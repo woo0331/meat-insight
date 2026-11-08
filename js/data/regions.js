@@ -58,13 +58,82 @@ window.AM_REGIONS = [
   { key:"jeju", name:"제주", full:"제주특별자치도", gu:["제주시","서귀포시"] }
 ];
 
+/* ⚠️⚠️ **해외 지역도 여기서 찾아집니다** (2026-11-08) — 이름을 푸는 자리가
+   둘이면 안 됩니다. `js/wanted.js` 는 `REG[r.key] = r.name` 으로 표를
+   만들어 두는데, 그 표를 `AM_REGIONS` 만으로 지으면 일본 · 태국 글이
+   **영문 키 그대로** 찍힙니다(조인에서 `closed` 가 손님 화면에 찍힌
+   그 자리). 찾는 자리는 이 함수 하나입니다.
+   ⚠️ 모르는 키는 **null** 입니다 — 이름을 지어내지 않습니다. */
 window.amRegion = function(key){
-  var r = window.AM_REGIONS.filter(function(x){ return x.key === key; });
-  return r.length ? r[0] : null;
+  var r = (window.AM_REGIONS || []).filter(function(x){ return x.key === key; });
+  if(r.length) return r[0];
+  var t = (window.AM_TRIP_REGIONS || []).filter(function(x){ return x.key === key; });
+  return t.length ? { key:t[0].key, name:t[0].name, full:t[0].full, gu:[], abroad:true } : null;
 };
 window.amRegionName = function(key, gu){
   var r = window.amRegion(key); if(!r) return "";
   return gu ? (r.name + " " + gu) : r.name;
+};
+
+/* ════════════════════════════════════════════════════════════════════
+   골프 여행의 **해외 지역 여섯** (2026-11-08)
+
+   ⚠️⚠️⚠️ **`AM_REGIONS` 에 섞지 않습니다.** 그 배열은 조인 · 중고 ·
+   구인 · 업체 영업지역 · 티타임이 **전부** 읽습니다 — 섞으면 그 순간
+   「일본에서 조인」 · 「태국 중고 직거래」 같은 고르개 칸이 생기고,
+   골라도 맞는 글이 영원히 0건입니다(눌러도 아무 일이 안 나는 칸 ·
+   절대 규칙 5). 그래서 **따로 둡니다.**
+
+   ⚠️⚠️ **까닭** — 알아본 곳이 전부(자이언트골프 · 오케이골프투어 ·
+   세이브투어 · 골프투어로) **지역을 첫째 축**으로 둡니다. 저희 여행
+   하위 여섯은 **유형 축만**(국내 · 해외 · 골프텔 · 패키지 · 캠프 ·
+   견적비교) 이라, 「해외 골프 여행」을 눌러도 **좁힐 것이 없었습니다.**
+
+   ⚠️⚠️ **DB 는 이 묶음을 모릅니다.** `wanted.region` 은
+   `text not null check (btrim(region) <> '')` 이고 `provider.regions`
+   는 `text[]` 입니다 — 키 묶음을 박지 않은 것이 맞습니다(박으면 지역을
+   더하는 날 두 곳이 어긋나고, 그때 화면은 보내는데 DB 가 거절합니다).
+   그러니 **화면이 유일한 자물쇠**이고, 못 막는 것을 막는다고 적지
+   않습니다 — 주소를 손으로 고쳐 오시면 모르는 키가 들어올 수 있습니다.
+   받는 쪽은 그 키를 **그대로** 보여 줍니다(이름을 지어내지 않습니다).
+
+   ⚠️ **키는 더하기만 합니다** — 이미 올라온 글이 이 글자를 들고 있습니다.
+   ⚠️ 나라 아래 세부 도시(일본→나리타 · 오사카)는 **안 둡니다** — 업체가
+   0곳인 동안 빈 칸만 늘어납니다. 필요해지는 날 `gu` 처럼 더합니다.
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_TRIP_REGIONS = [
+  { key:"jp",    name:"일본",   full:"일본" },
+  { key:"th",    name:"태국",   full:"태국" },
+  { key:"vn",    name:"베트남", full:"베트남" },
+  { key:"ph",    name:"필리핀", full:"필리핀" },
+  { key:"cn",    name:"중국",   full:"중국 · 대만" },
+  { key:"etc",   name:"그 밖",  full:"그 밖의 나라" }
+];
+
+/* 그 분류에서 **고를 수 있는 지역** — ⚠️⚠️ **여기 한 곳**입니다.
+   화면마다 `AM_REGIONS` 를 직접 읽으면 여행에 해외를 더하는 날
+   **고치는 자리가 스물다섯 곳**이 됩니다(지금 그 배열을 읽는 파일 수).
+   ⚠️ 여행만 국내 열일곱 **뒤에** 해외 여섯을 붙입니다 — 국내가 먼저인
+   까닭은 손님 대부분이 국내를 고르시기 때문입니다.
+   ⚠️ 모르는 분류는 국내만 냅니다(지어내지 않습니다).
+   ⚠️⚠️⚠️ **이름을 `amRegionsFor` 로 지었다가 바로 밟았습니다** — 이
+   파일 아래쪽에 **이미 그 이름**이 있습니다(묶음 키 → 지역 키들).
+   나중 것이 이겨서 이 함수가 **조용히 빈 배열**을 돌려주었고 에러는
+   한 줄도 안 났습니다. 밖에 거는 이름은 **먼저 세어 보세요**
+   (`grep -rn "window.<이름>" js/`). */
+window.amRegionsOf = function(catKey){
+  var c = (typeof catKey === "string") ? catKey : (catKey && catKey.key);
+  var home = (window.AM_REGIONS || []).slice();
+  if(c !== "travel") return home;
+  return home.concat((window.AM_TRIP_REGIONS || []).map(function(t){
+    /* ⚠️ `gu` 를 **빈 배열로** 답니다 — 시/군/구 고르개가 그 칸을
+       읽는데 없으면 그 자리에서 터집니다(해외는 세부가 없습니다). */
+    return { key: t.key, name: t.name, full: t.full, gu: [], abroad: true };
+  }));
+};
+/* 그 지역이 해외인가 — ⚠️ 화면이 이름으로 판단하지 않게 합니다 */
+window.amRegionAbroad = function(key){
+  return (window.AM_TRIP_REGIONS || []).some(function(t){ return t.key === key; });
 };
 
 /* ════════════════════════════════════════════════════════════════════

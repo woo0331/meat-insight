@@ -35,9 +35,18 @@
   var KEEP = String((window.WOW_BIZ || {}).wantedKeep || "");
   var A = null, SIGNED = false, PRO = null;
 
-  var REG = {};
-  (window.AM_REGIONS || []).forEach(function(r){ REG[r.key] = r.name; });
-  function rgName(k){ return REG[k] || String(k || ""); }
+  /* ⚠️⚠️ **그 분류가 고를 수 있는 지역**을 읽습니다 (`amRegionsOf` 한 곳) —
+     여행은 국내 열일곱 뒤에 해외 여섯이 붙습니다. `AM_REGIONS` 를 직접
+     읽으면 해외 글이 **영문 키 그대로** 찍힙니다(조인에서 `closed` 가
+     손님 화면에 찍힌 그 자리). */
+  function regs(){
+    return (window.amRegionsOf ? window.amRegionsOf(CAT) : (window.AM_REGIONS || [])) || [];
+  }
+  /* ⚠️ 모르는 키는 **그대로** 적습니다 — 이름을 지어내지 않습니다 */
+  function rgName(k){
+    var hit = regs().filter(function(r){ return r.key === k; });
+    return hit.length ? hit[0].name : String(k || "");
+  }
 
   /* 하위 — ⚠️ `catalog.js` 한 곳에서 끌어옵니다 (글자로 박지 않습니다) */
   function subs(){
@@ -137,7 +146,7 @@
           (F.rg === z.key ? " selected" : "") + '>' +
           esc(window.amZoneLong ? window.amZoneLong(z.key) : z.name) + '</option>';
       }).join("") + '</optgroup><optgroup label="시 · 도">' +
-      (window.AM_REGIONS || []).map(function(r){
+      regs().map(function(r){
         return '<option value="' + esc(r.key) + '"' +
           (F.rg === r.key ? " selected" : "") + '>' + esc(r.name) + '</option>';
       }).join("") + '</optgroup>';
@@ -253,7 +262,7 @@
     var sb = subs().map(function(it){
       return '<option value="' + esc(it.key) + '">' + esc(it.name) + '</option>';
     }).join("");
-    var rg = (window.AM_REGIONS || []).map(function(r){
+    var rg = regs().map(function(r){
       return '<option value="' + esc(r.key) + '">' + esc(r.name) + '</option>';
     }).join("");
     return '<h3 class="jbox-h">구합니다 글 올리기</h3>' +

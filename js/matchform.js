@@ -182,6 +182,10 @@
 
   function form(){
     var R = reqOf();
+    /* ⚠️ 분류 화면이 적는 이름과 **같은 줄**을 읽습니다 (amAskLabel 한 곳) */
+    function lab(k, d){
+      return (FROMCAT && window.amAskLabel) ? window.amAskLabel(FROMCAT, k, d) : d;
+    }
     return '<form id="mf" class="jform">' +
       wantNote() +
       '<div class="jrow jrow-full">' +
@@ -189,7 +193,8 @@
         '<div class="svcs">' + services() + '</div>' +
       '</div>' +
       '<div class="jrow">' +
-        '<label for="m-region">지역' + star(R.region) + '</label>' +
+        /* ⚠️ 이름표도 `AM_ASK` 한 곳에서 — 여행은 「출발 지역」입니다 */
+        '<label for="m-region">' + esc(lab("region", "지역")) + star(R.region) + '</label>' +
         '<select id="m-region" name="region"' + (R.region ? ' required' : '') + '>' +
           '<option value="">' + (R.region ? '고르세요' : '고르지 않음') + '</option>' +
           (window.AM_REGIONS || []).map(function(r){

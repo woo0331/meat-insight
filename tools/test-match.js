@@ -328,6 +328,19 @@ const FAKE = "https://sb-test.supabase.co";
        !r.none && r.n === 3, JSON.stringify(r));
     ok(cat + " — ⚠️⚠️ **적어 놓은 필수를 양식이 그대로 받는다**",
        !r.none && r.bad.length === 0, (r.bad || []).join(" / "));
+    /* ⚠️⚠️ **이름표도 그 줄을 읽는가** (2026-11-08) — 전에는 지역 칸의
+       이름표를 「지역」으로 **글자로 박아** 두어서, 여행처럼 `AM_ASK` 가
+       「출발 지역」이라고 적은 분류는 **분류 화면과 양식이 다른 말**을
+       했습니다. 키로만 맞춰 보면 영원히 초록인 자리입니다. */
+    const lb = await p.evaluate(function(k){
+      var a = window.amAskOf ? window.amAskOf(window.amCat(k)) : null;
+      var want = "";
+      if(a) a.forEach(function(x){ if(x[1] === "region") want = x[0]; });
+      var el = document.querySelector('label[for="m-region"]');
+      return { want: want, got: el ? el.textContent.replace("*","").trim() : null };
+    }, cat);
+    ok(cat + " — ⚠️⚠️ 지역 칸의 **이름표가 AM_ASK 와 같다** (글자로 안 박습니다)",
+       !!lb.want && lb.got === lb.want, JSON.stringify(lb));
     ok(cat + " — 필수가 하나라도 있다 (목록이 썩지 않았는가)",
        !r.none && r.reqN > 0, String(r.reqN));
     ok(cat + " — 별표가 찍힌다 (화면에 보이는 표시입니다)",

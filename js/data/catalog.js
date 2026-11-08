@@ -326,6 +326,19 @@ window.amAskReq = function(c){
   return out;
 };
 
+/* 그 분류가 그 칸을 **뭐라고 부르는가** — ⚠️⚠️ 양식의 이름표가
+   `AM_ASK` 와 **같은 줄**을 읽어야 합니다. 2026-11-08 까지 `/match` 의
+   지역 칸이 이름표를 「지역」으로 **글자로 박고** 있었는데, 여행은
+   `AM_ASK` 가 「**출발 지역**」이라고 적어 두었습니다 — 분류 화면은
+   "출발 지역을 여쭙습니다" 라고 말해 놓고 양식은 그냥 "지역" 이라
+   물었습니다(`test-match` 는 **키**로 맞춰 보므로 영원히 초록입니다).
+   ⚠️ 못 찾으면 넘겨준 기본 이름을 씁니다(지어내지 않습니다). */
+window.amAskLabel = function(c, key, dflt){
+  var a = window.amAskOf(c);
+  if(a) for(var i = 0; i < a.length; i++) if(a[i][1] === key) return a[i][0];
+  return dflt || "";
+};
+
 /* 그 분류의 **더 하실 말씀** 칸에 띄울 길잡이 — body 로 받는 것들입니다 */
 window.amAskBody = function(c){
   var a = window.amAskOf(c);

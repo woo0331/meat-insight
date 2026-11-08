@@ -120,6 +120,22 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
    딥그린 위에 올립니다 (초록 비율을 늘리지 않습니다). */
 .catband{ background: var(--grn-deep); padding-block: 0 12px; }
 .catband[hidden]{ display:none; }
+/* ⚠️⚠️ **넓은 PC 에서는 띠가 늘 펼쳐져 있습니다** (js/hdnav.js) — 그러면
+   '카테고리' 옆 꺾쇠는 **거짓말**입니다. 꺾쇠는 "눌러도 열릴 것이 있다"
+   는 약속인데 이미 열려 있고, 누르면 `/categories` 로 갑니다.
+   ⚠️ 가르는 폭(1180px)을 js/hdnav.js 와 **같은 수**로 두세요 — 어긋나면
+   꺾쇠만 남거나 띠가 접힌 채 꺾쇠가 사라집니다. */
+@media (min-width: 1180px){
+  .gnb [data-catnav] svg{ display:none; }
+  /* ⚠️ 띠가 늘 서 있는 폭에서는 '열 분류 전체보기' 를 안 냅니다 — 바로
+     위 '카테고리' 가 같은 자리(/categories)로 가고, 이것까지 두면 띠가
+     두 줄이 됩니다. 좁은 폭에서는 그대로 냅니다 (거기서는 띠를 눌러서
+     열고, 묶음으로 보는 길이 따로 필요합니다).
+     ⚠️⚠️ 특정도로 이깁니다 — `.catnav a`(0,1,1) 가 `display:inline-flex`
+     를 걸어서 `.catnav-all`(0,1,0) 로는 못 이깁니다. 작업 기억의 그
+     자리를 또 밟았고, 찍어 보고 알았습니다. */
+  .catnav a.catnav-all{ display:none; }
+}
 .catnav{ display:flex; flex-wrap:wrap; gap:4px; }
 .catnav a{
   display:inline-flex; align-items:center; gap:5px;
@@ -2257,7 +2273,11 @@ picture{ display: contents; }
 /* 주요 골프 서비스 넷 (지시서 A-5 · 2026-11-07)
    ⚠️ 칸 수는 **넷으로 나누어떨어지는 값**만 씁니다 (4 · 2 · 1) —
    안 그러면 마지막 줄에 한 장만 덩그러니 남습니다. */
-.svc-grid{ display:grid; gap:12px; grid-template-columns: repeat(4, 1fr); }
+/* ⚠️⚠️ 카드가 **여섯**입니다 (최종 디자인 지시서 1번) — 3열이면 2줄이
+   딱 맞고 빈 칸이 안 생깁니다. 4열이면 아래 줄에 둘만 남아 구멍이
+   보입니다 (메인 분류 격자에서 "분류 수가 칸 수로 나누어떨어지는지"
+   까지 재는 그 까닭입니다). */
+.svc-grid{ display:grid; gap:12px; grid-template-columns: repeat(3, 1fr); }
 @media (max-width: 1000px){ .svc-grid{ grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 520px){ .svc-grid{ grid-template-columns: 1fr; } }
 .svc-grid > *{ min-width:0; }

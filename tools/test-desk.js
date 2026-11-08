@@ -3588,7 +3588,12 @@ function boardsOf(){
           Array.prototype.forEach.call(all, function(x){
             if(x.getAttribute("data-adslot") === "main_hero") return;
             n++;
-            if(!x.querySelector(".adsl-i") && x.querySelector(".adph")) clean++;
+            /* ⚠️⚠️⚠️ **2026-11-08 — 재는 뜻이 또 바뀌었습니다.** 이 장면은
+               **손님**이고, 지시서 3번은 "광고 미등록 시 고객 화면에서 슬롯
+               자체를 숨기고 빈 점선 박스는 **관리자 미리보기에서만**" 이라고
+               적습니다 — 소재도 · 액자도 없이 **감춰져 있어야** 합니다.
+               운영자 쪽은 ①-2 가 따로 잽니다. */
+            if(!x.querySelector(".adsl-i") && !x.querySelector(".adph") && x.hidden) clean++;
           });
           return n + "/" + clean;
         })() };
@@ -3606,7 +3611,7 @@ function boardsOf(){
       /* ⚠️⚠️ **다른 자리 광고가 섞이면 안 됩니다** — 자리 열쇠가 자물쇠입니다 */
       ok("  ⚠️ 그 자리 광고만 들어간다 (히어로에 분류 광고가 안 섞인다)",
          r.n === 1, String(r.n));
-      ok("  ⚠️ 걸리는 광고가 없는 자리에는 **남의 광고가 안 섞이고** 점선 액자만 선다",
+      ok("  ⚠️⚠️ 손님에게는 걸리는 광고가 없는 자리가 **줄째 감춰진다** (지시서 3번)",
          r.empty.split("/")[0] === r.empty.split("/")[1] &&
          Number(r.empty.split("/")[0]) > 0, r.empty);
       await g.p.close();
@@ -3641,7 +3646,13 @@ function boardsOf(){
       await g.p.close();
     }
 
-    /* ③ 설정이 없으면 **한 줄도 안 그립니다** (손님에게 아무 말도 안 합니다) */
+    /* ③ 설정이 없으면 **광고도 · 점선 액자도 한 줄도 안 그립니다**
+       ⚠️⚠️⚠️ 2026-11-08 에 뜻이 바뀌었습니다 — 전에는 "설정이 없어도
+       액자는 선다" 를 재고 있었습니다. 지시서 3번이 "빈 점선 박스는
+       **관리자 미리보기에서만**" 이라고 적었고, 설정이 없는 동안에는
+       **아무도 로그인할 수 없어 운영자가 없습니다.** 그래서 아무것도
+       안 나오는 것이 맞습니다 (손님에게 아무 말도 하지 않습니다 ·
+       절대 규칙 3). */
     {
       const p0 = await b.newPage({ viewport: view });
       await p0.route("**/api/session", function(r){
@@ -3652,32 +3663,22 @@ function boardsOf(){
       await p0.waitForTimeout(400);
       const r = await p0.evaluate(function(){
         const el = document.querySelector('[data-adslot="main_hero"]');
-        const ph = el ? el.querySelector(".adph") : null;
-        const f  = window.amAdPh ? window.amAdPh("main_hero") : null;
         return { ads: el ? el.querySelectorAll(".adsl-i").length : -1,
                  links: el ? el.querySelectorAll("a").length : -1,
-                 ph: !!ph, shown: !!(el && !el.hidden),
-                 /* ⚠️ 액자에 적는 말은 `AM_AD_PH` 한 곳입니다 — 글자를
-                    여기 박으면 그 말을 고치는 날 멀쩡한 화면이 떨어집니다 */
-                 named: !!(ph && f && ph.textContent.indexOf(f.name) >= 0) };
+                 ph: !!(el && el.querySelector(".adph")),
+                 shown: !!(el && !el.hidden) };
       });
-      /* ⚠️⚠️ 설정(Supabase)이 없으면 **광고는 한 줄도 안 그립니다** —
-         손님에게 아무 말도 하지 않습니다 (절대 규칙 3). */
       ok("⚠️ 설정 전에는 광고를 **한 줄도 안 그린다**",
          r.ads === 0 && r.links === 0, JSON.stringify(r));
-      /* ⚠️⚠️ 그래도 **점선 안내 액자**는 섭니다 (사장님 시안) — 설정과
-         무관하게 서야 사장님이 자리를 보십니다. 끄는 길은 `site.js` 의
-         `adPlaceholder` 한 줄입니다. */
-      ok("  ⚠️ 설정이 없어도 **점선 안내 액자**는 선다 (시안)",
-         r.ph && r.shown, JSON.stringify(r));
-      ok("  ⚠️ 액자에 적는 말은 `AM_AD_PH` 에서 온다 (글자를 안 박습니다)",
-         r.named, JSON.stringify(r));
+      ok("  ⚠️⚠️ 설정 전에는 **점선 액자도 안 선다** (운영자가 없습니다 · 지시서 3번)",
+         !r.ph && !r.shown, JSON.stringify(r));
       await p0.close();
     }
 
-    /* ③-2 ⚠️⚠️ **끄는 길이 실제로 끄는가** — `site.js` 의 `adPlaceholder`
-       를 `false` 로 바꾼 파일을 내려보내고, 그때는 전처럼 **줄째 감춰지는지**
-       봅니다 (지시서 B 의 "광고가 없으면 공개 화면에서 슬롯 숨김").
+    /* ③-2 ⚠️⚠️ **켜는 길이 실제로 켜는가** — `site.js` 의 `adPlaceholder`
+       를 `true` 로 바꾼 파일을 내려보내고, 그때는 설정이 없어도 액자가
+       서는지 봅니다. 설정이 아직 없어 아무도 로그인할 수 없는 동안
+       사장님이 자리를 눈으로 보시는 **유일한 길**입니다.
        ⚠️ 스위치를 만들어 놓고 눌러 보지 않으면 그건 눌러도 아무 일이
        안 나는 칸입니다 (절대 규칙 5). */
     {
@@ -3686,7 +3687,7 @@ function boardsOf(){
         const res  = await route.fetch();
         const body = await res.text();
         return route.fulfill({ status:200, contentType:"application/javascript",
-          body: body.replace("adPlaceholder: true", "adPlaceholder: false") });
+          body: body.replace("adPlaceholder: false", "adPlaceholder: true") });
       });
       await p0.route("**/api/session", function(r){
         return r.fulfill({ status:200, contentType:"application/json",
@@ -3696,14 +3697,43 @@ function boardsOf(){
       await p0.waitForTimeout(400);
       const r2 = await p0.evaluate(function(){
         const el = document.querySelector('[data-adslot="main_hero"]');
-        return { off: window.WOW_BIZ ? window.WOW_BIZ.adPlaceholder : "?",
-                 hidden: !!(el && el.hidden),
-                 html: el ? el.innerHTML.length : -1 };
+        const ph = el ? el.querySelector(".adph") : null;
+        const f  = window.amAdPh ? window.amAdPh("main_hero") : null;
+        return { on: window.WOW_BIZ ? window.WOW_BIZ.adPlaceholder : "?",
+                 ph: !!ph, shown: !!(el && !el.hidden),
+                 /* ⚠️ 액자에 적는 말은 AM_AD_PH 한 곳입니다 — 글자를
+                    여기 박으면 그 말을 고치는 날 멀쩡한 화면이 떨어집니다 */
+                 named: !!(ph && f && ph.textContent.indexOf(f.name) >= 0) };
       });
-      ok("  ⚠️⚠️ `adPlaceholder` 를 끄면 전처럼 **줄째 감춰진다** (지시서 B)",
-         r2.off === false && r2.hidden && r2.html === 0, JSON.stringify(r2));
+      ok("  ⚠️⚠️ `adPlaceholder` 를 켜면 설정이 없어도 **점선 액자가 선다**",
+         r2.on === true && r2.ph && r2.shown, JSON.stringify(r2));
+      ok("  ⚠️ 액자에 적는 말은 `AM_AD_PH` 에서 온다 (글자를 안 박습니다)",
+         r2.named, JSON.stringify(r2));
       await p0.close();
     }
+
+    /* ③-3 ⚠️⚠️⚠️ **운영자에게는 액자가 섭니다** (지시서 3번의 "관리자
+       미리보기"). 손님 쪽은 ① 이 재고, 여기는 **같은 화면을 운영자 눈으로**
+       열어 봅니다 — 둘을 한 장면에서 재면 어느 자물쇠가 일하는지 모릅니다. */
+    for(const who of ["admin", "staff"]){
+      const g = await open("/", { role:who, name:"운영자", signedIn:true },
+                           { v_ad_live: [] }, {}, true);
+      const r3 = await g.p.evaluate(function(){
+        const all = document.querySelectorAll("[data-adslot]");
+        let n = 0, ph = 0;
+        Array.prototype.forEach.call(all, function(x){
+          n++;
+          if(x.querySelector(".adph") && !x.hidden) ph++;
+        });
+        return { n:n, ph:ph };
+      });
+      /* ⚠️ 갯수를 박지 않습니다 — 액자가 서는 자리(amAdPh 가 null 이
+         아닌 자리)만 셉니다. 메인에는 넷이 있고, 자리를 더하는 날 늘어납니다. */
+      ok("⚠️⚠️ " + who + " 에게는 **점선 액자가 선다** (관리자 미리보기 · 지시서 3번)",
+         r3.ph > 0, JSON.stringify(r3));
+      await g.p.close();
+    }
+
 
     /* ④ ⚠️⚠️⚠️ **빌드에 없는 업체는 링크를 안 겁니다** — `/pro/<id>` 는
        빌드가 찍는 화면이라, 승인 직후 pull-providers 를 안 돌리면 그
@@ -4376,7 +4406,7 @@ function boardsOf(){
     await g.p.close();
   }
 
-  /* ⑧-3 **부킹 · 조인 화면에도 같은 띄가 섬니다** (2026-11-07 · 시안).
+  /* ⑧-3 **부킹 · 조인 화면에도 같은 띠가 섭니다** (2026-11-07 · 시안).
      ⚠️⚠️⚠️ 전에는 **메인에만** 있어서, 머리말에서 골프장 부킹을 누르고
      들어오신 분은 **목록부터** 보셨습니다 — 어느 날짜 · 어느 지역에 자리가
      있는지를 보는 자리가 그 화면에 없었습니다.

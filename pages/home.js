@@ -89,13 +89,23 @@ function hero(){
     (ph ? W.amPhotoImg("hero", { cls:"hero-bg", eager:true }) : "") +
     '<div class="wrap hero-in">' +
     '<p class="hero-kick">' + esc(B.en) + '</p>' +
-    '<h1>골프의 모든 것,<br><b>' + esc(B.name) + '</b></h1>' +
-    '<p class="hero-sub">' + esc(B.desc) + '</p>' +
+    /* ⚠️⚠️ **글자는 최종 디자인 지시서 1번이 준 그대로**입니다 (2026-11-08).
+       ⚠️ 상호는 `AM_BRAND` 에서 옵니다 — 글자로 박으면 상호를 고치는 날
+       여기만 옛 이름으로 남습니다. */
+    '<h1>골프의 모든 것을 한곳에<br><b>' + esc(B.name) + '</b></h1>' +
+    /* ⚠️⚠️⚠️ **"예약 확정" · "직접 판매" 를 적지 않습니다** — 저희는
+       중개자이고 결제를 받지 않습니다 (지시서 §7 · 절대 규칙 5). */
+    '<p class="hero-sub">레슨 · 부킹 · 조인 · 중고장터 · 용품 · 여행까지<br>' +
+      '골프 라이프의 모든 서비스를 만나보세요!</p>' +
     /* ⚠️⚠️ **두 단추는 서로 다른 일을 합니다** (2차 지시서 §3-B).
        업체 직접 찾기 = 손님이 고르고 비교 · 매칭 요청 = 업체가 제안.
        같은 곳으로 보내면 지시서가 못 박은 것을 어깁니다. */
     '<div class="hero-cta">' +
-      '<a class="btn btn-pt" href="/search">' + icon("search",20) + '업체 직접 찾기</a>' +
+      /* ⚠️⚠️ 지시서 1번이 **'서비스 전체보기'** 를 첫 단추로 못 박았습니다.
+         ⚠️ 보내는 자리는 `/categories` 입니다 — 열 분류가 다 있는 화면이고,
+         업체가 0곳인 동안 `/search` 로 보내면 "아직 없습니다" 만 보십니다. */
+      '<a class="btn btn-pt" href="/categories">' + icon("menu",20) +
+        '서비스 전체보기</a>' +
       /* ⚠️ 전에는 "한 번에 견적 · 매칭 요청하기" 였고, 아래 매칭 띠의
          제목이 **같은 말**이었습니다 (§5). 단추는 짧게, 설명은 띠에서. */
       '<a class="btn btn-ghost" href="/match">' + icon("match",20) +
@@ -118,7 +128,7 @@ function hero(){
 
    ⚠️⚠️ 아래 `cats()` 와 **하는 일이 다릅니다** — 여기는 첫 화면에서
    바로 누르는 **길**이고(아이콘 + 이름뿐), 그쪽은 사진과 한 줄 설명으로
-   **무엇인지 보여 주는** 자리입니다. 그래서 둘 사이에 부킹 띄가 들어갑니다.
+   **무엇인지 보여 주는** 자리입니다. 그래서 둘 사이에 부킹 띠가 들어갑니다.
    ⚠️⚠️⚠️ **이름을 글자로 적지 않습니다** — `AM_CATS` 한 곳에서 끌어옵니다.
    두 벌로 적으면 분류를 고치는 날 한쪽만 바뀝니다(주소도 `amCatUrl()` 한 함수).
    ⚠️⚠️ **가로로 밀게 두지 않습니다**(`flex-wrap:wrap`) — 머리말 메뉴에서 겪은
@@ -348,26 +358,27 @@ function joinBand(){
    용품 · 여행" 으로 줄여 적었습니다) — 없는 분류는 줄째 빠집니다.
    ⚠️ "전체" 는 `/categories` 입니다 (열 분류가 다 있는 자리) —
    묶음을 눌렀는데 분류 하나로 보내면 나머지는 어디 갔는지 모릅니다. */
-var TABS = [
-  { key:"lesson",  short:"레슨" },
-  { key:"booking", short:"부킹" },
-  { key:"matchup", short:"조인" },
-  { key:"market",  short:"용품" },
-  { key:"travel",  short:"여행" }
-];
-function svcTabs(){
-  var out = '<a class="svc-tab svc-tab-on" href="/categories">전체</a>';
-  TABS.forEach(function(t){
-    var c = W.amCat ? W.amCat(t.key) : null;
-    if(!c) return;
-    out += '<a class="svc-tab" href="' + esc(W.amCatUrl(c)) + '">' +
-      esc(t.short) + '</a>';
-  });
-  return '<div class="svc-tabs">' + out + '</div>';
-}
+/* ⚠️⚠️⚠️ **서비스 탭 줄을 뺐습니다** (2026-11-08).
+   카드 위에 알약 모양 칩이 줄지어 있고 '전체' 하나가 켜져 있으면,
+   그건 **거르개로 읽힙니다** — 누르면 아래 카드가 걸러질 것 같습니다.
+   그런데 실제로는 그 분류 화면으로 **떠나는 링크**였습니다. 하는 일과
+   달리 보이는 칸이라 절대 규칙 5 의 사촌입니다.
+   ⚠️ 가는 길은 하나도 안 없어졌습니다 — 열 분류는 이제 머리말 띠에
+   **늘 서 있고**(넓은 PC), 카드 여섯이 같은 자리로 가며, '서비스
+   전체보기' 와 '카테고리' 가 /categories 로 갑니다.
+   ⚠️ CSS 의 `.svc-tab` 은 그대로 두었습니다 — 지우면 다시 낼 때
+   모양을 새로 짜야 하고, 안 쓰는 규칙은 화면을 깨뜨리지 않습니다. */
 
 function svcCards(){
-  var KEYS = ["lesson", "used", "booking", "travel"];
+  /* ⚠️⚠️ **최종 디자인 지시서 1번이 준 여섯**입니다 (2026-11-08) —
+     골프 레슨 · 골프장 부킹 · 골프 조인 · 중고 골프장터 · 피팅 · 수리 ·
+     골프 여행. 전에는 넷이었습니다.
+     ⚠️⚠️⚠️ 제목을 **'오늘의 추천' 이라고 적지 않습니다** — 지시서가
+     "실사용 데이터에 기반한 개인화 추천이 없는 경우 '주요 골프 서비스'
+     라는 제목 사용" 이라고 적었고, 저희는 누가 무엇을 보셨는지 세지
+     않습니다. 추천이라고 적으면 **하지 않은 일을 했다고** 하는 것입니다
+     (절대 규칙 5). */
+  var KEYS = ["lesson", "booking", "matchup", "used", "fitting", "travel"];
   var cards = KEYS.map(function(k){
     var c = W.amCat ? W.amCat(k) : null;
     if(!c) return "";
@@ -385,10 +396,10 @@ function svcCards(){
   if(!cards) return "";
   return '<section class="sec"><div class="wrap">' +
     '<div class="sec-hd"><h2>주요 골프 서비스</h2>' +
-    '<p>가장 많이 찾으시는 네 가지입니다. ' +
+    /* ⚠️ 갯수를 글자로 안 적습니다 — KEYS 를 늘리는 날 이 줄이 거짓이 됩니다 */
+    '<p>골프올인원에서 가장 많이 찾으시는 서비스입니다. ' +
     /* ⚠️ 지어낸 약속을 하지 않습니다 — 고르면 그 분류로 갈 뿐입니다 */
     '누르시면 그 분류의 업체와 글을 보실 수 있습니다.</p></div>' +
-    svcTabs() +
     '<div class="svc-grid">' + cards + '</div>' +
   '</div></section>';
 }

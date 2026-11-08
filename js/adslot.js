@@ -188,22 +188,36 @@
      ⚠️⚠️ 광고가 0건인 자리에 **점선 액자**를 냅니다 — 자리 이름 ·
      무엇을 받는 자리인지 · 권장 사이즈. 시안이 그렇게 그려져 있고
      사장님이 그대로 만들라고 하셨습니다.
-     ⚠️ 지시서 B 는 "공개 화면에서는 숨김" 이라고 적었습니다 — 다른
-     말이라 **끄는 길을 한 줄**로 두었습니다 (`site.js` 의
-     `adPlaceholder`). `false` 면 전처럼 줄째 사라집니다.
+     ⚠️⚠️ 그런데 그 액자를 **보는 사람은 운영자뿐**입니다 —
+     지시서 3번 · 지시서 B 가 둘 다 "광고가 없으면 고객 화면에서는
+     슬롯을 숨기고, 빈 점선 박스는 관리자 미리보기에서만" 이라고
+     적었습니다. 가르는 자물쇠는 아래 `phOn()` 한 곳입니다.
      ⚠️⚠️ **적는 말은 `AM_AD_PH` 한 곳**입니다 — 여기 글자로 박으면
      /admin 의 안내와 조용히 어긋납니다. 모르는 자리는 `amAdPh()` 가
      **null** 을 돌려주고, 그러면 액자를 **안 냅니다** (분류 · 지역
      광고는 시안에 액자가 없습니다).
      ⚠️ 권장 사이즈도 `AM_AD_SIZE` 에서 옵니다 — 시안은 프리미엄 ·
      하단에만 적어 두었으므로 `size` 가 참인 자리만 적습니다.
-     ⚠️⚠️ 이 액자는 **설정(Supabase)과 무관하게** 섭니다 — 로그인이
-     열리기 전에도 사장님이 자리를 보셔야 합니다. 그래서 자리를 켜는
-     일은 아래에서 **가장 먼저** 합니다.
+     ⚠️⚠️ **설정(Supabase)이 없는 동안에는 이 액자가 아무에게도 안
+     보입니다** — 로그인할 수가 없어 운영자가 없기 때문입니다.
+     그때 사장님이 자리를 눈으로 보시려면 `site.js` 의
+     `adPlaceholder` 를 잠깐 `true` 로 두시면 됩니다.
      ════════════════════════════════════════════════════════════════ */
+  /* ⚠️⚠️⚠️ **자물쇠가 둘입니다** — 지시서 3번은 "광고 미등록 시
+     고객 화면에서 슬롯 자체를 숨기고 빈 점선 박스는 **관리자
+     미리보기에서만**" 이라고 적습니다. 그래서 —
+       ① 운영자(admin · staff)에게는 늘 액자를 냅니다
+       ② 그 밖에게는 **안 냅니다** — 자리는 `hidden` 으로 남고
+          감싼 구간은 CSS 의 `:has()` 가 줄째 가립니다
+       ③ `site.js` 의 `adPlaceholder` 를 `true` 로 두면 **모두에게** 냅니다
+     ⚠️ ③ 가 필요한 까닭은, 설정(Supabase)이 없는 동안에는 **아무도
+     로그인할 수 없어 운영자가 없기** 때문입니다 — 그때 사장님이
+     자리를 보시려면 그 한 줄을 켜시면 됩니다. 기본값은 `false` 입니다. */
+  var PH_ROLE = false;                /* 운영자가 보고 있나 */
   function phOn(){
     var B = window.WOW_BIZ || {};
-    return B.adPlaceholder === true;
+    if(B.adPlaceholder === true) return true;
+    return PH_ROLE;
   }
   function ph(el){
     if(!phOn()) return 0;
@@ -240,8 +254,9 @@
     var place = el.getAttribute("data-adslot") || "";
     var key   = el.getAttribute("data-adslot-key") || "";
     var L     = pick(all, place, key);
-    /* ⚠️⚠️ 0건이면 **점선 액자**를 냅니다 (사장님 시안) — `site.js` 의
-       `adPlaceholder` 가 `false` 면 전처럼 줄째 감춥니다 (지시서 B). */
+    /* ⚠️⚠️ 0건이면 — 운영자에게만 **점선 액자**를 내고, 손님에게는
+       자리를 `hidden` 으로 남겨 감싼 구간이 줄째 사라지게 둡니다
+       (지시서 3번 · 지시서 B). 가르는 것은 `phOn()` 한 곳입니다. */
     if(!L.length){ el.innerHTML = ""; if(!ph(el)) el.hidden = true; return 0; }
     el.innerHTML = '<ul class="adsl">' + L.map(one).join("") + '</ul>';
     el.hidden = false;
@@ -258,6 +273,7 @@
     if(!window.amAuthAsk) return Promise.resolve(0);
     return window.amAuthAsk().then(function(a){
       if(!a || !a.on || !a.conf) return 0;
+      PH_ROLE = (a.role === "admin" || a.role === "staff");
       CONF = a.conf;
       return rows(a).then(function(all){ return fill(el, all); });
     }).catch(function(){ return 0; });
@@ -272,9 +288,8 @@
     var slots = document.querySelectorAll("[data-adslot]");
     if(!slots.length) return;
 
-    /* ⚠️⚠️ 점선 액자를 **가장 먼저** 세웁니다 — 설정(Supabase)이 없어도 ·
-       로그인이 열리기 전에도 사장님이 자리를 보셔야 합니다. 광고가
-       들어오면 `fill()` 이 그 자리를 배너로 **바꿔 끼웁니다**. */
+    /* ⚠️ 여기서는 `adPlaceholder` 가 `true` 일 때만 섭니다 (기본 `false`) —
+       운영자 액자는 로그인을 물어본 **뒤에** 섭니다. */
     placeAll();
 
     if(!window.amAuthAsk) return;
@@ -291,6 +306,11 @@
          말도 하지 않습니다 — 광고가 없는 것과 같아 보이는 것이 맞습니다).
          ⚠️ 점선 액자는 위에서 이미 섰습니다. */
       if(!a || !a.on || !a.conf) return;
+      /* ⚠️⚠️ 운영자면 점선 액자를 그때 **바로** 세워 둡니다 —
+         광고가 들어오면 `fill()` 이 그 자리를 배너로 바꿉니다.
+         ⚠️ `rows()` 가 실패해도 운영자에겐 자리가 보입니다. */
+      PH_ROLE = (a.role === "admin" || a.role === "staff");
+      if(PH_ROLE) placeAll();
       CONF = a.conf;
       return rows(a).then(function(all){
         Array.prototype.forEach.call(slots, function(el){ fill(el, all); });

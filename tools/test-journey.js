@@ -268,6 +268,45 @@ const MY_BOXES = ["mybox", "reqbox", "joinmine", "lsmine", "mycq", "jobmine",
        "보임=" + shut.shown + " aria-expanded=" + shut.exp);
     ok("  그 자리에서 화면 에러가 나지 않는다", errs.length === 0, errs.join(" | "));
     await p1.close();
+
+    /* ⚠️⚠️⚠️ **넓은 PC 에서는 늘 펼쳐져 있습니다** (2026-11-08) — 최종
+       디자인 지시서 1번의 "상단 PC 헤더 — 중앙 카테고리 텍스트 메뉴" 가
+       이 자리입니다. 폰(위)과 **다른 동작**이라 따로 잽니다.
+       ⚠️ 가르는 폭은 js/hdnav.js 와 css/app.css 의 1180px 입니다 —
+       1440 은 그 위, 390 은 그 아래입니다. */
+    const p2 = await b.newPage({ viewport:{ width:1440, height:900 } });
+    const errs2 = watch(p2);
+    await p2.goto(base + "/help", { waitUntil:"networkidle" });
+    await p2.waitForTimeout(400);
+    const wide = await p2.evaluate(function(){
+      const band = document.getElementById("catnav");
+      const hit  = document.querySelector("[data-catnav]");
+      const as = [].slice.call(band.querySelectorAll('a[href^="/cat/"]'));
+      return { shown: !!band.offsetParent,
+               unseen: as.filter(function(a){ return !a.offsetParent; }).length,
+               /* ⚠️ 여닫지 않는 칸에 aria-expanded 를 붙이면 화면 읽는
+                  기계가 접을 수 있다고 알립니다 — 떼어 냈는지 봅니다. */
+               exp: hit.getAttribute("aria-expanded"),
+               /* ⚠️ 꺾쇠는 "눌러도 열릴 것이 있다" 는 약속입니다 —
+                  이미 열려 있으면 거짓말이라 CSS 가 가립니다. */
+               chev: (function(){ const v = hit.querySelector("svg");
+                                  return !!(v && v.getClientRects().length); })() };
+    });
+    ok("⚠️⚠️ 넓은 PC 에서는 분류 띠가 **처음부터 펼쳐져 있다** (지시서 1번)",
+       wide.shown && wide.unseen === 0, JSON.stringify(wide));
+    ok("  여닫는 칸이 아니므로 `aria-expanded` 를 **안 붙인다**",
+       wide.exp === null, String(wide.exp));
+    ok("  꺾쇠를 **안 낸다** (이미 열려 있어 거짓말이 됩니다)",
+       wide.chev === false, String(wide.chev));
+    /* ⚠️ 이미 열려 있으니 누르면 **그냥 링크**여야 합니다 — 가로채서
+       접으면 손님이 방금 보시던 메뉴가 사라집니다. */
+    await p2.click("[data-catnav]");
+    await p2.waitForTimeout(400);
+    const went = await p2.evaluate(function(){ return document.location.pathname; });
+    ok("  누르면 **/categories 로 간다** (가로채서 접지 않습니다)",
+       went === "/categories", String(went));
+    ok("  그 자리에서 화면 에러가 나지 않는다", errs2.length === 0, errs2.join(" | "));
+    await p2.close();
   }
 
   /* ══════════════════════════════════════════════════════════════

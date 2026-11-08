@@ -19,6 +19,20 @@ const path = require("path");
 const { serve, watch } = require("./_serve.js");
 
 let bad = 0, ran = 0;
+/* ⚠️⚠️⚠️ **묶음이 접혀 있으면 먼저 펼치고 고릅니다** (2026-11-08).
+   전에는 `p.check('input[value="ls-solo"]')` 로 바로 눌렀는데, 시안에
+   맞춰 `AM_CATS` 의 차례를 바꾸자 첫 묶음이 **골프장 부킹**이 되었고
+   레슨 칸은 접힌 묶음 안이라 **보이지 않아** 검사가 30초 기다리다
+   터졌습니다 — 멀쩡한 화면을 고장이라고 한 자리입니다.
+   ⚠️ 손님이 하는 길 그대로입니다: 접혀 있으면 그 묶음을 펼치고 고릅니다. */
+async function pick(pg, v){
+  const box = pg.locator('input[name="svc"][value="' + v + '"]');
+  if(!(await box.isVisible()))
+    await pg.locator('fieldset.svc:has(input[name="svc"][value="' + v +
+                     '"]) button.svc-x').click();
+  await box.check();
+}
+
 function ok(name, cond, got){
   ran++;
   if(cond) console.log("  ✅ " + name);
@@ -103,13 +117,13 @@ const FAKE = "https://sb-test.supabase.co";
   ok("고르는 칸이 **다 펼쳐져 있지 않다**", seen0 < all0, seen0 + "/" + all0);
   ok("  그래도 고를 칸이 한 개는 보인다", seen0 > 0, seen0);
 
-  await p.check('input[name="svc"][value="ls-solo"]');
+  await pick(p, "ls-solo");
   /* 연습장 묶음을 펼칩니다 — 그 묶음의 단추를 누릅니다 */
   await p.locator('fieldset.svc:has(input[name="svc"][value="rg-in"]) button.svc-x')
          .click();
   const seen1 = await p.locator('input[name="svc"]:visible').count();
   ok("  펼치면 그 묶음의 칸이 보인다", seen1 > seen0, seen0 + " → " + seen1);
-  await p.check('input[name="svc"][value="rg-in"]');
+  await pick(p, "rg-in");
 
   /* ⚠️⚠️ **고른 것이 있는 묶음을 접어도 그 사실이 화면에 남아야 합니다** —
      처음에는 못 접게 막았는데 그러면 눌러도 아무 일이 안 나는 단추가
@@ -398,7 +412,7 @@ const FAKE = "https://sb-test.supabase.co";
   ok("  미리 고른 것도 없다",
      (await p.locator('input[name="svc"]:checked').count()) === 0);
   pvSent = [];
-  await p.check('input[name="svc"][value="ls-solo"]');
+  await pick(p, "ls-solo");
   await p.fill("#m-name", "최손님");
   await p.fill("#m-tel", "010-2222-4444");
   await p.check("#m-agree");
@@ -449,7 +463,7 @@ const FAKE = "https://sb-test.supabase.co";
   ok("⚠️ 접수 **전에는** 사진 칸이 없다",
      (await p.locator("#matchbox .phup").count()) === 0);
 
-  await p.check('input[name="svc"][value="ls-solo"]');
+  await pick(p, "ls-solo");
   await p.fill("#m-name", "박손님");
   await p.fill("#m-tel", "010-7777-8888");
   await p.check("#m-agree");
@@ -495,7 +509,7 @@ const FAKE = "https://sb-test.supabase.co";
   await p.goto(URL, { waitUntil:"networkidle" });
   await p.waitForTimeout(250);
   sent = [];
-  await p.check('input[name="svc"][value="ls-solo"]');
+  await pick(p, "ls-solo");
   await p.fill("#m-name", "김손님");
   await p.fill("#m-tel", "010-5555-2222");
   await p.check("#m-agree");
@@ -575,7 +589,7 @@ const FAKE = "https://sb-test.supabase.co";
   mode = "no";
   await p.goto(URL, { waitUntil:"networkidle" });
   await p.waitForTimeout(250);
-  await p.check('input[name="svc"][value="ls-solo"]');
+  await pick(p, "ls-solo");
   await p.fill("#m-name", "가");
   await p.fill("#m-tel", "123");
   await p.check("#m-agree");
@@ -613,7 +627,7 @@ const FAKE = "https://sb-test.supabase.co";
     });
     await q.goto(URL, { waitUntil:"networkidle" });
     await q.waitForTimeout(250);
-    await q.check('input[name="svc"][value="ls-solo"]');
+    await pick(q, "ls-solo");
     await q.fill("#m-name", "박손님");
     await q.fill("#m-tel", "010-7777-8888");
     await q.check("#m-agree");

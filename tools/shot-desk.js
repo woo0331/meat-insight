@@ -252,11 +252,23 @@ const AD_BILLS = [
   { id:"ab-3", ad_id:"ad-1", kind:"refund", amount:100000,
     on_day:"2026-11-06", memo:"노출 지연분" }
 ];
+/* ⚠️ 0066 의 골프장 자리 (js/admincourse.js) — ⚠️⚠️ 가짜 값도 DB 가 받는
+   값이어야 합니다 (kind 는 golf · range, state 는 open · closed · hidden).
+   ⚠️ 줄이 없으면 그 상자가 **빈 채로** 찍혀 아무도 못 봅니다 — 0051 의
+   사진 상자가 흉내 자료가 없어 한 번도 안 그려진 그 자리입니다. */
+const COURSES_ADM = [
+  { id:"c-1", slug:"namseoul-cc", kind:"golf", name:"검사용 남서울 컨트리클럽",
+    region:"gyeonggi", gu:"성남시", state:"open", source_id:"mcst-golf" },
+  { id:"c-2", slug:"c-8f2a71", kind:"range", name:"검사용 강남 골프연습장",
+    region:"seoul", gu:"강남구", state:"open", source_id:"seoul-range" },
+  { id:"c-3", slug:"jeju-closed", kind:"golf", name:"검사용 닫힌 골프장",
+    region:"jeju", gu:"제주시", state:"closed", source_id:"mcst-golf" }
+];
 const T_ADMIN = {
   request:[Object.assign({}, REQ, { state:"check" })], provider:PVS,
   provider_apply:APS, request_item:ITEMS, assignment:[],
   v_provider_staff:STAFF_ADM, provider_contact:CONTACT,
-  inquiry:INQ, report:REPS, audit_log:LOG,
+  inquiry:INQ, report:REPS, audit_log:LOG, v_course_public:COURSES_ADM,
   review:RV, notice:[], cq:CQM, ca:CAM, jobpost:JOBMINE, joinroom:ROOMS,
   v_ad_board:AD_BOARD, ad_bill:AD_BILLS, fee_policy:[], membership_plan:[],
   provider_membership:[]

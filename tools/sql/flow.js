@@ -659,6 +659,121 @@ module.exports = function(T){
 
 
   /* ════════════════════════════════════════════════════════════════
+     ══ 시나리오 J — 예약중 (0069): 예약 → 문의 → 되돌리기 → 사진 차례 → 찜
+     ⚠️⚠️⚠️ **상태 하나를 더하면 문 넷과 보기 둘이 같이 막힙니다.**
+     0056 의 `edit_listing` · `ask_listing` · `close_listing` 과 0068 의
+     사진 문 둘, 그리고 공개 보기 둘이 전부 `state = 'open'` 을
+     요구했습니다 — 토막으로 재면 "예약중으로 바뀐다" 만 보고 통과하고,
+     **그 뒤로 아무것도 못 한다**는 것은 한 줄로 눌러 봐야 드러납니다.
+     ⚠️ 앞 단계의 결과가 다음 단계의 입력입니다 (매물 id → 예약중 →
+     문의 id → 되돌리기 → 사진 id 셋 → 차례 → 찜).
+     ════════════════════════════════════════════════════════════════ */
+  console.log("\n══ 시나리오 J — 예약중: 예약 → 문의 → 되돌리기 → 사진 차례 → 찜");
+  const JS2 = psql("insert into auth.users (email) values ('fl-jsel@x.test') returning id");
+  const JB2 = psql("insert into auth.users (email) values ('fl-jbuy@x.test') returning id");
+  psql("insert into account (id, role, name) values " +
+       "('" + JS2 + "','customer','예약 파는 분')," +
+       "('" + JB2 + "','customer','예약 사는 분') " +
+       "on conflict (id) do update set role = excluded.role, name = excluded.name");
+
+  const JL = psql(as(JS2) + "select open_listing('" + j({
+    sub:"us-putter", region:"busan", title:"퍼터 팝니다 (흐름 검사)",
+    body:"흐름 검사로 올린 매물입니다", price:120000, cond:"like",
+    brand:"오디세이", model:"화이트핫 OG", ship:true,
+    contact:"010-0000-0069", agree_at:NOW() }) + "'::jsonb)");
+  ok("J-1 모델명과 함께 매물을 올린다", /^[0-9a-f-]{36}$/.test(JL), JL);
+  ok("  ⚠️ 공개 보기가 **모델명**을 낸다",
+     psql(anon + "select coalesce(model,'(없음)') from v_listing_open " +
+          "where id='" + JL + "'") === "화이트핫 OG");
+  /* ⚠️⚠️⚠️ **마스킹의 별 개수를 글자로 박지 않습니다.** 보기는
+     `left(이름,1) || repeat('*', 길이-1)` 이라 **이름이 길면 별도
+     늘어납니다** — 처음에 `예**` 로 박아 두었는데 이 씨앗의 성함은
+     '예약 파는 분'(여섯 글자)이라 별이 다섯입니다. 0052 에서 `김**` 를
+     박아 밟은 자리를 그대로 또 밟을 참이었습니다.
+     ⚠️ 그래서 **뜻을 셋으로 갈라** 잽니다 — ① 첫 글자만 남는가
+     ② 나머지가 전부 별인가 ③ **본이름이 한 글자도 안 나오는가**. */
+  const JSEL = psql(anon + "select coalesce(seller,'(없음)') from v_listing_open " +
+                    "where id='" + JL + "'");
+  ok("  ⚠️ 가린 성함 ① **첫 글자만** 남는다", JSEL.slice(0, 1) === "예", JSEL);
+  ok("  ⚠️ 가린 성함 ② 나머지가 **전부 별**이다",
+     JSEL.length > 1 && JSEL.slice(1).replace(/\*/g, "") === "", JSEL);
+  ok("  ⚠️⚠️ 가린 성함 ③ **본이름이 한 글자도 안 나온다**",
+     JSEL.indexOf("약") < 0 && JSEL.indexOf("파는") < 0, JSEL);
+
+  ok("J-2 파는 분이 **예약중**으로 둔다",
+     psql(as(JS2) + "select close_listing('" +
+       j({ id:JL, state:"reserved" }) + "'::jsonb)") === "reserved");
+  /* ⚠️⚠️⚠️ **목록에 그대로 남아야** 합니다 — 빠지면 "팔렸다" 와 구분이
+     없어지고 손님은 사라진 까닭을 알 수 없습니다 */
+  ok("  ⚠️⚠️ 예약중도 **공개 목록에 남는다** (팔린 것과 다릅니다)",
+     psql(anon + "select state from v_listing_open where id='" + JL + "'") === "reserved");
+
+  /* ⚠️⚠️ **예약중에도 문의를 받습니다** — 앞의 거래가 깨질 수 있습니다 */
+  const JA = psql(as(JB2) + "select ask_listing('" + j({
+    listing_id:JL, msg:"앞 거래가 어그러지면 연락 주세요",
+    contact:"010-0000-0070", agree_at:NOW() }) + "'::jsonb)");
+  ok("J-3 예약중에도 **문의가 들어간다**", /^[0-9a-f-]{36}$/.test(JA), JA);
+  /* ⚠️ 예약중에도 고칠 수 있어야 합니다 */
+  ok("  예약중에도 **고칠 수 있다**",
+     psql(as(JS2) + "select edit_listing('" +
+       j({ id:JL, price:"99000" }) + "'::jsonb)") === "edited");
+
+  /* ⚠️⚠️⚠️ **되돌리는 길이 있어야** 합니다 — 없으면 잘못 누른 분이
+     매물을 다시 올려야 하고 **받아 둔 문의가 통째로 날아갑니다** */
+  ok("J-4 **예약을 풀 수 있다** (막다른 길로 두지 않습니다)",
+     psql(as(JS2) + "select close_listing('" +
+       j({ id:JL, state:"open" }) + "'::jsonb)") === "open");
+  ok("  풀고 나도 **문의가 그대로 있다** (다시 올리지 않아도 됩니다)",
+     psql(as(JS2) + "select count(*)::text from listingask " +
+          "where listing_id='" + JL + "'") === "1");
+
+  /* ── 사진 차례 · 대표 ───────────────────────────────────────── */
+  const JP1 = psql(as(JS2) + "select claim_listing_photo('" +
+    j({ listing:JL, mime:"image/png", bytes:"1000" }) + "'::jsonb)->>'id'");
+  const JP2 = psql(as(JS2) + "select claim_listing_photo('" +
+    j({ listing:JL, mime:"image/png", bytes:"1000" }) + "'::jsonb)->>'id'");
+  ok("J-5 사진 두 장을 붙인다",
+     /^[0-9a-f-]{36}$/.test(JP1) && /^[0-9a-f-]{36}$/.test(JP2), JP1 + " / " + JP2);
+  const TH1 = psql(anon + "select thumb from v_listing_open where id='" + JL + "'");
+  ok("  대표가 **첫째**다",
+     TH1 === psql("select path from listingphoto where id='" + JP1 + "'"), TH1);
+  ok("J-6 차례를 바꾼다",
+     psql(as(JS2) + "select order_listing_photo('" +
+       j({ listing:JL, ids:[JP2, JP1] }) + "'::jsonb)") === "2");
+  /* ⚠️⚠️ **보기가 따라 바뀌어야** 합니다 — 안 바뀌면 파는 분이 정한
+     대표와 카드에 보이는 사진이 다릅니다 */
+  ok("  ⚠️⚠️ **대표가 따라 바뀐다** (보기가 ord 로 고릅니다)",
+     psql(anon + "select thumb from v_listing_open where id='" + JL + "'") ===
+     psql("select path from listingphoto where id='" + JP2 + "'"));
+  /* ⚠️ 공개 사진 보기도 그 차례를 내야 합니다 — 안 내면 상세 슬라이드가
+     올린 차례로 돌아 **대표와 첫 장이 다릅니다** */
+  ok("  ⚠️ 공개 사진 보기가 **그 차례로** 낸다 (상세 슬라이드가 씁니다)",
+     psql(anon + "select string_agg(id::text, ',' order by ord) " +
+          "from v_listing_photo_public where listing_id='" + JL + "'") ===
+     JP2 + "," + JP1);
+
+  /* ── 찜 ─────────────────────────────────────────────────────── */
+  ok("J-7 사는 분이 찜한다",
+     psql(as(JB2) + "select fav_listing('" + j({ id:JL, on:true }) + "'::jsonb)") === "t");
+  ok("  관심상품 보기에 **제 것이 보인다**",
+     psql(as(JB2) + "select count(*)::text from v_listing_fav where id='" + JL + "'") === "1");
+  /* ⚠️⚠️ **파는 분도 · 운영자도 못 읽습니다** — 누가 무엇에 찜했는지는
+     행동 기록입니다 (0059 의 조회 기록과 같은 결) */
+  ok("  ⚠️⚠️ **파는 분도 못 읽는다** (누가 찜했는지는 행동 기록입니다)",
+     psql(as(JS2) + "select count(*)::text from listingfav " +
+          "where listing_id='" + JL + "'") === "0");
+  ok("  ⚠️⚠️ **운영자도 못 읽는다**",
+     psql(as(ADM) + "select count(*)::text from listingfav " +
+          "where listing_id='" + JL + "'") === "0");
+  /* ⚠️⚠️ **팔려도 관심상품에 남습니다** — `v_listing_open` 을 썼으면
+     팔리는 순간 조용히 사라졌습니다 */
+  psql(as(JS2) + "select close_listing('" + j({ id:JL, state:"done" }) + "'::jsonb)");
+  ok("J-8 ⚠️⚠️ **팔려도 관심상품에 남고 상태를 낸다**",
+     psql(as(JB2) + "select state from v_listing_fav where id='" + JL + "'") === "done");
+  ok("  ⚠️ 그런데 **공개 목록에서는 빠진다** (더 살 수 없습니다)",
+     psql(anon + "select count(*)::text from v_listing_open where id='" + JL + "'") === "0");
+
+  /* ════════════════════════════════════════════════════════════════
      ══ 시나리오 I — 구합니다 (0061): 올리기 → 답 → 받아들이기 → 연락처
      ⚠️⚠️⚠️ **업체가 0곳이어도 되는 다섯째**입니다. 토막으로 재면
      앞 단계의 결과가 다음 단계의 입력인 자리가 영원히 안 드러납니다.

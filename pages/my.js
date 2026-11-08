@@ -63,6 +63,15 @@ exports.build = function(){
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="lsmine" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️ 관심상품 — 찜해 두신 중고 매물 (0069 · js/myfav.js).
+     ⚠️⚠️⚠️ **누가 무엇에 찜했는지는 제 것만 보입니다** — 파는 분에게도 ·
+     운영자에게도 안 냅니다(행동 기록입니다 · 0059 의 조회 기록과 같은
+     결). 그래서 보기도 `v_listing_fav` 하나이고 `auth.uid()` 로 좁힙니다.
+     ⚠️ **찜 수를 어디에도 안 적습니다** — 세어 낼 수야 있지만 "인기" 로
+     읽히고 우리가 검증할 길이 없습니다 (절대 규칙 1 의 결). */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="favbox" class="none" hidden></div></div></section>';
+
   /* ⚠️⚠️ 내 구합니다 글과 받은 답 (0061 · js/mywanted.js).
      ⚠️⚠️⚠️ 여기도 **연락처를 주고받는 유일한 자리**입니다 (제17조
      제2항) — 목록 화면(분류 다섯)에는 연락처 칸이 **아예 없습니다**.
@@ -110,6 +119,7 @@ exports.build = function(){
          /* ⚠️ `lstphoto.js` 는 매물 사진 상자 **한 곳**입니다 (0068) —
             `/cat/used` 도 같은 파일을 싣습니다. */
          "/js/myjob.js", "/js/lstphoto.js", "/js/mylisting.js",
+         "/js/myfav.js",
          "/js/myinq.js", "/js/mynick.js",
          /* ⚠️ 0061 — catalog.js 가 분류 · 하위 이름을, deal.js 가 상태
             말과 예산 셈을, regions.js 가 지역 이름을 줍니다 (빌드가

@@ -201,17 +201,22 @@ module.exports = async function handler(req, res){
         console.warn("[upload] PROVIDER_BUCKET 이 없어 매물 사진을 못 냅니다");
         return res.status(200).json({ ok:true, photos:[] });
       }
+      /* ⚠️⚠️⚠️ **차례(`ord`)대로 냅니다** (0069) — 올린 차례로 내면
+         파는 분이 정한 **대표 사진과 첫 장이 달라집니다**(카드는
+         `v_listing_open` 의 `thumb` 를 쓰는데 그것은 `ord` 로 고릅니다).
+         ⚠️ 차례가 같으면 올린 차례로 갈립니다 — 보기 · 문 · 여기 셋이
+         `ord, created_at, id` **같은 차례**를 씁니다. */
       const ql = await dbSelect("v_listing_photo_public",
-        "?select=" + encodeURIComponent("id,path,caption") +
+        "?select=" + encodeURIComponent("id,path,caption,ord") +
         "&listing_id=eq." + encodeURIComponent(lstq) +
-        "&order=created_at.asc&limit=8");
+        "&order=ord.asc,created_at.asc,id.asc&limit=10");
       if(!ql.ok){
         if(ql.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
         console.warn("[upload] listing photos — " + dbWhy(ql.why));
         return res.status(502).json({ error:"지금 불러오지 못했습니다" });
       }
       return res.status(200).json({ ok:true, photos: ql.rows.map(function(f){
-        return { id:f.id, caption:f.caption || "",
+        return { id:f.id, caption:f.caption || "", ord:f.ord,
                  url: origin() + "/storage/v1/object/public/" + bkl + "/" + f.path };
       }) });
     }

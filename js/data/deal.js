@@ -198,6 +198,29 @@ window.amWhen = function(iso){
          k.getUTCDate() + "일 (" + wd + ") " + ap + " " + h12 + "시" +
          (k.getUTCMinutes() ? " " + k.getUTCMinutes() + "분" : "");
 };
+/* 올린 지 얼마나 되었나 — ⚠️ 시안이 카드마다 「3시간 전」을 적습니다 (0069)
+   ⚠️⚠️ **`amWhen()` 과 갈라 둡니다** — 저쪽은 "언제인가"(약속 시각 · 동의
+   시각처럼 **정확히** 알아야 하는 자리), 이쪽은 "얼마나 되었나"(얼마나
+   새 매물인가). 한 함수로 두면 상담 시각이 「3시간 전」으로 찍힙니다.
+   ⚠️⚠️ **오래된 것은 날짜로 돌아갑니다** — 「84일 전」은 아무도 못 읽습니다.
+   ⚠️ 그 날짜도 **한국 시각**으로 읽습니다(`amWhen` 과 같은 자리 — 그냥
+   찍으면 아홉 시간 어긋나고 보는 사람은 그것을 모릅니다).
+   ⚠️ 앞날이면 「방금 전」입니다 — 「-2시간 전」을 찍지 않습니다(기계 시계가
+   조금 앞서 있을 수 있고, 그것을 손님에게 보일 까닭이 없습니다). */
+window.amAgo = function(iso){
+  if(!iso) return "";
+  var d = new Date(iso);
+  if(isNaN(d.getTime())) return String(iso);
+  var s = Math.floor((Date.now() - d.getTime()) / 1000);
+  if(s < 60) return "방금 전";
+  if(s < 3600) return Math.floor(s / 60) + "분 전";
+  if(s < 86400) return Math.floor(s / 3600) + "시간 전";
+  if(s < 86400 * 7) return Math.floor(s / 86400) + "일 전";
+  var k = new Date(d.getTime() + 9 * 3600 * 1000);
+  return k.getUTCFullYear() + "." +
+         ("0" + (k.getUTCMonth() + 1)).slice(-2) + "." +
+         ("0" + k.getUTCDate()).slice(-2);
+};
 window.amQuoteSt  = function(k){ return amPick(window.AM_QUOTE_ST, k); };
 window.amAssignSt = function(k){ return amPick(window.AM_ASSIGN_ST, k); };
 window.amVat      = function(k){ return amPick(window.AM_VAT, k); };
@@ -511,10 +534,16 @@ window.amAdStateName = function(k){
    잘못 들어간 값이 눈에 보입니다).
    ════════════════════════════════════════════════════════════════════ */
 window.AM_LST_ST = [
-  { key:"open",   name:"팔고 있습니다",   tone:"grn"  },
-  { key:"done",   name:"팔렸습니다",      tone:"ink"  },
-  { key:"closed", name:"내렸습니다",      tone:"ink"  },
-  { key:"hidden", name:"가려졌습니다",    tone:"bad"  }
+  { key:"open",     name:"팔고 있습니다",   tone:"grn"  },
+  /* ⚠️⚠️ **예약중은 파는 분이 고릅니다** (0069) — 운영자가 아닙니다.
+     "팔렸다" 가 아니므로 **목록에 그대로 남고 문의도 받습니다**(앞의
+     거래가 깨질 수 있습니다). 되돌리는 길도 `close_listing` 하나입니다 —
+     안 내면 잘못 누른 분이 매물을 다시 올려야 하고 받아 둔 문의가
+     통째로 날아갑니다 (막다른 길 · 절대 규칙 2). */
+  { key:"reserved", name:"예약중",         tone:"warn" },
+  { key:"done",     name:"팔렸습니다",      tone:"ink"  },
+  { key:"closed",   name:"내렸습니다",      tone:"ink"  },
+  { key:"hidden",   name:"가려졌습니다",    tone:"bad"  }
 ];
 window.AM_LSTASK_ST = [
   { key:"asked",    name:"기다리는 중",   mine:"기다리는 중",        tone:"warn" },
@@ -543,6 +572,48 @@ window.AM_LST_BRAND = [
   "혼마", "젝시오", "클리브랜드", "코브라", "오디세이", "스코티카메론",
   "브리지스톤", "PXG", "마루망", "야마하", "던롭", "나이키", "기타"
 ];
+
+/* ── 중고 묶음 탭 다섯 (0069 · 2026-11-08) ──────────────────────
+   ⚠️⚠️⚠️ **시안의 탭과 아래 거르개가 같은 것을 두 번 묻고 있었습니다.**
+   지시서가 준 그림에는 「전체 · 클럽 · 의류&신발 · 용품 · 기타」 탭이
+   있고 그 아래에 물건 종류 거르개가 또 있습니다 — 같은 값을 두 칸에서
+   고르게 두면 둘이 어긋나는 순간 손님은 **어느 쪽이 걸렸는지 알 수가
+   없습니다**. 그래서 탭은 **묶음**(여러 종류를 한 번에)이고 거르개는
+   **한 종류**입니다. 두 칸이 **같은 줄**(이 배열)을 읽습니다.
+   ⚠️⚠️ **키를 늘어놓는 자리는 여기 한 곳**입니다 — 화면이 "클럽이면
+   드라이버 · 우드 · …" 를 따로 적으면 종류가 느는 날 그 탭에서 새
+   종류가 **조용히 빠집니다**(눌러도 안 걸리는 칸입니다 · 절대 규칙 5).
+   ⚠️ **전체는 키가 없습니다**(`subs: []`) — 빈 배열이 "거르지 않음"
+   입니다. 거기에 열셋을 다 적어 두면 종류가 느는 날 새 종류가 전체에서
+   빠집니다.
+   ⚠️⚠️ **열셋이 빠짐없이 한 묶음에 들어가야 합니다** — 안 들어간 종류는
+   어느 탭에서도 안 보이고 에러도 안 납니다. `test-providers` 가
+   `amCatItems` 의 `pv:false` 하위를 세어 맞춰 봅니다(갯수를 박지
+   않습니다). */
+window.AM_LST_GROUP = [
+  { key:"all",   name:"전체",       subs:[] },
+  { key:"club",  name:"클럽",       subs:["us-driver","us-wood","us-utility",
+                                          "us-iron","us-wedge","us-putter",
+                                          "us-set","us-shaft"] },
+  { key:"wear",  name:"의류 · 신발", subs:["us-wear","us-shoes"] },
+  { key:"gear",  name:"용품",       subs:["us-bag","us-range"] },
+  { key:"etc",   name:"기타",       subs:["us-gear"] }
+];
+/* 어느 묶음에 드는 종류인가 — 거르개에서 종류를 고르면 탭도 같이 켜집니다
+   ⚠️ 못 찾으면 **null** 입니다(0 도 "all" 도 아닙니다 — 모르는 종류를
+   「전체」로 읽으면 탭이 엉뚱한 곳에 켜집니다). */
+window.amLstGroupOf = function(sub){
+  var L = window.AM_LST_GROUP || [];
+  for(var i = 0; i < L.length; i++){
+    if(L[i].subs && L[i].subs.indexOf(sub) >= 0) return L[i];
+  }
+  return null;
+};
+window.amLstGroup = function(k){
+  var L = window.AM_LST_GROUP || [];
+  for(var i = 0; i < L.length; i++) if(L[i].key === k) return L[i];
+  return null;
+};
 
 /* ── 중고 목록 정렬 (0068) ──────────────────────────────────────
    ⚠️⚠️ **보내는 글자를 여기 한 곳**에 둡니다 — 화면이 `price.asc` 를
@@ -679,6 +750,20 @@ window.amLstAskSt = function(k){
 window.amLstAskMine = function(k){
   var x = amLstPick(window.AM_LSTASK_ST, k);
   return x ? x.mine : String(k || "");
+};
+/* 매물 상태의 **말만** — ⚠️⚠️ 0069 에서 제가 이 이름을 **지어 쓰고
+   있었습니다**(`window.amLstStName`). `window.` 를 붙였으니
+   `check-globals` 는 통과하고, 부르면 그 자리에서 **`undefined is not a
+   function`** 으로 터집니다 — 예약중 매물 한 줄 때문에 목록이 통째로
+   안 그려졌습니다(`rows.map(card)` 가 던지면 `paint` 가 끝나지 않습니다).
+   ⚠️ `amLstCondName` 과 **같은 꼴**로 둡니다 — 네 자리가 각자 `.name` 을
+   꺼내면 상태 말을 바꾸는 날 한 곳만 고치게 됩니다.
+   ⚠️ **밖에 거는 이름은 먼저 세어 보세요** (`grep -rn "window.<이름>" js/`) —
+   `window.amAdPlace` 가 같은 이름에 덮여 액자가 조용히 안 그려진 자리와
+   같은 결이고, 이번에는 **아예 없는 이름**이었습니다. */
+window.amLstStName = function(k){
+  var x = amLstPick(window.AM_LST_ST, k);
+  return x ? x.name : String(k || "");
 };
 window.amLstCondName = function(k){
   var x = amLstPick(window.AM_LST_COND, k);

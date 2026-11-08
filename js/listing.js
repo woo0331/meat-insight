@@ -66,7 +66,15 @@
      ⚠️ `o` 는 정렬 열쇠입니다 — 보내는 글자(`price.asc`)는 `AM_LST_SORT`
      한 곳이고 주소에는 **열쇠**만 적습니다(칸 이름이 주소에 박히지 않게).
      ⚠️ `q` 는 제목 찾기입니다 — 거르는 것은 **서버**(`title=ilike.*…*`)입니다. */
-  var F = { sub:"", rg:"", ship:false, p:"", br:"", o:"", q:"", cd:"" };
+  /* ⚠️ `g` 는 묶음 탭 · `v` 는 상세로 볼 매물 id 입니다 (0069).
+     ⚠️⚠️ **`q` 는 찾는 말이고 `v` 는 매물 하나**입니다 — 한 열쇠로 두면
+     "타이틀리스트" 를 찾는 것과 그 매물 하나를 보는 것이 섞입니다. */
+  var F = { sub:"", rg:"", ship:false, p:"", br:"", o:"", q:"", cd:"", g:"", v:"" };
+  /* 지금 보고 있는 쪽 몇째 — ⚠️ 0 에서 셉니다 */
+  var PG = 0;
+  /* 내가 찜한 매물 — ⚠️⚠️ **제 것만** 받습니다(`v_listing_fav`). 남의
+     찜은 어디서도 못 읽습니다(행동 기록입니다 · 0069). */
+  var FAV = {};
   /* ⚠️ 공개 버킷 주소를 지으려면 설정이 필요합니다 — 없으면 사진 없이
      그립니다(아이콘 타일). 주소를 짓는 규칙은 `amPubUrl()` 한 곳입니다. */
   var CONF = null;
@@ -78,7 +86,11 @@
      "N건" 이 아니라 **"N건 이상"** 이라고 적습니다 (세어 본 값이 아니라
      받아 온 값입니다 · 절대 규칙 1). 두 곳에 적으면 한쪽만 고치는 날
      "50건" 이라고 말해 놓고 실제로는 더 있는 꼴이 됩니다. */
-  var LIMIT = 50;
+  var LIMIT = 24;
+  /* ⚠️⚠️ **쪽을 나눕니다** (0069 · 시안) — 받아 온 줄이 한도에 닿으면
+     다음 쪽이 있다는 뜻입니다. ⚠️ 전체 쪽 수는 **모릅니다** — 그래서
+     "3 / 12" 처럼 적지 않고 「다음」 단추만 냅니다(모르는 수를 적으면
+     그건 지어낸 숫자입니다 · 절대 규칙 1). */
 
   function readUrl(){
     try{
@@ -102,6 +114,19 @@
       /* ⚠️ 모르는 상태 키는 버립니다 — 값은 `AM_LST_COND` 한 곳입니다 */
       var cv = (u.get("cd") || "").trim();
       F.cd = (window.amLstCond && window.amLstCond(cv)) ? cv : "";
+      /* ⚠️ 모르는 묶음 키는 **버립니다** — 주소를 손으로 고쳐 오시면
+         아무것도 안 걸리는 화면이 되는데 "매물이 없다" 로 읽힙니다. */
+      var gv = (u.get("g") || "").trim();
+      F.g = (gv && gv !== "all" && window.amLstGroup && window.amLstGroup(gv)) ? gv : "";
+      /* ⚠️⚠️ **상세로 볼 매물 id** — 꼴만 봅니다(36자). 틀린 꼴을 그대로
+         서버에 보내면 PostgREST 가 400 을 내고 화면은 "못 읽었습니다" 가
+         됩니다 — 꼴이 아니면 **목록으로** 갑니다. */
+      var vv = (u.get("v") || "").trim();
+      F.v = /^[0-9a-fA-F-]{36}$/.test(vv) ? vv : "";
+      /* ⚠️ 쪽은 주소에 **1 부터** 적고 안에서는 0 부터 셉니다 — 주소에
+         "0쪽" 이 보이면 손님이 읽을 수 없습니다. 틀린 값은 첫 쪽입니다. */
+      var gp = parseInt(u.get("pg") || "1", 10);
+      PG = (gp > 1 && gp < 500) ? gp - 1 : 0;
     }catch(e){}
   }
   function writeUrl(){
@@ -115,6 +140,11 @@
       if(F.o)    qs.push("o="  + encodeURIComponent(F.o));
       if(F.q)    qs.push("q="  + encodeURIComponent(F.q));
       if(F.cd)   qs.push("cd=" + encodeURIComponent(F.cd));
+      if(F.g)    qs.push("g="  + encodeURIComponent(F.g));
+      if(F.v)    qs.push("v="  + encodeURIComponent(F.v));
+      /* ⚠️ 쪽은 주소에 **남깁니다** — 셋째 쪽을 보시다 새로 고치면 첫
+         쪽으로 돌아가고, 그러면 복사해 보낸 주소도 다른 화면입니다. */
+      if(PG > 0)  qs.push("pg=" + String(PG + 1));
       history.replaceState(null, "",
         location.pathname + (qs.length ? "?" + qs.join("&") : ""));
     }catch(e){}
@@ -240,36 +270,116 @@
      깔면 그 매물인 것처럼 보입니다(절대 규칙 1 · 업체 카드와 같은 규칙).
      ⚠️ 버킷이 꺼져 있으면 `amPubUrl()` 이 빈 글자를 돌려주므로 역시
      아이콘 타일입니다 — 주소를 지어내지 않습니다. */
+  /* ── 묶음 탭 — ⚠️ 시안의 「전체 · 클럽 · 의류&신발 · 용품 · 기타」 ───
+     ⚠️⚠️⚠️ **탭과 아래 거르개가 같은 것을 두 번 묻지 않게** 했습니다 —
+     탭은 **묶음**(여러 종류를 한 번에)이고 거르개는 **한 종류**입니다.
+     묶는 규칙은 `AM_LST_GROUP` **한 곳**이고 둘이 같은 줄을 읽습니다
+     (화면이 "클럽이면 드라이버 · 우드 · …" 를 따로 적으면 종류가 느는
+     날 그 탭에서 새 종류가 조용히 빠집니다 · 절대 규칙 5).
+     ⚠️⚠️ **단추가 아니라 링크**입니다 — 자바스크립트가 꺼진 분 · 봇에게
+     단추는 눌러도 아무 일이 안 나는 칸입니다. 눌림은 가로채서 주소만
+     바꿉니다 (업체찾기 거르개에서 세운 규칙). */
+  function tabs(){
+    var G = window.AM_LST_GROUP || [];
+    if(!G.length) return "";
+    /* 지금 켜진 탭 — 종류가 걸려 있으면 그 종류가 든 묶음, 묶음만
+       걸려 있으면 그 묶음, 아무것도 없으면 「전체」입니다.
+       ⚠️ `amLstGroupOf()` 가 못 찾으면 **null** 이라 아무 탭도 안
+       켜집니다 — 모르는 종류를 「전체」로 읽으면 탭이 엉뚱한 곳에 켜집니다. */
+    var on = F.sub
+      ? ((window.amLstGroupOf && window.amLstGroupOf(F.sub)) || {}).key
+      : (F.g || "all");
+    return '<nav class="lstab" aria-label="물건 묶음">' + G.map(function(x){
+      return '<a class="lstab-i' + (on === x.key ? " on" : "") +
+        '" href="' + esc(tabUrl(x.key)) + '" data-g="' + esc(x.key) + '"' +
+        (on === x.key ? ' aria-current="true"' : "") + '>' +
+        esc(x.name) + '</a>';
+    }).join("") + '</nav>';
+  }
+  function tabUrl(g){
+    var qs = [];
+    if(g && g !== "all") qs.push("g=" + encodeURIComponent(g));
+    if(F.rg)   qs.push("rg=" + encodeURIComponent(F.rg));
+    if(F.ship) qs.push("sh=1");
+    if(F.q)    qs.push("q="  + encodeURIComponent(F.q));
+    return "/cat/used" + (qs.length ? "?" + qs.join("&") : "");
+  }
+
+  /* ── 카드 — ⚠️ 시안대로 **1:1 정사각 사진** 격자입니다 (0069) ───────
+     ⚠️⚠️⚠️ **카드 전체가 상세 화면으로 가는 링크**입니다. 앞 판은 카드
+     안에 「사겠다고 문의하기」 단추만 있고 **상세 화면이 없어서**, 사진
+     한 장 · 설명 몇 줄을 목록 안에서만 볼 수 있었습니다 — 중고채를
+     사는 분이 각도마다 찍은 사진을 보고 고르는데 그 자리가 없었습니다.
+     문의 단추는 **상세 화면으로 옮겼습니다**(링크 안에 단추를 넣으면
+     어느 쪽이 눌리는지 브라우저마다 다릅니다).
+     ⚠️⚠️ **찜 단추는 링크 바깥**입니다 — 안에 넣으면 같은 자리입니다.
+     ⚠️⚠️ **사진이 0장이면 아이콘 타일**입니다 — 남의 사진이나 분류
+     사진을 깔면 그 매물인 것처럼 보입니다 (절대 규칙 1).
+     ⚠️ 버킷이 꺼져 있으면 `amPubUrl()` 이 **빈 글자**를 돌려주므로 역시
+     아이콘 타일입니다 (주소를 지어내지 않습니다). */
   function card(r){
     var u = window.amPubUrl ? window.amPubUrl(CONF, r.thumb) : "";
     var n = Number(r.photo_n) || 0;
     var ph = u
       ? '<img class="lsc-im" src="' + esc(u) + '" alt="' + esc(r.title) +
         '" loading="lazy" decoding="async">' +
-        (n > 1 ? '<span class="lsc-n">사진 ' + esc(String(n)) + '</span>' : "")
+        (n > 1 ? '<span class="lsc-n">' + esc(String(n)) + '장</span>' : "")
       : '<span class="lsc-no">' + window.icon("cart", 26) + '사진 없음</span>';
+    /* ⚠️⚠️ **팔린 · 예약중은 사진 위 덮개**입니다 (시안) — 글자로만
+       적으면 격자에서 안 보입니다. ⚠️ 말은 `AM_LST_ST` 한 곳이고,
+       `open` 이면 덮개를 **안 냅니다**(「판매중」 딱지를 모든 카드에
+       붙이면 그것만 보입니다). */
+    var st = r.state && r.state !== "open"
+      ? '<span class="lsc-st lsc-st-' + esc(r.state) + '">' +
+        esc(window.amLstStName(r.state)) + '</span>' : "";
     return '<li class="lsc">' +
-      '<div class="lsc-ph">' + ph +
-        '<span class="lsc-cd">' + esc(window.amLstCondName(r.cond)) + '</span>' +
-      '</div>' +
-      '<div class="lsc-i">' +
-        /* ⚠️ 브랜드가 비면 **그 자리를 빼고** 종류만 적습니다 (절대 규칙 2) */
-        '<p class="lsc-br">' + esc(r.brand ? (r.brand + " · " + subName(r.sub))
-                                           : subName(r.sub)) + '</p>' +
-        '<h3 class="lsc-t">' + esc(r.title) + '</h3>' +
-        /* ⚠️⚠️ **0 은 "무료" 입니다** — `||` 를 쓰면 0원이 사라집니다.
-           세는 자리는 `amLstPrice()` 한 곳입니다. */
-        '<p class="lsc-p">' + esc(window.amLstPrice(r.price)) + '</p>' +
-        /* ⚠️ "택배" 한 글자로 줄이지 않습니다 — 그러면 택배가 된다는
-           뜻인지 택배로만 보낸다는 뜻인지 알 수 없습니다 */
-        '<p class="lsc-m">' + esc(rgName(r.region)) +
-          (r.ship ? ' · 택배 가능' : ' · 직거래만') +
-          (Number(r.ask_n) > 0 ? ' · 문의 ' + esc(String(r.ask_n)) : "") + '</p>' +
-        '<button type="button" class="btn btn-sm btn-pt lsc-go" data-id="' +
-          esc(r.id) + '">사겠다고 문의하기</button>' +
-      '</div>' +
+      '<a class="lsc-a" href="' + esc(oneUrl(r.id)) + '" data-one="' + esc(r.id) + '">' +
+        '<span class="lsc-ph">' + ph + st +
+          '<span class="lsc-cd">' + esc(window.amLstCondName(r.cond)) + '</span>' +
+        '</span>' +
+        '<span class="lsc-i">' +
+          '<span class="lsc-t">' + esc(r.title) + '</span>' +
+          /* ⚠️⚠️ **0 은 "무료" 입니다** — `||` 를 쓰면 0원이 사라집니다.
+             세는 자리는 `amLstPrice()` 한 곳입니다. */
+          '<span class="lsc-p">' + esc(window.amLstPrice(r.price)) + '</span>' +
+          /* ⚠️ 브랜드 · 모델명이 비면 **그 자리를 빼고** 종류만 적습니다
+             (절대 규칙 2 — "(미기재)" 를 찍지 않습니다) */
+          '<span class="lsc-br">' + esc(brLine(r)) + '</span>' +
+          /* ⚠️ 시안이 카드마다 지역과 올린 지 얼마나 되었나를 적습니다 */
+          '<span class="lsc-m">' + esc(rgName(r.region)) + ' · ' +
+            esc(window.amAgo ? window.amAgo(r.created_at) : "") +
+            (r.ship ? ' · 택배 가능' : "") + '</span>' +
+        '</span>' +
+      '</a>' + favBtn(r.id) +
     '</li>';
   }
+  /* 브랜드 · 모델 · 종류 한 줄 — ⚠️ 비는 것은 **줄에서 빠집니다** */
+  function brLine(r){
+    var b = [];
+    if(r.brand) b.push(r.brand);
+    if(r.model) b.push(r.model);
+    b.push(subName(r.sub));
+    return b.join(" · ");
+  }
+  /* ⚠️⚠️ **찜은 로그인하신 분에게만** 냅니다 — 그리면 눌러서 로그인
+     화면으로 갔다가 돌아와도 **찜된 것이 없는** 꼴이 됩니다 (절대 규칙 5).
+     ⚠️ 찜 **수는 안 적습니다** — 세어 낼 수야 있지만 "인기" 로 읽히고
+     우리가 검증할 길이 없습니다 (0069 머리말의 까닭 셋). */
+  function favBtn(id){
+    if(!SIGNED) return "";
+    var on = FAV[id] ? " on" : "";
+    return '<button type="button" class="lsc-fav' + on + '" data-fav="' + esc(id) +
+      '" aria-pressed="' + (FAV[id] ? "true" : "false") +
+      '" title="관심상품"><span class="sr-only">관심상품에 ' +
+      (FAV[id] ? "담김" : "담기") + '</span>' + window.icon("heart", 18) + '</button>';
+  }
+  /* 찜 단추의 글자 — ⚠️ **한 곳**입니다 (상세의 단추와 다시 그릴 때가
+     같은 줄을 읽습니다 — 두 벌로 적으면 누르는 순간 글이 달라집니다) */
+  function favLabel(on){
+    return window.icon("heart", 16) +
+      esc(on ? " 관심상품에 담김" : " 관심상품에 담기");
+  }
+  function oneUrl(id){ return "/cat/used?v=" + encodeURIComponent(String(id)); }
 
   /* ── 보내기 — ⚠️ 거절한 말을 그대로 보여 줍니다 ─────────────────── */
   function call(a, name, args){
@@ -292,14 +402,29 @@
     /* ⚠️⚠️ `thumb` 은 **목록 카드의 첫 사진**입니다(0068) — 이것이 없으면
        카드마다 사진을 따로 물어보게 되어 스무 장이면 호출이 스무 번 늘고,
        그동안 카드가 비어 있어 "사진 없는 장터" 로 보입니다. */
-    var qs = ["select=id,sub,region,ship,title,body,price,cond,ask_n," +
-              "brand,photo_n,thumb", "limit=" + LIMIT];
+    var qs = ["select=id,sub,region,ship,title,price,cond,ask_n," +
+              "brand,model,state,created_at,photo_n,thumb", "limit=" + LIMIT];
+    /* ⚠️⚠️ **본문(`body`)을 목록에서 안 받습니다** (0069) — 카드가 쓰지
+       않는데 받으면 스물네 줄마다 2,000자씩 따라옵니다. 본문은 **상세
+       화면**이 한 줄만 받습니다. */
+    /* ⚠️ 쪽 — PostgREST 는 `offset` 으로 넘깁니다 */
+    if(PG > 0) qs.push("offset=" + String(PG * LIMIT));
     /* ⚠️⚠️ **보내는 글자는 `AM_LST_SORT` 한 곳**입니다 — 화면이
        `price.asc` 를 따로 적으면 칸 이름이 바뀌는 날 **조용히** 최신순으로
        보입니다(정렬이 안 되는 것은 에러가 안 납니다). */
     var so = window.amLstSort ? window.amLstSort(F.o) : null;
     qs.push("order=" + encodeURIComponent(so ? so.q : "created_at.desc"));
     if(F.sub)  qs.push("sub=eq."    + encodeURIComponent(F.sub));
+    /* ⚠️⚠️⚠️ **묶음 탭은 종류 여럿을 한 번에 겁니다** — 종류가 걸려
+       있으면 그것이 이깁니다(더 좁은 조건입니다). 키 묶음은
+       `AM_LST_GROUP` 한 곳에서 읽습니다 — 화면이 "클럽이면 드라이버 ·
+       우드 · …" 를 따로 적으면 종류가 느는 날 그 탭에서 새 종류가
+       **조용히 빠집니다**(절대 규칙 5). */
+    else if(F.g){
+      var gr = window.amLstGroup ? window.amLstGroup(F.g) : null;
+      var gk = (gr && gr.subs) || [];
+      if(gk.length) qs.push("sub=in.(" + gk.map(encodeURIComponent).join(",") + ")");
+    }
     /* ⚠️ 브랜드는 **글자 그대로** 견줍니다 (키가 따로 없습니다) */
     if(F.br)   qs.push("brand=eq."  + encodeURIComponent(F.br));
     if(F.cd)   qs.push("cond=eq."   + encodeURIComponent(F.cd));
@@ -335,6 +460,192 @@
 
   /* 지금 걸린 가격대 — ⚠️ 거르는 자리와 **같은 함수**를 읽습니다
      (두 곳에 적으면 적힌 말과 실제로 거르는 구간이 어긋납니다). */
+  /* ── 내가 찜한 것 ────────────────────────────────────────────────
+     ⚠️⚠️ **제 것만** 받습니다(`v_listing_fav`) — 남의 찜은 어디서도 못
+     읽습니다(행동 기록입니다 · 0069). 그래서 로그인 전에는 **아예 안
+     물어봅니다**(물어보면 permission denied 가 콘솔에 쌓입니다).
+     ⚠️ 못 읽으면 **빈 묶음**입니다 — 화면은 찜 단추를 꺼진 채로 냅니다
+     (켜진 것처럼 그리면 눌러도 안 꺼지는 칸이 됩니다). */
+  function loadFav(a){
+    if(!a.signedIn) return Promise.resolve({});
+    return fetch(a.conf.url + "/rest/v1/v_listing_fav?select=id&limit=200", {
+      headers: Object.assign({ apikey:a.conf.anonKey },
+                             window.amAuthHeaders ? window.amAuthHeaders() : {})
+    }).then(function(r){ return r.ok ? r.json() : []; })
+      .then(function(rows){
+        var m = {};
+        (rows || []).forEach(function(x){ m[x.id] = true; });
+        return m;
+      }).catch(function(){ return {}; });
+  }
+
+  /* ── 상세 화면 ──────────────────────────────────────────────────
+     ⚠️⚠️⚠️ **2026-11-08 까지 이 화면이 아예 없었습니다.** 카드를 눌러도
+     갈 자리가 없어서, 중고채를 사는 분이 각도마다 찍은 사진을 보고 고르는
+     그 일을 **목록 카드 안에서** 해야 했습니다 — 알아본 다섯 곳 가운데
+     상세 화면이 없는 곳은 하나도 없었습니다.
+     ⚠️⚠️ **보기를 새로 안 만들었습니다** — `v_listing_open` 에
+     `?id=eq.<uuid>` 로 한 줄만 받습니다(보기를 더하면 공개로 나가는 길이
+     둘이 되고, 한쪽만 고치는 날 한쪽만 샙니다).
+     ⚠️ 사진은 `v_listing_photo_public` 에서 **차례대로** 받습니다 —
+     그 보기가 `ord` 를 내므로 **대표와 첫 장이 같습니다**(0069). */
+  function loadOne(a, id){
+    var h = Object.assign({ apikey:a.conf.anonKey },
+                          window.amAuthHeaders ? window.amAuthHeaders() : {});
+    return Promise.all([
+      fetch(a.conf.url + "/rest/v1/v_listing_open?select=id,sub,region,ship," +
+            "title,body,price,cond,brand,model,state,seller,ask_n,photo_n" +
+            "&id=eq." + encodeURIComponent(id) + "&limit=1",
+            { headers:h }).then(function(r){ return r.ok ? r.json() : []; }),
+      fetch(a.conf.url + "/rest/v1/v_listing_photo_public?select=path,caption,ord" +
+            "&listing_id=eq." + encodeURIComponent(id) +
+            "&order=ord.asc&limit=10",
+            { headers:h }).then(function(r){ return r.ok ? r.json() : []; })
+    ]).then(function(x){
+      return { row: (x[0] || [])[0] || null, ph: x[1] || [] };
+    });
+  }
+
+  /* 상세 — 사진 묶음. ⚠️ 0장이면 **아이콘 타일**입니다 (남의 사진을
+     깔지 않습니다 · 절대 규칙 1). ⚠️ 한 장이면 작은 그림 줄을 안 냅니다. */
+  function oneShots(ph){
+    var us = (ph || []).map(function(f){
+      return window.amPubUrl ? window.amPubUrl(CONF, f.path) : "";
+    }).filter(Boolean);
+    if(!us.length){
+      return '<div class="lsd-ph lsd-ph-no">' +
+        window.icon("cart", 40) +
+        '<p>올리신 분이 사진을 아직 안 붙였습니다.</p></div>';
+    }
+    var big = '<div class="lsd-ph"><img id="lsd-big" src="' + esc(us[0]) +
+      '" alt="" decoding="async"></div>';
+    if(us.length < 2) return big;
+    /* ⚠️⚠️ **단추가 아니라 작은 그림 단추**입니다 — 누르면 큰 그림만
+       갈아 끼웁니다(주소는 안 바꿉니다. 사진은 한 매물의 한 부분입니다). */
+    return big + '<div class="lsd-th">' + us.map(function(u, i){
+      return '<button type="button" class="lsd-t' + (i ? "" : " on") +
+        '" data-shot="' + esc(u) + '"><img src="' + esc(u) +
+        '" alt="사진 ' + esc(String(i + 1)) + '" loading="lazy" decoding="async">' +
+        '</button>';
+    }).join("") + '</div>';
+  }
+
+  /* 상세 — 값 줄들. ⚠️⚠️ **비는 줄은 줄째 빠집니다** (절대 규칙 2 —
+     "(미기재)" 를 찍지 않습니다). */
+  function oneRows(r){
+    var out = [];
+    out.push(["물건 종류", subName(r.sub)]);
+    if(r.brand) out.push(["브랜드", r.brand]);
+    if(r.model) out.push(["모델명", r.model]);
+    out.push(["물건 상태", window.amLstCondName(r.cond)]);
+    out.push(["거래 지역", rgName(r.region) + (r.ship ? " · 택배도 됩니다" : " · 직거래만")]);
+    /* ⚠️ 판매자는 **보기가 가려서** 냅니다(`김**`) — 화면이 가리면
+       본이름이 이미 브라우저까지 온 것입니다(0052 에서 세운 규칙).
+       ⚠️ 못 받았으면 그 줄을 **안 냅니다**(「회원」 을 지어 적지 않습니다). */
+    if(r.seller) out.push(["판매자", r.seller]);
+    return '<dl class="lsd-dl">' + out.map(function(x){
+      return '<dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]) + '</dd>';
+    }).join("") + '</dl>';
+  }
+
+  /* ⚠️⚠️⚠️ **거래 주의사항을 상세 화면에 적습니다** — 골프올인원은
+     거래 당사자가 아닙니다(전자상거래법 제20조 제1항). 돈이 우리를
+     지나가지 않고 물건을 우리가 보지 않습니다. 푸터에도 있지만, **돈이
+     오가는 결정을 하는 그 자리**에서 한 번 더 말합니다.
+     ⚠️ **「안전거래」 · 「안전결제」 를 적지 않습니다** — 결제를 아예 받지
+     않습니다(제20조의3 · 절대 규칙 5). */
+  function oneWarn(){
+    return '<div class="lsd-warn">' +
+      '<h3>' + window.icon("shield", 18) + ' 거래하실 때</h3>' +
+      '<ul>' +
+        '<li>골프올인원은 <b>거래 당사자가 아닙니다.</b> 회원끼리 직접 ' +
+          '주고받으시는 거래이고, 저희가 대금을 받거나 물건을 확인하지 않습니다.</li>' +
+        '<li>만나서 <b>물건을 직접 보고</b> 주고받으시는 쪽이 가장 안전합니다. ' +
+          '택배로 받으실 때는 보내는 분의 이름과 연락처를 함께 적어 두세요.</li>' +
+        '<li>샤프트 · 헤드의 상태와 <b>정품 여부</b>는 받으시는 분이 보셔야 ' +
+          '합니다. 저희가 확인해 드릴 수 없습니다.</li>' +
+        '<li>문제가 생기면 <b>고객센터로 신고</b>해 주세요. 분쟁조정기구 · ' +
+          '법원의 요청이 있으면 저희가 가진 기록을 제공합니다.</li>' +
+      '</ul></div>';
+  }
+
+  /* 상세 한 장 */
+  function oneHtml(r, ph){
+    /* ⚠️ `open` 이면 딱지를 **안 냅니다** — 「판매중」을 모든 매물에
+       붙이면 그것만 보입니다. */
+    var st = r.state && r.state !== "open"
+      ? '<span class="lsd-st lsc-st-' + esc(r.state) + '">' +
+        esc(window.amLstStName(r.state)) + '</span>' : "";
+    return '<div class="lsd">' +
+      '<p class="lsd-back"><a href="' + esc(backUrl()) + '" data-back="1">' +
+        window.icon("arrow", 16) + ' 매물 목록으로</a></p>' +
+      oneShots(ph) +
+      '<div class="lsd-i">' +
+        '<p class="lsd-k">' + esc(subName(r.sub)) + st + '</p>' +
+        '<h2 class="lsd-ti">' + esc(r.title) + '</h2>' +
+        /* ⚠️⚠️ **0 은 "무료" 입니다** — 세는 자리는 `amLstPrice()` 한 곳 */
+        '<p class="lsd-p">' + esc(window.amLstPrice(r.price)) + '</p>' +
+        oneRows(r) +
+        '<div class="lsd-b" id="lsd-b"></div>' +
+      '</div>' +
+      /* ⚠️ 본문은 **손님이 쓴 글**입니다 — `esc()` 를 지나야 합니다 */
+      '<div class="lsd-body"><h3>설명</h3><p>' + esc(r.body) + '</p></div>' +
+      oneWarn() +
+    '</div>';
+  }
+  /* 목록으로 돌아가는 주소 — ⚠️ **걸려 있던 조건을 그대로** 들고
+     갑니다(안 들고 가면 셋째 쪽에서 들어온 분이 첫 쪽으로 떨어집니다). */
+  function backUrl(){
+    var keep = F.v; F.v = "";
+    var qs = [];
+    if(F.sub)  qs.push("s="  + encodeURIComponent(F.sub));
+    if(F.g)    qs.push("g="  + encodeURIComponent(F.g));
+    if(F.rg)   qs.push("rg=" + encodeURIComponent(F.rg));
+    if(F.ship) qs.push("sh=1");
+    if(F.p)    qs.push("p="  + encodeURIComponent(F.p));
+    if(F.br)   qs.push("br=" + encodeURIComponent(F.br));
+    if(F.o)    qs.push("o="  + encodeURIComponent(F.o));
+    if(F.q)    qs.push("q="  + encodeURIComponent(F.q));
+    if(F.cd)   qs.push("cd=" + encodeURIComponent(F.cd));
+    if(PG > 0) qs.push("pg=" + String(PG + 1));
+    F.v = keep;
+    return "/cat/used" + (qs.length ? "?" + qs.join("&") : "");
+  }
+  /* 상세의 단추 줄 — ⚠️⚠️ 로그인 여부로 **할 말이 갈립니다** */
+  function oneBtns(r, mine){
+    if(mine){
+      /* ⚠️⚠️ **제 매물에는 문의 단추를 안 냅니다** — 문이 거절합니다
+         (그리면 눌러도 아무 일이 안 나는 칸입니다 · 절대 규칙 5).
+         고치고 내리는 자리는 `/my` 입니다. */
+      return '<p class="lsd-mine">올리신 매물입니다. ' +
+        '고치거나 내리시는 자리는 내 정보입니다.</p>' +
+        '<a class="btn btn-pt" href="/my">내 정보에서 관리하기</a>';
+    }
+    if(!SIGNED){
+      return '<p class="lsd-mine">문의하시려면 로그인하셔야 합니다. ' +
+        '올리신 분과 사실 분을 잇는 자리라 누가 문의했는지 알아야 합니다.</p>' +
+        '<a class="btn btn-pt" href="' +
+          (window.amLoginUrl ? esc(window.amLoginUrl("/cat/used?v=" + r.id)) : "/login") +
+        '">로그인하기</a>';
+    }
+    /* ⚠️ 팔린 · 내려간 매물에는 문의 단추를 안 냅니다 (문이 거절합니다) */
+    if(r.state !== "open" && r.state !== "reserved"){
+      return '<p class="lsd-mine">이 매물은 더 문의를 받지 않습니다.</p>' +
+        '<a class="btn btn-line" href="' + esc(backUrl()) + '">다른 매물 보기</a>';
+    }
+    /* ⚠️⚠️ **예약중이라는 사실을 그 자리에서** 말합니다 — 문의는 받지만
+       앞선 분이 있다는 것을 모르고 기다리시면 안 됩니다. */
+    var note = r.state === "reserved"
+      ? '<p class="lsd-mine">지금 다른 분과 이야기 중인 매물입니다. ' +
+        '그 거래가 어그러지면 연락을 받으실 수 있습니다.</p>' : "";
+    return note +
+      '<button type="button" class="btn btn-pt lsd-ask" data-id="' + esc(r.id) +
+        '">사겠다고 문의하기</button>' +
+      '<button type="button" class="btn btn-bad lsd-fav' + (FAV[r.id] ? " on" : "") +
+        '" data-fav="' + esc(r.id) + '" aria-pressed="' +
+        (FAV[r.id] ? "true" : "false") + '">' + favLabel(!!FAV[r.id]) + '</button>';
+  }
+
   function bd0(){
     return window.amLstPriceBand ? window.amLstPriceBand(F.p) : null;
   }
@@ -370,69 +681,272 @@
       nl.hidden = false;
       /* ⚠️ **조건을 여기 다시 적지 않습니다** — 바로 위 칩 한 줄이 같은
          말을 합니다(찍어 보니 두 줄이 같은 글이었습니다). 여기는 **센
-         수**만 적습니다. */
-      nl.textContent = "매물 " + rows.length +
-        (rows.length >= LIMIT ? "건 이상" : "건");
+         수**만 적습니다.
+         ⚠️⚠️ **쪽을 나누면 "N건" 이 그 쪽의 수입니다** — 전체인 것처럼
+         적으면 세어 본 값이 아닙니다(절대 규칙 1). 쪽이 넘어가면
+         "몇째 쪽" 을 적고, 다음 쪽이 있으면 **"이 쪽에 N건"** 입니다. */
+      nl.textContent = PG > 0
+        ? (PG + 1) + "번째 쪽 · 이 쪽에 " + rows.length + "건"
+        : (rows.length >= LIMIT
+            ? "이 쪽에 " + rows.length + "건 (다음 쪽이 있습니다)"
+            : "매물 " + rows.length + "건");
     }
     if(!rows.length){
       /* ⚠️⚠️ **"아직 아무도 안 올렸다" 와 "조건에 맞는 것이 없다" 는
          다른 말입니다** — 같은 말로 적으면 손님이 조건을 지워 볼 생각을
-         못 합니다. ⚠️ 0건이어도 막다른 길로 두지 않습니다 (절대 규칙 2). */
-      list.innerHTML = nowBits().length
-        ? '<div class="none">' +
-          '<h3>조건에 맞는 매물이 없습니다.</h3>' +
-          '<p>조건을 넓혀 보시거나, 가지고 계신 것을 올려 보세요.</p>' +
-          '<div class="none-b">' +
-            /* ⚠️ 눌림은 **감싼 자리에서 받습니다**(`bindBar`) — 여기서
-               따로 달면 지우는 조건이 두 곳이 되고, 실제로 앞 판은
-               종류 · 지역 · 택배 셋만 지워 브랜드 · 가격대 · 찾는 말이
-               그대로 걸린 채 "지웠습니다" 가 됐습니다. */
-            '<button type="button" class="btn btn-line lsf-clear">조건 지우기</button>' +
-          '</div></div>'
-        : '<div class="none">' +
-          '<h3>아직 올라온 매물이 없습니다.</h3>' +
-          '<p>첫 매물을 올려 보세요. 사진 없이 글만으로도 올리실 수 있습니다.</p>' +
-        '</div>';
+         못 합니다. ⚠️ 0건이어도 막다른 길로 두지 않습니다 (절대 규칙 2).
+         ⚠️⚠️ **쪽을 넘겨 와서 0건인 것은 셋째 경우**입니다 — 조건을
+         지우라고 적으면 엉뚱한 말입니다(조건은 맞고 쪽이 지나간
+         것입니다). */
+      list.innerHTML = PG > 0 ? nonePage() :
+        (nowBits().length ? noneNarrow() : noneEmpty());
+      bindList(a);
       return;
     }
-    list.innerHTML = '<ul class="lsc-g">' + rows.map(card).join("") + '</ul>';
-    Array.prototype.forEach.call(list.querySelectorAll(".lsc-go"), function(b){
-      b.addEventListener("click", function(){
-        if(!a.signedIn){ window.location.href = window.amLoginUrl
-          ? window.amLoginUrl(window.location.pathname) : "/login"; return; }
-        var li = b.closest(".lsc");
-        if(li.querySelector("#lsaf")){ li.querySelector("#lsaf").remove(); return; }
-        li.insertAdjacentHTML("beforeend",
-          askForm(b.getAttribute("data-id"), li.querySelector("h3").textContent));
-        li.querySelector(".lsaf-x").addEventListener("click", function(){
-          li.querySelector("#lsaf").remove();
-        });
-        li.querySelector("#lsaf").addEventListener("submit", function(e){
-          e.preventDefault();
-          var f = e.target, msg = li.querySelector("#lsmsg2");
-          var btn = f.querySelector('button[type="submit"]');
-          btn.disabled = true;
-          msg.hidden = false; msg.textContent = "보내는 중입니다…";
-          call(a, "ask_listing", {
-            listing_id: f.getAttribute("data-id"),
-            msg: f.msg.value, contact: f.contact.value,
-            /* ⚠️ 동의 시각은 **누른 그 순간**입니다 (연 시각이 아닙니다) */
-            agree_at: new Date().toISOString()
-          }).then(function(){
-            li.innerHTML = '<div class="none">' +
-              '<h3>문의를 보냈습니다.</h3>' +
-              /* ⚠️⚠️ 문장 한가운데 링크를 박지 않습니다 (높이 16px) —
-                 문단 끝에 **단추**로 냅니다. */
-              '<p>올리신 분이 보고 받아들이시면 연락처를 주고받으실 수 ' +
-              /* ⚠️ 지킬 수 없는 약속을 하지 않습니다 */
-              '있습니다. 언제까지라고 약속드리지는 않습니다.</p>' +
-              '<a class="btn btn-pt" href="/my">내 정보에서 보기</a></div>';
-          }).catch(function(err){
-            btn.disabled = false;
-            msg.textContent = String((err && err.message) || "보내지 못했습니다.");
-          });
-        });
-      });
+    list.innerHTML = tabs() + '<ul class="lsc-g">' + rows.map(card).join("") +
+      '</ul>' + pager(rows.length);
+    bindList(a);
+  }
+  /* ⚠️⚠️ **고르는 것과 찍는 것을 갈라 둡니다** — 삼항으로 두 글 덩이 중
+     하나를 골라 `innerHTML` 에 넣으면 `check-safe` 가 "esc() 없이 변수를
+     넣는 줄" 로 잡습니다. 그 검사가 맞습니다 — 여기 손님 글이 한 자라도
+     들어오는 날 날것으로 나갑니다 (구합니다 글에서 겪은 자리). */
+  function nonePage(){
+    return '<div class="none">' +
+      '<h3>이 쪽에는 매물이 없습니다.</h3>' +
+      '<p>앞쪽으로 돌아가 보세요.</p>' +
+      '<div class="none-b">' +
+        '<a class="btn btn-pt" href="' + esc(pageUrl(0)) + '">첫 쪽으로</a>' +
+      '</div></div>';
+  }
+  function noneNarrow(){
+    return '<div class="none">' +
+      '<h3>조건에 맞는 매물이 없습니다.</h3>' +
+      '<p>조건을 넓혀 보시거나, 가지고 계신 것을 올려 보세요.</p>' +
+      '<div class="none-b">' +
+        /* ⚠️ 눌림은 **감싼 자리에서 받습니다**(`bindBar`) — 여기서
+           따로 달면 지우는 조건이 두 곳이 되고, 실제로 앞 판은
+           종류 · 지역 · 택배 셋만 지워 브랜드 · 가격대 · 찾는 말이
+           그대로 걸린 채 "지웠습니다" 가 됐습니다. */
+        '<button type="button" class="btn btn-line lsf-clear">조건 지우기</button>' +
+      '</div></div>';
+  }
+  function noneEmpty(){
+    return '<div class="none">' +
+      '<h3>아직 올라온 매물이 없습니다.</h3>' +
+      '<p>첫 매물을 올려 보세요. 사진 없이 글만으로도 올리실 수 있습니다.</p>' +
+    '</div>';
+  }
+
+  /* ── 쪽 넘기기 ──────────────────────────────────────────────────
+     ⚠️⚠️⚠️ **전체 쪽 수를 적지 않습니다.** 받아 온 줄이 한도에 닿았다는
+     것은 "다음 쪽이 있다" 는 뜻일 뿐이고, 몇 쪽인지는 **세어 보지
+     않았습니다** — "3 / 12" 처럼 적으면 그건 지어낸 숫자입니다
+     (절대 규칙 1). 시안에 번호 줄이 있지만, 세어 본 수가 없는 번호는
+     적을 수 없습니다.
+     ⚠️⚠️ **단추가 아니라 링크**입니다 — 자바스크립트가 꺼진 분 · 봇에게
+     단추는 눌러도 아무 일이 안 나는 칸입니다. */
+  function pager(n){
+    var prev = PG > 0
+      ? '<a class="lspg-b" href="' + esc(pageUrl(PG - 1)) + '" data-pg="' +
+        String(PG - 1) + '">' + window.icon("arrow", 16) + ' 앞쪽</a>'
+      : '';
+    var next = n >= LIMIT
+      ? '<a class="lspg-b lspg-n" href="' + esc(pageUrl(PG + 1)) + '" data-pg="' +
+        String(PG + 1) + '">다음 쪽 ' + window.icon("arrow", 16) + '</a>'
+      : '';
+    if(!prev && !next) return "";
+    return '<nav class="lspg" aria-label="쪽 넘기기">' + prev +
+      '<span class="lspg-i">' + (PG + 1) + '쪽</span>' + next + '</nav>';
+  }
+  function pageUrl(n){
+    var keep = PG; PG = n;
+    var keepV = F.v; F.v = "";
+    var qs = [];
+    if(F.sub)  qs.push("s="  + encodeURIComponent(F.sub));
+    if(F.g)    qs.push("g="  + encodeURIComponent(F.g));
+    if(F.rg)   qs.push("rg=" + encodeURIComponent(F.rg));
+    if(F.ship) qs.push("sh=1");
+    if(F.p)    qs.push("p="  + encodeURIComponent(F.p));
+    if(F.br)   qs.push("br=" + encodeURIComponent(F.br));
+    if(F.o)    qs.push("o="  + encodeURIComponent(F.o));
+    if(F.q)    qs.push("q="  + encodeURIComponent(F.q));
+    if(F.cd)   qs.push("cd=" + encodeURIComponent(F.cd));
+    if(n > 0)  qs.push("pg=" + String(n + 1));
+    PG = keep; F.v = keepV;
+    return "/cat/used" + (qs.length ? "?" + qs.join("&") : "");
+  }
+
+  /* ⚠️⚠️⚠️ **눌림을 묶는 자리는 `bindBar()` 한 곳입니다.** 이 파일이
+     스스로 적어 둔 규칙입니다 — "칩은 다시 그려지고 0건 상자는 목록 안에
+     생기므로, 그릴 때마다 달면 빠뜨리는 자리가 생깁니다." 0069 가 더한
+     것들(묶음 탭 · 쪽 · 찜 · 카드 · 상세의 작은 그림 · 목록으로)도 전부
+     그 한 곳에서 받습니다. 그래서 여기서는 **다시 그린 뒤에 묶을 것이
+     없습니다** — 그릴 때마다 묶으면 같은 손놀림에 호출이 두 번 돕니다
+     (`#lslist` 가 `#lswrap` **안**이라 `.lsf-clear` 가 실제로 두 번
+     돌 참이었습니다). */
+  function bindList(a){
+    /* ⚠️ 그릴 때마다 할 일은 **단추 줄을 채우는 것** 하나입니다 —
+       그것만 `innerHTML` 로 만들어진 뒤에 값을 알 수 있습니다. */
+    void a;
+  }
+
+  /* ⚠️⚠️ **찜은 눌린 그 단추만 바꿉니다** — 목록을 다시 그리면 보고
+     계신 자리가 맨 위로 튕깁니다. 그리고 **서버가 돌려준 값**으로
+     바꿉니다(화면이 먼저 뒤집어 놓으면 거절당한 날 켜진 채 남습니다). */
+  function toggleFav(a, btn, id){
+    if(!a.signedIn){
+      window.location.href = window.amLoginUrl
+        ? window.amLoginUrl("/cat/used?v=" + id) : "/login";
+      return;
+    }
+    btn.disabled = true;
+    call(a, "fav_listing", { id:id, on: !FAV[id] }).then(function(on){
+      var yes = (on === true || on === "true");
+      if(yes) FAV[id] = true; else delete FAV[id];
+      btn.disabled = false;
+      btn.classList.toggle("on", yes);
+      btn.setAttribute("aria-pressed", yes ? "true" : "false");
+      /* ⚠️ 상세의 단추는 글자도 바뀝니다 — 목록의 것은 아이콘뿐입니다.
+         ⚠️⚠️ **글자를 짓는 자리는 `favLabel()` 한 곳**입니다 — 여기서
+         이어 붙이면 `check-safe` 가 "esc() 없이 변수를 넣는 줄" 로
+         잡습니다. 그 검사가 맞습니다(따라갈 함수 이름이 없습니다). */
+      if(btn.classList.contains("lsd-fav")){
+        btn.innerHTML = favLabel(yes);
+      }else{
+        var sr = btn.querySelector(".sr-only");
+        if(sr) sr.textContent = "관심상품에 " + (yes ? "담김" : "담기");
+      }
+    }).catch(function(err){
+      btn.disabled = false;
+      /* ⚠️ 거절한 말을 **그대로** 보여 줍니다 (지어내지 않습니다) */
+      try{ window.alert(String((err && err.message) || "담지 못했습니다.")); }catch(_){}
+    });
+  }
+
+  /* ── 그리기 — ⚠️⚠️ **상세냐 목록이냐를 한 곳에서** 가릅니다 ──────
+     ⚠️ 가르는 것은 `F.v` 하나입니다 — 두 곳에서 보면 뒤로 가기를 눌렀을
+     때 한쪽만 바뀌어 **목록 위에 상세가 남습니다**. */
+  function draw(a){
+    if(F.v) return drawOne(a);
+    side(false);
+    return reload(a);
+  }
+  /* ⚠️⚠️⚠️ **감싼 상자(`#lswrap`)를 가리면 상세까지 같이 가려집니다** —
+     `#lslist` 가 그 안에 있습니다(`mountBar()` 가 **옮겨** 넣습니다).
+     처음에 `w.hidden = true` 로 적었다가 상세 화면이 **DOM 에는 있고
+     눈에는 안 보이는** 꼴이 될 참이었습니다. 더 나쁜 것은 **제 검사가
+     그것을 통과시켰다**는 것입니다 — `querySelector(".lsd")` 는 가려진
+     것도 찾아 주므로 "상세가 섰다" 로 읽혔습니다(`offsetParent` 로
+     재면 안 되는 그 자리와 같은 결입니다. 그려졌는지는
+     **`getClientRects().length`** 로 봅니다).
+     ⚠️ 그래서 가리는 것은 **거르개 레일과 맨 위 줄 · 올리는 양식**이고,
+     목록 자리는 그대로 둡니다. 그리고 레일이 빠진 만큼 본문이 넓어지게
+     감싼 상자에 딱지를 답니다(`lsw-1`) — 안 달면 PC 에서 **왼쪽 262px
+     이 빈 칸**으로 남습니다. */
+  function side(on){
+    var w  = document.getElementById("lswrap");
+    var rl = document.getElementById("lsrail");
+    var br = document.getElementById("lsbar");
+    var bx = document.getElementById("lsbox");
+    if(rl) rl.hidden = !!on;
+    if(br) br.hidden = !!on;
+    if(bx) bx.hidden = !!on;
+    if(w) w.classList.toggle("lsw-1", !!on);
+  }
+  function drawOne(a){
+    /* ⚠️⚠️ **상세를 볼 때는 거르개와 올리는 양식을 가립니다** — 남겨
+       두면 한 화면에 "이 매물" 과 "모든 매물의 거르개" 가 같이 서서
+       무엇을 거르는 칸인지 알 수 없습니다. (지우지 않고 **가립니다** —
+       지우면 목록으로 돌아올 때 다시 세워야 합니다.)
+       ⚠️⚠️⚠️ 가리는 자리는 **`side()` 한 곳**입니다 — 여기서 상자를
+       직접 집으면 `#lswrap` 을 가려 **상세까지 같이 가려집니다**
+       (`#lslist` 가 그 안입니다). 실제로 그렇게 적었다가 잡았습니다. */
+    side(true);
+    list.innerHTML = '<p class="lsd-wait">불러오는 중입니다…</p>';
+    var id = F.v;
+    return loadOne(a, id).then(function(x){
+      /* ⚠️⚠️ 그 사이에 손님이 뒤로 가기를 눌렀으면 **안 그립니다** —
+         안 보면 늦게 온 답이 목록을 덮어씁니다. */
+      if(F.v !== id) return;
+      if(!x.row){
+        /* ⚠️⚠️ **"없다" 와 "못 읽었다" 를 가립니다** — 공개 보기는 팔린 ·
+           내려간 · 가려진 매물을 안 냅니다. 그러니 0줄은 "그런 매물이
+           없다" 가 아니라 **"지금은 볼 수 없다"** 입니다 (절대 규칙 1 ·
+           모르는 것을 단정하지 않습니다). */
+        list.innerHTML = '<div class="none">' +
+          '<h3>지금은 볼 수 없는 매물입니다.</h3>' +
+          '<p>팔렸거나 올리신 분이 내렸을 수 있습니다.</p>' +
+          '<div class="none-b"><a class="btn btn-pt" href="' + esc(backUrl()) +
+            '" data-back="1">매물 목록으로</a></div></div>';
+        bindOne(a, null);
+        return;
+      }
+      list.innerHTML = oneHtml(x.row, x.ph);
+      bindOne(a, x.row);
+    }).catch(function(){
+      if(F.v !== id) return;
+      /* ⚠️ 못 읽은 것을 "없다" 로 적지 않습니다 */
+      list.innerHTML = '<div class="none">' +
+        '<h3>매물을 불러오지 못했습니다.</h3>' +
+        '<p>잠시 뒤에 다시 열어 보세요. 0건이라는 뜻이 아닙니다.</p>' +
+        '<div class="none-b"><a class="btn btn-pt" href="' + esc(backUrl()) +
+          '" data-back="1">매물 목록으로</a></div></div>';
+      bindOne(a, null);
+    });
+  }
+
+  /* ⚠️ 쪽 · 탭 · 상세를 오갈 때 맨 위로 — 안 올리면 다음 쪽의 첫 줄이
+     화면 밖에 있어 **아무 일도 안 난 것처럼** 보입니다. */
+  function top0(){
+    try{ window.scrollTo({ top:0, behavior:"smooth" }); }catch(_){ }
+  }
+
+  /* 지금 보고 있는 매물 한 줄 — ⚠️ 문의 양식의 제목에 씁니다.
+     ⚠️⚠️ **담아 두는 것은 이것 하나**입니다(제목뿐). 다른 값은 그릴 때
+     쓰고 버립니다 — 담아 두면 다른 창에서 값이 바뀐 날 옛 값을 그립니다. */
+  var ONE = null;
+
+  function bindOne(a, r){
+    ONE = r;
+    if(!r) return;
+    /* 단추 줄 — ⚠️⚠️ **제 매물인지는 화면이 모릅니다**(`v_listing_open`
+       에 `by_user` 가 없습니다 · 0056). 그래서 문의 단추를 내고, 제
+       매물이면 **문이 거절한 말을 그대로** 보여 줍니다("올리신 분은
+       문의하실 수 없습니다") — 알아내려고 다른 보기를 더 부르면 그
+       호출이 모든 상세에 붙습니다. */
+    var bw = document.getElementById("lsd-b");
+    if(bw) bw.innerHTML = oneBtns(r, false);
+    void a;
+  }
+
+  /* 문의 보내기 — ⚠️ 묶는 자리는 `bindBar()` 한 곳이고 여기는 **보내는
+     일**만 합니다 (양식이 다시 열릴 때마다 묶으면 두 번 보냅니다). */
+  function sendAsk(a, f){
+    var wrap = f.parentNode;
+    var msg = wrap.querySelector("#lsmsg2");
+    var btn = f.querySelector('button[type="submit"]');
+    if(btn) btn.disabled = true;
+    if(msg){ msg.hidden = false; msg.textContent = "보내는 중입니다…"; }
+    call(a, "ask_listing", {
+      listing_id: f.getAttribute("data-id"),
+      msg: f.msg.value, contact: f.contact.value,
+      /* ⚠️ 동의 시각은 **누른 그 순간**입니다 (연 시각이 아닙니다) */
+      agree_at: new Date().toISOString()
+    }).then(function(){
+      wrap.innerHTML = '<div class="none">' +
+        '<h3>문의를 보냈습니다.</h3>' +
+        /* ⚠️⚠️ 문장 한가운데 링크를 박지 않습니다 (높이 16px) —
+           문단 끝에 **단추**로 냅니다. */
+        '<p>올리신 분이 보고 받아들이시면 연락처를 주고받으실 수 ' +
+        /* ⚠️ 지킬 수 없는 약속을 하지 않습니다 */
+        '있습니다. 언제까지라고 약속드리지는 않습니다.</p>' +
+        '<a class="btn btn-pt" href="/my">내 정보에서 보기</a></div>';
+    }).catch(function(err){
+      if(btn) btn.disabled = false;
+      /* ⚠️ 거절한 말을 **그대로** 보여 줍니다 — 제 매물에 문의하시면
+         문이 "올리신 분은 문의하실 수 없습니다" 라고 말합니다 */
+      if(msg) msg.textContent = String((err && err.message) || "보내지 못했습니다.");
     });
   }
 
@@ -581,6 +1095,99 @@
       if(t.closest("#lf-open")){ sheet(true);  return; }
       if(t.closest("#lf-close") || t.closest(".lsf-done") ||
          t.closest("#lsscrim")){ sheet(false); return; }
+
+      /* ── 0069 에서 더한 것들 ─────────────────────────────────────
+         ⚠️ 새 탭 · 다른 창으로 여시는 것은 **가로채지 않습니다** */
+      var mod = e.metaKey || e.ctrlKey || e.shiftKey || e.button;
+
+      /* 찜 — ⚠️ 카드가 링크이므로 **먼저** 봅니다(링크로 떠나지 않게) */
+      var fv = t.closest("[data-fav]");
+      if(fv){
+        e.preventDefault(); e.stopPropagation();
+        toggleFav(a, fv, fv.getAttribute("data-fav"));
+        return;
+      }
+      /* 작은 그림 — 큰 그림만 갈아 끼웁니다 (주소는 안 바꿉니다) */
+      var sh = t.closest("[data-shot]");
+      if(sh){
+        var big = document.getElementById("lsd-big");
+        if(big) big.src = sh.getAttribute("data-shot");
+        Array.prototype.forEach.call(w.querySelectorAll(".lsd-t"),
+          function(x){ x.classList.remove("on"); });
+        sh.classList.add("on");
+        return;
+      }
+      /* 묶음 탭 */
+      var gb = t.closest("[data-g]");
+      if(gb && !mod){
+        e.preventDefault();
+        var g = gb.getAttribute("data-g");
+        F.g = (g === "all") ? "" : g;
+        /* ⚠️⚠️ **묶음을 바꾸면 종류를 같이 풉니다** — 안 풀면 「클럽」
+           에서 아이언을 고른 뒤 「용품」으로 가도 아이언이 그대로 걸려
+           **영원히 0건**입니다 (업체찾기에서 분류를 바꿀 때 하위를 푸는
+           그 까닭). */
+        F.sub = ""; PG = 0;
+        writeUrl(); syncRail(); syncChips(); reload(a);
+        top0();
+        return;
+      }
+      /* 쪽 넘기기 */
+      var pb = t.closest("[data-pg]");
+      if(pb && !mod){
+        e.preventDefault();
+        PG = Math.max(0, parseInt(pb.getAttribute("data-pg"), 10) || 0);
+        writeUrl(); reload(a);
+        top0();
+        return;
+      }
+      /* 목록으로 돌아가기 (상세에서) */
+      var bk = t.closest("[data-back]");
+      if(bk && !mod){
+        e.preventDefault();
+        var u = backUrl();
+        F.v = "";
+        try{ history.pushState(null, "", u); }catch(_){}
+        draw(a);
+        top0();
+        return;
+      }
+      /* 카드 → 상세 */
+      var ob = t.closest("[data-one]");
+      if(ob && !mod){
+        e.preventDefault();
+        F.v = ob.getAttribute("data-one");
+        try{ history.pushState(null, "", oneUrl(F.v)); }catch(_){}
+        draw(a);
+        top0();
+        return;
+      }
+      /* 문의 양식 열기 · 닫기 */
+      if(t.closest(".lsaf-x")){
+        var of = w.querySelector("#lsaf");
+        if(of) of.remove();
+        return;
+      }
+      var ak = t.closest(".lsd-ask");
+      if(ak){
+        var bw = document.getElementById("lsd-b");
+        if(!bw) return;
+        if(bw.querySelector("#lsaf")){ bw.querySelector("#lsaf").remove(); return; }
+        bw.insertAdjacentHTML("beforeend",
+          askForm(ak.getAttribute("data-id"), ONE ? ONE.title : ""));
+        return;
+      }
+    });
+
+    /* ⚠️⚠️ **보내기도 감싼 자리에서 받습니다** — 양식이 다시 그려질 때
+       마다 묶으면 한 번 보낸 뒤 다시 열었을 때 **두 번 보냅니다**.
+       ⚠️ `submit` 은 거품처럼 올라옵니다(`change` 와 달리 `focus` 류가
+       아닙니다). */
+    w.addEventListener("submit", function(e){
+      var f = e.target;
+      if(!f || f.id !== "lsaf") return;
+      e.preventDefault();
+      sendAsk(a, f);
     });
     /* ⚠️ 시트가 열렸을 때 ESC 로 닫힙니다 (가둬 두지 않습니다) */
     document.addEventListener("keydown", function(e){
@@ -651,6 +1258,17 @@
           'aria-label="브랜드를 직접 적습니다" placeholder="브랜드를 적어 주세요">' +
         '<span class="jhint">목록에 없으면 <b>기타</b> 를 고르고 ' +
         '직접 적어 주세요.</span>' +
+      '</div>' +
+      /* ⚠️⚠️ **모델명은 브랜드와 반대로 비워도 됩니다** (0069) — 반드시
+         받으면 모델명을 모르시는 분이 매물을 **아예 못 올립니다**
+         (절대 규칙 2). 그래서 별표를 안 붙이고, 비면 상세 화면에서
+         **줄째 빠집니다**("(미기재)" 를 찍지 않습니다). */
+      '<div class="jrow">' +
+        '<label for="l-model">모델명</label>' +
+        '<input id="l-model" name="model" maxlength="40" ' +
+          'placeholder="예: 스텔스2 · P790">' +
+        '<span class="jhint">모르시면 비워 두셔도 됩니다. ' +
+        '적어 두시면 찾는 분이 더 쉽게 봅니다.</span>' +
       '</div>' +
       '<div class="jrow">' +
         '<label for="l-cond">물건 상태 <b>*</b></label>' +
@@ -754,7 +1372,14 @@
     readUrl();
     mountBar();
     bindBar(a);
-    reload(a);
+    /* ⚠️⚠️ **찜을 먼저 받고 그립니다** — 안 기다리면 카드가 꺼진 하트로
+       먼저 그려지고, 답이 온 뒤에 다시 그려야 합니다(그러면 보고 계신
+       자리가 맨 위로 튕깁니다). 못 읽으면 빈 묶음이고 그대로 그립니다. */
+    loadFav(a).then(function(m){ FAV = m; draw(a); });
+    /* ⚠️⚠️⚠️ **뒤로 가기를 받습니다** — 상세로 들어가는 길이 `pushState`
+       라, 이 줄이 없으면 뒤로 가기를 눌러도 **화면이 그대로** 있습니다
+       (주소만 바뀌어서, 손님은 뒤로 가기가 고장난 것으로 읽습니다). */
+    window.addEventListener("popstate", function(){ readUrl(); draw(a); });
 
     var box = document.getElementById("lsbox");
     if(!box) return;
@@ -797,6 +1422,9 @@
         title: f.title.value, sub: f.sub.value, cond: f.cond.value,
         /* ⚠️ 브랜드는 **글자 그대로** 담깁니다 (키가 없습니다 · 0068) */
         brand: brandNow(),
+        /* ⚠️ 모델명은 **비울 수 있습니다** — 빈 글자를 보내면 0069 가
+           null 로 담습니다 (보냈는지를 `p ? 'model'` 로 봅니다). */
+        model: f.model.value,
         region: f.region.value, price: f.price.value,
         /* ⚠️ 체크박스는 **참 · 거짓**으로 보냅니다 ("on" 이 아닙니다) */
         ship: !!document.getElementById("l-ship").checked,

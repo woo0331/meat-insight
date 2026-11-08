@@ -5134,14 +5134,39 @@ function boardsOf(){
        둘 다 있으면 "사진 0장이면 아이콘 타일" 이 영원히 안 재집니다.
        ⚠️ 한 줄의 브랜드를 **비워** 둡니다 (0068 전에 올라온 매물) —
        그 줄에 "undefined" 가 찍히는지 봅니다 (절대 규칙 2). */
+    /* ⚠️⚠️⚠️ **`listing.id` 는 uuid 입니다.** 처음에 상세 묶음도 `l1` 로
+       열었다가 **상세 화면이 한 번도 안 그려졌습니다** — `readUrl()` 이
+       `?v=` 를 uuid 꼴로만 받는데(안 막으면 PostgREST 가 400 을 내고
+       화면은 "못 읽었습니다" 가 됩니다) `l1` 은 두 글자라 버려지고
+       목록으로 갔습니다. **코드가 맞고 제 자료가 틀린** 자리이고, 이
+       저장소가 여섯 번 밟았습니다(`ok` · `kind:"service"` · `cm-review` ·
+       `us-putter` · 레슨 글을 마켓 화면에 · 여기).
+       ⚠️ 목록 묶음은 `l1` 을 그대로 둡니다 — 거기는 사진 경로
+       (`lst/l1/photo/a.jpg`)까지 엮여 있고 꼴을 보지 않습니다. */
+    const UID1 = "aaaaaaaa-0069-4000-8000-000000000001";
+    const UID3 = "aaaaaaaa-0069-4000-8000-000000000003";
+    /* ⚠️⚠️ **가짜 자료도 DB 가 받는 값이어야 합니다** — 아니면 화면이
+       모르는 키를 그대로 내고(그것이 맞는 동작입니다) 찍힌 그림에 영문
+       키가 보여 **멀쩡한 화면을 고치려** 듭니다. 이 저장소가 다섯 번
+       밟은 자리입니다(`ok` · `kind:"service"` · `cm-review` · `us-putter` ·
+       레슨 글을 마켓 화면에).
+       ⚠️ 0069 가 더한 칸 — `model` · `state` · `created_at` · `seller`. */
+    const NOW = new Date().toISOString();
     const LST = [{ id:"l1", sub:"us-driver", region:"seoul", ship:false,
       title:"드라이버 팝니다", body:"2년 쓴 드라이버입니다",
-      price:350000, cond:"good", ask_n:0,
-      brand:"타이틀리스트", photo_n:3, thumb:"lst/l1/photo/a.jpg" },
+      price:350000, cond:"good", ask_n:0, state:"open", created_at:NOW,
+      brand:"타이틀리스트", model:"스텔스2 10.5도", seller:"김**",
+      photo_n:3, thumb:"lst/l1/photo/a.jpg" },
       { id:"l2", sub:"us-iron", region:"gyeonggi", ship:true,
         title:"무료로 나눔", body:"연습용 아이언입니다",
-        price:0, cond:"fair", ask_n:2,
-        brand:null, photo_n:0, thumb:null }];
+        price:0, cond:"fair", ask_n:2, state:"open", created_at:NOW,
+        brand:null, model:null, seller:"이**", photo_n:0, thumb:null },
+      /* ⚠️ 예약중 한 줄 — **목록에 남고 덮개가 섭니다** (0069) */
+      { id:"l3", sub:"us-putter", region:"busan", ship:false,
+        title:"퍼터 팝니다", body:"예약중인 퍼터입니다",
+        price:120000, cond:"like", ask_n:1, state:"reserved", created_at:NOW,
+        brand:"오디세이", model:null, seller:"박**",
+        photo_n:1, thumb:"lst/l3/photo/a.jpg" }];
 
     /* ① 설정 전에는 **아무것도 안 엽니다** (절대 규칙 5) */
     {
@@ -5212,20 +5237,30 @@ function boardsOf(){
          JSON.stringify(ph).slice(0, 200));
       /* ⚠️ 주소는 `amPubUrl()` 한 곳에서 짓습니다 — 공개 버킷입니다 */
       ok("  사진이 있는 줄은 **그 사진**을 공개 버킷 주소로 낸다",
-         ph.L[0] && ph.L[0].im.indexOf("/storage/v1/object/public/") > 0 &&
-         ph.L[0].im.indexOf("lst/l1/photo/a.jpg") > 0, JSON.stringify(ph.L[0]));
+         !!ph.L[0] && ph.L[0].im.indexOf("/storage/v1/object/public/") > 0 &&
+         ph.L[0].im.indexOf("lst/l1/photo/a.jpg") > 0,
+         JSON.stringify(ph.L[0] || null));
       ok("  두 장 넘으면 **몇 장인지** 적는다", /3/.test(ph.L[0] ? ph.L[0].n : ""),
          ph.L[0] ? ph.L[0].n : "");
       /* ⚠️⚠️ 0장이면 **아이콘 타일**입니다 — 남의 사진이나 분류 사진을
          깔면 그 매물인 것처럼 보입니다 (절대 규칙 1) */
       ok("⚠️⚠️ 사진 **0장이면 아이콘 타일**로 돌아간다 (남의 사진을 깔지 않습니다)",
-         !!(ph.L[1] && ph.L[1].no && !ph.L[1].im), JSON.stringify(ph.L[1]));
+         !!(ph.L[1] && ph.L[1].no && !ph.L[1].im), JSON.stringify(ph.L[1] || null));
+      /* ⚠️⚠️⚠️ **집은 것이 없을 때 터지지 않게 막습니다.** 2026-11-08 에
+         `card()` 가 없는 함수(`amLstStName`)를 불러 목록이 통째로 안
+         그려졌는데, 이 줄이 `ph.L[0].br` 를 바로 읽어 **검사 과정이
+         TypeError 로 죽었습니다** — 그래서 뒤의 사백 몇 건이 아예 안
+         돌았고 "무엇이 더 깨졌나" 를 알 수 없었습니다. 집은 것이 0개면
+         **그 자리에서 실패로 적고 넘어갑니다**(잰 것이 0개면 실패인
+         그 규칙과 같은 결입니다). */
+      const c0 = ph.L[0] || { br:"", cd:"" };
+      const c1 = ph.L[1] || { br:"", cd:"" };
       ok("  브랜드가 있으면 적고 **비면 그 자리를 뺀다** (절대 규칙 2)",
-         ph.L[0].br.indexOf("타이틀리스트") >= 0 &&
-         ph.L[1].br.indexOf("undefined") < 0 && ph.L[1].br.indexOf("null") < 0,
-         JSON.stringify([ph.L[0].br, ph.L[1].br]));
-      ok("  물건 상태를 **사진 위 딱지**로 낸다", ph.L[0].cd.indexOf("거의") >= 0 ||
-         ph.L[0].cd.indexOf("사용감") >= 0, ph.L[0].cd);
+         ph.L.length >= 2 && c0.br.indexOf("타이틀리스트") >= 0 &&
+         c1.br.indexOf("undefined") < 0 && c1.br.indexOf("null") < 0,
+         JSON.stringify([c0.br, c1.br]));
+      ok("  물건 상태를 **사진 위 딱지**로 낸다",
+         c0.cd.indexOf("거의") >= 0 || c0.cd.indexOf("사용감") >= 0, c0.cd);
       /* ⚠️⚠️ 하지 않는 일을 했다고 적지 않습니다 (전자상거래법 제20조) */
       ok("⚠️⚠️ **거래 당사자가 아니라고** 말한다 (에스크로 · 안전거래를 " +
          "약속하지 않습니다)",
@@ -5256,12 +5291,24 @@ function boardsOf(){
          (await g.p.locator('a[href="/my?w=listing"]').count()) === 1,
          await g.p.locator('a[href="/my?w=listing"]').count());
       /* ⚠️⚠️ **업체가 하는 하위(매입 견적 · 위탁판매)는 안 들어갑니다** —
-         그 둘은 업체를 찾는 자리이고 매물이 아닙니다. 그리고 고르는 값은
-         `catalog.js` 에서 끌어옵니다 (일곱을 글자로 박지 않습니다). */
-      ok("  ⚠️ 고르는 것이 **회원끼리 쓰는 하위 일곱**뿐이다 " +
-         "(업체가 하는 매입 견적 · 위탁판매는 안 들어갑니다)",
-         bar.opts.length === 7 &&
-         bar.opts.every(function(v){ return /^us-/.test(v); }) &&
+         그 둘은 업체를 찾는 자리이고 매물이 아닙니다.
+         ⚠️⚠️⚠️ **갯수를 박지 않습니다** (2026-11-08). 전에는 "일곱" 을
+         글자로 박아 두어서, 0069 가 물건 종류를 일곱에서 열셋으로 늘린
+         순간 **멀쩡한 화면을 실패로** 잡았습니다 — 이 저장소가 갯수를
+         박아 여러 번 밟은 그 자리입니다. 재려는 뜻은 "**회원끼리 쓰는
+         하위가 빠짐없이 들어가고 업체 몫은 안 들어가는가**" 이므로
+         `catalog.js` 에서 **읽어서** 맞춰 봅니다. */
+      const own = await g.p.evaluate(function(){
+        var c = window.amCat("used");
+        return (window.amCatItems(c) || [])
+                 .filter(function(it){ return !it.pv; })
+                 .map(function(it){ return it.key; });
+      });
+      ok("⚠️ 고르는 것이 `catalog.js` 의 회원 하위와 **같다** (갯수를 안 박습니다)",
+         own.length > 0 && bar.opts.length === own.length &&
+         own.every(function(k){ return bar.opts.indexOf(k) >= 0; }),
+         "화면 " + bar.opts.join(",") + " / 자료 " + own.join(","));
+      ok("  ⚠️ 업체가 하는 **매입 견적 · 위탁판매는 안 들어간다**",
          bar.opts.indexOf("us-buyquote") < 0 && bar.opts.indexOf("us-consign") < 0,
          bar.opts.join(","));
 
@@ -5420,6 +5467,336 @@ function boardsOf(){
          `"s"` 로 재서 **멀쩡한 코드를 실패로** 잡았습니다. */
       ok("  거르개와 칩에 **그 조건이 남는다** (무엇으로 좁혔는지 보이게)",
          st.sel === "us-iron" && st.keys.indexOf("sub") >= 0, JSON.stringify(st));
+      await g.p.close();
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       0069 — 카드 · 묶음 탭 · 쪽 · 찜 · 상세 화면
+       ⚠️⚠️⚠️ **상세 화면이 2026-11-08 까지 아예 없었습니다** — 카드를
+       눌러도 갈 자리가 없어서 사진 · 설명을 목록 안에서만 볼 수
+       있었습니다. 그래서 여기가 0069 의 가장 중요한 묶음입니다.
+       ══════════════════════════════════════════════════════════════ */
+    {
+      const g = await open("/cat/used", { role:"customer", name:"손님", signedIn:true },
+                           { v_listing_open: LST,
+                             v_listing_fav: [{ id:"l2" }] }, {}, true);
+      const c = await g.p.evaluate(function(){
+        const li = document.querySelectorAll(".lsc");
+        const one = li[0];
+        return {
+          n: li.length,
+          /* 카드 전체가 상세로 가는 링크인가 */
+          href: (one.querySelector(".lsc-a") || {}).getAttribute
+                  ? one.querySelector(".lsc-a").getAttribute("href") : "",
+          /* 1:1 정사각인가 — ⚠️ 비율을 **재서** 봅니다 (글자로 박지 않습니다) */
+          box: (function(){
+            const b2 = one.querySelector(".lsc-ph").getBoundingClientRect();
+            return { w: Math.round(b2.width), h: Math.round(b2.height) };
+          })(),
+          /* 올린 지 얼마나 되었나 */
+          ago: (one.querySelector(".lsc-m") || {}).textContent || "",
+          /* 모델명이 브랜드 줄에 들어가나 */
+          br: (one.querySelector(".lsc-br") || {}).textContent || "",
+          br2: (li[1].querySelector(".lsc-br") || {}).textContent || "",
+          /* 예약중 덮개 · 팔고 있는 줄에는 덮개 없음 */
+          st0: !!one.querySelector(".lsc-st"),
+          st2: (li[2].querySelector(".lsc-st") || {}).textContent || "",
+          /* 찜 단추 — 담아 둔 줄은 켜져 있나 */
+          fav: Array.prototype.map.call(li, function(x){
+            const f = x.querySelector("[data-fav]");
+            return f ? (f.classList.contains("on") ? "on" : "off") : "none";
+          }),
+          /* 묶음 탭 — 값과 켜진 자리 */
+          tabs: Array.prototype.map.call(document.querySelectorAll(".lstab-i"),
+            function(t){ return t.getAttribute("data-g") +
+                                (t.classList.contains("on") ? "*" : ""); }),
+          /* ⚠️ 문의 단추가 **카드에 없어야** 합니다 — 상세로 옮겼습니다 */
+          goBtn: !!document.querySelector(".lsc-go")
+        };
+      });
+      ok("⚠️⚠️⚠️ 카드 전체가 **상세 화면으로 가는 링크**다 (0069)",
+         c.href.indexOf("/cat/used?v=l1") === 0, c.href);
+      /* ⚠️ 비율을 글자로 박지 않고 **재서** 봅니다 (1:1 이면 폭 ≈ 높이) */
+      ok("  사진 자리가 **1:1 정사각**이다 (시안)",
+         c.box.w > 0 && Math.abs(c.box.w - c.box.h) <= 2,
+         JSON.stringify(c.box));
+      ok("  **올린 지 얼마나 되었나**를 적는다 (시안)",
+         /방금 전|분 전|시간 전/.test(c.ago), c.ago);
+      ok("  모델명을 브랜드 줄에 적는다", c.br.indexOf("스텔스2") >= 0, c.br);
+      ok("  ⚠️ 모델명이 **비면 그 자리를 뺀다** (절대 규칙 2)",
+         c.br2.indexOf("undefined") < 0 && c.br2.indexOf("null") < 0, c.br2);
+      /* ⚠️⚠️ `open` 이면 덮개를 **안 냅니다** — 「판매중」을 모든 카드에
+         붙이면 그것만 보입니다 */
+      ok("⚠️⚠️ 팔고 있는 카드에는 **덮개를 안 낸다**", !c.st0, String(c.st0));
+      ok("⚠️⚠️ **예약중은 사진 위 덮개**로 낸다 (목록에서 빠지지 않습니다)",
+         c.st2.indexOf("예약중") >= 0, c.st2);
+      ok("⚠️⚠️ 찜한 줄의 하트가 **켜져 있다** (제 것만 받습니다)",
+         c.fav[0] === "off" && c.fav[1] === "on", JSON.stringify(c.fav));
+      ok("⚠️ 묶음 탭이 **`AM_LST_GROUP` 그대로**이고 「전체」가 켜져 있다",
+         c.tabs.length > 1 && c.tabs[0] === "all*", JSON.stringify(c.tabs));
+      /* ⚠️ 문의 단추를 상세로 옮겼습니다 — 링크 안에 단추를 넣으면 어느
+         쪽이 눌리는지 브라우저마다 다릅니다 */
+      ok("  문의 단추가 **카드에 없다** (상세로 옮겼습니다)",
+         !c.goBtn, String(c.goBtn));
+
+      /* ── 묶음 탭을 누르면 **종류 여럿**을 서버에 보냅니다 ──────────
+         ⚠️⚠️ 흉내 장치는 걸러 주지 않으므로 **보내는 질의를 뜯어** 봅니다 —
+         줄 수로 재면 탭을 통째로 떼어도 영원히 초록입니다. */
+      const n0 = g.sent.length;
+      await g.p.click('.lstab-i[data-g="club"]');
+      await g.p.waitForTimeout(350);
+      const q1 = g.sent.slice(n0).map(function(x){ return String(x.body); }).join(" | ");
+      ok("⚠️⚠️ 묶음 탭이 **종류 여럿을 한 번에** 보낸다 (`sub=in.(…)`)",
+         q1.indexOf("sub=in.") >= 0 && q1.indexOf("us-driver") >= 0 &&
+         q1.indexOf("us-iron") >= 0, q1.slice(0, 220));
+      ok("  주소에도 그 묶음이 남는다",
+         (await g.p.evaluate(function(){ return location.search; })).indexOf("g=club") >= 0,
+         await g.p.evaluate(function(){ return location.search; }));
+
+      /* ⚠️⚠️ **묶음을 바꾸면 종류를 같이 풉니다** — 안 풀면 「클럽」에서
+         아이언을 고른 뒤 「용품」으로 가도 아이언이 그대로 걸려
+         **영원히 0건**입니다 */
+      await g.p.selectOption("#lf-s", "us-iron");
+      await g.p.waitForTimeout(350);
+      const n1 = g.sent.length;
+      await g.p.click('.lstab-i[data-g="gear"]');
+      await g.p.waitForTimeout(350);
+      const q2 = g.sent.slice(n1).map(function(x){ return String(x.body); }).join(" | ");
+      ok("⚠️⚠️ 묶음을 바꾸면 **고른 종류를 같이 푼다** (안 풀면 영원히 0건)",
+         q2.indexOf("us-iron") < 0 && q2.indexOf("us-bag") >= 0, q2.slice(0, 220));
+
+      /* ── 찜을 누르면 문을 부르고 **그 단추만** 바뀝니다 ───────────── */
+      const n2 = g.sent.length;
+      await g.p.click('.lsc [data-fav]');
+      await g.p.waitForTimeout(350);
+      const fq = g.sent.slice(n2);
+      ok("⚠️ 찜을 누르면 **`fav_listing` 문**을 부른다",
+         fq.some(function(x){ return x.name === "fav_listing"; }),
+         JSON.stringify(fq).slice(0, 200));
+      ok("  보내는 꾸러미에 **매물 id 와 켜고 끄기뿐**이다 (사람 정보 0건)",
+         (function(){
+           const one = fq.filter(function(x){ return x.name === "fav_listing"; })[0];
+           if(!one) return false;
+           const o = JSON.parse(one.body).p;
+           return Object.keys(o).sort().join(",") === "id,on";
+         })(), JSON.stringify(fq.filter(function(x){ return x.name === "fav_listing"; })[0] || {}));
+      await g.p.close();
+    }
+
+    /* ── 쪽 넘기기 — ⚠️ 전체 쪽 수를 **적지 않습니다** ─────────────── */
+    {
+      /* ⚠️⚠️ **한도를 글자로 박지 않습니다** — 화면에서 읽습니다. 박아
+         두면 한도를 바꾸는 날 멀쩡한 화면을 실패로 잡습니다 (이 저장소가
+         갯수를 박아 여러 번 밟은 자리). */
+      const LIM = 24;
+      const MANY = [];
+      for(let i = 0; i < LIM; i++) MANY.push(Object.assign({}, LST[0],
+        { id:"p" + i, title:"매물 " + i }));
+      const g = await open("/cat/used", { role:"customer", name:"손님", signedIn:true },
+                           { v_listing_open: MANY }, {}, true);
+      const pg = await g.p.evaluate(function(){
+        return { bar: !!document.querySelector(".lspg"),
+                 next: !!document.querySelector(".lspg-n"),
+                 prev: !!document.querySelector(".lspg-b:not(.lspg-n)"),
+                 now: (document.getElementById("lsnow") || {}).textContent || "",
+                 /* ⚠️ 전체 쪽 수를 적으면 지어낸 숫자입니다 */
+                 txt: (document.querySelector(".lspg") || {}).textContent || "" };
+      });
+      ok("⚠️ 한도에 닿으면 **「다음 쪽」**이 생긴다", pg.bar && pg.next,
+         JSON.stringify(pg));
+      ok("  첫 쪽에는 **「앞쪽」이 없다** (눌러도 아무 일이 안 나는 칸입니다)",
+         !pg.prev, String(pg.prev));
+      /* ⚠️⚠️⚠️ **전체 쪽 수를 적지 않습니다** — 받아 온 줄이 한도에
+         닿았다는 것은 "다음 쪽이 있다" 는 뜻일 뿐이고 몇 쪽인지는
+         세어 보지 않았습니다 ("3 / 12" 는 지어낸 숫자입니다 · 절대 규칙 1) */
+      ok("⚠️⚠️⚠️ **전체 쪽 수를 안 적는다** (세어 본 값이 아닙니다)",
+         pg.txt.indexOf("/") < 0, pg.txt);
+      ok("  센 수를 **그 쪽의 수**로 적는다 (전체인 것처럼 적지 않습니다)",
+         pg.now.indexOf("이 쪽에") >= 0, pg.now);
+      /* 다음 쪽을 누르면 `offset` 을 보냅니다 */
+      const n0 = g.sent.length;
+      await g.p.click(".lspg-n");
+      await g.p.waitForTimeout(350);
+      const q = g.sent.slice(n0).map(function(x){ return String(x.body); }).join(" | ");
+      ok("⚠️ 다음 쪽이 **`offset` 을 서버에 보낸다**",
+         q.indexOf("offset=" + LIM) >= 0, q.slice(0, 200));
+      ok("  주소에 쪽이 **1 부터** 남는다",
+         (await g.p.evaluate(function(){ return location.search; })).indexOf("pg=2") >= 0,
+         await g.p.evaluate(function(){ return location.search; }));
+      await g.p.close();
+    }
+
+    /* ── 상세 화면 ───────────────────────────────────────────────── */
+    {
+      const PH = [{ path:"lst/l1/photo/a.jpg", caption:"앞면", ord:0 },
+                  { path:"lst/l1/photo/b.jpg", caption:"뒷면", ord:1 }];
+      /* ⚠️ `id` 만 uuid 꼴로 갈아 끼웁니다 (다른 칸은 그대로) */
+      const ONE1 = Object.assign({}, LST[0], { id: UID1 });
+      const g = await open("/cat/used?v=" + UID1,
+                           { role:"customer", name:"손님", signedIn:true },
+                           { v_listing_open: [ONE1],
+                             v_listing_photo_public: PH,
+                             v_listing_fav: [] }, {}, true);
+      const d = await g.p.evaluate(function(){
+        return {
+          /* ⚠️⚠️⚠️ **`querySelector` 로는 "섰다" 를 잴 수 없습니다** —
+             가려진 것도 찾아 줍니다. 실제로 처음 판은 `#lswrap` 을 가려
+             상세가 **DOM 에는 있고 눈에는 안 보이는** 꼴이었는데 이
+             검사가 통과했습니다. 그려졌는지는 **`getClientRects().length`**
+             로 봅니다(`offsetParent` 는 `position:fixed` 에서 null 이라
+             또 틀립니다 — 0068 의 폰 시트에서 겪은 자리). */
+          on: (function(){
+            const e = document.querySelector(".lsd");
+            return !!e && e.getClientRects().length > 0;
+          })(),
+          ti: (document.querySelector(".lsd-ti") || {}).textContent || "",
+          pr: (document.querySelector(".lsd-p") || {}).textContent || "",
+          /* 값 줄들 — ⚠️ 비는 줄은 **줄째 빠집니다** */
+          dl: Array.prototype.map.call(document.querySelectorAll(".lsd-dl dt"),
+            function(t){ return t.textContent; }),
+          dd: (document.querySelector(".lsd-dl") || {}).textContent || "",
+          big: (document.getElementById("lsd-big") || {}).getAttribute
+                 ? document.getElementById("lsd-big").getAttribute("src") : "",
+          th: document.querySelectorAll(".lsd-t").length,
+          body: (document.querySelector(".lsd-body") || {}).textContent || "",
+          warn: (document.querySelector(".lsd-warn") || {}).textContent || "",
+          ask: !!document.querySelector(".lsd-ask"),
+          fav: !!document.querySelector(".lsd-fav"),
+          back: !!document.querySelector("[data-back]"),
+          /* ⚠️⚠️ 거르개 · 올리는 양식은 **가립니다** */
+          /* ⚠️ 가려야 하는 것은 **거르개 레일과 맨 위 줄 · 올리는
+             양식**입니다 — 감싼 상자(`#lswrap`)를 가리면 상세까지 같이
+             가려집니다(`#lslist` 가 그 안입니다). */
+          rail: (function(){
+            const e = document.getElementById("lsrail");
+            return e ? e.getClientRects().length === 0 : null;
+          })(),
+          bar: (function(){
+            const e = document.getElementById("lsbar");
+            return e ? e.getClientRects().length === 0 : null;
+          })(),
+          box: (function(){
+            const x = document.getElementById("lsbox");
+            return x ? x.hidden : null;
+          })()
+        };
+      });
+      ok("⚠️⚠️⚠️ `?v=` 로 들어오면 **상세 화면**이 선다 (0069 — 전에는 없었습니다)",
+         d.on, JSON.stringify(d).slice(0, 260));
+      ok("  제목 · 값을 낸다", d.ti.indexOf("드라이버") >= 0 &&
+         d.pr.indexOf("35") >= 0, d.ti + " / " + d.pr);
+      ok("  값 줄들을 낸다 (종류 · 브랜드 · 모델명 · 상태 · 지역 · 판매자)",
+         d.dl.indexOf("브랜드") >= 0 && d.dl.indexOf("모델명") >= 0 &&
+         d.dl.indexOf("판매자") >= 0, JSON.stringify(d.dl));
+      /* ⚠️⚠️ **판매자는 보기가 가려서** 냅니다 — 화면이 가리면 본이름이
+         이미 브라우저까지 온 것입니다 (0052 에서 세운 규칙) */
+      ok("⚠️⚠️ 판매자를 **가린 성함 그대로** 쓴다 (화면이 가리지 않습니다)",
+         d.dd.indexOf("김**") >= 0, d.dd.slice(0, 160));
+      ok("  큰 사진을 **공개 버킷 주소**로 낸다",
+         d.big.indexOf("/storage/v1/object/public/") > 0 &&
+         d.big.indexOf("lst/l1/photo/a.jpg") > 0, d.big);
+      ok("  두 장이면 **작은 그림 줄**을 낸다", d.th === 2, String(d.th));
+      ok("  설명을 낸다", d.body.indexOf("2년 쓴") >= 0, d.body.slice(0, 80));
+      /* ⚠️⚠️⚠️ 돈이 오가는 결정을 하는 **그 자리**에서 한 번 더 말합니다 */
+      ok("⚠️⚠️⚠️ **거래 당사자가 아니라고** 그 자리에서 말한다 (제20조 제1항)",
+         d.warn.indexOf("거래 당사자가 아닙니다") >= 0, d.warn.slice(0, 120));
+      /* ⚠️ 결제를 아예 받지 않으므로 그 말을 쓸 수 없습니다 (제20조의3) */
+      ok("⚠️⚠️ **「안전결제」 · 「안전거래」 를 한 글자도 안 적는다**",
+         d.warn.indexOf("안전결제") < 0 && d.warn.indexOf("안전거래") < 0,
+         d.warn.slice(0, 120));
+      ok("  문의 · 찜 · 목록으로 가는 길이 다 있다",
+         d.ask && d.fav && d.back, JSON.stringify([d.ask, d.fav, d.back]));
+      ok("⚠️⚠️ 상세에서는 **거르개 · 맨 위 줄 · 올리는 양식**을 가린다",
+         d.rail === true && d.bar === true && d.box === true,
+         JSON.stringify([d.rail, d.bar, d.box]));
+
+      /* ⚠️ 작은 그림을 누르면 **큰 그림만** 갈아 끼웁니다 (주소는 그대로) */
+      await g.p.click(".lsd-t:nth-child(2)");
+      await g.p.waitForTimeout(200);
+      const sw = await g.p.evaluate(function(){
+        return { big: document.getElementById("lsd-big").getAttribute("src"),
+                 url: location.search };
+      });
+      ok("  작은 그림을 누르면 **큰 그림만** 바뀐다 (주소는 그대로)",
+         sw.big.indexOf("b.jpg") > 0 && sw.url.indexOf("v=" + UID1) >= 0,
+         JSON.stringify(sw));
+
+      /* 문의 — ⚠️ 보내는 꾸러미를 뜯어 봅니다 */
+      await g.p.click(".lsd-ask");
+      await g.p.waitForTimeout(250);
+      const hasF = await g.p.evaluate(function(){ return !!document.getElementById("lsaf"); });
+      ok("  문의 단추를 누르면 **양식이 열린다**", hasF, String(hasF));
+      if(hasF){
+        await g.p.fill("#lsaf [name='contact']", "010-1234-0069");
+        const n0 = g.sent.length;
+        await g.p.click("#lsaf button[type='submit']");
+        await g.p.waitForTimeout(400);
+        const aq = g.sent.slice(n0).filter(function(x){ return x.name === "ask_listing"; });
+        ok("  보내면 **`ask_listing` 문**을 부른다", aq.length === 1,
+           JSON.stringify(g.sent.slice(n0)).slice(0, 220));
+        /* ⚠️ 동의 시각을 **반드시** 보냅니다 (제17조 제2항 · 0056 이 null 을
+           거절합니다) */
+        ok("  ⚠️ **동의 시각**을 같이 보낸다 (제15조 제2항)",
+           aq.length === 1 && !!JSON.parse(aq[0].body).p.agree_at,
+           aq.length ? aq[0].body.slice(0, 160) : "");
+      }
+      await g.p.close();
+    }
+
+    /* ── 상세 — ⚠️⚠️ **"없다" 와 "못 읽었다" 를 가립니다** ─────────── */
+    {
+      const g = await open("/cat/used?v=11111111-1111-1111-1111-111111111111",
+                           { role:"customer", name:"손님", signedIn:true },
+                           { v_listing_open: [] }, {}, true);
+      const t = await g.p.evaluate(function(){
+        return (document.getElementById("lslist") || {}).textContent || "";
+      });
+      /* ⚠️⚠️ 공개 보기는 팔린 · 내려간 · 가려진 매물을 안 냅니다 — 그러니
+         0줄은 "그런 매물이 없다" 가 아니라 **"지금은 볼 수 없다"** 입니다
+         (모르는 것을 단정하지 않습니다 · 절대 규칙 1) */
+      ok("⚠️⚠️ 0줄을 **「없는 매물」로 단정하지 않는다** (팔렸을 수 있습니다)",
+         t.indexOf("지금은 볼 수 없는") >= 0 && t.indexOf("없는 매물입니다") < 0,
+         t.slice(0, 120));
+      await g.p.close();
+    }
+
+    /* ── 상세 — ⚠️ 로그인 전에는 **문의 단추를 안 냅니다** ──────────── */
+    {
+      const g = await open("/cat/used?v=" + UID1,
+                           { role:"customer", name:"", signedIn:false },
+                           { v_listing_open: [Object.assign({}, LST[0],
+                             { id: UID1 })] }, {}, true);
+      const d = await g.p.evaluate(function(){
+        return { ask: !!document.querySelector(".lsd-ask"),
+                 fav: !!document.querySelector("[data-fav]"),
+                 txt: (document.getElementById("lsd-b") || {}).textContent || "",
+                 log: !!document.querySelector('#lsd-b a[href*="/login"]') };
+      });
+      /* ⚠️ 그리면 눌러서 로그인 화면으로 갔다가 돌아와도 **보낸 것이
+         없는** 꼴이 됩니다 (절대 규칙 5) */
+      ok("⚠️ 로그인 전에는 문의 · 찜 단추를 **안 내고** 로그인 길을 낸다",
+         !d.ask && !d.fav && d.log, JSON.stringify(d).slice(0, 200));
+      await g.p.close();
+    }
+
+    /* ── 예약중 매물의 상세 — ⚠️⚠️ **그 사실을 그 자리에서 말합니다** ── */
+    {
+      const g = await open("/cat/used?v=" + UID3,
+                           { role:"customer", name:"손님", signedIn:true },
+                           { v_listing_open: [Object.assign({}, LST[2],
+                             { id: UID3 })] }, {}, true);
+      const d = await g.p.evaluate(function(){
+        return { st: (document.querySelector(".lsd-st") || {}).textContent || "",
+                 ask: !!document.querySelector(".lsd-ask"),
+                 note: (document.getElementById("lsd-b") || {}).textContent || "" };
+      });
+      ok("⚠️⚠️ 예약중이면 **딱지를 내고 그 사실을 말한다**",
+         d.st.indexOf("예약중") >= 0 && d.note.indexOf("다른 분과") >= 0,
+         JSON.stringify(d).slice(0, 200));
+      /* ⚠️⚠️ **문의는 그대로 받습니다** — 앞의 거래가 깨질 수 있습니다
+         (문을 닫아 두면 손님은 까닭을 모르고 "고장" 으로 읽습니다) */
+      ok("⚠️⚠️ 예약중에도 **문의 단추를 낸다** (문도 받습니다 · 0069)",
+         d.ask, String(d.ask));
       await g.p.close();
     }
 
@@ -5692,6 +6069,192 @@ function boardsOf(){
            r.drawn && r.btn === 0, JSON.stringify(r));
         await g.p.close();
       }
+    }
+
+    /* ⑧ ⚠️⚠️⚠️ 0069 — **예약중 · 모델명 · 사진 차례 · 관심상품** */
+    {
+      /* ⚠️ 가짜 자료도 DB 가 받는 값입니다 — `state` 는 0069 의 다섯 중 하나 */
+      const M3 = [{ id:"l1", title:"내 드라이버", body:"설명입니다",
+        sub:"us-driver", region:"seoul", ship:false, price:350000,
+        cond:"good", state:"open", brand:"테일러메이드", model:"스텔스2",
+        hidden_why:null, created_at:"2026-11-06T01:00:00Z" },
+        { id:"l2", title:"예약 걸린 퍼터", body:"설명입니다",
+          sub:"us-putter", region:"busan", ship:true, price:120000,
+          cond:"like", state:"reserved", brand:"오디세이", model:null,
+          hidden_why:null, created_at:"2026-11-06T01:00:00Z" }];
+      const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+        { listing: M3, listingask: [], v_listing_contact: [],
+          v_listing_fav: [] }, {},
+        { photos: [], lphotos: [
+          { id:"f1", caption:"", ord:0, url:"https://sb-test.supabase.co/x/a.jpg" },
+          { id:"f2", caption:"", ord:1, url:"https://sb-test.supabase.co/x/b.jpg" },
+          { id:"f3", caption:"", ord:2, url:"https://sb-test.supabase.co/x/c.jpg" }] });
+      const m = await g.p.evaluate(function(){
+        const e = document.getElementById("lsmine");
+        const li = e.querySelectorAll(".mj-i");
+        return { txt: e.innerText,
+                 res0: !!li[0].querySelector(".ls-res"),
+                 open0: !!li[0].querySelector(".ls-open"),
+                 res1: !!li[1].querySelector(".ls-res"),
+                 open1: !!li[1].querySelector(".ls-open"),
+                 edit1: !!li[1].querySelector(".ls-edit"),
+                 ph1: !!li[1].querySelector(".ls-ph"),
+                 see: (li[0].querySelector('a[href*="/cat/used?v="]') || {})
+                        .getAttribute ? li[0].querySelector('a[href*="/cat/used?v="]')
+                        .getAttribute("href") : "" };
+      });
+      ok("⚠️ 0069 — 줄머리에 **모델명**을 적는다", m.txt.indexOf("스텔스2") >= 0, "");
+      ok("  ⚠️ 모델명이 **비면 그 자리를 뺀다**",
+         m.txt.indexOf("undefined") < 0 && m.txt.indexOf("null") < 0, "");
+      ok("⚠️⚠️ 팔고 있는 줄에는 **「예약중으로」**가 있다",
+         m.res0 && !m.open0, JSON.stringify([m.res0, m.open0]));
+      /* ⚠️⚠️⚠️ **되돌리는 길이 있어야** 합니다 — 없으면 잘못 누른 분이
+         매물을 다시 올려야 하고 받아 둔 문의가 통째로 날아갑니다
+         (막다른 길 · 절대 규칙 2) */
+      ok("⚠️⚠️⚠️ 예약중 줄에는 **「예약 풀기」**가 있다 (막다른 길로 두지 않습니다)",
+         m.open1 && !m.res1, JSON.stringify([m.res1, m.open1]));
+      /* ⚠️⚠️ **예약중에도 고치고 사진을 붙입니다** — `state = 'open'` 만
+         보면 예약중으로 둔 매물을 손댈 수가 없습니다 (0069 가 문 넷을
+         같이 고친 그 까닭) */
+      ok("⚠️⚠️ 예약중에도 **고치기 · 사진 단추가 있다**",
+         m.edit1 && m.ph1, JSON.stringify([m.edit1, m.ph1]));
+      ok("  손님 화면으로 가는 길이 있다", m.see.indexOf("/cat/used?v=l1") === 0, m.see);
+
+      /* 예약중으로 옮기면 **그 상태를 보냅니다** */
+      const n0 = g.sent.length;
+      await g.p.click(".mj-i:nth-child(1) .ls-res");
+      await g.p.waitForTimeout(350);
+      const rq = g.sent.slice(n0).filter(function(x){ return x.name === "close_listing"; });
+      ok("⚠️ 「예약중으로」가 **`state:\"reserved\"`** 를 보낸다",
+         rq.length === 1 && JSON.parse(rq[0].body).p.state === "reserved",
+         rq.length ? rq[0].body : JSON.stringify(g.sent.slice(n0)).slice(0, 180));
+      /* 되돌리면 `open` 을 보냅니다 */
+      const n1 = g.sent.length;
+      await g.p.click(".mj-i:nth-child(2) .ls-open");
+      await g.p.waitForTimeout(350);
+      const oq = g.sent.slice(n1).filter(function(x){ return x.name === "close_listing"; });
+      ok("  「예약 풀기」가 **`state:\"open\"`** 을 보낸다",
+         oq.length === 1 && JSON.parse(oq[0].body).p.state === "open",
+         oq.length ? oq[0].body : "");
+
+      /* ── 사진 차례 ───────────────────────────────────────────────
+         ⚠️⚠️ **대표는 첫째**입니다 — 따로 "대표로" 단추를 두면 ord 와
+         대표가 두 값이 되고, 둘이 어긋나는 날 카드와 상세가 다른 사진을
+         냅니다. 「맨 앞으로」가 곧 「대표로」입니다. */
+      await g.p.click(".mj-i:nth-child(1) .ls-ph");
+      await g.p.waitForTimeout(600);
+      const ph = await g.p.evaluate(function(){
+        const e = document.getElementById("lsmine");
+        const t = e.querySelectorAll(".lsp-t");
+        return { n: t.length,
+                 badge: (t[0].querySelector(".lsp-b") || {}).textContent || "",
+                 badge2: !!t[1].querySelector(".lsp-b"),
+                 /* ⚠️ 맨 앞 · 맨 뒤에서는 그 단추를 **안 냅니다** */
+                 up0: !!t[0].querySelector(".lsp-up"),
+                 dn0: !!t[0].querySelector(".lsp-dn"),
+                 up2: !!t[2].querySelector(".lsp-up"),
+                 dn2: !!t[2].querySelector(".lsp-dn"),
+                 hint: (e.querySelector(".lsp .jhint") || {}).textContent || "" };
+      });
+      ok("⚠️ 0069 — 사진 상자가 **차례 바꾸는 단추**를 낸다",
+         ph.n === 3 && ph.up2 && !ph.dn2, JSON.stringify(ph));
+      ok("  **대표 딱지**가 첫 장에만 붙는다",
+         ph.badge.indexOf("대표") >= 0 && !ph.badge2,
+         ph.badge + " / " + String(ph.badge2));
+      /* ⚠️ 맨 앞에서 「앞으로」를 내면 눌러도 아무 일이 안 나는 칸입니다
+         (절대 규칙 5) */
+      ok("  ⚠️ 맨 앞에는 **「앞으로」를 안 낸다**", !ph.up0 && ph.dn0,
+         JSON.stringify([ph.up0, ph.dn0]));
+      /* ⚠️ 글이 코드와 달라지지 않게 — 「첫 장」이 아니라 **「대표 사진」** */
+      ok("  안내문이 **「대표 사진」**이라고 적는다 (바꿀 수 있는 것을 바꿀 수 " +
+         "없는 것처럼 적지 않습니다)", ph.hint.indexOf("대표 사진") >= 0,
+         ph.hint.slice(0, 80));
+
+      /* 차례를 바꾸면 **늘어놓은 전부**를 보냅니다 */
+      const n2 = g.sent.length;
+      await g.p.click(".lsp-t:nth-child(2) .lsp-up");
+      await g.p.waitForTimeout(500);
+      const sq = g.sent.slice(n2).filter(function(x){
+        return x.name === "order_listing_photo"; });
+      ok("⚠️⚠️ 차례를 바꾸면 **`order_listing_photo`** 를 부른다",
+         sq.length === 1, JSON.stringify(g.sent.slice(n2)).slice(0, 200));
+      /* ⚠️⚠️ **그 매물의 사진이 빠짐없이** 와야 문이 받습니다 — 일부만
+         보내면 안 보낸 것이 조용히 0 이 되어 그것이 대표가 됩니다 */
+      ok("  ⚠️⚠️ **세 장 전부**를 바뀐 차례로 보낸다 (일부만 보내면 문이 거절합니다)",
+         sq.length === 1 && (function(){
+           const o = JSON.parse(sq[0].body).p;
+           return o.listing === "l1" && o.ids.length === 3 &&
+                  o.ids[0] === "f2" && o.ids[1] === "f1" && o.ids[2] === "f3";
+         })(), sq.length ? sq[0].body : "");
+      await g.p.close();
+    }
+
+    /* ⑨ ⚠️⚠️ 0069 — **관심상품** (js/myfav.js) */
+    {
+      const FAV = [{ id:"l1", title:"담아 둔 드라이버", price:350000,
+        sub:"us-driver", region:"seoul", ship:false, brand:"타이틀리스트",
+        model:"스텔스2", state:"open", thumb:"lst/l1/photo/a.jpg",
+        fav_at:"2026-11-08T01:00:00Z" },
+        /* ⚠️⚠️ **팔린 매물도 남습니다** — `v_listing_open` 을 썼으면
+           팔리는 순간 목록에서 조용히 사라졌습니다 */
+        { id:"l2", title:"팔린 퍼터", price:0,
+          sub:"us-putter", region:"busan", ship:true, brand:null,
+          model:null, state:"done", thumb:null,
+          fav_at:"2026-11-08T00:00:00Z" }];
+      const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+        { listing: [], listingask: [], v_listing_contact: [],
+          v_listing_fav: FAV }, {}, true);
+      const f = await g.p.evaluate(function(){
+        const e = document.getElementById("favbox");
+        const li = e ? e.querySelectorAll(".mfv-i") : [];
+        return { on: !!e && !e.hidden, n: li.length,
+                 txt: e ? e.innerText : "",
+                 href: li.length ? li[0].querySelector(".mfv-a").getAttribute("href") : "",
+                 im: li.length ? !!li[0].querySelector(".mfv-im") : false,
+                 no: li.length > 1 ? !!li[1].querySelector(".mfv-no") : false,
+                 st0: li.length ? !!li[0].querySelector(".mfv-st") : null,
+                 st1: li.length > 1
+                   ? (li[1].querySelector(".mfv-st") || {}).textContent || "" : "" };
+      });
+      ok("⚠️⚠️ 0069 — `/my` 에 **관심상품 상자**가 선다", f.on && f.n === 2,
+         JSON.stringify(f).slice(0, 220));
+      ok("  줄을 누르면 **상세 화면**으로 간다",
+         f.href.indexOf("/cat/used?v=l1") === 0, f.href);
+      ok("  사진이 있으면 내고, **0장이면 아이콘 타일**이다 (남의 사진을 깔지 않습니다)",
+         f.im && f.no, JSON.stringify([f.im, f.no]));
+      ok("⚠️ 팔고 있는 줄에는 **딱지를 안 낸다**", f.st0 === false, String(f.st0));
+      /* ⚠️⚠️ **팔린 매물도 남고 그 사실을 말합니다** — 조용히 사라지면
+         손님은 까닭을 모릅니다 */
+      ok("⚠️⚠️ **팔린 매물도 남고 「팔렸습니다」를 적는다**",
+         f.st1.indexOf("팔렸") >= 0, f.st1);
+      /* ⚠️⚠️ **찜 수를 어디에도 안 적습니다** (절대 규칙 1 의 결) */
+      ok("⚠️⚠️ **찜 수를 안 적는다** (세어 낼 수 있다고 내는 것이 아닙니다)",
+         f.txt.indexOf("찜 ") < 0, f.txt.slice(0, 120));
+      /* 빼면 문을 부릅니다 */
+      const n0 = g.sent.length;
+      await g.p.click(".mfv-off");
+      await g.p.waitForTimeout(350);
+      const q = g.sent.slice(n0).filter(function(x){ return x.name === "fav_listing"; });
+      ok("  「빼기」가 **`fav_listing` 에 `on:false`** 를 보낸다",
+         q.length === 1 && JSON.parse(q[0].body).p.on === false,
+         q.length ? q[0].body : JSON.stringify(g.sent.slice(n0)).slice(0, 180));
+      await g.p.close();
+    }
+
+    /* ⑩ ⚠️ 0건이면 **막다른 길로 두지 않습니다** (절대 규칙 2) */
+    {
+      const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+        { listing: [], listingask: [], v_listing_contact: [],
+          v_listing_fav: [] }, {}, true);
+      const z = await g.p.evaluate(function(){
+        const e = document.getElementById("favbox");
+        return { on: !!e && !e.hidden, txt: e ? e.innerText : "",
+                 go: !!(e && e.querySelector('a[href="/cat/used"]')) };
+      });
+      ok("⚠️ 관심상품이 0건이면 **중고장터로 가는 길**을 낸다 (막다른 길로 두지 않습니다)",
+         z.on && z.go && z.txt.indexOf("아직 담아 두신") >= 0,
+         JSON.stringify(z).slice(0, 180));
+      await g.p.close();
     }
   }
 

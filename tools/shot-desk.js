@@ -324,10 +324,18 @@ T_ADMIN.settlement = FEE_SETT;
 const LSMINE = [
   { id:"ls-1", title:"타이틀리스트 드라이버 10.5도", body:"2년 썼고 흠집 조금 있습니다. 헤드커버 같이 드립니다.",
     sub:"us-driver", region:"seoul", ship:false, price:350000, cond:"good",
+    brand:"타이틀리스트", model:"스텔스2 10.5도",
     state:"open", hidden_why:null, created_at:"2026-11-06T01:00:00Z" },
   { id:"ls-2", title:"연습용 아이언 무료로 나눔", body:"입문용입니다. 직접 가져가실 분만.",
     sub:"us-iron", region:"gyeonggi", ship:false, price:0, cond:"fair",
+    brand:"기타", model:null,
     state:"open", hidden_why:null, created_at:"2026-11-05T01:00:00Z" },
+  /* ⚠️ 0069 — **예약중 한 줄**. 「예약 풀기」 단추가 그려지는지 눈으로
+     봐야 하는 자리입니다 (되돌리는 길이 없으면 막다른 길입니다). */
+  { id:"ls-4", title:"오디세이 퍼터 (예약중)", body:"한 분과 이야기 중입니다.",
+    sub:"us-putter", region:"busan", ship:true, price:120000, cond:"like",
+    brand:"오디세이", model:null,
+    state:"reserved", hidden_why:null, created_at:"2026-11-07T01:00:00Z" },
   { id:"ls-3", title:"가려진 매물", body:"운영자가 가린 자리입니다.",
     sub:"us-bag", region:"seoul", ship:true, price:120000, cond:"like",
     state:"hidden", hidden_why:"금지된 물건으로 보입니다",
@@ -420,6 +428,17 @@ const T_MY = {
   inquiry:INQ,
   /* ⚠️ 0056 — 내 중고 매물 (`js/mylisting.js`) */
   listing:LSMINE, listingask:LSASK, v_listing_contact:LSCON,
+  /* ⚠️ 0069 의 관심상품 — **팔린 매물도 남습니다**(그 사실을 적는지
+     눈으로 봐야 하는 자리입니다). */
+  v_listing_fav: [
+    { id:"lf-1", title:"담아 둔 타이틀리스트 드라이버", price:350000,
+      sub:"us-driver", region:"seoul", ship:false, brand:"타이틀리스트",
+      model:"스텔스2", state:"open", thumb:"lst/lf-1/photo/a.jpg",
+      fav_at:"2026-11-08T02:00:00Z" },
+    { id:"lf-2", title:"팔린 퍼터 (담아 둔 것)", price:0,
+      sub:"us-putter", region:"busan", ship:true, brand:null,
+      model:null, state:"done", thumb:null,
+      fav_at:"2026-11-08T01:00:00Z" }],
   /* ⚠️ 0058 — 저장한 조건 (`js/mywatch.js`). 흉내 자료를 안 주면 그
      상자가 **0건으로만** 그려져 목록 모양을 아무도 못 봅니다 (0051 의
      사진 상자가 `pvPhoto` 를 안 돌려줘 한 번도 안 그려진 그 자리). */
@@ -496,16 +515,30 @@ const T_WT_TR = {
    ⚠️⚠️ 공개 버킷 주소는 그물 밖이라 그림이 **깨진 네모**로 찍힙니다 —
    그러면 "사진이 안 나온다" 로 읽히므로, 아래에서 그 주소를 가로채
    저장소의 그림으로 바꿔 줍니다 (`PUB` 가로채기). */
+/* ⚠️ 0069 가 더한 칸 — `model` · `state` · `created_at` · `seller`.
+   ⚠️⚠️ **안 채우면 찍힌 그림이 거짓말을 합니다** — 등록시간 칸이 빈
+   글자가 되고 상태 덮개가 안 서서, 그 그림을 보고 "안 만들었구나" 로
+   읽습니다 (가짜 자료가 DB 가 받는 값이어야 하는 그 자리의 결). */
+const NOW_ISO = new Date(Date.now() - 3 * 3600 * 1000).toISOString();
+/* ⚠️⚠️ **`listing.id` 는 uuid 입니다** — `?v=l1` 로 열면 `readUrl()` 이
+   꼴을 보고 버려서 **상세가 아니라 목록**이 찍힙니다(화면이 맞고 자료가
+   틀린 자리입니다). 상세를 찍는 장면만 uuid 꼴로 갈아 끼웁니다. */
+const LST_U1 = "aaaaaaaa-0069-4000-8000-000000000001";
+const LST_U3 = "aaaaaaaa-0069-4000-8000-000000000003";
 const T_LST = {
+  v_listing_fav: [{ id:"l2" }],
   v_listing_open: [
     { id:"l1", sub:"us-driver", region:"seoul", ship:false,
       title:"드라이버 10.5도 팝니다 (헤드커버 포함)",
       body:"2년 쓴 드라이버입니다.", price:350000, cond:"good", ask_n:0,
-      brand:"타이틀리스트", photo_n:3, thumb:"lst/l1/photo/a.jpg" },
+      brand:"타이틀리스트", model:"스텔스2 10.5도", state:"open",
+      created_at:NOW_ISO, seller:"김**",
+      photo_n:3, thumb:"lst/l1/photo/a.jpg" },
     { id:"l2", sub:"us-iron", region:"gyeonggi", ship:true,
       title:"연습용 아이언 무료로 나눔합니다",
       body:"연습용 아이언입니다.", price:0, cond:"fair", ask_n:2,
-      brand:null, photo_n:0, thumb:null },
+      brand:null, model:null, state:"open", created_at:NOW_ISO,
+      seller:"이**", photo_n:0, thumb:null },
     /* ⚠️ 가짜 자료도 **DB 가 받는 값**이어야 합니다 — 처음에
        `us-putter` 라고 적어 두었다가 찍은 그림에 **영문 키가 그대로**
        찍혔습니다 (이 저장소가 다섯 번 겪은 자리). 있는 키는
@@ -514,11 +547,14 @@ const T_LST = {
     { id:"l3", sub:"us-wedge", region:"busan", ship:true,
       title:"웨지 52도 · 56도 두 자루 팝니다", body:"거의 안 썼습니다.",
       price:120000, cond:"like", ask_n:1,
-      brand:"오디세이", photo_n:1, thumb:"lst/l3/photo/a.jpg" },
+      brand:"오디세이", model:null, state:"reserved",
+      created_at:NOW_ISO, seller:"박**",
+      photo_n:1, thumb:"lst/l3/photo/a.jpg" },
     { id:"l4", sub:"us-bag", region:"incheon", ship:false,
       title:"캐디백 · 보스턴백 세트", body:"한 시즌 썼습니다.",
       price:90000, cond:"good", ask_n:0,
-      brand:"기타", photo_n:2, thumb:"lst/l4/photo/a.jpg" }
+      brand:"기타", model:null, state:"done", created_at:NOW_ISO,
+      seller:"최**", photo_n:2, thumb:"lst/l4/photo/a.jpg" }
   ]
 };
 
@@ -584,6 +620,23 @@ const SCENES = [
      영원히 아무도 안 보는 자리입니다 (PC 는 레일이 늘 서 있습니다). */
   ["used",            "/cat/used", CUS, T_LST, {}],
   ["used-filter",     "/cat/used", CUS, T_LST, {}, "#lf-open"],
+  /* ⚠️⚠️⚠️ **상세 화면 (0069)** — 2026-11-08 까지 이 화면이 아예
+     없었습니다. 찍어 보지 않으면 "보기 흉한가" 를 알 수 없습니다. */
+  ["used-one",        "/cat/used?v=" + LST_U1, CUS,
+    Object.assign({}, T_LST, {
+      v_listing_open: [Object.assign({}, T_LST.v_listing_open[0],
+                                     { id: LST_U1 })],
+      v_listing_photo_public: [
+        { path:"lst/l1/photo/a.jpg", caption:"앞면", ord:0 },
+        { path:"lst/l1/photo/b.jpg", caption:"뒷면", ord:1 },
+        { path:"lst/l1/photo/c.jpg", caption:"헤드", ord:2 }] }), {}],
+  /* ⚠️ 예약중 매물의 상세 — **그 사실을 그 자리에서 말하는지** 봅니다 */
+  ["used-one-res",    "/cat/used?v=" + LST_U3, CUS,
+    Object.assign({}, T_LST, {
+      v_listing_open: [Object.assign({}, T_LST.v_listing_open[2],
+                                     { id: LST_U3 })],
+      v_listing_photo_public: [
+        { path:"lst/l3/photo/a.jpg", caption:"", ord:0 }] }), {}],
   /* ⚠️ 조건을 걸고 들어온 자리 — 칩 한 줄이 보이는지 눈으로 봅니다 */
   ["used-chips",      "/cat/used?br=" + encodeURIComponent("타이틀리스트") +
                       "&cd=good&rg=seoul&sh=1", CUS, T_LST, {}],
@@ -632,6 +685,10 @@ const BOXES = {
           ["nick", "#nickbox"],
           /* ⚠️ 0061 의 내가 올린 구합니다 (js/mywanted.js) */
           ["wanted", "#wtmine"],
+          /* ⚠️ 0069 의 관심상품 (js/myfav.js) — **새 상자를 만드는 날
+             이 줄을 같이 늘립니다.** 안 늘리면 그 안은 영원히 아무도
+             안 보는 자리가 됩니다 (0051 의 사진 상자가 그랬습니다). */
+          ["fav", "#favbox"],
           ["inq", "#myinqbox"]],
   /* ⚠️⚠️ 구합니다(0061)도 **설정이 있어야 열립니다** — `check-screens` 는
      빈 상자만 봅니다. 분류 화면의 목록을 여기서 찍습니다. */
@@ -641,7 +698,10 @@ const BOXES = {
   "/cat/travel": [["wanted", "#wtwrap"]],
   /* ⚠️⚠️ 중고 매물 (0068) — 거르개 묶음(`#lswrap`)과 목록을 따로 찍습니다 */
   "/cat/used": [["wrap", "#lswrap"], ["bar", "#lsbar"], ["list", "#lslist"],
-                ["rail", "#lsrail"], ["form", "#lsbox"]]
+                ["rail", "#lsrail"], ["form", "#lsbox"],
+                /* ⚠️ 0069 — 상세 화면. `?v=` 로 들어오면 목록 자리에
+                   그려지므로 `#lslist` 가 그 상자입니다. */
+                ["detail", ".lsd"]]
 };
 
 (async function(){

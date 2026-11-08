@@ -124,12 +124,42 @@ function checkKeys(sql, col, table){
     if(from < 0) from = sql.indexOf("create table " + table + " (");
     if(from < 0) return null;
   }
+  const grab = at => {
+    const open = sql.indexOf("(", at + 7);
+    const close = sql.indexOf(")", open);
+    if(open < 0 || close < 0) return null;
+    return quoted(sql.slice(open + 1, close));
+  };
+  let out = null;
   const at = sql.indexOf("check (" + col + " in (", from);
-  if(at < 0) return null;
-  const open = sql.indexOf("(", at + 7);
-  const close = sql.indexOf(")", open);
-  if(open < 0 || close < 0) return null;
-  return quoted(sql.slice(open + 1, close));
+  if(at >= 0) out = grab(at);
+  /* ⚠️⚠️⚠️ **뒤 번호가 그 check 를 갈아 끼우면 그것이 DB 의 참입니다**
+     (2026-11-08). 0069 가 `listing.state` 에 `reserved` 를 더하려고
+     옛 check 를 떼고 `alter table listing add constraint … check (state
+     in (…))` 로 다시 걸었는데, 이 함수는 `create table` 자리에서 찾은
+     **첫 것**만 읽어서 0056 의 옛 넷을 DB 의 참으로 알고 **멀쩡한 화면을
+     실패로** 잡았습니다 — `enum` 쪽에서 `alter type … add value` 를
+     안 세어 0015 의 셋을 아무도 못 보고 있던 자리의 **거울상**입니다
+     (그쪽은 모르고 통과, 이쪽은 모르고 실패).
+     ⚠️ **마지막 것이 이깁니다** — 파일을 번호 차례로 이어 읽으므로
+     뒤에 적힌 것이 나중에 돈 것입니다. 번호를 박지 않습니다. */
+  let i = 0;
+  const head = "alter table " + table + " add constraint ";
+  for(;;){
+    const a2 = table ? sql.indexOf(head, i) : -1;
+    if(a2 < 0) break;
+    /* ⚠️ 그 `add constraint` 한 덩이 안에서만 봅니다 — 세미콜론까지.
+       덩이를 안 자르면 **다음 제약의 check** 를 이 칸 것으로 읽습니다. */
+    const semi = sql.indexOf(";", a2);
+    const seg = sql.slice(a2, semi < 0 ? sql.length : semi);
+    const c2 = seg.indexOf("check (" + col + " in (");
+    if(c2 >= 0){
+      const got = grab(a2 + c2);
+      if(got && got.length) out = got;
+    }
+    i = a2 + head.length;
+  }
+  return out;
 }
 function quoted(s){
   const out = [];
@@ -355,6 +385,22 @@ if(require.main === module){
                      : "  ❌ **못 잡았습니다** (광고 상태를 안 세고 있습니다)");
     if(!got6) fail = 1;
 
+    /* ⚠️⚠️⚠️ **뒤 번호가 갈아 끼운 check 를 안 보면 멀쩡한 화면을 실패로
+       잡습니다** (2026-11-08). 0069 가 `listing.state` 에 `reserved` 를
+       더하려고 0056 의 옛 check 를 떼고 `alter table … add constraint`
+       로 다시 걸었는데, `create table` 자리에서 찾은 **첫 것**만 읽던
+       판은 옛 넷을 DB 의 참으로 알고 "화면에 reserved 가 있는데 DB 에
+       없습니다" 로 떨어졌습니다 — 뒤에 걸린 것을 빼 보고 그 자리가
+       아직 살아 있는지 봅니다. */
+    console.log("\n── 되돌려 보기 ⑦ 뒤 번호가 갈아 끼운 check 를 빼면");
+    const sql7 = readAll().replace(
+      "check (state in ('open','reserved','done','closed','hidden'))",
+      "check (state in ('open','done','closed','hidden'))");
+    const r7 = run({ sql: sql7 });
+    const got7 = r7.bad.some(function(m){ return m.indexOf("reserved") >= 0; });
+    console.log(got7 ? "  ✅ 잡았습니다 — " + r7.bad.filter(m => m.indexOf("reserved") >= 0)[0]
+                     : "  ❌ **못 잡았습니다** (뒤 번호의 check 를 안 세고 있습니다)");
+    if(!got7) fail = 1;
     console.log("\n── 되돌려 보기 ③ DB 쪽을 아예 못 읽으면 (검사가 틀린 경우)");
     const r3 = run({ sql: "-- 아무것도 없습니다" });
     const got3 = r3.measured === 0 && r3.bad.length > 0;

@@ -67,6 +67,39 @@
       '</button>';
   }
 
+  /* 아직 팔고 있는 자리인가 — ⚠️ **예약중도 들어갑니다**(0069).
+     ⚠️⚠️ 이 판단을 화면 곳곳에 흩어 적으면 한 곳만 고치는 날 어떤
+     단추는 나오고 어떤 단추는 안 나옵니다 — **한 함수**입니다. */
+  function live(st){ return st === "open" || st === "reserved"; }
+
+  /* 매물 한 줄의 단추들 — ⚠️ 예약중이면 **되돌리는 단추**를 냅니다
+     (없으면 잘못 누른 분이 매물을 다시 올려야 하고 받아 둔 문의가
+     통째로 날아갑니다 · 막다른 길 · 절대 규칙 2). */
+  function btns(r){
+    var ph = (window.amLstPhoto && window.amLstPhoto.on())
+      ? '<button type="button" class="btn btn-line ls-ph" data-id="' +
+        esc(r.id) + '">사진</button>' : '';
+    /* ⚠️⚠️ **예약중 단추의 말이 상태마다 갈립니다** — 한 말로 두면
+       눌러도 아무 일이 안 나는 칸이 됩니다(이미 그 상태면 문이
+       "이미 그 상태입니다" 로 거절합니다 · 0069). */
+    var res = r.state === "reserved"
+      ? '<button type="button" class="btn btn-line ls-open" data-id="' + esc(r.id) +
+        '">예약 풀기</button>'
+      : '<button type="button" class="btn btn-line ls-res" data-id="' + esc(r.id) +
+        '">예약중으로</button>';
+    return ph + res +
+      '<button type="button" class="btn btn-line ls-edit" data-id="' + esc(r.id) +
+      '">고치기</button>' +
+      '<button type="button" class="btn btn-line ls-sold" data-id="' + esc(r.id) +
+      '">팔렸습니다</button>' +
+      '<button type="button" class="btn btn-line ls-close" data-id="' + esc(r.id) +
+      '">내리기</button>' +
+      /* ⚠️ 손님이 보는 화면으로 가는 길 — 올리신 분이 **제 매물이 어떻게
+         보이는지** 볼 자리가 없었습니다 (사진 차례를 바꾼 뒤 확인할 곳) */
+      '<a class="btn btn-bad" href="/cat/used?v=' + encodeURIComponent(r.id) +
+      '">손님 화면으로 보기</a>';
+  }
+
   function paint(a, mine, asks, contacts){
     var cm = {};
     contacts.forEach(function(c){ cm[c.ask_id] = c; });
@@ -89,7 +122,9 @@
             esc(window.amLstPrice(r.price)) + ' · ' +
             /* ⚠️ 브랜드가 비면 **그 자리를 빼고** 종류만 적습니다
                (0068 전에 올라온 매물은 비어 있습니다 · 절대 규칙 2) */
-            (r.brand ? esc(r.brand) + ' · ' : '') + esc(subName(r.sub)) +
+            (r.brand ? esc(r.brand) + ' · ' : '') +
+            /* ⚠️ 모델명도 비면 **그 자리를 빼고** 넘어갑니다 (0069) */
+            (r.model ? esc(r.model) + ' · ' : '') + esc(subName(r.sub)) +
             ' · ' + esc(rgName(r.region)) + ' · ' + esc(st.name) + '</p>' +
           /* ⚠️ 가린 까닭을 글쓴이에게 보여 줍니다 — 까닭 없이 못 가리게
              해 두고 그 까닭을 숨기면 무엇이 문제였는지 모릅니다 */
@@ -114,23 +149,17 @@
                 '</li>';
               }).join("") + '</ul>'
             : '<p class="mj-z">아직 문의가 없습니다.</p>') +
-          (r.state === "open"
-            /* ⚠️⚠️ **사진은 여기서도 붙입니다** — 올리신 직후
-               (`/cat/used`)에만 붙일 수 있게 두면 그 화면을 닫은 분의
-               매물은 영원히 사진이 없습니다 (막다른 길 · 절대 규칙 2).
-               ⚠️ 상자 markup 과 올리는 길은 `js/lstphoto.js` **한 곳**
-               입니다 — 두 화면에 따로 적으면 한쪽만 고치는 날 어긋납니다.
-               ⚠️ 버킷이 꺼져 있으면 단추를 **안 냅니다**(눌러도 아무 일이
-               안 나는 단추를 미리 만들지 않습니다). */
-            ? (window.amLstPhoto && window.amLstPhoto.on()
-                ? '<button type="button" class="btn btn-line ls-ph" data-id="' +
-                  esc(r.id) + '">사진</button>' : '') +
-              '<button type="button" class="btn btn-line ls-edit" data-id="' + esc(r.id) +
-              '">고치기</button>' +
-              '<button type="button" class="btn btn-line ls-sold" data-id="' + esc(r.id) +
-              '">팔렸습니다</button>' +
-              '<button type="button" class="btn btn-line ls-close" data-id="' + esc(r.id) +
-              '">내리기</button>' : '') +
+          /* ⚠️⚠️⚠️ **예약중에도 단추를 냅니다** (0069) — `state = 'open'`
+             만 보면 예약중으로 둔 매물을 **고칠 수도 · 사진을 붙일 수도 ·
+             되돌릴 수도** 없습니다(0069 가 문 넷을 같이 고친 그 까닭).
+             ⚠️⚠️ **사진은 여기서도 붙입니다** — 올리신 직후
+             (`/cat/used`)에만 붙일 수 있게 두면 그 화면을 닫은 분의
+             매물은 영원히 사진이 없습니다 (막다른 길 · 절대 규칙 2).
+             ⚠️ 상자 markup 과 올리는 길은 `js/lstphoto.js` **한 곳**
+             입니다 — 두 화면에 따로 적으면 한쪽만 고치는 날 어긋납니다.
+             ⚠️ 버킷이 꺼져 있으면 단추를 **안 냅니다**(눌러도 아무 일이
+             안 나는 단추를 미리 만들지 않습니다). */
+          (live(r.state) ? btns(r) : '') +
         '</li>';
       }).join("") + '</ul>';
     }
@@ -195,6 +224,13 @@
       { id: b.getAttribute("data-id"), state:"done" }); });
     act(".ls-close",  function(b){ return call(a, "close_listing",
       { id: b.getAttribute("data-id"), state:"closed" }); });
+    /* ⚠️⚠️ **예약중은 오갑니다** (0069) — 되돌리는 길이 없으면 잘못 누른
+       분이 매물을 다시 올려야 하고 받아 둔 문의가 통째로 날아갑니다
+       (막다른 길 · 절대 규칙 2). 문도 그 둘을 다 받습니다. */
+    act(".ls-res",    function(b){ return call(a, "close_listing",
+      { id: b.getAttribute("data-id"), state:"reserved" }); });
+    act(".ls-open",   function(b){ return call(a, "close_listing",
+      { id: b.getAttribute("data-id"), state:"open" }); });
     /* ⚠️⚠️ 연락처를 여는 것은 **따로 동의**입니다 — 누른 그 순간을 보냅니다.
        ⚠️ 닫을 때는 동의 시각을 안 보냅니다 (문이 여는 쪽만 봅니다 —
        닫을 때도 요구하면 철회를 막는 꼴입니다). */
@@ -271,6 +307,14 @@
               'aria-label="브랜드를 직접 적습니다" placeholder="브랜드를 적어 주세요">' +
             '<span class="jhint">목록에 없으면 <b>기타</b> 를 고르고 ' +
             '직접 적어 주세요.</span></div>' +
+            /* ⚠️⚠️ **모델명은 비울 수 있습니다** (0069) — 별표를 안 붙입니다.
+               ⚠️ 적혀 있던 값을 **미리 채웁니다** — 안 채우면 늘 보내는
+               칸이라 저장할 때마다 지워집니다 (`save_provider_self` 가
+               `industries` 를 지우고 있던 그 자리). */
+            '<div class="jrow"><label>모델명</label>' +
+            '<input name="model" maxlength="40" value="' + esc(r.model || "") +
+              '" placeholder="예: 스텔스2 · P790">' +
+            '<span class="jhint">모르시면 비워 두셔도 됩니다.</span></div>' +
             '<div class="jrow"><label>물건 상태 <b>*</b></label>' +
             '<select name="cond" required>' + cd + '</select></div>' +
             '<div class="jrow jrow-full"><label class="jchk">' +
@@ -315,6 +359,11 @@
           var p = { id: f.getAttribute("data-id"), title: f.title.value,
                     body: f.body.value, price: f.price.value,
                     brand: brandNow(),
+                    /* ⚠️⚠️ **모델명은 비우는 것도 보내는 것**입니다 (0069) —
+                       늘 보내므로 비우면 지워집니다 (문이 `p ? 'model'` 로
+                       보냈는지를 봅니다). `coalesce` 로 받는 칸이면 빈
+                       글자가 "안 보냈다" 와 섞여 **지울 수가 없습니다**. */
+                    model: f.model.value,
                     cond: f.cond.value, ship: !!f.ship.checked };
           if(f.contact.value) p.contact = f.contact.value;
           call(a, "edit_listing", p)
@@ -336,7 +385,7 @@
          칸을 안 줬으므로 부르면 **질의가 통째로 거절**됩니다 (0053 의
          `memo` · `answered_by` 에서 겪은 그 자리입니다). */
       get(a, "listing?select=id,title,body,sub,region,ship,price,cond,state," +
-             "brand,hidden_why,created_at&order=created_at.desc&limit=50"),
+             "brand,model,hidden_why,created_at&order=created_at.desc&limit=50"),
       get(a, "listingask?select=id,listing_id,msg,state,created_at,by_user," +
              "seller_share_at,buyer_share_at&order=created_at.desc&limit=200"),
       get(a, "v_listing_contact?select=ask_id,seller_contact,buyer_contact," +

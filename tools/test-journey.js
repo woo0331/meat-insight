@@ -88,7 +88,14 @@ const PAGES = ["/", "/categories", "/cat/lesson", "/cat/used", "/cat/booking",
   "/cat/career", "/cat/community",
   /* ⚠️ 0059 — 게시판 하나로 좁힌 주소도 돕니다 (거르개가 주소를 바꾸므로
      그 주소로 바로 들어와도 열려야 합니다). */
-  "/cat/community?s=cm-open", "/categories", "/search", "/match",
+  "/cat/community?s=cm-open",
+  /* ⚠️⚠️ 0069 — **중고 상세 화면**(`?v=`)과 묶음 탭(`?g=`)도 그 주소로
+     바로 들어와야 합니다. 상세는 흉내 자료가 0줄이라 "지금은 볼 수
+     없는 매물입니다" 가 뜨고, 여기서 재는 것은 **에러 0건과 그 상자의
+     링크가 실제로 열리는 주소인가**입니다 (`check-links` 는 빌드가 찍은
+     HTML 만 보므로 이 뒤는 영원히 못 봅니다). */
+  "/cat/used?v=11111111-1111-1111-1111-111111111111",
+  "/cat/used?g=club", "/categories", "/search", "/match",
   "/match?cat=lesson", "/my", "/help", "/guide", "/terms", "/privacy",
   "/login", "/404"].filter(function(x, i, L){ return L.indexOf(x) === i; });
 
@@ -117,7 +124,12 @@ const MY_BOXES = ["mybox", "reqbox", "joinmine", "lsmine", "mycq", "jobmine",
                   /* ⚠️ 0059 — 공개 닉네임 상자 (js/mynick.js) */
                   "wchbox", "nickbox",
                   /* ⚠️ 0061 — 내가 올린 구합니다 (js/mywanted.js) */
-                  "wtmine"];
+                  "wtmine",
+                  /* ⚠️ 0069 — 관심상품 (js/myfav.js). **새 `/my` 상자를
+                     만드는 날 이 줄과 `shot-desk` 의 `BOXES` 를 같이
+                     늘립니다** — 안 늘리면 그 상자만 조용히 아무도 안
+                     재고 아무도 안 보는 자리가 됩니다. */
+                  "favbox"];
 
 (async function(){
   const prove = process.argv.indexOf("--prove") >= 0;

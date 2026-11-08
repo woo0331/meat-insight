@@ -819,6 +819,10 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 
 @media (min-width: 1000px){
   .lsw{ grid-template-columns: 262px minmax(0,1fr); }
+  /* ⚠️⚠️ 상세 화면에서는 거르개 레일이 빠집니다 (0069) — 이 줄이 없으면
+     **왼쪽 262px 이 빈 칸**으로 남습니다. 가르는 것은 `side()` 가 다는
+     딱지 하나이고, 화면이 폭을 재지 않습니다. */
+  .lsw.lsw-1{ grid-template-columns: minmax(0,1fr); }
 }
 @media (max-width: 999.98px){
   /* ⚠️⚠️ 알아본 다섯 곳(2nd Swing · SidelineSwap · 번개장터 · 당근 ·
@@ -890,6 +894,195 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 /* ⚠️ 문의 양식은 카드 안에서 열립니다 — 격자 칸을 벌리지 않게 */
 .lsc .jform{ grid-column:1 / -1; padding:0 15px 15px; }
 
+/* ── 0069 — 카드를 시안대로 (1:1 정사각 · PC 4열) ──────────────────
+   ⚠️⚠️ **칸 수를 `auto-fill` 로 두지 않습니다.** 앞 판은
+   `minmax(218px,1fr)` 이라 폭에 따라 3·4·5열이 되었는데, 시안은
+   **PC 4 · 태블릿 3 · 폰 2** 입니다. 수를 정해 두면 한 줄의 칸 수가
+   늘 같아서 사진이 들쭉날쭉하지 않습니다.
+   ⚠️ 폰에서 **2열**입니다 — 1열로 두면 한 화면에 한 장만 보여 중고채를
+   훑는 일이 안 됩니다 (알아본 다섯 곳이 전부 폰에서 2열입니다). */
+.lsc-g{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+@media (min-width: 620px){ .lsc-g{ grid-template-columns: repeat(3, minmax(0,1fr)); } }
+@media (min-width: 1000px){ .lsc-g{ grid-template-columns: repeat(4, minmax(0,1fr)); } }
+/* 카드 전체가 링크입니다 — ⚠️ 찜 단추를 겹쳐 놓으려고 `relative` */
+.lsc{ position:relative; }
+.lsc-a{ display:grid; grid-template-rows: auto 1fr; text-decoration:none;
+        color:inherit; min-width:0; }
+.lsc-a > *{ min-width:0; }
+.lsc-a:hover .lsc-t{ text-decoration:underline; }
+/* ⚠️⚠️ **1:1 정사각**입니다 (시안) — 중고채는 길이가 제각각이라
+   4:3 으로 두면 드라이버가 잘립니다. */
+.lsc-ph{ aspect-ratio: 1 / 1; }
+/* 팔린 · 예약중 덮개 — ⚠️⚠️ **사진 위에 덮습니다** (글자로만 적으면
+   격자에서 안 보입니다). `open` 이면 화면이 아예 안 냅니다. */
+.lsc-st{ position:absolute; inset:0; display:grid; place-items:center;
+         font-size:15px; font-weight:800; color:#fff; letter-spacing:-.2px;
+         background: rgba(8,43,32,.62); }
+/* ⚠️ 예약중은 **아직 살 수 있습니다** — 팔린 것과 같은 색으로 두면
+   손님이 지나칩니다 (골드는 어두운 면 전용이라 여기가 맞는 자리입니다) */
+.lsc-st-reserved{ background: rgba(8,43,32,.52); color: var(--gold); }
+/* 찜 — ⚠️⚠️ 링크 **바깥**이고 사진 위에 겹칩니다. 누름 40px 이상. */
+.lsc-fav{ position:absolute; right:6px; top:6px; z-index:2;
+          min-width:40px; min-height:40px; display:grid; place-items:center;
+          border:0; border-radius:50%; cursor:pointer;
+          background: rgba(255,255,255,.92); color: var(--ink3);
+          box-shadow: 0 1px 4px rgba(8,43,32,.18); }
+.lsc-fav svg{ fill:none; stroke:currentColor; stroke-width:1.9; }
+/* ⚠️ 켜지면 **선이 아니라 면**입니다 — 아이콘을 둘 그리지 않습니다 */
+.lsc-fav.on{ color: var(--bad-text); }
+.lsc-fav.on svg{ fill:currentColor; }
+.lsc-fav:focus-visible{ outline:3px solid var(--gold-text); outline-offset:2px; }
+.lsc-i{ padding:11px 12px 13px; gap:4px; }
+.lsc-t{ font-size:14.5px; }
+.lsc-p{ font-size:16.5px; }
+.lsc-br{ font-size:12px; }
+.lsc-m{ font-size:12px; }
+
+/* ── 묶음 탭 (0069) ───────────────────────────────────────────────
+   ⚠️ **접습니다**(`flex-wrap`) — 가로로 미는 상자에 넣으면 폰에서
+   마지막 탭이 "밀면 보이는 것" 이 됩니다 (머리말 메뉴에서 겪은 자리). */
+.lstab{ display:flex; flex-wrap:wrap; gap:7px; margin:0 0 14px; }
+.lstab-i{ display:inline-flex; align-items:center; min-height:40px;
+          padding:0 15px; border-radius: var(--r-pill); font-size:14px;
+          font-weight:700; text-decoration:none; color: var(--ink2);
+          background:#fff; border:1.5px solid var(--line); }
+.lstab-i:hover{ border-color: var(--grn-deep); color: var(--ink); }
+/* ⚠️ 켜진 탭은 **면**입니다 — 액션그린은 면 전용이라 흰 글자가 맞습니다 */
+.lstab-i.on{ background: var(--grn-deep); border-color: var(--grn-deep); color:#fff; }
+
+/* ── 쪽 넘기기 (0069) ─────────────────────────────────────────────
+   ⚠️ 전체 쪽 수를 모르므로 번호 줄을 안 냅니다 — 「앞쪽 · N쪽 · 다음 쪽」 */
+.lspg{ display:flex; align-items:center; justify-content:center; gap:10px;
+       margin:22px 0 4px; }
+.lspg-b{ display:inline-flex; align-items:center; gap:5px; min-height:44px;
+         padding:0 16px; border-radius: var(--r-sm); font-size:14.5px;
+         font-weight:700; text-decoration:none; color: var(--ink);
+         background:#fff; border:1.5px solid var(--line); }
+.lspg-b:hover{ border-color: var(--grn-deep); }
+.lspg-b svg{ fill:none; stroke:currentColor; stroke-width:2; }
+/* ⚠️ 「앞쪽」의 화살표만 왼쪽을 봅니다 */
+.lspg-b:first-child svg{ transform: rotate(180deg); }
+.lspg-n svg{ transform:none; }
+.lspg-i{ font-size:14px; font-weight:700; color: var(--ink3); }
+
+/* ── 상세 화면 (0069) ─────────────────────────────────────────────
+   ⚠️⚠️⚠️ **2026-11-08 까지 이 화면이 아예 없었습니다** — 카드를 눌러도
+   갈 자리가 없어서 사진 · 설명을 목록 안에서만 볼 수 있었습니다. */
+.lsd{ display:grid; gap:18px; }
+@media (min-width: 900px){
+  .lsd{ grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+        align-items:start; column-gap:30px; }
+  .lsd > *{ min-width:0; }
+  .lsd-back{ grid-column:1 / -1; }
+  .lsd-ph, .lsd-th{ grid-column:1; }
+  .lsd-i{ grid-column:2; grid-row:2 / span 2; }
+  .lsd-body, .lsd-warn{ grid-column:1 / -1; }
+}
+.lsd-back{ margin:0; }
+.lsd-back a{ display:inline-flex; align-items:center; gap:6px; min-height:40px;
+             font-size:14.5px; font-weight:700; color: var(--grn-text);
+             text-decoration:none; }
+.lsd-back a:hover{ text-decoration:underline; }
+.lsd-back svg{ fill:none; stroke:currentColor; stroke-width:2;
+               transform: rotate(180deg); }
+/* 큰 사진 — ⚠️ 비율을 박아 두어야 사진이 늦게 와도 글이 안 튑니다 (CLS) */
+.lsd-ph{ position:relative; aspect-ratio: 1 / 1; background: var(--bg-2);
+         border:1.5px solid var(--line); border-radius: var(--r);
+         overflow:hidden; display:grid; place-items:center; }
+.lsd-ph img{ width:100%; height:100%; object-fit:contain; display:block; }
+/* ⚠️⚠️ 사진이 0장이면 **아이콘 타일**입니다 (남의 사진을 깔지 않습니다) */
+.lsd-ph-no{ display:grid; place-items:center; gap:10px; color: var(--ink3); }
+.lsd-ph-no svg{ fill:none; stroke:currentColor; stroke-width:1.6; }
+.lsd-ph-no p{ margin:0; font-size:14px; }
+/* 작은 그림 줄 — ⚠️ 한 장이면 화면이 아예 안 냅니다 */
+.lsd-th{ display:flex; flex-wrap:wrap; gap:8px; }
+.lsd-t{ width:62px; height:62px; padding:0; cursor:pointer; overflow:hidden;
+        border:1.5px solid var(--line); border-radius: var(--r-sm);
+        background: var(--bg-2); }
+.lsd-t img{ width:100%; height:100%; object-fit:cover; display:block; }
+.lsd-t.on{ border-color: var(--grn-deep); border-width:2.5px; }
+.lsd-i{ display:grid; gap:12px; }
+.lsd-k{ margin:0; display:flex; align-items:center; gap:8px;
+        font-size:13px; font-weight:700; color: var(--grn-text); }
+/* 상세의 상태 딱지 — ⚠️ 목록의 덮개와 **다른 자리**라 띠로 냅니다 */
+.lsd-st{ display:inline-flex; align-items:center; padding:3px 10px;
+         border-radius: var(--r-pill); font-size:12.5px; font-weight:800;
+         background: var(--grn-deep); color:#fff; }
+.lsd-st.lsc-st-reserved{ background: var(--grn-deep); color: var(--gold); }
+/* ⚠️⚠️⚠️ **제목과 작은 그림 단추의 이름을 갈라 둡니다** — 처음에 둘 다
+   `.lsd-t` 로 적었습니다. `.lg` 가 머리말의 로고이면서 약관 본문이어서
+   조문 스무 개가 가로로 늘어섰던 자리이고, `.pvst-n` 이 담당자이면서
+   상호였던 자리의 **셋째**입니다. 그대로 뒀으면 작은 그림의 62px 정사각이
+   **제목에 걸려** 제목이 네모로 잘렸습니다. 제목은 `.lsd-ti` 입니다. */
+.lsd-ti{ margin:0; font-size:22px; line-height:1.35; color: var(--ink);
+         word-break:keep-all; overflow-wrap:anywhere; }
+.lsd-p{ margin:0; font-size:26px; font-weight:800; color: var(--ink);
+        letter-spacing:-.4px; }
+/* 값 줄들 — ⚠️⚠️ 비는 줄은 **줄째 빠집니다** (절대 규칙 2) */
+.lsd-dl{ margin:0; display:grid; grid-template-columns: auto minmax(0,1fr);
+         gap:9px 16px; font-size:14.5px; }
+.lsd-dl dt{ color: var(--ink3); font-weight:700; white-space:nowrap; }
+.lsd-dl dd{ margin:0; color: var(--ink);
+            word-break:keep-all; overflow-wrap:anywhere; }
+.lsd-b{ display:flex; flex-wrap:wrap; gap:10px; }
+.lsd-b .btn{ flex:1 1 auto; }
+.lsd-b .jform{ flex:1 1 100%; }
+/* ⚠️ 「제 매물입니다」 · 「로그인하셔야」 같은 안내는 줄을 통째로 씁니다 */
+.lsd-mine{ flex:1 1 100%; margin:0; font-size:14px; color: var(--ink3);
+           word-break:keep-all; overflow-wrap:anywhere; }
+.lsd-fav svg{ fill:none; stroke:currentColor; stroke-width:1.9; }
+.lsd-fav.on svg{ fill:currentColor; }
+.lsd-body h3{ margin:0 0 8px; font-size:16px; color: var(--ink); }
+.lsd-body p{ margin:0; font-size:15px; line-height:1.72; color: var(--ink2);
+             white-space:pre-wrap;
+             word-break:keep-all; overflow-wrap:anywhere; }
+.lsd-wait{ margin:0; padding:40px 0; text-align:center;
+           font-size:14.5px; color: var(--ink3); }
+/* ── 거래 주의사항 — ⚠️⚠️ 돈이 오가는 결정을 하는 **그 자리**에서
+   "거래 당사자가 아니다" 를 한 번 더 말합니다 (제20조 제1항).
+   ⚠️ 「안전거래」 · 「안전결제」 는 한 글자도 안 적습니다 (제20조의3). */
+.lsd-warn{ padding:16px 18px; background: var(--bg-2);
+           border:1.5px solid var(--line); border-radius: var(--r-sm); }
+.lsd-warn h3{ margin:0 0 9px; display:flex; align-items:center; gap:7px;
+              font-size:15px; color: var(--ink); }
+.lsd-warn h3 svg{ fill:none; stroke:currentColor; stroke-width:1.8; }
+.lsd-warn ul{ margin:0; padding-left:19px; display:grid; gap:7px; }
+.lsd-warn li{ font-size:13.5px; line-height:1.65; color: var(--ink2);
+              word-break:keep-all; overflow-wrap:anywhere; }
+
+/* ── 관심상품 (js/myfav.js · 0069) ────────────────────────────────
+   ⚠️ 목록 카드(`.lsc*`)를 **안 빌려 씁니다** — 여기는 한 줄짜리 묶음이고
+   거기는 정사각 격자입니다. 빌려 쓰면 한쪽을 고치는 날 둘이 같이
+   바뀝니다 (`.lsc*` 를 구합니다 글이 빌려 쓰고 있어 0068 에서 이름을
+   갈라야 했던 그 자리). */
+.mfv-l{ list-style:none; margin:0; padding:0; display:grid; gap:12px; }
+.mfv-i{ background:#fff; border:1.5px solid var(--line);
+        border-radius: var(--r-sm); padding:12px;
+        display:flex; flex-wrap:wrap; align-items:center; gap:12px;
+        min-width:0; }
+.mfv-i > *{ min-width:0; }
+.mfv-a{ flex:1 1 220px; display:flex; align-items:center; gap:12px;
+        min-width:0; text-decoration:none; color:inherit; }
+.mfv-a:hover .mfv-t{ text-decoration:underline; }
+.mfv-ph{ flex:0 0 auto; width:72px; height:72px; overflow:hidden;
+         border-radius: var(--r-sm); background: var(--bg-2);
+         border:1px solid var(--line); display:grid; place-items:center; }
+.mfv-im{ width:100%; height:100%; object-fit:cover; display:block; }
+.mfv-no{ color: var(--ink3); }
+.mfv-no svg{ fill:none; stroke:currentColor; stroke-width:1.7; }
+.mfv-x{ display:grid; gap:3px; min-width:0; }
+.mfv-t{ display:flex; align-items:center; gap:7px; flex-wrap:wrap;
+        font-size:14.5px; font-weight:700; color: var(--ink);
+        word-break:keep-all; overflow-wrap:anywhere; }
+/* ⚠️ 팔린 · 예약중 딱지 — `open` 이면 화면이 아예 안 냅니다 */
+.mfv-st{ flex:0 0 auto; padding:2px 8px; border-radius: var(--r-pill);
+         font-size:11.5px; font-weight:800;
+         background: var(--grn-deep); color:#fff; }
+.mfv-p{ font-size:15.5px; font-weight:800; color: var(--ink); }
+.mfv-m{ font-size:12.5px; color: var(--ink3);
+        word-break:keep-all; overflow-wrap:anywhere; }
+.mfv-off{ flex:0 0 auto; }
+
 /* ── 매물 사진 상자 (js/lstphoto.js · 0068) ──────────────────────── */
 .lsp{ margin-top:14px; padding:14px 16px; background: var(--bg-2);
       border:1.5px solid var(--line); border-radius: var(--r-sm);
@@ -900,6 +1093,20 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .lsp-t{ display:grid; gap:6px; justify-items:center; }
 .lsp-t img{ width:108px; height:81px; object-fit:cover; display:block;
             border-radius: var(--r-sm); border:1px solid var(--line); }
+/* 사진 차례 바꾸기 · 대표 딱지 (0069) — ⚠️ 누름 40px 이상 */
+.lsp-t{ position:relative; }
+.lsp-b{ position:absolute; left:4px; top:4px;
+        padding:2px 7px; border-radius: var(--r-pill);
+        font-size:11.5px; font-weight:800;
+        background: var(--grn-deep); color:#fff; }
+.lsp-mv{ display:flex; gap:6px; justify-content:center; }
+.lsp-up, .lsp-dn{ min-width:40px; min-height:40px; padding:0; cursor:pointer;
+        display:grid; place-items:center; border-radius: var(--r-sm);
+        background:#fff; border:1.5px solid var(--line); color: var(--ink2); }
+.lsp-up:hover, .lsp-dn:hover{ border-color: var(--grn-deep); color: var(--ink); }
+.lsp-up svg, .lsp-dn svg{ fill:none; stroke:currentColor; stroke-width:2.2; }
+/* ⚠️ 같은 아이콘을 돌려 씁니다 — 아이콘을 둘 그리면 두 곳이 됩니다 */
+.lsp-up svg{ transform: rotate(180deg); }
 .lsp-r{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
 .lsp-r input[type="file"]{ flex:1 1 180px; min-width:0; font-size:14px;
             color: var(--ink); }

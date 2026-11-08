@@ -377,12 +377,46 @@ module.exports = function(T){
   const cCap = denied(claim(SEL, { caption:"가".repeat(61) }));
   ok("  사진 설명이 너무 길면 막힌다 (60자)", cCap.no, cCap.why);
 
-  /* ⚠️ 여덟 장까지 — 일곱 장 더 넣어 아홉째가 막히는지 봅니다 */
-  for(let i = 0; i < 6; i++) allowed(claim(SEL, {}));
-  const cnt8 = psql("select count(*) from listingphoto where listing_id = '" + BID + "'");
-  ok("여덟 장까지 들어간다", cnt8 === "8", cnt8);
-  const c9 = denied(claim(SEL, {}));
-  ok("  ⚠️ 아홉째는 막힌다", c9.no, c9.why);
+  /* ⚠️⚠️⚠️ **몇 장까지인지를 검사에 박지 않습니다** (2026-11-08). 전에는
+     "여덟 장" 을 글자로 박아 두어서, 0069 가 열 장으로 늘린 순간 **멀쩡한
+     문을 실패로** 잡았습니다 — 이 저장소가 갯수를 박아 여러 번 밟은 그
+     자리입니다. 지금은 **문을 마지막으로 덮은 마이그레이션에서 읽습니다**
+     (번호도 박지 않습니다 — `test-desk` 가 `update provider set` 을 읽는
+     그 방식입니다).
+     ⚠️ 읽은 값이 없으면 **실패**입니다 — 못 읽으면 잴 것이 없는데 초록으로
+     지나가면 그 초록은 아무 뜻이 없습니다. */
+  const CAP = (function(){
+    const fs = require("fs"), path = require("path");
+    const dir = path.join(__dirname, "..", "..", "db", "migrations");
+    const files = fs.readdirSync(dir).filter(f => f.endsWith(".sql")).sort();
+    let n = 0;
+    files.forEach(function(f){
+      const s = fs.readFileSync(path.join(dir, f), "utf8");
+      let i = 0;
+      for(;;){
+        const a = s.indexOf("function claim_listing_photo(", i);
+        if(a < 0) break;
+        const seg = s.slice(a, s.indexOf("end $$;", a));
+        const g = seg.indexOf("from listingphoto where listing_id = v_l) >=");
+        if(g >= 0){
+          const m = /\d+/.exec(seg.slice(g + 44));
+          if(m) n = Number(m[0]);
+        }
+        i = a + 10;
+      }
+    });
+    return n;
+  })();
+  ok("⚠️ 사진 한도를 마이그레이션에서 **읽었다** (검사에 박지 않습니다)",
+     CAP >= 1, "읽은 값 " + CAP);
+
+  /* ⚠️ 한도까지 채우고 **한 장 더**가 막히는지 봅니다 — 지금 한 장이
+     들어 있으므로 CAP-1 장을 더 넣습니다. */
+  for(let i = 0; i < CAP - 1; i++) allowed(claim(SEL, {}));
+  const cntMax = psql("select count(*) from listingphoto where listing_id = '" + BID + "'");
+  ok("한도(" + CAP + "장)까지 들어간다", cntMax === String(CAP), cntMax);
+  const cOver = denied(claim(SEL, {}));
+  ok("  ⚠️ 한 장 더는 막힌다", cOver.no, cOver.why);
 
   /* ⚠️⚠️ 공개 목록이 **첫 장과 장수**를 같이 냅니다 — 안 내면 카드마다
      사진을 따로 물어보게 되어 스무 장이면 호출이 스무 번 늘고, 그동안
@@ -391,13 +425,13 @@ module.exports = function(T){
     "case when thumb like 'lst/" + BID + "/photo/%' then 'ok' else coalesce(thumb,'(없음)') end " +
     "from v_listing_open where id = '" + BID + "'");
   ok("⚠️⚠️ 공개 목록이 **첫 장과 장수**를 같이 낸다 (카드마다 안 물어보게)",
-     openPh.yes && openPh.out === "8/ok", openPh.out || openPh.why);
+     openPh.yes && openPh.out === CAP + "/ok", openPh.out || openPh.why);
 
   /* ⚠️ 공개 사진 보기 — 비로그인도 봅니다 (크롤러 몫) */
   const pubPh = allowed(anon + "select count(*) from v_listing_photo_public " +
     "where listing_id = '" + BID + "'");
   ok("비로그인도 매물 사진 목록을 본다 (크롤러 몫)",
-     pubPh.yes && pubPh.out === "8", pubPh.out || pubPh.why);
+     pubPh.yes && pubPh.out === String(CAP), pubPh.out || pubPh.why);
   /* ⚠️⚠️ 그 보기에 **올린 사람(by_user)이 없어야** 합니다 — 글은 공개지만
      누가 올렸는지는 공개가 아닙니다 (0047 · 0037 에서 세운 규칙) */
   const noWho = denied(anon + "select by_user from v_listing_photo_public limit 1");
@@ -436,6 +470,193 @@ module.exports = function(T){
     "where listing_id = '" + LID2 + "'");
   ok("⚠️⚠️ **내린 매물의 사진이 공개 보기에서 빠진다**",
      phWas === "1" && phNow === "0", phWas + " → " + phNow);
+
+  /* ══════════════════════════════════════════════════════════════════
+     ⑬ 0069 — 예약중 · 모델명 · 사진 차례 · 찜
+     ⚠️⚠️⚠️ **상태 하나를 더하면 문 넷이 같이 막힙니다.** 0056 의
+     `edit_listing` · `ask_listing` · `close_listing` 과 0068 의 사진 문
+     둘이 전부 `state = 'open'` 을 요구했습니다 — 그대로 두면 예약중으로
+     바꾸는 순간 그 매물을 **고칠 수도 · 문의받을 수도 · 되돌릴 수도**
+     없어집니다. 그래서 **문마다 따로** 눌러 봅니다 (한 자리에서 재면
+     하나만 보고 통과합니다).
+     ══════════════════════════════════════════════════════════════════ */
+  console.log("\n── 0069 예약중 · 모델명 · 사진 차례 · 찜");
+
+  const RID = allowed(put(SEL, { title:"예약 걸어 볼 매물", model:"스텔스2 10.5도" })).out;
+  ok("매물을 모델명과 함께 올린다", !!RID, RID);
+  const mdl = psql(anon + "select coalesce(model,'(없음)') from v_listing_open where id = '" + RID + "'");
+  ok("  ⚠️ 공개 보기가 **모델명을 낸다**", mdl === "스텔스2 10.5도", mdl);
+
+  /* ⚠️⚠️ **모델명은 비워도 됩니다** — 반드시 받으면 모르시는 분이 매물을
+     아예 못 올립니다 (브랜드와 **반대**입니다 · 절대 규칙 2) */
+  const noMd = allowed(put(SEL, { title:"모델명 없는 매물" }));
+  ok("  ⚠️ 모델명을 **안 보내도 올라간다** (모르시는 분이 못 올리면 안 됩니다)",
+     noMd.yes, noMd.out || noMd.why);
+  const tooMd = denied(put(SEL, { title:"모델명이 긴 매물", model:"가".repeat(41) }));
+  ok("  모델명이 너무 길면 막힌다 (40자)", tooMd.no, tooMd.why);
+
+  /* ⚠️⚠️⚠️ **비우는 것도 보내는 것입니다** — `coalesce` 로 받으면 빈
+     글자가 "안 보냈다" 와 섞여 **지울 수가 없습니다**. */
+  allowed(as(SEL) + "select edit_listing('" + J({ id:RID, model:"" }) + "'::jsonb)");
+  const mdGone = psql("select coalesce(model,'(없음)') from listing where id = '" + RID + "'");
+  ok("⚠️⚠️ 모델명을 **빈 글자로 보내면 지워진다** (coalesce 로 받으면 못 지웁니다)",
+     mdGone === "(없음)", mdGone);
+  allowed(as(SEL) + "select edit_listing('" + J({ id:RID, title:"제목만 고칩니다" }) + "'::jsonb)");
+  const mdKeep = psql("select coalesce(model,'(없음)') from listing where id = '" + RID + "'");
+  ok("  ⚠️ **안 보내면 그대로**입니다 (보낸 칸만 고칩니다)", mdKeep === "(없음)", mdKeep);
+  allowed(as(SEL) + "select edit_listing('" + J({ id:RID, model:"P790" }) + "'::jsonb)");
+  ok("  다시 적을 수 있다",
+     psql("select model from listing where id = '" + RID + "'") === "P790");
+
+  /* ── 예약중을 오갑니다 ─────────────────────────────────────────── */
+  const toRes = allowed(as(SEL) + "select close_listing('" +
+    J({ id:RID, state:"reserved" }) + "'::jsonb)");
+  ok("⚠️⚠️ **파는 분이 예약중으로 둔다** (운영자가 아닙니다)",
+     toRes.yes && toRes.out === "reserved", toRes.out || toRes.why);
+  /* ⚠️⚠️⚠️ **예약중은 목록에 그대로 남습니다** — 빠지면 "팔렸다" 와
+     구분이 없어지고, 손님은 사라진 까닭을 알 수 없습니다 */
+  const resSeen = psql(anon + "select state from v_listing_open where id = '" + RID + "'");
+  ok("⚠️⚠️⚠️ 예약중도 **공개 목록에 남고 상태를 낸다**", resSeen === "reserved", resSeen);
+  const resPh = allowed(as(SEL) + "select claim_listing_photo('" +
+    J({ listing:RID, mime:"image/png", bytes:"1000" }) + "'::jsonb)");
+  ok("  ⚠️ 예약중 매물에도 **사진을 더할 수 있다**", resPh.yes, resPh.out || resPh.why);
+  const resPub = psql(anon + "select count(*) from v_listing_photo_public " +
+    "where listing_id = '" + RID + "'");
+  ok("  ⚠️⚠️ 예약중 매물의 **사진도 공개로 나간다** (안 내면 카드가 아이콘으로 돌아갑니다)",
+     resPub === "1", resPub);
+  const resEdit = allowed(as(SEL) + "select edit_listing('" +
+    J({ id:RID, price:"777000" }) + "'::jsonb)");
+  ok("  ⚠️ 예약중에도 **고칠 수 있다**", resEdit.yes, resEdit.out || resEdit.why);
+  const resAsk = allowed(as(BUY2) + "select ask_listing('" +
+    J({ listing_id:RID, contact:"010-0000-0069", agree_at:nowIso }) + "'::jsonb)");
+  ok("⚠️⚠️ 예약중에도 **문의를 받는다** (앞의 거래가 깨질 수 있습니다)",
+     resAsk.yes, resAsk.out || resAsk.why);
+  /* ⚠️⚠️⚠️ **되돌리는 길이 있어야** 합니다 — 없으면 잘못 누른 분이 매물을
+     다시 올려야 하고 받아 둔 문의가 통째로 날아갑니다 (막다른 길) */
+  const back = allowed(as(SEL) + "select close_listing('" +
+    J({ id:RID, state:"open" }) + "'::jsonb)");
+  ok("⚠️⚠️⚠️ 예약중에서 **되돌릴 수 있다** (막다른 길로 두지 않습니다)",
+     back.yes && back.out === "open", back.out || back.why);
+  /* ⚠️ 같은 상태로 옮기는 것은 거절합니다 — 조용히 성공으로 끝내면 화면이
+     "바꿨습니다" 를 적는데 실제로는 아무 일도 안 일어났습니다 */
+  const same = denied(as(SEL) + "select close_listing('" +
+    J({ id:RID, state:"open" }) + "'::jsonb)");
+  ok("  ⚠️ **같은 상태로는 못 옮긴다** (기록이 거짓이 되지 않게)", same.no, same.why);
+  const resNot = denied(as(NOSY) + "select close_listing('" +
+    J({ id:RID, state:"reserved" }) + "'::jsonb)");
+  ok("  ⚠️ **남이 예약중으로 못 둔다**", resNot.no, resNot.why);
+  const resBad = denied(as(SEL) + "select close_listing('" +
+    J({ id:RID, state:"hidden" }) + "'::jsonb)");
+  ok("  ⚠️ 파는 분이 **가릴 수는 없다** (가리는 문은 move_listing 입니다)",
+     resBad.no, resBad.why);
+  /* ⚠️⚠️ 예약중 매물도 운영자가 가릴 수 있어야 합니다 — 못 가리면 신고를
+     받고도 내릴 길이 없습니다 */
+  allowed(as(SEL) + "select close_listing('" + J({ id:RID, state:"reserved" }) + "'::jsonb)");
+  const hidRes = allowed(as(ADM) + "select move_listing('" +
+    J({ id:RID, state:"hidden", why:"검사로 가립니다" }) + "'::jsonb)");
+  ok("  ⚠️⚠️ **예약중 매물도 운영자가 가린다**", hidRes.yes, hidRes.out || hidRes.why);
+
+  /* ── 사진 차례 · 대표 사진 ─────────────────────────────────────── */
+  /* ⚠️⚠️⚠️ **대표 사진을 boolean 으로 두지 않았습니다** — 둘 다 참인 줄이
+     생길 수 있고 그러면 화면이 둘 가운데 하나를 멋대로 고릅니다. 대표는
+     **차례가 가장 앞선 것**입니다. */
+  const OID = allowed(put(SEL, { title:"사진 차례를 볼 매물" })).out;
+  const p1 = JSON.parse(allowed(as(SEL) + "select claim_listing_photo('" +
+    J({ listing:OID, mime:"image/png", bytes:"1000" }) + "'::jsonb)").out);
+  const p2 = JSON.parse(allowed(as(SEL) + "select claim_listing_photo('" +
+    J({ listing:OID, mime:"image/png", bytes:"1000" }) + "'::jsonb)").out);
+  const p3 = JSON.parse(allowed(as(SEL) + "select claim_listing_photo('" +
+    J({ listing:OID, mime:"image/png", bytes:"1000" }) + "'::jsonb)").out);
+  ok("⚠️ 올릴 때 차례가 **뒤에 붙는다** (0 으로 두면 올릴 때마다 대표가 바뀝니다)",
+     p1.ord === 0 && p2.ord === 1 && p3.ord === 2,
+     p1.ord + "," + p2.ord + "," + p3.ord);
+  const th1 = psql(anon + "select thumb from v_listing_open where id = '" + OID + "'");
+  ok("  대표 사진이 **첫째**다", th1 === p1.path, th1);
+  const ordr = allowed(as(SEL) + "select order_listing_photo('" +
+    J({ listing:OID, ids:[p3.id, p1.id, p2.id] }) + "'::jsonb)");
+  ok("차례를 바꾼다", ordr.yes && ordr.out === "3", ordr.out || ordr.why);
+  const th2 = psql(anon + "select thumb from v_listing_open where id = '" + OID + "'");
+  ok("⚠️⚠️ **대표 사진이 따라 바뀐다** (보기가 ord 로 고릅니다)", th2 === p3.path, th2);
+  /* ⚠️ 공개 사진 보기도 그 차례를 내야 합니다 — 안 내면 상세 화면의
+     슬라이드가 올린 차례로 보여서 **대표와 첫 장이 다릅니다** */
+  const pubOrd = psql(anon + "select string_agg(ord::text, ',' order by ord) " +
+    "from v_listing_photo_public where listing_id = '" + OID + "'");
+  ok("  ⚠️ 공개 사진 보기가 **ord 칸을 낸다** (상세 슬라이드가 그 차례로 돕니다)",
+     pubOrd === "0,1,2", pubOrd);
+  /* ⚠️⚠️ **빠짐없이 와야** 합니다 — 일부만 보내면 안 보낸 것이 어디로
+     가야 하는지 아무도 모르고, 조용히 0 으로 두면 그것이 대표가 됩니다 */
+  const ordShort = denied(as(SEL) + "select order_listing_photo('" +
+    J({ listing:OID, ids:[p1.id] }) + "'::jsonb)");
+  ok("⚠️⚠️ **일부만 보내면 거절한다**", ordShort.no, ordShort.why);
+  const ordDup = denied(as(SEL) + "select order_listing_photo('" +
+    J({ listing:OID, ids:[p1.id, p1.id, p2.id] }) + "'::jsonb)");
+  ok("  ⚠️ 같은 사진이 두 번이면 거절한다", ordDup.no, ordDup.why);
+  const ordAlien = denied(as(SEL) + "select order_listing_photo('" +
+    J({ listing:OID, ids:[p1.id, p2.id, fid] }) + "'::jsonb)");
+  ok("  ⚠️ **남의 매물 사진이 섞이면 거절한다**", ordAlien.no, ordAlien.why);
+  const ordNosy = denied(as(NOSY) + "select order_listing_photo('" +
+    J({ listing:OID, ids:[p1.id, p2.id, p3.id] }) + "'::jsonb)");
+  ok("  ⚠️ **남은 차례를 못 바꾼다**", ordNosy.no, ordNosy.why);
+  const ordAdm = denied(as(ADM) + "select order_listing_photo('" +
+    J({ listing:OID, ids:[p1.id, p2.id, p3.id] }) + "'::jsonb)");
+  ok("  ⚠️ **운영자도 못 바꾼다** (남이 올린 자료의 차례입니다)", ordAdm.no, ordAdm.why);
+  /* ⚠️ 기록에 **장수만** 남습니다 (사진 설명 · 경로는 손님 것입니다) */
+  const ordLog = psql("select data::text from audit_log where obj = 'listing' " +
+    "and obj_id = '" + OID + "' and to_state = 'photo_ordered' limit 1");
+  ok("  ⚠️ 기록에 **장수만** 남는다 (경로 · 설명을 안 담습니다)",
+     ordLog.indexOf("\"n\"") >= 0 && ordLog.indexOf("lst/") < 0, ordLog);
+
+  /* ── 찜 (관심상품) ─────────────────────────────────────────────── */
+  /* ⚠️⚠️⚠️ **찜 수를 공개하지 않습니다** — 세어 낼 수야 있지만 그 수는
+     "인기" 로 읽히고 우리가 검증할 길이 없습니다. 그리고 누가 무엇에
+     찜했는지는 **행동 기록**이라 파는 분에게도 · 운영자에게도 안 냅니다
+     (0059 의 `cqview` 를 운영자도 못 읽게 둔 그 까닭). */
+  const FID = allowed(put(SEL, { title:"찜해 볼 매물" })).out;
+  const fav1 = allowed(as(BUY) + "select fav_listing('" + J({ id:FID, on:true }) + "'::jsonb)");
+  ok("찜을 켠다", fav1.yes && fav1.out === "t", fav1.out || fav1.why);
+  /* ⚠️ 두 번 켜도 줄은 하나입니다 (글 하나가 관심상품에 두 번 뜨지 않게) */
+  allowed(as(BUY) + "select fav_listing('" + J({ id:FID, on:true }) + "'::jsonb)");
+  const favN = psql("select count(*) from listingfav where listing_id = '" + FID + "'");
+  ok("  ⚠️ 두 번 켜도 **줄은 하나**다", favN === "1", favN);
+  const favMine = psql(as(BUY) + "select count(*) from v_listing_fav where id = '" + FID + "'");
+  ok("  ⚠️ 관심상품 보기에 **제 것이 보인다**", favMine === "1", favMine);
+  /* ⚠️⚠️ **남의 찜은 못 봅니다** — 표도 · 보기도 (행동 기록입니다) */
+  const favNosy = psql(as(NOSY) + "select count(*) from v_listing_fav where id = '" + FID + "'");
+  ok("⚠️⚠️ **남의 찜은 보기에 안 나온다**", favNosy === "0", favNosy);
+  const favRaw = psql(as(NOSY) + "select count(*) from listingfav where listing_id = '" + FID + "'");
+  ok("  ⚠️ 표에서도 **0줄**이다 (RLS 가 제 줄만 냅니다)", favRaw === "0", favRaw);
+  /* ⚠️⚠️⚠️ **운영자도 못 읽습니다** — 0050 의 알림 · 0059 의 조회 기록과
+     같은 결입니다 (남의 행동을 읽을 까닭이 없습니다) */
+  const favAdm = psql(as(ADM) + "select count(*) from listingfav where listing_id = '" + FID + "'");
+  ok("⚠️⚠️⚠️ **운영자도 남의 찜을 못 읽는다**", favAdm === "0", favAdm);
+  /* ⚠️⚠️ **공개 보기에 찜 수 칸이 아예 없습니다** (절대 규칙 1 — 세어 낼
+     수 있다고 내는 것이 아닙니다) */
+  const noFavN = denied(anon + "select fav_n from v_listing_open limit 1");
+  ok("⚠️⚠️ 공개 보기에 **찜 수 칸이 아예 없다**", noFavN.no, noFavN.why);
+  /* ⚠️ 아무도 표에 바로 못 씁니다 — 문 하나뿐입니다 */
+  const favIns = denied(as(BUY) + "insert into listingfav (by_user, listing_id) " +
+    "values ('" + BUY + "','" + FID + "')");
+  ok("  ⚠️ 표에 **바로 못 넣는다** (들어오는 길은 문 하나입니다)", favIns.no, favIns.why);
+  const favOff = allowed(as(BUY) + "select fav_listing('" + J({ id:FID, on:false }) + "'::jsonb)");
+  ok("찜을 끈다", favOff.yes && favOff.out === "f", favOff.out || favOff.why);
+  ok("  ⚠️ 끄면 **그 즉시** 줄이 없어진다",
+     psql("select count(*) from listingfav where listing_id = '" + FID + "'") === "0");
+  /* ⚠️⚠️ **팔린 매물은 찜이 남습니다** — 찜해 둔 것이 팔리면 "팔렸습니다"
+     를 보여 드리는 것이 맞습니다 (조용히 사라지면 손님은 까닭을 모릅니다) */
+  allowed(as(BUY) + "select fav_listing('" + J({ id:FID, on:true }) + "'::jsonb)");
+  allowed(as(SEL) + "select close_listing('" + J({ id:FID, state:"done" }) + "'::jsonb)");
+  const favDone = psql(as(BUY) + "select state from v_listing_fav where id = '" + FID + "'");
+  ok("⚠️⚠️ **팔린 매물도 관심상품에 남고 '팔렸습니다' 를 낸다**",
+     favDone === "done", favDone);
+  /* ⚠️ 내려간 매물은 찜할 수 없습니다 — 열 수 없는 줄이 쌓입니다 */
+  const CID = allowed(put(SEL, { title:"내릴 매물" })).out;
+  allowed(as(SEL) + "select close_listing('" + J({ id:CID, state:"closed" }) + "'::jsonb)");
+  const favClosed = denied(as(BUY) + "select fav_listing('" + J({ id:CID }) + "'::jsonb)");
+  ok("  ⚠️ **내려간 매물은 못 찜한다** (관심상품에 열 수 없는 줄이 쌓입니다)",
+     favClosed.no, favClosed.why);
+  const favNone = denied(as(BUY) + "select fav_listing('" +
+    J({ id:"00000000-0000-0000-0000-000000000069" }) + "'::jsonb)");
+  ok("  ⚠️ 없는 매물은 거절한다", favNone.no, favNone.why);
 
   /* ⚠️ 매물을 지우면 사진 줄도 같이 갑니다 (on delete cascade) — 다만
      이 저장소는 매물을 지우지 않고 **내립니다**. 그 사실만 적어 둡니다. */

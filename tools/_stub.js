@@ -65,8 +65,12 @@ function stub(p, who, tables, rpcs, up){
           body: JSON.stringify({ photos: (up && up.photos) ? up.photos : [] }) });
       /* ⚠️⚠️ 0068 — 매물 사진(`lstq=`)도 **주소를 서버가 짓습니다**.
          ⚠️ 꼴은 `api/upload.js` 의 GET 과 **같아야** 합니다
-         (`{ok:true, photos:[{id,caption,url}]}`) — 다르면 그 차이만큼이
-         영원히 안 재는 자리가 됩니다. */
+         (`{ok:true, photos:[{id,caption,ord,url}]}`) — 다르면 그 차이만큼이
+         영원히 안 재는 자리가 됩니다.
+         ⚠️⚠️ **차례(`ord`)는 0069 가 더했습니다** — 진짜는 `ord` 차례로
+         냅니다. 화면은 받은 **줄 차례**로 「앞으로 · 뒤로」를 세므로 이
+         흉내가 주는 차례가 곧 그 차례입니다(섞어 주면 멀쩡한 화면이
+         엉뚱한 차례를 보냅니다). */
       if(u.indexOf("lstq=") >= 0)
         return r.fulfill({ status:200, contentType:"application/json",
           body: JSON.stringify({ ok:true,

@@ -737,26 +737,198 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .jnc-go{ justify-self:start; }
 .jnc-go[disabled]{ opacity:.55; cursor:default; }
 
-/* ── 중고 직거래 매물 카드 (js/listing.js · 0056) ────────────────
+/* ── 거르개 레일(PC) · 아래 시트(폰) — js/listing.js · 0068 ──────────
+   ⚠️⚠️⚠️ **갈래를 가르는 것은 여기 한 곳**입니다 (1000px). 화면이
+   `innerWidth` 를 재서 갈래를 정하면 돌려 보는 폭마다 다른 코드가 돌고,
+   그러면 한 폭에서만 나는 고장을 아무도 못 잡습니다.
+   ⚠️⚠️ **격자 칸은 제 내용만큼 벌어집니다** — `minmax(0,1fr)` 과
+   `min-width:0` 이 없으면 긴 제목 · 넓은 사진이 칸을 벌려 **화면 전체가
+   가로로 밀립니다** (폰 390px 이 688px 가 됐던 그 자리). */
+.lsw{ display:grid; grid-template-columns: minmax(0,1fr); gap:20px;
+      align-items:start; }
+.lsw > *{ min-width:0; }
+.lsf-main{ display:grid; gap:14px; min-width:0; }
+
+/* 맨 위 줄 — 찾기 · (폰) 필터 · 정렬 */
+.lsf-top{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.lsf-q{ flex:1 1 220px; min-width:0; display:flex; align-items:center; gap:8px;
+        background:#fff; border:1.5px solid var(--line);
+        border-radius: var(--r-sm); padding:0 12px; }
+.lsf-q svg{ flex:none; color: var(--ink3); }
+.lsf-q input{ flex:1 1 auto; min-width:0; border:0; background:transparent;
+              min-height:46px; font-size:16px; color: var(--ink);
+              font-family: inherit; }
+.lsf-q input:focus{ outline:2px solid var(--grn); outline-offset:1px; }
+/* ⚠️ 누르는 것은 **40px 이상**입니다 — `.btn` 이 아니므로 직접 줍니다 */
+.lsf-btn{ flex:none; display:none; align-items:center; gap:6px;
+          min-height:46px; padding:0 14px; cursor:pointer;
+          background:#fff; border:1.5px solid var(--line);
+          border-radius: var(--r-sm); font-size:15px; font-weight:700;
+          color: var(--ink); font-family: inherit; }
+.lsf-btn b{ display:inline-grid; place-items:center; min-width:22px;
+            min-height:22px; border-radius: var(--r-pill);
+            background: var(--pt); color: var(--on-pt);
+            font-size:12.5px; font-weight:800; }
+/* ⚠️ 이 고르개만 **화살표를 그대로 둡니다**(`appearance` 를 안 지웁니다) —
+   레일의 고르개들은 위에 이름표가 붙어 있지만 이것은 줄에 혼자 서 있어서,
+   화살표가 없으면 **그냥 글자**로 보입니다 (찍어 보고 알았습니다). */
+.lsf-sel{ flex:none; min-height:46px; padding:0 12px; background:#fff;
+          border:1.5px solid var(--line); border-radius: var(--r-sm);
+          font-size:15px; color: var(--ink); font-family: inherit; }
+
+/* 고른 조건 — ⚠️ 하나하나 지울 수 있어야 합니다 */
+.lsf-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+.lsf-chip, .lsf-clear{ display:inline-flex; align-items:center; gap:6px;
+          min-height:40px; padding:0 13px; cursor:pointer;
+          border-radius: var(--r-pill); font-size:14.5px; font-weight:700;
+          font-family: inherit; }
+.lsf-chip{ background: var(--grn-soft); border:1.5px solid var(--grn-line);
+           color: var(--grn-text); }
+.lsf-chip svg{ flex:none; }
+/* ⚠️ 밝은 바탕의 조용한 단추는 `--bad-text` 입니다 (`.btn-ghost` 는
+   어두운 면 전용 — 흰 바탕에 놓으면 안 보이는 단추가 됩니다) */
+.lsf-clear{ background:transparent; border:1.5px solid var(--bad);
+            color: var(--bad-text); }
+
+/* 레일 — ⚠️ 폰에서는 **아래에서 올라오는 시트**입니다 */
+.lsf-rail{ background:#fff; border:1.5px solid var(--line);
+           border-radius: var(--r); padding:16px 18px; min-width:0; }
+.lsf-h{ display:flex; align-items:center; justify-content:space-between;
+        gap:10px; margin:0 0 10px; }
+.lsf-h b{ font-size:16px; color: var(--ink); }
+.lsf-x{ display:none; align-items:center; justify-content:center;
+        min-width:40px; min-height:40px; cursor:pointer; background:transparent;
+        border:1.5px solid var(--line); border-radius: var(--r-sm);
+        color: var(--ink); }
+.lsf-b{ grid-template-columns: minmax(0,1fr); }
+/* ⚠️⚠️ **고르개는 제 내용만큼 넓어집니다** — 지역 고르개에 묶음 이름
+   (「경상 · 부산 · 대구 · 울산」)이 들어 있어서 그 칸만 레일 밖으로
+   삐져나왔습니다. `<select>` 안의 글자는 낱말 잘림 검사에도 가로 스크롤
+   검사에도 안 걸립니다(작업 기억 — 세 번 당한 자리) — **찍어 보고**
+   알았습니다. */
+/* ⚠️⚠️ **체크칸은 빼야 합니다** — `input` 전부에 걸었더니 「택배도 되는
+   것만」의 네모가 레일 폭만큼 커지고 그 옆 글자가 **한 글자씩 세로로**
+   흘러 레일 밖으로 나갔습니다 (찍어 보고 알았습니다). */
+.lsf-rail select,
+.lsf-rail input:not([type="checkbox"]):not([type="radio"]){
+  width:100%; min-width:0; max-width:100%; }
+.lsf-f{ display:none; gap:10px; margin-top:14px; }
+/* ⚠️ 폰 시트를 덮는 막 — PC 에서는 안 그립니다 */
+.lsf-scrim{ display:none; }
+.lsf-scrim[hidden]{ display:none; }
+
+@media (min-width: 1000px){
+  .lsw{ grid-template-columns: 262px minmax(0,1fr); }
+}
+@media (max-width: 999.98px){
+  /* ⚠️⚠️ 알아본 다섯 곳(2nd Swing · SidelineSwap · 번개장터 · 당근 ·
+     골마켓)이 전부 폰에서는 거르개를 단추 하나로 모읍니다 — 늘 펼쳐
+     두면 고르개 여섯이 화면 위를 차지해 매물이 아래로 밀립니다. */
+  .lsf-btn{ display:inline-flex; }
+  .lsf-x{ display:inline-flex; }
+  .lsf-f{ display:grid; grid-template-columns: 1fr 1fr; }
+  /* ⚠️⚠️ **머리말(`.hd`)이 `z-index:100`** 입니다 — 60 으로 두었더니
+     시트 위쪽이 머리말에 가렸습니다(찍어 보고 알았습니다). 막이 뒤를
+     덮으므로 머리말이 안 눌리는 것이 맞습니다. */
+  .lsf-rail{ position:fixed; left:0; right:0; bottom:0; z-index:120;
+             max-height:84vh; overflow-y:auto;
+             border-radius: var(--r) var(--r) 0 0;
+             border-width:1.5px 0 0; box-shadow: var(--shadow-up);
+             /* ⚠️ 닫힌 시트는 **안 그립니다** — 화면 읽는 기계에도
+                안 보이는 것이 맞습니다 (닫혀 있으니까요). */
+             display:none; }
+  .lsw.lsf-on .lsf-rail{ display:block; }
+  .lsw.lsf-on .lsf-scrim{ display:block; position:fixed; inset:0; z-index:110;
+             background: rgba(8,43,32,.45); }
+}
+
+/* ── 매물 카드 — ⚠️⚠️ **사진이 먼저입니다** (0068) ──────────────────
    ⚠️⚠️ **조인 카드(`.jnc`)를 그대로 쓰지 않습니다.** 짧은 이름을 두
    자리에 쓰면 한쪽 모양을 고치는 날 다른 쪽이 조용히 바뀌고, 집는
    검사가 엉뚱한 칸을 집습니다 (`.lg` 가 로고이면서 약관이었던 자리 ·
    `.pvst-n` 이 담당자이면서 상호였던 자리). 모양은 닮았지만 이름을
-   가릅니다. */
-.lsl{ list-style:none; margin:0; padding:0; display:grid; gap:14px; }
+   가릅니다.
+   ⚠️ 칸 수를 박지 않습니다 — `auto-fill` 이라 폭에 따라 저절로 갈립니다
+   (칸 수를 박으면 마지막 줄에 구멍이 보이는 폭이 생깁니다). */
+.lsc-g{ list-style:none; margin:0; padding:0; display:grid; gap:16px;
+        grid-template-columns: repeat(auto-fill, minmax(218px, 1fr)); }
 .lsc{ background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
+      display:grid; grid-template-rows: auto 1fr; overflow:hidden;
+      min-width:0; }
+.lsc > *{ min-width:0; }
+/* 사진 자리 — ⚠️ 비율을 박아 두어야 사진이 늦게 와도 글이 안 튑니다 (CLS) */
+.lsc-ph{ position:relative; aspect-ratio: 4 / 3; background: var(--bg-2);
+         display:grid; place-items:center; overflow:hidden; }
+.lsc-im{ width:100%; height:100%; object-fit:cover; display:block; }
+/* 사진이 0장일 때 — ⚠️⚠️ 남의 사진이나 분류 사진을 깔지 않습니다
+   (그 매물인 것처럼 보입니다 · 절대 규칙 1 · 업체 카드와 같은 규칙) */
+.lsc-no{ display:grid; justify-items:center; gap:6px; font-size:13px;
+         color: var(--ink3); }
+.lsc-n, .lsc-cd{ position:absolute; border-radius: var(--r-pill);
+         font-size:12.5px; font-weight:700; padding:4px 9px; }
+/* ⚠️⚠️ **반투명 바탕을 쓰지 않습니다.** `rgba(8,43,32,.78)` 로 두었더니
+   ① 밝은 사진 위에서는 실제로 읽기 어렵고 ② 대비를 **계산**하는 검사가
+   사진을 못 보고 1.07 로 읽어 떨어뜨렸습니다. 사진 위 글자를 계산으로
+   재는 것은 안 되는 일이라(작업 기억), **바탕을 꽉 채워** 사진과 상관없이
+   읽히게 만듭니다 (흰 글자 · 딥그린 15.2). */
+.lsc-n{ right:8px; bottom:8px; background: var(--grn-deep); color:#fff; }
+.lsc-cd{ left:8px; top:8px; background:#fff; color: var(--ink);
+         border:1px solid var(--line); }
+/* ⚠️ 칸 높이가 제각각으로 보이지 않게 **단추를 바닥에** 붙입니다 —
+   제목이 한 줄인 카드와 두 줄인 카드가 한 줄에 서면 단추가 어긋납니다
+   (찍어 보고 알았습니다 · 도구는 못 잡습니다). */
+.lsc-i{ display:flex; flex-direction:column; gap:5px; padding:13px 15px 15px; }
+.lsc-br{ margin:0; font-size:12.5px; font-weight:700; color: var(--grn-text);
+         word-break:keep-all; overflow-wrap:anywhere; }
+.lsc-t{ margin:0; font-size:15.5px; color: var(--ink); line-height:1.45;
+        word-break:keep-all; overflow-wrap:anywhere; }
+/* 값 — ⚠️ 글자색은 **짙은 쪽**입니다 (액션그린은 면 전용 · 흰 바탕 3.14) */
+.lsc-p{ margin:0; font-size:17px; font-weight:800; color: var(--ink); }
+.lsc-m{ margin:0; font-size:13px; color: var(--ink3);
+        word-break:keep-all; overflow-wrap:anywhere; }
+.lsc-go{ margin-top:auto; padding-top:10px; }
+/* ⚠️ 문의 양식은 카드 안에서 열립니다 — 격자 칸을 벌리지 않게 */
+.lsc .jform{ grid-column:1 / -1; padding:0 15px 15px; }
+
+/* ── 매물 사진 상자 (js/lstphoto.js · 0068) ──────────────────────── */
+.lsp{ margin-top:14px; padding:14px 16px; background: var(--bg-2);
+      border:1.5px solid var(--line); border-radius: var(--r-sm);
+      display:grid; gap:10px; min-width:0; }
+.lsp-h{ margin:0; font-size:14.5px; font-weight:700; color: var(--ink); }
+.lsp-l{ list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap;
+        gap:10px; }
+.lsp-t{ display:grid; gap:6px; justify-items:center; }
+.lsp-t img{ width:108px; height:81px; object-fit:cover; display:block;
+            border-radius: var(--r-sm); border:1px solid var(--line); }
+.lsp-r{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.lsp-r input[type="file"]{ flex:1 1 180px; min-width:0; font-size:14px;
+            color: var(--ink); }
+/* ⚠️ `[hidden]` 에 `display:none` 을 같이 적습니다 — 작성자 CSS 가
+   브라우저 기본을 이기는 자리를 여러 번 겪었습니다 */
+#l-brand2[hidden], .ls-br2[hidden]{ display:none; }
+
+/* ── 구합니다 글 카드 (js/wanted.js · js/mywanted.js · 0061) ─────────
+   ⚠️⚠️⚠️ **2026-11-08 까지 이 화면이 중고 카드(`.lsc*`)를 빌려 쓰고
+   있었습니다.** 0068 이 중고를 **사진 격자**로 바꾸는 순간 구합니다 글이
+   같이 바뀌고(사진 자리가 없으니 빈 액자가 되고), 집는 검사도 엉뚱한 칸을
+   집습니다 — `.lg` 가 로고이면서 약관이었던 자리 · `.pvst-n` 이 담당자
+   이면서 상호였던 자리의 **셋째**입니다.
+   ⚠️ 모양은 전과 똑같습니다 — **이름만 갈랐습니다**(`.wtc*`). 둘이 닮은
+   것은 우연이고, 한쪽을 고칠 때 다른 쪽이 따라오면 안 됩니다. */
+.wtl{ list-style:none; margin:0; padding:0; display:grid; gap:14px; }
+.wtc{ background:#fff; border:1.5px solid var(--line); border-radius: var(--r);
       padding:18px 20px; display:grid; gap:8px; }
 /* ⚠️ 격자 칸은 제 내용만큼 벌어집니다 — 긴 제목이 화면을 밀지 않게 */
-.lsc > *{ min-width:0; }
-.lsc-h{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
-.lsc-h h3{ margin:0; font-size:17px; color: var(--ink);
+.wtc > *{ min-width:0; }
+.wtc-h{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.wtc-h h3{ margin:0; font-size:17px; color: var(--ink);
            word-break:keep-all; overflow-wrap:anywhere; }
-/* 값 — ⚠️ 글자색은 **짙은 쪽**입니다 (액션그린은 면 전용 · 흰 바탕 3.14) */
-.lsc-p{ flex:none; font-size:16px; font-weight:800; color: var(--grn-text); }
-.lsc-m{ margin:0; font-size:14.5px; color: var(--ink3); }
-.lsc-b{ margin:0; font-size:15px; color: var(--ink); line-height:1.6;
+/* 예산 — ⚠️ 글자색은 **짙은 쪽**입니다 (액션그린은 면 전용 · 흰 바탕 3.14) */
+.wtc-p{ flex:none; font-size:16px; font-weight:800; color: var(--grn-text); }
+.wtc-m{ margin:0; font-size:14.5px; color: var(--ink3); }
+.wtc-b{ margin:0; font-size:15px; color: var(--ink); line-height:1.6;
         word-break:keep-all; overflow-wrap:anywhere; }
-.lsc-go{ justify-self:start; }
+.wtc-go{ justify-self:start; }
 .jafh{ margin:12px 0 0; font-size:15px; color: var(--ink); }
 .jbox-h{ margin:0 0 14px; font-size:18px; color: var(--ink); }
 .jnote{ margin:14px 0 0; font-size:13.5px; color: var(--ink3); line-height:1.55;
@@ -986,26 +1158,9 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
            line-height:1.7; word-break:keep-all; overflow-wrap:anywhere; }
 .tbd-note .btn{ min-height:40px; margin-left:6px; }
 
-/* ── 종류 · 지역별 현황 (0067 · js/countboard.js) ────────
-   ⚠️ 모양은 부킹 · 조인 현황표(.tbf · .tbd-*)를 **그대로** 씁니다 —
-   두 벌로 적으면 한쪽만 고치는 날 둘이 다른 모양이 됩니다.
-   여기에는 **게시판 칸**만 더합니다 (게시판은 표가 아닙니다 —
-   cq 표에 지역 칸이 없습니다). */
-.cb-wide{ grid-column:1 / -1; }
-.cqb-grid{ display:grid; gap:8px; grid-template-columns:repeat(2, minmax(0, 1fr)); }
-@media (min-width:760px){ .cqb-grid{ grid-template-columns:repeat(4, minmax(0, 1fr)); } }
-.cqb-grid > *{ min-width:0; }
-/* ⚠️ 누르는 것은 40px 이상 (손님이 40~60대입니다) */
-.cqb-c2{ display:flex; align-items:center; justify-content:space-between; gap:8px;
-         min-height:48px; padding:0 12px; border:1.5px solid var(--line);
-         border-radius: var(--r-sm); background: var(--bg-2);
-         text-decoration:none; }
-.cqb-c2:hover{ border-color: var(--grn); }
-.cqb-nm{ font-size:14.5px; font-weight:700; color: var(--ink);
-         word-break:keep-all; overflow-wrap:anywhere; }
-.cqb-n{ font-size:15px; font-weight:800; color: var(--grn-deep); }
-/* 인력 목록의 지역 고르개 — ⚠️ 칸(chip)으로 안 냅니다 (열일곱이라
-   폰에서 "밀면 보이는 것" 이 됩니다). */
+/* ── 인력 목록의 지역 고르개 (0067 · 2026-11-08) ─────────────────
+   ⚠️ 칸(chip)으로 안 냅니다 — 지역이 열일곱이라 거르개 줄에 놓으면
+   폰에서 "밀면 보이는 것" 이 됩니다 (머리말 메뉴에서 겪은 자리). */
 .jbf-rg{ display:flex; align-items:center; gap:8px; margin:0 0 14px; }
 .jbf-rg label{ font-size:14px; font-weight:700; color: var(--ink); }
 .jbf-rg select{ min-height:44px; padding:0 12px; border-radius: var(--r-sm);

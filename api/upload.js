@@ -126,7 +126,9 @@ module.exports = async function handler(req, res){
     const ppid = String((req.query && req.query.pp) || "").trim();
     /* 0059 — 게시판 글 하나의 사진 전부 (한 번에 묻습니다) */
     const cqq = String((req.query && req.query.cqq) || "").trim();
-    if(!pid && !ppid && !cqq)
+    /* 0068 — 매물 하나의 사진 전부 (한 번에 묻습니다) */
+    const lstq = String((req.query && req.query.lstq) || "").trim();
+    if(!pid && !ppid && !cqq && !lstq)
       /* ⚠️ 설정 여부만입니다 — 버킷 이름도 · 주소도 안 돌려줍니다
          (`api/admin-health.js` 가 "있는지" 만 알려 주는 방식).
          ⚠️⚠️ 업체 쪽은 **따로** 말합니다 — 공개 버킷이 없으면 시설
@@ -141,7 +143,11 @@ module.exports = async function handler(req, res){
         /* ⚠️ 0064 — 광고 소재. 값은 `pvPhoto` 와 같지만 **이름을
            따로** 둡니다 — 화면이 남의 기능 이름으로 제 칸을 가리면,
            버킷을 갈라 쓰는 날 엉뚱한 자리가 같이 꺼집니다. */
-        adImg: !!(dbReady() && pvBucket()) });
+        adImg: !!(dbReady() && pvBucket()),
+        /* ⚠️ 0068 — 매물 사진. 값은 `pvPhoto` 와 같지만 **이름을
+           따로** 둡니다 — 화면이 남의 기능 이름으로 제 칸을 가리면,
+           버킷을 갈라 쓰는 날 엉뚱한 자리가 같이 꺼집니다. */
+        lstPhoto: !!(dbReady() && pvBucket()) });
 
     /* ── 게시판 글의 사진 주소 (0059) ────────────────────────────────
        ⚠️⚠️ **공개 보기로 읽습니다**(`v_cq_photo_public`) — 그 보기가
@@ -172,6 +178,41 @@ module.exports = async function handler(req, res){
       return res.status(200).json({ ok:true, photos: qp.rows.map(function(f){
         return { id:f.id, caption:f.caption || "",
                  url: origin() + "/storage/v1/object/public/" + bkt + "/" + f.path };
+      }) });
+    }
+
+    /* ── 매물에 붙은 사진 주소 (0068) ──────────────────────────────
+       ⚠️⚠️ **공개 보기로 읽습니다**(`v_listing_photo_public`) — 그 보기가
+       `anon` 에게도 열려 있어 가입 안 하신 분도 매물 사진을 봅니다.
+       `listingphoto` 표를 그 사람 토큰으로 읽으면 **제 매물 사진만**
+       보입니다(0068 의 정책이 그렇습니다) — 남의 매물을 열면 사진이
+       사라집니다.
+       ⚠️⚠️ **공개 버킷이라 서명이 필요 없습니다** — 주소를 그대로 짓습니다
+       (서명을 걸면 사진 여덟 장에 호출 여덟 번이 늘고, 10분 뒤에 깨집니다).
+       ⚠️ 내린 · 팔린 · 가려진 매물의 사진은 보기가 걸러 냅니다.
+       ⚠️ 목록 카드의 **첫 장**은 이 길로 안 옵니다 — `v_listing_open` 이
+       `thumb` 로 같이 내주므로 스무 장이면 호출이 스무 번 늘지 않습니다. */
+    if(lstq){
+      if(!dbReady()) return res.status(200).json({ up:false });
+      if(!/^[0-9a-fA-F-]{36}$/.test(lstq))
+        return res.status(400).json({ error:"매물을 찾을 수 없습니다" });
+      const bkl = pvBucket();
+      if(!bkl){
+        console.warn("[upload] PROVIDER_BUCKET 이 없어 매물 사진을 못 냅니다");
+        return res.status(200).json({ ok:true, photos:[] });
+      }
+      const ql = await dbSelect("v_listing_photo_public",
+        "?select=" + encodeURIComponent("id,path,caption") +
+        "&listing_id=eq." + encodeURIComponent(lstq) +
+        "&order=created_at.asc&limit=8");
+      if(!ql.ok){
+        if(ql.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+        console.warn("[upload] listing photos — " + dbWhy(ql.why));
+        return res.status(502).json({ error:"지금 불러오지 못했습니다" });
+      }
+      return res.status(200).json({ ok:true, photos: ql.rows.map(function(f){
+        return { id:f.id, caption:f.caption || "",
+                 url: origin() + "/storage/v1/object/public/" + bkl + "/" + f.path };
       }) });
     }
 
@@ -307,6 +348,58 @@ module.exports = async function handler(req, res){
       return res.status(502).json({ error:"지금 올리지 못했습니다. 잠시 뒤 다시 눌러 주세요" });
     }
     return res.status(200).json({ ok:true, url:sgq.url, id:gq.id });
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     0068 — 매물 사진 올릴 자리를 청합니다
+     ⚠️⚠️ **0059(게시판 사진)와 같은 길**입니다 — 올린 분이 직접 부르고,
+     제 매물이 아니면 DB 가 거절합니다(역할을 여기서 또 판단하면 두 곳이
+     어긋납니다).
+     ⚠️⚠️ **버킷은 DB 가 돌려준 경로로 고릅니다** — 문이 경로를
+     `lst/<매물>/photo/…` 로 짓고 `bucketForPath()` 가 `/photo/` 를 보고
+     공개 버킷을 고릅니다. 화면이 보낸 값으로 고르면 거기가 구멍입니다.
+     ⚠️ 매물 사진은 **공개 목록에 그려지므로 공개가 맞습니다**.
+     ══════════════════════════════════════════════════════════════ */
+  if(b0 && b0.lst === true){
+    if(!dbReady() || !authReady()){
+      console.warn("[upload] SUPABASE_* 가 없습니다");
+      return res.status(503).json({ error:"지금은 올릴 수 없습니다" });
+    }
+    if(!pvBucket()){
+      console.warn("[upload] PROVIDER_BUCKET 이 없습니다 (매물 사진)");
+      return res.status(503).json({ error:"지금은 사진을 올릴 수 없습니다" });
+    }
+    if(!bearer(req)) return res.status(401).json({ error:"로그인이 필요합니다" });
+    const sl = await session(req);
+    if(!sl.ok){
+      if(sl.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      return res.status(401).json({ error:"로그인이 필요합니다" });
+    }
+    const rl = await dbRpc(sl.token, "claim_listing_photo", { p: {
+      listing: String(b0.listing || "").trim(),
+      mime: String(b0.mime || "").trim().toLowerCase(),
+      bytes: String(Number(b0.bytes) || 0), caption: String(b0.caption || "") } });
+    if(!rl.ok){
+      if(rl.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      console.warn("[upload] listing claim — " + dbWhy(rl.why));
+      /* ⚠️ DB 가 거절한 **그 말**을 그대로 보여 줍니다 */
+      const ml = String(rl.why || "").match(/"message"\s*:\s*"([^"]{1,200})"/);
+      return res.status(400).json({ error: ml ? ml[1] : "지금 올리지 못했습니다" });
+    }
+    const gl = rl.data && (Array.isArray(rl.data) ? rl.data[0] : rl.data);
+    const pl = gl && gl.path;
+    if(!pl){
+      console.warn("[upload] listing claim 이 경로를 안 돌려줬습니다");
+      return res.status(502).json({ error:"지금 올리지 못했습니다" });
+    }
+    const sgl = await signed("upload", pl, bucketForPath(pl));
+    if(!sgl.ok){
+      if(sgl.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      console.warn("[upload] " + sgl.why);
+      /* ⚠️ 자리는 이미 적혔습니다 — 올린 분이 제 화면에서 뺄 수 있습니다 */
+      return res.status(502).json({ error:"지금 올리지 못했습니다. 잠시 뒤 다시 눌러 주세요" });
+    }
+    return res.status(200).json({ ok:true, url:sgl.url, id:gl.id });
   }
 
   /* ══════════════════════════════════════════════════════════════

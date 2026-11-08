@@ -97,7 +97,7 @@ module.exports = function(T){
   const lid = psql(as(B) + "select open_listing(jsonb_build_object(" +
     "'sub','us-iron','region','seoul','title','아이언 세트 팝니다'," +
     "'body','상태 좋습니다. 직거래 가능합니다.','price','400000'," +
-    "'cond','good','ship',true,'contact','010-1111-2222'," +
+    "'cond','good','brand','핑','ship',true,'contact','010-1111-2222'," +
     "'agree_at', now()::text));" + back);
   ok("매물이 문으로 올라갔다", lid.length > 10, lid);
   ok("⚠️⚠️ **조건이 맞는 분께 알림이 한 장** 꽂혔다",
@@ -113,7 +113,7 @@ module.exports = function(T){
   const lid2 = psql(as(B) + "select open_listing(jsonb_build_object(" +
     "'sub','us-iron','region','seoul','title','두 번째 아이언'," +
     "'body','이것도 상태 좋습니다.','price','300000'," +
-    "'cond','good','ship',false,'contact','010-1111-3333'," +
+    "'cond','good','brand','핑','ship',false,'contact','010-1111-3333'," +
     "'agree_at', now()::text));" + back);
   ok("⚠️⚠️ 지역이 다른 분께는 **한 장도 안 간다**",
      mine(C, "listing", lid2) === "0", mine(C, "listing", lid2));
@@ -126,7 +126,7 @@ module.exports = function(T){
   const lid3 = psql(as(B) + "select open_listing(jsonb_build_object(" +
     "'sub','us-iron','region','seoul','title','세 번째 아이언'," +
     "'body','직거래만 합니다.','price','200000'," +
-    "'cond','good','ship',false,'contact','010-1111-4444'," +
+    "'cond','good','brand','핑','ship',false,'contact','010-1111-4444'," +
     "'agree_at', now()::text));" + back);
   ok("⚠️ 택배만 받겠다고 하신 분께 **직거래 매물은 안 간다**",
      mine(D, "listing", lid3) === "0", mine(D, "listing", lid3));
@@ -138,7 +138,7 @@ module.exports = function(T){
   const lid4 = psql(as(B) + "select open_listing(jsonb_build_object(" +
     "'sub','us-iron','region','seoul','title','제가 올린 것'," +
     "'body','제 조건에도 맞습니다.','price','100000'," +
-    "'cond','good','ship',true,'contact','010-1111-5555'," +
+    "'cond','good','brand','핑','ship',true,'contact','010-1111-5555'," +
     "'agree_at', now()::text));" + back);
   ok("⚠️⚠️ 제가 올린 글은 **제게 안 옵니다** (0050 의 notify_one 이 봅니다)",
      mine(B, "listing", lid4) === "0", mine(B, "listing", lid4));

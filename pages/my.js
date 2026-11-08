@@ -107,7 +107,10 @@ exports.build = function(){
          "/js/auth.js", "/js/photo.js", "/js/account.js",
          "/js/review.js", "/js/myreq.js",
          "/js/data/regions.js", "/js/myjoin.js", "/js/mycq.js",
-         "/js/myjob.js", "/js/mylisting.js", "/js/myinq.js", "/js/mynick.js",
+         /* ⚠️ `lstphoto.js` 는 매물 사진 상자 **한 곳**입니다 (0068) —
+            `/cat/used` 도 같은 파일을 싣습니다. */
+         "/js/myjob.js", "/js/lstphoto.js", "/js/mylisting.js",
+         "/js/myinq.js", "/js/mynick.js",
          /* ⚠️ 0061 — catalog.js 가 분류 · 하위 이름을, deal.js 가 상태
             말과 예산 셈을, regions.js 가 지역 이름을 줍니다 (빌드가
             catalog 를 저절로 싣습니다). */

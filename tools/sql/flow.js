@@ -609,6 +609,8 @@ module.exports = function(T){
   const HL = psql(as(HS) + "select open_listing('" +
     j({ sub:"us-driver", region:"seoul", title:"흐름 검사용 드라이버",
         body:"흐름 검사로 올리는 매물입니다", price:"300000", cond:"good",
+        /* ⚠️ 0068 — 브랜드가 필수입니다 */
+        brand:"타이틀리스트",
         contact:"010-7777-7777", agree_at:psql("select now()") }) + "'::jsonb)");
   ok("H-1 매물을 문으로 올린다", /^[0-9a-f-]{36}$/.test(HL), HL);
   /* ⚠️ 공개 목록은 **비로그인도** 봅니다 (크롤러 몫) — 그런데 연락처는

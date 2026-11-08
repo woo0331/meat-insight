@@ -86,7 +86,10 @@
         var st  = window.amLstSt(r.state);
         return '<li class="mj-i">' +
           '<p class="mj-t"><b>' + esc(r.title) + '</b> · ' +
-            esc(window.amLstPrice(r.price)) + ' · ' + esc(subName(r.sub)) +
+            esc(window.amLstPrice(r.price)) + ' · ' +
+            /* ⚠️ 브랜드가 비면 **그 자리를 빼고** 종류만 적습니다
+               (0068 전에 올라온 매물은 비어 있습니다 · 절대 규칙 2) */
+            (r.brand ? esc(r.brand) + ' · ' : '') + esc(subName(r.sub)) +
             ' · ' + esc(rgName(r.region)) + ' · ' + esc(st.name) + '</p>' +
           /* ⚠️ 가린 까닭을 글쓴이에게 보여 줍니다 — 까닭 없이 못 가리게
              해 두고 그 까닭을 숨기면 무엇이 문제였는지 모릅니다 */
@@ -112,7 +115,17 @@
               }).join("") + '</ul>'
             : '<p class="mj-z">아직 문의가 없습니다.</p>') +
           (r.state === "open"
-            ? '<button type="button" class="btn btn-line ls-edit" data-id="' + esc(r.id) +
+            /* ⚠️⚠️ **사진은 여기서도 붙입니다** — 올리신 직후
+               (`/cat/used`)에만 붙일 수 있게 두면 그 화면을 닫은 분의
+               매물은 영원히 사진이 없습니다 (막다른 길 · 절대 규칙 2).
+               ⚠️ 상자 markup 과 올리는 길은 `js/lstphoto.js` **한 곳**
+               입니다 — 두 화면에 따로 적으면 한쪽만 고치는 날 어긋납니다.
+               ⚠️ 버킷이 꺼져 있으면 단추를 **안 냅니다**(눌러도 아무 일이
+               안 나는 단추를 미리 만들지 않습니다). */
+            ? (window.amLstPhoto && window.amLstPhoto.on()
+                ? '<button type="button" class="btn btn-line ls-ph" data-id="' +
+                  esc(r.id) + '">사진</button>' : '') +
+              '<button type="button" class="btn btn-line ls-edit" data-id="' + esc(r.id) +
               '">고치기</button>' +
               '<button type="button" class="btn btn-line ls-sold" data-id="' + esc(r.id) +
               '">팔렸습니다</button>' +
@@ -200,6 +213,25 @@
        그 칸이 지워지지 않습니다 (`save_provider_self` 와 다릅니다).
        ⚠️ 연락처는 표에서 못 읽어 오므로(칸 GRANT) **비워 열고**, 비워
        보내면 그대로 둡니다 — 그 사실을 그 자리에서 말합니다. */
+    /* ── 사진 — ⚠️ 누를 때 **그 매물 것만** 물어봅니다 ───────────────
+       ⚠️⚠️ 늘 펼쳐 두면 매물 쉰 개에 호출이 쉰 번 늘고, 그동안 화면이
+       멈춰 보입니다. 그래서 누르면 엽니다.
+       ⚠️ 사진이 바뀌면 목록 카드의 첫 장도 바뀌므로 다시 그립니다 —
+       안 그리면 올려도 카드가 그대로여서 "안 올라갔다" 로 보입니다. */
+    Array.prototype.forEach.call(box.querySelectorAll(".ls-ph"), function(b){
+      b.addEventListener("click", function(){
+        var li = b.closest(".mj-i");
+        var open = li.querySelector(".lsp");
+        if(open){ open.remove(); return; }
+        if(!window.amLstPhoto) return;
+        var html = window.amLstPhoto.box();
+        if(!html) return;
+        li.insertAdjacentHTML("beforeend", html);
+        window.amLstPhoto.bind(li.querySelector(".lsp"),
+                               b.getAttribute("data-id"), a.conf, null);
+      });
+    });
+
     Array.prototype.forEach.call(box.querySelectorAll(".ls-edit"), function(b){
       b.addEventListener("click", function(){
         var li = b.closest(".mj-i");
@@ -210,6 +242,21 @@
         var cd = (window.AM_LST_COND || []).map(function(c){
           return '<option value="' + esc(c.key) + '">' + esc(c.name) + '</option>';
         }).join("");
+        /* ⚠️⚠️ 브랜드는 **고르개 + 직접 적기**입니다 (올리는 양식과 같은
+           규칙) — 목록에 없는 브랜드를 가진 분이 못 고치면 안 됩니다.
+           ⚠️ 지금 담긴 글자가 목록에 없으면 **그대로 한 줄 더** 넣어
+           고른 것으로 보여 줍니다 (안 넣으면 저장할 때마다 엉뚱한
+           브랜드로 바뀝니다). */
+        var now = String(r.brand || "");
+        var BL = (window.AM_LST_BRAND || []).slice();
+        var free = !!now && BL.indexOf(now) < 0;
+        var br = (free ? ['<option value="' + esc(now) + '" selected>' +
+                          esc(now) + '</option>'] : []).concat(
+          BL.map(function(n){
+            return '<option value="' + esc(n) + '"' +
+              (now === n ? " selected" : "") + '>' +
+              esc(n === "기타" ? "기타 (직접 적기)" : n) + '</option>';
+          })).join("");
         li.insertAdjacentHTML("beforeend",
           '<form class="jform ls-ef" data-id="' + esc(r.id) + '">' +
             '<div class="jrow jrow-full"><label>제목 <b>*</b></label>' +
@@ -218,6 +265,12 @@
             '<div class="jrow"><label>값 <b>*</b></label>' +
             '<input name="price" type="number" min="0" max="100000000" step="1000" ' +
             'inputmode="numeric" required value="' + esc(String(r.price)) + '"></div>' +
+            '<div class="jrow"><label>브랜드 <b>*</b></label>' +
+            '<select name="brand" required>' + br + '</select>' +
+            '<input class="ls-br2" maxlength="30" hidden ' +
+              'aria-label="브랜드를 직접 적습니다" placeholder="브랜드를 적어 주세요">' +
+            '<span class="jhint">목록에 없으면 <b>기타</b> 를 고르고 ' +
+            '직접 적어 주세요.</span></div>' +
             '<div class="jrow"><label>물건 상태 <b>*</b></label>' +
             '<select name="cond" required>' + cd + '</select></div>' +
             '<div class="jrow jrow-full"><label class="jchk">' +
@@ -238,6 +291,19 @@
           '</form>');
         var f = li.querySelector(".ls-ef");
         f.cond.value = String(r.cond);
+        /* ⚠️ 「기타」를 고르시면 직접 적는 칸이 나옵니다 */
+        var b2 = f.querySelector(".ls-br2");
+        if(b2) f.brand.addEventListener("change", function(){
+          b2.hidden = f.brand.value !== "기타";
+          if(!b2.hidden){ try{ b2.focus(); }catch(_){} }
+        });
+        /* ⚠️⚠️ 보내는 브랜드를 **한 곳**에서 짓습니다 (올리는 양식과 같은
+           규칙) — 두 곳에 적으면 한쪽만 고치는 날 둘이 다른 값을 담습니다 */
+        function brandNow(){
+          if(f.brand.value !== "기타") return f.brand.value;
+          var v = b2 ? String(b2.value || "").trim() : "";
+          return v || "기타";
+        }
         f.addEventListener("submit", function(e){
           e.preventDefault();
           var msg = document.getElementById("lsmmsg");
@@ -248,6 +314,7 @@
              문이 그대로 두지만, 안 보내는 쪽이 뜻이 분명합니다. */
           var p = { id: f.getAttribute("data-id"), title: f.title.value,
                     body: f.body.value, price: f.price.value,
+                    brand: brandNow(),
                     cond: f.cond.value, ship: !!f.ship.checked };
           if(f.contact.value) p.contact = f.contact.value;
           call(a, "edit_listing", p)
@@ -269,7 +336,7 @@
          칸을 안 줬으므로 부르면 **질의가 통째로 거절**됩니다 (0053 의
          `memo` · `answered_by` 에서 겪은 그 자리입니다). */
       get(a, "listing?select=id,title,body,sub,region,ship,price,cond,state," +
-             "hidden_why,created_at&order=created_at.desc&limit=50"),
+             "brand,hidden_why,created_at&order=created_at.desc&limit=50"),
       get(a, "listingask?select=id,listing_id,msg,state,created_at,by_user," +
              "seller_share_at,buyer_share_at&order=created_at.desc&limit=200"),
       get(a, "v_listing_contact?select=ask_id,seller_contact,buyer_contact," +
@@ -291,6 +358,14 @@
 
   window.amAuthAsk().then(function(a){
     if(!a || !a.on || !a.signedIn) return;   /* 로그인 전에는 안 그립니다 */
-    reload(a).catch(function(){ /* 못 읽었으면 숨긴 채로 둡니다 */ });
+    /* ⚠️⚠️ **사진 버킷이 켜졌는지 먼저 묻고 그립니다** — 안 기다리면
+       그 답이 오기 전에 그려 「사진」 단추가 조용히 안 나옵니다
+       (스크립트 차례에 기댄 자리를 두 번 겪었습니다).
+       ⚠️ 못 물어봐도 목록은 그립니다 — 사진 단추만 안 납니다. */
+    var pre = window.amLstPhoto ? window.amLstPhoto.ready()
+                                : Promise.resolve(false);
+    pre.catch(function(){}).then(function(){
+      return reload(a);
+    }).catch(function(){ /* 못 읽었으면 숨긴 채로 둡니다 */ });
   }).catch(function(){});
 })();

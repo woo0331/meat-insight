@@ -3030,7 +3030,26 @@ function boardsOf(){
     ["/admin 입금 · 환수", "/admin", { role:"admin", name:"관리자" },
      FEE_SWEEP, { biz_metrics: MET }, "#feeadm button[data-ftab='paid']"],
     ["/admin 월 정산서", "/admin", { role:"admin", name:"관리자" },
-     FEE_SWEEP, { biz_metrics: MET }, "#feeadm button[data-ftab='settle']"]
+     FEE_SWEEP, { biz_metrics: MET }, "#feeadm button[data-ftab='settle']"],
+    /* ⚠️⚠️⚠️ 0068 — **중고 매물 목록**(`/cat/used`)입니다. 이 화면도
+       설정이 있어야 열려서 `check-screens` 는 **빈 상자**만 봅니다 —
+       사진 카드 격자가 폰에서 칸을 벌리는지(격자 칸의 기본값이
+       `min-width:auto` 라 사진 · 긴 제목이 화면을 밉니다)는 여기서만
+       드러납니다. ⚠️ 가짜 자료는 `v_listing_open` 의 칸 그대로입니다. */
+    ["/cat/used 중고 매물 목록", "/cat/used", { role:"customer", name:"손님" },
+     { v_listing_open:[
+       { id:"lw1", sub:"us-driver", region:"seoul", ship:false,
+         title:"타이틀리스트 드라이버 10.5도 (헤드커버 · 정품 보증서 포함)",
+         body:"2년 썼습니다", price:350000, cond:"good", ask_n:0,
+         brand:"타이틀리스트", photo_n:3, thumb:"lst/lw1/photo/a.jpg" },
+       { id:"lw2", sub:"us-iron", region:"gyeonggi", ship:true,
+         title:"연습용 아이언 무료로 나눔", body:"연습용입니다",
+         price:0, cond:"fair", ask_n:2,
+         brand:null, photo_n:0, thumb:null }] }, {}],
+    /* ⚠️⚠️ **폰에서는 거르개가 아래 시트라 눌러야 그려집니다** — 안
+       누르면 고르개 여섯이 폰에서 미는지 아무도 안 잽니다 */
+    ["/cat/used 거르개 시트", "/cat/used", { role:"customer", name:"손님" },
+     { v_listing_open:[] }, {}, "#lf-open"]
   ];
   for(const [label, path, who, tables, rpcs, pre] of phones){
     for(const w of PHONES){
@@ -4534,196 +4553,6 @@ function boardsOf(){
     await g.p.close();
   }
 
-  /* ⑧-6 ⚠️⚠️⚠️ **종류 · 지역별 현황** (0067 · js/countboard.js · 2026-11-08).
-     부킹 · 조인에만 현황표가 있어서, 중고 · 인력 · 게시판에 들어오신 분은
-     **목록부터** 보셨습니다.
-     ⚠️⚠️ **네 가지를 갈라서** 잽니다 —
-       ① 설정이 없어도 뼈대가 서는가 · 그 칸이 **0 이 아닌가**
-       ② 칸을 누르면 **받는 쪽이 실제로 걸러지는가**(보내는 질의를 뜯어 봅니다
-          — 흉내 장치는 안 걸러 주므로 줄 수로 재면 영원히 초록입니다)
-       ③ 게시판은 **표가 아니라 칸**이고 0건도 안 숨기는가
-       ④ 세로축을 **한 곳에서** 끌어오는가 (갯수를 박지 않습니다) */
-  {
-    /* ① 설정 없이 — 중고 */
-    const p0 = await b.newPage({ viewport: view });
-    await p0.route("**/api/session", function(r){
-      return r.fulfill({ status:200, contentType:"application/json",
-        body: JSON.stringify({ auth:false, signedIn:false, conf:null }) });
-    });
-    await p0.goto(base + "/cat/used", { waitUntil:"networkidle" });
-    await p0.waitForTimeout(500);
-    const r = await p0.evaluate(function(){
-      const bx = document.getElementById("countboard");
-      const rows = bx ? bx.querySelectorAll(".tbd-t tbody tr") : [];
-      const used = (window.AM_CATS || []).filter(function(c){
-        return c.key === "used"; })[0];
-      return { rows: rows.length,
-               cells: rows.length ? rows[0].querySelectorAll("td").length : 0,
-               zones: (window.AM_REGION_ZONES || []).length,
-               subs: ((used && used.items) || []).filter(function(i){
-                 return !i.pv; }).length,
-               unknown: bx ? bx.querySelectorAll(".tbd-x").length : -1,
-               zeros: bx ? bx.querySelectorAll(".tbd-0").length : -1,
-               find: !!(bx && bx.querySelector(".tbf-go")),
-               body: bx ? bx.innerText : "" };
-    });
-    ok("⚠️⚠️ 중고 — 설정이 없어도 현황표의 **뼈대가 그려진다**",
-       r.rows > 0 && r.rows === r.subs && r.cells === r.zones,
-       JSON.stringify(r).slice(0, 200));
-    ok("  ⚠️⚠️⚠️ 그 칸에 **0 을 적지 않는다** (세어 본 것이 아닙니다)",
-       r.unknown > 0 && r.zeros === 0, JSON.stringify(r).slice(0, 200));
-    ok("  ⚠️ '0건' 이라고 말하지 않는다",
-       r.body.indexOf("0건이라는 뜻이 아닙니다") >= 0, r.body.slice(0, 200));
-    ok("  ⚠️ 찾는 칸은 그대로 돈다 (주소만 짓고 DB 를 안 읽습니다)", r.find, "없습니다");
-    await p0.close();
-  }
-  {
-    /* ② 중고 — 숫자가 있으면 칸이 링크이고, 눌러 간 자리가 **서버에서**
-       걸러집니다. ⚠️ 가격대도 같이 봅니다 (0056 은 price 를 반드시
-       받아 놓고 목록은 그 칸으로 못 좁혔습니다). */
-    const g = await open("/cat/used", { role:"customer", name:"손님", signedIn:true },
-      { v_listing_count: [{ sub:"us-iron", region:"seoul", n:3 }],
-        v_listing_open: [] }, {}, true);
-    await g.p.waitForTimeout(600);
-    const r = await g.p.evaluate(function(){
-      const a = document.querySelector("#countboard .tbd-n");
-      return { href: a ? a.getAttribute("href") : null,
-               zeros: document.querySelectorAll("#countboard .tbd-0").length };
-    });
-    ok("중고 — 숫자가 있는 칸이 **링크**다", !!r.href, JSON.stringify(r));
-    ok("  ⚠️ 0 인 칸은 **0 이라고 적는다** (빈칸은 '모름' 과 섞입니다)",
-       r.zeros > 0, JSON.stringify(r));
-    /* ⚠️⚠️ 칸은 **묶음**(capital)을 보냅니다 — 표가 묶음으로 세기
-       때문입니다. 받는 쪽이 그것을 시 · 도로 푸는지는 아래에서 봅니다. */
-    ok("  ⚠️⚠️ 칸이 **그 종류 · 그 묶음**으로 보낸다",
-       String(r.href).indexOf("s=us-iron") >= 0 &&
-       String(r.href).indexOf("rg=capital") >= 0, String(r.href));
-    await g.p.close();
-  }
-  {
-    /* ⚠️⚠️ **받는 쪽이 실제로 거르는가** — 보내는 질의를 뜯어 봅니다 */
-    const g = await open("/cat/used?s=us-iron&rg=capital&p=u30",
-      { role:"customer", name:"손님", signedIn:true },
-      { v_listing_open: [], v_listing_count: [] }, {}, true);
-    await g.p.waitForTimeout(600);
-    const q = g.sent.filter(function(x){
-      return x.name === "GET" && String(x.body).indexOf("v_listing_open") >= 0;
-    }).map(function(x){ return decodeURIComponent(String(x.body)); });
-    /* ⚠️⚠️⚠️ **묶음을 시 · 도로 풀어서** 보내야 합니다 — 안 풀면
-       `region=eq.capital` 이 되어 **아무것도 안 걸립니다**(에러 0줄).
-       푸는 규칙은 `amRegionsFor()` 한 곳입니다. */
-    ok("⚠️⚠️ 중고 — 종류 · 지역을 **서버에 보내서** 거른다",
-       q.some(function(x){ return x.indexOf("sub=eq.us-iron") >= 0 &&
-         x.indexOf("region=in.(seoul,gyeonggi,incheon)") >= 0; }),
-       q.slice(-1).join("").slice(0, 240));
-    /* ⚠️ 아래를 닫고 위를 엽니다(gte · lt) — 둘 다 닫으면 딱 10만원짜리가
-       두 칸에 다 걸립니다. `lt` 를 빠뜨리면 위가 열려 버립니다. */
-    ok("  ⚠️⚠️ **가격대도 서버가 거른다** (gte · lt 둘 다)",
-       q.some(function(x){ return x.indexOf("price=gte.100000") >= 0 &&
-         x.indexOf("price=lt.300000") >= 0; }),
-       q.slice(-1).join("").slice(0, 240));
-    const sel = await g.p.evaluate(function(){
-      const e = document.getElementById("lf-p");
-      return e ? { v: e.value, n: e.options.length,
-                   keys: (window.AM_LST_PRICE || []).length } : null;
-    });
-    ok("  ⚠️ 거르개가 **그 가격대로 열린다**", sel && sel.v === "u30",
-       JSON.stringify(sel));
-    ok("  ⚠️ 고르개가 **AM_LST_PRICE 한 곳**에서 온다 (갯수를 안 박습니다)",
-       !!sel && sel.keys > 0 && sel.n === sel.keys + 1, JSON.stringify(sel));
-    await g.p.close();
-  }
-  {
-    /* ③ 인력 — 갈래 x 지역. ⚠️ 지역으로 좁히는 길이 2026-11-08 까지
-       **주소에 없었습니다** — 칸은 그려지는데 눌러도 안 걸리는 꼴이었습니다. */
-    const g = await open("/cat/career?k=hire&rg=gyeongs",
-      { role:"customer", name:"손님", signedIn:true },
-      { v_job_open: [], v_job_count: [{ kind:"hire", region:"busan", n:2 }] },
-      {}, true);
-    await g.p.waitForTimeout(700);
-    const q = g.sent.filter(function(x){
-      return x.name === "GET" && String(x.body).indexOf("v_job_open") >= 0;
-    }).map(function(x){ return decodeURIComponent(String(x.body)); });
-    ok("⚠️⚠️ 인력 — 갈래 · 지역을 **서버에 보내서** 거른다",
-       q.some(function(x){ return x.indexOf("kind=eq.hire") >= 0 &&
-         x.indexOf("region=in.(") >= 0 && x.indexOf("busan") >= 0; }),
-       q.slice(-1).join("").slice(0, 240));
-    const r = await g.p.evaluate(function(){
-      const rows = document.querySelectorAll("#countboard .tbd-t tbody tr");
-      const sel = document.getElementById("jbf-rg");
-      return { rows: rows.length,
-               kinds: (window.AM_JOB_KIND || []).length,
-               rg: sel ? sel.value : null };
-    });
-    ok("  ⚠️ 세로축이 **AM_JOB_KIND 한 곳**에서 온다 (갯수를 안 박습니다)",
-       r.kinds > 0 && r.rows === r.kinds, JSON.stringify(r));
-    ok("  ⚠️ 지역 고르개가 **그 묶음으로 열린다**", r.rg === "gyeongs",
-       JSON.stringify(r));
-    await g.p.close();
-  }
-  {
-    /* ④ 게시판 — ⚠️⚠️ **표가 아닙니다** (cq 표에 지역 칸이 없습니다).
-       0건인 게시판도 **안 숨깁니다** — 숨기면 첫 글을 남길 길이 사라지고
-       글쓰기 고르개에는 나오므로 두 화면이 다른 말을 합니다. */
-    const g = await open("/cat/community",
-      { role:"customer", name:"손님", signedIn:true },
-      { v_cq_public: [], v_cq_count: [{ cat:"cm-open", n:4 }] }, {}, true);
-    await g.p.waitForTimeout(700);
-    const r = await g.p.evaluate(function(){
-      const bx = document.getElementById("countboard");
-      const cm = (window.AM_CATS || []).filter(function(c){
-        return c.key === "community"; })[0];
-      return { chips: bx ? bx.querySelectorAll(".cqb-c2").length : -1,
-               table: bx ? bx.querySelectorAll(".tbd-t").length : -1,
-               boards: ((cm && cm.items) || []).length,
-               zeros: bx ? bx.querySelectorAll(".tbd-0").length : -1,
-               one: bx ? (bx.querySelector(".cqb-n") || {}).textContent : null };
-    });
-    ok("게시판 — **표가 아니라 칸**이다 (지역 칸이 없습니다)",
-       r.table === 0 && r.chips > 0, JSON.stringify(r));
-    ok("  ⚠️ 칸이 **게시판 수만큼** 선다 (갯수를 안 박습니다)",
-       r.boards > 0 && r.chips === r.boards, JSON.stringify(r));
-    ok("  ⚠️⚠️ 0건인 게시판도 **안 숨긴다** (첫 글을 남길 자리입니다)",
-       r.zeros === r.boards - 1, JSON.stringify(r));
-    ok("  ⚠️ 센 값을 그대로 적는다", String(r.one).trim() === "4",
-       JSON.stringify(r));
-    await g.p.close();
-  }
-  {
-    /* ⑤ 구합니다 — 하위 x 지역. ⚠️⚠️ **주소에서 읽는 길이 없었습니다** —
-       거르개는 있었는데 `?s=` · `?rg=` 로 들어오면 아무것도 안 걸렸습니다.
-       ⚠️ 그리고 **하위를 안 적은 글**(sub 이 null)은 어느 줄에도 안
-       더합니다 — 더하면 손님이 안 고른 하위에 글이 있는 것처럼 보입니다. */
-    const g = await open("/cat/lesson?s=ls-solo&rg=capital",
-      { role:"customer", name:"손님", signedIn:true },
-      { v_wanted_open: [],
-        v_wanted_count: [{ cat:"lesson", sub:"ls-solo", region:"seoul", n:2 },
-                         { cat:"lesson", sub:null, region:"seoul", n:5 }] },
-      {}, true);
-    await g.p.waitForTimeout(800);
-    const q = g.sent.filter(function(x){
-      return x.name === "GET" && String(x.body).indexOf("v_wanted_open") >= 0;
-    }).map(function(x){ return decodeURIComponent(String(x.body)); });
-    ok("⚠️⚠️ 구합니다 — 하위 · 지역을 **서버에 보내서** 거른다",
-       q.some(function(x){ return x.indexOf("sub=eq.ls-solo") >= 0 &&
-         x.indexOf("region=in.(seoul,gyeonggi,incheon)") >= 0; }),
-       q.slice(-1).join("").slice(0, 240));
-    const r = await g.p.evaluate(function(){
-      const bx = document.getElementById("countboard");
-      const cells = bx ? Array.prototype.map.call(
-        bx.querySelectorAll(".tbd-t tbody td"),
-        function(td){ return (td.textContent || "").trim(); }) : [];
-      return { sum: cells.filter(function(x){ return x !== "0"; }).join(","),
-               note: bx ? bx.innerText : "" };
-    });
-    ok("  ⚠️⚠️⚠️ **하위를 안 적은 글을 어느 줄에도 안 더한다**",
-       r.sum === "2", JSON.stringify(r).slice(0, 200));
-    ok("  ⚠️ 그 사실을 **그 자리에서** 말한다",
-       r.note.indexOf("하위를 안 적으신 글은 표에 안 들어갑니다") >= 0,
-       r.note.slice(0, 220));
-    await g.p.close();
-  }
-
   /* ⑨ 폰 폭 셋 */
   for(const w of PHONES){
     const p2 = await b.newPage({ viewport: { width: w, height: 900 } });
@@ -5300,12 +5129,19 @@ function boardsOf(){
        `us-*` 하위 키, 물건 상태는 0056 의 cond 넷입니다. 아닌 값을
        넣으면 화면이 키를 그대로 보여 주고(그게 맞습니다), 그 그림을
        보고 멀쩡한 화면을 고치려 들게 됩니다. */
+    /* ⚠️⚠️ 0068 — `brand` · `photo_n` · `thumb` 는 `v_listing_open` 이
+       내주는 칸입니다. 한 줄은 **사진이 있고** 한 줄은 **없게** 둡니다 —
+       둘 다 있으면 "사진 0장이면 아이콘 타일" 이 영원히 안 재집니다.
+       ⚠️ 한 줄의 브랜드를 **비워** 둡니다 (0068 전에 올라온 매물) —
+       그 줄에 "undefined" 가 찍히는지 봅니다 (절대 규칙 2). */
     const LST = [{ id:"l1", sub:"us-driver", region:"seoul", ship:false,
       title:"드라이버 팝니다", body:"2년 쓴 드라이버입니다",
-      price:350000, cond:"good", ask_n:0 },
+      price:350000, cond:"good", ask_n:0,
+      brand:"타이틀리스트", photo_n:3, thumb:"lst/l1/photo/a.jpg" },
       { id:"l2", sub:"us-iron", region:"gyeonggi", ship:true,
         title:"무료로 나눔", body:"연습용 아이언입니다",
-        price:0, cond:"fair", ask_n:2 }];
+        price:0, cond:"fair", ask_n:2,
+        brand:null, photo_n:0, thumb:null }];
 
     /* ① 설정 전에는 **아무것도 안 엽니다** (절대 규칙 5) */
     {
@@ -5357,6 +5193,39 @@ function boardsOf(){
          r.body.indexOf("010-") < 0, "");
       ok("  ⚠️ 그리고 그 사실을 손님에게 말해 준다",
          r.body.indexOf("연락처는 목록에 나오지 않습니다") >= 0, "");
+      /* ⚠️⚠️⚠️ 0068 — **사진이 먼저입니다.** 알아본 다섯 곳(2nd Swing ·
+         SidelineSwap · 번개장터 · 당근 · 골마켓) 가운데 사진 없이
+         중고채를 파는 곳은 하나도 없었습니다. */
+      const ph = await g.p.evaluate(function(){
+        const L = Array.prototype.map.call(
+          document.querySelectorAll(".lsc"), function(li){
+          const im = li.querySelector(".lsc-im");
+          return { im: im ? im.getAttribute("src") : "",
+                   no: !!li.querySelector(".lsc-no"),
+                   n:  (li.querySelector(".lsc-n") || {}).textContent || "",
+                   br: (li.querySelector(".lsc-br") || {}).textContent || "",
+                   cd: (li.querySelector(".lsc-cd") || {}).textContent || "" };
+        });
+        return { L: L, grid: !!document.querySelector(".lsc-g") };
+      });
+      ok("⚠️⚠️ 0068 — 카드가 **격자**이고 사진 자리가 있다", ph.grid,
+         JSON.stringify(ph).slice(0, 200));
+      /* ⚠️ 주소는 `amPubUrl()` 한 곳에서 짓습니다 — 공개 버킷입니다 */
+      ok("  사진이 있는 줄은 **그 사진**을 공개 버킷 주소로 낸다",
+         ph.L[0] && ph.L[0].im.indexOf("/storage/v1/object/public/") > 0 &&
+         ph.L[0].im.indexOf("lst/l1/photo/a.jpg") > 0, JSON.stringify(ph.L[0]));
+      ok("  두 장 넘으면 **몇 장인지** 적는다", /3/.test(ph.L[0] ? ph.L[0].n : ""),
+         ph.L[0] ? ph.L[0].n : "");
+      /* ⚠️⚠️ 0장이면 **아이콘 타일**입니다 — 남의 사진이나 분류 사진을
+         깔면 그 매물인 것처럼 보입니다 (절대 규칙 1) */
+      ok("⚠️⚠️ 사진 **0장이면 아이콘 타일**로 돌아간다 (남의 사진을 깔지 않습니다)",
+         !!(ph.L[1] && ph.L[1].no && !ph.L[1].im), JSON.stringify(ph.L[1]));
+      ok("  브랜드가 있으면 적고 **비면 그 자리를 뺀다** (절대 규칙 2)",
+         ph.L[0].br.indexOf("타이틀리스트") >= 0 &&
+         ph.L[1].br.indexOf("undefined") < 0 && ph.L[1].br.indexOf("null") < 0,
+         JSON.stringify([ph.L[0].br, ph.L[1].br]));
+      ok("  물건 상태를 **사진 위 딱지**로 낸다", ph.L[0].cd.indexOf("거의") >= 0 ||
+         ph.L[0].cd.indexOf("사용감") >= 0, ph.L[0].cd);
       /* ⚠️⚠️ 하지 않는 일을 했다고 적지 않습니다 (전자상거래법 제20조) */
       ok("⚠️⚠️ **거래 당사자가 아니라고** 말한다 (에스크로 · 안전거래를 " +
          "약속하지 않습니다)",
@@ -5411,13 +5280,126 @@ function boardsOf(){
       const u = await g.p.evaluate(function(){ return location.search; });
       ok("  조건이 주소에 남는다 (복사해 보낼 수 있게)",
          u.indexOf("s=us-iron") >= 0 && u.indexOf("sh=1") >= 0, u);
+
+      /* ⚠️⚠️⚠️ 0068 — **브랜드 · 물건 상태 · 정렬 · 찾기**를 더했습니다.
+         ⚠️ 흉내 장치는 걸러 주지 않으므로 **보내는 질의를 뜯어** 봅니다 —
+         줄 수로 재면 그 칸을 통째로 떼어도 영원히 초록입니다. */
+      {
+        const b0 = await g.p.evaluate(function(){
+          return { br: !!document.getElementById("lf-br"),
+                   cd: !!document.getElementById("lf-cd"),
+                   o:  !!document.getElementById("lf-o"),
+                   q:  !!document.getElementById("lf-q"),
+                   /* ⚠️ 고르개의 **목록은 `AM_LST_BRAND` 한 곳**에서
+                      옵니다 — 갯수를 박지 않고 그 묶음과 맞춰 봅니다 */
+                   bopt: Array.prototype.map.call(
+                     document.querySelectorAll("#lf-br option"),
+                     function(o){ return o.value; }).filter(Boolean),
+                   want: (window.AM_LST_BRAND || []).slice(),
+                   oopt: Array.prototype.map.call(
+                     document.querySelectorAll("#lf-o option"),
+                     function(o){ return o.value; }),
+                   owant: (window.AM_LST_SORT || []).map(function(x){ return x.key; }) };
+        });
+        ok("⚠️⚠️ 0068 — 브랜드 · 물건 상태 · 정렬 · 찾는 칸이 있다",
+           b0.br && b0.cd && b0.o && b0.q, JSON.stringify(b0).slice(0, 160));
+        ok("  ⚠️ 브랜드 목록이 **AM_LST_BRAND 와 같다** (갯수를 박지 않습니다)",
+           b0.want.length > 0 && b0.bopt.join(",") === b0.want.join(","),
+           b0.bopt.join(",").slice(0, 120));
+        ok("  ⚠️ 정렬 목록이 **AM_LST_SORT 와 같은 차례다**",
+           b0.owant.length > 0 && b0.oopt.join(",") === b0.owant.join(","),
+           b0.oopt.join(","));
+
+        const m0 = g.sent.length;
+        await g.p.selectOption("#lf-br", "캘러웨이");
+        await g.p.waitForTimeout(350);
+        const qb = g.sent.slice(m0).map(function(x){ return String(x.body); }).join(" | ");
+        /* ⚠️ 브랜드는 **글자 그대로** 견줍니다 (키가 없습니다) */
+        ok("  브랜드를 고르면 **서버에** 조건을 보낸다",
+           qb.indexOf("brand=eq.") >= 0 &&
+           qb.indexOf(encodeURIComponent("캘러웨이")) >= 0, qb.slice(0, 200));
+
+        const m1 = g.sent.length;
+        await g.p.selectOption("#lf-cd", "like");
+        await g.p.waitForTimeout(350);
+        const qc = g.sent.slice(m1).map(function(x){ return String(x.body); }).join(" | ");
+        ok("  물건 상태를 고르면 cond=eq. 를 보낸다", qc.indexOf("cond=eq.like") >= 0,
+           qc.slice(0, 200));
+
+        const m2 = g.sent.length;
+        await g.p.selectOption("#lf-o", "low");
+        await g.p.waitForTimeout(350);
+        const qo = g.sent.slice(m2).map(function(x){ return String(x.body); }).join(" | ");
+        /* ⚠️⚠️ 보내는 글자는 `AM_LST_SORT` 한 곳입니다 — 화면이
+           `price.asc` 를 따로 적으면 칸 이름이 바뀌는 날 **조용히**
+           최신순으로 보입니다 (정렬이 안 되는 것은 에러가 안 납니다). */
+        ok("  값 낮은 순을 고르면 order=price.asc 를 보낸다",
+           qo.indexOf("order=price.asc") >= 0, qo.slice(0, 200));
+
+        const m3 = g.sent.length;
+        await g.p.fill("#lf-q", "드라이버");
+        await g.p.waitForTimeout(700);
+        const qq = g.sent.slice(m3).map(function(x){ return String(x.body); }).join(" | ");
+        /* ⚠️⚠️ 찾기도 **서버**가 합니다 — 쉰 줄만 받아 화면에서 찾으면
+           그 쉰 줄 밖의 매물이 영영 안 나옵니다. */
+        ok("  찾는 말을 적으면 **서버에** title=ilike 를 보낸다",
+           qq.indexOf("title=ilike.") >= 0 &&
+           qq.indexOf(encodeURIComponent("드라이버")) >= 0, qq.slice(0, 200));
+
+        /* ⚠️⚠️ Baymard 가 "사이트의 20% 가 고른 조건을 안 보여 준다" 고
+           짚은 자리 — 무엇으로 좁혔는지가 안 보이면 0건을 "매물이 없다"
+           로 읽습니다. 칩 하나하나를 지울 수 있어야 합니다. */
+        const c0 = await g.p.evaluate(function(){
+          return { n: document.querySelectorAll(".lsf-chip").length,
+                   keys: Array.prototype.map.call(
+                     document.querySelectorAll(".lsf-chip"),
+                     function(b){ return b.getAttribute("data-off"); }),
+                   clear: document.querySelectorAll(".lsf-clear").length };
+        });
+        ok("⚠️⚠️ 0068 — 고른 조건이 **칩 한 줄**로 보인다 (지울 수 있게)",
+           c0.n >= 5 && c0.clear >= 1, JSON.stringify(c0));
+        /* ⚠️ 정렬은 **좁히는 조건이 아닙니다** — 칩에 넣으면 지우기로
+           손님이 고른 차례가 사라집니다 */
+        ok("  ⚠️ 정렬은 칩에 **안 넣는다** (좁히는 조건이 아닙니다)",
+           c0.keys.indexOf("o") < 0, c0.keys.join(","));
+
+        /* 칩 하나를 지우면 그 조건만 빠집니다 */
+        const m4 = g.sent.length;
+        await g.p.click('.lsf-chip[data-off="br"]');
+        await g.p.waitForTimeout(350);
+        const q4 = g.sent.slice(m4).map(function(x){ return String(x.body); }).join(" | ");
+        ok("  칩을 지우면 **그 조건만** 빠진다 (나머지는 그대로)",
+           q4.indexOf("brand=eq.") < 0 && q4.indexOf("cond=eq.like") >= 0,
+           q4.slice(0, 200));
+
+        /* ⚠️⚠️ 「조건 모두 지우기」는 **전부** 지웁니다 — 2026-11-08 까지
+           0건 상자의 단추가 종류 · 지역 · 택배 셋만 지워, 브랜드 · 가격대 ·
+           찾는 말이 그대로 걸린 채 "지웠습니다" 가 됐습니다. */
+        const m5 = g.sent.length;
+        await g.p.click(".lsf-clear");
+        await g.p.waitForTimeout(350);
+        const q5 = g.sent.slice(m5).map(function(x){ return String(x.body); }).join(" | ");
+        const u5 = await g.p.evaluate(function(){ return location.search; });
+        /* ⚠️ **정렬은 남아야 맞습니다** — 좁히는 조건이 아니므로 지우기가
+           건드리지 않습니다. 처음에 `u5 === ""` 로 재서 **멀쩡한 코드를
+           실패로** 잡았습니다 (코드가 아니라 제 검사가 틀린 자리). */
+        ok("⚠️⚠️ 「조건 모두 지우기」가 **전부** 지운다 (셋만 지우지 않습니다)",
+           q5.indexOf("cond=eq.") < 0 && q5.indexOf("sub=eq.") < 0 &&
+           q5.indexOf("ship=is.true") < 0 && q5.indexOf("title=ilike.") < 0 &&
+           q5.indexOf("brand=eq.") < 0 &&
+           /^(\?o=low)?$/.test(u5), q5.slice(0, 200) + " url=" + u5);
+      }
       await g.p.close();
     }
 
     /* ④ 올리는 양식 — ⚠️ 보내는 꾸러미까지 뜯어 봅니다 */
     {
+      /* ⚠️⚠️ 0068 — `open_listing` 은 **새 매물의 id** 를 돌려줍니다.
+         흉내가 null 을 주면 올린 직후 사진 상자를 열 자리가 없어, 그
+         길이 **한 번도 안 돌면서도** 검사는 초록입니다. */
       const g = await open("/cat/used", { role:"customer", name:"손님", signedIn:true },
-                           { v_listing_open: LST }, {}, true);
+                           { v_listing_open: LST },
+                           { open_listing: "l-new" }, true);
       const r = await g.p.evaluate(function(){
         const f = document.getElementById("lsf");
         if(!f) return { form:false };
@@ -5428,9 +5410,37 @@ function boardsOf(){
                  body: document.body.innerText };
       });
       ok("로그인하면 올리는 양식이 열린다", r.form, JSON.stringify(r).slice(0, 120));
-      ok("  제목 · 종류 · 상태 · 지역 · 값 · 설명 · 연락처가 **필수**다",
-         ["title","sub","cond","region","price","body","contact"]
+      ok("  제목 · 종류 · 상태 · 지역 · 값 · 설명 · 연락처 · **브랜드**가 필수다",
+         ["title","sub","cond","region","price","body","contact","brand"]
            .every(function(n){ return r.req.indexOf(n) >= 0; }), (r.req || []).join(","));
+      /* ⚠️⚠️ 0068 — 브랜드는 **고르개 + 직접 적기**입니다. 목록만 내면
+         목록에 없는 브랜드를 가진 분이 올릴 수가 없고(절대 규칙 2),
+         직접 적기만 두면 "타이틀리스트" · "타이틀 리스트" · "Titleist" 가
+         섞여 거르개가 아무것도 못 모읍니다. */
+      {
+        const bf = await g.p.evaluate(function(){
+          const t = document.getElementById("l-brand2");
+          return { sel: !!document.getElementById("l-brand"),
+                   txt: !!t,
+                   hid: t ? t.hidden : null,
+                   /* ⚠️ `hidden` 만으로는 안 가려지는 자리를 여러 번
+                      겪었습니다 — 실제로 안 그려지는지 봅니다 */
+                   off: t ? (getComputedStyle(t).display === "none") : null,
+                   etc: (window.AM_LST_BRAND || []).indexOf("기타") >= 0 };
+        });
+        ok("⚠️⚠️ 0068 — 브랜드는 **고르개 + 직접 적기**다 (목록에 없는 분도 올립니다)",
+           bf.sel && bf.txt && bf.etc, JSON.stringify(bf));
+        ok("  ⚠️ 직접 적는 칸은 처음에 **안 그려진다** (`hidden` + display:none)",
+           bf.hid === true && bf.off === true, JSON.stringify(bf));
+        await g.p.selectOption("#l-brand", "기타");
+        await g.p.waitForTimeout(150);
+        const bf2 = await g.p.evaluate(function(){
+          const t = document.getElementById("l-brand2");
+          return { hid: t.hidden, off: getComputedStyle(t).display === "none" };
+        });
+        ok("  ⚠️ 「기타」를 고르면 그 칸이 **나온다**",
+           bf2.hid === false && bf2.off === false, JSON.stringify(bf2));
+      }
       ok("  ⚠️ 동의 상자에 수집 항목 · 목적 · 보유 기간 · 제공이 같이 있다 (제15조 제2항)",
          r.terms >= 4, String(r.terms));
       /* ⚠️ 글자를 박지 않고 **설정값**과 맞춰 봅니다 */
@@ -5444,6 +5454,7 @@ function boardsOf(){
          (r.body || "").indexOf("무료로 나누시면") >= 0, "");
 
       await g.p.fill("#l-title", "검사용 드라이버");
+      await g.p.selectOption("#l-brand", "핑");
       await g.p.selectOption("#l-sub", "us-driver");
       await g.p.selectOption("#l-cond", "like");
       await g.p.selectOption("#l-rg", "seoul");
@@ -5462,11 +5473,55 @@ function boardsOf(){
          pl.title === "검사용 드라이버" && pl.sub === "us-driver" &&
          pl.cond === "like" && String(pl.price) === "250000" &&
          pl.contact === "010-5555-5555", JSON.stringify(pl));
+      /* ⚠️ 브랜드는 **글자 그대로** 담깁니다 (키가 없습니다 · 0068) */
+      ok("  ⚠️ 0068 — 브랜드를 **글자 그대로** 보낸다", pl.brand === "핑",
+         JSON.stringify(pl.brand));
       /* ⚠️ 체크박스는 **참 · 거짓**으로 보냅니다 ("on" 이 아닙니다 —
          문이 `(p->>'ship')::boolean` 으로 읽습니다) */
       ok("  ⚠️ 택배 여부를 **참 · 거짓**으로 보낸다 ('on' 이 아닙니다)",
          pl.ship === true, JSON.stringify(pl.ship));
       ok("  ⚠️ 동의 시각을 같이 보낸다", !!pl.agree_at, String(pl.agree_at));
+
+      /* ⚠️⚠️⚠️ 0068 — **올린 그 자리에서 사진을 붙입니다.** 올리신 직후에만
+         붙일 수 있게 두면 그 화면을 닫은 분의 매물은 영원히 사진이 없으므로
+         `/my` 에도 같은 상자를 냅니다 (아래 ⑦). markup 과 올리는 길은
+         `js/lstphoto.js` 한 곳입니다. */
+      await g.p.waitForTimeout(400);
+      const dn = await g.p.evaluate(function(){
+        const bx = document.getElementById("lsbox");
+        return { done: (bx ? bx.innerText : "").indexOf("매물을 올렸습니다") >= 0,
+                 box: !!(bx && bx.querySelector(".lsp")),
+                 file: !!(bx && bx.querySelector(".lsp-i")),
+                 my: !!(bx && bx.querySelector('a[href="/my"]')) };
+      });
+      ok("⚠️⚠️ 0068 — 올린 **그 자리에서 사진 상자**가 열린다",
+         dn.done && dn.box && dn.file, JSON.stringify(dn));
+      ok("  ⚠️ 그리고 나중에 붙이실 수 있는 길(`/my`)도 같이 낸다 (막다른 길 아님)",
+         dn.my, JSON.stringify(dn));
+
+      /* 실제로 올려 봅니다 — 자리를 청하고(POST) 파일을 올립니다(PUT).
+         ⚠️⚠️ **버킷은 서버가 경로를 보고 고릅니다** — 화면이 고르면
+         거기가 구멍입니다 (0051 에서 세운 규칙). 화면이 보내는 꾸러미에
+         버킷 이름이 **없어야** 합니다. */
+      const n9 = g.sent.length;
+      await g.p.setInputFiles(".lsp-i", { name:"a.jpg", mimeType:"image/jpeg",
+                                          buffer: Buffer.from("x".repeat(2048)) });
+      await g.p.click(".lsp-go");
+      await g.p.waitForTimeout(700);
+      const up9 = g.sent.slice(n9).filter(function(x){ return x.name === "upload"; })
+                   .map(function(x){ return String(x.body); });
+      /* ⚠️⚠️ **방법으로 가립니다** — 같은 주소 꼴로 카드의 사진을
+         내려받는 GET 도 오므로, 이름만 보면 올리지 않았는데도 "올렸다"
+         로 세어집니다 (처음에 둘로 세어 떨어졌습니다). */
+      const put9 = g.sent.slice(n9).filter(function(x){
+        return x.name === "storage" && String(x.body).indexOf("PUT") === 0; });
+      ok("  ⚠️ 올리기가 **자리를 청하고 파일을 올린다** (POST → PUT)",
+         up9.some(function(b){ return b.indexOf("POST") === 0; }) &&
+         put9.length === 1, JSON.stringify({ up:up9, put:put9.length }));
+      const pb = up9.filter(function(b){ return b.indexOf("POST") === 0; }).join(" ");
+      ok("  ⚠️⚠️ 꾸러미에 **버킷 이름이 없다** (버킷은 서버가 경로를 보고 고릅니다)",
+         pb.indexOf('"lst":true') >= 0 && pb.indexOf("bucket") < 0 &&
+         pb.indexOf("pv-test") < 0, pb.slice(0, 200));
       await g.p.close();
     }
 
@@ -5533,7 +5588,79 @@ function boardsOf(){
          "(0056 이 그 칸을 안 줬습니다 — 부르면 질의가 거절됩니다)",
          asked.length > 0 && asked.indexOf("contact") < 0 &&
          asked.indexOf("agree_at") < 0, asked.slice(0, 200));
+      /* ⚠️ 0068 — 줄머리에 브랜드를 적으려면 그 칸을 **같이 읽어야**
+         합니다. 안 읽으면 늘 비어 보이고 에러는 한 줄도 안 납니다. */
+      ok("  ⚠️ 0068 — **brand 를 같이 읽는다** (안 읽으면 늘 비어 보입니다)",
+         asked.indexOf("brand") >= 0, asked.slice(0, 200));
       await g.p.close();
+    }
+
+    /* ⑦ ⚠️⚠️⚠️ 0068 — **`/my` 에서도 사진을 붙입니다.** 올리신 직후에만
+       붙일 수 있게 두면 그 화면을 닫은 분의 매물은 영원히 사진이 없습니다
+       (막다른 길 · 절대 규칙 2). 그리고 **버킷이 꺼져 있으면 단추를 안
+       냅니다** — 그리면 눌러도 아무 일이 안 나는 단추입니다 (절대 규칙 5). */
+    {
+      const MINE2 = [{ id:"l1", title:"내 드라이버", body:"설명입니다",
+        sub:"us-driver", region:"seoul", ship:false, price:350000,
+        cond:"good", state:"open", brand:"테일러메이드", hidden_why:null,
+        created_at:"2026-11-06T01:00:00Z" }];
+      /* 버킷이 켜진 쪽 — ⚠️ 이미 붙은 사진도 그려야 합니다 */
+      {
+        const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+          { listing: MINE2, listingask: [], v_listing_contact: [] }, {},
+          { photos: [], lphotos: [
+            { id:"f1", caption:"", url:"https://sb-test.supabase.co/x/a.jpg" }] });
+        const r0 = await g.p.evaluate(function(){
+          const e = document.getElementById("lsmine");
+          return { btn: e ? e.querySelectorAll(".ls-ph").length : -1,
+                   body: e ? e.innerText : "" };
+        });
+        ok("⚠️⚠️ 0068 — `/my` 에 **사진 단추**가 있다 (나중에도 붙이실 수 있게)",
+           r0.btn === 1, JSON.stringify(r0.btn));
+        ok("  ⚠️ 줄머리에 **브랜드**를 적는다", r0.body.indexOf("테일러메이드") >= 0, "");
+        await g.p.click(".ls-ph");
+        await g.p.waitForTimeout(500);
+        const r1 = await g.p.evaluate(function(){
+          const e = document.getElementById("lsmine");
+          return { box: !!e.querySelector(".lsp"),
+                   /* ⚠️ 붙어 있는 사진은 **서버가 지은 주소**로 그립니다 */
+                   thumb: (e.querySelector(".lsp-t img") || {}).getAttribute
+                            ? e.querySelector(".lsp-t img").getAttribute("src") : "",
+                   x: e.querySelectorAll(".lsp-x").length,
+                   /* ⚠️⚠️ **id 를 한 글자도 안 씁니다** — `/my` 는 매물
+                      여럿을 한 화면에 내므로 id 를 달면 같은 id 가
+                      여러 개가 됩니다 (조인의 동의 상자에서 겪은 자리) */
+                   ids: e.querySelectorAll(".lsp [id]").length };
+        });
+        ok("  누르면 사진 상자가 열리고 **붙어 있는 사진**이 그려진다",
+           r1.box && r1.thumb.indexOf("a.jpg") > 0, JSON.stringify(r1));
+        ok("  ⚠️⚠️ 그 상자에 **id 가 하나도 없다** (한 화면에 여럿이 열립니다)",
+           r1.ids === 0, String(r1.ids));
+        /* 빼기 — ⚠️ 되돌릴 수 없는 일이라 한 번 여쭙습니다 */
+        g.p.on("dialog", function(d){ d.accept(); });
+        const n0 = g.sent.length;
+        await g.p.click(".lsp-x");
+        await g.p.waitForTimeout(500);
+        const dr = g.sent.slice(n0).filter(function(x){
+          return x.name === "drop_listing_photo"; });
+        ok("  「빼기」가 **drop_listing_photo 를 그 사진 id 로** 부른다",
+           dr.length === 1 && String(dr[0].body).indexOf('"f1"') >= 0,
+           JSON.stringify(dr).slice(0, 160));
+        await g.p.close();
+      }
+      /* 버킷이 꺼진 쪽 — ⚠️ 단추를 **안 냅니다** */
+      {
+        const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+          { listing: MINE2, listingask: [], v_listing_contact: [] }, {}, false);
+        const r = await g.p.evaluate(function(){
+          const e = document.getElementById("lsmine");
+          return { btn: e ? e.querySelectorAll(".ls-ph").length : -1,
+                   drawn: !!(e && e.children.length) };
+        });
+        ok("⚠️⚠️ 버킷이 꺼져 있으면 **사진 단추를 안 낸다** (절대 규칙 5)",
+           r.drawn && r.btn === 0, JSON.stringify(r));
+        await g.p.close();
+      }
     }
   }
 
@@ -5588,7 +5715,7 @@ function boardsOf(){
            처음에 목록에서 찾아 "없다" 고 떨어졌고, 그것은 제 검사가
            엉뚱한 칸을 집은 것이었습니다. */
         const bx = document.getElementById("wtbox");
-        return { n: document.querySelectorAll("#wtlist .lsc").length,
+        return { n: document.querySelectorAll("#wtlist .wtc").length,
                  body: document.body.innerText,
                  login: !!(bx && bx.querySelector('a[href^="/login"]')),
                  form: !!document.getElementById("wtf") };

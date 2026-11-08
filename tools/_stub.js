@@ -34,7 +34,12 @@ function stub(p, who, tables, rpcs, up){
        없습니다). 지금 운영이 그 상태라, 그 길을 먼저 잽니다. */
     p.route("**/api/upload*", function(r){
       const u = r.request().url();
-      sent.push({ name:"upload", body: r.request().method() + " " + u });
+      /* ⚠️ 보내는 **꾸러미까지** 적어 둡니다 — 주소만 적어 두면
+         "버킷 이름을 화면이 고르지 않는가" 를 잴 수가 없습니다
+         (0051 이 세운 규칙: 버킷은 서버가 경로를 보고 고릅니다). */
+      sent.push({ name:"upload",
+                  body: r.request().method() + " " + u +
+                        " " + (r.request().postData() || "") });
       if(!up) return r.fulfill({ status:200, contentType:"application/json",
                                  body: JSON.stringify({ up:false }) });
       if(u.indexOf("p=") >= 0)
@@ -58,12 +63,32 @@ function stub(p, who, tables, rpcs, up){
       if(u.indexOf("cqq=") >= 0)
         return r.fulfill({ status:200, contentType:"application/json",
           body: JSON.stringify({ photos: (up && up.photos) ? up.photos : [] }) });
+      /* ⚠️⚠️ 0068 — 매물 사진(`lstq=`)도 **주소를 서버가 짓습니다**.
+         ⚠️ 꼴은 `api/upload.js` 의 GET 과 **같아야** 합니다
+         (`{ok:true, photos:[{id,caption,url}]}`) — 다르면 그 차이만큼이
+         영원히 안 재는 자리가 됩니다. */
+      if(u.indexOf("lstq=") >= 0)
+        return r.fulfill({ status:200, contentType:"application/json",
+          body: JSON.stringify({ ok:true,
+            photos: (up && up.lphotos) ? up.lphotos : [] }) });
+      /* ⚠️⚠️⚠️ **올릴 자리를 청하는 것은 POST 입니다** — 주소에 질의가
+         없어서 앞의 가지들로는 안 갈립니다. 여기를 안 내주면 사진을
+         올리는 길이 **한 번도 안 돌고**, 그래도 상자는 그려지므로
+         "눌러 보는 검사가 있다" 로 읽힙니다 (0051 에서 흉내가 `pvPhoto`
+         를 안 줘서 상자가 아예 안 그려졌던 자리의 거울상입니다). */
+      if(r.request().method() === "POST")
+        return r.fulfill({ status:200, contentType:"application/json",
+          body: JSON.stringify({ ok:true, id:"f-new",
+                                 url: FAKE + "/storage/v1/upload/sign/x" }) });
       return r.fulfill({ status:200, contentType:"application/json",
                          body: JSON.stringify({ up:true, pvPhoto:true, pvDoc:true,
                                                 cqPhoto:true,
                                                 /* ⚠️ 0064 — 광고 소재. 없으면
                                                    /admin 이 그 칸을 안 냅니다 */
-                                                adImg:true }) });
+                                                adImg:true,
+                                                /* ⚠️ 0068 — 매물 사진. 없으면
+                                                   사진 상자가 안 그려집니다 */
+                                                lstPhoto:true }) });
     }),
     p.route("**/api/session", function(r){
       /* ⚠️⚠️ 0064 — `pubBucket` 은 **공개 버킷 이름**입니다 (`publicConf()`).
@@ -77,6 +102,19 @@ function stub(p, who, tables, rpcs, up){
       return r.fulfill({ status:200, contentType:"application/json",
         body: JSON.stringify(Object.assign({ auth:true, signedIn:true, hats:[],
           conf:cf }, who)) });
+    }),
+    /* ⚠️⚠️ **서명받은 자리에 파일을 올리는 PUT** — 이 길을 안 내주면
+       올리기가 그물에서 멈춰 "올리지 못했습니다" 로만 보입니다 (화면은
+       멀쩡한데 검사가 틀린 자리). 꼴은 Supabase 와 같게 200 입니다. */
+    p.route(FAKE + "/storage/**", function(r){
+      /* ⚠️⚠️ **이름을 `PUT` 으로 박지 않습니다** — 같은 주소 꼴로
+         사진을 **내려받는 GET** 도 옵니다(카드의 `<img>`). 박아 두면
+         올리지 않았는데도 "올렸다" 로 세어집니다. 방법은 body 에 적고
+         재는 쪽이 가릅니다. */
+      sent.push({ name:"storage",
+                  body: r.request().method() + " " + r.request().url() });
+      return r.fulfill({ status:200, contentType:"application/json",
+                         body: JSON.stringify({ Key:"ok" }) });
     }),
     p.route(FAKE + "/rest/v1/**", function(r){
       const u = r.request().url();

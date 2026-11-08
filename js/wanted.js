@@ -160,16 +160,16 @@
        갓 올라온 글이 전부 인기 없는 글로 보입니다 (후기 0건에 숫자를
        안 찍는 그 까닭). */
     if(Number(r.reply_n) > 0) bits.push("답 " + String(r.reply_n) + "건");
-    return '<li class="lsc">' +
-      '<div class="lsc-h">' +
+    return '<li class="wtc">' +
+      '<div class="wtc-h">' +
         '<h3>' + esc(r.title) + '</h3>' +
         /* ⚠️⚠️ **0 은 "무료로 해 주실 분"** 이고 안 적음과 다릅니다 —
            비면 이 칸이 **줄째 빠집니다**(자리표시자를 안 찍습니다). */
-        (bud ? '<span class="lsc-p">' + esc(bud) + '</span>' : '') +
+        (bud ? '<span class="wtc-p">' + esc(bud) + '</span>' : '') +
       '</div>' +
-      '<p class="lsc-m">' + bits.join(" · ") + '</p>' +
-      '<p class="lsc-b">' + esc(r.body) + '</p>' +
-      '<p class="lsc-go">' +
+      '<p class="wtc-m">' + bits.join(" · ") + '</p>' +
+      '<p class="wtc-b">' + esc(r.body) + '</p>' +
+      '<p class="wtc-go">' +
         '<button type="button" class="btn btn-pt btn-sm wt-go" data-id="' +
           esc(r.id) + '">답하기</button> ' +
         '<button type="button" class="btn btn-bad btn-sm wt-rep" data-id="' +
@@ -193,7 +193,7 @@
             '</div>');
     }else{
       list.innerHTML = filterBar() +
-        '<ul class="lsl">' + rows.map(card).join("") + '</ul>';
+        '<ul class="wtl">' + rows.map(card).join("") + '</ul>';
     }
     var nl = document.getElementById("wtnow");
     if(nl && bits.length){
@@ -395,7 +395,7 @@
         if(box) box.innerHTML =
           '<p class="jafh">답을 보냈습니다. 올리신 분이 받아들이면 ' +
           '<b>내 정보</b> 화면에서 연락처를 여실 수 있습니다.</p>' +
-          '<p class="lsc-go"><a class="btn btn-line" href="/my">내 정보로 가기</a></p>';
+          '<p class="wtc-go"><a class="btn btn-line" href="/my">내 정보로 가기</a></p>';
         return reload();
       }).catch(function(err){
         say(msg, String((err && err.message) || "보내지 못했습니다."));
@@ -415,7 +415,7 @@
         if(box) box.innerHTML =
           '<p class="jafh">답하시려면 로그인이 필요합니다. ' +
           '누가 답했는지 알아야 올리신 분이 받아들일 수 있습니다.</p>' +
-          '<p class="lsc-go"><a class="btn btn-pri" href="' + loginUrl() +
+          '<p class="wtc-go"><a class="btn btn-pri" href="' + loginUrl() +
           '">로그인</a></p>';
         return;
       }
@@ -428,7 +428,7 @@
       if(!SIGNED){
         if(box) box.innerHTML =
           '<p class="jafh">신고는 로그인한 뒤에 하실 수 있습니다.</p>' +
-          '<p class="lsc-go"><a class="btn btn-pri" href="' + loginUrl() +
+          '<p class="wtc-go"><a class="btn btn-pri" href="' + loginUrl() +
           '">로그인</a></p>';
         return;
       }
@@ -457,7 +457,7 @@
   function needLogin(){
     return '<p class="jafh">글을 올리시려면 로그인이 필요합니다. ' +
       '올리신 글을 나중에 고치거나 내리시려면 누가 올렸는지 알아야 합니다.</p>' +
-      '<p class="lsc-go"><a class="btn btn-pri" href="' + loginUrl() +
+      '<p class="wtc-go"><a class="btn btn-pri" href="' + loginUrl() +
       '">로그인</a></p>';
   }
 
@@ -476,7 +476,7 @@
       if(box) box.innerHTML =
         '<p class="jafh">지금은 글을 올리실 수 없습니다. ' +
         '준비가 끝나면 이 자리에서 바로 올리실 수 있습니다.</p>' +
-        '<p class="lsc-go"><a class="btn btn-pt" href="/help">고객센터</a></p>';
+        '<p class="wtc-go"><a class="btn btn-pt" href="/help">고객센터</a></p>';
       return;
     }
     if(box){ box.innerHTML = openForm(); bindOpen(); }

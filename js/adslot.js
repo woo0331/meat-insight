@@ -82,11 +82,13 @@
     }).slice(0, MAX);
   }
 
-  /* 공개 버킷의 주소 — ⚠️ 버킷이 설정되기 전에는 **빈 글자**를 돌려주고
-     화면은 소재 없이 글자만 그립니다 (주소를 지어내지 않습니다). */
+  /* 공개 버킷의 주소 — ⚠️⚠️ 짓는 규칙은 `js/data/deal.js` 의
+     `amPubUrl()` **한 곳**입니다(2026-11-08). 전에는 이 세 줄이 여기와
+     `js/adminbiz.js` 에 따로 있었고, 매물 사진이 셋째가 될 참이었습니다.
+     ⚠️ 버킷이 설정되기 전에는 **빈 글자**를 돌려주고 화면은 소재 없이
+     글자만 그립니다 (주소를 지어내지 않습니다). */
   function imgUrl(path){
-    if(!path || !CONF || !CONF.pubBucket || !CONF.url) return "";
-    return CONF.url + "/storage/v1/object/public/" + CONF.pubBucket + "/" + path;
+    return window.amPubUrl ? window.amPubUrl(CONF, path) : "";
   }
 
   /* 광고주 이름 — ⚠️ 적어 두신 것이 있으면 그것, 없으면 업체 상호입니다

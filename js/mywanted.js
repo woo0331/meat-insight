@@ -125,14 +125,14 @@
     /* 내가 연 것 · 상대가 연 것을 **갈라서** 봅니다 */
     var iOpened = mine ? !!c.helper_share_at : !!c.owner_share_at;
     var theirs  = mine ? c.owner_contact : c.helper_contact;
-    return '<article class="lsc">' +
-      '<div class="lsc-h"><h3>' + esc(head) +
+    return '<article class="wtc">' +
+      '<div class="wtc-h"><h3>' + esc(head) +
         (!mine && r.pro_name ? ' <span class="chip">업체</span>' : '') + '</h3>' +
         (st ? '<span class="chip">' + esc(st.name) + '</span>' : '') +
       '</div>' +
-      '<p class="lsc-b">' + esc(r.body) + '</p>' +
+      '<p class="wtc-b">' + esc(r.body) + '</p>' +
       (open
-        ? '<p class="lsc-m">⚠️ 연락처는 <b>각자 제 것만</b> 엽니다. ' +
+        ? '<p class="wtc-m">⚠️ 연락처는 <b>각자 제 것만</b> 엽니다. ' +
             '받아들였다고 저절로 열리지 않습니다.</p>' +
           /* ⚠️⚠️⚠️ **이름을 문장에 끼우지 않습니다.** 처음에
              `<상호>이(가) 열어 준` 으로 적었다가 찍어 보니
@@ -143,9 +143,9 @@
              다시 적을 까닭이 없습니다. 끼우지 않으면 조사도 ·
              이중 escape 도 생기지 않습니다. */
           contactLine("상대가 열어 준 연락처 —", theirs) +
-          '<p class="lsc-go">' + shareBtn(r.id, iOpened) + '</p>'
+          '<p class="wtc-go">' + shareBtn(r.id, iOpened) + '</p>'
         : (mine ? ''
-                : '<p class="lsc-go">' +
+                : '<p class="wtc-go">' +
                   '<button type="button" class="btn btn-pt btn-sm wt-mv" ' +
                     'data-id="' + esc(r.id) + '" data-to="accepted">받아들이기</button> ' +
                   '<button type="button" class="btn btn-bad btn-sm wt-mv" ' +
@@ -168,10 +168,10 @@
          되는 것을 같이 냅니다 (절대 규칙 2). */
       html += '<p class="myhint">아직 올리신 글이 없습니다. ' +
         '찾으시는 것을 적어 두시면 업체나 다른 회원이 답을 답니다.</p>' +
-        '<p class="lsc-go"><a class="btn btn-pt" href="/cat/lesson">' +
+        '<p class="wtc-go"><a class="btn btn-pt" href="/cat/lesson">' +
         '구합니다 글 올리기</a></p>';
     }else{
-      html += '<ul class="lsl">' + mine.map(function(w){
+      html += '<ul class="wtl">' + mine.map(function(w){
         var st = window.amWantSt ? window.amWantSt(w.state) : null;
         var bud = window.amWantBudget ? window.amWantBudget(w.budget) : "";
         var rs = byW[w.id] || [];
@@ -179,19 +179,19 @@
         if(w.sub)      bits.push(subName(w.cat, w.sub));
         bits.push(rgName(w.region));
         if(w.when_txt) bits.push(w.when_txt);
-        return '<li class="lsc">' +
-          '<div class="lsc-h"><h3>' + esc(w.title) + '</h3>' +
+        return '<li class="wtc">' +
+          '<div class="wtc-h"><h3>' + esc(w.title) + '</h3>' +
             (st ? '<span class="chip">' + esc(st.name) + '</span>' : '') +
           '</div>' +
-          '<p class="lsc-m">' + esc(bits.join(" · ")) +
+          '<p class="wtc-m">' + esc(bits.join(" · ")) +
             (bud ? ' · ' + esc(bud) : '') + '</p>' +
           /* ⚠️ 가린 까닭은 **글쓴이에게 보여 줍니다** — 까닭 없이 못
              가리게 해 두고 그 까닭을 숨기면 무엇이 문제였는지 알 수
              없습니다. */
           (w.state === "hidden" && w.hidden_why
-            ? '<p class="lsc-m">가린 까닭 — ' + esc(w.hidden_why) + '</p>' : '') +
+            ? '<p class="wtc-m">가린 까닭 — ' + esc(w.hidden_why) + '</p>' : '') +
           (w.state === "open"
-            ? '<p class="lsc-go">' +
+            ? '<p class="wtc-go">' +
               '<button type="button" class="btn btn-line btn-sm wt-edit" ' +
                 'data-id="' + esc(w.id) + '">고치기</button> ' +
               '<button type="button" class="btn btn-line btn-sm wt-done" ' +
@@ -202,7 +202,7 @@
           (rs.length
             ? '<p class="jafh"><b>받은 답 ' + esc(String(rs.length)) + '</b></p>' +
               rs.map(function(r){ return replyRow(r, cm, false); }).join("")
-            : '<p class="lsc-m">아직 답이 없습니다.</p>') +
+            : '<p class="wtc-m">아직 답이 없습니다.</p>') +
         '</li>';
       }).join("") + '</ul>';
     }
@@ -211,8 +211,8 @@
        (빈 제목만 서 있으면 고장으로 보입니다). */
     if(sent.length){
       html += '<h2 class="mj-h">내가 보낸 답</h2>' +
-        '<ul class="lsl">' + sent.map(function(r){
-          return '<li class="lsc">' + replyRow(r, cm, true) + '</li>';
+        '<ul class="wtl">' + sent.map(function(r){
+          return '<li class="wtc">' + replyRow(r, cm, true) + '</li>';
         }).join("") + '</ul>';
     }
 
@@ -295,7 +295,7 @@
       var ed = t.closest(".wt-edit");
       var ex = t.closest(".wt-ex");
       if(ed || ex){
-        var li = (ed || ex).closest(".lsc");
+        var li = (ed || ex).closest(".wtc");
         if(!li) return;
         /* ⚠️⚠️ **열린 양식은 상자 전체에서** 거둡니다 — 이 `<li>` 안만
            보면 다른 글의 양식이 같이 열려 있을 수 있고, 그러면 같은

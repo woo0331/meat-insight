@@ -438,35 +438,50 @@ const T_MY = {
    고치게 됩니다 (조인에서 `ok` 를 적어 두고 밟은 그 자리). */
 const CQ_ID = "11111111-1111-1111-1111-111111111111";
 /* 구합니다 목록 (0061) — ⚠️ 공개 보기라 `contact` 칸이 **없습니다** */
-const T_WTC = [{ cat:"lesson", sub:"ls-solo", region:"seoul", n:2 },
-               { cat:"lesson", sub:"ls-group", region:"gyeonggi", n:1 },
-               { cat:"lesson", sub:null, region:"seoul", n:5 }];
 const T_WT = {
   v_wanted_open: WTMINE.map(function(w){
     return { id:w.id, cat:w.cat, sub:w.sub, region:w.region, title:w.title,
              body:w.body, budget:w.budget, when_txt:w.when_txt,
              created_at:w.created_at,
              reply_n: w.id.indexOf("aa1") === 0 ? 3 : 0 };
-  }),
-  v_wanted_count: T_WTC
+  })
 };
 
-/* ⚠️⚠️ 0067 — 현황표가 읽는 **세는 보기**입니다. 숫자를 넣어 두지
-   않으면 칸이 전부 0 이라 "그려졌는가" 만 보고 지나갑니다. */
-const T_LSC = {
-  v_listing_open: [],
-  v_listing_count: [{ sub:"us-iron", region:"seoul", n:3 },
-                    { sub:"us-iron", region:"gyeonggi", n:1 },
-                    { sub:"us-driver", region:"busan", n:2 }]
-};
-const T_JBC = {
-  v_job_open: [],
-  v_job_count: [{ kind:"hire", region:"seoul", n:4 },
-                { kind:"seek", region:"gyeonggi", n:1 }]
+/* 중고 매물 목록 (0056 → 0068) — ⚠️ 공개 보기라 `contact` 칸이
+   **없습니다**. ⚠️⚠️ 한 줄은 **사진이 있고** 한 줄은 **없게** 둡니다 —
+   둘 다 있으면 "사진 0장이면 아이콘 타일" 을 눈으로 볼 수가 없습니다.
+   ⚠️ 한 줄의 브랜드를 **비워** 둡니다 (0068 전에 올라온 매물) — 그 줄에
+   "undefined" 가 찍히면 그림에 보입니다.
+   ⚠️⚠️ 공개 버킷 주소는 그물 밖이라 그림이 **깨진 네모**로 찍힙니다 —
+   그러면 "사진이 안 나온다" 로 읽히므로, 아래에서 그 주소를 가로채
+   저장소의 그림으로 바꿔 줍니다 (`PUB` 가로채기). */
+const T_LST = {
+  v_listing_open: [
+    { id:"l1", sub:"us-driver", region:"seoul", ship:false,
+      title:"드라이버 10.5도 팝니다 (헤드커버 포함)",
+      body:"2년 쓴 드라이버입니다.", price:350000, cond:"good", ask_n:0,
+      brand:"타이틀리스트", photo_n:3, thumb:"lst/l1/photo/a.jpg" },
+    { id:"l2", sub:"us-iron", region:"gyeonggi", ship:true,
+      title:"연습용 아이언 무료로 나눔합니다",
+      body:"연습용 아이언입니다.", price:0, cond:"fair", ask_n:2,
+      brand:null, photo_n:0, thumb:null },
+    /* ⚠️ 가짜 자료도 **DB 가 받는 값**이어야 합니다 — 처음에
+       `us-putter` 라고 적어 두었다가 찍은 그림에 **영문 키가 그대로**
+       찍혔습니다 (이 저장소가 다섯 번 겪은 자리). 있는 키는
+       `us-driver · us-wood · us-iron · us-wedge · us-shaft · us-bag ·
+       us-gear` 입니다. */
+    { id:"l3", sub:"us-wedge", region:"busan", ship:true,
+      title:"웨지 52도 · 56도 두 자루 팝니다", body:"거의 안 썼습니다.",
+      price:120000, cond:"like", ask_n:1,
+      brand:"오디세이", photo_n:1, thumb:"lst/l3/photo/a.jpg" },
+    { id:"l4", sub:"us-bag", region:"incheon", ship:false,
+      title:"캐디백 · 보스턴백 세트", body:"한 시즌 썼습니다.",
+      price:90000, cond:"good", ask_n:0,
+      brand:"기타", photo_n:2, thumb:"lst/l4/photo/a.jpg" }
+  ]
 };
 
 const T_CQ = {
-  v_cq_count: [{ cat:"cm-open", n:4 }, { cat:"cm-ask", n:2 }],
   v_cq_public: [
     { id:CQ_ID, cat:"cm-open", title:"주말에 라운딩 다녀왔습니다",
       body:"날씨가 좋아서 스코어도 잘 나왔습니다.\n다음에 또 가려고 합니다.",
@@ -515,9 +530,14 @@ const SCENES = [
      봐야 합니다 (글이 남아 있으면 그림에 보입니다). */
   /* ⚠️ 구합니다 (0061) — 분류 화면의 목록 (업체가 0곳이어도 도는 자리) */
   ["wanted",          "/cat/lesson", CUS, T_WT, {}],
-  /* ⚠️ 0067 의 현황표 — 중고 · 인력 · 게시판 · 구합니다 넷 */
-  ["used",            "/cat/used",   CUS, T_LSC, {}],
-  ["career",          "/cat/career", CUS, T_JBC, {}],
+  /* ⚠️⚠️ 중고 매물 (0068) — **사진 카드 격자와 거르개**입니다. 폰에서는
+     거르개가 아래 시트라 **눌러야 보입니다** — 안 누르면 그 시트는
+     영원히 아무도 안 보는 자리입니다 (PC 는 레일이 늘 서 있습니다). */
+  ["used",            "/cat/used", CUS, T_LST, {}],
+  ["used-filter",     "/cat/used", CUS, T_LST, {}, "#lf-open"],
+  /* ⚠️ 조건을 걸고 들어온 자리 — 칩 한 줄이 보이는지 눈으로 봅니다 */
+  ["used-chips",      "/cat/used?br=" + encodeURIComponent("타이틀리스트") +
+                      "&cd=good&rg=seoul&sh=1", CUS, T_LST, {}],
   ["desk-notmine",    "/desk",  CUS, T_DESK,  {}],
   ["admin-notmine",   "/admin", CUS, T_ADMIN, { biz_metrics: MET }]
 ];
@@ -552,7 +572,7 @@ const BOXES = {
      알았습니다. `pages/my.js` 에서 세어 고쳤습니다. */
   /* ⚠️⚠️ 게시판(0059)도 **설정이 있어야 열립니다** — `check-screens` 는
      빈 상자만 봅니다. 모아보기 · 글 하나를 여기서 찍습니다. */
-  "/cat/community": [["board", "#cqlist"], ["count", "#countboard"]],
+  "/cat/community": [["board", "#cqlist"]],
   "/my": [["me", "#mybox"], ["notice", "#noticebox"], ["req", "#reqbox"],
           ["join", "#joinmine"], ["cq", "#mycq"], ["job", "#jobmine"],
           /* ⚠️ 0056 의 내 중고 매물 (js/mylisting.js) */
@@ -566,13 +586,10 @@ const BOXES = {
           ["inq", "#myinqbox"]],
   /* ⚠️⚠️ 구합니다(0061)도 **설정이 있어야 열립니다** — `check-screens` 는
      빈 상자만 봅니다. 분류 화면의 목록을 여기서 찍습니다. */
-  "/cat/lesson": [["wanted", "#wtlist"], ["count", "#countboard"]],
-  /* ⚠️⚠️ 0067 의 종류 · 지역별 현황 — `check-screens` 는 **빈 상자**만
-     봅니다(알맹이는 로그인 뒤에 그려집니다). 여기서 눈으로 봅니다.
-     ⚠️ **새 화면을 만드는 날 이 줄을 같이 늘리세요** — 안 늘리면 그 안은
-     영원히 아무도 안 보는 자리가 됩니다. */
-  "/cat/used":   [["count", "#countboard"], ["list", "#lslist"]],
-  "/cat/career": [["count", "#countboard"], ["list", "#joblist"]]
+  "/cat/lesson": [["wanted", "#wtlist"]],
+  /* ⚠️⚠️ 중고 매물 (0068) — 거르개 묶음(`#lswrap`)과 목록을 따로 찍습니다 */
+  "/cat/used": [["wrap", "#lswrap"], ["bar", "#lsbar"], ["list", "#lslist"],
+                ["rail", "#lsrail"], ["form", "#lsbox"]]
 };
 
 (async function(){
@@ -605,6 +622,14 @@ const BOXES = {
       /* ⚠️⚠️ `up` 을 **참**으로 줍니다 — 버킷이 설정된 뒤의 모습을
          봐야 합니다 (지금 운영은 꺼져 있어서 그 칸이 아예 안 나옵니다). */
       await stub(p, who, tables, rpcs, true);
+      /* ⚠️⚠️ 공개 버킷의 사진 주소를 가로채 **저장소의 그림**을 줍니다 —
+         안 주면 그림이 깨진 네모로 찍혀 "사진이 안 나온다" 로 읽힙니다
+         (보는 도구라 여기서만 합니다 · 검사는 주소만 봅니다). */
+      await p.route("**/storage/v1/object/public/**", function(r){
+        return r.fulfill({ status:200, contentType:"image/jpeg",
+          body: fs.readFileSync(path.join(__dirname, "..", "img", "mock",
+                                          "cat-used.jpg")) });
+      });
       await p.goto(base + route, { waitUntil:"networkidle" });
       await p.waitForTimeout(600);
       if(pre){
@@ -616,11 +641,20 @@ const BOXES = {
       await p.screenshot({ path:f, fullPage:true });
       /* ⚠️ 상자마다 따로 — 보이는 것만 (`hidden` 인 상자는 건너뜁니다:
          그려지지 않은 자리를 빈 그림으로 찍으면 "봤다" 고 착각합니다). */
-      for(const [bn, sel] of (BOXES[route] || [])){
+      /* ⚠️⚠️ **질의문자를 떼고 찾습니다** — `/cat/community?s=cm-open` ·
+         `/cat/used?br=…` 처럼 조건을 걸고 들어온 자리가 BOXES 와 안 맞아
+         **상자가 한 장도 안 찍히고** 있었습니다 (전체 화면만 찍혔습니다). */
+      for(const [bn, sel] of (BOXES[route.split("?")[0]] || [])){
         const el = await p.$(sel);
         if(!el) continue;
+        /* ⚠️⚠️ **`offsetParent` 로 재면 안 됩니다** — `position:fixed` 인
+           칸은 보이고 있어도 **null** 입니다. 폰의 거르개 시트가 그 꼴이라
+           열어 놓고 찍어도 **한 장도 안 찍혔습니다**(작업 기억의 `.sr-only`
+           자리와 같은 결 · 거기서는 반대로 null 이 아니었습니다).
+           그려졌는지는 **네모가 있는가**로 봅니다. */
         const vis = await el.evaluate(function(e){
-          return !e.hidden && !!e.offsetParent && e.children.length > 0; });
+          return !e.hidden && e.getClientRects().length > 0 &&
+                 e.children.length > 0; });
         if(!vis) continue;
         await el.screenshot({ path: path.join(OUT,
           name + "-" + tag + "--" + bn + ".png") }).catch(function(){});

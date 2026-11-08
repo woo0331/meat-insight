@@ -209,9 +209,11 @@
     var head = '<b class="adm-k">' + esc(kind === "pc" ? "PC 소재" : "모바일 소재") +
       (want ? ' <i class="adm-sz">권장 ' + esc(want) + '</i>' : "") + '</b>';
     var body;
-    if(path && A && A.conf && A.conf.pubBucket){
-      body = '<img class="adm-im" src="' +
-        esc(A.conf.url + "/storage/v1/object/public/" + A.conf.pubBucket + "/" + path) +
+    /* ⚠️⚠️ 주소를 짓는 규칙은 `js/data/deal.js` 의 `amPubUrl()` 한
+       곳입니다(2026-11-08) — 두 곳에 적으면 한쪽만 고치는 날 한쪽만 샙니다. */
+    var purl = window.amPubUrl ? window.amPubUrl(A && A.conf, path) : "";
+    if(purl){
+      body = '<img class="adm-im" src="' + esc(purl) +
         '" alt="' + esc((a.advertiser || a.provider_name || "") + " " +
           (kind === "pc" ? "PC" : "모바일") + " 소재") + '" loading="lazy">' +
         '<button class="btn btn-sm btn-bad" data-addropimg="' + esc(kind) +

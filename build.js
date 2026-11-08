@@ -215,8 +215,13 @@ function footer(){
        빠졌습니다. 메뉴에서 빼기만 하고 길을 안 남기면 지운 것과 같습니다
        (`check-links` 의 외톨이 검사가 그것을 잡습니다). 전에는 다섯만
        냈습니다. */
+    /* ⚠️⚠️ **셋째 칸은 그 줄에 붙일 class 입니다** (2026-11-08) — 분류가
+       열이라 한 줄씩 쌓으면 그 칸만 400px 가 되고, 푸터 **왼쪽이 통째로
+       비어** 미완성 사이트로 보입니다(찍어 보고 알았습니다 · 가로로
+       밀리지도 · 글자가 작지도 않아 어떤 검사도 안 잡습니다).
+       `ft-two` 가 넓은 폭에서만 두 열로 접습니다 — 폰에서는 한 열입니다. */
     ["서비스", (W.AM_CATS || []).map(function(c){
-      return [W.amCatUrl(c), c.name]; })],
+      return [W.amCatUrl(c), c.name]; }), "ft-two"],
     /* ⚠️⚠️ **업체찾기 · 매칭 요청이 여기 있어야 합니다** — 시안의
        머리말에는 그 둘이 없습니다. 길을 남기지 않으면 매칭 요청(손님이
        견적을 받는 주된 길)으로 가는 자리가 메인의 띠 하나뿐이 됩니다. */
@@ -243,7 +248,8 @@ function footer(){
       '<nav class="ft-nav" aria-label="푸터 메뉴">' + cols.map(function(c){
         /* ⚠️ h4 였다가 접근성 점검에 걸렸습니다 — 본문이 h2 까지만 쓰는데
            푸터가 h4 로 뛰면 낭독기가 "빠진 단계" 로 읽습니다. */
-        return '<div><h2 class="ft-h">' + esc(c[0]) + '</h2><ul>' + c[1].map(function(l){
+        return '<div' + (c[2] ? ' class="' + esc(c[2]) + '"' : '') +
+          '><h2 class="ft-h">' + esc(c[0]) + '</h2><ul>' + c[1].map(function(l){
           return '<li><a href="' + esc(l[0]) + '">' + esc(l[1]) + '</a></li>';
         }).join("") + '</ul></div>';
       }).join("") + '</nav>' +

@@ -259,10 +259,15 @@ exports.build = function(c){
         '없는 것입니다.</p></div>' +
       '</div>' +
       '<div id="lsbox"></div>' +
+      /* ⚠️⚠️ **경고 하나에 `<p>` 하나**입니다 (2026-11-08) — 한 문단에
+         ⚠️ 둘을 이어 붙였더니 1280px 에서 한 줄로 늘어서 어디서 끊어
+         읽어야 하는지 안 보였습니다(손님이 40~60대입니다). 찍어 보고
+         알았습니다 — 글자가 작지도 · 가로로 밀리지도 않아 검사는 전부
+         초록이었습니다. */
       '<p class="jnote">⚠️ 연락처는 목록에 나오지 않습니다. 문의가 ' +
-      '받아들여진 뒤 서로 따로 고르셨을 때만 그 상대 한 분에게 보입니다. ' +
-      '⚠️ 만나서 물건을 보고 거래하시고, 미리 보내 달라는 요구는 ' +
-      '받아들이지 마세요.</p>' +
+      '받아들여진 뒤 서로 따로 고르셨을 때만 그 상대 한 분에게 보입니다.</p>' +
+      '<p class="jnote">⚠️ 만나서 물건을 보고 거래하시고, 미리 보내 달라는 ' +
+      '요구는 받아들이지 마세요.</p>' +
       '</div></section>'
     : '';
 
@@ -435,8 +440,8 @@ exports.build = function(c){
       '<p class="jnote">⚠️ 이 글은 <b>누구나 봅니다.</b> ' +
       '조용히 업체 견적만 받아 보고 싶으시면 ' +
       '<b>매칭 요청</b>을 쓰세요 — 그쪽은 운영자만 보고, 업체에 넘길 ' +
-      '때 상호를 알려 드리고 다시 여쭙습니다. ' +
-      '⚠️ 연락처는 목록에 나오지 않습니다.</p>' +
+      '때 상호를 알려 드리고 다시 여쭙습니다.</p>' +
+      '<p class="jnote">⚠️ 연락처는 목록에 나오지 않습니다.</p>' +
       '<p class="lsc-go"><a class="btn btn-line" href="' +
         esc(W.amCatUrl(c)).replace(/^\/cat\//, "/match?cat=") +
         '">매칭 요청으로 견적 받기</a></p>' +
@@ -488,6 +493,29 @@ exports.build = function(c){
      읽을 몫). 목록은 아무 때나 바뀌므로 **브라우저가** 그립니다 —
      빌드 때 찍으면 배포할 때만 바뀝니다.
      ⚠️ 아래 글을 지우면 봇에게는 **빈 화면**이 됩니다. */
+  /* ⚠️⚠️⚠️ **0곳 상자가 막다른 길이었습니다** (2026-11-08) — 메인과
+     업체찾기는 `amOpenNow()` 로 "업체를 기다리지 않고 지금 하실 수 있는
+     것" 다섯을 내는데, **분류 화면의 0곳 상자만 길이 하나도 없었습니다.**
+     거기서 손님이 할 수 있는 일이 뒤로 가기뿐이었습니다 (절대 규칙 2).
+     ⚠️⚠️ **줄은 `amOpenNow()` 한 곳**입니다 — 글을 여기 따로 적으면
+     세 화면이 조용히 다른 말을 합니다.
+     ⚠️⚠️ **지금 보고 계신 분류로 보내는 줄은 뺍니다** — 그 줄의 주소는
+     이 화면 자신이라, 그대로 두면 **눌러도 제자리인 단추**가 됩니다
+     (레슨 화면의 "구합니다 글 올리기" 가 그 자리입니다 · 절대 규칙 5).
+     ⚠️ 0건이면 줄째 빠집니다 (지어내지 않습니다). */
+  function nowOpen(cat){
+    var here = W.amCatUrl(cat);
+    var L = (W.amOpenNow ? W.amOpenNow() : []).filter(function(x){
+      return x.href !== here;
+    });
+    if(!L.length) return "";
+    return '<p class="none-or">업체를 기다리지 않고 지금 하실 수 있는 것</p>' +
+      '<div class="none-b">' + L.map(function(x){
+        return '<a class="btn btn-line" href="' + esc(x.href) + '">' +
+          icon(x.icon, 18) + esc(x.label) + '</a>';
+      }).join("") + '</div>';
+  }
+
   var zero = '<section class="sec sec-alt"><div class="wrap"><div class="none">' +
     '<h2>' + esc(k.zeroT) + '</h2>' +
     '<p>' + esc(k.zeroD) + '</p>' +
@@ -500,6 +528,7 @@ exports.build = function(c){
       ? '<a class="btn btn-pri" href="' + esc(k.cta[0]) + '">' +
         icon(k.cta[2], 20) + esc(k.cta[1]) + '</a>'
       : '') +
+    nowOpen(c) +
   '</div></div></section>';
 
   return {

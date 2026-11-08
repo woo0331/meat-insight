@@ -504,7 +504,9 @@ window.amSubUrl = function(catKey, subKey){
    ⚠️ 이름 · 주소를 여기 글자로 박지 않습니다 — `AM_CATS` 에서 끌어
    옵니다 (분류 이름을 다듬는 날 두 곳이 어긋나지 않게).
    ⚠️ 그 분류가 없어지면 그 줄도 **저절로 빠집니다** (지어내지 않습니다). */
-window.amOpenNow = function(){
+/* ⚠️ `here` 는 **보고 계신 분류의 키**입니다 (없으면 안 보냅니다) —
+   업체찾기 · 메인에는 분류가 없으므로 빈 채로 부릅니다. */
+window.amOpenNow = function(here){
   var out = [];
   /* ⚠️ 2026-11-06 — **중고 직거래가 넷째입니다** (0056). 전에는 셋이었고,
      그때 중고장터는 "업체를 기다리는 자리" 였습니다 (매물을 올릴 길이
@@ -525,10 +527,45 @@ window.amOpenNow = function(){
       없다는 그 줄과 같은 결입니다). */
    ["lesson", "구합니다 글 올리기"]].forEach(function(x){
     var c = window.amCat(x[0]);
+    /* ⚠️⚠️⚠️ **구합니다는 보고 계신 분류에 맞는 자리로 보냅니다**
+       (2026-11-08). 전에는 어느 화면에서든 레슨으로 보냈는데, 지시서
+       §12 가 「구매 희망 요청」을 중고장터에서 이어 주라고 적었습니다 —
+       그런데 중고채를 찾는 분을 **레슨 화면**으로 보내고 있었습니다.
+       ⚠️ 고르는 자리는 `wantNear()` **한 함수**입니다 (화면마다 따로
+       적으면 분류가 느는 날 어긋납니다). */
+    if(x[0] === "lesson" && here) c = wantNear(here) || c;
     if(c) out.push({ href: window.amCatUrl(c), label: x[1], icon: c.icon });
   });
   return out;
 };
+/* 이 분류에서 구합니다 글을 올릴 **가장 가까운 자리** —
+   ① 제 분류가 받으면 제 자리 ② 같은 영역의 형제 분류 ③ 못 찾으면 null
+   ⚠️ 못 찾으면 **null** 입니다 — 아무 분류나 돌려주면 손님이 엉뚱한
+   화면에서 "여기가 아닌데" 를 겪습니다 (부르는 쪽이 레슨으로 둡니다).
+   ⚠️⚠️ **`amWantCats()` 를 읽습니다** — 받는 분류를 여기 글자로 적으면
+   `AM_WANT_OFF` 를 고치는 날 두 곳이 어긋나고, 그때 화면은 보내는데
+   그 분류에는 올리는 자리가 없습니다. */
+function wantNear(key){
+  var c = window.amCat(key);
+  if(!c) return null;
+  var L = window.amWantCats ? window.amWantCats() : [];
+  var i;
+  for(i = 0; i < L.length; i++) if(L[i].key === key) return L[i];
+  /* ⚠️⚠️ **분류는 제 영역을 모릅니다** — 영역이 분류 목록을 들고
+     있습니다(`AM_ZONES` 의 `cats`). 처음에 `c.zone` 으로 견주었다가
+     **늘 undefined 라 아무것도 못 찾았고**, 중고에서 여전히 레슨으로
+     보냈습니다(에러는 한 줄도 안 납니다 — 조용히 기본값으로 떨어지는
+     그 자리입니다). 영역을 **찾아서** 봅니다. */
+  var Z = window.AM_ZONES || [], mine = null;
+  for(i = 0; i < Z.length; i++){
+    if((Z[i].cats || []).indexOf(key) >= 0){ mine = Z[i]; break; }
+  }
+  if(!mine) return null;
+  for(i = 0; i < L.length; i++){
+    if((mine.cats || []).indexOf(L[i].key) >= 0) return L[i];
+  }
+  return null;
+}
 
 /* ── 구합니다 (0061) 가 서는 분류 ──────────────────────────────────
    ⚠️⚠️ **한 곳입니다.** 분류 화면(빌드) · 목록(브라우저) · `/my` · 검사가

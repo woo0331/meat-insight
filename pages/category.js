@@ -230,7 +230,10 @@ function chips(c, items, note){
    되는 것으로 보냅니다 (절대 규칙 2). */
 function nowOpen(cat){
   var here = W.amCatUrl(cat);
-  var L = (W.amOpenNow ? W.amOpenNow() : []).filter(function(x){
+  /* ⚠️ 보고 계신 분류를 넘깁니다 — 구합니다 글을 **이 분류에 맞는
+     자리**로 보내려는 것입니다 (중고채를 찾는 분을 레슨으로 보내지
+     않게 · 지시서 §12). */
+  var L = (W.amOpenNow ? W.amOpenNow(cat.key) : []).filter(function(x){
     return x.href !== here;
   });
   if(!L.length) return "";

@@ -34,7 +34,17 @@
   var A = null, PICK = null;
   /* ⚠️ `course` 는 메인의 찾는 칸이 보내는 열쇠입니다 — 여기 없으면
      `val("course")` 가 읽을 칸이 없어 조용히 안 걸립니다. */
-  var S = { rg:"", d:"", course:"" };
+  var S = { rg:"", d:"", course:"", t:"" };
+  /* 티오프 시간대 — ⚠️ 말과 경계는 `js/data/deal.js` 의 `AM_TEE_BAND`
+     **한 곳**이고 메인의 찾는 칸이 같은 줄을 읽습니다. 두 곳에 적으면
+     "오전" 이 화면마다 다른 시각을 가리킵니다.
+     ⚠️⚠️ **조인에는 안 냅니다** — `joinroom.tee` 가 자유 글자라
+     숫자로 견줄 수가 없습니다(절대 규칙 5).
+     ⚠️⚠️ **부를 때마다 읽습니다** — 불러올 때 담아 두면 스크립트 차례가
+     바뀌는 날 그 칸이 조용히 사라집니다(에러 0줄). */
+  function bands(){
+    return (KIND === "join") ? [] : (window.AM_TEE_BAND || []);
+  }
   var B = window.WOW_BIZ || {};
   var KEEP   = String(B.bookKeep || "");
   var SEARCH = Number(B.teeSearch) || 0;   /* 달력으로 찾을 수 있는 날 수 */
@@ -107,6 +117,8 @@
     if(S.rg) q.push("rg=" + encodeURIComponent(S.rg));
     if(d)    q.push("d="  + encodeURIComponent(d));
     if(S.course) q.push("course=" + encodeURIComponent(S.course));
+    /* ⚠️ 날짜 띠를 눌러도 **고르신 시간대는 그대로** 들고 갑니다 */
+    if(S.t) q.push("t=" + encodeURIComponent(S.t));
     return window.location.pathname + (q.length ? "?" + q.join("&") : "");
   }
   function shortDay(iso){
@@ -156,9 +168,19 @@
       '<div class="jrow"><label for="tf-rg">지역</label>' +
       '<select id="tf-rg" name="rg"><option value="">전체 지역</option>' +
         regs + '</select></div>' +
+      /* 티오프 시간대 — ⚠️ 부킹에만 섭니다 (조인이면 빈 배열입니다) */
+      (bands().length
+        ? '<div class="jrow"><label for="tf-t">시간대</label>' +
+          '<select id="tf-t" name="t"><option value="">전체 시간</option>' +
+          bands().map(function(b){
+            return '<option value="' + esc(b.key) + '"' +
+              (S.t === b.key ? " selected" : "") + '>' + esc(b.name) +
+              ' ' + esc(b.lead) + '</option>';
+          }).join("") + '</select></div>'
+        : "") +
       '<div class="jrow tf-go">' +
       '<button type="submit" class="btn btn-pri">자리 찾기</button>' +
-      (S.rg || S.d
+      (S.rg || S.d || S.t
         ? '<button type="button" class="btn btn-line tf-all">조건 지우기</button>'
         : '') +
       '</div></form>';
@@ -251,9 +273,13 @@
        아직 아무도 안 올린 것과, 조건에 맞는 것이 없는 것은 다릅니다. */
     var k = (KIND === "join") ? "조인 자리" : "티타임";
     return '<div class="none">' +
-      (S.rg || S.d
+      (S.rg || S.d || S.t
         ? '<h3>그 조건에 맞는 ' + esc(k) + '이 없습니다.</h3>' +
-          '<p>날짜나 지역을 넓혀 보세요. 지어낸 자리를 채우지 않습니다.</p>' +
+          '<p>날짜나 지역을 넓혀 보세요. 지어낸 자리를 채우지 않습니다.' +
+          /* ⚠️ 시간대를 고르면 **시각이 안 적힌 자리**가 빠집니다 —
+             손님이 "없다" 로 읽지 않게 그 사실을 적습니다. */
+          (S.t ? ' 시간대를 고르시면 <b>티오프 시각이 적힌 자리만</b> 나옵니다.' : '') +
+          '</p>' +
           '<button type="button" class="btn btn-line tf-all">조건 지우기</button>'
         : '<h3>아직 올라온 ' + esc(k) + '이 <b>0건</b>입니다.</h3>' +
           '<p>제휴 골프장이 확인한 자리만 여기에 올라옵니다. ' +
@@ -310,6 +336,17 @@
        서버입니다 — 쉰 줄만 받아 화면에서 거르면 조건에 맞는 것이
        그 쉰 줄 밖에 있을 때 0건으로 보입니다. */
     if(S.course) qs.push("course=eq." + encodeURIComponent(S.course));
+    /* ⚠️⚠️ **시간대도 서버가 거릅니다** — 백 줄만 받아 화면에서 거르면
+       맞는 자리가 그 백 줄 밖에 있을 때 0건으로 보입니다.
+       ⚠️ 아래를 열고 위를 닫습니다(gte · lt) — 둘 다 닫으면 12:00 이
+       오전에도 오후에도 걸립니다. `to` 가 없으면 위를 안 겁니다.
+       ⚠️ `tee_at` 이 빈 자리는 여기서 빠집니다(비교가 null 입니다) —
+       화면이 그 사실을 적습니다. */
+    var bd = window.amTeeBand ? window.amTeeBand(S.t) : null;
+    if(bd){
+      qs.push("tee_at=gte." + encodeURIComponent(bd.from));
+      if(bd.to) qs.push("tee_at=lt." + encodeURIComponent(bd.to));
+    }
     /* ⚠️ 달력으로 찾을 수 있는 끝 — 지시서 §5 (61~90일은 사전 상담만) */
     else if(SEARCH) qs.push("play_at=lte." + encodeURIComponent(kstISO(SEARCH)));
     return get("v_teetime_open?" + qs.join("&")).then(function(rows){
@@ -333,6 +370,7 @@
     };
     if(f.id === "ttf-find"){
       S.d = val("d"); S.rg = val("rg"); S.course = val("course");
+      S.t = val("t");
       load();
       return;
     }
@@ -365,7 +403,9 @@
   box.addEventListener("click", function(e){
     var t = e.target;
     if(!t || !t.closest) return;
-    if(t.closest(".tf-all")){ S.rg = ""; S.d = ""; S.course = ""; return void load(); }
+    if(t.closest(".tf-all")){
+      S.rg = ""; S.d = ""; S.course = ""; S.t = ""; return void load();
+    }
     /* 날짜 띠 — ⚠️ 주소를 **같이 바꿉니다**(뒤로 가기도 됩니다) */
     var dd = t.closest("[data-tfd]");
     if(dd){
@@ -412,6 +452,10 @@
          여기서 맞는 값인지 가릴 길이 없습니다 — 틀리면 0건입니다). */
       var cs = u.get("course");
       if(cs) S.course = String(cs).slice(0, 80);
+      /* ⚠️ 시간대는 **아는 값만** 받습니다 — 모르는 값을 그대로 쓰면
+         영원히 0건인 화면이 됩니다(절대 규칙 1). */
+      var tb = (u.get("t") || "").trim();
+      if(tb && window.amTeeBand && window.amTeeBand(tb)) S.t = tb;
     }catch(e){ }
     return load();
   }).catch(function(){});

@@ -20,7 +20,9 @@
    ⚠️⚠️ **날짜는 Asia/Seoul** 입니다 — `toISOString()` 으로 오늘을 지으면
    한국에서 아침 9시 전에 하루가 밀립니다.
 
-   ⚠️ 설정이 없으면 **한 줄도 안 그립니다** (빌드가 찍어 둔 안내 그대로).
+   ⚠️⚠️ **설정이 없어도 찾는 칸과 표의 뼈대는 그립니다** (2026-11-08) —
+   다만 칸에 숫자 대신 `–` 를 적고 **0건이 아니라 못 읽은 것**이라고
+   말합니다. 그 둘을 섞으면 그것이 지어낸 숫자입니다.
    ════════════════════════════════════════════════════════════════════ */
 (function(){
   var box = document.getElementById("teeboard");
@@ -36,7 +38,18 @@
   var KIND = (box.getAttribute("data-teekind") === "join") ? "join" : "booking";
   /* 찾는 칸이 들고 있는 값 — ⚠️ 표의 `KIND` 와 **같은 변수**를 읽습니다.
      두 곳에 따로 두면 탭을 바꿨을 때 표와 단추가 다른 말을 합니다. */
-  var FIND = { d:"", rg:"", course:"" };
+  var FIND = { d:"", rg:"", course:"", t:"" };
+  /* 티오프 시간대 — 말과 경계는 js/data/deal.js 의 AM_TEE_BAND 한 곳입니다.
+     ⚠️ 조인은 시각이 **자유 글자**(joinroom.tee — "아침 · 오전")라
+     숫자로 견줄 수가 없습니다 — 그래서 그 칸을 **아예 안 냅니다**
+     (고르게 두고 안 걸러 주면 눌러도 아무 일이 안 나는 칸입니다 · 절대 규칙 5).
+     ⚠️⚠️⚠️ **스크립트 차례에 기대지 않습니다** — 메인은 `data/deal.js` 를
+     이 파일보다 **뒤에** 싣습니다. 불러올 때 값을 담아 두면 그 자리에서
+     빈 배열이 되어 시간대 칸이 **조용히 안 그려집니다**(에러 0줄 ·
+     `window.amAdPlace` 가 덮여 액자가 안 그려진 그 자리와 같은 결).
+     그래서 **부를 때마다** 읽습니다 (차례를 고치는 것으로 때우면 다음에
+     새 화면이 다른 차례로 적는 날 또 납니다). */
+  function bands(){ return window.AM_TEE_BAND || []; }
   /* ⚠️⚠️ 골프장 고르개는 **올라온 티타임의 골프장만** 담습니다 —
      목록을 지어내면 영원히 0건인 자리로 보내는 것입니다(절대 규칙 1 · 5).
      0곳이면 그 칸을 **아예 안 냅니다**(절대 규칙 2). */
@@ -73,7 +86,14 @@
     return base + "?rg=" + encodeURIComponent(zone) + "&d=" + encodeURIComponent(day);
   }
 
-  function table(rows){
+  /* ⚠️⚠️⚠️ **표는 늘 그립니다** (2026-11-08) — 설정이 없어 숫자를 못
+     읽을 때도 **날짜 열과 지역 줄은 그대로** 세웁니다. 전에는 그 자리에
+     한 줄짜리 안내만 남아서, 시안의 오른쪽 절반이 손님에게는 **빈 글**
+     이었습니다.
+     ⚠️⚠️ 다만 칸에 **0 을 적지 않습니다** — 세어 본 것이 아니라 못 읽은
+     것이므로 `–` 를 적고 그 뜻을 표 아래에서 말합니다. 0 과 "모름" 을
+     섞으면 그것이 지어낸 숫자입니다 (절대 규칙 1). */
+  function table(rows, unknown){
     var ds = days();
     /* 묶음 × 날짜로 모읍니다 — ⚠️ 보기는 **지역별**로 주므로 여기서
        묶습니다 (묶는 규칙은 regions.js 한 곳입니다). */
@@ -92,6 +112,8 @@
     }).join("");
     var body = ZONES.map(function(z){
       var td = ds.map(function(x){
+        /* ⚠️ 못 읽었으면 **숫자를 적지 않습니다** (0 이 아닙니다) */
+        if(unknown) return '<td><span class="tbd-x">–</span></td>';
         var n = sum[z.key + "|" + x.iso] || 0;
         return "<td>" + (n > 0
           ? '<a class="tbd-n" href="' + esc(cellUrl(z.key, x.iso)) + '">' +
@@ -105,7 +127,8 @@
        글이 문서 기준으로 튀어 폰 화면을 민 자리가 있었습니다. */
     return '<div class="tbd-s"><table class="tbd-t">' +
       '<caption class="sr">앞으로 ' + esc(String(DAYS)) +
-      '일 동안 지역별로 올라온 자리 수</caption>' +
+      '일 동안 지역별로 올라온 자리 수' +
+      (unknown ? ' — 지금은 숫자를 읽지 못했습니다' : '') + '</caption>' +
       '<thead><tr><th scope="col">지역</th>' + th + "</tr></thead>" +
       "<tbody>" + body + "</tbody></table></div>";
   }
@@ -130,6 +153,19 @@
         '<a class="btn btn-sm btn-pt" href="/match?cat=booking">부킹 상담 요청하기</a></p>';
   }
 
+  /* ⚠️⚠️ **못 읽었을 때는 "0건" 이라고 말하지 않습니다** — 세어 본 것이
+     아니라 읽지 못한 것입니다(절대 규칙 1). 표의 뼈대는 그대로 두고
+     칸이 왜 비어 있는지를 여기서 말합니다. */
+  function noteOff(){
+    return '<p class="tbd-note">표의 칸은 <b>아직 숫자를 읽지 못한 자리</b>입니다 — ' +
+      '0건이라는 뜻이 아닙니다. 날짜 · 지역 · 시간대를 고르고 <b>찾아보기</b>는 ' +
+      '지금도 됩니다.</p>';
+  }
+  function noteFail(){
+    return '<p class="tbd-note">지금 숫자를 불러오지 못했습니다 — ' +
+      '0건이라는 뜻이 아닙니다. 잠시 뒤에 다시 열어 주세요.</p>';
+  }
+
   /* ── 찾는 칸 ───────────────────────────────────────────────────
      ⚠️⚠️⚠️ **2026-11-07 까지 이 칸이 없었습니다.** 메인에 "원하는
      날짜와 지역의 자리 찾기" 라는 **제목만 달아 놓고 찾는 칸을 안
@@ -152,6 +188,20 @@
             (FIND.course === c ? " selected" : "") + ">" + esc(c) + "</option>";
         }).join("") + "</select></div>"
       : "";
+    /* 티오프 시간대 — ⚠️ **부킹에만** 냅니다. 말과 경계는 AM_TEE_BAND
+       한 곳이고, 목록 화면(js/booking.js)이 **같은 줄**을 읽습니다 —
+       두 곳에 적으면 "오전" 이 화면마다 다른 시각을 가리킵니다. */
+    var BS = bands();
+    var band = BS.map(function(b){
+      return '<option value="' + esc(b.key) + '"' +
+        (FIND.t === b.key ? " selected" : "") + ">" + esc(b.name) +
+        " " + esc(b.lead) + "</option>";
+    }).join("");
+    var bandBox = BS.length
+      ? '<div class="tbf-r"><label for="tbf-t">시간대</label>' +
+        '<select id="tbf-t" data-tbf="t"><option value="">전체 시간</option>' +
+        band + "</select></div>"
+      : "";
     var isJoin = (KIND === "join");
     return '<div class="tbf">' +
       '<div class="tbf-sw" role="group" aria-label="무엇을 찾으시나요">' +
@@ -170,8 +220,15 @@
           '<div class="tbf-r"><label for="tbf-rg">지역</label>' +
           '<select id="tbf-rg" data-tbf="rg"><option value="">전체 지역</option>' +
           rg + '</select></div>' +
+          (isJoin ? "" : bandBox) +
           (isJoin ? "" : course) +
         '</div>' +
+        /* ⚠️ 시각이 **안 적힌 자리**(0060 의 tee_at 은 비울 수 있습니다)는
+           시간대를 고르시면 빠집니다 — 그 사실을 그 자리에서 말합니다
+           (없는 것과 안 보여 주는 것은 다릅니다 · 절대 규칙 5). */
+        ((!isJoin && FIND.t)
+          ? '<p class="tbf-hint">시간대를 고르시면 <b>티오프 시각이 적힌 자리만</b> 나옵니다.</p>'
+          : "") +
         '<button type="button" class="btn btn-deep tbf-go">' +
           window.icon("search", 20) +
           (isJoin ? "조인 찾아보기" : "부킹 검색하기") + '</button>' +
@@ -188,6 +245,9 @@
     /* ⚠️ 조인에는 골프장 칸이 없습니다 — 보내면 받는 쪽이 모릅니다 */
     if(KIND !== "join" && FIND.course)
       q.push("course=" + encodeURIComponent(FIND.course));
+    /* ⚠️ 시간대도 조인에는 안 보냅니다 — 받는 쪽이 모릅니다 */
+    if(KIND !== "join" && FIND.t)
+      q.push("t=" + encodeURIComponent(FIND.t));
     return base + (q.length ? "?" + q.join("&") : "");
   }
 
@@ -222,8 +282,7 @@
        ⚠️ 못 읽을 때 **0건이라고 말하지 않습니다** — 세어 본 것이 아니라
        못 읽은 것입니다(절대 규칙 1). */
     if(!A){
-      paintBox('<p class="myhint">지금은 현황을 보여 드리지 못합니다. ' +
-        '날짜 · 지역을 고르고 찾아보실 수 있습니다.</p>');
+      paintBox(table(null, true) + noteOff());
       return Promise.resolve();
     }
     paintBox('<p class="myhint">불러오는 중입니다…</p>');
@@ -235,7 +294,7 @@
     return get(q + "&limit=2000").then(function(rows){
       if(!rows){
         /* ⚠️ 못 읽었으면 **0건이라고 말하지 않습니다** */
-        paintBox('<p class="myhint">지금 불러오지 못했습니다. 잠시 뒤에 다시 열어 주세요.</p>');
+        paintBox(table(null, true) + noteFail());
         return;
       }
       var total = rows.reduce(function(a, r){ return a + (Number(r.n) || 0); }, 0);
@@ -268,8 +327,8 @@
      판은 구간을 치워서 **찾는 칸까지 같이 없았습니다** — 지시서가 "핵심 메인
      기능" 으로 요구한 부킹 · 조인 찾는 칸이 손님에게 **없는 것**이 된
      것입니다. 그 칸은 주소만 짓고 DB 를 안 읽습니다.
-     ⚠️ 지금은 `draw()` 가 A 가 없으면 **찾는 칸만** 그리고, 현황표 자리에는
-     "지금은 현황을 보여 드리지 못합니다" 를 적습니다 — **0건이 아닙니다.** */
+     ⚠️ 지금은 `draw()` 가 A 가 없어도 **찾는 칸과 표의 뼈대**를 그리고,
+     칸에는 숫자 대신 `–` 를 적습니다 — **0건이 아닙니다.** */
 
   window.amAuthAsk().then(function(a){
     if(!a || !a.on){

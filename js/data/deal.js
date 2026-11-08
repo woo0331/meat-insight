@@ -612,6 +612,25 @@ window.AM_TEE_KIND = [
   { key:"booking", name:"골프장 부킹", lead:"한 팀을 통째로" },
   { key:"join",    name:"골프 조인",   lead:"자리 단위로" }
 ];
+/* 티오프 시간대 — ⚠️⚠️ **말과 경계를 한 곳**에 둡니다. 메인의 찾는 칸과
+   목록 화면(js/booking.js)이 같은 줄을 읽어야 "오전" 이 두 화면에서 다른
+   시각을 가리키지 않습니다.
+   ⚠️ 경계는 **아래를 열고 위를 닫습니다**(from ≤ t < to) — 둘 다 닫으면
+   12:00 이 오전에도 오후에도 걸립니다.
+   ⚠️ `to` 가 null 이면 그 뒤 전부입니다 (time 의 끝이 24:00 이라 위를
+   안 겁니다 — 24:00 으로 적으면 자정 자리가 빠집니다).
+   ⚠️⚠️ **`teetime.tee_at` 은 비어 있을 수 있습니다** (0060 — 시각이 아직
+   안 정해진 자리). 시간대를 고르시면 그런 자리는 **빠집니다** — 화면이
+   그 사실을 그 자리에서 말합니다 (없는 것과 안 보여 주는 것은 다릅니다).
+   ⚠️⚠️ **조인(0046)에는 안 씁니다** — `joinroom.tee` 는 자유 글자("아침 ·
+   오전")라 숫자로 견줄 수가 없습니다. 고르게 두고 안 걸러 주면 눌러도
+   아무 일이 안 나는 칸입니다 (절대 규칙 5). */
+window.AM_TEE_BAND = [
+  { key:"dawn",  name:"새벽", lead:"05:00~08:00", from:"05:00", to:"08:00" },
+  { key:"am",    name:"오전", lead:"08:00~12:00", from:"08:00", to:"12:00" },
+  { key:"pm",    name:"오후", lead:"12:00~17:00", from:"12:00", to:"17:00" },
+  { key:"night", name:"야간", lead:"17:00 이후",  from:"17:00", to:null    }
+];
 window.AM_TEE_ST = [
   { key:"open",   name:"받는 중", tone:"ok" },
   { key:"closed", name:"닫음",    tone:"ink" },
@@ -632,6 +651,10 @@ window.amTeeKind = function(k){
   var x = amTeePick(window.AM_TEE_KIND, k);
   /* ⚠️ 모르는 키는 **키 그대로** 냅니다 (지어내지 않습니다) */
   return x || { name:String(k || ""), lead:"" };
+};
+/* ⚠️ 모르는 값은 **null** 입니다 — 안 거릅니다 (거짓 0건을 만들지 않습니다) */
+window.amTeeBand = function(k){
+  return amTeePick(window.AM_TEE_BAND, k);
 };
 window.amTeeSt = function(k){
   var x = amTeePick(window.AM_TEE_ST, k);

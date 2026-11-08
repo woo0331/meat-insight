@@ -4436,6 +4436,104 @@ function boardsOf(){
     await g.p.close();
   }
 
+  /* ⑧-4 ⚠️⚠️⚠️ **설정이 없어도 표의 뼈대를 그립니다** (2026-11-08).
+     전에는 그 자리에 한 줄짜리 안내만 남아서, 시안의 오른쪽 절반이
+     손님에게는 **빈 글**이었습니다 — 사장님이 폰에서 보시고 "현황표도
+     만들어 달라" 고 하신 자리입니다.
+     ⚠️⚠️ 다만 칸에 **0 을 적으면 안 됩니다** — 세어 본 것이 아니라 못
+     읽은 것입니다. 그래서 **둘을 갈라서** 잽니다: 뼈대가 섰는가 ·
+     그리고 그 칸이 0 이 아닌가 (절대 규칙 1). */
+  {
+    const p0 = await b.newPage({ viewport: view });
+    await p0.route("**/api/session", function(r){
+      return r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ auth:false, signedIn:false, conf:null }) });
+    });
+    await p0.goto(base + "/", { waitUntil:"networkidle" });
+    await p0.waitForTimeout(400);
+    const r = await p0.evaluate(function(){
+      const bx = document.getElementById("teeboard");
+      const rows = bx ? bx.querySelectorAll(".tbd-t tbody tr") : [];
+      return { rows: rows.length,
+               cells: rows.length ? rows[0].querySelectorAll("td").length : 0,
+               unknown: bx ? bx.querySelectorAll(".tbd-x").length : -1,
+               zeros: bx ? bx.querySelectorAll(".tbd-0").length : -1,
+               find: !!(bx && bx.querySelector(".tbf-go")),
+               body: bx ? bx.innerText : "" };
+    });
+    ok("⚠️⚠️ 설정이 없어도 현황표의 **뼈대가 그려진다** (날짜 열 · 지역 줄)",
+       r.rows === zonesOf().length && r.cells === keepNum("teeBoard"),
+       JSON.stringify(r).slice(0, 200));
+    ok("  ⚠️⚠️⚠️ 그 칸에 **0 을 적지 않는다** (세어 본 것이 아닙니다)",
+       r.unknown > 0 && r.zeros === 0, JSON.stringify(r).slice(0, 200));
+    ok("  ⚠️ '0건' 이라고 말하지 않는다 (못 읽은 것과 0 은 다릅니다)",
+       r.body.indexOf("0건이라는 뜻이 아닙니다") >= 0 &&
+       r.body.indexOf("아직 숫자를 읽지 못한") >= 0, r.body.slice(0, 220));
+    ok("  ⚠️ 찾는 칸은 그대로 돈다", r.find, "없습니다");
+    await p0.close();
+  }
+
+  /* ⑧-5 **티오프 시간대** (2026-11-08) — 사장님이 "날짜 시간 다 정해서"
+     라고 하신 자리입니다.
+     ⚠️⚠️ **보내는 질의를 뜯어 봅니다** — 흉내 장치는 걸러 주지 않으므로
+     줄 수로 재면 시간대를 통째로 떼어도 **영원히 초록**입니다.
+     ⚠️ 갯수를 박지 않습니다 — 고르개의 수를 `AM_TEE_BAND` 에서 셉니다. */
+  {
+    const g = await open("/", { role:"customer", name:"손님", signedIn:true },
+      { v_teetime_count: TCNT, v_join_count: [], v_teetime_open: TEE }, {}, true);
+    await g.p.waitForTimeout(400);
+    const r = await g.p.evaluate(function(){
+      const sel = document.querySelector('#teeboard [data-tbf="t"]');
+      return { on: !!sel,
+               opts: sel ? Array.prototype.map.call(sel.options,
+                 function(o){ return o.value; }).filter(Boolean) : [],
+               keys: (window.AM_TEE_BAND || []).map(function(x){ return x.key; }) };
+    });
+    ok("메인 찾는 칸에 **시간대**가 있다 (부킹)", r.on,
+       JSON.stringify(r).slice(0, 160));
+    ok("  고르개가 **AM_TEE_BAND 한 곳**에서 온다 (글자로 안 박습니다)",
+       r.keys.length > 0 && r.opts.join(",") === r.keys.join(","),
+       r.opts.join(",") + " / " + r.keys.join(","));
+
+    await g.p.selectOption('#teeboard [data-tbf="t"]', "am");
+    await g.p.click("#teeboard .tbf-go");
+    await g.p.waitForTimeout(800);
+    const u = g.p.url();
+    ok("⚠️ 찾는 단추가 **그 시간대**로 보낸다", u.indexOf("t=am") >= 0, u);
+    const got = await g.p.evaluate(function(){
+      const el = document.querySelector("#ttlist #tf-t");
+      return el ? el.value : null;
+    });
+    ok("  ⚠️⚠️ **받는 쪽이 그 시간대로 열린다**", got === "am", String(got));
+    /* ⚠️⚠️⚠️ **거르는 것은 서버입니다** — 백 줄만 받아 화면에서 거르면
+       맞는 자리가 그 백 줄 밖에 있을 때 0건으로 보입니다.
+       ⚠️ 아래를 열고 위를 닫습니다(gte · lt) — 둘 다 닫으면 12:00 이
+       오전에도 오후에도 걸립니다. */
+    const q = g.sent.filter(function(x){
+      return x.name === "GET" && String(x.body).indexOf("v_teetime_open") >= 0;
+    }).map(function(x){ return decodeURIComponent(String(x.body)); });
+    ok("  ⚠️⚠️ 시간대를 **서버에 보내서** 거른다 (화면에서 거르지 않습니다)",
+       q.some(function(x){ return x.indexOf("tee_at=gte.08:00") >= 0 &&
+         x.indexOf("tee_at=lt.12:00") >= 0; }),
+       q.slice(-2).join(" / ").slice(0, 240));
+    await g.p.close();
+  }
+  {
+    /* ⚠️ 조인에는 **시간대 칸을 안 냅니다** — `joinroom.tee` 가 자유
+       글자라 숫자로 견줄 수가 없습니다 (고르게 두고 안 걸러 주면
+       눌러도 아무 일이 안 나는 칸입니다 · 절대 규칙 5). */
+    const g = await open("/cat/matchup", { role:"customer", name:"손님", signedIn:true },
+      { v_teetime_count: TCNT, v_join_count: TCNT, v_teetime_open: TEE }, {}, true);
+    await g.p.waitForTimeout(700);
+    const r = await g.p.evaluate(function(){
+      return { board: !!document.querySelector('#teeboard [data-tbf="t"]'),
+               list: !!document.querySelector("#ttlist #tf-t") };
+    });
+    ok("조인에는 **시간대 칸을 안 낸다** (견줄 자료가 없습니다)",
+       r.board === false && r.list === false, JSON.stringify(r));
+    await g.p.close();
+  }
+
   /* ⑨ 폰 폭 셋 */
   for(const w of PHONES){
     const p2 = await b.newPage({ viewport: { width: w, height: 900 } });

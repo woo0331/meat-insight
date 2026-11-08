@@ -930,6 +930,9 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
         border:1.5px solid var(--line); border-radius: var(--r-sm); }
 .tbf-r input:focus, .tbf-r select:focus{ outline:2px solid var(--grn); outline-offset:1px; }
 .tbf-go{ width:100%; min-height:50px; }
+/* 시간대를 고르셨을 때만 나오는 한 줄 */
+.tbf-hint{ margin:0 0 12px; font-size:13.5px; color: var(--ink3);
+           line-height:1.7; word-break:keep-all; overflow-wrap:anywhere; }
 .tbd-stat{ min-width:0; }
 
 .tbd-h{ display:flex; align-items:center; gap:10px; flex-wrap:wrap;
@@ -960,6 +963,9 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
         text-decoration:none; }
 .tbd-n:hover{ text-decoration:underline; }
 .tbd-0{ display:inline-flex; align-items:center; justify-content:center;
+        min-height:40px; color: var(--ink3); }
+/* ⚠️ 아직 못 읽은 칸 — **0 과 다릅니다**(0 은 세어 본 값입니다) */
+.tbd-x{ display:inline-flex; align-items:center; justify-content:center;
         min-height:40px; color: var(--ink3); }
 .tbd-note{ margin:12px 0 0; font-size:14px; color: var(--ink3);
            line-height:1.7; word-break:keep-all; overflow-wrap:anywhere; }

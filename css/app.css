@@ -986,6 +986,33 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
            line-height:1.7; word-break:keep-all; overflow-wrap:anywhere; }
 .tbd-note .btn{ min-height:40px; margin-left:6px; }
 
+/* ── 종류 · 지역별 현황 (0067 · js/countboard.js) ────────
+   ⚠️ 모양은 부킹 · 조인 현황표(.tbf · .tbd-*)를 **그대로** 씁니다 —
+   두 벌로 적으면 한쪽만 고치는 날 둘이 다른 모양이 됩니다.
+   여기에는 **게시판 칸**만 더합니다 (게시판은 표가 아닙니다 —
+   cq 표에 지역 칸이 없습니다). */
+.cb-wide{ grid-column:1 / -1; }
+.cqb-grid{ display:grid; gap:8px; grid-template-columns:repeat(2, minmax(0, 1fr)); }
+@media (min-width:760px){ .cqb-grid{ grid-template-columns:repeat(4, minmax(0, 1fr)); } }
+.cqb-grid > *{ min-width:0; }
+/* ⚠️ 누르는 것은 40px 이상 (손님이 40~60대입니다) */
+.cqb-c2{ display:flex; align-items:center; justify-content:space-between; gap:8px;
+         min-height:48px; padding:0 12px; border:1.5px solid var(--line);
+         border-radius: var(--r-sm); background: var(--bg-2);
+         text-decoration:none; }
+.cqb-c2:hover{ border-color: var(--grn); }
+.cqb-nm{ font-size:14.5px; font-weight:700; color: var(--ink);
+         word-break:keep-all; overflow-wrap:anywhere; }
+.cqb-n{ font-size:15px; font-weight:800; color: var(--grn-deep); }
+/* 인력 목록의 지역 고르개 — ⚠️ 칸(chip)으로 안 냅니다 (열일곱이라
+   폰에서 "밀면 보이는 것" 이 됩니다). */
+.jbf-rg{ display:flex; align-items:center; gap:8px; margin:0 0 14px; }
+.jbf-rg label{ font-size:14px; font-weight:700; color: var(--ink); }
+.jbf-rg select{ min-height:44px; padding:0 12px; border-radius: var(--r-sm);
+                border:1.5px solid var(--line); background: var(--surface);
+                color: var(--ink); font-size:15px; }
+.jbf-rg select:focus{ outline:2px solid var(--grn); outline-offset:1px; }
+
 /* ── 티타임 (0060) ───────────────────────────────────────────────
    ⚠️ 쓰는 변수는 전부 tokens.css 에 있는 것입니다 · 단추는 전부 변형을
    답니다 (`check-safe` ⑧ ⑩). */

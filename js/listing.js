@@ -57,7 +57,10 @@
      ⚠️⚠️ **거르는 것은 서버입니다.** 쉰 줄만 받아 와서 화면에서 걸러
      내면, 서울 매물이 쉰 줄 밖에 있을 때 **0건으로 보입니다**(에러 없이).
      조인 목록에서 적어 둔 그 줄입니다. */
-  var F = { sub:"", rg:"", ship:false };
+  /* ⚠️⚠️ `p` 는 **가격대 열쇠**입니다 (금액이 아닙니다) — 경계와 이름은
+     `js/data/deal.js` 의 `AM_LST_PRICE` 한 곳이고, 숫자를 주소에 적게
+     두면 손님마다 다른 구간이 생겨 현황표의 칸과 못 맞춥니다. */
+  var F = { sub:"", rg:"", ship:false, p:"" };
   /* ⚠️ 0058 — 로그인한 분에게만 "조건 저장" 길을 냅니다. 로그인 전에
      그리면 눌러서 로그인 화면으로 갔다가 돌아와도 **저장된 것이 없는**
      꼴이 됩니다 (절대 규칙 5). */
@@ -69,6 +72,10 @@
       F.sub  = (u.get("s")  || "").trim();
       F.rg   = (u.get("rg") || "").trim();
       F.ship = u.get("sh") === "1";
+      /* ⚠️ 모르는 가격대 키는 **버립니다** — 주소를 손으로 고쳐 오시면
+         아무것도 안 걸리는 화면이 되는데 "매물이 없다" 로 읽힙니다. */
+      var pv = (u.get("p") || "").trim();
+      F.p = (pv && window.amLstPriceBand && window.amLstPriceBand(pv)) ? pv : "";
     }catch(e){}
   }
   function writeUrl(){
@@ -77,6 +84,7 @@
       if(F.sub)  qs.push("s="  + encodeURIComponent(F.sub));
       if(F.rg)   qs.push("rg=" + encodeURIComponent(F.rg));
       if(F.ship) qs.push("sh=1");
+      if(F.p)    qs.push("p="  + encodeURIComponent(F.p));
       history.replaceState(null, "",
         location.pathname + (qs.length ? "?" + qs.join("&") : ""));
     }catch(e){}
@@ -87,15 +95,34 @@
       return '<option value="' + esc(it.key) + '"' +
         (F.sub === it.key ? " selected" : "") + '>' + esc(it.name) + '</option>';
     }).join("");
-    var rg = (window.AM_REGIONS || []).map(function(r){
+    /* ⚠️⚠️ **묶음 여섯을 먼저** 냅니다 — 현황표의 칸이 묶음을 보내므로,
+       안 내면 칸을 눌러 들어온 분의 고르개가 "전국" 으로 보입니다
+       (걸러져 있는데 안 걸린 것처럼 보이는 꼴). */
+    var rg = (window.AM_REGION_ZONES || []).map(function(z){
+      return '<option value="' + esc(z.key) + '"' +
+        (F.rg === z.key ? " selected" : "") + '>' +
+        esc(window.amZoneLong ? window.amZoneLong(z.key) : z.name) + '</option>';
+    }).join("");
+    rg = '<optgroup label="지역 묶음">' + rg + '</optgroup>' +
+         '<optgroup label="시 · 도">' + (window.AM_REGIONS || []).map(function(r){
       return '<option value="' + esc(r.key) + '"' +
         (F.rg === r.key ? " selected" : "") + '>' + esc(r.name) + '</option>';
+    }).join("") + '</optgroup>';
+    var pb = (window.AM_LST_PRICE || []).map(function(x){
+      return '<option value="' + esc(x.key) + '"' +
+        (F.p === x.key ? " selected" : "") + '>' + esc(x.name) + '</option>';
     }).join("");
     return '<form class="jform jnf-f" id="lsfil">' +
       '<div class="jrow"><label for="lf-s">물건 종류</label>' +
         '<select id="lf-s"><option value="">전체</option>' + sb + '</select></div>' +
       '<div class="jrow"><label for="lf-rg">지역</label>' +
         '<select id="lf-rg"><option value="">전국</option>' + rg + '</select></div>' +
+      /* ⚠️⚠️ **값으로 좁히는 길이 2026-11-08 까지 없었습니다** — 0056 은
+         `listing.price` 를 반드시 받아 놓고 목록은 그 칸으로 못 좁혔습니다.
+         ⚠️ 구간은 `AM_LST_PRICE` 한 곳이고 **아래를 닫고 위를 엽니다**
+         (gte · lt) — 둘 다 닫으면 딱 10만원짜리가 두 칸에 다 걸립니다. */
+      '<div class="jrow"><label for="lf-p">가격대</label>' +
+        '<select id="lf-p"><option value="">전체 가격</option>' + pb + '</select></div>' +
       '<div class="jrow jrow-full">' +
         '<label class="jchk"><input type="checkbox" id="lf-sh"' +
           (F.ship ? " checked" : "") + '><span>택배도 되는 것만</span></label>' +
@@ -150,19 +177,41 @@
     var qs = ["select=id,sub,region,ship,title,body,price,cond,ask_n",
               "order=created_at.desc", "limit=50"];
     if(F.sub)  qs.push("sub=eq."    + encodeURIComponent(F.sub));
-    if(F.rg)   qs.push("region=eq." + encodeURIComponent(F.rg));
+    /* ⚠️⚠️⚠️ **묶음(수도권)과 시 · 도(서울)를 한 열쇠로 받습니다** —
+       현황표의 칸은 묶음을 보내고 거르개는 시 · 도를 보냅니다. 푸는
+       규칙은 `amRegionsFor()` 한 곳이고, 모르는 키면 **아무것도 안
+       겁니다**(틀린 키로 0건을 내면 손님은 "매물이 없다" 로 읽습니다). */
+    var rs = window.amRegionsFor ? window.amRegionsFor(F.rg) : [];
+    if(rs.length) qs.push("region=in.(" + rs.map(encodeURIComponent).join(",") + ")");
     if(F.ship) qs.push("ship=is.true");
+    /* ⚠️⚠️ **거르는 것은 서버입니다** — 쉰 줄만 받아 화면에서 거르면
+       조건에 맞는 매물이 쉰 줄 밖에 있을 때 0건으로 보입니다.
+       ⚠️ `from` 이 null 인 첫 칸은 아래쪽을 안 겁니다 — **0원(무료로
+       나눔)이 거기 들어가야** 하기 때문입니다 (0 을 기다리는 자리). */
+    var bd = window.amLstPriceBand ? window.amLstPriceBand(F.p) : null;
+    if(bd){
+      if(bd.from !== null && bd.from !== undefined)
+        qs.push("price=gte." + encodeURIComponent(String(bd.from)));
+      if(bd.to !== null && bd.to !== undefined)
+        qs.push("price=lt."  + encodeURIComponent(String(bd.to)));
+    }
     return fetch(a.conf.url + "/rest/v1/v_listing_open?" + qs.join("&"), {
       headers: Object.assign({ apikey:a.conf.anonKey },
                              window.amAuthHeaders ? window.amAuthHeaders() : {})
     }).then(function(r){ return r.ok ? r.json() : []; });
   }
 
+  /* 지금 걸린 가격대 — ⚠️ 거르는 자리와 **같은 함수**를 읽습니다
+     (두 곳에 적으면 적힌 말과 실제로 거르는 구간이 어긋납니다). */
+  function bd0(){
+    return window.amLstPriceBand ? window.amLstPriceBand(F.p) : null;
+  }
   function nowBits(){
     var b = [];
     if(F.sub)  b.push(subName(F.sub));
-    if(F.rg)   b.push(rgName(F.rg));
+    if(F.rg)   b.push(window.amRegionLabel ? window.amRegionLabel(F.rg) : rgName(F.rg));
     if(F.ship) b.push("택배 가능");
+    if(bd0()) b.push(bd0().name);
     return b;
   }
 
@@ -255,6 +304,7 @@
       if(t.id === "lf-s")       F.sub = t.value;
       else if(t.id === "lf-rg") F.rg = t.value;
       else if(t.id === "lf-sh") F.ship = !!t.checked;
+      else if(t.id === "lf-p")  F.p = t.value;
       else return;
       writeUrl();
       reload(a);

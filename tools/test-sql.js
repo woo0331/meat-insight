@@ -171,6 +171,10 @@ try{
      있는지**가 여기서 가장 중요합니다 (제17조 제2항) — 0046 · 0056 의
      세 겹을 그대로 베꼈으니 그 셋을 **따로** 눌러 봅니다. */
   require("./sql/wanted.js")({ ok, psql, psqlFile, denied, allowed });
+  /* 0067 — 종류 · 지역별 현황. ⚠️⚠️ 세는 보기 넷은 앞 번호의 공개 보기
+     **위에 못 얹어서** 표에서 직접 셉니다 — 조건이 두 곳이므로 여기서
+     **칸마다** 맞춰 봅니다 (총합만 보면 상쇄되어 엉뚱한 까닭으로 통과). */
+  require("./sql/counts.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/course.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/notice.js")({ ok, psql, psqlFile, denied, allowed });
   /* 0057 — 업체 사업자 신원정보 (제20조 제2항). ⚠️ 공개 보기의 칸 ·

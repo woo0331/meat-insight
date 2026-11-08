@@ -438,16 +438,35 @@ const T_MY = {
    고치게 됩니다 (조인에서 `ok` 를 적어 두고 밟은 그 자리). */
 const CQ_ID = "11111111-1111-1111-1111-111111111111";
 /* 구합니다 목록 (0061) — ⚠️ 공개 보기라 `contact` 칸이 **없습니다** */
+const T_WTC = [{ cat:"lesson", sub:"ls-solo", region:"seoul", n:2 },
+               { cat:"lesson", sub:"ls-group", region:"gyeonggi", n:1 },
+               { cat:"lesson", sub:null, region:"seoul", n:5 }];
 const T_WT = {
   v_wanted_open: WTMINE.map(function(w){
     return { id:w.id, cat:w.cat, sub:w.sub, region:w.region, title:w.title,
              body:w.body, budget:w.budget, when_txt:w.when_txt,
              created_at:w.created_at,
              reply_n: w.id.indexOf("aa1") === 0 ? 3 : 0 };
-  })
+  }),
+  v_wanted_count: T_WTC
+};
+
+/* ⚠️⚠️ 0067 — 현황표가 읽는 **세는 보기**입니다. 숫자를 넣어 두지
+   않으면 칸이 전부 0 이라 "그려졌는가" 만 보고 지나갑니다. */
+const T_LSC = {
+  v_listing_open: [],
+  v_listing_count: [{ sub:"us-iron", region:"seoul", n:3 },
+                    { sub:"us-iron", region:"gyeonggi", n:1 },
+                    { sub:"us-driver", region:"busan", n:2 }]
+};
+const T_JBC = {
+  v_job_open: [],
+  v_job_count: [{ kind:"hire", region:"seoul", n:4 },
+                { kind:"seek", region:"gyeonggi", n:1 }]
 };
 
 const T_CQ = {
+  v_cq_count: [{ cat:"cm-open", n:4 }, { cat:"cm-ask", n:2 }],
   v_cq_public: [
     { id:CQ_ID, cat:"cm-open", title:"주말에 라운딩 다녀왔습니다",
       body:"날씨가 좋아서 스코어도 잘 나왔습니다.\n다음에 또 가려고 합니다.",
@@ -496,6 +515,9 @@ const SCENES = [
      봐야 합니다 (글이 남아 있으면 그림에 보입니다). */
   /* ⚠️ 구합니다 (0061) — 분류 화면의 목록 (업체가 0곳이어도 도는 자리) */
   ["wanted",          "/cat/lesson", CUS, T_WT, {}],
+  /* ⚠️ 0067 의 현황표 — 중고 · 인력 · 게시판 · 구합니다 넷 */
+  ["used",            "/cat/used",   CUS, T_LSC, {}],
+  ["career",          "/cat/career", CUS, T_JBC, {}],
   ["desk-notmine",    "/desk",  CUS, T_DESK,  {}],
   ["admin-notmine",   "/admin", CUS, T_ADMIN, { biz_metrics: MET }]
 ];
@@ -530,7 +552,7 @@ const BOXES = {
      알았습니다. `pages/my.js` 에서 세어 고쳤습니다. */
   /* ⚠️⚠️ 게시판(0059)도 **설정이 있어야 열립니다** — `check-screens` 는
      빈 상자만 봅니다. 모아보기 · 글 하나를 여기서 찍습니다. */
-  "/cat/community": [["board", "#cqlist"]],
+  "/cat/community": [["board", "#cqlist"], ["count", "#countboard"]],
   "/my": [["me", "#mybox"], ["notice", "#noticebox"], ["req", "#reqbox"],
           ["join", "#joinmine"], ["cq", "#mycq"], ["job", "#jobmine"],
           /* ⚠️ 0056 의 내 중고 매물 (js/mylisting.js) */
@@ -544,7 +566,13 @@ const BOXES = {
           ["inq", "#myinqbox"]],
   /* ⚠️⚠️ 구합니다(0061)도 **설정이 있어야 열립니다** — `check-screens` 는
      빈 상자만 봅니다. 분류 화면의 목록을 여기서 찍습니다. */
-  "/cat/lesson": [["wanted", "#wtlist"]]
+  "/cat/lesson": [["wanted", "#wtlist"], ["count", "#countboard"]],
+  /* ⚠️⚠️ 0067 의 종류 · 지역별 현황 — `check-screens` 는 **빈 상자**만
+     봅니다(알맹이는 로그인 뒤에 그려집니다). 여기서 눈으로 봅니다.
+     ⚠️ **새 화면을 만드는 날 이 줄을 같이 늘리세요** — 안 늘리면 그 안은
+     영원히 아무도 안 보는 자리가 됩니다. */
+  "/cat/used":   [["count", "#countboard"], ["list", "#lslist"]],
+  "/cat/career": [["count", "#countboard"], ["list", "#joblist"]]
 };
 
 (async function(){

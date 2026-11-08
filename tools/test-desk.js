@@ -4534,6 +4534,196 @@ function boardsOf(){
     await g.p.close();
   }
 
+  /* ⑧-6 ⚠️⚠️⚠️ **종류 · 지역별 현황** (0067 · js/countboard.js · 2026-11-08).
+     부킹 · 조인에만 현황표가 있어서, 중고 · 인력 · 게시판에 들어오신 분은
+     **목록부터** 보셨습니다.
+     ⚠️⚠️ **네 가지를 갈라서** 잽니다 —
+       ① 설정이 없어도 뼈대가 서는가 · 그 칸이 **0 이 아닌가**
+       ② 칸을 누르면 **받는 쪽이 실제로 걸러지는가**(보내는 질의를 뜯어 봅니다
+          — 흉내 장치는 안 걸러 주므로 줄 수로 재면 영원히 초록입니다)
+       ③ 게시판은 **표가 아니라 칸**이고 0건도 안 숨기는가
+       ④ 세로축을 **한 곳에서** 끌어오는가 (갯수를 박지 않습니다) */
+  {
+    /* ① 설정 없이 — 중고 */
+    const p0 = await b.newPage({ viewport: view });
+    await p0.route("**/api/session", function(r){
+      return r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ auth:false, signedIn:false, conf:null }) });
+    });
+    await p0.goto(base + "/cat/used", { waitUntil:"networkidle" });
+    await p0.waitForTimeout(500);
+    const r = await p0.evaluate(function(){
+      const bx = document.getElementById("countboard");
+      const rows = bx ? bx.querySelectorAll(".tbd-t tbody tr") : [];
+      const used = (window.AM_CATS || []).filter(function(c){
+        return c.key === "used"; })[0];
+      return { rows: rows.length,
+               cells: rows.length ? rows[0].querySelectorAll("td").length : 0,
+               zones: (window.AM_REGION_ZONES || []).length,
+               subs: ((used && used.items) || []).filter(function(i){
+                 return !i.pv; }).length,
+               unknown: bx ? bx.querySelectorAll(".tbd-x").length : -1,
+               zeros: bx ? bx.querySelectorAll(".tbd-0").length : -1,
+               find: !!(bx && bx.querySelector(".tbf-go")),
+               body: bx ? bx.innerText : "" };
+    });
+    ok("⚠️⚠️ 중고 — 설정이 없어도 현황표의 **뼈대가 그려진다**",
+       r.rows > 0 && r.rows === r.subs && r.cells === r.zones,
+       JSON.stringify(r).slice(0, 200));
+    ok("  ⚠️⚠️⚠️ 그 칸에 **0 을 적지 않는다** (세어 본 것이 아닙니다)",
+       r.unknown > 0 && r.zeros === 0, JSON.stringify(r).slice(0, 200));
+    ok("  ⚠️ '0건' 이라고 말하지 않는다",
+       r.body.indexOf("0건이라는 뜻이 아닙니다") >= 0, r.body.slice(0, 200));
+    ok("  ⚠️ 찾는 칸은 그대로 돈다 (주소만 짓고 DB 를 안 읽습니다)", r.find, "없습니다");
+    await p0.close();
+  }
+  {
+    /* ② 중고 — 숫자가 있으면 칸이 링크이고, 눌러 간 자리가 **서버에서**
+       걸러집니다. ⚠️ 가격대도 같이 봅니다 (0056 은 price 를 반드시
+       받아 놓고 목록은 그 칸으로 못 좁혔습니다). */
+    const g = await open("/cat/used", { role:"customer", name:"손님", signedIn:true },
+      { v_listing_count: [{ sub:"us-iron", region:"seoul", n:3 }],
+        v_listing_open: [] }, {}, true);
+    await g.p.waitForTimeout(600);
+    const r = await g.p.evaluate(function(){
+      const a = document.querySelector("#countboard .tbd-n");
+      return { href: a ? a.getAttribute("href") : null,
+               zeros: document.querySelectorAll("#countboard .tbd-0").length };
+    });
+    ok("중고 — 숫자가 있는 칸이 **링크**다", !!r.href, JSON.stringify(r));
+    ok("  ⚠️ 0 인 칸은 **0 이라고 적는다** (빈칸은 '모름' 과 섞입니다)",
+       r.zeros > 0, JSON.stringify(r));
+    /* ⚠️⚠️ 칸은 **묶음**(capital)을 보냅니다 — 표가 묶음으로 세기
+       때문입니다. 받는 쪽이 그것을 시 · 도로 푸는지는 아래에서 봅니다. */
+    ok("  ⚠️⚠️ 칸이 **그 종류 · 그 묶음**으로 보낸다",
+       String(r.href).indexOf("s=us-iron") >= 0 &&
+       String(r.href).indexOf("rg=capital") >= 0, String(r.href));
+    await g.p.close();
+  }
+  {
+    /* ⚠️⚠️ **받는 쪽이 실제로 거르는가** — 보내는 질의를 뜯어 봅니다 */
+    const g = await open("/cat/used?s=us-iron&rg=capital&p=u30",
+      { role:"customer", name:"손님", signedIn:true },
+      { v_listing_open: [], v_listing_count: [] }, {}, true);
+    await g.p.waitForTimeout(600);
+    const q = g.sent.filter(function(x){
+      return x.name === "GET" && String(x.body).indexOf("v_listing_open") >= 0;
+    }).map(function(x){ return decodeURIComponent(String(x.body)); });
+    /* ⚠️⚠️⚠️ **묶음을 시 · 도로 풀어서** 보내야 합니다 — 안 풀면
+       `region=eq.capital` 이 되어 **아무것도 안 걸립니다**(에러 0줄).
+       푸는 규칙은 `amRegionsFor()` 한 곳입니다. */
+    ok("⚠️⚠️ 중고 — 종류 · 지역을 **서버에 보내서** 거른다",
+       q.some(function(x){ return x.indexOf("sub=eq.us-iron") >= 0 &&
+         x.indexOf("region=in.(seoul,gyeonggi,incheon)") >= 0; }),
+       q.slice(-1).join("").slice(0, 240));
+    /* ⚠️ 아래를 닫고 위를 엽니다(gte · lt) — 둘 다 닫으면 딱 10만원짜리가
+       두 칸에 다 걸립니다. `lt` 를 빠뜨리면 위가 열려 버립니다. */
+    ok("  ⚠️⚠️ **가격대도 서버가 거른다** (gte · lt 둘 다)",
+       q.some(function(x){ return x.indexOf("price=gte.100000") >= 0 &&
+         x.indexOf("price=lt.300000") >= 0; }),
+       q.slice(-1).join("").slice(0, 240));
+    const sel = await g.p.evaluate(function(){
+      const e = document.getElementById("lf-p");
+      return e ? { v: e.value, n: e.options.length,
+                   keys: (window.AM_LST_PRICE || []).length } : null;
+    });
+    ok("  ⚠️ 거르개가 **그 가격대로 열린다**", sel && sel.v === "u30",
+       JSON.stringify(sel));
+    ok("  ⚠️ 고르개가 **AM_LST_PRICE 한 곳**에서 온다 (갯수를 안 박습니다)",
+       !!sel && sel.keys > 0 && sel.n === sel.keys + 1, JSON.stringify(sel));
+    await g.p.close();
+  }
+  {
+    /* ③ 인력 — 갈래 x 지역. ⚠️ 지역으로 좁히는 길이 2026-11-08 까지
+       **주소에 없었습니다** — 칸은 그려지는데 눌러도 안 걸리는 꼴이었습니다. */
+    const g = await open("/cat/career?k=hire&rg=gyeongs",
+      { role:"customer", name:"손님", signedIn:true },
+      { v_job_open: [], v_job_count: [{ kind:"hire", region:"busan", n:2 }] },
+      {}, true);
+    await g.p.waitForTimeout(700);
+    const q = g.sent.filter(function(x){
+      return x.name === "GET" && String(x.body).indexOf("v_job_open") >= 0;
+    }).map(function(x){ return decodeURIComponent(String(x.body)); });
+    ok("⚠️⚠️ 인력 — 갈래 · 지역을 **서버에 보내서** 거른다",
+       q.some(function(x){ return x.indexOf("kind=eq.hire") >= 0 &&
+         x.indexOf("region=in.(") >= 0 && x.indexOf("busan") >= 0; }),
+       q.slice(-1).join("").slice(0, 240));
+    const r = await g.p.evaluate(function(){
+      const rows = document.querySelectorAll("#countboard .tbd-t tbody tr");
+      const sel = document.getElementById("jbf-rg");
+      return { rows: rows.length,
+               kinds: (window.AM_JOB_KIND || []).length,
+               rg: sel ? sel.value : null };
+    });
+    ok("  ⚠️ 세로축이 **AM_JOB_KIND 한 곳**에서 온다 (갯수를 안 박습니다)",
+       r.kinds > 0 && r.rows === r.kinds, JSON.stringify(r));
+    ok("  ⚠️ 지역 고르개가 **그 묶음으로 열린다**", r.rg === "gyeongs",
+       JSON.stringify(r));
+    await g.p.close();
+  }
+  {
+    /* ④ 게시판 — ⚠️⚠️ **표가 아닙니다** (cq 표에 지역 칸이 없습니다).
+       0건인 게시판도 **안 숨깁니다** — 숨기면 첫 글을 남길 길이 사라지고
+       글쓰기 고르개에는 나오므로 두 화면이 다른 말을 합니다. */
+    const g = await open("/cat/community",
+      { role:"customer", name:"손님", signedIn:true },
+      { v_cq_public: [], v_cq_count: [{ cat:"cm-open", n:4 }] }, {}, true);
+    await g.p.waitForTimeout(700);
+    const r = await g.p.evaluate(function(){
+      const bx = document.getElementById("countboard");
+      const cm = (window.AM_CATS || []).filter(function(c){
+        return c.key === "community"; })[0];
+      return { chips: bx ? bx.querySelectorAll(".cqb-c2").length : -1,
+               table: bx ? bx.querySelectorAll(".tbd-t").length : -1,
+               boards: ((cm && cm.items) || []).length,
+               zeros: bx ? bx.querySelectorAll(".tbd-0").length : -1,
+               one: bx ? (bx.querySelector(".cqb-n") || {}).textContent : null };
+    });
+    ok("게시판 — **표가 아니라 칸**이다 (지역 칸이 없습니다)",
+       r.table === 0 && r.chips > 0, JSON.stringify(r));
+    ok("  ⚠️ 칸이 **게시판 수만큼** 선다 (갯수를 안 박습니다)",
+       r.boards > 0 && r.chips === r.boards, JSON.stringify(r));
+    ok("  ⚠️⚠️ 0건인 게시판도 **안 숨긴다** (첫 글을 남길 자리입니다)",
+       r.zeros === r.boards - 1, JSON.stringify(r));
+    ok("  ⚠️ 센 값을 그대로 적는다", String(r.one).trim() === "4",
+       JSON.stringify(r));
+    await g.p.close();
+  }
+  {
+    /* ⑤ 구합니다 — 하위 x 지역. ⚠️⚠️ **주소에서 읽는 길이 없었습니다** —
+       거르개는 있었는데 `?s=` · `?rg=` 로 들어오면 아무것도 안 걸렸습니다.
+       ⚠️ 그리고 **하위를 안 적은 글**(sub 이 null)은 어느 줄에도 안
+       더합니다 — 더하면 손님이 안 고른 하위에 글이 있는 것처럼 보입니다. */
+    const g = await open("/cat/lesson?s=ls-solo&rg=capital",
+      { role:"customer", name:"손님", signedIn:true },
+      { v_wanted_open: [],
+        v_wanted_count: [{ cat:"lesson", sub:"ls-solo", region:"seoul", n:2 },
+                         { cat:"lesson", sub:null, region:"seoul", n:5 }] },
+      {}, true);
+    await g.p.waitForTimeout(800);
+    const q = g.sent.filter(function(x){
+      return x.name === "GET" && String(x.body).indexOf("v_wanted_open") >= 0;
+    }).map(function(x){ return decodeURIComponent(String(x.body)); });
+    ok("⚠️⚠️ 구합니다 — 하위 · 지역을 **서버에 보내서** 거른다",
+       q.some(function(x){ return x.indexOf("sub=eq.ls-solo") >= 0 &&
+         x.indexOf("region=in.(seoul,gyeonggi,incheon)") >= 0; }),
+       q.slice(-1).join("").slice(0, 240));
+    const r = await g.p.evaluate(function(){
+      const bx = document.getElementById("countboard");
+      const cells = bx ? Array.prototype.map.call(
+        bx.querySelectorAll(".tbd-t tbody td"),
+        function(td){ return (td.textContent || "").trim(); }) : [];
+      return { sum: cells.filter(function(x){ return x !== "0"; }).join(","),
+               note: bx ? bx.innerText : "" };
+    });
+    ok("  ⚠️⚠️⚠️ **하위를 안 적은 글을 어느 줄에도 안 더한다**",
+       r.sum === "2", JSON.stringify(r).slice(0, 200));
+    ok("  ⚠️ 그 사실을 **그 자리에서** 말한다",
+       r.note.indexOf("하위를 안 적으신 글은 표에 안 들어갑니다") >= 0,
+       r.note.slice(0, 220));
+    await g.p.close();
+  }
+
   /* ⑨ 폰 폭 셋 */
   for(const w of PHONES){
     const p2 = await b.newPage({ viewport: { width: w, height: 900 } });
@@ -5454,9 +5644,12 @@ function boardsOf(){
       const q = g.sent.slice(n0).filter(function(x){
         return String(x.body).indexOf("v_wanted_open") >= 0;
       }).map(function(x){ return String(x.body); }).join(" | ");
+      /* ⚠️⚠️ 2026-11-08 부터 **묶음도 시 · 도도 한 열쇠**로 받으므로
+         (현황표의 칸이 묶음을 보냅니다) 늘 `region=in.(…)` 입니다 —
+         시 · 도 하나면 그 하나가 들어갑니다. 뜻은 같고 꼴만 바뀌었습니다. */
       ok("⚠️⚠️ 지역 거르개가 **보내는 질의를 좁힌다** (줄 수로 재면 " +
          "거르개를 떼어도 영원히 초록입니다)",
-         q.indexOf("region=eq.seoul") >= 0, q.slice(0, 220));
+         q.indexOf("region=in.(seoul)") >= 0, q.slice(0, 220));
       /* ⚠️ 분류는 늘 그 화면의 분류로 좁혀져야 합니다 — 안 좁히면
          레슨 화면에 중고 구합니다 글이 섞여 나옵니다 */
       ok("  ⚠️ 분류도 **그 화면의 분류로** 좁힌다", q.indexOf("cat=eq.lesson") >= 0,

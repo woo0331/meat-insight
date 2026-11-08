@@ -427,6 +427,12 @@ exports.build = function(c){
       '업체나 다른 회원이 답을 답니다. <b>연락처는 글에 적지 마세요</b> — ' +
       '답을 받아들이신 뒤 서로 따로 고르셨을 때만 열립니다. ' +
       '골프올인원은 거래 당사자가 아닙니다.</p></div>' +
+      /* ⚠️⚠️⚠️ 하위 · 지역별 현황(0067) — 부킹 · 조인의 현황표와 같은
+         틀이고 그리는 코드는 js/countboard.js 한 곳입니다.
+         ⚠️ 구합니다는 분류마다 서는 자리라 어느 분류인지를 상자에 적어
+         줍니다(data-cbcat) — 화면이 주소로 짐작하면 주소가 바뀌는 날
+         조용히 어긋납니다(data-wcat 과 같은 꼴). */
+      '<div id="countboard" data-cb="wanted" data-cbcat="' + esc(c.key) + '" hidden></div>' +
       '<div id="wtlist" data-wcat="' + esc(c.key) + '">' +
         '<div class="none"><h3>글을 보시려면 잠시만 기다려 주세요.</h3>' +
         '<p>올라온 글을 불러옵니다.</p></div>' +
@@ -461,7 +467,38 @@ exports.build = function(c){
      글자가 작지도 않아 다른 검사는 전부 초록이었습니다. */
   var ownSec   = (lsSec || joinSec || cqSec || jobSec);   /* 0곳 안내를 **대신**합니다 */
   var sideSec  = teeSec + wtSec;                          /* 0곳 안내에 **곁들입니다** */
-  var memberSec = sideSec + ownSec;
+  /* ── 종류 · 지역별 현황 (0067) ──────────────────────
+     ⚠️⚠️⚠️ 부킹 · 조인에만 현황표가 있었습니다. 중고 · 인력 · 게시판에
+     들어오신 분은 목록부터 보셨고, 서울에 아이언이 몇 개 있는지 알려면
+     줄을 밀어 내려가야 했습니다.
+     ⚠️⚠️ 그리는 코드는 js/countboard.js 한 곳입니다 — 화면마다 따로 적으면
+     한쪽만 고치는 날 둘이 다른 말을 합니다(업체 카드를 빌드와 브라우저
+     둘이 그리던 그 자리).
+     ⚠️ 갈래는 상자에 적어 줍니다(data-cb) — 화면이 주소로 다시 판단하면
+     규칙이 두 곳이 됩니다(data-teekind 과 같은 꼴).
+     ⚠️ 구합니다는 여기 안 넣습니다 — 그쪽은 곁들이는 자리라 제 구간
+     안에 서야 합니다(맨 위에 두면 업체 목록보다 앞에 서서 그 분류의
+     알맹이처럼 보입니다). */
+  var cbKind = (c.key === "used") ? "used"
+             : (c.key === "career") ? "career"
+             : (c.key === "community") ? "board" : "";
+  var cbSec = cbKind
+    ? '<section class="sec"><div class="wrap">' +
+      '<div class="sec-hd"><h2>' +
+        (cbKind === "board"
+          ? '게시판별 현황'
+          : '어디에 무엇이 올라와 있나') + '</h2>' +
+      '<p>' + (cbKind === "used"
+          ? '지금 올라와 있는 매물을 <b>물건 종류 · 지역</b>으로 나눠 세어 드립니다. '
+          : (cbKind === "career"
+            ? '지금 올라와 있는 글을 <b>갈래 · 지역</b>으로 나눠 세어 드립니다. '
+            : '게시판마다 지금 올라와 있는 <b>글 수</b>입니다. ')) +
+        '숫자는 <b>실제로 센 값</b>이고 지어내지 않습니다. ' +
+        '골프올인원은 거래 당사자가 아닙니다.</p></div>' +
+      '<div id="countboard" data-cb="' + esc(cbKind) + '" hidden></div>' +
+      '</div></section>'
+    : '';
+  var memberSec = sideSec + cbSec + ownSec;
   /* ⚠️⚠️⚠️ **2026-11-07 — `/cat/matchup` 에 `#ttlist` 가 한 줄도 안 찍혔습니다.**
      아래 0곳 가지가 `ownSec || (sideSec + zero)` 라, 조인 화면처럼 **ownSec 이
      있는 분류에서는 sideSec 이 통째로 사라졌습니다** — 그래서 0060 이
@@ -564,13 +601,15 @@ exports.build = function(c){
       : (c.key === "booking"
           ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
              "/js/teeboard.js", "/js/booking.js"]
-      : (c.key === "community" ? ["/js/community.js"]
+      /* ⚠️⚠️ countboard.js — 게시판별 글 수(0067)입니다. 안 실으면
+         그 상자가 hidden 인 채로 남고 **에러도 안 납니다.** */
+      : (c.key === "community" ? ["/js/community.js", "/js/countboard.js"]
       /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — site.js 가
          careerKeep(보유 기간)을, regions.js 가 지역 칸을, catalog.js 가
          하위분류 칸을 줍니다 (catalog 는 빌드가 저절로 싣습니다). */
       : (c.key === "career"
           ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
-             "/js/career.js"]
+             "/js/career.js", "/js/countboard.js"]
       /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — site.js 가
          listingKeep(보유 기간 · 비면 양식을 안 엽니다) · regions.js 가
          지역 칸 · **deal.js 가 물건 상태 말**을 줍니다. 하나라도 빠지면
@@ -578,7 +617,7 @@ exports.build = function(c){
          양식이 안 열렸던 그 자리입니다). */
       : (c.key === "used"
           ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
-             "/js/listing.js"]
+             "/js/listing.js", "/js/countboard.js"]
       /* ⚠️⚠️ 0061 — **값을 읽는 파일을 싣는 것까지가 기능입니다**:
          site.js 가 wantedKeep(비면 양식을 **안 엽니다**) · regions.js 가
          지역 칸 · deal.js 가 예산 셈(`amWantBudget`)을 줍니다. 하나라도
@@ -586,14 +625,14 @@ exports.build = function(c){
          실어 문의 양식이 안 열렸던 그 자리입니다). */
       : ((W.amWantOn && W.amWantOn(c))
           ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
-             "/js/wanted.js"]
+             "/js/wanted.js", "/js/countboard.js"]
           : [])))))).concat(["/js/data/providers.generated.js",
                           "/js/data/providers.js", "/js/adslot.js"]),
     /* ⚠️ 조인은 제 구간이 "0건" 을 스스로 말하므로 zero 를 **안 겹칩니다**
        (한 화면에 "없습니다" 가 두 번 나오면 미완성으로 읽힙니다). */
     /* ⚠️ 중고는 제 구간이 "0건" 을 스스로 말하므로 zero 를 **안 겹칩니다**
        (한 화면에 "없습니다" 가 두 번 나오면 미완성으로 읽힙니다) */
-    body: head + adTop + subs + teeFind + sideSec + (ownSec || zero) +
+    body: head + adTop + subs + teeFind + sideSec + cbSec + (ownSec || zero) +
           asks(c) + related(c)
   };
 };

@@ -146,3 +146,39 @@ window.amZoneCheck = function(){
   });
   return { dup: dup, miss: miss };
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   묶음과 시 · 도를 **한 열쇠**로 받습니다 (0067 · 2026-11-08)
+
+   ⚠️⚠️⚠️ **현황표의 칸은 묶음(zone)을 보내고 목록의 거르개는 시 · 도
+   (region)를 보냅니다.** 둘이 같은 열쇠(`rg`)를 쓰는데 뜻이 다르면,
+   칸을 눌러 들어간 목록이 **아무것도 안 걸러진 채** 열립니다 —
+   실제로 `/cat/used?rg=capital` 이 그 꼴이었습니다(에러 0줄).
+
+   ⚠️⚠️ 그래서 **푸는 규칙을 한 곳**에 둡니다. 받는 쪽은 늘
+   `amRegionsFor()` 로 풀어 `region=in.(…)` 을 보냅니다 —
+     묶음이면  그 묶음의 시 · 도 전부
+     시 · 도면 그 하나
+     모르면    빈 배열 (아무것도 안 걸어야 합니다 — 틀린 키로 0건을
+               내면 손님은 "글이 없다" 로 읽습니다)
+   ⚠️ `gangwon` · `jeju` 는 묶음 이름과 시 · 도 이름이 **같습니다** —
+   같은 묶음을 가리키므로 어느 쪽으로 읽어도 답이 같습니다(묶음을
+   먼저 봅니다).
+   ⚠️ 부킹 · 조인(`js/booking.js`)은 묶음만 받으므로 `amZoneRegions()`
+   를 그대로 씁니다 — 그쪽 고르개에 시 · 도가 아예 없습니다.
+   ════════════════════════════════════════════════════════════════════ */
+window.amRegionsFor = function(key){
+  var k = String(key || "").trim();
+  if(!k) return [];
+  var z = window.amZone(k);
+  if(z) return (z.regions || []).slice();
+  return window.amRegion(k) ? [k] : [];
+};
+/* 지금 걸린 지역을 **말로** — ⚠️ 거르는 자리와 같은 규칙을 읽습니다 */
+window.amRegionLabel = function(key){
+  var k = String(key || "").trim();
+  if(!k) return "";
+  if(window.amZone(k)) return window.amZoneLong(k);
+  var r = window.amRegion(k);
+  return r ? r.name : "";
+};

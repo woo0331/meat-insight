@@ -522,6 +522,47 @@ window.AM_LSTASK_ST = [
   { key:"rejected", name:"거절했습니다",  mine:"거절되었습니다",     tone:"ink"  },
   { key:"canceled", name:"거뒀습니다",    mine:"거두셨습니다",       tone:"ink"  }
 ];
+/* ── 중고 가격대 (0056 · 2026-11-08) ────────────────────
+   ⚠️⚠️ **경계는 아래를 닫고 위를 엽니다** (gte · lt) — 둘 다 닫으면
+   딱 10만원짜리 매물이 두 칸에 다 걸립니다 (AM_TEE_BAND 와 같은 규칙).
+   ⚠️ 그래서 이름도 그 뜻으로 적습니다 — 첫 칸은 "10만원 **미만**" 입니다
+   (따라오는 칸이 "10만 ~" 로 시작하므로 딱 10만원은 뒤에 들어갑니다).
+   이름과 경계를 따로 적으면 화면이 "10만원 이하" 라고 말해 놓고
+   서버는 그 값을 빼는 꼴이 됩니다 (절대 규칙 5).
+   ⚠️⚠️ **0 은 무료로 나눔**이고 첫 칸에 들어갑니다 — `from` 이 null 인
+   까닭입니다 (0 을 기다리는 자리에 `||` 를 쓰면 그 줄이 사라집니다).
+   ⚠️ 거르는 것은 **서버**입니다 (price=gte. · price=lt.) — 화면에서 거르면
+   싼 줄만 받아 올 때 조건에 맞는 매물이 그 밖에 있으면 0건으로 보입니다. */
+window.AM_LST_PRICE = [
+  { key:"u10",  name:"10만원 미만",   from:null,    to:100000  },
+  { key:"u30",  name:"10만 ~ 30만원",  from:100000,  to:300000  },
+  { key:"u50",  name:"30만 ~ 50만원",  from:300000,  to:500000  },
+  { key:"u100", name:"50만 ~ 100만원", from:500000,  to:1000000 },
+  { key:"o100", name:"100만원 이상",  from:1000000, to:null    }
+];
+window.amLstPriceBand = function(k){
+  var L = window.AM_LST_PRICE || [];
+  for(var i = 0; i < L.length; i++) if(L[i].key === k) return L[i];
+  return null;
+};
+/* ── 구인 · 구직 · 제휴의 갈래 (0048) ───────────────
+   ⚠️⚠️⚠️ **2026-11-08 까지 이 세 줄이 `js/career.js` 안에만 있었습니다** —
+   즉 아무도 DB 와 맞춰 보지 않았습니다. 조인이 상태 말을
+   `js/myjoin.js` 안에 들고 있다가 영문 `closed` 가 손님 화면에 찍혔던
+   그 자리와 같은 꼴입니다. 현황표(0067)가 같은 목록을 읽게 되면서
+   **두 곳이 될 차례**였고, 그래서 여기 한 곳으로 꺼냈습니다.
+   ⚠️ 값은 0048 의 `jobpost.kind` check 와 한 글자도 같아야 합니다 —
+   `check-deal` 이 빌드마다 맞춰 봅니다. */
+window.AM_JOB_KIND = [
+  { key:"hire", name:"구인",      lead:"사람을 구합니다"   },
+  { key:"seek", name:"구직",      lead:"일자리를 구합니다" },
+  { key:"biz",  name:"제휴 · 거래", lead:"업체끼리 제안합니다" }
+];
+window.amJobKind = function(k){
+  var L = window.AM_JOB_KIND || [];
+  for(var i = 0; i < L.length; i++) if(L[i].key === k) return L[i];
+  return null;
+};
 /* ── 구합니다 (0061) ─────────────────────────────────────────────
    ⚠️⚠️ **말이 두 벌입니다** — 글을 올린 분의 `name` 과 답한 분의
    `mine`. "받았습니다" 를 답한 분 화면에 찍으면 올린 분에게 할 말을

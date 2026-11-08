@@ -42,14 +42,19 @@
   var SUBNAME = {};
   SUBS.forEach(function(i){ SUBNAME[i.key] = i.name; });
 
-  /* 갈래 — ⚠️ **한 곳**에 적습니다 (DB 의 check 와 같은 글자) */
-  var KINDS = [
-    { key:"hire", name:"구인",  lead:"사람을 구합니다" },
-    { key:"seek", name:"구직",  lead:"일자리를 구합니다" },
-    { key:"biz",  name:"제휴 · 거래", lead:"업체끼리 제안합니다" }
-  ];
-  var KNAME = {};
-  KINDS.forEach(function(k){ KNAME[k.key] = k.name; });
+  /* 갈래 — ⚠️⚠️⚠️ **2026-11-08 에 `js/data/deal.js` 로 꺼냈습니다.**
+     그전에는 이 세 줄이 여기에만 있어 **아무도 DB 와 맞춰 보지
+     않았습니다** — 조인이 상태 말을 `js/myjoin.js` 안에 들고 있다가
+     영문 `closed` 가 손님 화면에 찍혔던 그 자리와 같은 꼴입니다.
+     현황표(0067)가 같은 목록을 읽게 되면서 두 곳이 될 차례였고,
+     지금은 `check-deal` 이 0048 의 check 와 빌드마다 맞춰 봅니다.
+     ⚠️⚠️ **불러올 때 담아 두지 않습니다** — 스크립트 차례가 바뀌는 날
+     빈 배열이 되어 갈래 칸이 **조용히 안 그려집니다**(에러 0줄). */
+  function kinds(){ return window.AM_JOB_KIND || []; }
+  function kname(k){
+    var x = window.amJobKind ? window.amJobKind(k) : null;
+    return x ? x.name : "";
+  }
 
   function dayText(iso){
     var d = new Date(iso + "T00:00:00");
@@ -66,7 +71,7 @@
   function nowKind(){
     var m = /[?&]k=([a-z]+)/.exec(window.location.search || "");
     var k = m ? m[1] : "";
-    return KNAME[k] ? k : "";
+    return kname(k) ? k : "";
   }
   /* ⚠️⚠️ 하위분류로 좁혀 오신 길 (`?s=` · 지시서 §4) — 분류 화면의
      하위 목록이 `amSubUrl()` 로 보냅니다. 전에는 하위 여섯이 **글로만**
@@ -77,6 +82,23 @@
     var m = /[?&]s=([a-z0-9-]+)/.exec(window.location.search || "");
     var k = m ? m[1] : "";
     return SUBNAME[k] ? k : "";
+  }
+  /* ⚠️⚠️⚠️ **지역으로 좁히는 길이 2026-11-08 까지 없었습니다** (`?rg=`).
+     0048 은 `jobpost.region` 을 받아 놓고 목록은 그 칸으로 좁히지
+     않았습니다 — 서울 사는 분이 제주 구인글까지 쉰 줄을 밀어 내려
+     가셨습니다 (조인 거르개가 한 개도 없었던 그 자리).
+     ⚠️⚠️ 현황표(0067)가 칸을 누르면 이 주소로 보냅니다 — 받는 쪽이 이
+     열쇠를 모르면 **칸은 그려지는데 눌러도 안 걸립니다** (절대 규칙 5).
+     ⚠️ 모르는 지역 키는 **버립니다** — 주소를 손으로 고쳐 오시면
+     아무것도 안 걸리는 화면이 되는데, 그러면 "글이 없다" 로 읽힙니다. */
+  function rgName(k){
+    return window.amRegionLabel ? window.amRegionLabel(k) : "";
+  }
+  function nowRg(){
+    var m = /[?&]rg=([a-z0-9-]+)/.exec(window.location.search || "");
+    var k = m ? m[1] : "";
+    /* ⚠️ 묶음도 시 · 도도 받습니다 — 푸는 규칙 한 곳으로 가립니다 */
+    return (window.amRegionsFor && window.amRegionsFor(k).length) ? k : "";
   }
 
   function get(a, path){
@@ -108,7 +130,7 @@
     return '<li class="jbc" data-id="' + esc(j.id) + '">' +
       '<div class="jbc-h">' +
         '<h3>' + esc(j.title) + '</h3>' +
-        '<span class="jbc-k">' + esc(KNAME[j.kind] || j.kind) + '</span>' +
+        '<span class="jbc-k">' + esc(kname(j.kind) || j.kind) + '</span>' +
       '</div>' +
       '<p class="jbc-m">' + esc(SUBNAME[j.sub] || j.sub) + ' · ' +
         esc(REG[j.region] || j.region) + ' · ' + esc(who) +
@@ -174,7 +196,7 @@
   }
 
   function openForm(hasPro){
-    var kd = KINDS.map(function(k){
+    var kd = kinds().map(function(k){
       return '<option value="' + esc(k.key) + '">' + esc(k.name) +
              ' — ' + esc(k.lead) + '</option>';
     }).join("");
@@ -258,9 +280,12 @@
   /* 지금 조건 — ⚠️ 하위로 좁혀 오셨으면 **무엇으로 좁혔는지** 말하고
      풀 길을 같이 냅니다 (칸이 없는 조건이라 말해 주지 않으면 손님은
      "글이 없다" 로 읽습니다). */
-  function subLine(sub){
-    if(!sub) return "";
-    return '<p class="sf-now">' + esc(SUBNAME[sub]) + ' 글만 보고 있습니다. ' +
+  function subLine(sub, rg){
+    if(!sub && !rg) return "";
+    var b = [];
+    if(sub) b.push(SUBNAME[sub]);
+    if(rg)  b.push(rgName(rg));
+    return '<p class="sf-now">' + esc(b.join(" · ")) + ' 글만 보고 있습니다. ' +
       '<a href="/cat/career">조건 지우기</a></p>';
   }
 
@@ -270,25 +295,44 @@
      적으면 한쪽만 고치는 날 둘이 달라집니다.
      ⚠️ 눌림 표시는 `.chip-on` 과 `aria-current` 둘 다 답니다 (색만
      바꾸면 화면 읽는 기계에는 아무 말도 안 한 것입니다). */
-  function filters(k, sub){
-    /* ⚠️⚠️ 갈래를 눌러도 **하위 조건을 지킵니다** — 풀리면 손님이
-       좁혀 온 길이 조용히 사라집니다 (업체찾기에서 겪은 자리). */
-    var keep = sub ? "&s=" + encodeURIComponent(sub) : "";
+  function filters(k, sub, rg){
+    /* ⚠️⚠️ 갈래를 눌러도 **하위 · 지역 조건을 지킵니다** — 풀리면 손님이
+       좁혀 온 길이 조용히 사라집니다 (업체찾기에서 겪은 자리).
+       ⚠️ 조건을 더하는 날 이 줄도 같이 보세요 — 안 보면 새 조건만
+       조용히 풀립니다. */
+    var keep = (sub ? "&s=" + encodeURIComponent(sub) : "") +
+               (rg  ? "&rg=" + encodeURIComponent(rg) : "");
+    var rest = keep.replace(/^&/, "?");
     var one = function(key, name){
       var on = (k === key);
-      var qs = key ? ("?k=" + encodeURIComponent(key) + keep)
-                   : (sub ? "?s=" + encodeURIComponent(sub) : "");
+      var qs = key ? ("?k=" + encodeURIComponent(key) + keep) : rest;
       return '<a class="chip' + (on ? ' chip-on' : '') + '"' +
         (on ? ' aria-current="true"' : '') +
         ' href="/cat/career' + esc(qs) +
         '" data-k="' + esc(key) + '">' + esc(name) + '</a>';
     };
+    /* ⚠️⚠️ **지역은 칸(chip)으로 안 냅니다** — 열일곱이라 거르개 줄에
+       놓으면 폰에서 "밀면 보이는 것" 이 됩니다 (머리말 메뉴 넷째가
+       폰에서 없는 메뉴였던 그 자리). 고르개 하나로 냅니다. */
+    var rgOpt = '<optgroup label="지역 묶음">' +
+      (window.AM_REGION_ZONES || []).map(function(z){
+        return '<option value="' + esc(z.key) + '"' +
+          (rg === z.key ? ' selected' : '') + '>' +
+          esc(window.amZoneLong ? window.amZoneLong(z.key) : z.name) + '</option>';
+      }).join("") + '</optgroup><optgroup label="시 · 도">' +
+      (window.AM_REGIONS || []).map(function(r){
+        return '<option value="' + esc(r.key) + '"' +
+          (rg === r.key ? ' selected' : '') + '>' + esc(r.name) + '</option>';
+      }).join("") + '</optgroup>';
     return '<div class="sf-c jbf-c">' + one("", "전체") +
-      KINDS.map(function(x){ return one(x.key, x.name); }).join("") + '</div>';
+      kinds().map(function(x){ return one(x.key, x.name); }).join("") + '</div>' +
+      '<div class="jbf-rg"><label for="jbf-rg">지역</label>' +
+      '<select id="jbf-rg"><option value="">전국</option>' + rgOpt +
+      '</select></div>';
   }
 
-  function paint(a, rows, k, sub){
-    var html = filters(k, sub) + subLine(sub);
+  function paint(a, rows, k, sub, rg){
+    var html = filters(k, sub, rg) + subLine(sub, rg);
     /* ⚠️⚠️ 0058 — "조건을 저장하고 알림 받기". 글과 주소는
        js/data/deal.js 의 amWatchLink() 한 곳입니다 (분류 화면 셋이
        같은 말을 해야 합니다).
@@ -299,7 +343,7 @@
       /* ⚠️ 0건이어도 **막다른 길로 두지 않습니다** (절대 규칙 2) */
       html += '<div class="none">' +
         '<h3>' + (sub ? esc(SUBNAME[sub]) + ' 글이 아직 없습니다.'
-                : k ? esc(KNAME[k]) + ' 글이 아직 없습니다.'
+                : k ? esc(kname(k)) + ' 글이 아직 없습니다.'
                     : '아직 올라온 글이 없습니다.') + '</h3>' +
         '<p>첫 글을 올려 보세요. 분류와 지역만 정하시면 됩니다.</p></div>';
     }else{
@@ -313,8 +357,21 @@
         e.preventDefault();
         var want = ln.getAttribute("data-k");
         try{ window.history.pushState({}, "", ln.getAttribute("href")); }catch(_){}
-        load(a, want, sub);
+        load(a, want, sub, rg);
       });
+    });
+    /* ⚠️ 고르개도 **주소를 같이 바꿉니다** — 복사해 보내도 같은 화면이고
+       뒤로 가기도 됩니다 (칸을 링크로 만든 그 까닭과 같습니다). */
+    var rgSel = list.querySelector("#jbf-rg");
+    if(rgSel) rgSel.addEventListener("change", function(){
+      var want = rgSel.value;
+      var q = [];
+      if(k)    q.push("k=" + encodeURIComponent(k));
+      if(sub)  q.push("s=" + encodeURIComponent(sub));
+      if(want) q.push("rg=" + encodeURIComponent(want));
+      try{ window.history.pushState({}, "",
+        "/cat/career" + (q.length ? "?" + q.join("&") : "")); }catch(_){}
+      load(a, k, sub, want);
     });
 
     Array.prototype.forEach.call(list.querySelectorAll(".jbc-go"), function(b){
@@ -360,7 +417,7 @@
     });
   }
 
-  function load(a, k, sub){
+  function load(a, k, sub, rg){
     var q = "v_job_open?select=id,kind,sub,region,title,body,pay,terms," +
             "close_at,created_at,who,pro_name,apply_n" +
             "&order=created_at.desc&limit=50";
@@ -368,8 +425,15 @@
     /* ⚠️ 열쇠 이름이 DB 의 칸과 **글자까지** 같아야 합니다 — 다르면
        아무것도 안 걸렀는데 화면은 멀쩡해 보입니다. */
     if(sub) q += "&sub=eq." + encodeURIComponent(sub);
+    /* ⚠️⚠️ **거르는 것은 서버입니다** — 쉰 줄만 받아 화면에서 거르면
+       서울 글이 쉰 줄 밖에 있을 때 **0건으로 보입니다**.
+       ⚠️⚠️⚠️ **묶음(수도권)과 시 · 도(서울)를 한 열쇠로 받습니다** —
+       현황표의 칸은 묶음을 보내고 고르개는 시 · 도를 보냅니다. 푸는
+       규칙은 `amRegionsFor()` 한 곳입니다. */
+    var rs = window.amRegionsFor ? window.amRegionsFor(rg) : [];
+    if(rs.length) q += "&region=in.(" + rs.map(encodeURIComponent).join(",") + ")";
     return get(a, q).then(function(rows){
-      paint(a, rows || [], k || "", sub || ""); });
+      paint(a, rows || [], k || "", sub || "", rg || ""); });
   }
 
   window.amAuthAsk().then(function(a){
@@ -389,10 +453,10 @@
       return;
     }
 
-    load(a, nowKind(), nowSub());
+    load(a, nowKind(), nowSub(), nowRg());
     /* 뒤로 가기 — 주소가 바뀌면 다시 그립니다 */
     window.addEventListener("popstate", function(){
-      load(a, nowKind(), nowSub()); });
+      load(a, nowKind(), nowSub(), nowRg()); });
 
     var box = document.getElementById("jobbox");
     if(!box) return;
@@ -431,7 +495,7 @@
           '<p>목록에 바로 보입니다. 지원이 들어오면 내 정보에서 ' +
           '수락하실 수 있습니다.</p>' +
           '<a class="btn btn-pt" href="/my">내 정보에서 보기</a>';
-        load(a, nowKind(), nowSub());
+        load(a, nowKind(), nowSub(), nowRg());
       }).catch(function(err){
         btn.disabled = false;
         msg.textContent = String((err && err.message) || "올리지 못했습니다.");

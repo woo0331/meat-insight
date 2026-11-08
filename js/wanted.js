@@ -52,6 +52,34 @@
   }
 
   var F = { sub:"", rg:"" };
+  /* ⚠️⚠️⚠️ **주소에서 읽는 길이 2026-11-08 까지 없었습니다.** 거르개는
+     있었는데 `?s=` · `?rg=` 로 들어오면 아무것도 안 걸렸습니다 — 즉
+     현황표(0067)의 칸을 눌러도 **그냥 분류 화면이 열릴 뿐**이었습니다.
+     ⚠️⚠️ 열쇠를 더하는 날 **첫 그림 조건도 같이** 봅니다 (`/search` 가
+     `?sub=` 만 들고 오면 다시 그리지 않아 아무것도 안 걸렸던 그 자리) —
+     여기서는 `load()` 가 늘 F 를 읽으므로 따로 고칠 자리가 없습니다.
+     ⚠️ 모르는 키는 **버립니다** — 주소를 손으로 고쳐 오시면 아무것도
+     안 걸리는 화면이 되는데, 그러면 "글이 없다" 로 읽힙니다. */
+  function readUrl(){
+    var u;
+    try{ u = new URLSearchParams(window.location.search || ""); }catch(_){ return; }
+    var sv = (u.get("s") || "").trim();
+    var rv = (u.get("rg") || "").trim();
+    if(sv && subs().some(function(x){ return x.key === sv; })) F.sub = sv;
+    /* ⚠️ 묶음도 시 · 도도 받습니다 — 푸는 규칙 한 곳으로 가립니다 */
+    if(rv && window.amRegionsFor && window.amRegionsFor(rv).length) F.rg = rv;
+  }
+  /* 지금 걸린 조건을 주소에 적습니다 — ⚠️ 칸이 보내는 열쇠와 **같은
+     이름**입니다 (현황표의 cellUrl 과 맞아야 눌렀을 때 같은 목록입니다). */
+  function syncUrl(){
+    var q = [];
+    if(F.sub) q.push("s=" + encodeURIComponent(F.sub));
+    if(F.rg)  q.push("rg=" + encodeURIComponent(F.rg));
+    try{
+      window.history.replaceState({}, "",
+        window.location.pathname + (q.length ? "?" + q.join("&") : ""));
+    }catch(_){}
+  }
 
   /* ── 보내기 — ⚠️ 거절한 말을 그대로 보여 줍니다 ─────────────────── */
   function call(name, args){
@@ -78,7 +106,11 @@
               "cat=eq." + encodeURIComponent(CAT),
               "order=created_at.desc", "limit=100"];
     if(F.sub) qs.push("sub=eq." + encodeURIComponent(F.sub));
-    if(F.rg)  qs.push("region=eq." + encodeURIComponent(F.rg));
+    /* ⚠️⚠️⚠️ **묶음(수도권)과 시 · 도(서울)를 한 열쇠로 받습니다** —
+       현황표의 칸은 묶음을 보내고 거르개는 시 · 도를 보냅니다. 푸는
+       규칙은 `amRegionsFor()` 한 곳입니다. */
+    var rs = window.amRegionsFor ? window.amRegionsFor(F.rg) : [];
+    if(rs.length) qs.push("region=in.(" + rs.map(encodeURIComponent).join(",") + ")");
     return fetch(A.conf.url + "/rest/v1/v_wanted_open?" + qs.join("&"), {
       headers: Object.assign({ apikey: A.conf.anonKey },
                              window.amAuthHeaders ? window.amAuthHeaders() : {})
@@ -90,7 +122,7 @@
   function nowBits(){
     var b = [];
     if(F.sub) b.push(subName(F.sub));
-    if(F.rg)  b.push(rgName(F.rg));
+    if(F.rg)  b.push(window.amRegionLabel ? window.amRegionLabel(F.rg) : rgName(F.rg));
     return b;
   }
 
@@ -99,10 +131,16 @@
       return '<option value="' + esc(it.key) + '"' +
         (F.sub === it.key ? " selected" : "") + '>' + esc(it.name) + '</option>';
     }).join("");
-    var rg = (window.AM_REGIONS || []).map(function(r){
-      return '<option value="' + esc(r.key) + '"' +
-        (F.rg === r.key ? " selected" : "") + '>' + esc(r.name) + '</option>';
-    }).join("");
+    var rg = '<optgroup label="지역 묶음">' +
+      (window.AM_REGION_ZONES || []).map(function(z){
+        return '<option value="' + esc(z.key) + '"' +
+          (F.rg === z.key ? " selected" : "") + '>' +
+          esc(window.amZoneLong ? window.amZoneLong(z.key) : z.name) + '</option>';
+      }).join("") + '</optgroup><optgroup label="시 · 도">' +
+      (window.AM_REGIONS || []).map(function(r){
+        return '<option value="' + esc(r.key) + '"' +
+          (F.rg === r.key ? " selected" : "") + '>' + esc(r.name) + '</option>';
+      }).join("") + '</optgroup>';
     return '<form class="jform jnf-f" id="wtfil">' +
       '<div class="jrow"><label for="wf-s">무엇을</label>' +
         '<select id="wf-s"><option value="">전체</option>' + sb + '</select></div>' +
@@ -173,6 +211,7 @@
       if(!t || !t.id) return;
       if(t.id === "wf-s")  F.sub = t.value;
       if(t.id === "wf-rg") F.rg  = t.value;
+      syncUrl();
       reload();
     });
   }
@@ -454,6 +493,8 @@
     }
     A = a;
     SIGNED = !!a.signedIn;
+    /* ⚠️ 주소로 좁혀 오신 길을 **첫 그림 전에** 읽습니다 (현황표의 칸) */
+    readUrl();
     /* ⚠️ 로그인 안 하신 분께는 **누르기 전에** 로그인 길을 냅니다 */
     if(!SIGNED && box) box.innerHTML = needLogin();
     /* ⚠️ 업체 역할일 때만 상호로 답할 수 있습니다 */

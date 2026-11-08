@@ -130,6 +130,15 @@ var PROBE = function(cfg){
     [].slice.call(document.querySelectorAll(".gnb, .catnav")).forEach(function(nav){
       var nb = nav.getBoundingClientRect();
       [].slice.call(nav.querySelectorAll("a, button")).forEach(function(a){
+        /* ⚠️⚠️⚠️ **일부러 안 그린 칸을 "상자 밖" 으로 읽지 마세요**
+           (2026-11-08). `display:none` 인 칸은 `getBoundingClientRect()`
+           가 **전부 0** 이라 `b.left < nb.left - 1` 이 참이 되고, 멀쩡한
+           화면 스물넷이 한꺼번에 떨어졌습니다 — 넓은 PC 에서 '열 분류
+           전체보기' 를 가린 그날입니다. 재려는 뜻은 "**그려진** 칸이
+           제 상자 밖으로 밀렸는가" 이지 "안 그려진 칸이 있는가" 가
+           아닙니다 (그건 다른 자물쇠입니다).
+           ⚠️ 또 밟은 "검사가 멀쩡한 것을 고장이라고 한 자리" 입니다. */
+        if(!a.getClientRects().length) return;
         var b = a.getBoundingClientRect();
         if(b.right > nb.right + 1 || b.left < nb.left - 1 ||
            b.bottom > nb.bottom + 1 || b.top < nb.top - 1)
@@ -211,7 +220,24 @@ function hex(a){ return "#" + a.map(function(n){ return ("0"+Math.round(n).toStr
   if(prove){
     console.log("\n되돌려 보기 — 일부러 깨뜨립니다");
     var css = path.join(ROOT, "css/app.css"), keep = fs.readFileSync(css, "utf8");
-    fs.writeFileSync(css, keep + "\n.cat-l{font-size:9px}\n.btn{min-height:22px;padding:0 10px}\n");
+    /* ⚠️⚠️⚠️ **미끼를 분류 이름(`.cat-l`)에 걸어 두었다가 썩었습니다**
+       (2026-11-08 에 알았습니다). 메인을 다시 짜면서 그 클래스가 `/` 에서
+       빠졌고, 미끼가 **아무 칸에도 안 걸려** "9px 글자를 넣으니 0건" 이
+       되었습니다 — 되돌려 보기가 **되돌려 보기를 못 하는** 꼴이고, 그때부터
+       12px 검사가 살아 있는지 아무도 모르고 있었습니다.
+       ⚠️ 그래서 미끼를 **그날의 클래스에 안 겁니다** — `main` 안의 글 칸은
+       어느 화면에나 있습니다 (작업 기억: "검사에 그날의 색 · 이름 · 개수를
+       박지 마세요. 뜻을 적으세요").
+       ⚠️⚠️ `!important` 는 **특정도 때문**입니다 — `main a`(0,0,2) 는
+       화면의 거의 모든 글이 가진 클래스 규칙(0,1,0)을 **못 이깁니다.**
+       처음에 그냥 적었다가 여전히 0건이 나왔고, 작업 기억의 "파일 뒤에
+       붙였다고 이기는 것이 아닙니다" 를 같은 날 **두 번** 밟았습니다. */
+    fs.writeFileSync(css, keep + "\nmain a, main p{font-size:9px !important}\n.btn{min-height:22px;padding:0 10px}\n" +
+      /* ⚠️⚠️⚠️ 셋째 미끼 — **머리말 메뉴가 상자 밖으로 밀리는 자리**.
+         2026-11-08 에 이 자리의 코드를 고치면서(안 그려진 칸을 "밖" 으로
+         읽던 것) 되돌려 보기가 **한 건도 없다**는 것을 알았습니다 —
+         고치고 나서 아직 잡는지 아무도 안 본 자리였습니다. */
+      "\n.gnb{max-width:120px;overflow-x:auto}\n");
     var b2 = await chromium.launch(); var srv2 = (await serve(port + 1)).srv;
     var p2 = await b2.newPage({ viewport:{ width:1440, height:900 } });
     await p2.goto("http://127.0.0.1:" + (port+1) + "/", { waitUntil:"networkidle" });
@@ -222,8 +248,10 @@ function hex(a){ return "#" + a.map(function(n){ return ("0"+Math.round(n).toStr
                 (r2.small.length ? "O" : "❌ 아무것도 안 잡습니다"));
     console.log("  22px 단추를 넣으니 " + r2.taps.length + "건 잡힘  " +
                 (r2.taps.length ? "O" : "❌ 아무것도 안 잡습니다"));
+    console.log("  머리말 메뉴를 좁히니 " + r2.hid.length + "건 잡힘  " +
+                (r2.hid.length ? "O" : "❌ 아무것도 안 잡습니다"));
     console.log("  (css/app.css 는 되돌렸습니다)");
-    if(!r2.small.length || !r2.taps.length) process.exit(1);
+    if(!r2.small.length || !r2.taps.length || !r2.hid.length) process.exit(1);
   }
 
   console.log("\n잰 글자 칸 " + measured + "개 · 문제 " + bad + "건");

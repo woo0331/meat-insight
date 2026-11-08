@@ -42,36 +42,6 @@
 
 window.AM_CATS = [
 
-  { key:"lesson", name:"골프 레슨", icon:"swing", kind:"provider", provider:true,
-    lead:"프로매칭 · 레슨예약",
-    kw:"레슨 프로 강습 배우기 골프배우기 입문 초보 원포인트 스윙교정 레슨비",
-    items:[
-      { key:"ls-solo",   name:"개인 레슨" },
-      { key:"ls-group",  name:"그룹 레슨" },
-      { key:"ls-field",  name:"필드 레슨" },
-      { key:"ls-point",  name:"원포인트 레슨" },
-      { key:"ls-junior", name:"주니어 레슨" },
-      { key:"ls-online", name:"온라인 레슨" }
-    ]},
-
-  /* ⚠️ 중고 골프장터는 **둘이 섞입니다** — 회원끼리의 직거래와, 업체가
-     하는 매입 견적 · 위탁판매입니다. 그래서 kind 는 trade 이고
-     업체가 고를 수 있는 하위는 pv:true 인 둘뿐입니다. */
-  { key:"used", name:"중고 골프장터", icon:"cart", kind:"trade", provider:true,
-    lead:"중고매매 · 매입견적",
-    kw:"중고 중고채 중고클럽 팔기 삽니다 직거래 처분 되팔기 매입 위탁판매",
-    items:[
-      { key:"us-driver",   name:"드라이버",          pv:false },
-      { key:"us-wood",     name:"우드 · 유틸리티",    pv:false },
-      { key:"us-iron",     name:"아이언",            pv:false },
-      { key:"us-wedge",    name:"웨지 · 퍼터",        pv:false },
-      { key:"us-shaft",    name:"샤프트",            pv:false },
-      { key:"us-bag",      name:"골프백",            pv:false },
-      { key:"us-gear",     name:"기타 중고용품",      pv:false },
-      { key:"us-buyquote", name:"중고채 매입 견적",   pv:true  },
-      { key:"us-consign",  name:"위탁판매 연결",      pv:true  }
-    ]},
-
   { key:"booking", name:"골프장 부킹", icon:"flag", kind:"provider", provider:true,
     lead:"전국 골프장 예약",
     kw:"부킹 예약 티타임 라운딩 골프장 그린피 주말부킹 잔여타임 특가 야간",
@@ -94,6 +64,36 @@ window.AM_CATS = [
       { key:"jo-club",    name:"동호회 모집" }
     ]},
 
+  { key:"used", name:"중고 골프장터", icon:"cart", kind:"trade", provider:true,
+    lead:"중고매매 · 매입견적",
+    kw:"중고 중고채 중고클럽 팔기 삽니다 직거래 처분 되팔기 매입 위탁판매",
+    items:[
+      { key:"us-driver",   name:"드라이버",          pv:false },
+      { key:"us-wood",     name:"우드 · 유틸리티",    pv:false },
+      { key:"us-iron",     name:"아이언",            pv:false },
+      { key:"us-wedge",    name:"웨지 · 퍼터",        pv:false },
+      { key:"us-shaft",    name:"샤프트",            pv:false },
+      { key:"us-bag",      name:"골프백",            pv:false },
+      { key:"us-gear",     name:"기타 중고용품",      pv:false },
+      { key:"us-buyquote", name:"중고채 매입 견적",   pv:true  },
+      { key:"us-consign",  name:"위탁판매 연결",      pv:true  }
+    ]},
+
+  { key:"lesson", name:"골프 레슨", icon:"swing", kind:"provider", provider:true,
+    lead:"프로매칭 · 레슨예약",
+    kw:"레슨 프로 강습 배우기 골프배우기 입문 초보 원포인트 스윙교정 레슨비",
+    items:[
+      { key:"ls-solo",   name:"개인 레슨" },
+      { key:"ls-group",  name:"그룹 레슨" },
+      { key:"ls-field",  name:"필드 레슨" },
+      { key:"ls-point",  name:"원포인트 레슨" },
+      { key:"ls-junior", name:"주니어 레슨" },
+      { key:"ls-online", name:"온라인 레슨" }
+    ]},
+
+  /* ⚠️ 중고 골프장터는 **둘이 섞입니다** — 회원끼리의 직거래와, 업체가
+     하는 매입 견적 · 위탁판매입니다. 그래서 kind 는 trade 이고
+     업체가 고를 수 있는 하위는 pv:true 인 둘뿐입니다. */
   { key:"range", name:"골프 연습장", icon:"balls", kind:"provider", provider:true,
     lead:"실내 · 실외 · 스크린",
     kw:"연습장 실내연습장 실외연습장 스크린골프 타석 숏게임 퍼팅 이용권 체험권",
@@ -115,7 +115,14 @@ window.AM_CATS = [
       { key:"mk-shoe",  name:"골프화" },
       { key:"mk-wear",  name:"의류" },
       { key:"mk-acc",   name:"골프 액세서리" },
-      { key:"mk-train", name:"연습용품" }
+      { key:"mk-train", name:"연습용품" },
+    /* ⚠️⚠️⚠️ **시안의 「렌탈존」이 갈 자리**입니다 (2026-11-08). 대여를
+       담는 분류도 하위도 없어서 머리말 메뉴가 **갈 데가 없었습니다**.
+       하위 키는 **더하기만** 합니다(이미 올라온 글이 키를 글자로 들고
+       있습니다) — 지금은 그 키로 저장된 것이 0건이라 더해도 안전합니다.
+       ⚠️ 업체가 0곳이라 당장은 빈 목록입니다. 다른 하위와 **같은 상태**
+       이고, 지어낸 업체를 넣지 않습니다(절대 규칙 1). */
+    { key:"mk-rent", name:"렌탈 · 대여" }
     ]},
 
   { key:"fitting", name:"피팅 · 수리", icon:"clubs", kind:"provider", provider:true,

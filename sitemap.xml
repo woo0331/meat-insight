@@ -2,10 +2,10 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://www.storeway.co.kr/</loc><lastmod>2026-11-08</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
   <url><loc>https://www.storeway.co.kr/categories</loc><lastmod>2026-11-08</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://www.storeway.co.kr/cat/lesson</loc><lastmod>2026-11-08</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://www.storeway.co.kr/cat/used</loc><lastmod>2026-11-08</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://www.storeway.co.kr/cat/booking</loc><lastmod>2026-11-08</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://www.storeway.co.kr/cat/matchup</loc><lastmod>2026-11-08</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.storeway.co.kr/cat/used</loc><lastmod>2026-11-08</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.storeway.co.kr/cat/lesson</loc><lastmod>2026-11-08</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://www.storeway.co.kr/cat/range</loc><lastmod>2026-11-08</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://www.storeway.co.kr/cat/market</loc><lastmod>2026-11-08</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://www.storeway.co.kr/cat/fitting</loc><lastmod>2026-11-08</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>

@@ -127,7 +127,7 @@ var PROBE = function(cfg){
     /* ⚠️ 머리말 메뉴와 **열 분류 띠** 둘 다 봅니다 — 띠도 "전부
        보여야 하는 것" 이라 밀어서 찾게 두면 같은 고장입니다.
        ⚠️ 이름을 나열하지 않습니다 (새 줄이 생기면 여기도 늘리세요). */
-    [].slice.call(document.querySelectorAll(".gnb, .catnav")).forEach(function(nav){
+    [].slice.call(document.querySelectorAll(".gnb")).forEach(function(nav){
       var nb = nav.getBoundingClientRect();
       [].slice.call(nav.querySelectorAll("a, button")).forEach(function(a){
         /* ⚠️⚠️⚠️ **일부러 안 그린 칸을 "상자 밖" 으로 읽지 마세요**
@@ -176,16 +176,9 @@ function hex(a){ return "#" + a.map(function(n){ return ("0"+Math.round(n).toStr
         console.error("❌ " + routes[i] + " " + (res ? res.status() : "응답 없음"));
         bad++; await p.close(); continue;
       }
-      /* ⚠️⚠️⚠️ **접힌 것은 아무도 재지 않습니다.** 머리말의 열 분류
-         띠(§2)는 `hidden` 으로 가려져 있어, 그대로 재면 그 안의 열
-         한 칸이 12px · 대비 · 누름 · 가로 밀림 검사에서 **통째로
-         빠집니다** — 작업 기억이 `<details>` 를 쓰지 말라고 한 그
-         까닭입니다. 그래서 **재기 전에 속성을 떼어** 폭마다 같이
-         잽니다. ⚠️ 띠가 없는 화면에서는 아무 일도 하지 않습니다. */
-      await p.evaluate(function(){
-        var band = document.getElementById("catnav");
-        if(band) band.hidden = false;
-      });
+      /* ⚠️ 2026-11-08 에 **열 분류 띠가 없어졌습니다** — 머리말이 시안대로
+         한 줄이 되면서 메뉴 아홉이 늘 보입니다. 전에는 띠가 `hidden` 이라
+         재기 전에 그 속성을 떼어 주었습니다. */
       var r = await p.evaluate(PROBE, { font: MIN_FONT, tap: MIN_TAP });
       await p.close();
 

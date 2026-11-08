@@ -102,12 +102,26 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 
 /* ⚠️ 검색이 제 줄로 내려가면서 메뉴가 **가운데**로 옵니다 (3차 시안) */
 .gnb{ display:flex; align-items:center; gap:4px; margin-inline:auto; }
+/* ⚠️⚠️⚠️ **메뉴가 넷에서 열이 되면서 1440px 에서 8px 넘쳤습니다**
+   (2026-11-08). 화면 스물넷이 한꺼번에 "가로 스크롤 1448>1440" 으로
+   떨어졌습니다 — 여백과 글자를 줄여 넣습니다.
+   ⚠️ 줄 바꿈으로 풀지 않았습니다: 시안의 머리말은 **한 줄**입니다.
+   ⚠️⚠️ 메뉴를 더하는 날 `check-screens` 가 다섯 폭에서 다시 잽니다 —
+   더 들어갈 자리가 없으면 그때는 이름을 줄이는 것이 아니라 **메뉴를
+   줄이세요**(글자를 줄여 밀어 넣으면 폭이 조금만 좁아져도 또 넘칩니다). */
 .gnb a, .gnb button{
   display:inline-flex; align-items:center; gap:5px;
-  min-height: var(--tap); padding: 8px 13px; border-radius: 8px;
-  font-size:16px; font-weight:600; white-space:nowrap;
+  min-height: var(--tap); padding: 8px 9px; border-radius: 8px;
+  font-size:15px; font-weight:600; white-space:nowrap;
 }
 .gnb a:hover, .gnb button:hover{ background: rgba(255,255,255,.12); }
+
+/* 머리말 오른쪽 돋보기 (시안 · 2026-11-08) — ⚠️ 누르는 자리는 40px
+   이상이어야 합니다(손님이 40~60대입니다). 아이콘만 있어서 글자로
+   높이를 못 만들므로 `min-width` · `min-height` 를 직접 줍니다. */
+.hd-sch{ display:inline-flex; align-items:center; justify-content:center;
+  min-width: var(--tap); min-height: var(--tap); border-radius:10px; }
+.hd-sch:hover{ background: rgba(255,255,255,.12); }
 
 /* ── 열 분류 띠 — '카테고리' 를 누르면 열립니다 (§2 · 2026-11-07) ──
    ⚠️⚠️ **`[hidden]` 에 `display:none` 을 같이 적습니다.** 작성자 CSS
@@ -165,6 +179,10 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
   background:#fff; color: var(--ink);
 }
 .sch input::placeholder{ color:var(--ink3); }
+/* ⚠️ `/search` 안의 검색 칸 — 머리말(딥그린) 과 달리 **밝은 바탕** 위라
+   흰 칸이 바탕에 묻힙니다. 테두리를 줍니다 (2026-11-08). */
+.sch-in{ margin-bottom:14px; }
+.sch-in input{ border:1.5px solid var(--line); }
 /* 왼쪽 돋보기는 **장식**입니다 (aria-hidden) — 누르는 것은 오른쪽 단추 */
 .sch-ic{
   position:absolute; left:17px; top:50%; transform:translateY(-50%);
@@ -183,9 +201,17 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
    .hd .gnb (0,2,0) 로 적어 둔 규칙이 없는지 확인하고 늘리세요. */
 @media (max-width: 1100px){
   .hd-in{ flex-wrap: wrap; min-height:0; padding-block:10px; gap:10px; }
-  .gnb{ order:3; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch;
-        padding-bottom:2px; scrollbar-width:none; margin-inline:0; }
-  .gnb::-webkit-scrollbar{ display:none; }
+  /* ⚠️⚠️⚠️ **`overflow-x:auto` 를 뺐습니다** (2026-11-08). 메뉴가 넷에서
+     **아홉**으로 늘면서(시안), 밀어서 보는 상자에 담으면 뒤 다섯이
+     손님에게 **없는 메뉴**가 됩니다 — 2026-11-04 에 넷째(고객센터)로
+     겪은 그 자리입니다. 아홉은 **세 칸**으로 나누어떨어져 3줄에 빈 칸
+     없이 들어갑니다. ⚠️ 메뉴 수를 바꾸는 날 이 칸 수도 같이 보세요
+     (나누어떨어지지 않으면 마지막 줄에 구멍이 보입니다). */
+  .gnb{ order:3; width:100%; margin-inline:0;
+        display:grid; grid-template-columns: repeat(5, minmax(0,1fr));
+        gap:2px 4px; }
+  .gnb > *{ min-width:0; }
+  .gnb a{ justify-content:center; padding-inline:6px; }
 
 /* ⚠️⚠️⚠️ **메뉴 넷 가운데 넷째가 화면 밖에 있었습니다** (2026-11-04).
    `.gnb` 가 `overflow-x:auto` 라 가로로 밀어서 볼 수는 있는데, 밀 수
@@ -199,10 +225,12 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
    ⚠️ `tools/check-screens.js` 가 이제 "머리말 메뉴가 전부 보이는가" 를
    폭마다 잽니다. */
 @media (max-width: 620px){
-  .gnb{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr));
-        gap:2px 4px; overflow-x:visible; }
-  .gnb > *{ min-width:0; }
-  .gnb a, .gnb button{ justify-content:center; padding-inline:8px; }
+  /* ⚠️⚠️ 폰에서는 **두 칸**입니다 — 메뉴 열은 2 · 5 로 나누어떨어지므로
+     폰은 2칸 5줄, 태블릿은 5칸 2줄이 되어 **마지막 줄에 구멍이 없습니다.**
+     ⚠️ 메뉴 수를 바꾸는 날 이 두 수를 같이 보세요(열 → 아홉이 되면
+     3칸 · 9 로, 여덟이면 2칸 · 4칸으로). */
+  .gnb{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .gnb a{ font-size:14.5px; padding-inline:4px; }
 }
   .hd-r{ margin-left:auto; }
   .hd-r .lbl{ display:none; }
@@ -865,7 +893,10 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
    ⚠️ 격자 칸 안에 가로 스크롤 상자(.tbd-s)가 있으므로 `min-width:0`
    을 꼭 둡니다 — 안 두면 칸이 표 너비만큼 벌어져 **화면 전체가
    가로로 밀립니다**(폰에서 390px 가 688px 가 된 그 자리). */
-.tbw{ display:grid; gap:20px; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); align-items:start; }
+/* ⚠️⚠️ 시안은 왼쪽 찾는 칸과 오른쪽 현황표가 **거의 반반**입니다
+   (2026-11-08). 전에는 왼쪽이 360px 로 고정이라 날짜 · 지역 · 골프장이
+   세로로 쌓였습니다. */
+.tbw{ display:grid; gap:20px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items:start; }
 .tbw > *{ min-width:0; }
 @media (max-width: 900px){ .tbw{ grid-template-columns: minmax(0, 1fr); } }
 
@@ -880,7 +911,12 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .tbf-in{ padding:18px 16px 16px; }
 .tbf-lead{ margin:0 0 14px; font-size:15px; color: var(--ink2); line-height:1.55; }
 .tbf-lead b{ color: var(--ink); }
-.tbf-g{ display:grid; gap:12px; margin-bottom:14px; }
+/* ⚠️⚠️ 시안은 **라운드 날짜 · 지역 · 골프장이 가로 세 칸**입니다
+   (2026-11-08). ⚠️ 골프장 칸은 올라온 자리가 0건이면 **아예 안 나옵니다**
+   — 그때는 `auto-fit` 이 두 칸으로 접습니다(빈 칸이 안 생깁니다).
+   ⚠️ 폰에서는 한 칸으로 쌓입니다(220px 보다 좁으면 저절로). */
+.tbf-g{ display:grid; gap:12px; margin-bottom:14px;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
 .tbf-r{ display:grid; gap:6px; min-width:0; }
 .tbf-r label{ font-size:14px; font-weight:700; color: var(--ink); }
 .tbf-r input, .tbf-r select{ width:100%; min-height:46px; padding:0 12px;
@@ -2277,9 +2313,14 @@ picture{ display: contents; }
    딱 맞고 빈 칸이 안 생깁니다. 4열이면 아래 줄에 둘만 남아 구멍이
    보입니다 (메인 분류 격자에서 "분류 수가 칸 수로 나누어떨어지는지"
    까지 재는 그 까닭입니다). */
-.svc-grid{ display:grid; gap:12px; grid-template-columns: repeat(3, 1fr); }
-@media (max-width: 1000px){ .svc-grid{ grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 520px){ .svc-grid{ grid-template-columns: 1fr; } }
+/* ⚠️⚠️ 시안은 카드 **여섯을 한 줄**로 둡니다 (2026-11-08). 1440px 에서
+   한 칸이 약 195px 이라 글자가 안 잘립니다 — `check-screens` 가 다섯
+   폭에서 낱말 잘림과 가로 밀림을 잽니다.
+   ⚠️ 여섯은 3 · 2 · 1 로 전부 나누어떨어집니다(빈 칸이 안 생깁니다). */
+.svc-grid{ display:grid; gap:12px; grid-template-columns: repeat(6, 1fr); }
+@media (max-width: 1180px){ .svc-grid{ grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 760px){ .svc-grid{ grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 460px){ .svc-grid{ grid-template-columns: 1fr; } }
 .svc-grid > *{ min-width:0; }
 .svc{ display:grid; grid-template-rows:auto 1fr; position:relative;
   background: var(--surface); border:1.5px solid var(--line);

@@ -72,6 +72,20 @@ exports.build = function(){
      ⚠️ 폰에서는 가로로 미끄러집니다 (지시서 4번). 줄바꿈으로 쌓으면
      거르개가 화면 두 장을 차지해서 업체가 안 보입니다. */
   body += '<section class="sfilt"><div class="wrap">' +
+    /* ⚠️⚠️⚠️ **검색 칸이 이 화면 안으로 들어왔습니다** (2026-11-08 · 시안).
+       전에는 머리말 아래에 넓은 검색 띠가 모든 화면에 있었고 이 화면은
+       그 칸(`#q`)에 기대고 있었습니다. 시안의 머리말에는 돋보기만 있고
+       그 돋보기가 **여기로** 보냅니다 — 그러니 칸이 여기 있어야 합니다.
+       ⚠️ `id="q"` · `name="q"` 를 **그대로** 둡니다: `js/search.js` 가
+       그 id 로 집고, 양식으로 보낼 때 주소에 `q=` 로 담깁니다. 이름을
+       바꾸면 **열리기는 하는데 아무것도 안 걸리는** 자리가 됩니다. */
+    '<form class="sch sch-in" role="search" action="/search" method="get">' +
+      '<label class="sr" for="q">골프 서비스 · 업체 검색</label>' +
+      '<span class="sch-ic" aria-hidden="true">' + icon("search", 20) + '</span>' +
+      '<input id="q" name="q" type="search" ' +
+        'placeholder="원하는 골프 서비스, 업체를 검색해보세요.">' +
+      '<button type="submit" aria-label="검색">' + icon("search", 22) + '</button>' +
+    '</form>' +
     chiprow("분류", "cat", {
       all: furl(null, null),
       list: cats.map(function(c){

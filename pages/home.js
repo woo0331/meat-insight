@@ -104,12 +104,11 @@ function hero(){
       /* ⚠️⚠️ 지시서 1번이 **'서비스 전체보기'** 를 첫 단추로 못 박았습니다.
          ⚠️ 보내는 자리는 `/categories` 입니다 — 열 분류가 다 있는 화면이고,
          업체가 0곳인 동안 `/search` 로 보내면 "아직 없습니다" 만 보십니다. */
-      '<a class="btn btn-pt" href="/categories">' + icon("menu",20) +
-        '서비스 전체보기</a>' +
-      /* ⚠️ 전에는 "한 번에 견적 · 매칭 요청하기" 였고, 아래 매칭 띠의
-         제목이 **같은 말**이었습니다 (§5). 단추는 짧게, 설명은 띠에서. */
-      '<a class="btn btn-ghost" href="/match">' + icon("match",20) +
-        '매칭 요청하기</a>' +
+      /* ⚠️⚠️ **단추는 하나입니다** (2026-11-08 · 시안) — '서비스 전체보기'.
+         ⚠️ 매칭 요청으로 가는 길은 없어지지 않았습니다 — 메인의 매칭 띠,
+         푸터의 '이용 안내' 칸, 업체가 0곳인 자리의 상자에 있습니다. */
+      '<a class="btn btn-gold" href="/categories">' + icon("menu",20) +
+        '서비스 전체보기' + icon("arrow",18) + '</a>' +
     '</div>' +
     /* ⚠️ 아이콘은 장식이라 소리로 읽을 것이 없습니다 — icon() 이
        aria-hidden 을 답니다. 글은 그 옆에 그대로 있습니다. */
@@ -379,6 +378,17 @@ function svcCards(){
      않습니다. 추천이라고 적으면 **하지 않은 일을 했다고** 하는 것입니다
      (절대 규칙 5). */
   var KEYS = ["lesson", "booking", "matchup", "used", "fitting", "travel"];
+  /* ⚠️⚠️ **카드 밑줄은 시안 글자**입니다 — 분류의 `lead`(카드 · 목록에
+     쓰는 짧은 말)와 **다른 말**이라 여기 따로 둡니다. 한 곳에 묶으면
+     분류 화면의 말까지 같이 바뀝니다. */
+  var LEAD = {
+    lesson:  "실력 향상을 위한 맞춤 레슨",
+    booking: "원하는 일정의 티타임 예약",
+    matchup: "함께하는 즐거운 라운딩",
+    used:    "골프용품 사고팔기",
+    fitting: "내 스윙에 맞는 클럽 찾기",
+    travel:  "국내 · 해외 골프여행"
+  };
   var cards = KEYS.map(function(k){
     var c = W.amCat ? W.amCat(k) : null;
     if(!c) return "";
@@ -388,18 +398,18 @@ function svcCards(){
         (cp ? W.amPhotoImg("cat-" + k) : "") + '</span>' +
       '<span class="svc-t">' +
         '<b class="svc-n">' + esc(c.name) + '</b>' +
-        '<span class="svc-l">' + esc(c.lead) + '</span>' +
+        '<span class="svc-l">' + esc(LEAD[k] || c.lead) + '</span>' +
       '</span>' +
       '<span class="svc-go" aria-hidden="true">' + icon("arrow", 18) + '</span>' +
     '</a>';
   }).join("");
   if(!cards) return "";
   return '<section class="sec"><div class="wrap">' +
-    '<div class="sec-hd"><h2>주요 골프 서비스</h2>' +
-    /* ⚠️ 갯수를 글자로 안 적습니다 — KEYS 를 늘리는 날 이 줄이 거짓이 됩니다 */
-    '<p>골프올인원에서 가장 많이 찾으시는 서비스입니다. ' +
-    /* ⚠️ 지어낸 약속을 하지 않습니다 — 고르면 그 분류로 갈 뿐입니다 */
-    '누르시면 그 분류의 업체와 글을 보실 수 있습니다.</p></div>' +
+    /* ⚠️⚠️ 제목은 **시안 글자 그대로**입니다 (2026-11-08 · 사장님 지시).
+       ⚠️ 저희는 누가 무엇을 보셨는지 **세지 않습니다** — 카드 여섯은
+       고정이고 사람마다 바뀌지 않습니다. 개인화를 붙이시는 날 그 사실을
+       여기 적어야 합니다. */
+    '<div class="sec-hd"><h2>오늘의 추천</h2></div>' +
     '<div class="svc-grid">' + cards + '</div>' +
   '</div></section>';
 }

@@ -76,8 +76,14 @@
       /* ⚠️⚠️ 하위분류도 **키**로 견줍니다 (`provider.subs` 가 키를
          글자로 들고 있습니다). 이름으로 견주면 하위 이름을 다듬는 날
          조용히 아무것도 안 걸립니다. */
+      /* ⚠️⚠️⚠️ **하위는 쉼표로 여럿이 올 수 있습니다** (2026-11-08) —
+         머리말의 「의류&신발」 은 하위 **둘**(의류 · 골프화)입니다.
+         하나만 받으면 메뉴 이름이 "신발" 을 말해 놓고 **안 걸러 주는**
+         꼴이 됩니다. 하나라도 맞으면 냅니다(OR). */
       if(s.sub){
-        if(window.amProviderSubs(p).indexOf(s.sub) < 0) return false;
+        var want = subKeys(s.sub), has = window.amProviderSubs(p);
+        var hit = want.some(function(k){ return has.indexOf(k) >= 0; });
+        if(!hit) return false;
       }
       /* ⚠️ 지역은 **키**로 견줍니다. 이름("서울")으로 견주면 regions.js
          를 고치는 날 조용히 아무것도 안 걸립니다. */
@@ -152,9 +158,17 @@
   }
   /* ⚠️ 모르는 하위 키면 **키를 그대로** 냅니다 — 이름을 지어내지
      않습니다 (손님이 주소를 손으로 고쳐 올 수 있습니다). */
+  /* 쉼표로 온 하위 키를 가릅니다 — ⚠️ 거르는 자리와 이름 적는 자리가
+     **같은 함수**를 써야 둘이 어긋나지 않습니다. */
+  function subKeys(v){
+    return String(v || "").split(",").map(function(x){ return x.trim(); })
+      .filter(Boolean);
+  }
   function subName(k){
-    var f = window.amSub ? window.amSub(k) : null;
-    return (f && f.item && f.item.name) ? f.item.name : k;
+    return subKeys(k).map(function(one){
+      var f = window.amSub ? window.amSub(one) : null;
+      return (f && f.item && f.item.name) ? f.item.name : one;
+    }).join(" · ");
   }
 
   /* ── 비교 — ⚠️⚠️ **고른 업체만** 들어갑니다 (가짜 비교 금지) ────── */

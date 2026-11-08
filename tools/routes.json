@@ -2,10 +2,10 @@
   "routes": [
     "/",
     "/categories",
-    "/cat/lesson",
-    "/cat/used",
     "/cat/booking",
     "/cat/matchup",
+    "/cat/used",
+    "/cat/lesson",
     "/cat/range",
     "/cat/market",
     "/cat/fitting",

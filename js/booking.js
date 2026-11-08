@@ -146,9 +146,12 @@
        세고 그 칸이 `?rg=<묶음>` 으로 보냅니다. 여기서 지역 하나로 받으면
        **표의 숫자와 목록의 줄 수가 달라집니다** (지시서 §5). 묶는 규칙은
        `js/data/regions.js` 의 `AM_REGION_ZONES` **한 곳**입니다. */
+    /* ⚠️ 고르개는 **자세한 이름**입니다(amZoneLong) — 메인 찾는 칸과
+       같은 함수를 읽습니다(두 곳에 이으면 한쪽만 고치는 날 어긋납니다). */
     var regs = (window.AM_REGION_ZONES || []).map(function(z){
       return '<option value="' + esc(z.key) + '"' +
-        (S.rg === z.key ? " selected" : "") + '>' + esc(z.name) + '</option>';
+        (S.rg === z.key ? " selected" : "") + '>' +
+        esc(window.amZoneLong(z.key)) + '</option>';
     }).join("");
     return dayStrip() +
       '<form class="jform tf-bar" id="ttf-find">' +

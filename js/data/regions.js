@@ -82,15 +82,36 @@ window.amRegionName = function(key, gu){
    ⚠️ 어느 지역도 **빠지거나 두 번 들어가면 안 됩니다** — 빠지면 그
    지역 자리가 현황표에서 영원히 안 보입니다. `amZoneCheck()` 가 셉니다.
    ════════════════════════════════════════════════════════════════════ */
+/* ⚠️⚠️ **이름이 둘입니다** (2026-11-08) — `name` 은 **표의 줄머리**에 쓰는
+   짧은 이름이고 `full` 은 **고르개**에 쓰는 자세한 이름입니다.
+   까닭: 현황표는 반쪽 칸에 들어가는데 줄머리가 "경상 · 부산 · 대구 · 울산"
+   이면 그 칸만 140px 를 먹어 **마지막 날짜가 잘렸습니다.** 고르개는
+   자리가 넉넉하므로 무엇이 들어 있는지 그대로 적습니다.
+   ⚠️ 두 이름을 쓰는 규칙은 `amZoneLong()` **한 곳**입니다 — 화면마다
+   따로 이으면 한쪽만 고치는 날 두 화면이 다른 말을 합니다.
+   ⚠️ `full` 이 `name` 과 같으면(강원 · 제주) 괄호를 **안 답니다**
+   ("강원 (강원)" 이 됩니다). */
 window.AM_REGION_ZONES = [
-  { key:"capital", name:"서울 · 경기 · 인천", regions:["seoul","gyeonggi","incheon"] },
-  { key:"gangwon", name:"강원",               regions:["gangwon"] },
-  { key:"chungch", name:"충청 · 대전 · 세종",  regions:["daejeon","sejong","chungbuk","chungnam"] },
-  { key:"jeolla",  name:"전라 · 광주",         regions:["gwangju","jeonbuk","jeonnam"] },
-  { key:"gyeongs", name:"경상 · 부산 · 대구 · 울산",
+  { key:"capital", name:"수도권", full:"서울 · 경기 · 인천",
+    regions:["seoul","gyeonggi","incheon"] },
+  { key:"gangwon", name:"강원",   full:"강원",
+    regions:["gangwon"] },
+  { key:"chungch", name:"충청권", full:"충청 · 대전 · 세종",
+    regions:["daejeon","sejong","chungbuk","chungnam"] },
+  { key:"jeolla",  name:"호남권", full:"전라 · 광주",
+    regions:["gwangju","jeonbuk","jeonnam"] },
+  { key:"gyeongs", name:"영남권", full:"경상 · 부산 · 대구 · 울산",
     regions:["busan","daegu","ulsan","gyeongbuk","gyeongnam"] },
-  { key:"jeju",    name:"제주",               regions:["jeju"] }
+  { key:"jeju",    name:"제주",   full:"제주",
+    regions:["jeju"] }
 ];
+/* 고르개에 적는 이름 — ⚠️ 무엇이 들어 있는지 **그 자리에서** 말합니다
+   (짧은 이름만 내면 "영남권에 울산이 드나" 를 알 길이 없습니다). */
+window.amZoneLong = function(key){
+  var z = window.amZone(key);
+  if(!z) return String(key || "");
+  return (z.full && z.full !== z.name) ? (z.name + " (" + z.full + ")") : z.name;
+};
 
 window.amZone = function(key){
   var z = window.AM_REGION_ZONES.filter(function(x){ return x.key === key; });

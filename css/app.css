@@ -949,7 +949,13 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .tbd-s{ overflow-x:auto; position:relative;
         background: var(--surface); border:1.5px solid var(--line);
         border-radius: var(--r); }
-.tbd-t{ border-collapse:collapse; width:100%; min-width:680px; font-size:14px; }
+/* ⚠️⚠️ **680px 는 날 수가 14일이던 때의 값입니다** — `teeBoard` 가 7일로
+   줄고 줄머리도 짧아졌는데 이 값이 남아 있어서, 표가 제 내용보다 넓게
+   늘어나 **반쪽 칸에서 끝까지 가로로 밀렸습니다.** 지금은 바닥만 깔고
+   제 내용만큼 벌어지게 둡니다(내용이 더 넓으면 그대로 넓어집니다).
+   ⚠️ 날 수를 다시 늘리시면(`site.js` 의 `teeBoard`) 표가 저절로 넓어져
+   가로로 밀립니다 — 그건 맞는 동작입니다(비교표 · 약관 표와 같은 자리). */
+.tbd-t{ border-collapse:collapse; width:100%; min-width:480px; font-size:14px; }
 .tbd-t th, .tbd-t td{ border:1px solid var(--line); padding:6px;
                       text-align:center; }
 .tbd-t thead th{ background: var(--bg-2); color: var(--ink3);

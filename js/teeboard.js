@@ -175,9 +175,12 @@
      ⚠️ 거르개 열쇠는 `cellUrl()` 과 **같은 이름**(`rg` · `d`)을 씁니다 —
      표의 칸을 눌렀을 때와 **같은 목록**이 열려야 합니다. */
   function findBox(){
+    /* ⚠️ 고르개는 **자세한 이름**입니다(amZoneLong) — 표의 줄머리만
+       짧게 줄이고, 무엇이 들어 있는지는 고를 때 그대로 말합니다. */
     var rg = ZONES.map(function(z){
       return '<option value="' + esc(z.key) + '"' +
-        (FIND.rg === z.key ? " selected" : "") + ">" + esc(z.name) + "</option>";
+        (FIND.rg === z.key ? " selected" : "") + ">" +
+        esc(window.amZoneLong(z.key)) + "</option>";
     }).join("");
     /* ⚠️ 골프장은 **있을 때만** 냅니다 (0곳이면 고를 것이 없는 칸입니다) */
     var course = COURSES.length

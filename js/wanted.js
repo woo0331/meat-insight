@@ -60,7 +60,11 @@
     return String(k);
   }
 
-  var F = { sub:"", rg:"" };
+  var F = { sub:"", rg:"", q:"" };
+  /* ⚠️⚠️ **한도는 여기 한 곳**입니다 — 받아 온 줄이 이 수에 닿으면
+     화면이 "N건 이상" 이라고 적습니다. 그 수를 전체인 것처럼 적으면
+     세어 본 값이 아닙니다(절대 규칙 1). */
+  var LIMIT = 100;
   /* ⚠️⚠️⚠️ **주소에서 읽는 길이 2026-11-08 까지 없었습니다.** 거르개는
      있었는데 `?s=` · `?rg=` 로 들어오면 아무것도 안 걸렸습니다 — 즉
      현황표(0067)의 칸을 눌러도 **그냥 분류 화면이 열릴 뿐**이었습니다.
@@ -77,6 +81,7 @@
     if(sv && subs().some(function(x){ return x.key === sv; })) F.sub = sv;
     /* ⚠️ 묶음도 시 · 도도 받습니다 — 푸는 규칙 한 곳으로 가립니다 */
     if(rv && window.amRegionsFor && window.amRegionsFor(rv).length) F.rg = rv;
+    F.q = (u.get("q") || "").trim().slice(0, 40);
   }
   /* 지금 걸린 조건을 주소에 적습니다 — ⚠️ 칸이 보내는 열쇠와 **같은
      이름**입니다 (현황표의 cellUrl 과 맞아야 눌렀을 때 같은 목록입니다). */
@@ -84,6 +89,8 @@
     var q = [];
     if(F.sub) q.push("s=" + encodeURIComponent(F.sub));
     if(F.rg)  q.push("rg=" + encodeURIComponent(F.rg));
+    /* ⚠️ 찾는 말도 주소에 남깁니다 — 조건을 복사해 보낼 수 있어야 합니다 */
+    if(F.q)   q.push("q=" + encodeURIComponent(F.q));
     try{
       window.history.replaceState({}, "",
         window.location.pathname + (q.length ? "?" + q.join("&") : ""));
@@ -113,13 +120,21 @@
     var qs = ["select=id,cat,sub,region,title,body,budget,when_txt," +
               "created_at,reply_n",
               "cat=eq." + encodeURIComponent(CAT),
-              "order=created_at.desc", "limit=100"];
+              "order=created_at.desc", "limit=" + LIMIT];
     if(F.sub) qs.push("sub=eq." + encodeURIComponent(F.sub));
     /* ⚠️⚠️⚠️ **묶음(수도권)과 시 · 도(서울)를 한 열쇠로 받습니다** —
        현황표의 칸은 묶음을 보내고 거르개는 시 · 도를 보냅니다. 푸는
        규칙은 `amRegionsFor()` 한 곳입니다. */
     var rs = window.amRegionsFor ? window.amRegionsFor(F.rg) : [];
     if(rs.length) qs.push("region=in.(" + rs.map(encodeURIComponent).join(",") + ")");
+    /* ⚠️⚠️ **찾기도 서버가 합니다** — 백 줄만 받아 화면에서 찾으면 그
+       백 줄 밖의 글이 영영 안 나옵니다(0068 에서 적어 둔 자리).
+       ⚠️ `*` 와 `%` 는 ilike 의 글자라 그대로 보내면 손님이 친 말과 다른
+       것을 찾습니다 — 빼고 보냅니다. */
+    if(F.q){
+      var qq = F.q.replace(/[*%]/g, " ").trim();
+      if(qq) qs.push("title=ilike." + encodeURIComponent("*" + qq + "*"));
+    }
     return fetch(A.conf.url + "/rest/v1/v_wanted_open?" + qs.join("&"), {
       headers: Object.assign({ apikey: A.conf.anonKey },
                              window.amAuthHeaders ? window.amAuthHeaders() : {})
@@ -127,36 +142,112 @@
       .catch(function(){ return null; });
   }
 
-  /* 지금 걸린 조건을 말로 — ⚠️ 켜진 것이 없으면 빈 글자입니다 */
-  function nowBits(){
-    var b = [];
-    if(F.sub) b.push(subName(F.sub));
-    if(F.rg)  b.push(window.amRegionLabel ? window.amRegionLabel(F.rg) : rgName(F.rg));
-    return b;
-  }
-
-  function filterBar(){
+  /* ── 거르개 ─────────────────────────────────────────────────────
+     ⚠️⚠️⚠️ 2026-11-08 — 전에는 고르개 **둘**(무엇을 · 지역)이 목록 위에
+     가로로 놓여 있었고, 고른 조건은 "지금 조건 — 골프채 · 서울" 한 **글**
+     이라 **하나씩 지울 수가 없었습니다.** 0건이 나오면 손님은 무엇으로
+     좁혔는지 못 보고 "글이 없구나" 로 읽습니다(0068 에서 중고장터에 칩을
+     단 그 까닭이고, 알아본 곳들이 전부 고른 조건을 보여 줍니다).
+     ⚠️ 모양은 **0068 의 CSS 를 그대로** 씁니다(`.lsw` · `.lsf-*`) — 같은
+     위젯을 두 벌로 그리면 한쪽만 고치는 날 두 화면이 달라집니다.
+     ⚠️⚠️ **id 는 갈라 둡니다**(`wt*`) — 클래스는 같이 쓰고 집는 이름은
+     따로입니다. 한 화면에 둘이 같이 설 일은 지금 없지만(중고는 구합니다를
+     안 받습니다), id 가 겹치면 그날 조용히 엉뚱한 칸을 집습니다. */
+  function railHtml(){
     var sb = subs().map(function(it){
       return '<option value="' + esc(it.key) + '"' +
         (F.sub === it.key ? " selected" : "") + '>' + esc(it.name) + '</option>';
     }).join("");
+    /* ⚠️⚠️ **묶음 여섯을 먼저** 냅니다 — 다른 화면이 묶음으로 보내므로,
+       안 내면 그리로 들어온 분의 고르개가 "전국" 으로 보입니다. */
     var rg = '<optgroup label="지역 묶음">' +
       (window.AM_REGION_ZONES || []).map(function(z){
         return '<option value="' + esc(z.key) + '"' +
           (F.rg === z.key ? " selected" : "") + '>' +
           esc(window.amZoneLong ? window.amZoneLong(z.key) : z.name) + '</option>';
-      }).join("") + '</optgroup><optgroup label="시 · 도">' +
-      regs().map(function(r){
+      }).join("") + '</optgroup>';
+    /* ⚠️⚠️ **해외는 따로 묶어 냅니다**(여행만) — 시 · 도 틈에 「일본」을
+       끼우면 국내인 줄 압니다. 목록은 `amRegionsOf()` 한 곳입니다. */
+    var home = [], away = [];
+    regs().forEach(function(r){ (r.abroad ? away : home).push(r); });
+    function opts(L){
+      return L.map(function(r){
         return '<option value="' + esc(r.key) + '"' +
           (F.rg === r.key ? " selected" : "") + '>' + esc(r.name) + '</option>';
-      }).join("") + '</optgroup>';
-    return '<form class="jform jnf-f" id="wtfil">' +
+      }).join("");
+    }
+    rg += '<optgroup label="시 · 도">' + opts(home) + '</optgroup>' +
+          (away.length ? '<optgroup label="해외">' + opts(away) + '</optgroup>' : "");
+    return '<div class="lsf-h"><b>필터</b>' +
+      '<button type="button" class="lsf-x" id="wf-close" aria-label="필터 닫기">' +
+      window.icon("close", 16) + '</button></div>' +
+    '<form class="jform lsf-b" id="wtfil">' +
       '<div class="jrow"><label for="wf-s">무엇을</label>' +
         '<select id="wf-s"><option value="">전체</option>' + sb + '</select></div>' +
       '<div class="jrow"><label for="wf-rg">지역</label>' +
         '<select id="wf-rg"><option value="">전국</option>' + rg + '</select></div>' +
     '</form>' +
-    '<p class="jnf-n" id="wtnow" hidden></p>';
+    /* ⚠️ 폰 시트의 바닥 — PC 에서는 CSS 가 가립니다 */
+    '<div class="lsf-f">' +
+      '<button type="button" class="btn btn-line wtf-reset">지우기</button>' +
+      '<button type="button" class="btn btn-deep wtf-done">결과 보기</button>' +
+    '</div>';
+  }
+
+  /* 맨 위 줄 — 찾기 · (폰에서만) 필터 단추
+     ⚠️⚠️ **정렬 고르개를 안 냅니다** — 구합니다 글에 쓸 차례가 최신순
+     하나뿐입니다. 한 가지뿐인 고르개는 눌러도 아무 일이 안 나는 칸입니다
+     (절대 규칙 5). 차례가 둘이 되는 날 그때 냅니다. */
+  function topBar(){
+    var n = nowChips().length;
+    return '<div class="lsf-top">' +
+      '<div class="lsf-q">' + window.icon("search", 19) +
+        '<input id="wf-q" type="search" maxlength="40" value="' + esc(F.q) + '" ' +
+        'placeholder="찾으시는 것을 적어 보세요" aria-label="구합니다 글 찾기"></div>' +
+      '<button type="button" class="lsf-btn" id="wf-open" aria-expanded="false">' +
+        window.icon("menu", 19) + '필터' +
+        (n ? ' <b>' + esc(String(n)) + '</b>' : "") + '</button>' +
+    '</div>';
+  }
+
+  /* 고른 조건 — ⚠️ 칩 하나하나를 **지울 수 있게** 둡니다.
+     ⚠️ **id 를 달지 않습니다** — 0건 상자도 같은 단추를 내므로 둘이
+     같이 있을 때 같은 id 가 둘이 됩니다. */
+  function nowChips(){
+    var out = [];
+    if(F.q)   out.push(["q",   '"' + F.q + '"']);
+    if(F.sub) out.push(["sub", subName(F.sub)]);
+    if(F.rg)  out.push(["rg",  window.amRegionLabel ? window.amRegionLabel(F.rg)
+                                                    : rgName(F.rg)]);
+    return out;
+  }
+  function chipRow(){
+    var cs = nowChips();
+    if(!cs.length) return "";
+    return '<div class="lsf-chips">' + cs.map(function(c){
+      return '<button type="button" class="lsf-chip" data-off="' + esc(c[0]) + '">' +
+        esc(c[1]) + ' ' + window.icon("close", 13) + '</button>';
+    }).join("") +
+    '<button type="button" class="lsf-clear">조건 모두 지우기</button>' +
+    '</div>';
+  }
+
+  /* ⚠️⚠️ **지우는 자리가 한 곳**입니다 — 칩 · 「모두 지우기」 · 0건 상자가
+     같은 줄을 부릅니다. 0068 에서 0건 상자의 단추가 셋만 지워 "지웠습니다"
+     가 거짓이 됐던 자리입니다. */
+  function offAll(){
+    F.sub = ""; F.rg = ""; F.q = "";
+    var q = document.getElementById("wf-q");
+    if(q) q.value = "";
+  }
+  function offOne(k){
+    if(k === "sub")     F.sub = "";
+    else if(k === "rg") F.rg  = "";
+    else if(k === "q"){
+      F.q = "";
+      var q = document.getElementById("wf-q");
+      if(q) q.value = "";
+    }
   }
 
   function card(r){
@@ -187,53 +278,170 @@
     '</li>';
   }
 
+  /* ⚠️⚠️⚠️ **레일을 다시 그리지 않습니다.** 전에는 `paint()` 가
+     `filterBar()` 를 **목록과 함께** 매번 다시 찍었습니다 — 찾는 칸을
+     더하는 순간 글자를 한 자 칠 때마다 그 칸이 새로 그려져 **커서가
+     튕겨 나갑니다**(에러는 안 납니다). 지금은 **한 번 세우고**
+     (`mountBar`) 목록만 갈아 끼웁니다. */
+  function mountBar(){
+    var w = document.getElementById("wtwrap");
+    if(w) return;
+    w = document.createElement("div");
+    w.id = "wtwrap"; w.className = "lsw";
+    list.parentNode.insertBefore(w, list);
+
+    var rail = document.createElement("aside");
+    rail.id = "wtrail"; rail.className = "lsf-rail";
+    rail.setAttribute("aria-label", "구합니다 글 거르개");
+
+    var main = document.createElement("div");
+    main.id = "wtmain"; main.className = "lsf-main";
+    var bar = document.createElement("div");
+    bar.id = "wtbar";
+    bar.innerHTML = topBar() + '<div id="wtchips"></div>' +
+      '<p class="jnf-n" id="wtnow" hidden></p>';
+    main.appendChild(bar);
+    main.appendChild(list);          /* ⚠️ 옮깁니다 (새로 만들지 않습니다) */
+
+    /* ⚠️ 폰에서 시트가 열린 동안 뒤를 덮습니다 — PC 에서는 CSS 가 가립니다 */
+    var sc = document.createElement("div");
+    sc.id = "wtscrim"; sc.className = "lsf-scrim"; sc.hidden = true;
+
+    w.appendChild(rail); w.appendChild(main); w.appendChild(sc);
+    syncRail(); syncChips();
+  }
+  function syncRail(){
+    var r = document.getElementById("wtrail");
+    if(r) r.innerHTML = railHtml();
+  }
+  function syncChips(){
+    var c = document.getElementById("wtchips");
+    if(c) c.innerHTML = chipRow();
+    var o = document.getElementById("wf-open");
+    if(o){
+      var n = nowChips().length;
+      o.innerHTML = window.icon("menu", 19) + "필터" +
+        (n ? ' <b>' + esc(String(n)) + '</b>' : "");
+    }
+  }
+  function sheet(on){
+    var w = document.getElementById("wtwrap");
+    var o = document.getElementById("wf-open");
+    var sc = document.getElementById("wtscrim");
+    if(!w) return;
+    if(on) w.classList.add("lsf-on"); else w.classList.remove("lsf-on");
+    if(o) o.setAttribute("aria-expanded", on ? "true" : "false");
+    if(sc) sc.hidden = !on;
+  }
+
+  /* ⚠️⚠️ **0건 상자는 글자만**입니다 — `check-safe` 가 "innerHTML 에
+     변수를 넣는 줄" 을 세는데, 삼항으로 두 글 덩이를 고르면 그 줄에
+     변수가 섞여 **esc() 를 따라갈 수가 없습니다.** 그 검사가 맞습니다:
+     여기 손님 글이 한 자라도 들어오는 날 날것으로 나갑니다. 그래서
+     고르는 것과 찍는 것을 갈라 둡니다(0068 의 `doneHtml()` 과 같은 꼴).
+     ⚠️ 지우는 단추는 **`offAll()` 같은 줄**을 부릅니다 — 0068 에서
+     0건 상자가 조건 일부만 지워 "지웠습니다" 가 거짓이 된 자리. */
+  function noneNarrow(){
+    return '<div class="none"><h3>그 조건에 맞는 글이 없습니다.</h3>' +
+      '<p>지역이나 종류를 넓혀 보세요.</p>' +
+      '<div class="none-b"><button type="button" class="btn btn-line lsf-clear">' +
+      '조건 모두 지우기</button></div></div>';
+  }
+  function noneEmpty(){
+    return '<div class="none"><h3>아직 올라온 글이 없습니다.</h3>' +
+      '<p>찾으시는 것을 적어 두시면 업체나 다른 회원이 답을 답니다.</p></div>';
+  }
+
   function paint(rows){
-    var bits = nowBits();
+    mountBar();
+    var on = nowChips().length;
     if(!rows.length){
       /* ⚠️⚠️ **0건을 두 가지로 갈라 말합니다** — "아직 아무도 안
          올렸다" 와 "조건에 맞는 것이 없다" 는 다른 말이고, 섞으면
          거르개를 걸어 둔 분이 "이 자리는 죽었구나" 로 읽습니다. */
-      list.innerHTML = filterBar() +
-        (bits.length
-          ? '<div class="none"><h3>그 조건에 맞는 글이 없습니다.</h3>' +
-            '<p>지역이나 종류를 넓혀 보세요.</p></div>'
-          : '<div class="none"><h3>아직 올라온 글이 없습니다.</h3>' +
-            '<p>찾으시는 것을 적어 두시면 업체나 다른 회원이 답을 답니다.</p>' +
-            '</div>');
+      if(on) list.innerHTML = noneNarrow();
+      else   list.innerHTML = noneEmpty();
     }else{
-      list.innerHTML = filterBar() +
-        '<ul class="wtl">' + rows.map(card).join("") + '</ul>';
+      list.innerHTML = '<ul class="wtl">' + rows.map(card).join("") + '</ul>';
     }
+    /* ⚠️⚠️ **한도에 닿으면 "N건 이상"** 입니다 — 받아 온 줄 수를 전체인
+       것처럼 적으면 세어 본 값이 아닙니다(절대 규칙 1). */
     var nl = document.getElementById("wtnow");
-    if(nl && bits.length){
+    if(nl){
       nl.hidden = false;
-      nl.textContent = "지금 조건 — " + bits.join(" · ");
+      nl.textContent = rows.length >= LIMIT
+        ? ("구합니다 글 " + LIMIT + "건 이상")
+        : ("구합니다 글 " + rows.length + "건");
     }
-    bindBar();
+    syncRail(); syncChips();
   }
 
+  /* ⚠️ 거르개는 **한 번만** 묶습니다 — 다시 그릴 때마다 묶으면 같은
+     손놀림에 reload 가 여러 번 돕니다. */
+  var BOUND = false;
   function bindBar(){
-    var f = document.getElementById("wtfil");
-    if(!f) return;
-    f.addEventListener("change", function(e){
+    if(BOUND) return;
+    BOUND = true;
+    var w = document.getElementById("wtwrap");
+    if(!w) return;
+    w.addEventListener("change", function(e){
       var t = e.target;
       if(!t || !t.id) return;
       if(t.id === "wf-s")  F.sub = t.value;
-      if(t.id === "wf-rg") F.rg  = t.value;
-      syncUrl();
-      reload();
+      else if(t.id === "wf-rg") F.rg = t.value;
+      else return;
+      syncUrl(); reload();
+    });
+    /* ⚠️ 찾는 말은 **치는 동안 기다렸다가** 보냅니다 — 한 자마다 보내면
+       호출이 그만큼 늘고 마지막 답이 먼저 온 답을 덮습니다. */
+    var tm = null;
+    w.addEventListener("input", function(e){
+      var t = e.target;
+      if(!t || t.id !== "wf-q") return;
+      if(tm) clearTimeout(tm);
+      tm = setTimeout(function(){
+        F.q = String(t.value || "").trim().slice(0, 40);
+        syncUrl(); reload();
+      }, 400);
+    });
+    w.addEventListener("keydown", function(e){
+      if(e.key !== "Enter") return;
+      var t = e.target;
+      if(!t || t.id !== "wf-q") return;
+      e.preventDefault();
+      if(tm) clearTimeout(tm);
+      F.q = String(t.value || "").trim().slice(0, 40);
+      syncUrl(); reload();
+    });
+    w.addEventListener("click", function(e){
+      var t = e.target;
+      if(!t || !t.closest) return;
+      if(t.closest("#wf-open")){ sheet(true); return; }
+      if(t.closest("#wf-close") || t.closest(".wtf-done") ||
+         t.closest("#wtscrim")){ sheet(false); return; }
+      if(t.closest(".wtf-reset") || t.closest(".lsf-clear")){
+        offAll(); syncUrl(); reload(); return;
+      }
+      var c = t.closest(".lsf-chip");
+      if(c){ offOne(c.getAttribute("data-off")); syncUrl(); reload(); }
     });
   }
+
   function reload(){
     return load().then(function(rows){
-      /* ⚠️ 못 읽었으면 **0건이라고 말하지 않습니다** */
+      /* ⚠️⚠️ 못 읽었으면 **0건이라고 말하지 않습니다** — 그리고 센 수도
+         안 적습니다(못 읽은 것과 0건은 다릅니다 · 절대 규칙 1). */
       if(!rows){
-        list.innerHTML = filterBar() +
+        mountBar();
+        list.innerHTML =
           '<p class="myhint">지금 불러오지 못했습니다. 잠시 뒤에 다시 열어 주세요.</p>';
+        var nl = document.getElementById("wtnow");
+        if(nl){ nl.hidden = true; nl.textContent = ""; }
         bindBar();
         return;
       }
       paint(rows);
+      bindBar();
     });
   }
 

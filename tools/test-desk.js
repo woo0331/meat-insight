@@ -5815,6 +5815,126 @@ function boardsOf(){
       await g.p.close();
     }
 
+    /* ③-2 **레일 · 찾기 · 조건 칩 · 센 수** (2026-11-08) ─────────────
+       ⚠️⚠️⚠️ 전에는 고르개 **둘**이 목록 위에 가로로 놓였고, 고른 조건은
+       "지금 조건 — 골프채 · 서울" 한 **글**이라 하나씩 지울 수가 없었습니다.
+       0건이 나오면 무엇으로 좁혔는지 못 보고 "글이 없구나" 로 읽습니다.
+       ⚠️⚠️ **흉내 장치는 걸러 주지 않습니다** — 줄 수로 재면 받는 쪽을
+       통째로 떼어도 영원히 초록입니다. **보내는 질의를 뜯어** 봅니다. */
+    {
+      const g = await open("/cat/market", { role:"customer", name:"손님", signedIn:true },
+                           { v_wanted_open: WNT }, {}, true);
+      const b0 = await g.p.evaluate(function(){
+        return { rail: !!document.getElementById("wtrail"),
+                 q:    !!document.getElementById("wf-q"),
+                 open: !!document.getElementById("wf-open"),
+                 now:  (document.getElementById("wtnow") || {}).textContent || "",
+                 /* ⚠️ 정렬 고르개는 **일부러 안 냅니다** — 쓸 차례가
+                    최신순 하나뿐이라 눌러도 아무 일이 안 나는 칸입니다 */
+                 sort: !!document.getElementById("wf-o") };
+      });
+      ok("⚠️⚠️ 구합니다에 **거르개 레일 · 찾는 칸**이 있다 (0068 의 틀)",
+         b0.rail && b0.q && b0.open, JSON.stringify(b0));
+      ok("  ⚠️ 센 수를 적는다", /구합니다 글 \d+건/.test(b0.now), b0.now);
+      ok("  ⚠️ 정렬 고르개를 **안 낸다** (한 가지뿐인 고르개는 죽은 칸입니다)",
+         !b0.sort, String(b0.sort));
+
+      /* 찾는 말 — ⚠️ **서버가** 찾습니다 */
+      const m0 = g.sent.length;
+      await g.p.fill("#wf-q", "드라이버");
+      await g.p.waitForTimeout(700);
+      const qq = g.sent.slice(m0).map(function(x){ return String(x.body); }).join(" | ");
+      ok("⚠️⚠️ 찾는 말을 적으면 **서버에** title=ilike 를 보낸다 " +
+         "(백 줄만 받아 화면에서 찾으면 그 밖의 글이 영영 안 나옵니다)",
+         qq.indexOf("title=ilike.") >= 0 &&
+         qq.indexOf(encodeURIComponent("드라이버")) >= 0, qq.slice(0, 200));
+
+      /* 고른 조건이 **칩**으로 보이고 하나씩 지워집니다 */
+      const c0 = await g.p.evaluate(function(){
+        return { n: document.querySelectorAll(".lsf-chip").length,
+                 keys: Array.prototype.map.call(document.querySelectorAll(".lsf-chip"),
+                   function(b){ return b.getAttribute("data-off"); }),
+                 clear: document.querySelectorAll(".lsf-clear").length };
+      });
+      ok("⚠️⚠️ 고른 조건이 **칩 한 줄**로 보인다 (지울 수 있게)",
+         c0.n >= 1 && c0.clear >= 1 && c0.keys.indexOf("q") >= 0, JSON.stringify(c0));
+
+      const m1 = g.sent.length;
+      await g.p.click('.lsf-chip[data-off="q"]');
+      await g.p.waitForTimeout(400);
+      const q1 = g.sent.slice(m1).map(function(x){ return String(x.body); }).join(" | ");
+      ok("  칩을 지우면 **그 조건만** 빠진다",
+         q1.indexOf("v_wanted_open") >= 0 && q1.indexOf("title=ilike.") < 0,
+         q1.slice(0, 200));
+
+      /* 「조건 모두 지우기」는 **전부** 지웁니다 */
+      await g.p.selectOption("#wf-rg", "seoul");
+      await g.p.waitForTimeout(400);
+      await g.p.fill("#wf-q", "아이언");
+      await g.p.waitForTimeout(700);
+      const m2 = g.sent.length;
+      await g.p.click(".lsf-clear");
+      await g.p.waitForTimeout(400);
+      const q2 = g.sent.slice(m2).map(function(x){ return String(x.body); }).join(" | ");
+      const u2 = await g.p.evaluate(function(){ return location.search; });
+      ok("⚠️⚠️ 「조건 모두 지우기」가 **전부** 지운다 (일부만 지우면 " +
+         "'지웠습니다' 가 거짓입니다)",
+         q2.indexOf("region=in.") < 0 && q2.indexOf("title=ilike.") < 0 && u2 === "",
+         q2.slice(0, 200) + " url=" + u2);
+      await g.p.close();
+    }
+
+    /* ③-3 **여행만 해외 지역이 나옵니다** (2026-11-08) ────────────────
+       ⚠️⚠️⚠️ 알아본 곳이 전부 지역을 첫째 축으로 두는데 저희 `AM_REGIONS`
+       는 국내 열일곱뿐이라 「해외 골프 여행」을 눌러도 좁힐 것이 없었습니다.
+       ⚠️⚠️ **다른 분류에는 안 냅니다** — 「일본에서 조인」 은 골라도 영원히
+       0건이고, 그건 눌러도 아무 일이 안 나는 칸입니다(절대 규칙 5).
+       ⚠️ 갯수를 박지 않습니다 — `AM_TRIP_REGIONS` 와 맞춰 봅니다. */
+    {
+      const g = await open("/cat/travel", { role:"customer", name:"손님", signedIn:true },
+                           { v_wanted_open: [] }, {}, true);
+      const r = await g.p.evaluate(function(){
+        function grp(lab){
+          var o = Array.prototype.filter.call(
+            document.querySelectorAll("#wf-rg optgroup"),
+            function(x){ return x.getAttribute("label") === lab; });
+          return o.length ? Array.prototype.map.call(o[0].querySelectorAll("option"),
+            function(x){ return x.value; }) : [];
+        }
+        return { away: grp("해외"),
+                 want: (window.AM_TRIP_REGIONS || []).map(function(t){ return t.key; }),
+                 home: grp("시 · 도") };
+      });
+      ok("⚠️⚠️ 여행은 지역 고르개에 **해외 묶음**이 선다",
+         r.want.length > 0 && r.away.join(",") === r.want.join(","),
+         JSON.stringify(r.away) + " vs " + JSON.stringify(r.want));
+      ok("  ⚠️ 해외를 **시 · 도 틈에 끼우지 않는다** (국내인 줄 압니다)",
+         r.home.length > 0 && r.home.every(function(k){
+           return r.want.indexOf(k) < 0; }), JSON.stringify(r.home));
+      /* 골라 보면 그 키로 좁혀 보냅니다 */
+      const n0 = g.sent.length;
+      await g.p.selectOption("#wf-rg", "jp");
+      await g.p.waitForTimeout(400);
+      const q = g.sent.slice(n0).map(function(x){ return String(x.body); }).join(" | ");
+      ok("⚠️⚠️⚠️ 해외를 고르면 **그 키로 좁혀 보낸다** (주소만 맞는 것이 아닙니다)",
+         q.indexOf("region=in.(jp)") >= 0, q.slice(0, 200));
+      await g.p.close();
+    }
+
+    /* ③-4 **다른 분류에는 해외가 없습니다** — 되돌려 보기의 반대쪽 */
+    {
+      const g = await open("/cat/lesson", { role:"customer", name:"손님", signedIn:true },
+                           { v_wanted_open: [] }, {}, true);
+      const away = await g.p.evaluate(function(){
+        return Array.prototype.filter.call(
+          document.querySelectorAll("#wf-rg optgroup"),
+          function(x){ return x.getAttribute("label") === "해외"; }).length;
+      });
+      ok("⚠️⚠️ 레슨에는 해외 묶음이 **한 줄도 없다** (영원히 0건인 칸을 안 냅니다)",
+         away === 0, String(away));
+      await g.p.close();
+    }
+
     /* ④ 올리는 양식 — 보유 기간 · 동의 · 보내는 꾸러미 */
     {
       const g = await open("/cat/lesson", { role:"customer", name:"손님", signedIn:true },

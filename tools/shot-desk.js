@@ -447,6 +447,47 @@ const T_WT = {
   })
 };
 
+/* ⚠️⚠️⚠️ **가짜 자료도 그 화면의 분류여야 합니다.** 마켓 화면에 레슨 글을
+   꽂았더니 하위가 `ls-solo` **영문 키 그대로** 찍혔습니다 — 화면은 모르는
+   키를 그대로 내는 것이 맞고(이름을 지어내지 않습니다) **틀린 것은 제
+   자료**였습니다. 운영에서는 `load()` 가 `cat=eq.market` 으로 좁히므로
+   섞일 수가 없습니다. 조인의 `ok` · 문의의 `kind:"service"` · 게시판의
+   `cm-review` · 중고의 `us-putter` 에 이어 **다섯째**입니다. */
+const T_WT_MK = {
+  v_wanted_open: [
+    { id:"bb111111-1111-1111-1111-111111111111", cat:"market", sub:"mk-club",
+      region:"seoul", title:"타이틀리스트 드라이버 10.5도 중고로 구합니다",
+      body:"상태 좋은 것으로 찾습니다. 직거래 선호합니다.",
+      budget:400000, when_txt:"이번 달 안으로", created_at:"2026-11-07T01:00:00Z",
+      reply_n:2 },
+    { id:"bb222222-2222-2222-2222-222222222222", cat:"market", sub:"mk-shoe",
+      region:"seoul", title:"여성용 골프화 240 새것 어디가 싼가요",
+      body:"브랜드는 상관없습니다.",
+      budget:null, when_txt:null, created_at:"2026-11-06T01:00:00Z", reply_n:0 },
+    /* ⚠️ 한 줄은 **예산 0** — "무료로 해 주실 분" 이 나오는지 눈으로 봅니다
+       (`||` 를 쓰면 0 이 사라지고 "안 적음" 과 섞입니다). */
+    { id:"bb333333-3333-3333-3333-333333333333", cat:"market", sub:"mk-train",
+      region:"seoul", title:"연습용 드라이버 무료로 주실 분",
+      body:"스크린 연습용으로 쓰려고 합니다.",
+      budget:0, when_txt:null, created_at:"2026-11-05T01:00:00Z", reply_n:1 }
+  ]
+};
+/* ⚠️ 여행은 **해외 지역**이 사람 말로 나오는지 보는 자리입니다
+   (`jp` 가 그대로 찍히면 그림에 보입니다). */
+const T_WT_TR = {
+  v_wanted_open: [
+    { id:"cc111111-1111-1111-1111-111111111111", cat:"travel", sub:"tr-away",
+      region:"jp", title:"일본 골프 패키지 2박3일 알아봅니다",
+      body:"4명이고 12월 중순으로 생각하고 있습니다.",
+      budget:900000, when_txt:"12월 중순", created_at:"2026-11-07T01:00:00Z",
+      reply_n:1 },
+    { id:"cc222222-2222-2222-2222-222222222222", cat:"travel", sub:"tr-home",
+      region:"jeju", title:"제주 2박3일 골프텔 추천 부탁드립니다",
+      body:"부부 둘이 갑니다.",
+      budget:null, when_txt:null, created_at:"2026-11-06T01:00:00Z", reply_n:0 }
+  ]
+};
+
 /* 중고 매물 목록 (0056 → 0068) — ⚠️ 공개 보기라 `contact` 칸이
    **없습니다**. ⚠️⚠️ 한 줄은 **사진이 있고** 한 줄은 **없게** 둡니다 —
    둘 다 있으면 "사진 0장이면 아이콘 타일" 을 눈으로 볼 수가 없습니다.
@@ -530,6 +571,14 @@ const SCENES = [
      봐야 합니다 (글이 남아 있으면 그림에 보입니다). */
   /* ⚠️ 구합니다 (0061) — 분류 화면의 목록 (업체가 0곳이어도 도는 자리) */
   ["wanted",          "/cat/lesson", CUS, T_WT, {}],
+  /* ⚠️⚠️ 2026-11-08 — 구합니다에도 **거르개 레일**이 섰습니다(0068 의 틀).
+     폰에서는 아래 시트라 **눌러야 보입니다** — 안 누르면 그 시트는 영원히
+     아무도 안 보는 자리입니다. 그리고 여행만 **해외 지역**이 나오므로
+     그 장을 따로 찍습니다(그림에서만 보이는 자리). */
+  ["wanted-filter",   "/cat/market", CUS, T_WT_MK, {}, "#wf-open"],
+  ["wanted-chips",    "/cat/market?rg=seoul&q=" + encodeURIComponent("드라이버"),
+                      CUS, T_WT_MK, {}],
+  ["wanted-travel",   "/cat/travel", CUS, T_WT_TR, {}],
   /* ⚠️⚠️ 중고 매물 (0068) — **사진 카드 격자와 거르개**입니다. 폰에서는
      거르개가 아래 시트라 **눌러야 보입니다** — 안 누르면 그 시트는
      영원히 아무도 안 보는 자리입니다 (PC 는 레일이 늘 서 있습니다). */
@@ -587,6 +636,9 @@ const BOXES = {
   /* ⚠️⚠️ 구합니다(0061)도 **설정이 있어야 열립니다** — `check-screens` 는
      빈 상자만 봅니다. 분류 화면의 목록을 여기서 찍습니다. */
   "/cat/lesson": [["wanted", "#wtlist"]],
+  /* ⚠️ 레일은 목록 **밖**(`#wtwrap`)이라 `#wtlist` 만 집으면 안 찍힙니다 */
+  "/cat/market": [["wanted", "#wtwrap"]],
+  "/cat/travel": [["wanted", "#wtwrap"]],
   /* ⚠️⚠️ 중고 매물 (0068) — 거르개 묶음(`#lswrap`)과 목록을 따로 찍습니다 */
   "/cat/used": [["wrap", "#lswrap"], ["bar", "#lsbar"], ["list", "#lslist"],
                 ["rail", "#lsrail"], ["form", "#lsbox"]]

@@ -456,7 +456,7 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
   border:1.5px dashed var(--line); background: var(--bg-2);
   border-radius: var(--r); padding: 26px 22px; text-align:center;
 }
-.none h2{ font-size:17px; }
+.none h2, .none h3{ font-size:17px; }
 .none p{ margin-top:8px; color: var(--ink3); font-size:15px; }
 .none .btn{ margin-top:16px; }
 
@@ -2244,6 +2244,27 @@ picture{ display: contents; }
           font-size:15px; color: var(--ink); line-height:1.5; }
 .asks-n{ color: var(--grn-text); flex:none; margin-top:3px; display:flex; }
 .asks-go{ margin-top:20px; }
+
+/* ── 하위 칩 바로 위의 길잡이 한 줄 (2026-11-08) ────────────────────
+   ⚠️⚠️ 이 줄은 **그 칩이 무엇을 거르는지**를 말합니다 — 전에는
+   「…에서 다루는 것」이라는 제 구간 안에 있어서, 거르는 목록은 저
+   아래인데 칩은 맨 위에 있었습니다. */
+.chips-n{ margin:0 0 10px; font-size:14.5px; color: var(--ink3);
+          line-height:1.6; word-break: keep-all; }
+.chips-sub{ margin-bottom:18px; }
+
+/* ── 매칭 요청에 적는 것 — 업체 구간 안의 덩이 (2026-11-08) ───────
+   ⚠️⚠️⚠️ 전에는 이것이 **큰 제목 하나를 통째로** 먹었습니다. 그
+   길은 업체를 기다리는 길이라, 업체가 0곳인 지금은 배정할 곳이
+   없습니다. 자리를 바꿨고 **길은 안 지웠습니다.** */
+.asks-w{ margin-top:22px; padding:22px 20px 24px;
+         background:#fff; border:1.5px solid var(--line);
+         border-radius: var(--r); }
+.asks-h{ font-size:18px; color: var(--ink); }
+.asks-w > p{ margin-top:8px; margin-bottom:16px;
+             font-size:15px; color: var(--ink3); line-height:1.65;
+             word-break: keep-all; }
+.asks-w > p b{ color: var(--bad-text); }
 /* 분류 화면에서 넘어오신 길 — 그 분류 묶음을 맨 앞에 두고 표시합니다 */
 .svc-on{ border-color: var(--grn-line); background: var(--grn-soft); }
 .svc-tag{ font-size:12px; font-weight:700; color: var(--grn-text);

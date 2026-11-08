@@ -5392,6 +5392,37 @@ function boardsOf(){
       await g.p.close();
     }
 
+    /* ③-2 분류 화면의 **물건 종류 칩**을 눌러 들어온 자리 ─────────────
+       ⚠️⚠️⚠️ 2026-11-08 — 그 칩 일곱은 `<span>` 이라 **눌리지 않았습니다.**
+       그런데 이 목록은 0056 부터 `?s=` 를 읽고 있었습니다 — **받는 쪽은
+       있는데 가는 길이 없는** 자리였습니다. 지금은 `amSubUrl()` 이
+       `/cat/used?s=us-…` 를 짓습니다.
+       ⚠️⚠️ **주소만 맞는 것으로는 아무 뜻이 없습니다** — 흉내 장치는 걸러
+       주지 않으므로 줄 수로 재면 받는 쪽을 통째로 떼어도 영원히 초록입니다.
+       **첫 질의를 뜯어** 그 조건이 실려 나가는지 봅니다. */
+    {
+      const g = await open("/cat/used?s=us-iron",
+                           { role:"customer", name:"손님", signedIn:true },
+                           { v_listing_open: LST }, {}, true);
+      const q = g.sent.map(function(x){ return String(x.body); }).join(" | ");
+      ok("⚠️⚠️⚠️ 물건 종류 칩으로 들어오면 **첫 질의부터** 그 종류로 좁는다",
+         q.indexOf("sub=eq.us-iron") >= 0, q.slice(0, 220));
+      const st = await g.p.evaluate(function(){
+        return { sel: (document.getElementById("lf-s") || {}).value || "",
+                 keys: Array.prototype.map.call(
+                   document.querySelectorAll(".lsf-chip"),
+                   function(b){ return b.getAttribute("data-off"); }) };
+      });
+      /* ⚠️ 고른 조건이 **보여야** 합니다 — 안 보이면 손님이 0건을
+         "매물이 없다" 로 읽습니다 (고르개에도 · 칩에도 남습니다). */
+      /* ⚠️ 칩의 열쇠는 **DB 칸 이름**(`sub`)이고 주소의 열쇠는 `s` 입니다 —
+         둘이 다른 것이 맞습니다(주소는 짧게, 질의는 칸 이름대로). 처음에
+         `"s"` 로 재서 **멀쩡한 코드를 실패로** 잡았습니다. */
+      ok("  거르개와 칩에 **그 조건이 남는다** (무엇으로 좁혔는지 보이게)",
+         st.sel === "us-iron" && st.keys.indexOf("sub") >= 0, JSON.stringify(st));
+      await g.p.close();
+    }
+
     /* ④ 올리는 양식 — ⚠️ 보내는 꾸러미까지 뜯어 봅니다 */
     {
       /* ⚠️⚠️ 0068 — `open_listing` 은 **새 매물의 id** 를 돌려줍니다.

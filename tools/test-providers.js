@@ -755,28 +755,66 @@ function nowServe(){ return serve(0); }
        /이런하위는없습니다/.test((await p.textContent("#sres")) || ""),
        (await p.textContent("#sres")) || "");
 
-    /* ══ 분류 화면의 하위 목록이 **그 주소를 가리키는가** ══════════
-       ⚠️ 갯수를 박지 않습니다 — 하위가 늘면 늘어난 대로 돕니다.
-       ⚠️⚠️ 업체가 입점하지 않는 하위는 **글로 두어야** 합니다 (링크로
-       내면 영원히 0건인 자리로 보내는 것이고, 그건 눌러도 아무 일이
-       안 나는 칸과 같습니다). */
-    console.log("\n── 분류 화면의 하위 목록이 그 거르개를 가리키나");
-    await p.goto("http://127.0.0.1:" + h.port + "/cat/range", { waitUntil:"networkidle" });
-    await p.waitForTimeout(200);
-    const subLinks = await p.evaluate(function(){
-      var out = { link:[], text:0 };
-      Array.prototype.forEach.call(document.querySelectorAll(".chips-sub li"), function(li){
-        var a = li.querySelector("a");
-        if(a) out.link.push(a.getAttribute("href")); else out.text++;
+    /* ══ 하위 칩이 **갈 자리가 있는 것만** 링크인가 ════════════════
+       ⚠️⚠️⚠️ 2026-11-08 — 전까지 이 검사는 `/cat/used` 에서
+       "글로 둔 칩이 하나라도 있는가"(`text > 0`)를 재고 있었습니다.
+       그런데 0068 이 매물 목록에 `?s=` 거르개를 냈고 0059 가 게시판에
+       `?s=` 를 냈으므로, 중고 일곱과 게시판 열둘은 **이제 갈 자리가
+       있습니다** — 그 열아홉을 글로 두면 거꾸로 "되는 것을 안 되는
+       것처럼" 적는 꼴입니다 (절대 규칙 5 의 뒤집힌 판).
+       ⚠️ 재려는 뜻은 처음부터 하나입니다: **갈 자리가 있으면 링크 ·
+       없으면 글.** 갈래를 정하는 자리는 `amSubGoes()` 한 곳이고,
+       여기서는 그 결과를 주소 꼴로 확인합니다. 갯수는 안 박습니다. */
+    console.log("\n── 하위 칩 — 갈 자리가 있는 것만 링크인가");
+    async function subChips(route){
+      await p.goto("http://127.0.0.1:" + h.port + route, { waitUntil:"networkidle" });
+      await p.waitForTimeout(200);
+      return await p.evaluate(function(){
+        var out = { link:[], text:[] };
+        Array.prototype.forEach.call(document.querySelectorAll(".chips-sub li"), function(li){
+          var a = li.querySelector("a");
+          if(a) out.link.push(a.getAttribute("href"));
+          else out.text.push((li.textContent || "").trim());
+        });
+        return out;
       });
-      return out;
-    });
-    ok("⚠️ 잴 것이 0개면 실패입니다 (하위 목록을 찾기는 했는가)",
-       subLinks.link.length > 0, JSON.stringify(subLinks));
-    ok("⚠️⚠️ 하위가 **그 거르개 주소**를 가리킨다 (amSubUrl 한 함수)",
-       subLinks.link.every(function(h2){
-         return /^\/search\?cat=range&sub=rg-/.test(h2); }),
-       subLinks.link.join(" "));
+    }
+
+    const usedSub = await subChips("/cat/used");
+    ok("⚠️ 잴 것이 0개면 실패입니다 (/cat/used 의 하위 칩을 찾기는 했는가)",
+       usedSub.link.length + usedSub.text.length > 0, JSON.stringify(usedSub));
+    ok("⚠️⚠️ 중고 — 물건 종류는 **매물 목록 거르개**로 간다 (0068 의 ?s=)",
+       usedSub.link.filter(function(u){
+         return u.indexOf("/cat/used?s=us-") === 0; }).length > 0,
+       usedSub.link.join(" "));
+    ok("⚠️⚠️ 중고 — 업체가 하는 둘(매입 견적 · 위탁판매)은 **업체찾기**로 간다",
+       usedSub.link.filter(function(u){
+         return u.indexOf("/search?cat=used&sub=") === 0; }).length > 0,
+       usedSub.link.join(" "));
+    ok("  중고는 갈 자리 없는 칩이 **하나도 없다** (아홉 다 눌립니다)",
+       usedSub.text.length === 0, JSON.stringify(usedSub.text));
+
+    const cqSub = await subChips("/cat/community");
+    ok("⚠️⚠️ 게시판 — 하위가 **그 게시판 글만** 모아 보여 주는 주소로 간다 (0059 의 ?s=)",
+       cqSub.link.length > 0 && cqSub.link.every(function(u){
+         return u.indexOf("/cat/community?s=cm-") === 0; }),
+       cqSub.link.join(" "));
+    ok("  게시판도 갈 자리 없는 칩이 **하나도 없다**",
+       cqSub.text.length === 0, JSON.stringify(cqSub.text));
+
+    /* ⚠️⚠️ 반대쪽도 같이 봅니다 — **좁힐 자료가 없는** 하위는 글로 둡니다.
+       조인(`joinroom`)에는 하위 칸이 아예 없어서 거를 수가 없습니다.
+       링크로 내면 영원히 0건인 자리로 보내는 것이고, 그건 눌러도 아무
+       일이 안 나는 칸과 같습니다 (절대 규칙 5). */
+    const mtSub = await subChips("/cat/matchup");
+    ok("⚠️⚠️⚠️ 조인 — 좁힐 자료가 없는 하위는 **글로** 둔다 (0건 자리로 안 보냅니다)",
+       mtSub.text.length > 0 && mtSub.link.length === 0, JSON.stringify(mtSub));
+
+    const rgSub = await subChips("/cat/range");
+    ok("연습장 — 하위가 **그 거르개 주소**를 가리킨다 (amSubUrl 한 함수)",
+       rgSub.link.length > 0 && rgSub.link.every(function(u){
+         return /^\/search\?cat=range&sub=rg-/.test(u); }),
+       rgSub.link.join(" "));
     /* 실제로 눌러 봅니다 — 주소만 맞고 안 걸리면 아무 뜻이 없습니다 */
     await p.click('.chips-sub a[href="/search?cat=range&sub=rg-sim"]');
     await p.waitForTimeout(400);
@@ -786,18 +824,31 @@ function nowServe(){ return serve(0); }
          .indexOf("sub=rg-sim") >= 0,
        await p.evaluate(function(){ return location.search; }));
 
-    /* 중고장터 — 물건 종류 하위는 업체가 하는 일이 아니라 **글**입니다 */
-    await p.goto("http://127.0.0.1:" + h.port + "/cat/used", { waitUntil:"networkidle" });
-    await p.waitForTimeout(200);
-    const usedSub = await p.evaluate(function(){
-      var link = 0, text = 0;
-      Array.prototype.forEach.call(document.querySelectorAll(".chips-sub li"), function(li){
-        if(li.querySelector("a")) link++; else text++;
+    /* ⚠️⚠️⚠️ **하위가 한 개도 안 빠졌는가 — 열 장 전부** ════════════
+       2026-11-08 부터 칩을 **둘로 가릅니다**(업체찾기로 가는 것은 업체
+       구간 안에, 제 목록을 좁히는 것은 그 목록 위에). 그런데 제 목록
+       구간은 **네 분류에만** 있습니다(중고 · 조인 · 게시판 · 인력) —
+       업체만 받는 분류에 `pv` 가 아닌 하위가 하나 생기는 날 그 칩은
+       **놓을 자리가 없어 조용히 사라집니다**(에러 0줄 · 가로로 밀리지도
+       않고 글자가 작지도 않아 어떤 검사도 안 잡습니다).
+       ⚠️ 그래서 화면에서 **세어** 봅니다 — `amCatItems()` 가 내놓는 수와
+       그 화면의 칩 수가 같아야 합니다. **갯수를 박지 않습니다.** */
+    console.log("\n── 하위 칩이 열 장에서 한 개도 안 빠지나");
+    const catList = await p.evaluate(function(){
+      return (window.AM_CATS || []).map(function(c){
+        return { key: c.key, url: window.amCatUrl(c),
+                 n: (window.amCatItems(c) || []).length };
       });
-      return { link: link, text: text };
     });
-    ok("⚠️ 업체가 입점하지 않는 하위는 **글로** 둔다 (0건 자리로 안 보냅니다)",
-       usedSub.text > 0 && usedSub.link > 0, JSON.stringify(usedSub));
+    ok("⚠️ 잴 것이 0개면 실패입니다 (분류 목록을 읽기는 했는가)",
+       catList.length > 0, catList.length);
+    for(const c of catList){
+      await p.goto("http://127.0.0.1:" + h.port + c.url, { waitUntil:"networkidle" });
+      await p.waitForTimeout(120);
+      const got = await p.locator(".chips-sub li").count();
+      ok("  " + c.key + " — 하위 " + c.n + "개가 화면에 다 있다", got === c.n,
+         "화면 " + got + "개 · 자료 " + c.n + "개");
+    }
 
     console.log("\n── /search 검색어 (머리말 검색창)");
     await p.goto("http://127.0.0.1:" + h.port + "/search?q=" + encodeURIComponent("연습장"),

@@ -22,7 +22,12 @@ var card = require("./_card.js");
 var KIND = {
   provider: {
     what: "이 분류의 일을 하는 업체를 찾고 비교하는 자리입니다.",
+    /* ⚠️⚠️ **길잡이 한 줄이 둘입니다** — 업체가 0곳일 때와 있을 때 할 말이
+       다릅니다. 한 줄로 두면 업체가 들어오신 날 "업체가 등록되면 … 되게
+       됩니다" 가 **이미 등록된 업체 목록 바로 위에서** 그대로 나옵니다
+       (코드는 멀쩡하고 글만 썩는 자리). 고르는 자리는 pvBlock 한 곳입니다. */
     subs: "업체가 등록되면 아래 항목으로 걸러 볼 수 있게 됩니다. 요청하실 때도 여기서 고르십니다.",
+    pvOn: "항목을 누르시면 그 일을 하는 업체만 모아 보여 드립니다.",
     zeroT:"아직 등록된 업체가 없습니다.",
     zeroD:"문을 열기 전이라 보여 드릴 업체가 없습니다. 없는 업체를 지어내 보여 드리지 않습니다.",
     /* ⚠️ 전에는 "이 분야 업체로 입점하기" 였습니다. 이 구간을 읽는 사람은
@@ -48,7 +53,17 @@ var KIND = {
        중고채 매입 견적 · 위탁판매 연결. 그 둘만 적습니다.
        ⚠️ 그렇다고 막다른 길로 두지 않습니다 — 아래 `asks(c)` 가 이 분류의
        매칭 요청 단추를 냅니다 (절대 규칙 2). */
-    what: "중고 골프채와 용품을 업체를 통해 팔거나 사는 자리입니다. " +
+    /* ⚠️⚠️⚠️ **2026-11-08 — 이 줄이 또 썩어 있었습니다.** "업체를 통해
+       팔거나 사는 자리" 라고 적혀 있었는데, 그 글은 **매물을 올리는 길이
+       아예 없던 2026-11-06** 에 쓴 것입니다. 0056 이 매물을 · 0068 이
+       사진과 브랜드를 세운 뒤로 이 분류의 알맹이는 **회원끼리 직거래**
+       이고, 업체가 하는 것은 둘(매입 견적 · 위탁판매)뿐이며 그 업체는
+       0곳입니다 — 되는 것을 안 적고 안 되는 것을 주된 것처럼 적는
+       꼴이었습니다(절대 규칙 5 의 거울상).
+       ⚠️ **기능을 세운 날 그 기능을 설명하는 글을 같이 고치세요** —
+       이 저장소가 다섯 번 밟은 자리입니다. */
+    what: "회원끼리 직접 사고파는 자리입니다. 업체에 맡기는 매입 견적 · " +
+          "위탁판매도 아래에서 함께 연결해 드립니다. " +
           "골프올인원은 거래 당사자가 아닙니다.",
     /* ⚠️⚠️ **아홉 가운데 둘만 눌립니다** (`pv:true` 인 매입 견적 ·
        위탁판매). 그래서 아래 "눌러 보시면 …" 한 줄을 **덧붙이지
@@ -60,9 +75,15 @@ var KIND = {
        ⚠️ 아홉 가운데 **둘만** 링크입니다(업체가 하는 매입 견적 ·
        위탁판매). 나머지 일곱은 **매물의 종류**이고, 아래 매물 목록의
        거르개에서 고르십니다. */
-    subs: "업체가 해 드리는 것(매입 견적 · 위탁판매)은 눌러서 그 일을 하는 " +
-          "업체를 보실 수 있습니다. 아래 물건 종류는 회원끼리 사고파는 " +
-          "매물의 종류입니다 — 매물 목록에서 그 종류로 좁혀 보실 수 있습니다.",
+    subs: "물건 종류를 누르시면 그 종류의 매물만 모아 보여 드립니다.",
+    /* 업체 쪽 덩이의 머리말 — ⚠️ 중고만 "0곳" 이 **제목이 아닙니다**.
+       여기는 업체가 없어도 매물이 도는 자리라, 업체는 **곁들이는 것**
+       입니다. 그래서 제목이 "업체에 맡기실 수도 있습니다" 이고 "아직
+       등록된 업체가 없습니다" 는 그 안의 h3 입니다. */
+    pvH:  "업체에 맡기실 수도 있습니다",
+    pvD:  "직접 팔기 번거로우시면 업체가 값을 매겨 사 가거나(매입 견적) " +
+          "대신 팔아(위탁판매) 드립니다.",
+    pvNote: null,
     cta:  null
   },
   match: {
@@ -84,7 +105,11 @@ var KIND = {
     what: "글을 올리고 읽는 자리입니다.",
     /* ⚠️⚠️⚠️ 위 match 와 같은 자리 — 0047(`ask_cq`) · 0048(`open_jobpost`)
        이 선 뒤에도 "올리는 기능은 아직 없습니다" 가 남아 있었습니다. */
-    subs: "회원이 직접 올리는 자리입니다. 아래와 같은 글을 올리실 수 있습니다.",
+    /* ⚠️⚠️ 2026-11-08 — 게시판 열둘이 `<span>` 이라 **한 번도 안
+       눌렸습니다**. `js/community.js` 는 진작 `?s=` 를 읽고 있었고요
+       (받는 쪽은 있는데 가는 길이 없던 자리). 이제 눌리므로 글도
+       그 사실대로 적습니다. */
+    subs: "갈래를 누르시면 그 갈래의 글만 모아 보여 드립니다.",
     zeroT:"아직 올라온 글이 없습니다.",
     zeroD:"첫 글이 올라오면 여기에 바로 보입니다.",
     cta:  null
@@ -104,9 +129,11 @@ KIND.trade.zeroD = KIND.provider.zeroD;
    까닭은 **할 수 있는 것이 없어서가 아닙니다** — 여는 · 올리는 양식이
    **바로 이 화면 안에** 있습니다(`js/join.js` · `js/community.js` ·
    `js/career.js`). 다른 데로 보낼 까닭이 없어서 안 냅니다.
-   ⚠️ 중고장터(`trade`)는 아직 문이 없어 정말로 `cta` 가 없습니다.
-   (전에는 이 주석이 "조인 · 커뮤니티는 아직 할 수 있는 것이 없어서" 라고
-   적혀 있었습니다 — 0046~0048 이 선 뒤에 썩은 줄이었습니다.)
+   ⚠️⚠️ **중고장터도 2026-11-08 에 같은 꼴이 되었습니다** — 여기 "아직
+   문이 없어 정말로 `cta` 가 없습니다" 라고 적혀 있었는데 0056 이 그 문을
+   세웠고 양식은 **이 화면 안**(`js/listing.js` 의 `#lsbox`)에 있습니다.
+   썩은 줄을 또 남길 뻔했습니다 — **기능을 세운 날 그 기능을 설명하는
+   주석도 같이** 고치세요.
    ⚠️ 매칭 요청 화면은 업체가 0곳이어도 접수되고(운영자가 받습니다),
    그 화면이 그 사실을 스스로 말합니다. */
 
@@ -148,14 +175,19 @@ function related(c){
    "여쭙는다" 고 하는데 양식에는 그 칸이 없는 꼴이 됩니다.
    ⚠️ 받을 자리가 없는 분류(조인 · 인력 · 커뮤니티)는 AM_ASK 가 비어
    있고, 그러면 이 구간이 **줄째 빠집니다** (절대 규칙 2). */
-function asks(c){
+/* ⚠️⚠️⚠️ **2026-11-08 — 이것이 큰 제목 하나를 통째로 먹고 있었습니다.**
+   업체가 0곳이라 매칭 요청을 넣어도 **배정할 곳이 없는데**, 화면에서
+   가장 큰 자리 하나가 그 길이었습니다. 지금은 **업체 구간 안의 h3**
+   입니다 — 그 길이 업체를 기다리는 길이라는 것이 자리로 보입니다.
+   ⚠️ 길은 안 지웠습니다. 자리만 바꿨습니다. */
+function asksBlock(c){
   var a = W.amAskOf ? W.amAskOf(c) : null;
   if(!a) return "";
-  return '<section class="sec sec-alt"><div class="wrap">' +
-    '<div class="sec-hd"><h2>' + esc(c.name) + ' 요청에 적는 것</h2>' +
+  return '<div class="asks-w">' +
+    '<h3 class="asks-h">' + esc(c.name) + ' 요청에 적는 것</h3>' +
     '<p>이 분류로 매칭 요청을 남기시면 아래를 여쭙습니다. ' +
     '전부 한 양식에서 한 번에 적으십니다. ' +
-    '<b>*</b> 는 꼭 적어 주셔야 하는 것입니다.</p></div>' +
+    '<b>*</b> 는 꼭 적어 주셔야 하는 것입니다.</p>' +
     /* ⚠️⚠️ **별표는 AM_ASK 의 셋째 칸에서 옵니다** — 양식이 required
        를 거는 자리와 **같은 줄**을 읽습니다. 여기 손으로 적으면
        "필수라고 적어 놓고 안 받는" 꼴이 됩니다 (`test-match` 가
@@ -166,6 +198,81 @@ function asks(c){
     }).join("") + '</ul>' +
     '<p class="asks-go"><a class="btn btn-pt" href="/match?cat=' + esc(c.key) + '">' +
       icon("match", 20) + esc(c.name) + ' 매칭 요청하기</a></p>' +
+  '</div>';
+}
+
+/* ── 하위 칩 — ⚠️⚠️ **제가 거르는 목록 바로 위에** 놓습니다 ───────────
+   ⚠️⚠️⚠️ 2026-11-08 까지 이 칩이 「…에서 다루는 것」이라는 **제 구간**에
+   담겨 열 장 전부 **맨 위**에 있었습니다. 그런데 그 칩이 거르는 목록은
+   저 아래였습니다 — 누르고 나서야 어디로 갔는지 아는 꼴입니다.
+   ⚠️ 그리고 업체가 0곳이라, 업체찾기로 가는 칩은 **맨 위에서 전부 0건으로**
+   보내고 있었습니다. 지금은 업체 구간 안에 있습니다.
+   ⚠️ 주소도 · 눌리는지도 `amSubUrl()` · `amSubGoes()` **한 곳**입니다. */
+function chips(c, items, note){
+  if(!items.length) return "";
+  return (note ? '<p class="chips-n">' + esc(note) + '</p>' : '') +
+    /* ⚠️ `chips-sub` 는 **잴 자리를 가리키는 이름**입니다 — 관련
+       분류 줄도 `.chips` 를 쓰므로, 이름이 없으면 검사가 그 링크까지
+       하위 칩으로 셉니다. CSS 는 아래 여백 한 줄뿐입니다. */
+    '<ul class="chips chips-sub">' + items.map(function(it){
+      return W.amSubGoes(c, it.key)
+        ? '<li><a class="chip chip-go" href="' +
+          esc(W.amSubUrl(c.key, it.key)) + '">' + esc(it.name) + '</a></li>'
+        : '<li><span class="chip">' + esc(it.name) + '</span></li>';
+    }).join("") + '</ul>';
+}
+
+/* ── 업체 쪽 한 덩이 ──────────────────────────────────────────────
+   ⚠️⚠️ **업체찾기로 가는 칩 · 업체 카드(또는 0곳 안내) · 매칭 요청**을
+   한 덩이로 묶습니다. 전에는 셋이 화면 세 곳에 흩어져 있어서, 업체가
+   0곳인 지금 손님이 **무엇이 업체를 기다리는 길인지** 알 수 없었습니다.
+   ⚠️ 0건이어도 막다른 길로 두지 않습니다 — `nowOpen()` 이 지금 실제로
+   되는 것으로 보냅니다 (절대 규칙 2). */
+function nowOpen(cat){
+  var here = W.amCatUrl(cat);
+  var L = (W.amOpenNow ? W.amOpenNow() : []).filter(function(x){
+    return x.href !== here;
+  });
+  if(!L.length) return "";
+  return '<p class="none-or">업체를 기다리지 않고 지금 하실 수 있는 것</p>' +
+    '<div class="none-b">' + L.map(function(x){
+      return '<a class="btn btn-line" href="' + esc(x.href) + '">' +
+        icon(x.icon, 18) + esc(x.label) + '</a>';
+    }).join("") + '</div>';
+}
+function pvBlock(c, k, list, pvItems){
+  /* 업체를 받지 않는 분류(조인 · 커뮤니티)는 이 덩이가 **통째로** 빠집니다 */
+  if(!c.provider) return "";
+  var ask = asksBlock(c);
+  /* ⚠️ 할 말이 하나도 없으면 **구간째 뺍니다** — 인력(`career`)은 업체를
+     받지만 하위 칩이 전부 제 글 목록으로 가고 AM_ASK 도 비어 있어,
+     업체가 0곳인 동안은 "아직 등록된 업체가 없습니다" 한 줄만 남습니다.
+     그 한 줄은 손님이 할 수 있는 일이 없는 자리입니다 (절대 규칙 2). */
+  if(!list.length && !pvItems.length && !ask) return "";
+  /* ⚠️ 칩 위의 길잡이 한 줄은 **업체가 있을 때와 0곳일 때가 다릅니다** */
+  var note = k.pvNote !== undefined ? k.pvNote
+           : (list.length ? (k.pvOn || k.subs) : k.subs);
+  if(list.length)
+    return '<section class="sec sec-alt"><div class="wrap">' +
+      '<div class="sec-hd"><h2>' + esc(c.name) + ' 업체 ' + W.won(list.length) + '곳</h2>' +
+      '<p>골프올인원은 통신판매중개자이며 거래 당사자가 아닙니다.</p></div>' +
+      chips(c, pvItems, note) +
+      card.grid(list) + ask +
+    '</div></section>';
+  return '<section class="sec sec-alt"><div class="wrap">' +
+    '<div class="sec-hd"><h2>' + esc(k.pvH || k.zeroT) + '</h2>' +
+    '<p>' + esc(k.pvH ? k.pvD : k.zeroD) + '</p></div>' +
+    chips(c, pvItems, note) +
+    '<div class="none">' +
+      (k.pvH ? '<h3>' + esc(k.zeroT) + '</h3><p>' + esc(k.zeroD) + '</p>' : '') +
+      /* ⚠️⚠️ 매칭 요청 단추가 **한 화면에 둘**이 되지 않게 — 아래
+         `asksBlock` 이 무엇을 여쭙는지까지 말해 주므로 그쪽을 남깁니다. */
+      (k.cta && !ask
+        ? '<a class="btn btn-pri" href="' + esc(k.cta[0]) + '">' +
+          icon(k.cta[2], 20) + esc(k.cta[1]) + '</a>'
+        : '') +
+      nowOpen(c) +
+    '</div>' + ask +
   '</div></section>';
 }
 
@@ -200,36 +307,20 @@ exports.build = function(c){
     '<div class="adsl-w" data-adslot="cat_top" data-adslot-key="' +
       esc(c.key) + '" hidden></div></div></section>';
 
-  var canPv = W.amCatItemsForProvider(c).map(function(it){ return it.key; });
-  var subs = items.length
-    ? '<section class="sec"><div class="wrap">' +
-      '<div class="sec-hd"><h2>' + esc(c.name) + '에서 다루는 것</h2>' +
-      '<p>' + esc(k.subs) +
-      /* ⚠️⚠️ **무엇이 걸러지는지는 `amSubFinds()` 한 곳**이 정합니다 —
-         `/cat/career` 의 하위는 업체가 아니라 **구인 · 구직 글**을
-         좁히는데 여기가 "업체만 모아" 라고 적고 있었습니다 (2026-11-05). */
-      /* ⚠️⚠️⚠️ **하위가 전부 눌릴 때만 붙입니다** (2026-11-06). 중고
-         장터는 아홉 가운데 **둘만** 눌리는데(나머지는 회원끼리 쓰는
-         물건 종류라 좁힐 자료가 없습니다) 이 줄이 아홉 전부에 해당하는
-         것처럼 읽혔습니다 — "눌러 보시면" 이라고 적어 놓고 일곱은
-         안 눌리는 꼴입니다. 그 분류는 제 `subs` 글에서 **무엇이 눌리는지**
-         직접 말합니다. */
-      (canPv.length && canPv.length === items.length
-        ? (W.amSubFinds(c) === "글"
-            ? ' 눌러 보시면 그 갈래의 글만 모아 보여 드립니다.'
-            : ' 눌러 보시면 그 일을 하는 업체만 모아 보여 드립니다.')
-        : '') +
-      '</p></div>' +
-      /* ⚠️ `chips-sub` 는 **잴 자리를 가리키는 이름**입니다 — 관련
-         분류 줄도 `.chips` 를 쓰므로, 이름이 없으면 검사가 그 링크까지
-         하위로 세어 멀쩡한 화면을 실패로 잡습니다 (실제로 그랬습니다). */
-      '<ul class="chips chips-sub">' + items.map(function(it){
-        return canPv.indexOf(it.key) >= 0
-          ? '<li><a class="chip chip-go" href="' +
-            esc(W.amSubUrl(c.key, it.key)) + '">' + esc(it.name) + '</a></li>'
-          : '<li><span class="chip">' + esc(it.name) + '</span></li>';
-      }).join("") + '</ul></div></section>'
-    : "";
+  /* ── 하위 칩을 **둘로 가릅니다** ──────────────────────────────────
+     ⚠️⚠️⚠️ 2026-11-08 — 전에는 「…에서 다루는 것」이라는 제 구간에 아홉 ·
+     열둘을 통째로 담아 **열 장 전부 맨 위**에 놓았습니다. 그런데 그 칩이
+     거르는 목록은 화면 저 아래였고, 업체가 0곳이라 업체찾기로 가는 칩은
+     **맨 위에서 전부 0건으로** 보내고 있었습니다.
+     ⚠️ 가르는 잣대는 **그 칩이 어디로 가느냐** 하나입니다(`amSubUrl()`) —
+     `/search` 로 가면 업체 쪽, 아니면 이 화면의 제 목록 쪽입니다. 화면이
+     분류 이름으로 따로 판단하면 갈래가 늘어나는 날 두 곳이 어긋납니다. */
+  var pvItems = W.amCatItemsForProvider(c).filter(function(it){
+    return W.amSubUrl(c.key, it.key).indexOf("/search") === 0;
+  });
+  var pvKeys  = pvItems.map(function(it){ return it.key; });
+  var ownItems = items.filter(function(it){ return pvKeys.indexOf(it.key) < 0; });
+  var ownChips = chips(c, ownItems, k.subs);
 
   /* ⚠️⚠️ **업체가 있을 때와 없을 때를 둘 다 그립니다.** 앞 서비스에서
      "0곳" 안내만 만들어 두고 **있을 때 그리는 자리를 안 만든** 적이
@@ -253,6 +344,7 @@ exports.build = function(c){
          물건을 우리가 보지 않습니다 (전자상거래법 제20조) */
       '골프올인원은 거래 당사자가 아니며, 결제 · 배송 · 안전거래를 ' +
       '대신해 드리지 않습니다.</p></div>' +
+      ownChips +
       '<div id="lslist">' +
         '<div class="none"><h3>매물을 보시려면 잠시만 기다려 주세요.</h3>' +
         '<p>올라온 매물을 불러옵니다. 보이지 않으면 아직 올라온 매물이 ' +
@@ -278,6 +370,7 @@ exports.build = function(c){
       '다른 회원이 참가를 신청합니다. ' +
       /* ⚠️ 지어낸 약속을 하지 않습니다 — 우리가 부킹을 잡아 주지 않습니다 */
       '골프올인원은 부킹을 대신 잡아 드리지 않으며 거래 당사자가 아닙니다.</p></div>' +
+      ownChips +
       '<div id="joinlist">' +
         '<div class="none"><h3>조인을 보시려면 잠시만 기다려 주세요.</h3>' +
         '<p>열려 있는 조인을 불러옵니다. 보이지 않으면 아직 열린 조인이 ' +
@@ -306,6 +399,7 @@ exports.build = function(c){
       /* ⚠️ 지어낸 약속을 하지 않습니다 — 우리가 답해 드리는 곳이 아닙니다 */
       '골프올인원이 답변을 드리지는 않으며, 글과 댓글의 내용은 ' +
       '적으신 회원의 것입니다.</p></div>' +
+      ownChips +
       '<div id="cqlist">' +
         '<div class="none"><h3>글을 보시려면 잠시만 기다려 주세요.</h3>' +
         '<p>올라온 글을 불러옵니다. 보이지 않으면 아직 올라온 글이 ' +
@@ -334,6 +428,7 @@ exports.build = function(c){
       /* ⚠️ 지어낸 약속을 하지 않습니다 — 우리가 채용을 대신 하지 않습니다 */
       '골프올인원은 채용을 대신 진행하지 않으며 거래 당사자가 아닙니다. ' +
       '적어 주신 조건이 사실인지는 서로 확인하셔야 합니다.</p></div>' +
+      ownChips +
       '<div id="joblist">' +
         '<div class="none"><h3>글을 보시려면 잠시만 기다려 주세요.</h3>' +
         '<p>올라온 글을 불러옵니다. 보이지 않으면 아직 올라온 글이 ' +
@@ -459,32 +554,38 @@ exports.build = function(c){
      통째로 사라졌습니다**(그리고 거기 붙어 있던 매칭 요청 단추까지).
      `test-providers` 가 여행 분류에서 잡았습니다 — 가로로 밀리지도 ·
      글자가 작지도 않아 다른 검사는 전부 초록이었습니다. */
-  var ownSec   = (lsSec || joinSec || cqSec || jobSec);   /* 0곳 안내를 **대신**합니다 */
-  var sideSec  = teeSec + wtSec;                          /* 0곳 안내에 **곁들입니다** */
-  var memberSec = sideSec + ownSec;
+  /* ⚠️⚠️⚠️ **2026-11-08 — 차례를 뒤집었습니다.**
+     전에는 `head + adTop + subs(칩) + teeFind + sideSec + (ownSec || zero)`
+     였습니다. 그래서 **열 장 전부**가 이렇게 보였습니다 —
+       ① 맨 위에 하위 칩 한 줄(업체 0곳이라 거의 다 0건으로 갑니다)
+       ② 조인 화면은 **업체가 내놓은 자리**가 **회원이 연 조인**보다 위
+       ③ 「<분류> 요청에 적는 것」이 큰 제목 하나를 통째로
+     지금은 **지금 실제로 되는 것이 위**입니다:
+       회원 것(`ownSec` 매물 · 조인 · 게시판 · 구인 · 구합니다)
+       → 업체 것(`pvSec` 칩 · 카드 또는 0곳 안내 · 매칭 요청)
+     ⚠️⚠️ 다만 **업체가 실제로 있으면 업체가 위**입니다 — 그때는 손님이
+     업체를 찾으러 온 것이 맞습니다. 가르는 것은 `list.length` 하나이고
+     아래 한 줄뿐입니다 (분류마다 적어 두면 갈래가 늘어나는 날 어긋납니다).
+     ⚠️ `teeFind`(찾는 칸)는 **늘 맨 위**입니다 — 그 칸은 부킹 · 조인을
+     찾는 자리이고 시안이 그렇게 요구했습니다. */
+  var ownSec = lsSec + joinSec + cqSec + jobSec + wtSec;
   /* ⚠️⚠️⚠️ **2026-11-07 — `/cat/matchup` 에 `#ttlist` 가 한 줄도 안 찍혔습니다.**
-     아래 0곳 가지가 `ownSec || (sideSec + zero)` 라, 조인 화면처럼 **ownSec 이
-     있는 분류에서는 sideSec 이 통째로 사라졌습니다** — 그래서 0060 이
-     세운 "업체가 내놓은 조인 자리" 가 **처음부터 죽은 코드**였습니다
+     그때 차례가 `ownSec || (sideSec + zero)` 라, 조인 화면처럼 ownSec 이
+     있는 분류에서는 sideSec 이 **통째로 사라졌습니다** — 0060 이 세운
+     "업체가 내놓은 조인 자리" 가 **처음부터 죽은 코드**였습니다
      (`js/booking.js` 는 `#ttlist` 가 없으면 그자리에서 나갑니다 · 에러 0줄).
-     ⚠️ 여행 분류에서 **구합니다를 더했다가 0곳 안내가 사라졌던** 그 자리의
-     **거울상**입니다. 지금은 sideSec 은 **늘** 서고, `zero`(업체 0곳 안내)만
-     ownSec 이 있을 때 빠집니다. */
+     ⚠️ 2026-11-08 에 **구간을 더하기만 하는 꼴**로 바꿔 그 함정을 없앴습니다 —
+     이제 `ownSec` 도 `teeSec` 도 `pvSec` 도 **서로를 지우지 않습니다.** */
 
-  var list = W.amProvidersOf(c.key);
-  if(list.length){
-    return {
-      route: W.amCatUrl(c), title: c.name,
-      crumbs: [["카테고리 전체보기", "/categories"], [c.name, W.amCatUrl(c)]],
-      desc: c.name + " — " + c.lead + ". " + k.what + " 지금 " + list.length + "곳이 있습니다.",
-      body: head + adTop + subs + teeFind +
-        '<section class="sec sec-alt"><div class="wrap">' +
-          '<div class="sec-hd"><h2>' + esc(c.name) + ' 업체 ' + W.won(list.length) + '곳</h2>' +
-          '<p>골프올인원은 통신판매중개자이며 거래 당사자가 아닙니다.</p></div>' +
-          card.grid(list) +
-        '</div></section>' + memberSec + asks(c) + related(c)
-    };
-  }
+  /* ⚠️⚠️⚠️ **가지를 둘로 두지 않습니다** (2026-11-08). 전에는 "업체가
+     있을 때" 와 "0곳일 때" 가 `return` 둘로 갈려 있었고, 그래서 한쪽에만
+     구간을 더하는 일이 **두 번** 났습니다 — 여행에서 구합니다를 더했다가
+     0곳 안내가 통째로 사라진 자리, `/cat/matchup` 에 `#ttlist` 가 한 줄도
+     안 찍혀 0060 이 세운 코드가 **처음부터 죽어 있던** 자리.
+     지금은 줄기가 하나이고, 업체 쪽은 `pvBlock()` 한 함수가 **있을 때와
+     없을 때를 같이** 그립니다. */
+  var list  = W.amProvidersOf(c.key);
+  var pvSec = pvBlock(c, k, list, pvItems);
 
   /* ⚠️⚠️⚠️ **조인은 막다른 길이 아닙니다** (0046 · 지시서 §2.A).
      여기는 업체를 찾는 자리가 아니라 **회원끼리 여는** 자리라,
@@ -503,33 +604,6 @@ exports.build = function(c){
      이 화면 자신이라, 그대로 두면 **눌러도 제자리인 단추**가 됩니다
      (레슨 화면의 "구합니다 글 올리기" 가 그 자리입니다 · 절대 규칙 5).
      ⚠️ 0건이면 줄째 빠집니다 (지어내지 않습니다). */
-  function nowOpen(cat){
-    var here = W.amCatUrl(cat);
-    var L = (W.amOpenNow ? W.amOpenNow() : []).filter(function(x){
-      return x.href !== here;
-    });
-    if(!L.length) return "";
-    return '<p class="none-or">업체를 기다리지 않고 지금 하실 수 있는 것</p>' +
-      '<div class="none-b">' + L.map(function(x){
-        return '<a class="btn btn-line" href="' + esc(x.href) + '">' +
-          icon(x.icon, 18) + esc(x.label) + '</a>';
-      }).join("") + '</div>';
-  }
-
-  var zero = '<section class="sec sec-alt"><div class="wrap"><div class="none">' +
-    '<h2>' + esc(k.zeroT) + '</h2>' +
-    '<p>' + esc(k.zeroD) + '</p>' +
-    /* ⚠️⚠️ **바로 아래 "요청에 적는 것" 구간에 같은 단추가 있으면**
-       한 화면에 매칭 요청 단추가 둘이 됩니다 (지시서 §2 — 중복). 그쪽이
-       무엇을 여쭙는지까지 말해 주므로 그쪽을 남기고 여기는 뺍니다.
-       ⚠️ 그 구간이 없는 분류(조인 · 인력 · 커뮤니티)에서는 여기도 비어
-       있습니다 — 그 분류는 지금 할 수 있는 것이 정말로 없습니다. */
-    (k.cta && !(W.amAskOf && W.amAskOf(c))
-      ? '<a class="btn btn-pri" href="' + esc(k.cta[0]) + '">' +
-        icon(k.cta[2], 20) + esc(k.cta[1]) + '</a>'
-      : '') +
-    nowOpen(c) +
-  '</div></div></section>';
 
   return {
     route: W.amCatUrl(c),
@@ -592,11 +666,12 @@ exports.build = function(c){
              "/js/wanted.js"]
           : [])))))).concat(["/js/data/providers.generated.js",
                           "/js/data/providers.js", "/js/adslot.js"]),
-    /* ⚠️ 조인은 제 구간이 "0건" 을 스스로 말하므로 zero 를 **안 겹칩니다**
-       (한 화면에 "없습니다" 가 두 번 나오면 미완성으로 읽힙니다). */
-    /* ⚠️ 중고는 제 구간이 "0건" 을 스스로 말하므로 zero 를 **안 겹칩니다**
-       (한 화면에 "없습니다" 가 두 번 나오면 미완성으로 읽힙니다) */
-    body: head + adTop + subs + teeFind + sideSec + (ownSec || zero) +
-          asks(c) + related(c)
+    /* ⚠️⚠️ **차례 한 줄이 이 화면의 뜻입니다** — 찾는 칸이 맨 위,
+       그 다음이 **지금 실제로 되는 것**(회원 것), 그 다음이 업체 것.
+       업체가 실제로 있으면 그때만 업체가 앞으로 옵니다. */
+    body: head + adTop + teeFind +
+          (list.length ? (pvSec + teeSec + ownSec)
+                       : (ownSec + teeSec + pvSec)) +
+          related(c)
   };
 };

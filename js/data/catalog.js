@@ -411,6 +411,28 @@ window.amSub = function(subKey){
    갑니다 (`amCatUrl` 로 겪었습니다) — 빌드도 브라우저도 이 함수를
    부릅니다.
    ⚠️ 하위 키가 없으면 분류만으로 좁힙니다 (지어내지 않습니다). */
+/* 그 하위가 **업체가 하는 일**인가 — `amSubUrl()` 이 갈래를 가를 때
+   씁니다. ⚠️ `pv` 를 안 적은 하위는 그 분류가 업체를 받는지로 갈립니다
+   (`amCatItemsForProvider` 와 **같은 규칙**이어야 합니다). */
+function amSubIsPv(catKey, subKey){
+  var L = window.amCatItemsForProvider(catKey) || [];
+  for(var i = 0; i < L.length; i++) if(L[i].key === subKey) return true;
+  return false;
+}
+/* 그 하위를 **누를 수 있는가** — 누르면 실제로 좁혀지는 자리가 있을
+   때만 링크로 냅니다 (절대 규칙 5 — 눌러도 아무 일이 안 나는 칸을 미리
+   만들지 않습니다).
+   ⚠️⚠️ 조인 다섯은 **글로 둡니다** — `joinroom` 에 하위 칸이 없어 좁힐
+   자료가 **정말로** 없습니다. 링크로 내면 영원히 0건인 자리로 보내는
+   것이고, 그건 눌러도 아무 일이 안 나는 칸과 같습니다.
+   ⚠️ 인력 · 게시판 · 중고의 하위는 제 목록이 `?s=` 를 읽습니다
+   (`js/career.js` · `js/community.js` · `js/listing.js`).
+   ⚠️ 그 밖은 **업체가 하는 하위**만 — 업체찾기가 `sub` 로 좁힙니다. */
+window.amSubGoes = function(catKey, subKey){
+  var c = (typeof catKey === "string") ? catKey : (catKey && catKey.key);
+  if(c === "career" || c === "community" || c === "used") return true;
+  return amSubIsPv(c, subKey);
+};
 window.amSubUrl = function(catKey, subKey){
   var c = (typeof catKey === "string") ? catKey : (catKey && catKey.key);
   /* ⚠️⚠️⚠️ **인력 · 비즈니스의 하위는 업체 목록이 아닙니다.** "골프 프로
@@ -421,22 +443,34 @@ window.amSubUrl = function(catKey, subKey){
      ⚠️ 갈래를 가르는 판단을 화면마다 적지 않습니다 — 여기 한 곳입니다. */
   if(c === "career")
     return "/cat/career" + (subKey ? "?s=" + encodeURIComponent(subKey) : "");
+  /* ⚠️⚠️⚠️ **게시판 열둘과 중고 물건 종류 일곱도 같은 자리입니다**
+     (2026-11-08). 그 열아홉은 `<span>` 으로 그려져 **한 번도 안 눌렸는데**,
+     받는 쪽은 진작 있었습니다 — `js/community.js` 와 `js/listing.js` 가
+     둘 다 `?s=` 를 읽습니다. **받는 쪽은 있는데 가는 길이 없던** 자리이고,
+     0067 에서 인력 `?rg=` · 구합니다 `?s=` 로 겪은 그 자리의 거울상입니다.
+     ⚠️ 중고는 **하위마다 갈립니다** — 업체가 하는 둘(`pv:true` · 매입
+     견적 · 위탁판매)은 업체찾기로, 나머지 일곱(회원끼리 쓰는 물건 종류)은
+     매물 목록으로 갑니다. 그 판단을 화면에 적으면 두 곳이 됩니다. */
+  if(c === "community")
+    return "/cat/community" + (subKey ? "?s=" + encodeURIComponent(subKey) : "");
+  if(c === "used" && subKey && !amSubIsPv("used", subKey))
+    return "/cat/used?s=" + encodeURIComponent(subKey);
   var qs = [];
   if(c)      qs.push("cat=" + encodeURIComponent(c));
   if(subKey) qs.push("sub=" + encodeURIComponent(subKey));
   return "/search" + (qs.length ? "?" + qs.join("&") : "");
 };
 
-/* 하위를 누르면 **무엇이** 걸러지나 — "업체" 인가 "올라온 글" 인가.
-   ⚠️⚠️ 위 `amSubUrl` 과 **같은 갈래**입니다. 안내문을 화면에서 따로
-   판단하면 둘이 어긋납니다 — 실제로 `/cat/career` 가 "그 일을 하는
-   **업체**만 모아 보여 드립니다" 라고 적고 있었는데, 그 하위는
-   업체가 아니라 **구인 · 구직 글**을 좁힙니다 (2026-11-05 검수).
-   ⚠️ 갈래를 늘리는 날 `amSubUrl` 과 **이 함수를 같이** 고치세요. */
-window.amSubFinds = function(catKey){
-  var c = (typeof catKey === "string") ? catKey : (catKey && catKey.key);
-  return c === "career" ? "글" : "업체";
-};
+/* ⚠️⚠️⚠️ **`amSubFinds()` 를 여기서 지웠습니다** (2026-11-08).
+   그 함수는 "하위를 누르면 업체가 걸러지나 글이 걸러지나" 를 한 낱말로
+   내어 「…에서 다루는 것」 구간의 안내문에 쓰였습니다. 그 구간을 걷어
+   내면서 **부르는 자리가 0곳**이 되었고, 그러면 그건 기능이 아니라
+   남은 글입니다 (`check-doors` 가 SQL 의 문에 대고 세는 그 규칙과
+   같습니다 — 0이면 없는 것입니다).
+   ⚠️ 지금 그 판단을 하는 자리는 둘입니다 — 어디로 가는지는 `amSubUrl()`,
+   눌리는지는 `amSubGoes()`. 칩 위의 길잡이 한 줄은 분류마다 다른 말이라
+   `pages/category.js` 의 `KIND` 에 있습니다 (한 낱말로는 중고를 못
+   적습니다 — 거기는 하위마다 가는 곳이 갈립니다). */
 
 /* ⚠️⚠️⚠️ **업체가 0곳이어도 지금 되는 것** — 절대 규칙 2 의 "0 인
    자리에는 지금 실제로 되는 것을 같이 냅니다" 를 **한 곳**에서 냅니다.

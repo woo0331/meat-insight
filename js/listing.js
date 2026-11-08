@@ -848,11 +848,26 @@
     var w  = document.getElementById("lswrap");
     var rl = document.getElementById("lsrail");
     var br = document.getElementById("lsbar");
-    var bx = document.getElementById("lsbox");
     if(rl) rl.hidden = !!on;
     if(br) br.hidden = !!on;
-    if(bx) bx.hidden = !!on;
     if(w) w.classList.toggle("lsw-1", !!on);
+    /* ⚠️⚠️⚠️ **목록 화면의 머리글과 하위 칩까지 같이 가립니다** — 빌드가
+       찍어 둔 「올라온 매물」 구간 제목 · 길잡이 한 줄 · 물건 종류 칩
+       열셋 · 아래 주의 두 줄이 `#lswrap` **밖**에 있어서, 상세를 열어도
+       그것들이 그대로 위에 서 있었습니다. 재 보니 폰에서 제목이
+       **1,602px** 아래였습니다 — 손님이 상세를 열고 화면 두 개를 밀어야
+       물건 이름이 나옵니다. 가로로 밀리지도 · 글자가 작지도 · 대비가
+       낮지도 않아 **어떤 검사도 안 잡습니다**. **찍어 보고** 알았습니다.
+       ⚠️ 집는 법은 **「`#lswrap` 말고 전부」** 입니다 — 클래스 이름을
+       늘어놓으면 빌드가 한 줄 더 찍는 날 그것만 남습니다(이 저장소가
+       "열쇠를 더하는 날 첫 그림 조건도 같이" 로 겪은 자리).
+       ⚠️ **지우지 않고 가립니다** — 목록으로 돌아올 때 다시 세워야 합니다. */
+    var box = w && w.parentNode;
+    if(box){
+      Array.prototype.forEach.call(box.children, function(el){
+        if(el !== w) el.hidden = !!on;
+      });
+    }
   }
   function drawOne(a){
     /* ⚠️⚠️ **상세를 볼 때는 거르개와 올리는 양식을 가립니다** — 남겨

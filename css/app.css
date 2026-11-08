@@ -986,9 +986,13 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .lsd-back svg{ fill:none; stroke:currentColor; stroke-width:2;
                transform: rotate(180deg); }
 /* 큰 사진 — ⚠️ 비율을 박아 두어야 사진이 늦게 와도 글이 안 튑니다 (CLS) */
+/* ⚠️⚠️ **폭을 묶어 둡니다** — 1:1 이라 폭이 곧 높이입니다. 안 묶으면
+   1280px 화면에서 607px 짜리 사진이 서서 **제목과 값이 첫 화면 밖**으로
+   밀립니다(재 보고 알았습니다 · 도구는 못 잡습니다). 가운데로 모읍니다. */
 .lsd-ph{ position:relative; aspect-ratio: 1 / 1; background: var(--bg-2);
          border:1.5px solid var(--line); border-radius: var(--r);
-         overflow:hidden; display:grid; place-items:center; }
+         overflow:hidden; display:grid; place-items:center;
+         width:100%; max-width:460px; margin-inline:auto; }
 .lsd-ph img{ width:100%; height:100%; object-fit:contain; display:block; }
 /* ⚠️⚠️ 사진이 0장이면 **아이콘 타일**입니다 (남의 사진을 깔지 않습니다) */
 .lsd-ph-no{ display:grid; place-items:center; gap:10px; color: var(--ink3); }

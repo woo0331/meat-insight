@@ -111,8 +111,8 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
    줄이세요**(글자를 줄여 밀어 넣으면 폭이 조금만 좁아져도 또 넘칩니다). */
 .gnb a, .gnb button{
   display:inline-flex; align-items:center; gap:5px;
-  min-height: var(--tap); padding: 8px 9px; border-radius: 8px;
-  font-size:15px; font-weight:600; white-space:nowrap;
+  min-height: var(--tap); padding: 8px 7px; border-radius: 8px;
+  font-size:13.5px; font-weight:600; white-space:nowrap;
 }
 .gnb a:hover, .gnb button:hover{ background: rgba(255,255,255,.12); }
 
@@ -199,7 +199,13 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 
 /* 폰 — ⚠️ 미디어 쿼리가 특정도에서 지는 일이 잦습니다.
    .hd .gnb (0,2,0) 로 적어 둔 규칙이 없는지 확인하고 늘리세요. */
-@media (max-width: 1100px){
+/* ⚠️⚠️⚠️ **1340px 로 올렸습니다** (2026-11-08). 메뉴가 열이 되고,
+   로그인하시면 `js/hdauth.js` 가 오른쪽에 칸을 하나 더 끼워서
+   **1280px 에서 56px 넘쳤습니다**. ⚠️ `check-screens` 는 360 · 390 · 430 ·
+   768 · 1440 다섯 폭만 재고 **로그인도 안 하므로**, 그 자리를 못 봅니다 —
+   광고 소재 검사(1280 · 로그인)가 잡았습니다.
+   ⚠️ 시안의 "한 줄" 은 **넓은 PC**(1341px 위) 에서 지킵니다. */
+@media (max-width: 1340px){
   .hd-in{ flex-wrap: wrap; min-height:0; padding-block:10px; gap:10px; }
   /* ⚠️⚠️⚠️ **`overflow-x:auto` 를 뺐습니다** (2026-11-08). 메뉴가 넷에서
      **아홉**으로 늘면서(시안), 밀어서 보는 상자에 담으면 뒤 다섯이

@@ -906,7 +906,17 @@ function nowServe(){ return serve(0); }
       const tap = await ph.evaluate(function(){
         return Array.prototype.filter.call(
           document.querySelectorAll("main a, main button, main label"),
-          function(e){ return e.getBoundingClientRect().height < 39.5; }).length;
+          function(e){
+            /* ⚠️⚠️⚠️ **화면 읽는 기계용 글(`.sr`)은 누르는 것이 아닙니다**
+               (2026-11-08). 그것은 1px 상자라 늘 40px 미만이고, 손님에게는
+               보이지도 않습니다. `/search` 안으로 검색 칸이 들어오면서 그
+               `<label class="sr">` 이 `main` 안에 처음 들어왔고, 멀쩡한
+               화면이 세 폭에서 떨어졌습니다 — 전에는 그 이름표가 머리말에
+               있어 `main` 밖이었습니다.
+               ⚠️ 또 밟은 "검사가 멀쩡한 것을 고장이라고 한 자리" 입니다. */
+            if(e.classList.contains("sr") || e.closest(".sr")) return false;
+            return e.getBoundingClientRect().height < 39.5;
+          }).length;
       });
       ok("누르는 것이 40px 이상이다", tap === 0, tap + "개");
       await ph.close();

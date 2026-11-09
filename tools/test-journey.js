@@ -510,30 +510,34 @@ const MY_BOXES = ["mybox", "reqbox", "joinmine", "lsmine", "mycq", "jobmine",
 
   console.log("\n── ⚠️⚠️ 중고장터 머리 · 안전거래 가이드 (2026-11-09)");
   {
+    /* ⚠️⚠️⚠️ **`look()` 이 돌려주는 `body` 는 HTML 이 아니라 `innerText`
+       입니다.** 처음에 `t.indexOf('href="#safe"')` 로 재서 **멀쩡한 화면을
+       다섯 건이나 고장이라고** 했습니다(그 함수가 스스로 "글자 수와 글
+       자체는 다릅니다" 라고 적어 둔 바로 옆 줄입니다). 링크는 `r.hrefs`
+       로 · **자리(id)는 찍힌 HTML 을 읽어서** 봅니다 — `check-links` 는
+       `#` 뒤를 안 보므로 그 자리가 실제로 있는지는 아무도 안 봅니다. */
     const { r } = await look("/cat/used", FULL);
     const t = r.body || "";
-    /* ⚠️ `check-links` 는 `#` 뒤를 **안 봅니다** — 그러니 이 검사가
-       그 자리의 id 가 **실제로 있는지**를 봐야 합니다. 없으면 히어로의
-       「안전거래 가이드」가 눌러도 아무 일이 안 나는 칸입니다. */
+    const H = fs.readFileSync(path.join(ROOT, "cat", "used", "index.html"), "utf8");
+    const MY = fs.readFileSync(path.join(ROOT, "my", "index.html"), "utf8");
     ok("히어로의 「안전거래 가이드」가 `#safe` 로 가고 그 자리가 **있다**",
-       t.indexOf('href="#safe"') >= 0 && t.indexOf('id="safe"') >= 0,
-       t.indexOf('href="#safe"') + " / " + t.indexOf('id="safe"'));
+       r.hrefs.indexOf("#safe") >= 0 && H.indexOf('id="safe"') >= 0,
+       JSON.stringify({ href: r.hrefs.indexOf("#safe"),
+                        id: H.indexOf('id="safe"') }));
     ok("  ⚠️ 「판매글 등록」이 `#lsbox` 로 가고 그 자리가 **있다**",
-       t.indexOf('href="#lsbox"') >= 0 && t.indexOf('id="lsbox"') >= 0, "");
+       r.hrefs.indexOf("#lsbox") >= 0 && H.indexOf('id="lsbox"') >= 0, "");
     ok("  ⚠️ 퀵액션에 **찜한 상품 · 내 판매글**이 있다",
-       t.indexOf('href="/my#favbox"') >= 0 && t.indexOf('href="/my#lsmine"') >= 0, "");
+       r.hrefs.indexOf("/my#favbox") >= 0 && r.hrefs.indexOf("/my#lsmine") >= 0,
+       r.hrefs.filter(function(h){ return h.indexOf("/my#") === 0; }).join(" "));
     /* ⚠️⚠️⚠️ **「내 구매내역」을 안 만듭니다** — 주문도 · 결제도 · 배송도
        없어서 지어낸 기록이 됩니다(지시서 §5). 시안에 있다고 그려 두면
        눌러서 빈 화면으로 가거나 "거래 기록이 남는 곳" 으로 읽힙니다. */
     ok("⚠️⚠️ **「내 구매내역」을 안 낸다** (주문 · 결제 시스템이 없습니다)",
        t.indexOf("구매내역") < 0 && t.indexOf("구매 내역") < 0,
        t.indexOf("구매내역") + " / " + t.indexOf("구매 내역"));
-    /* ⚠️ `/my` 쪽 id 도 **실제로 있는지** 봅니다 — 보내는 쪽만 보면
-       받는 쪽이 바뀌는 날 조용히 엉뚱한 자리로 갑니다. */
-    const { r: my } = await look("/my", FULL);
-    const m = my.body || "";
+    /* ⚠️ 보내는 쪽만 보면 받는 쪽이 바뀌는 날 조용히 엉뚱한 자리로 갑니다 */
     ok("  ⚠️ `/my` 에 그 두 자리가 **실제로 있다** (`#favbox` · `#lsmine`)",
-       m.indexOf('id="favbox"') >= 0 && m.indexOf('id="lsmine"') >= 0, "");
+       MY.indexOf('id="favbox"') >= 0 && MY.indexOf('id="lsmine"') >= 0, "");
 
     ok("안전거래 가이드가 **중개 고지**를 그 자리에서 한다",
        t.indexOf("거래 당사자가 아닙니다") >= 0, "");
@@ -546,7 +550,8 @@ const MY_BOXES = ["mybox", "reqbox", "joinmine", "lsmine", "mycq", "jobmine",
     ok("  ⚠️ 그리고 **대금을 받지 않는다**고 분명히 적는다",
        t.indexOf("대금을 받지도") >= 0, "");
     ok("  ⚠️ 신고 · 분쟁으로 가는 길을 같이 낸다 (막다른 길로 두지 않습니다)",
-       t.indexOf('href="/help"') >= 0 && t.indexOf('href="/terms"') >= 0, "");
+       r.hrefs.indexOf("/help") >= 0 && r.hrefs.indexOf("/terms") >= 0,
+       r.hrefs.filter(function(h){ return h === "/help" || h === "/terms"; }).join(" "));
   }
 
   if(prove){

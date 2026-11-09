@@ -180,11 +180,19 @@ function boardsOf(){
     await p.waitForTimeout(450);
     return { p: p, errs: errs, sent: sent };
   }
+  /* ⚠️⚠️⚠️ **안 그려진 칸은 누르는 것이 아닙니다** (2026-11-09).
+     `hidden` 인 양식 안의 단추는 `getBoundingClientRect().height` 가 **0**
+     이라 "40px 미만" 으로 세어집니다 — 재려는 뜻은 "**그려진** 칸이 손가락에
+     닿는가" 이지 "안 그려진 칸이 있는가" 가 아닙니다(그건 다른 자물쇠입니다).
+     `check-screens` 가 `display:none` 인 메뉴 칸을 상자 밖으로 읽어 **멀쩡한
+     화면 스물넷을 떨어뜨린** 그 자리와 같습니다. 거르는 법도 같습니다 —
+     `getClientRects().length`. */
   function tapsOk(p, sel){
     return p.evaluate(function(s){
       return Array.prototype.filter.call(
         document.querySelectorAll(s + " button, " + s + " a"),
-        function(e){ return e.getBoundingClientRect().height < 39.5; }).length;
+        function(e){ return e.getClientRects().length > 0 &&
+                            e.getBoundingClientRect().height < 39.5; }).length;
     }, sel);
   }
 
@@ -2139,11 +2147,18 @@ function boardsOf(){
       /* ⚠️ 0 은 **무료로 나눔**입니다 — `||` 를 쓰면 사라집니다 */
       ok("  ⚠️ 값 0 을 **무료로 나눔**으로 적는다",
          t.txt.indexOf("무료") >= 0, t.txt.slice(0, 400));
-      /* ⚠️ 지우는 단추를 **안 냅니다** (분쟁 때 낼 것이 없어집니다) */
+      /* ⚠️ 지우는 단추를 **안 냅니다** (분쟁 때 낼 것이 없어집니다)
+         ⚠️⚠️ **글 전체에서 「지우」 를 찾으면 안 됩니다** — 이 상자의 안내문이
+         「**지우지** 않고 가립니다」 로 시작해서 제 글을 제가 집었습니다
+         (멀쩡한 화면을 고장이라고 한 자리). **단추 · 링크의 글자만** 봅니다. */
       const del = await g.p.evaluate(function(){
         const e = document.getElementById("lsadm");
-        return (e ? e.innerText : "").indexOf("지우") >= 0; });
-      ok("  ⚠️⚠️ **지우는 단추를 안 낸다** (가리기만 합니다)", !del, String(del));
+        if(!e) return "";
+        return Array.prototype.map.call(e.querySelectorAll("button, a"),
+          function(x){ return x.textContent || ""; }).join(" ");
+      });
+      ok("  ⚠️⚠️ **지우는 단추를 안 낸다** (가리기만 합니다)",
+         del.indexOf("지우") < 0 && del.indexOf("삭제") < 0, del.slice(0, 160));
 
       /* 가리기 — ⚠️ 까닭 없이는 안 보냅니다 */
       const n0 = g.sent.length;

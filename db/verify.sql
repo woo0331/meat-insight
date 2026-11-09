@@ -8,7 +8,9 @@
 --     몇 번 돌려도 안전하고, 운영 중에 돌려도 됩니다.
 --
 --  ⚠️⚠️ 기대값은 전부 **저장소에서 센 값**입니다 (눈대중이 아닙니다) —
---     판 69 · 표 55 · 상태 13 · 역할 4 · 길 70 · 함수 43.
+--     판 70 · 표 55 · 상태 13 · 역할 4 · 길 70 · 함수 43.
+--     ⚠️ 2026-11-09 — 0070 이 판 하나를 더했습니다(표 · 함수는 그대로입니다:
+--       `move_listing` 을 **덮어쓴** 것이고 새 함수가 아닙니다).
 --     ⚠️⚠️⚠️ **2026-11-09 에 다시 셌습니다.** 그 전에는 판 23 · 표 21 ·
 --     함수 48 로 **0023 판의 값**이 남아 있어서, 0069 까지 올린 멀쩡한
 --     DB 가 네 줄에서 ❌ 로 찍혔습니다 (판 · 표 · 함수 · anon).
@@ -196,7 +198,7 @@ v_cust as (
      and pg_get_functiondef(p.oid) like '%''customer''%'
 ),
 rows as (
-  select 1 i, '판 번호 (0001~0069)'            t, v_ver.n::text   got, '69' want from v_ver
+  select 1 i, '판 번호 (0001~0070)'            t, v_ver.n::text   got, '70' want from v_ver
   union all select  2, '표 (public · 보기 뺀 것)',  v_tab.n::text,  '55' from v_tab
   union all select  3, '⚠️ RLS 안 켜진 표: ' || v_rls.who, v_rls.n::text, '0' from v_rls
   union all select  4, '신청 상태 (hold 포함: ' ||

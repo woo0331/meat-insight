@@ -658,6 +658,86 @@ module.exports = function(T){
     J({ id:"00000000-0000-0000-0000-000000000069" }) + "'::jsonb)");
   ok("  ⚠️ 없는 매물은 거절한다", favNone.no, favNone.why);
 
+
+  /* ════════════════════════════════════════════════════════════════
+     ⑭ 0070 — 가린 매물을 **되돌리는 길** · 그리고 칸 GRANT
+     ⚠️⚠️⚠️ 0056 의 `move_listing` 은 `hidden` 으로만 갔습니다 — 한 번
+     가리면 올린 분(제 문들이 전부 `state in ('open','reserved')` 를
+     요구합니다)도 운영자도 못 되돌렸습니다.
+     ⚠️ 되돌리는 자리는 **가리기 전 상태**여야 합니다 — 팔린 매물을
+     가렸다가 `open` 으로 되살리면 이미 팔린 물건이 다시 살 수 있는
+     것처럼 목록에 섭니다 (절대 규칙 1).
+     ════════════════════════════════════════════════════════════════ */
+  console.log("\n── 0070 가린 매물 되돌리기 · 칸 GRANT");
+  {
+    const HID = allowed(put(SEL, { title:"가릴 매물" })).out;
+
+    const noWhy = denied(as(ADM) + "select move_listing('" +
+      J({ id:HID, state:"hidden", why:"짧" }) + "'::jsonb)");
+    ok("까닭이 짧으면 거절한다", noWhy.no, noWhy.why);
+    const notAdm = denied(as(BUY) + "select move_listing('" +
+      J({ id:HID, state:"hidden", why:"금지된 물건입니다" }) + "'::jsonb)");
+    ok("  ⚠️ 손님은 못 가린다", notAdm.no, notAdm.why);
+    const badTo = denied(as(ADM) + "select move_listing('" +
+      J({ id:HID, state:"done", why:"금지된 물건입니다" }) + "'::jsonb)");
+    ok("  ⚠️ 모르는 상태로는 못 옮긴다 (hidden · open 둘뿐)", badTo.no, badTo.why);
+
+    /* ⚠️ 되돌아갈 자리를 만들려고 **예약중**으로 두고 가립니다 —
+       `open` 으로 두면 "가리기 전 상태로 돌아갔는지" 와 "그냥 open 으로
+       돌아갔는지" 가 **답이 같아** 아무것도 안 잡습니다. */
+    allowed(as(SEL) + "select close_listing('" +
+      J({ id:HID, state:"reserved" }) + "'::jsonb)");
+    const hid = allowed(as(ADM) + "select move_listing('" +
+      J({ id:HID, state:"hidden", why:"금지된 물건입니다" }) + "'::jsonb)");
+    ok("운영자가 가린다", hid.yes && hid.out === "hidden", hid.out || hid.why);
+    ok("  ⚠️ 가리기 전 상태를 적어 둔다 (hidden_from)",
+       psql("select hidden_from from listing where id = '" + HID + "'") === "reserved");
+    const again = denied(as(ADM) + "select move_listing('" +
+      J({ id:HID, state:"hidden", why:"또 가립니다" }) + "'::jsonb)");
+    ok("  ⚠️ **같은 상태로 또 옮기면 거절한다** (조용히 성공하면 화면이 " +
+       "'바꿨습니다' 를 적는데 아무 일도 안 일어났습니다)", again.no, again.why);
+    /* ⚠️ 가려지면 **공개 보기에서 빠집니다** — 되돌리기가 참으로 쓸모가
+       있으려면 가리는 것이 실제로 듣고 있어야 합니다. */
+    ok("  ⚠️ 가려진 매물은 공개 보기에서 빠진다",
+       psql(anon + "select count(*) from v_listing_open where id = '" + HID + "'") === "0");
+
+    const back = allowed(as(ADM) + "select move_listing('" +
+      J({ id:HID, state:"open" }) + "'::jsonb)");
+    ok("⚠️⚠️ **되돌리면 가리기 전 상태로** 돌아간다 (open 이 아니라 reserved)",
+       back.yes && back.out === "reserved", back.out || back.why);
+    ok("  ⚠️ 되돌리면 가린 기록을 비운다 (까닭 · 누가 · 언제 · 어디서)",
+       psql("select coalesce(hidden_why,'') || '|' || coalesce(hidden_from,'') " +
+            "from listing where id = '" + HID + "'") === "|");
+    const notHid = denied(as(ADM) + "select move_listing('" +
+      J({ id:HID, state:"open" }) + "'::jsonb)");
+    ok("  ⚠️ 가려지지 않은 것을 되돌리면 거절한다", notHid.no, notHid.why);
+    /* ⚠️ 기록에 **까닭 글자를 안 담습니다** — 길이만 남깁니다 */
+    const log = psql("select coalesce(data::text,'') from audit_log where obj = 'listing' " +
+                     "and obj_id = '" + HID + "' order by at desc limit 1");
+    ok("  ⚠️ 감사 기록에 **까닭 글자가 안 담긴다** (길이만)",
+       log.indexOf("금지된") < 0 && log.indexOf("why_len") >= 0, log);
+  }
+
+  /* ⚠️⚠️⚠️ **화면이 부르는 칸을 그대로 눌러 봅니다** (2026-11-09).
+     `listing` 은 **칸 단위**로 select 를 줍니다(0056 이 연락처 · 동의
+     시각을 빼려고 그렇게 했습니다). 칸 단위 GRANT 는 **나중에 생긴
+     칸을 저절로 덮지 않습니다** — 0069 가 `model` 을 더해 놓고 GRANT 를
+     안 줘서, `/my` 의 「내 판매글」 질의가 **통째로 거절**되고 그 상자가
+     빈 채로 남았습니다(0줄이 아닙니다 · 에러도 화면에 안 나옵니다).
+     ⚠️ 칸 이름을 **검사에 적지 않습니다** — 화면 파일에서 읽어 옵니다
+     (적어 두면 화면이 칸을 하나 더 부르는 날 그 칸만 조용히 빠집니다). */
+  {
+    const src = require("fs").readFileSync(
+      require("path").join(__dirname, "..", "..", "js", "mylisting.js"), "utf8");
+    const m = /listing\?select=([A-Za-z0-9_,\s"+]*?)&/.exec(src);
+    const cols = m ? m[1].replace(/["+\s]/g, "") : "";
+    ok("⚠️ `js/mylisting.js` 에서 부르는 칸을 **읽어 왔다** (0개면 검사가 고장)",
+       cols.split(",").filter(Boolean).length > 0, cols);
+    const q = allowed(as(SEL) + "select " + cols + " from listing limit 1");
+    ok("⚠️⚠️⚠️ `/my` 가 부르는 칸이 **칸 GRANT 를 전부 지난다** " +
+       "(하나라도 안 주면 질의가 통째로 거절되고 그 상자가 빈 채로 남습니다)",
+       q.yes, q.why);
+  }
   /* ⚠️ 매물을 지우면 사진 줄도 같이 갑니다 (on delete cascade) — 다만
      이 저장소는 매물을 지우지 않고 **내립니다**. 그 사실만 적어 둡니다. */
 };

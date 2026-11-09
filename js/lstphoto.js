@@ -39,9 +39,18 @@
     return ASK;
   }
 
-  var OK_MIME = ["image/jpeg", "image/png", "image/webp"];
+  /* ⚠️ **담기는 크기** — DB 가 다시 봅니다 (화면에서만 막으면 꾸러미를
+     고쳐 지나갑니다). 다시 그린 뒤의 크기를 이 값과 견줍니다. */
   var MAX = 8388608;                 /* ⚠️ 0069 의 값과 같아야 합니다 */
   var MANY = 10;                     /* ⚠️ **0069** 의 값과 같아야 합니다 */
+  /* ⚠️⚠️ **고르실 수 있는 크기 — 담기는 크기와 다릅니다.** 폰 사진은
+     한 장이 6~12MB 인데 다시 그리면 1MB 아래로 떨어집니다. 원본을 8MB
+     로 막으면 요즘 폰으로 찍은 사진을 **아예 못 올리십니다**(절대 규칙 2).
+     이 수는 "읽어 볼 수 있는 크기" 일 뿐이고 DB 와 맞출 값이 아닙니다 —
+     수백 MB 짜리를 canvas 에 그리려다 그 탭이 죽는 것을 막습니다.
+     ⚠️ 종류를 여기서 안 셉니다 — `js/imgprep.js` 가 **첫 바이트**로
+     봅니다(적어 보낸 `file.type` 은 확장자만 보고 쓰는 값입니다). */
+  var PICK = 33554432;
 
   /* 상자 — ⚠️ 버킷이 꺼졌으면 **빈 글자**입니다 */
   function box(){
@@ -50,13 +59,24 @@
       '<p class="lsp-h">사진</p>' +
       '<ul class="lsp-l"></ul>' +
       '<div class="lsp-r">' +
-        '<input type="file" class="lsp-i" ' +
-          'accept="image/jpeg,image/png,image/webp" aria-label="올리실 사진">' +
+        /* ⚠️⚠️ `multiple` — 시안도 · 알아본 다섯 곳도 전부 여러 장을
+           한 번에 고릅니다. 한 장씩만 되면 열 장을 올리는 데 열 번을
+           누르셔야 합니다.
+           ⚠️ `accept="image/*"` 라야 폰에서 **카메라 · 갤러리**가 같이
+           나옵니다 (종류를 좁혀 적으면 기기마다 카메라가 안 뜹니다) —
+           진짜 사진인지는 `js/imgprep.js` 가 첫 바이트로 봅니다. */
+        '<input type="file" class="lsp-i" multiple ' +
+          'accept="image/*" aria-label="올리실 사진 (여러 장을 고르셔도 됩니다)">' +
         '<button type="button" class="btn btn-sm btn-pt lsp-go">이 사진 올리기</button>' +
       '</div>' +
-      /* ⚠️ 못 막는 것을 막는다고 적지 않습니다 — 픽셀 크기는 못 봅니다
-         (파일이 우리 서버를 지나가지 않습니다). 세는 것만 적습니다. */
-      '<p class="jhint">열 장까지 · 한 장에 8MB 까지 · JPG · PNG · WEBP · ' +
+      /* ⚠️⚠️ **위치정보를 뗀다는 것을 그 자리에서** 말합니다 — 손님이
+         올린 사진이 어떻게 다루어지는지는 그 자리에서 알려 드려야 합니다.
+         ⚠️ 그리고 **못 막는 것을 막는다고 적지 않습니다** — 떼는 것은
+         EXIF 뿐이고, 사진에 **찍혀 있는** 집 · 차 번호는 우리가 못 봅니다.
+         ⚠️ 글은 `js/imgprep.js` 의 `amImgPrepNote()` **한 곳**입니다
+         (세 화면이 같은 말을 해야 합니다). */
+      '<p class="jhint">열 장까지 · 한 장에 32MB 까지 · JPG · PNG · WEBP · ' +
+      esc(window.amImgPrepNote ? window.amImgPrepNote() : "") + ' ' +
       /* ⚠️ 0069 부터 **차례를 바꿀 수 있습니다** — 그래서 "첫 장" 이
          아니라 **대표**라고 적습니다(바꿀 수 있는 것을 못 바꾸는 것처럼
          적으면 그 단추를 아무도 안 누릅니다). */
@@ -121,39 +141,89 @@
 
     var go = el.querySelector(".lsp-go");
     var inp = el.querySelector(".lsp-i");
+    /* ⚠️⚠️⚠️ **올리기 전에 `js/imgprep.js` 를 지나갑니다** — 거기서
+       ① 첫 바이트로 **진짜 사진인지** 보고(브라우저가 적는 `file.type` 은
+       확장자만 보고 쓰는 값이라 이름만 바꾼 파일이 통과합니다)
+       ② canvas 에 다시 그려 **위치정보(EXIF)를 통째로** 떼고
+       ③ 긴 변을 줄여 다시 압축합니다.
+       ⚠️ 파일이 우리 서버를 **안 지나가므로**(서명된 주소로 브라우저가
+       바로 올립니다) 떼는 자리는 여기뿐입니다. 못 떼면 **안 올립니다** —
+       원본을 그냥 올리면 그 한 장만 조용히 집 좌표를 달고 공개 버킷에
+       들어갑니다.
+       ⚠️⚠️ 그래서 보내는 `mime` · `bytes` 는 **다시 그린 것**의 값입니다
+       (원본 값을 보내면 DB 가 받은 종류 · 크기와 실제가 달라집니다). */
+    function sendOne(f){
+      if(!window.amImgPrep)
+        return Promise.reject(new Error("사진을 준비하지 못했습니다."));
+      return window.amImgPrep(f).then(function(x){
+        /* ⚠️ 줄인 뒤의 크기를 봅니다 — DB 도 **다시** 봅니다
+           (화면에서만 막으면 꾸러미를 고쳐 지나갑니다). */
+        if(x.bytes > MAX) throw new Error("줄여도 8MB 를 넘습니다.");
+        return fetch("/api/upload", {
+          method:"POST",
+          headers: Object.assign({ "content-type":"application/json" },
+                                 W.amAuthHeaders ? W.amAuthHeaders() : {}),
+          /* ⚠️⚠️ `lst:true` 로 **매물 쪽 길**임을 말합니다. 버킷은 서버가
+             DB 가 돌려준 **경로**로 고릅니다 (여기서 고르면 거기가 구멍). */
+          body: JSON.stringify({ lst:true, listing:id, mime:x.mime, bytes:x.bytes })
+        }).then(function(r){
+          return r.json().then(function(j){ return { ok:r.ok, j:j }; });
+        }).then(function(y){
+          if(!y.ok || !y.j || !y.j.url)
+            throw new Error((y.j && y.j.error) || "지금 올리지 못했습니다");
+          return fetch(y.j.url, { method:"PUT",
+            headers:{ "content-type":x.mime }, body:x.blob });
+        }).then(function(r){
+          if(!r || !r.ok) throw new Error("올리지 못했습니다");
+        });
+      });
+    }
+
     if(go && inp) go.addEventListener("click", function(){
-      var f = inp.files && inp.files[0];
-      if(!f){ say("올리실 사진을 골라 주세요."); return; }
-      /* ⚠️ DB 도 같은 것을 봅니다 — 여기서만 막으면 꾸러미를 고쳐 지나갑니다 */
-      if(OK_MIME.indexOf(f.type) < 0){ say("사진은 JPG · PNG · WEBP 만 됩니다."); return; }
-      if(f.size > MAX){ say("8MB 를 넘습니다."); return; }
+      var fs = inp.files ? Array.prototype.slice.call(inp.files) : [];
+      if(!fs.length){ say("올리실 사진을 골라 주세요."); return; }
       var n = el.querySelectorAll(".lsp-t").length;
+      /* ⚠️⚠️ **몇 장이 남았는지 먼저 셉니다** — 다 올리고 나서 마지막
+         몇 장만 거절되면 "올라간 줄 알았다" 가 됩니다. 넘치면 그 자리에서
+         몇 장까지 되는지 말합니다. */
       if(n >= MANY){ say("사진은 열 장까지입니다. 먼저 빼 주세요."); return; }
+      if(fs.length > MANY - n){
+        say("지금 " + (MANY - n) + "장까지 더 올리실 수 있습니다. " +
+            "고르신 것은 " + fs.length + "장입니다.");
+        return;
+      }
+      /* ⚠️ 고른 파일이 너무 크면 **풀기 전에** 막습니다 — 수백 MB 짜리를
+         canvas 에 그리려다 그 탭이 죽습니다. 이 수는 "읽어 볼 수 있는
+         크기" 이고 **담기는 크기(MAX)와 다릅니다.** */
+      for(var i = 0; i < fs.length; i++) if(fs[i].size > PICK){
+        say("한 장이 너무 큽니다 — 32MB 까지 고르실 수 있습니다."); return;
+      }
       go.disabled = true;
-      say("올리는 중입니다…");
-      fetch("/api/upload", {
-        method:"POST",
-        headers: Object.assign({ "content-type":"application/json" },
-                               W.amAuthHeaders ? W.amAuthHeaders() : {}),
-        /* ⚠️⚠️ `lst:true` 로 **매물 쪽 길**임을 말합니다. 버킷은 서버가
-           DB 가 돌려준 **경로**로 고릅니다 (여기서 고르면 거기가 구멍). */
-        body: JSON.stringify({ lst:true, listing:id, mime:f.type, bytes:f.size })
-      }).then(function(r){
-        return r.json().then(function(j){ return { ok:r.ok, j:j }; });
-      }).then(function(x){
-        if(!x.ok || !x.j || !x.j.url)
-          throw new Error((x.j && x.j.error) || "지금 올리지 못했습니다");
-        return fetch(x.j.url, { method:"PUT",
-          headers:{ "content-type":f.type }, body:f });
-      }).then(function(r){
-        if(!r || !r.ok) throw new Error("올리지 못했습니다");
+      /* ⚠️⚠️ **한 장씩 차례로** 보냅니다 — 한꺼번에 보내면 열 장이 동시에
+         올라가 느린 망에서 전부 실패하고, 몇 장이 올라갔는지도 알 수
+         없습니다. 그리고 **몇 장째인지** 말합니다. */
+      var done = 0;
+      fs.reduce(function(chain, f){
+        return chain.then(function(){
+          say(fs.length > 1
+            ? ("올리는 중입니다… " + (done + 1) + " / " + fs.length)
+            : "올리는 중입니다…");
+          return sendOne(f).then(function(){ done += 1; });
+        });
+      }, Promise.resolve()).then(function(){
         go.disabled = false;
         inp.value = "";
         if(msg) msg.hidden = true;
         return draw(el, id).then(function(){ if(after) after(); });
       }).catch(function(e){
         go.disabled = false;
-        say(String((e && e.message) || "올리지 못했습니다."));
+        inp.value = "";
+        /* ⚠️ **몇 장이 올라갔는지 말합니다** — 가운데서 실패하면 앞의
+           것은 이미 올라가 있습니다. "실패" 만 적으면 다시 전부 고르셔서
+           같은 사진이 두 벌이 됩니다. */
+        say(String((e && e.message) || "올리지 못했습니다.") +
+            (done ? (" (" + done + "장은 올라갔습니다)") : ""));
+        return draw(el, id).then(function(){ if(after) after(); });
       });
     });
 

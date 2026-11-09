@@ -42,6 +42,20 @@ function ok(name, cond, got){
    고치는 날 흉내가 조용히 안 걸립니다). */
 const { FAKE, stub } = require("./_stub.js");
 
+/* ⚠️⚠️⚠️ **올려 보는 사진은 진짜 사진이어야 합니다** (2026-11-09).
+   전에는 `Buffer.from("x".repeat(2048))` 에 `mimeType:"image/jpeg"` 를
+   붙여 보냈습니다 — 브라우저가 적는 종류는 **확장자만 보고 쓰는 값**이라
+   그것이 통과하고 있었습니다. 지금은 `js/imgprep.js` 가 **첫 바이트**를
+   보고 거절하므로, 가짜 바이트로 재면 **멀쩡한 코드를 고장이라고** 합니다.
+   아래는 1x1 짜리 **참 PNG** 입니다 (canvas 가 풀 수 있습니다).
+   ⚠️ PNG 를 넣고 **보내는 종류가 image/jpeg 로 바뀌는지**를 봅니다 —
+   그것이 "다시 그렸다 = EXIF 가 사라졌다" 의 증거입니다. */
+const PNG1 = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQ" +
+  "DwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+/* 사진이 아닌 파일 — ⚠️ 이름만 `.jpg` 입니다 */
+const NOTIMG = Buffer.from("이것은 사진이 아닙니다 ".repeat(40), "utf8");
+
 /* ── 가짜 자료 ──────────────────────────────────────────────────────
    ⚠️⚠️ 손님이 적은 글에 태그를 넣어 둡니다 — 그대로 나가면 사고입니다
    (절대 규칙 4). 업체가 적은 글에도 넣습니다. */
@@ -2059,6 +2073,121 @@ function boardsOf(){
     ok("신고함의 누르는 것이 40px 이상이다",
        (await tapsOk(s.p, "#repbox")) === 0, await tapsOk(s.p, "#repbox"));
     await s.p.close();
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     /admin 중고 매물 관리 (0056 · 0070 · 개편 지시서 §7)
+     ⚠️⚠️⚠️ 전에는 **신고가 들어온 매물만** 다룰 수 있었습니다 —
+     `move_listing` 을 부르는 자리가 신고함 하나였습니다. 그리고 0056 의
+     문은 `hidden` 으로만 가서 **되돌릴 길이 아무에게도 없었습니다.**
+     ════════════════════════════════════════════════════════════════ */
+  console.log("\n── /admin 중고 매물 관리 (0070)");
+  {
+    const LSA = [
+      { id:"eeeeeeee-0070-4000-8000-000000000001", title:"드라이버 팝니다",
+        sub:"us-driver", brand:"타이틀리스트", model:"스텔스2",
+        region:"seoul", price:350000, state:"open",
+        hidden_why:null, hidden_from:null, created_at:"2026-11-08T01:00:00Z" },
+      /* ⚠️ 가려진 줄 — **되돌리기** 단추가 나와야 하고, 되돌리면 어디로
+         가는지(`hidden_from`)까지 적어야 합니다. */
+      { id:"eeeeeeee-0070-4000-8000-000000000002", title:"가려진 매물",
+        sub:"us-ball", brand:"기타", model:null,
+        region:"busan", price:0, state:"hidden",
+        hidden_why:"금지된 물건입니다", hidden_from:"done",
+        created_at:"2026-11-08T02:00:00Z" }];
+
+    /* ① 운영자가 아니면 **한 줄도 안 그리고 읽으러 가지도 않습니다** */
+    {
+      const g = await open("/admin", { role:"customer", name:"홍길동" },
+                           { listing: LSA });
+      const off = await g.p.evaluate(function(){
+        const e = document.getElementById("lsadm");
+        return { hid: !e || e.hidden, html: e ? e.innerHTML : "" };
+      });
+      ok("⚠️ 손님에게는 매물 관리가 **한 줄도 안 보인다**",
+         off.hid && off.html === "", JSON.stringify(off).slice(0, 160));
+      ok("  ⚠️ 그리고 **읽으러 가지도 않는다**",
+         !g.sent.some(function(x){ return x.name === "listing"; }),
+         g.sent.map(function(x){ return x.name; }).join(" "));
+      await g.p.close();
+    }
+
+    /* ② 운영자 */
+    {
+      const g = await open("/admin", { role:"admin", name:"운영자" },
+                           { listing: LSA });
+      const t = await g.p.evaluate(function(){
+        const e = document.getElementById("lsadm");
+        return { txt: e ? e.innerText : "",
+                 rows: e ? e.querySelectorAll("li[data-ls]").length : 0,
+                 hide: e ? e.querySelectorAll("button[data-hide]").length : 0,
+                 back: e ? e.querySelectorAll("button[data-back]").length : 0,
+                 see:  e ? e.querySelectorAll('a[href^="/cat/used?v="]').length : 0 };
+      });
+      ok("⚠️ 운영자에게 매물 목록이 보인다", t.rows === 2, JSON.stringify(t));
+      ok("  ⚠️ 팔고 있는 매물에는 **가리기**, 가려진 매물에는 **되돌리기**",
+         t.hide === 1 && t.back === 1, JSON.stringify(t));
+      /* ⚠️ 조사까지 봅니다 — 「팔렸습니다」 는 받침이 없어 **「가」** 입니다.
+         글자로 박으면 「예약중가」 같은 말이 나가고 아무 도구도 안 잡습니다. */
+      ok("  ⚠️⚠️ 되돌리면 **어디로 가는지** 적는다 (가리기 전 상태 · 0070)",
+         t.txt.indexOf("되돌리면 상태가") >= 0 &&
+         t.txt.indexOf("팔렸습니다가 됩니다") >= 0, t.txt.slice(0, 400));
+      ok("  ⚠️ 가린 **까닭**을 그 자리에서 보여 준다",
+         t.txt.indexOf("금지된 물건입니다") >= 0, t.txt.slice(0, 400));
+      ok("  ⚠️ 매물 자체를 볼 길을 같이 낸다 (제목만 보고 가릴 수 없습니다)",
+         t.see === 2, JSON.stringify(t));
+      /* ⚠️ 0 은 **무료로 나눔**입니다 — `||` 를 쓰면 사라집니다 */
+      ok("  ⚠️ 값 0 을 **무료로 나눔**으로 적는다",
+         t.txt.indexOf("무료") >= 0, t.txt.slice(0, 400));
+      /* ⚠️ 지우는 단추를 **안 냅니다** (분쟁 때 낼 것이 없어집니다) */
+      const del = await g.p.evaluate(function(){
+        const e = document.getElementById("lsadm");
+        return (e ? e.innerText : "").indexOf("지우") >= 0; });
+      ok("  ⚠️⚠️ **지우는 단추를 안 낸다** (가리기만 합니다)", !del, String(del));
+
+      /* 가리기 — ⚠️ 까닭 없이는 안 보냅니다 */
+      const n0 = g.sent.length;
+      await g.p.click("li[data-ls] button[data-hide]");
+      await g.p.waitForTimeout(200);
+      const opened = await g.p.evaluate(function(){
+        const f = document.querySelector("#lsadm .lsadm-f");
+        return !!(f && !f.hidden); });
+      ok("  가리기를 누르면 **까닭 칸**이 열린다", opened, String(opened));
+      await g.p.fill("#lsadm .lsadm-f input[name='lwhy']", "가짜 매물로 보입니다");
+      await g.p.click("#lsadm .lsadm-f button[type='submit']");
+      await g.p.waitForTimeout(400);
+      const sent = g.sent.slice(n0)
+        .filter(function(x){ return x.name === "move_listing"; })
+        .map(function(x){ return String(x.body); }).join(" ");
+      ok("  ⚠️ `move_listing` 을 **까닭과 함께** 보낸다",
+         sent.indexOf('"state":"hidden"') >= 0 &&
+         sent.indexOf("가짜 매물로 보입니다") >= 0, sent.slice(0, 220));
+      /* ⚠️⚠️ 이 문은 **jsonb 하나(`p`)** 를 받습니다 — 자리 인자로 보내면
+         거절됩니다 (0013 에서 겪은 자리). */
+      ok("  ⚠️⚠️ 꾸러미가 `{p:{…}}` 꼴이다 (자리 인자가 아닙니다)",
+         sent.indexOf('"p":{') >= 0, sent.slice(0, 220));
+      await g.p.close();
+    }
+
+    /* ③ 되돌리기 — ⚠️ 까닭을 **안 받습니다** (되돌리기가 가리기보다
+       어려워지면 잘못 가린 것이 그대로 남습니다) */
+    {
+      const g = await open("/admin", { role:"staff", name:"직원" },
+                           { listing: LSA });
+      const n0 = g.sent.length;
+      await g.p.click("li[data-ls] button[data-back]");
+      await g.p.waitForTimeout(400);
+      const sent = g.sent.slice(n0)
+        .filter(function(x){ return x.name === "move_listing"; })
+        .map(function(x){ return String(x.body); }).join(" ");
+      ok("⚠️ **직원도** 가리고 되돌릴 수 있다 (문이 둘에게 열려 있습니다)",
+         sent.indexOf('"state":"open"') >= 0, sent.slice(0, 220));
+      ok("  ⚠️ 되돌릴 때는 **까닭을 안 받는다**",
+         sent.indexOf("why") < 0, sent.slice(0, 220));
+      ok("매물 관리의 누르는 것이 40px 이상이다",
+         (await tapsOk(g.p, "#lsadm")) === 0, await tapsOk(g.p, "#lsadm"));
+      await g.p.close();
+    }
   }
 
   console.log("\n── /my 손님이 신고를 엽니다 (0040)");
@@ -5962,11 +6091,32 @@ function boardsOf(){
          ⚠️⚠️ **버킷은 서버가 경로를 보고 고릅니다** — 화면이 고르면
          거기가 구멍입니다 (0051 에서 세운 규칙). 화면이 보내는 꾸러미에
          버킷 이름이 **없어야** 합니다. */
-      const n9 = g.sent.length;
+      /* ⚠️⚠️⚠️ **사진이 아닌 파일을 먼저 넣어 봅니다** (2026-11-09) —
+         이름만 `.jpg` 이고 종류도 `image/jpeg` 라고 적어 보냅니다.
+         브라우저가 적는 종류는 확장자만 보고 쓰는 값이라 이것이 그냥
+         통과하고 있었습니다. 지금은 `js/imgprep.js` 가 **첫 바이트**를
+         보고 거절해야 하고, **PUT 이 한 번도 안 가야** 합니다. */
+      const n8 = g.sent.length;
       await g.p.setInputFiles(".lsp-i", { name:"a.jpg", mimeType:"image/jpeg",
-                                          buffer: Buffer.from("x".repeat(2048)) });
+                                          buffer: NOTIMG });
       await g.p.click(".lsp-go");
-      await g.p.waitForTimeout(700);
+      await g.p.waitForTimeout(600);
+      const bad8 = g.sent.slice(n8).filter(function(x){
+        return x.name === "storage" && String(x.body).indexOf("PUT") === 0; });
+      const say8 = await g.p.evaluate(function(){
+        const m = document.querySelector("#lsbox .lsp-m");
+        return m && !m.hidden ? m.textContent : ""; });
+      ok("⚠️⚠️ 사진이 **아닌** 파일은 첫 바이트로 거절한다 (이름만 .jpg)",
+         bad8.length === 0 && say8.indexOf("사진 파일이 아닙니다") >= 0,
+         JSON.stringify({ put: bad8.length, say: say8 }));
+
+      const n9 = g.sent.length;
+      /* ⚠️ **참 PNG** 를 넣습니다 — 아래에서 보내는 종류가 `image/jpeg`
+         로 바뀌어야 합니다 (다시 그렸다 = EXIF 가 사라졌다). */
+      await g.p.setInputFiles(".lsp-i", { name:"a.png", mimeType:"image/png",
+                                          buffer: PNG1 });
+      await g.p.click(".lsp-go");
+      await g.p.waitForTimeout(900);
       const up9 = g.sent.slice(n9).filter(function(x){ return x.name === "upload"; })
                    .map(function(x){ return String(x.body); });
       /* ⚠️⚠️ **방법으로 가립니다** — 같은 주소 꼴로 카드의 사진을
@@ -5981,6 +6131,15 @@ function boardsOf(){
       ok("  ⚠️⚠️ 꾸러미에 **버킷 이름이 없다** (버킷은 서버가 경로를 보고 고릅니다)",
          pb.indexOf('"lst":true') >= 0 && pb.indexOf("bucket") < 0 &&
          pb.indexOf("pv-test") < 0, pb.slice(0, 200));
+      /* ⚠️⚠️⚠️ **다시 그렸다는 증거**입니다 — PNG 를 넣었는데 보내는
+         종류가 `image/jpeg` 라는 것은 canvas 를 한 번 지났다는 뜻이고,
+         canvas 를 지나면 EXIF(위치정보)가 **통째로** 사라집니다. 여기가
+         초록이 아니면 폰으로 찍은 사진의 집 좌표가 **공개 버킷**에
+         그대로 올라갑니다. */
+      ok("  ⚠️⚠️⚠️ 올리기 전에 **다시 그린다** (PNG 를 넣어도 image/jpeg 로 간다)",
+         pb.indexOf('"mime":"image/jpeg"') >= 0, pb.slice(0, 200));
+      ok("  ⚠️ 그리고 **줄여서** 보낸다 (보내는 bytes 가 0보다 크다)",
+         /"bytes":[1-9]/.test(pb), pb.slice(0, 200));
       await g.p.close();
     }
 

@@ -137,6 +137,97 @@ KIND.trade.zeroD = KIND.provider.zeroD;
    ⚠️ 매칭 요청 화면은 업체가 0곳이어도 접수되고(운영자가 받습니다),
    그 화면이 그 사실을 스스로 말합니다. */
 
+/* ── 중고장터만의 머리 — ⚠️ 시안의 히어로 + 퀵액션 줄 (2026-11-09) ──
+   ⚠️⚠️⚠️ **「내 구매내역」을 안 만듭니다.** 시안에는 있지만 저희에게는
+   주문도 · 결제도 · 배송도 없습니다(결제를 아예 안 받습니다 ·
+   제20조의3). 칸을 내면 눌러서 빈 화면으로 가거나, 더 나쁘게는 "거래
+   기록이 남는 곳" 으로 읽힙니다 — 지시서 §5 도 "실제 주문/결제 시스템이
+   없으면 허위 기록을 만들지 말고 메뉴 명칭 · 노출 여부를 조정한다" 고
+   적었습니다.
+   ⚠️⚠️ **찜한 상품 옆에 숫자를 안 적습니다**(시안은 「찜한상품 0」) —
+   빌드는 그 수를 셀 수가 없고, 0 을 찍으면 그건 **세어 본 값이
+   아닙니다**(절대 규칙 1 · 현황표 칸에 `–` 를 적은 그 자리).
+   ⚠️ 히어로의 딱지 셋은 시안의 「안전거래 가이드 · 간편한 등록 · 다양한
+   골프용품」 자리인데, 셋째는 **매물이 0건일 때 거짓**이라 중개 고지로
+   바꿨습니다(그 자리에서 참인 말만 적습니다).
+   ⚠️⚠️ 히어로는 메인과 **같은 클래스**(`.hero.hero-ph`)를 씁니다 —
+   글자 대비를 책임지는 딥그린 막이 거기 있고, 두 벌로 적으면 한쪽만
+   고치는 날 한 화면에서만 글이 안 읽힙니다. `.hero-sm` 은 높이만
+   줄입니다. */
+function usedHead(c){
+  var ph = W.amPhoto ? W.amPhoto("hero") : null;
+  return '<section class="hero hero-sm' + (ph ? " hero-ph" : "") + '">' +
+    (ph ? W.amPhotoImg("hero", { cls:"hero-bg", eager:true }) : "") +
+    '<div class="wrap hero-in">' +
+      '<h1>중고 골프장터</h1>' +
+      '<p class="hero-sub">회원끼리 골프용품을 직접 사고파는 자리입니다.<br>' +
+      '클럽 · 의류 · 용품을 사진과 함께 올리시고, 매입 · 위탁은 ' +
+      '업체로 이어 드립니다.</p>' +
+      '<ul class="lshd-b">' +
+        '<li><a href="#safe">' + icon("shield", 17) + '안전거래 가이드</a></li>' +
+        '<li><a href="#lsbox">' + icon("camera", 17) + '사진 열 장까지</a></li>' +
+        '<li>' + icon("info", 17) + '골프올인원은 거래 당사자가 아닙니다</li>' +
+      '</ul>' +
+    '</div>' +
+  '</section>' +
+  /* ⚠️ 셋 다 **링크**입니다 — 단추로 만들면 자바스크립트가 꺼진 분 ·
+     크롤러에게 눌러도 아무 일이 안 나는 칸이 됩니다(절대 규칙 5).
+     ⚠️ 앞 둘은 `/my` 의 **실제 상자**로 갑니다(`#favbox` · `#lsmine`) —
+     로그인하지 않으셨으면 `/my` 가 그 자리에서 로그인 길을 냅니다. */
+  '<section class="pghd pghd-ls"><div class="wrap lshd">' +
+    '<div class="lshd-t">' + crumbs(c) + '</div>' +
+    '<nav class="lshd-q" aria-label="중고장터 빠른 이동">' +
+      '<a href="/my#favbox">' + icon("heart", 17) + '찜한 상품</a>' +
+      '<a href="/my#lsmine">' + icon("store", 17) + '내 판매글</a>' +
+      '<a class="btn btn-pt lshd-new" href="#lsbox">' +
+        icon("check", 17) + '판매글 등록</a>' +
+    '</nav>' +
+  '</div></section>';
+}
+
+/* ── 안전거래 가이드 — ⚠️ 시안의 바닥 안내입니다 (2026-11-09) ────────
+   ⚠️⚠️ 전에는 이 말이 매물 목록 아래 `⚠️` 두 줄로만 있었습니다. 히어로의
+   「안전거래 가이드」가 갈 자리가 있어야 하고(절대 규칙 5), 분쟁이 났을
+   때 "어디에 적어 두었나" 가 있어야 합니다.
+   ⚠️⚠️⚠️ **「안전결제」 · 「거래보호」 를 한 글자도 적지 않습니다** —
+   결제를 아예 안 받습니다(제20조의3). 적는 순간 지키지 못할 약속이고,
+   오히려 **그것을 내세우는 상대가 사기**라고 말해 주는 쪽이 맞습니다. */
+function safeGuide(){
+  var L = [
+    ["만나서 물건을 보고 거래하세요",
+     "중고채는 사진으로 흠집 · 샤프트 강도를 알기 어렵습니다. " +
+     "택배는 올리신 분이 된다고 적어 주신 경우이고, 골프올인원이 " +
+     "보내 드리지는 않습니다."],
+    ["먼저 보내 달라는 요구는 받아들이지 마세요",
+     "값을 먼저 보내면 돌려받을 길이 저희에게 없습니다. " +
+     "골프올인원은 대금을 받지도 · 맡아 두지도 않습니다."],
+    ["「안전결제」 를 하자는 상대는 사기입니다",
+     "저희에게는 결제가 아예 없습니다. 그런 주소를 보내 오면 " +
+     "누르지 마시고 신고해 주세요."],
+    ["연락처는 두 분이 각자 고르셨을 때만 보입니다",
+     "문의를 받아들이는 것은 「팔겠습니다」 이지 「번호를 줘도 좋다」 가 " +
+     "아닙니다. 연 뒤에도 언제든 닫으실 수 있습니다."],
+    ["시세보다 크게 싼 물건은 한 번 더 보세요",
+     "사진을 다른 곳에서 가져다 쓰는 일이 있습니다. " +
+     "다른 각도에서 찍은 사진을 더 보여 달라고 하셔도 됩니다."]
+  ];
+  return '<section class="sec" id="safe"><div class="wrap">' +
+    '<div class="sec-hd"><h2>안전거래 가이드</h2>' +
+    '<p>골프올인원은 통신판매중개자이며 <b>거래 당사자가 아닙니다</b>. ' +
+    '값 · 물건 · 배송에 대한 책임은 올리신 분과 사시는 분에게 있습니다.</p></div>' +
+    '<ol class="sfg">' + L.map(function(x){
+      return '<li><b>' + esc(x[0]) + '</b><span>' + esc(x[1]) + '</span></li>';
+    }).join("") + '</ol>' +
+    '<p class="jnote">사기 · 분쟁이 생기면 <b>내 정보</b>의 신고 자리나 ' +
+    '고객센터로 알려 주세요. 분쟁조정기구 · 수사기관 · 법원의 요청이 ' +
+    '있으면 약관에 적힌 대로 거래 기록을 냅니다.</p>' +
+    '<div class="none-b">' +
+      '<a class="btn btn-line" href="/help">고객센터</a>' +
+      '<a class="btn btn-line" href="/terms">이용약관</a>' +
+    '</div>' +
+  '</div></section>';
+}
+
 function crumbs(c){
   return '<nav class="crumb" aria-label="현재 위치">' +
     '<a href="/">홈</a>' + icon("arrow", 14) +
@@ -283,7 +374,11 @@ exports.build = function(c){
   var k = KIND[c.kind] || KIND.provider;
   var items = W.amCatItems(c);
 
-  var head = '<section class="pghd"><div class="wrap">' +
+  /* ⚠️ 중고장터만 **머리가 다릅니다** — 시안이 골프장 배경 히어로와
+     퀵액션 줄을 요구합니다(개편 지시서 §2-2 · §2-3). 다른 아홉 장은
+     그대로입니다 (한 장 때문에 열 장을 바꾸지 않습니다). */
+  var head = (c.key === "used") ? usedHead(c)
+    : '<section class="pghd"><div class="wrap">' +
     crumbs(c) +
     '<h1>' + esc(c.name) + '</h1>' +
     '<p class="pghd-l">' + esc(c.lead) + ' — ' + esc(k.what) + '</p>' +
@@ -359,10 +454,12 @@ exports.build = function(c){
          읽어야 하는지 안 보였습니다(손님이 40~60대입니다). 찍어 보고
          알았습니다 — 글자가 작지도 · 가로로 밀리지도 않아 검사는 전부
          초록이었습니다. */
+      /* ⚠️⚠️ 전에 여기 있던 ⚠️ 두 줄은 **안전거래 가이드**(`#safe`)로
+         옮겼습니다 — 두 곳에 적으면 한쪽만 고치는 날 둘이 다른 말을
+         합니다. 여기서는 **그 자리로 가는 길**만 냅니다. */
       '<p class="jnote">⚠️ 연락처는 목록에 나오지 않습니다. 문의가 ' +
-      '받아들여진 뒤 서로 따로 고르셨을 때만 그 상대 한 분에게 보입니다.</p>' +
-      '<p class="jnote">⚠️ 만나서 물건을 보고 거래하시고, 미리 보내 달라는 ' +
-      '요구는 받아들이지 마세요.</p>' +
+      '받아들여진 뒤 서로 따로 고르셨을 때만 그 상대 한 분에게 보입니다. ' +
+      '거래하시기 전에 <b>아래 안전거래 가이드</b>를 꼭 읽어 보세요.</p>' +
       '</div></section>'
     : '';
 
@@ -641,7 +738,9 @@ exports.build = function(c){
       : (c.key === "booking"
           ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
              "/js/teeboard.js", "/js/booking.js"]
-      : (c.key === "community" ? ["/js/community.js"]
+      /* ⚠️ 게시판 글 사진도 **공개 버킷**으로 가므로 `imgprep.js` 가
+         먼저 서야 합니다 (위치정보를 떼는 한 곳입니다). */
+      : (c.key === "community" ? ["/js/imgprep.js", "/js/community.js"]
       /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — site.js 가
          careerKeep(보유 기간)을, regions.js 가 지역 칸을, catalog.js 가
          하위분류 칸을 줍니다 (catalog 는 빌드가 저절로 싣습니다). */
@@ -658,7 +757,12 @@ exports.build = function(c){
              `/my` 도 같은 파일을 싣습니다. 안 실으면 올리신 직후 사진
              칸이 조용히 안 나옵니다. */
           ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
-             "/js/lstphoto.js", "/js/listing.js"]
+          /* ⚠️⚠️⚠️ `imgprep.js` 를 **사진 상자보다 먼저** 싣습니다 — 올리기 전에
+            위치정보(EXIF)를 떼고 줄이는 한 곳입니다. 안 실으면
+            `amImgPrep` 이 없어 올리기가 **거절**됩니다(원본을 그냥
+            올리지 않습니다 — 그 한 장만 조용히 집 좌표를 달고
+            공개 버킷에 들어갑니다). */
+             "/js/imgprep.js", "/js/lstphoto.js", "/js/listing.js"]
       /* ⚠️⚠️ 0061 — **값을 읽는 파일을 싣는 것까지가 기능입니다**:
          site.js 가 wantedKeep(비면 양식을 **안 엽니다**) · regions.js 가
          지역 칸 · deal.js 가 예산 셈(`amWantBudget`)을 줍니다. 하나라도
@@ -672,9 +776,12 @@ exports.build = function(c){
     /* ⚠️⚠️ **차례 한 줄이 이 화면의 뜻입니다** — 찾는 칸이 맨 위,
        그 다음이 **지금 실제로 되는 것**(회원 것), 그 다음이 업체 것.
        업체가 실제로 있으면 그때만 업체가 앞으로 옵니다. */
+    /* ⚠️ 안전거래 가이드는 **중고장터에만** 섭니다 — 히어로의 그 링크가
+       갈 자리이고(절대 규칙 5), 회원끼리 돈이 오가는 자리가 여기입니다. */
     body: head + adTop + teeFind +
           (list.length ? (pvSec + teeSec + ownSec)
                        : (ownSec + teeSec + pvSec)) +
+          (c.key === "used" ? safeGuide() : "") +
           related(c)
   };
 };

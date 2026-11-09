@@ -77,8 +77,17 @@ window.AM_CATS = [
       { key:"us-set",      name:"풀세트",            pv:false },
       { key:"us-shaft",    name:"샤프트",            pv:false },
       { key:"us-bag",      name:"골프백",            pv:false },
+      /* ⚠️ 2026-11-09 — 중고장터 개편 지시서 §2-4 의 목록에 있는데
+         저희에게 없던 둘입니다. `listing.sub` 은 글자라 **마이그레이션이
+         한 줄도 필요 없습니다**(0056 이 키 묶음을 일부러 DB 에 안
+         박았습니다 — 박으면 종류가 느는 날 두 곳이 어긋나고 그때
+         화면은 보내는데 DB 가 거절합니다).
+         ⚠️⚠️ **`AM_LST_GROUP` 에도 같이** 넣습니다 — 안 넣으면 그
+         종류가 어느 탭에서도 안 보이고 **에러도 안 납니다.** */
+      { key:"us-ball",     name:"골프공",            pv:false },
       { key:"us-wear",     name:"골프의류",          pv:false },
       { key:"us-shoes",    name:"골프화",            pv:false },
+      { key:"us-acc",      name:"장갑 · 모자 · 액세서리", pv:false },
       { key:"us-range",    name:"거리측정기",        pv:false },
       { key:"us-gear",     name:"기타 용품",          pv:false },
       { key:"us-buyquote", name:"중고채 매입 견적",   pv:true  },

@@ -118,7 +118,12 @@ exports.build = function(){
          "/js/data/regions.js", "/js/myjoin.js", "/js/mycq.js",
          /* ⚠️ `lstphoto.js` 는 매물 사진 상자 **한 곳**입니다 (0068) —
             `/cat/used` 도 같은 파일을 싣습니다. */
-         "/js/myjob.js", "/js/lstphoto.js", "/js/mylisting.js",
+         /* ⚠️⚠️⚠️ `imgprep.js` 를 **사진 상자보다 먼저** 싣습니다 — 올리기 전에
+            위치정보(EXIF)를 떼고 줄이는 한 곳입니다. 안 실으면
+            `amImgPrep` 이 없어 올리기가 **거절**됩니다(원본을 그냥
+            올리지 않습니다 — 그 한 장만 조용히 집 좌표를 달고
+            공개 버킷에 들어갑니다). */
+         "/js/myjob.js", "/js/imgprep.js", "/js/lstphoto.js", "/js/mylisting.js",
          "/js/myfav.js",
          "/js/myinq.js", "/js/mynick.js",
          /* ⚠️ 0061 — catalog.js 가 분류 · 하위 이름을, deal.js 가 상태

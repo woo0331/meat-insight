@@ -264,7 +264,29 @@ const COURSES_ADM = [
   { id:"c-3", slug:"jeju-closed", kind:"golf", name:"검사용 닫힌 골프장",
     region:"jeju", gu:"제주시", state:"closed", source_id:"mcst-golf" }
 ];
+/* ⚠️⚠️ 0070 의 중고 매물 관리 — **가짜 값도 DB 가 받는 값이어야
+   합니다.** 물건 종류는 `us-*` 하위 키, 상태는 0069 의 다섯(open ·
+   reserved · done · closed · hidden)입니다. 아닌 값을 넣으면 화면이
+   키를 그대로 내고(그게 맞습니다) 찍힌 그림을 보고 **멀쩡한 화면을
+   고치려** 듭니다 — 이 저장소가 여섯 번 밟은 자리입니다.
+   ⚠️ 한 줄은 **가려진 것**으로 둡니다 — 되돌리기 단추와 "되돌리면
+   어디로" 가 안 그려지면 그 자리는 아무도 안 보는 자리가 됩니다. */
+const LST_ADM = [
+  { id:"ls-a1", title:"테일러메이드 드라이버 팝니다", sub:"us-driver",
+    brand:"테일러메이드", model:"스텔스2 10.5도", region:"seoul",
+    price:350000, state:"open", hidden_why:null, hidden_from:null,
+    created_at:"2026-11-08T01:00:00Z" },
+  { id:"ls-a2", title:"연습용 골프공 나눔", sub:"us-ball",
+    brand:"기타", model:null, region:"gyeonggi",
+    price:0, state:"reserved", hidden_why:null, hidden_from:null,
+    created_at:"2026-11-08T03:00:00Z" },
+  { id:"ls-a3", title:"가려진 매물", sub:"us-acc",
+    brand:"기타", model:null, region:"busan",
+    price:20000, state:"hidden", hidden_why:"금지된 물건으로 보입니다",
+    hidden_from:"done", created_at:"2026-11-07T05:00:00Z" }
+];
 const T_ADMIN = {
+  listing:LST_ADM,
   request:[Object.assign({}, REQ, { state:"check" })], provider:PVS,
   provider_apply:APS, request_item:ITEMS, assignment:[],
   v_provider_staff:STAFF_ADM, provider_contact:CONTACT,
@@ -668,7 +690,11 @@ const BOXES = {
              /* ⚠️ 0003 · 0013 의 수수료 · 정산 (js/adminfee.js) */
              ["fee", "#feeadm"],
              /* ⚠️ 0025 · 0054 의 회원 역할 (js/adminhat.js) */
-             ["hat", "#hatadm"], ["course", "#csadm"], ["log", "#logbox"]],
+             ["hat", "#hatadm"], ["course", "#csadm"], ["log", "#logbox"],
+             /* ⚠️ 0056 · 0070 의 중고 매물 관리 (js/adminlst.js) —
+                **새 상자를 만드는 날 이 줄을 같이 늘립니다.** 안 늘리면
+                그 안은 영원히 아무도 안 보는 자리가 됩니다. */
+             ["listing", "#lsadm"]],
   /* ⚠️ 처음에 `#myreqbox` · `#myjoinbox` 처럼 **지어낸 id** 를 적어
      두어서 `/my` 상자가 한 장도 안 찍혔습니다 — 찍히는 갯수를 보고
      알았습니다. `pages/my.js` 에서 세어 고쳤습니다. */

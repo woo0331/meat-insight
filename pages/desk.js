@@ -103,7 +103,9 @@ exports.build = function(){
          "/js/data/site.js",
          "/js/photo.js", "/js/auth.js", "/js/review.js",
          "/js/desk.js", "/js/deskme.js", "/js/deskprice.js",
-         "/js/deskfee.js", "/js/deskphoto.js", "/js/deskstaff.js",
+         /* ⚠️ 시설 사진도 **공개 버킷**으로 가므로 `imgprep.js` 가 먼저
+            서야 합니다 (위치정보를 떼는 한 곳 · 증빙서류는 안 지나갑니다). */
+         "/js/deskfee.js", "/js/imgprep.js", "/js/deskphoto.js", "/js/deskstaff.js",
          "/js/deskcontact.js", "/js/deskstart.js", "/js/deskteetime.js",
          "/js/notice.js"]
   };

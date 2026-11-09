@@ -596,7 +596,7 @@ window.AM_LST_GROUP = [
                                           "us-iron","us-wedge","us-putter",
                                           "us-set","us-shaft"] },
   { key:"wear",  name:"의류 · 신발", subs:["us-wear","us-shoes"] },
-  { key:"gear",  name:"용품",       subs:["us-bag","us-range"] },
+  { key:"gear",  name:"용품",       subs:["us-bag","us-ball","us-range","us-acc"] },
   { key:"etc",   name:"기타",       subs:["us-gear"] }
 ];
 /* 어느 묶음에 드는 종류인가 — 거르개에서 종류를 고르면 탭도 같이 켜집니다

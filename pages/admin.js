@@ -65,6 +65,17 @@ exports.build = function(){
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="repbox" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️⚠️ **중고 매물 관리** (0056 · 0070 · 중고장터 개편 지시서 §7).
+     `move_listing` 은 0056 부터 있었지만 부르는 자리가 **신고 처리
+     하나**라, 신고가 아직 안 들어온 사기 매물 · 금지 품목은 운영자가
+     내릴 길이 없었습니다. 그리고 0056 의 문은 `hidden` 으로만 가서
+     **되돌릴 길이 아무에게도 없었습니다**(0070 이 냈습니다).
+     ⚠️ `check-doors` 는 둘 다 못 잡습니다 — 그 문을 부르는 화면이
+     **있고**, 없는 것은 "신고를 거치지 않는 길" 과 "되돌리는 방향"
+     이며 **없는 것은 셀 수가 없습니다.** */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="lsadm" class="none" hidden></div></div></section>';
+
   /* 고객센터 문의 (0045 · 4차 지시서 §11) — ⚠️⚠️ 지시서가 "관리자가
      확인할 수 없는 문의 접수 기능은 완료로 처리하지 않는다" 고 적은
      바로 그 자리입니다. 문(open_inquiry)만 열고 이 자리를 안 만들면
@@ -108,6 +119,10 @@ exports.build = function(){
          "/js/adminpro.js", "/js/adminrep.js", "/js/admininq.js",
          "/js/adminlog.js", "/js/metrics.js", "/js/adminbiz.js",
          "/js/adminstaff.js", "/js/adminfee.js",
+         /* ⚠️ 중고 매물 관리 — `AM_LST_ST`(상태 말) · `amLstPrice` ·
+            `amAgo` 는 `data/deal.js` 에, 물건 종류 이름은
+            `data/catalog.js`(빌드가 저절로 싣습니다)에 있습니다. */
+         "/js/adminlst.js",
          /* ⚠️ 골프장 자료 · 갈래 말을 읽습니다 — 안 실으면 그 상자가
             조용히 안 그려집니다 (값을 읽는 파일을 싣는 것까지가 기능) */
          "/js/data/courses.generated.js", "/js/data/courses.js",

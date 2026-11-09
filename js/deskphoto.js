@@ -174,25 +174,44 @@
                                 : "서류는 PDF 만 됩니다");
           return;
         }
-        if(f.size > MAX){ nope("8MB 를 넘습니다"); return; }
+        /* ⚠️⚠️⚠️ **시설 사진만 다시 그립니다 — 서류는 안 건드립니다.**
+           시설 사진은 **공개 버킷**으로 가고(주소만 알면 누구나 엽니다)
+           폰으로 찍은 사진의 EXIF 에는 찍은 자리의 위도 · 경도가 들어
+           있습니다. 서류는 **PDF** 라 canvas 에 못 그리고, 비공개
+           버킷으로 가며, 글자가 뭉개지면 심사에 못 씁니다.
+           ⚠️ 가르는 것은 `kind` 하나이고 **버킷을 고르는 것은 여전히
+           서버**입니다 (0051 에서 세운 규칙 — 화면이 고르면 거기가 구멍).
+           ⚠️ 사진은 32MB 까지 고르실 수 있습니다(줄여서 올립니다) ·
+           서류는 **그대로** 가므로 8MB 그대로입니다. */
+        var isPhoto = kind === "photo";
+        if(f.size > (isPhoto ? 33554432 : MAX)){
+          nope(isPhoto ? "32MB 를 넘습니다" : "8MB 를 넘습니다"); return;
+        }
+        if(isPhoto && !window.amImgPrep){ nope("사진을 준비하지 못했습니다"); return; }
 
-        return fetch("/api/upload", {
-          method:"POST",
-          headers: Object.assign({ "content-type":"application/json" },
-                                 window.amAuthHeaders()),
-          /* ⚠️⚠️ `pv:true` 로 **업체 쪽 길**임을 말합니다. 버킷은
-             서버가 DB 가 돌려준 **경로**로 고릅니다 — 여기서 보낸
-             kind 로 고르면 거기가 구멍입니다. */
-          body: JSON.stringify({ pv:true, kind:kind, mime:f.type, bytes:f.size })
-        }).then(function(r){
-          return r.json().then(function(j){ return { ok:r.ok, j:j }; });
-        }).then(function(x){
-          if(!x.ok || !x.j || !x.j.url)
-            throw new Error((x.j && x.j.error) || "지금 올리지 못했습니다");
-          /* ⚠️⚠️ **여기서 "올렸습니다" 라고 하지 않습니다** — 자리를
-             받은 것이고 파일은 아직 안 갔습니다. */
-          return fetch(x.j.url, { method:"PUT",
-            headers:{ "content-type":f.type }, body:f });
+        return (isPhoto ? window.amImgPrep(f)
+                        : Promise.resolve({ mime:f.type, bytes:f.size, blob:f })
+        ).then(function(pz){
+          if(pz.bytes > MAX) throw new Error("줄여도 8MB 를 넘습니다");
+          return fetch("/api/upload", {
+            method:"POST",
+            headers: Object.assign({ "content-type":"application/json" },
+                                   window.amAuthHeaders()),
+            /* ⚠️⚠️ `pv:true` 로 **업체 쪽 길**임을 말합니다. 버킷은
+               서버가 DB 가 돌려준 **경로**로 고릅니다 — 여기서 보낸
+               kind 로 고르면 거기가 구멍입니다. */
+            body: JSON.stringify({ pv:true, kind:kind,
+                                   mime:pz.mime, bytes:pz.bytes })
+          }).then(function(r){
+            return r.json().then(function(j){ return { ok:r.ok, j:j }; });
+          }).then(function(x){
+            if(!x.ok || !x.j || !x.j.url)
+              throw new Error((x.j && x.j.error) || "지금 올리지 못했습니다");
+            /* ⚠️⚠️ **여기서 "올렸습니다" 라고 하지 않습니다** — 자리를
+               받은 것이고 파일은 아직 안 갔습니다. */
+            return fetch(x.j.url, { method:"PUT",
+              headers:{ "content-type":pz.mime }, body:pz.blob });
+          });
         }).then(function(r){
           if(!r || !r.ok) throw new Error("올리지 못했습니다");
           li.className = "is-ok";

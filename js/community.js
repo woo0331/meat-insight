@@ -412,7 +412,9 @@
       (n > 0 ? ' · 지금 ' + esc(String(n)) + '장' : '') + '</p>' +
       (n >= 5
         ? '<p class="cqz">다섯 장이 다 찼습니다. 먼저 한 장을 빼 주세요.</p>'
-        : '<input type="file" class="cq-ph-f" accept="image/jpeg,image/png,image/webp">' +
+        /* ⚠️ `image/*` 라야 폰에서 **카메라 · 갤러리**가 같이 나옵니다 —
+           진짜 사진인지는 `js/imgprep.js` 가 첫 바이트로 봅니다. */
+        : '<input type="file" class="cq-ph-f" accept="image/*">' +
           '<button type="button" class="btn btn-sm btn-pt cq-ph-go">올리기</button>') +
       '<p class="jmsg cq-ph-m" hidden></p>' +
     '</div>';
@@ -883,28 +885,41 @@
       var say = function(t){ if(msg){ msg.hidden = false; msg.textContent = t; } };
       var f = pin.files && pin.files[0];
       if(!f){ say("올리실 사진을 골라 주세요."); return; }
-      if(["image/jpeg","image/png","image/webp"].indexOf(f.type) < 0){
-        say("사진은 JPG · PNG · WEBP 만 됩니다."); return;
+      /* ⚠️ 32MB — **고르실 수 있는 크기**이고 담기는 크기(8MB)와 다릅니다.
+         아래에서 다시 그려 줄이므로 폰 사진이 그대로 막히지 않습니다. */
+      if(f.size > 33554432){
+        say("사진이 너무 큽니다 — 32MB 까지 고르실 수 있습니다."); return;
       }
-      if(f.size > 8388608){ say("8MB 를 넘습니다."); return; }
+      if(!window.amImgPrep){ say("사진을 준비하지 못했습니다."); return; }
       pgo.disabled = true;
       say("올리는 중입니다…");
-      fetch("/api/upload", {
-        method:"POST",
-        headers: Object.assign({ "content-type":"application/json" },
-                               window.amAuthHeaders ? window.amAuthHeaders() : {}),
-        /* ⚠️⚠️ `cq:true` 로 **게시판 쪽 길**임을 말합니다. 버킷은 서버가
-           DB 가 돌려준 **경로**로 고릅니다 (여기서 고르면 거기가 구멍입니다). */
-        body: JSON.stringify({ cq:true, question:S.q, mime:f.type, bytes:f.size })
-      }).then(function(r){
-        return r.json().then(function(j){ return { ok:r.ok, j:j }; });
-      }).then(function(x){
-        if(!x.ok || !x.j || !x.j.url)
-          throw new Error((x.j && x.j.error) || "지금 올리지 못했습니다");
-        /* ⚠️⚠️ **여기서 "올렸습니다" 라고 하지 않습니다** — 자리를 받은
-           것이고 파일은 아직 안 갔습니다 (0051 에서 적어 둔 그 자리). */
-        return fetch(x.j.url, { method:"PUT",
-          headers:{ "content-type":f.type }, body:f });
+      /* ⚠️⚠️⚠️ **올리기 전에 `js/imgprep.js` 를 지나갑니다** — 게시판 글
+         사진도 **공개 버킷**으로 갑니다(주소만 알면 누구나 엽니다). 폰으로
+         찍은 사진의 EXIF 에는 찍은 자리의 위도 · 경도가 들어 있어서, 그냥
+         올리면 글쓴이의 집 좌표가 그대로 공개됩니다. 파일이 우리 서버를
+         안 지나가므로 떼는 자리는 **브라우저뿐**이고, 못 떼면 **안
+         올립니다**(원본을 그냥 올리면 그 한 장만 조용히 샙니다).
+         ⚠️ 그래서 보내는 `mime` · `bytes` 는 **다시 그린 것**의 값입니다. */
+      window.amImgPrep(f).then(function(pz){
+        if(pz.bytes > 8388608) throw new Error("줄여도 8MB 를 넘습니다.");
+        return fetch("/api/upload", {
+          method:"POST",
+          headers: Object.assign({ "content-type":"application/json" },
+                                 window.amAuthHeaders ? window.amAuthHeaders() : {}),
+          /* ⚠️⚠️ `cq:true` 로 **게시판 쪽 길**임을 말합니다. 버킷은 서버가
+             DB 가 돌려준 **경로**로 고릅니다 (여기서 고르면 거기가 구멍입니다). */
+          body: JSON.stringify({ cq:true, question:S.q,
+                                 mime:pz.mime, bytes:pz.bytes })
+        }).then(function(r){
+          return r.json().then(function(j){ return { ok:r.ok, j:j }; });
+        }).then(function(x){
+          if(!x.ok || !x.j || !x.j.url)
+            throw new Error((x.j && x.j.error) || "지금 올리지 못했습니다");
+          /* ⚠️⚠️ **여기서 "올렸습니다" 라고 하지 않습니다** — 자리를 받은
+             것이고 파일은 아직 안 갔습니다 (0051 에서 적어 둔 그 자리). */
+          return fetch(x.j.url, { method:"PUT",
+            headers:{ "content-type":pz.mime }, body:pz.blob });
+        });
       }).then(function(r){
         if(!r || !r.ok) throw new Error("올리지 못했습니다");
         draw();

@@ -3033,3 +3033,62 @@ picture{ display: contents; }
 /* ⚠️ 단추는 **문단 끝에** 모읍니다 — 문장 한가운데 링크는 누름 높이가
    16px 입니다(작업 기억에서 일곱 곳을 고친 자리). */
 .mb-go{ display:flex; flex-wrap:wrap; gap:10px; margin:0; }
+
+/* ── 중고장터 머리 (2026-11-09 · 시안) ─────────────────────────────
+   ⚠️⚠️ 히어로는 메인과 **같은 클래스**(`.hero.hero-ph`)를 씁니다 —
+   글자 대비를 책임지는 딥그린 막(`.hero-ph::after`)이 거기 있고, 두
+   벌로 적으면 한쪽만 고치는 날 한 화면에서만 글이 안 읽힙니다.
+   `.hero-sm` 은 **높이만** 줄입니다.
+   ⚠️ `.hero.hero-sm h1` 로 적습니다 — `.hero-sm h1` 은 `.hero h1` 과
+   특정도가 같아(0,1,1) 파일 차례에 기대게 됩니다. */
+.hero-sm .hero-in{ padding-block: 48px 52px; max-width: 760px; }
+.hero.hero-sm h1{ font-size: clamp(28px, 3.8vw, 42px); }
+.hero-sm .hero-sub{ margin-top: 12px; }
+
+/* 히어로 딱지 셋 — ⚠️ 어두운 면 위라 흰 글자입니다 */
+.lshd-b{
+  display:flex; flex-wrap:wrap; gap: 10px 22px; margin-top: 22px;
+  list-style:none; padding:0;
+}
+.lshd-b li{
+  display:inline-flex; align-items:center; gap:7px;
+  color: var(--on-dark-2); font-size: 15px; font-weight:600;
+}
+.lshd-b li a{
+  display:inline-flex; align-items:center; gap:7px;
+  color:#fff; text-decoration: underline; text-underline-offset: 3px;
+  min-height: 40px;
+}
+.lshd-b svg{ flex:none; }
+
+/* 빵부스러기 + 퀵액션 한 줄 — ⚠️ 밝은 바탕입니다 */
+.pghd-ls{ padding-block: 20px 18px; }
+.lshd{ display:flex; flex-wrap:wrap; align-items:center; gap: 14px 20px; }
+.lshd-t{ flex:1 1 320px; min-width:0; }
+.lshd-t .pghd-l{ margin-top: 6px; }
+.lshd-q{ display:flex; flex-wrap:wrap; gap: 8px; margin-left:auto; }
+/* ⚠️⚠️⚠️ **`:not(.btn)` 이 꼭 있어야 합니다.** 처음에 `.lshd-q > a`
+   (0,1,1) 로 적었더니 `.btn-pt`(0,1,0)를 **이겨서** 「판매글 등록」이
+   초록 단추가 아니라 **흰 칸**으로 나왔습니다 — 가로로 밀리지도 · 글자가
+   작지도 · 대비가 낮지도 않아 어떤 검사도 안 잡았고 **찍어 보고**
+   알았습니다. 이 저장소가 특정도로 열두 번 넘게 밟은 그 자리입니다. */
+.lshd-q > a:not(.btn){
+  display:inline-flex; align-items:center; gap:7px;
+  min-height: 44px; padding: 0 15px; border-radius: 10px;
+  border: 1.4px solid var(--line); background:#fff;
+  color: var(--ink); font-size: 15px; font-weight:700;
+}
+.lshd-q > a.btn{ gap:7px; }
+
+/* ── 안전거래 가이드 ───────────────────────────────────────────── */
+.sfg{ list-style:none; padding:0; margin: 0; display:grid; gap: 12px; }
+@media (min-width: 900px){ .sfg{ grid-template-columns: 1fr 1fr; } }
+.sfg > *{ min-width: 0; }
+.sfg li{
+  display:block; padding: 16px 18px; border-radius: 12px;
+  border: 1.4px solid var(--line); background:#fff;
+}
+.sfg li b{ display:block; font-size: 16px; color: var(--ink); }
+.sfg li span{ display:block; margin-top: 6px; color: var(--ink2);
+  font-size: 15px; line-height: 1.62; }
+.sfg li::marker{ content: none; }

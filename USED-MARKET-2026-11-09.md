@@ -136,7 +136,43 @@ node tools/shot-desk.js admin   로그인해야 보이는 화면을 찍습니다
 node tools/shot.js "/cat/used|1440|a|full" "/cat/used|390|b|full"
 ```
 
-{{검사결과}}
+**결과 — `node tools/ship.js` 묶음 27개가 **전부 초록**입니다 (817.0초).**
+
+```
+✅ 전부 초록입니다 — 올려도 됩니다.  (817.0초)
+▶ 빌드 결과가 커밋과 같은가  (git status)  →  ✅ 같습니다
+```
+
+| 묶음 | 결과 |
+|---|---|
+| `check-safe` (키 · 헤더 · CSP · esc · 없는 CSS 변수 · 모양 없는 단추) | 24 / 24 |
+| `check-a11y` | 30 / 30 |
+| `check-screens` (360 · 390 · 430 · 768 · 1440) | 잰 글자 칸 **11,098개** · 문제 0건 |
+| `check-links` | 화면 25장 · 끊긴 곳 0 · 410 0 · 외톨이 0 |
+| `test-join` | 26 / 26 |
+| `test-match` | 115 / 115 |
+| `test-help` | 29 / 29 |
+| `test-admin` | 18 / 18 |
+| `test-journey` | **175 / 175** (중고장터 머리 묶음 아홉이 새로 들어갔습니다) |
+| `test-desk` | **1372 / 1372** (사진 · 매물 관리 묶음 열셋이 새로 들어갔습니다) |
+| `test-providers` | 202 / 202 |
+| `test-course` | 18 / 18 |
+| `test-photos` | 19 / 19 |
+| `test-sql` | **1913 / 1913** (0070 묶음 열셋이 새로 들어갔습니다) |
+| `test-upgrade` | 41 / 41 |
+| 수를 안 내는 묶음 (build · make-apply · check-comments · check-globals · check-deal · check-doors · check-chains · check-keys · check-authenv · check-routes · check-photos) | 전부 통과 |
+
+**세어 본 검사 합계 3982건 · 실패 0건 · 건너뛴 묶음 0개.**
+
+⚠️ **건너뛴 묶음이 없습니다** — Postgres 가 없으면 `test-sql` 이 건너뛰는데
+그것을 통과로 치면 안 돌려 본 것이 깨진 채 배포됩니다. 이번에는 전부
+돌았습니다.
+
+**되돌려 보기** — 느슨하게 고친 `tapsOk()` 가 **그려진 짧은 단추는 여전히
+잡는지** 눌러 봤습니다: 멀쩡할 때 **0건** · 20px 로 줄이면 **2건**.
+⚠️ 첫 미끼(`min-height:20px`)는 **아무것도 안 잡았습니다** — `.btn-sm` 은
+안쪽 글자 + 패딩만으로 이미 ~41px 라 `min-height` 를 내려도 높이가 안
+줄어듭니다. 미끼가 실제로 먹었는지(높이 20px)를 **재고 나서** 읽었습니다.
 
 **새로 더한 검사**
 

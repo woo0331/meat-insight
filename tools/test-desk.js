@@ -4698,6 +4698,41 @@ function boardsOf(){
        qs2.slice(0, 2).join(" | ").slice(0, 160));
     await g.p.close();
   }
+  /* ④ 쉼표로 여럿 — ⚠️⚠️⚠️ 머리말의 「골프 정보 · 후기」가 게시판 **넷**을
+     한 번에 보냅니다(2026-11-09). 하나만 좁히면 메뉴가 "후기" 를 말해 놓고
+     후기를 안 냅니다. ⚠️ 흉내 장치는 걸러 주지 않으므로 **보내는 질의를
+     뜯어** 봅니다 — 줄 수로 재면 쉼표를 통째로 떼어도 영원히 초록입니다. */
+  {
+    const many = "cm-tip,cm-course,cm-lesson,cm-gear";
+    const g = await open("/cat/community?s=" + many,
+                         { role:"customer", name:"손님", signedIn:true },
+                         { v_cq_public: CQ, v_ca_public: CA }, {}, true);
+    const qs = g.sent.filter(function(x){ return x.name === "GET"; })
+      .map(function(x){ return x.body; })
+      .filter(function(u){ return u.indexOf("v_cq_public") >= 0; });
+    const hit = qs.filter(function(u){ return u.indexOf("cat=in.") >= 0; });
+    ok("⚠️⚠️ 게시판 넷을 **한 번에** 좁혀 묻는다 (cat=in.(…))",
+       hit.length > 0, qs.slice(0, 2).join(" | ").slice(0, 200));
+    /* 넷이 **빠짐없이** 실려야 합니다 — 하나라도 빠지면 그 게시판 글이
+       메뉴를 눌렀을 때 안 나옵니다(에러는 한 줄도 안 납니다). */
+    const q1 = decodeURIComponent(hit[0] || "");
+    ok("  넷이 하나도 안 빠졌다",
+       ["cm-tip","cm-course","cm-lesson","cm-gear"].every(function(k){
+         return q1.indexOf(k) >= 0; }), q1.slice(0, 200));
+    ok("  ⚠️ `cat=eq.` 로 **하나만** 묻지 않는다",
+       qs.every(function(u){ return u.indexOf("cat=eq.") < 0; }),
+       qs.slice(0, 2).join(" | ").slice(0, 200));
+    /* 칩은 **넷 다** 켜져야 합니다 — 켜진 칩과 거르는 조건이 어긋나면
+       손님은 무엇으로 좁혔는지 알 수가 없습니다. */
+    const on = await g.p.evaluate(function(){
+      return [].slice.call(document.querySelectorAll(".cqb-c .chip-on"))
+               .map(function(a){ return a.getAttribute("data-bd"); });
+    });
+    ok("  고른 게시판 넷이 **칩에 다 켜져 있다**",
+       on.length === 4 && on.indexOf("cm-tip") >= 0 && on.indexOf("cm-gear") >= 0,
+       JSON.stringify(on));
+    await g.p.close();
+  }
 
   /* ④ 목록 한 장 — 제목 · 글쓴이 · 날짜 · 댓글 수 · **회원 조회** */
   {

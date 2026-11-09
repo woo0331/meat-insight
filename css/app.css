@@ -100,21 +100,81 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .lg-en b{ color: var(--gold); font-weight:800; }               /* 헤더 위 8.14 */
 .lg-ko{ font-size:12.5px; color: var(--on-dark-2); margin-top:2px; }
 
-/* ⚠️ 검색이 제 줄로 내려가면서 메뉴가 **가운데**로 옵니다 (3차 시안) */
-.gnb{ display:flex; align-items:center; gap:4px; margin-inline:auto; }
-/* ⚠️⚠️⚠️ **메뉴가 넷에서 열이 되면서 1440px 에서 8px 넘쳤습니다**
-   (2026-11-08). 화면 스물넷이 한꺼번에 "가로 스크롤 1448>1440" 으로
-   떨어졌습니다 — 여백과 글자를 줄여 넣습니다.
-   ⚠️ 줄 바꿈으로 풀지 않았습니다: 시안의 머리말은 **한 줄**입니다.
-   ⚠️⚠️ 메뉴를 더하는 날 `check-screens` 가 다섯 폭에서 다시 잽니다 —
-   더 들어갈 자리가 없으면 그때는 이름을 줄이는 것이 아니라 **메뉴를
-   줄이세요**(글자를 줄여 밀어 넣으면 폭이 조금만 좁아져도 또 넘칩니다). */
+/* ════════════════════════════════════════════════════════════════════
+   머리말 메뉴 일곱 + 하위 메뉴 (2026-11-09 · 통합 지시서 §3)
+
+   ⚠️⚠️⚠️ **맨 위 칸은 링크 · 펼치는 것은 옆의 작은 단추**입니다.
+   한 칸을 단추로만 만들면 자바스크립트가 꺼진 분 · 크롤러에게는 눌러도
+   아무 일이 안 나는 칸이 됩니다(절대 규칙 5). 그래서 이름을 누르면
+   그 분류로 **그냥 갑니다.**
+
+   ⚠️⚠️ **PC 에서는 마우스를 올리거나 키보드 초점이 들어오면 CSS 가
+   펼칩니다**(`:hover` · `:focus-within`) — 자바스크립트 없이도 됩니다.
+   좁은 폭의 아코디언만 `js/hdmenu.js` 가 여닫습니다.
+
+   ⚠️ 펼침 칸(`.gnb-d`)은 **딥그린이 아니라 밝은 면**입니다 — 같은
+   딥그린 위에 딥그린을 얹으면 경계가 안 보입니다. 밝은 면이라 글자는
+   `--ink`(본문)입니다(`--on-dark` 같은 없는 변수를 지어 쓰지 않습니다).
+   ════════════════════════════════════════════════════════════════════ */
+.gnb{ display:flex; align-items:center; gap:2px; margin-inline:auto; }
+.gnb-i{ position:relative; display:flex; align-items:center; }
+/* ⚠️⚠️ **메뉴가 열에서 일곱이 되었습니다** (2026-11-09). 전에는 열이
+   1440px 에서 8px 넘쳐 여백과 글자를 줄여 넣었습니다 — 일곱이 되면서
+   자리가 생겼으므로 글자를 14.5px 로 돌려놓습니다.
+   ⚠️ 메뉴를 더하는 날 `check-screens` 가 다섯 폭에서 다시 잽니다 —
+   더 들어갈 자리가 없으면 이름을 줄이는 것이 아니라 **메뉴를 줄이세요**
+   (글자를 줄여 밀어 넣으면 폭이 조금만 좁아져도 또 넘칩니다). */
 .gnb a, .gnb button{
   display:inline-flex; align-items:center; gap:5px;
-  min-height: var(--tap); padding: 8px 7px; border-radius: 8px;
-  font-size:13.5px; font-weight:600; white-space:nowrap;
+  min-height: var(--tap); padding: 8px 8px; border-radius: 8px;
+  font-size:14.5px; font-weight:600; white-space:nowrap;
 }
 .gnb a:hover, .gnb button:hover{ background: rgba(255,255,255,.12); }
+/* 펼치는 단추 — ⚠️ 누르는 자리는 40px 이상입니다(손님이 40~60대입니다).
+   아이콘만 있어서 글자로 높이를 못 만드므로 직접 줍니다. */
+.gnb-x{ padding:8px 4px; min-width:28px; justify-content:center; }
+.gnb-x svg{ transition: transform .15s; }
+.gnb-i.on > .gnb-x svg{ transform: rotate(180deg); }
+
+/* 펼침 칸 — ⚠️⚠️ 기본이 `display:none` 입니다. `hidden` 속성을 쓰지
+   않았습니다 — 여기에 `display:block` 을 주는 규칙이 있으면 `hidden` 은
+   **안 가려집니다**(작성자 CSS 가 브라우저 기본을 이깁니다 · 작업 기억의
+   그 자리). 여닫는 것은 `.on` 한 가지로만 가릅니다. */
+.gnb-d{
+  display:none; position:absolute; top:100%; left:0; z-index:120;
+  min-width:210px; padding:8px; margin-top:6px;
+  background:#fff; color: var(--ink);
+  border-radius:12px; box-shadow: 0 14px 34px rgba(8,43,32,.22);
+}
+/* ⚠️ 오른쪽 끝 메뉴는 **왼쪽으로** 펼칩니다 — 안 그러면 화면 밖으로
+   나가고 그때 가로 스크롤이 생깁니다(`check-screens` 가 잡습니다). */
+.gnb-i:last-child > .gnb-d, .gnb-i:nth-last-child(2) > .gnb-d{ left:auto; right:0; }
+.gnb-d a{
+  display:block; width:100%; white-space:normal;
+  padding:10px 12px; border-radius:8px; font-size:15px; font-weight:600;
+  color: var(--ink);
+}
+.gnb-d a:hover{ background: var(--grn-soft); }
+.gnb-i.on > .gnb-d{ display:block; }
+/* ⚠️ 넓은 PC 에서만 마우스 · 초점으로 펼칩니다 — 좁은 폭에서는 아코디언이고
+   거기서 `:hover` 가 걸리면 손가락이 스치기만 해도 열립니다. */
+@media (min-width: 1341px){
+  .gnb-i:hover > .gnb-d, .gnb-i:focus-within > .gnb-d{ display:block; }
+}
+
+/* 햄버거 — ⚠️⚠️⚠️ **`[hidden]` 에 `display:none` 을 같이 적습니다.**
+   이 칸에 `display:inline-flex` 를 주므로, 안 적으면 속성만 붙고
+   **안 가려집니다**(작업 기억의 그 자리). 빌드는 `hidden` 으로 내보내고
+   `js/hdmenu.js` 가 켜질 때만 뗍니다 — 자바스크립트가 꺼진 분에게는
+   단추가 없고 메뉴 일곱이 그대로 보입니다. */
+.hd-burger{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width: var(--tap); min-height: var(--tap); border-radius:10px;
+  margin-left:auto;
+}
+.hd-burger[hidden]{ display:none; }
+.hd-burger:hover{ background: rgba(255,255,255,.12); }
+@media (min-width: 1341px){ .hd-burger{ display:none; } }
 
 /* 머리말 오른쪽 돋보기 (시안 · 2026-11-08) — ⚠️ 누르는 자리는 40px
    이상이어야 합니다(손님이 40~60대입니다). 아이콘만 있어서 글자로
@@ -197,49 +257,54 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
 .hd-r .btn{ font-size:15px; }
 .bar{ display:none; }
 
-/* 폰 — ⚠️ 미디어 쿼리가 특정도에서 지는 일이 잦습니다.
+/* 좁은 폭 — ⚠️ 미디어 쿼리가 특정도에서 지는 일이 잦습니다.
    .hd .gnb (0,2,0) 로 적어 둔 규칙이 없는지 확인하고 늘리세요. */
-/* ⚠️⚠️⚠️ **1340px 로 올렸습니다** (2026-11-08). 메뉴가 열이 되고,
-   로그인하시면 `js/hdauth.js` 가 오른쪽에 칸을 하나 더 끼워서
-   **1280px 에서 56px 넘쳤습니다**. ⚠️ `check-screens` 는 360 · 390 · 430 ·
-   768 · 1440 다섯 폭만 재고 **로그인도 안 하므로**, 그 자리를 못 봅니다 —
-   광고 소재 검사(1280 · 로그인)가 잡았습니다.
+/* ⚠️⚠️⚠️ **1340px 로 올렸습니다** (2026-11-08). 로그인하시면
+   `js/hdauth.js` 가 오른쪽에 칸을 하나 더 끼워서 **1280px 에서 56px
+   넘쳤습니다**. ⚠️ `check-screens` 는 360 · 390 · 430 · 768 · 1440 다섯
+   폭만 재고 **로그인도 안 하므로**, 그 자리를 못 봅니다 — 광고 소재
+   검사(1280 · 로그인)가 잡았습니다.
    ⚠️ 시안의 "한 줄" 은 **넓은 PC**(1341px 위) 에서 지킵니다. */
 @media (max-width: 1340px){
   .hd-in{ flex-wrap: wrap; min-height:0; padding-block:10px; gap:10px; }
-  /* ⚠️⚠️⚠️ **`overflow-x:auto` 를 뺐습니다** (2026-11-08). 메뉴가 넷에서
-     **아홉**으로 늘면서(시안), 밀어서 보는 상자에 담으면 뒤 다섯이
-     손님에게 **없는 메뉴**가 됩니다 — 2026-11-04 에 넷째(고객센터)로
-     겪은 그 자리입니다. 아홉은 **세 칸**으로 나누어떨어져 3줄에 빈 칸
-     없이 들어갑니다. ⚠️ 메뉴 수를 바꾸는 날 이 칸 수도 같이 보세요
-     (나누어떨어지지 않으면 마지막 줄에 구멍이 보입니다). */
-  .gnb{ order:3; width:100%; margin-inline:0;
-        display:grid; grid-template-columns: repeat(5, minmax(0,1fr));
-        gap:2px 4px; }
-  .gnb > *{ min-width:0; }
-  .gnb a{ justify-content:center; padding-inline:6px; }
 
-/* ⚠️⚠️⚠️ **메뉴 넷 가운데 넷째가 화면 밖에 있었습니다** (2026-11-04).
-   `.gnb` 가 `overflow-x:auto` 라 가로로 밀어서 볼 수는 있는데, 밀 수
-   있다는 표가 하나도 없어서 **고객센터가 폰에서 그냥 없는 메뉴**였습니다 —
-   360 · 390 · 430 **세 폭 모두** 그랬습니다 (네 개가 399px 인데 자리는
-   320~390px). 전수 점검은 **화면 전체**의 가로 밀림만 보므로 영원히
-   초록이었습니다 (상자 **안쪽** 스크롤은 정상이니까요).
-   ⚠️ 고치는 법: 좁은 폭에서는 **두 줄 두 칸**으로 둡니다. 글자를 줄여
-   한 줄에 밀어 넣는 쪽은 폭이 더 좁아지거나 메뉴가 하나 늘면 **또
-   같은 일**이 납니다 — 칸으로 나누면 몇 개가 되든 다 보입니다.
-   ⚠️ `tools/check-screens.js` 가 이제 "머리말 메뉴가 전부 보이는가" 를
-   폭마다 잽니다. */
-@media (max-width: 620px){
-  /* ⚠️⚠️ 폰에서는 **두 칸**입니다 — 메뉴 열은 2 · 5 로 나누어떨어지므로
-     폰은 2칸 5줄, 태블릿은 5칸 2줄이 되어 **마지막 줄에 구멍이 없습니다.**
-     ⚠️ 메뉴 수를 바꾸는 날 이 두 수를 같이 보세요(열 → 아홉이 되면
-     3칸 · 9 로, 여덟이면 2칸 · 4칸으로). */
-  .gnb{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-  .gnb a{ font-size:14.5px; padding-inline:4px; }
-}
+  /* ⚠️⚠️⚠️ **자바스크립트가 꺼진 분에게는 메뉴 일곱이 그대로 보입니다.**
+     `.hd` 에 `nav-js` 가 붙는 것은 `js/hdmenu.js` 가 켜졌을 때뿐이고,
+     그때만 햄버거로 접습니다. 접기만 하고 여는 길이 없으면 폰에서 메뉴가
+     **통째로 없는 것**이 됩니다(2026-11-04 에 넷째 메뉴로 겪은 자리의
+     더 나쁜 판 · 절대 규칙 5).
+     ⚠️⚠️ 격자가 아니라 **흘려 담습니다**(`flex-wrap`) — 메뉴가 몇 개가
+     되든 마지막 줄에 구멍이 남지 않습니다. 전에는 칸 수를 박아 두어
+     메뉴 수를 바꿀 때마다 2 · 5 로 나누어떨어지는지 따져야 했습니다. */
+  .gnb{ order:3; width:100%; margin-inline:0;
+        display:flex; flex-wrap:wrap; gap:2px 4px; }
+  .gnb > *{ min-width:0; }
+  .gnb-t{ justify-content:center; padding-inline:8px; }
+
+  /* 햄버거를 켠 뒤 — 메뉴는 **아코디언**입니다(지시서 §3) */
+  .hd.nav-js .gnb{ display:none; }
+  .hd.nav-js.nav-on .gnb{ display:block; }
+  .hd.nav-js .gnb-i{ display:flex; width:100%; flex-wrap:wrap;
+                     border-top:1px solid rgba(255,255,255,.14); }
+  .hd.nav-js .gnb-i:first-child{ border-top:0; }
+  .hd.nav-js .gnb-t{ flex:1 1 auto; justify-content:flex-start;
+                     font-size:16px; padding-block:12px; }
+  .hd.nav-js .gnb-x{ flex:none; min-width: var(--tap); }
+  /* ⚠️ 아코디언에서는 **떠 있지 않고** 제 줄을 차지합니다 — 떠 있으면
+     아래 메뉴를 덮어서 그 아래가 안 보입니다. */
+  .hd.nav-js .gnb-d{ position:static; width:100%; margin:0 0 8px;
+                     box-shadow:none; }
+  .hd.nav-js .gnb-i:last-child > .gnb-d,
+  .hd.nav-js .gnb-i:nth-last-child(2) > .gnb-d{ left:auto; right:auto; }
+
+  /* ⚠️ 햄버거를 **맨 오른쪽**에 둡니다 — DOM 에서는 로고 바로 뒤라
+     (초점 차례가 로고 → 메뉴 단추 → 메뉴여야 합니다) 자리만 옮깁니다. */
+  .hd-burger{ order:2; margin-left:0; }
   .hd-r{ margin-left:auto; }
   .hd-r .lbl{ display:none; }
+}
+@media (max-width: 620px){
+  .gnb a{ font-size:14.5px; padding-inline:6px; }
 }
 /* ⚠️ 아주 좁은 폭 — 로고와 입점 단추가 **한 줄에** 앉게 줄입니다.
    줄이지 않으면 단추가 제 줄로 내려가 머리말이 **세 줄**이 됩니다
@@ -2952,3 +3017,19 @@ picture{ display: contents; }
   word-break:keep-all; overflow-wrap:anywhere; }
 .csg-w{ font-size:13px; color: var(--ink2); }
 .csg-m{ display:flex; flex-wrap:wrap; gap:8px; font-size:12.5px; color: var(--ink3); }
+
+/* ════════════════════════════════════════════════════════════════════
+   골프 회원권 전문관 — /membership   (2026-11-09)
+   ⚠️⚠️ **없는 클래스는 조용히 아무 모양도 안 입습니다.** 처음에 이 넷을
+   화면에만 적고 CSS 를 안 적어서, 목록이 글머리표도 줄 간격도 없이
+   줄줄이 붙어 나왔습니다(`check-safe` ⑧ 은 **변수만** 보고 클래스는
+   안 봅니다 — 찍어 보고 알았습니다).
+   ════════════════════════════════════════════════════════════════════ */
+.mb-top{ font-size:16px; color: var(--ink2); margin:0 0 18px; max-width:72ch; }
+.mb-lead{ font-size:16px; color: var(--ink2); margin:0 0 14px; max-width:72ch; }
+.mb-li{ margin:0 0 18px; padding-left:20px; max-width:72ch; }
+.mb-li li{ margin:0 0 9px; font-size:16px; line-height:1.6; }
+.mb-li li::marker{ color: var(--gold-text); }
+/* ⚠️ 단추는 **문단 끝에** 모읍니다 — 문장 한가운데 링크는 누름 높이가
+   16px 입니다(작업 기억에서 일곱 곳을 고친 자리). */
+.mb-go{ display:flex; flex-wrap:wrap; gap:10px; margin:0; }

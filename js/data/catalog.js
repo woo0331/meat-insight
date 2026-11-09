@@ -454,6 +454,17 @@ window.amSubGoes = function(catKey, subKey){
 };
 window.amSubUrl = function(catKey, subKey){
   var c = (typeof catKey === "string") ? catKey : (catKey && catKey.key);
+  /* ⚠️⚠️⚠️ **하위를 쉼표로 여럿 보낼 수 있습니다** (2026-11-09 · 머리말
+     하위 메뉴). 「골프 의류 · 신발」 처럼 **메뉴 이름 하나가 하위 둘**을
+     말하는 자리가 넷 있습니다 — 하나만 보내면 이름이 "신발" 을 말해 놓고
+     안 걸러 주는 꼴입니다.
+     ⚠️ 갈래(업체찾기냐 제 목록이냐)는 **첫 키**로 가릅니다 — 한 메뉴에
+     갈래가 다른 키를 섞으면 어차피 갈 자리가 둘이 되므로, 섞어 적는 것이
+     잘못입니다(섞으면 첫 키 쪽으로 가고 나머지는 거기서 안 걸립니다).
+     ⚠️ 받는 쪽이 쉼표를 갈라야 합니다 — `js/search.js`(sub) ·
+     `js/community.js`(s) 둘이 그렇게 합니다. 새 갈래를 더하는 날
+     **받는 쪽도 같이** 보세요. */
+  var first = String(subKey || "").split(",")[0].trim();
   /* ⚠️⚠️⚠️ **인력 · 비즈니스의 하위는 업체 목록이 아닙니다.** "골프 프로
      구인 · 구직" 을 업체찾기로 보내면 그 화면은 **영원히 0건**이고, 그건
      눌러도 아무 일이 안 나는 칸과 같습니다 (절대 규칙 5). 그 하위는
@@ -472,7 +483,7 @@ window.amSubUrl = function(catKey, subKey){
      매물 목록으로 갑니다. 그 판단을 화면에 적으면 두 곳이 됩니다. */
   if(c === "community")
     return "/cat/community" + (subKey ? "?s=" + encodeURIComponent(subKey) : "");
-  if(c === "used" && subKey && !amSubIsPv("used", subKey))
+  if(c === "used" && subKey && !amSubIsPv("used", first))
     return "/cat/used?s=" + encodeURIComponent(subKey);
   var qs = [];
   if(c)      qs.push("cat=" + encodeURIComponent(c));

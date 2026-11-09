@@ -66,3 +66,6 @@ RESTORE-phoneway.md
 #  pages/      빌드가 읽는 화면 틀입니다 (손님이 받는 것은 찍힌 index.html)
 #  DEPLOY.md   배포 절차 — 운영자용
 DEPLOY.md
+
+# 2026-11-09 — 전체 진단 보고서 (운영자용)
+GOLF_ALL_IN_ONE_FULL_DIAGNOSIS.md

@@ -93,8 +93,21 @@
   function readUrl(){
     var u = new URLSearchParams(window.location.search);
     var s = (u.get("s") || "").trim();
-    /* ⚠️ 모르는 값은 버립니다 — 없는 게시판으로 들어오면 모아보기입니다 */
-    S.s = (s === "all" || boards().some(function(b){ return b.key === s; })) ? s : "";
+    /* ⚠️⚠️⚠️ **쉼표로 여럿 들어옵니다** (2026-11-09 · 머리말 하위 메뉴).
+       전에는 **한 키만** 받아들이고 모르는 값은 버렸는데, 쉼표가 통째로
+       "모르는 값" 이 되어 「골프 정보 · 후기」를 누르면 **모아보기**가
+       떴습니다 — 가는 길을 내 놓고 **받는 쪽을 안 고친** 자리이고,
+       이 저장소가 그 거울상(받는 쪽은 있는데 길이 없던 자리)을 두 번
+       겪었습니다. `test-desk` 가 질의를 뜯어 보고 잡았습니다.
+       ⚠️ 모르는 키는 **버립니다** — 지어내지 않습니다. 전부 모르면
+       모아보기입니다. */
+    if(s === "all"){ S.s = "all"; }
+    else {
+      var known = s.split(",").map(function(x){ return x.trim(); })
+        .filter(function(k){
+          return k && boards().some(function(b){ return b.key === k; }); });
+      S.s = known.join(",");
+    }
     S.q = (u.get("q") || "").trim();
     S.q2 = (u.get("f") || "").trim().slice(0, 40);
     var p = parseInt(u.get("p") || "1", 10);
@@ -166,9 +179,21 @@
   }
 
   /* ── 게시판 줄 ──────────────────────────────────────────────────── */
+  /* 고른 게시판 — ⚠️ **쉼표를 가르는 자리는 여기 하나**입니다.
+     목록 질의와 칩이 같은 줄을 읽어야 합니다 (두 곳에 적으면 칩은 켜져
+     있는데 목록은 안 걸러 주는 날이 옵니다). "" 는 모아보기 · "all" 은
+     전체 글이라 **좁히지 않습니다**. */
+  function boardKeys(){
+    if(!S.s || S.s === "all") return [];
+    return String(S.s).split(",").map(function(x){ return x.trim(); })
+      .filter(function(x){ return x; });
+  }
+
   function bar(){
+    var picked = boardKeys();
     var one = function(k, name){
-      return '<a class="chip' + (S.s === k ? " chip-on" : "") + '" href="' +
+      var on = k ? (picked.indexOf(k) >= 0) : (S.s === k);
+      return '<a class="chip' + (on ? " chip-on" : "") + '" href="' +
         esc(url({ s:k, q:"", p:0 })) + '" data-bd="' + esc(k) + '">' +
         esc(name) + '</a>';
     };
@@ -176,7 +201,8 @@
        둡니다 — 전에는 "전체" 하나였는데, 게시판이 늘자 어느 게시판에
        무엇이 올라왔는지 알 길이 목록을 끝까지 미는 것뿐이었습니다. */
     return '<div class="sf-c cqb-c">' + one("", "게시판 모아보기") +
-      one("all", "전체 글") +
+      '<a class="chip' + (S.s === "all" ? " chip-on" : "") + '" href="' +
+        esc(url({ s:"all", q:"", p:0 })) + '" data-bd="all">' + esc("전체 글") + '</a>' +
       boards().map(function(b){ return one(b.key, b.name); }).join("") + '</div>';
   }
 
@@ -268,7 +294,16 @@
     var qs = ["select=id,cat,title,who,named,created_at,answer_n,view_n,photo_n",
               "order=created_at.desc",
               "limit=" + String(PER), "offset=" + String(S.p * PER)];
-    if(S.s && S.s !== "all") qs.push("cat=eq." + encodeURIComponent(S.s));
+    /* ⚠️⚠️ **쉼표로 여럿 받습니다** (2026-11-09 · 머리말 하위 메뉴).
+       「골프 정보 · 후기」는 게시판 **넷**(골프 정보 · 골프장 후기 ·
+       레슨 후기 · 장비 후기)이라, 하나만 좁히면 메뉴가 "후기" 를 말해
+       놓고 후기를 안 냅니다. `js/search.js` 가 `sub` 에 하는 것과 **같은
+       규칙**입니다.
+       ⚠️ 거르는 것은 **서버**입니다 — 스무 줄만 받아 화면에서 거르면
+       그 스무 줄 밖의 글이 영영 안 나옵니다. */
+    var bds = boardKeys();
+    if(bds.length === 1) qs.push("cat=eq." + encodeURIComponent(bds[0]));
+    else if(bds.length)  qs.push("cat=in.(" + bds.map(encodeURIComponent).join(",") + ")");
     /* ⚠️ 찾는 글자가 있으면 **서버에서** 좁힙니다 (ilike) */
     var qw = qSafe(S.q2);
     if(qw) qs.push("title=ilike.*" + encodeURIComponent(qw) + "*");

@@ -66,59 +66,149 @@ function ver(file){
 }
 
 /* ════════════════════════════════════════════════════════════════════
-/* ⚠️⚠️⚠️ **머리말은 시안 그대로 열 분류 텍스트 메뉴 한 줄**입니다
-   (2026-11-08 · 최종 디자인 지시서 1번). 전에는 손님이 하는 일 넷
-   (카테고리 · 업체찾기 · 매칭 요청 · 고객센터)이었습니다.
-   ⚠️⚠️ **빠진 셋은 푸터에 길을 남겼습니다** — 메뉴에서 빼기만 하고
-   길을 안 남기면 지운 것과 같습니다(`check-links` 의 외톨이 검사가
-   그것을 잡습니다). 업체찾기 · 매칭 요청 · 고객센터 셋 다 푸터의
-   '이용 안내' 칸에 있고, 매칭 요청은 메인의 매칭 띠에도 있습니다.
+   머리말 — **상단 메뉴 일곱 + 하위 메뉴** (2026-11-09 · 통합 지시서)
 
-   ⚠️⚠️⚠️ **이름은 시안의 말이고 가는 자리는 우리 분류입니다** —
-   지시서가 "메뉴 명칭이 다르면 **탐색용 별칭으로 매핑**하고 기존 URL ·
-   데이터 · 카테고리 분류를 임의로 삭제하거나 변경하지 말 것" 이라고
-   적었습니다. 주소는 `amCatUrl()` · `amSubUrl()` **두 함수**에서만
-   짓습니다(주소를 두 곳에 지었다가 링크 예순다섯 곳이 410 으로 갈
-   뻔한 그 자리).
+   ⚠️⚠️⚠️ **열에서 일곱으로 묶었습니다.** 전에는 시안의 이름 열이 한 줄에
+   평평하게 서 있었고, 하위로 가는 길은 분류 화면까지 들어가야 있었습니다.
+   지금은 일곱이 머리말에 서고 **그 아래 하위 메뉴가 펼쳐집니다.**
 
-   ⚠️⚠️⚠️ **시안의 「렌탈존」은 갈 자리가 없었습니다** — 대여를 담는
-   분류도 하위도 없었습니다. 그래서 `골프용품 마켓` 아래 하위
-   **`mk-rent`(렌탈 · 대여)** 를 더하고 그리로 보냅니다. 없는 자리로
-   보내거나 '준비 중' 칸을 내면 눌러도 아무 일이 안 나는 칸입니다
-   (절대 규칙 5 · 통합 지시서 §0-3).
-   ⚠️ 업체가 0곳이라 당장은 빈 목록이고, 그건 **다른 하위와 같은
-   상태**입니다 — 지어낸 업체를 채우지 않습니다(절대 규칙 1). */
+   ⚠️⚠️⚠️ **길은 하나도 안 없어졌습니다.** 지시서 §4 가 "기존 페이지 ·
+   URL · 데이터를 삭제하지 않는다" 고 못박았습니다 —
+     · 분류 **열 전부**가 메인의 분류 띠 · `/categories` · 푸터의
+       '서비스' 칸에 그대로 있습니다
+     · 머리말 일곱에 이름이 안 뜨는 분류(조인 · 중고 · 연습장)는
+       **하위 메뉴**에 있습니다
+     · `골프 인력 · 비즈니스` 는 일곱에도 하위에도 자리가 없습니다 —
+       지시서의 하위 목록에 그 줄이 없기 때문입니다. **지우지 않았고**
+       메인 띠 · `/categories` · 푸터 셋으로 그대로 들어갑니다
+       (`check-links` 의 외톨이 검사가 그것을 셉니다).
+   ⚠️ 주소는 **글자로 박지 않습니다** — `navHref()` 가 `amCatUrl()` ·
+   `amSubUrl()` 로 짓습니다(주소를 두 곳에 지었다가 링크 예순다섯 곳이
+   410 으로 갈 뻔한 그 자리).
+
+   ⚠️⚠️ **이름은 지시서의 말 · 가는 자리는 우리 분류**입니다. 지시서가
+   "메뉴 명칭이 다르면 탐색용 별칭으로 매핑하고 기존 URL · 분류를 임의로
+   바꾸지 말 것" 이라고 적었습니다.
+
+   ⚠️⚠️ **하위가 둘 이상인 자리는 쉼표**로 보냅니다 — `js/search.js` 가
+   갈라 **하나라도 맞으면** 냅니다. 하나만 보내면 메뉴 이름이 "신발" 을
+   말해 놓고 안 걸러 주는 꼴입니다(「골프 의류 · 신발」 · 「샤프트 · 그립
+   교체」 · 「중고 매입 · 위탁」 · 「골프 정보 · 후기」 넷이 그 자리입니다).
+
+   ⚠️⚠️⚠️ **「골프 회원권」만 새 화면입니다**(`/membership`). 지시서가
+   "신규 전문관으로 구축하되 **초기에는 정보 및 상담 중심**" 이라고
+   적었습니다 — 그래서 시세 · 매물 · 거래를 **담지 않습니다**:
+     · 회원권 호가는 저희에게 **자료가 없습니다**. 지어내면 절대 규칙 1
+       이고, 작업 기억이 "제휴가 필요한 값은 칸을 아예 안 만든다" 로
+       적어 둔 바로 그 줄에 **회원권 호가**가 있습니다.
+     · 그래서 분류(`AM_CATS`)로 올리지 **않았습니다** — 올리면
+       `/search?cat=membership` 이 영원히 0건인 자리가 되고, 메인 분류
+       띠가 열하나가 되어 마지막 줄에 구멍이 생깁니다(그 나누어떨어짐을
+       `test-providers` 가 잽니다).
+   ⚠️ 회원권 업체가 실제로 입점하시는 날 분류로 올립니다 — 그때 띠의
+   칸 수도 같이 보세요. */
+var MEMBER_URL = "/membership";
+
 var NAV = [
-  /* 시안의 이름                우리 자리 */
-  { name:"부킹/조인",    cat:"booking" },
-  { name:"중고골프장터",  cat:"used" },
-  /* ⚠️ 하위로 가는 둘 — 「골프클럽」 · 「의류&신발」 은 분류가 아니라
-     `골프용품 마켓` 의 **하위**입니다. `amSubUrl()` 이 주소를 짓습니다.
-     ⚠️⚠️ 의류&신발은 하위 **둘**(의류 · 골프화)이라 쉼표로 보냅니다 —
-     `js/search.js` 가 쉼표를 갈라 하나라도 맞으면 냅니다. 하나만
-     보내면 메뉴 이름이 "신발" 을 말해 놓고 **안 걸러 주는** 꼴입니다. */
-  { name:"골프클럽",     cat:"market", sub:"mk-club" },
-  { name:"렌탈존",      cat:"market", sub:"mk-rent" },
-  { name:"의류&신발",    cat:"market", sub:"mk-wear,mk-shoe" },
-  { name:"용품",        cat:"market" },
-  { name:"골프투어",     cat:"travel" },
-  { name:"피팅샵",      cat:"fitting" },
-  { name:"레슨샵",      cat:"lesson" },
-  { name:"커뮤니티",     cat:"community" }
+  /* 지시서의 이름            우리 자리 */
+  { name:"부킹 · 조인", cat:"booking", subs:[
+    { name:"골프장 부킹",        cat:"booking" },
+    { name:"골프 조인",          cat:"matchup" },
+    /* ⚠️ 0066 의 전국 골프장 마스터는 `/search` 아래 구간입니다 —
+       `pages/course.js` 가 빵부스러기에서 쓰는 주소와 **같은 자리**로
+       보냅니다(두 곳이 다른 데를 가리키지 않게). */
+    { name:"전국 골프장 찾기",   href:"/search#courses" },
+    /* ⚠️ 날짜 × 지역 현황표는 `/cat/booking` 에 있습니다. 그 구간의
+       제목이 `id="tbd-h"` 라 그 자리로 바로 내려갑니다. */
+    { name:"날짜 · 지역별 현황", cat:"booking", hash:"#tbd-h" }
+  ]},
+  { name:"골프마켓", cat:"market", subs:[
+    { name:"중고 골프장터",     cat:"used" },
+    { name:"신품 골프클럽",     cat:"market", sub:"mk-club" },
+    { name:"골프 의류 · 신발",  cat:"market", sub:"mk-wear,mk-shoe" },
+    { name:"골프용품",          cat:"market" },
+    { name:"골프 렌탈",         cat:"market", sub:"mk-rent" },
+    /* ⚠️ 이 둘만 **업체가 하는 일**(`pv:true`)이라 업체찾기로 갑니다 —
+       나머지 열셋은 회원끼리 쓰는 물건 종류라 매물 목록을 좁힙니다. */
+    { name:"중고 매입 · 위탁",  cat:"used",   sub:"us-buyquote,us-consign" }
+  ]},
+  { name:"레슨 · 연습장", cat:"lesson", subs:[
+    { name:"골프 레슨",      cat:"lesson" },
+    /* ⚠️ "프로를 찾는다" 는 곧 **업체찾기**입니다 — 레슨으로 좁힌
+       업체 목록이고, 주소는 `navHref()` 가 분류 키로 짓습니다. */
+    { name:"레슨 프로 찾기", cat:"lesson", find:true },
+    { name:"골프 연습장",    cat:"range" },
+    { name:"스크린골프",     cat:"range",  sub:"rg-sim" }
+  ]},
+  { name:"골프여행", cat:"travel", subs:[
+    { name:"국내 골프여행", cat:"travel", sub:"tr-home" },
+    { name:"해외 골프여행", cat:"travel", sub:"tr-away" },
+    { name:"골프 패키지",   cat:"travel", sub:"tr-pack" },
+    { name:"골프 캠프",     cat:"travel", sub:"tr-camp" }
+  ]},
+  { name:"피팅 · 수리", cat:"fitting", subs:[
+    { name:"골프클럽 피팅",      cat:"fitting" },
+    { name:"샤프트 · 그립 교체", cat:"fitting", sub:"ft-shaft,ft-grip" },
+    { name:"골프클럽 수리",      cat:"fitting", sub:"ft-mend" }
+  ]},
+  { name:"골프 회원권", href: MEMBER_URL, subs:[
+    /* ⚠️⚠️⚠️ 다섯 다 **같은 화면의 구간**입니다 — 호가 · 매물을 담는
+       화면이 아니라 "무엇을 확인하셔야 하는지" 와 상담으로 가는 길을
+       적은 자리입니다. 없는 자료로 화면을 만들면 절대 규칙 1 입니다. */
+    { name:"회원권 시세",     href: MEMBER_URL + "#price" },
+    { name:"회원권 매수",     href: MEMBER_URL + "#buy"   },
+    { name:"회원권 매도",     href: MEMBER_URL + "#sell"  },
+    { name:"법인 회원권",     href: MEMBER_URL + "#corp"  },
+    { name:"회원권 전문업체", href: MEMBER_URL + "#pro"   }
+  ]},
+  { name:"커뮤니티", cat:"community", subs:[
+    { name:"자유게시판",       cat:"community", sub:"cm-open" },
+    { name:"골프 질문 · 답변", cat:"community", sub:"cm-ask" },
+    /* ⚠️⚠️ 「정보 · 후기」는 게시판 **넷**입니다(골프 정보 · 골프장
+       후기 · 레슨 후기 · 장비 후기). 하나만 보내면 메뉴가 "후기" 를
+       말해 놓고 후기를 안 냅니다 — `js/community.js` 가 쉼표를 갈라
+       `cat=in.(…)` 로 보냅니다. */
+    { name:"골프 정보 · 후기", cat:"community", sub:"cm-tip,cm-course,cm-lesson,cm-gear" },
+    { name:"골프 동호회",      cat:"community", sub:"cm-club" }
+  ]}
 ];
+
+/* 주소를 짓는 자리는 **여기 하나**입니다 (하위 메뉴도 같은 함수가 씁니다) */
 function navHref(n){
-  return n.sub ? W.amSubUrl(n.cat, n.sub) : W.amCatUrl(W.amCat(n.cat));
+  if(n.href) return n.href;
+  if(n.find) return "/search?cat=" + encodeURIComponent(n.cat);
+  if(n.sub)  return W.amSubUrl(n.cat, n.sub);
+  return W.amCatUrl(W.amCat(n.cat)) + (n.hash || "");
+}
+
+/* 메뉴 하나를 그립니다 — ⚠️⚠️ **맨 위 칸은 언제나 링크**입니다.
+   단추로만 만들면 자바스크립트가 꺼진 분 · 크롤러에게는 눌러도 아무 일이
+   안 나는 칸이 됩니다(절대 규칙 5 · 거르개에서 세운 그 규칙). 펼치는 것은
+   **옆의 작은 단추**이고, PC 에서는 마우스를 올리거나 키보드 초점이
+   들어와도 CSS 가 펼칩니다(자바스크립트 없이도 됩니다). */
+function navItem(n, i){
+  var id = "gm" + i;
+  var top = '<a class="gnb-t" href="' + esc(navHref(n)) + '">' + esc(n.name) + '</a>';
+  if(!(n.subs && n.subs.length)) return '<div class="gnb-i">' + top + '</div>';
+  return '<div class="gnb-i">' + top +
+    '<button class="gnb-x" type="button" aria-expanded="false" ' +
+            'aria-controls="' + id + '" aria-label="' + esc(n.name) + ' 하위 메뉴">' +
+      icon("down", 16) + '</button>' +
+    '<div class="gnb-d" id="' + id + '">' +
+      n.subs.map(function(s){
+        return '<a href="' + esc(navHref(s)) + '">' + esc(s.name) + '</a>';
+      }).join("") +
+    '</div>' +
+  '</div>';
 }
 
 function header(){
   var B = W.AM_BRAND, cut = B.enCut;
   return '<header class="hd"><div class="wrap hd-in">' +
-    /* ⚠️⚠️ **로고 그림이 아직 없습니다.** 3차 시안은 금색 방패 안에
-       골퍼가 들어간 그림을 씁니다 — 저희에게 그 파일이 없고, 비슷하게
-       그려 놓고 "로고" 라고 부르면 없는 것을 있다고 하는 것입니다.
-       그래서 **금색 방패 표식**으로 두고, 진짜 로고 파일이 오면
-       `AM_BRAND.logo` 에 주소만 적으시면 여기서 바뀝니다 (칸은 이미
-       있습니다 — js/data/brand.js). */
+    /* ⚠️ 로고 그림은 `js/data/brand.js` 의 `AM_BRAND.logo` 한 곳입니다 —
+       지금은 임시 표식(`img/brand/logo.png`)이 들어가 있고, 진짜 로고
+       파일이 오면 그 줄의 주소만 바꾸시면 머리말 · 푸터가 같이 바뀝니다.
+       비우면 금색 방패 아이콘으로 떨어집니다(빈 칸을 내지 않습니다). */
     '<a class="lg" href="/" aria-label="' + esc(B.name) + ' 홈">' +
       /* ⚠️ 가로 · 세로를 **실제 모양대로** 적습니다. 네모(40x40)로
          적으면 브라우저가 그만큼 자리를 잡아 두었다가 그림이 오면
@@ -133,23 +223,24 @@ function header(){
         '<span class="lg-ko">' + esc(B.name) + '</span>' +
       '</span>' +
     '</a>' +
-    '<nav class="gnb" aria-label="주요 메뉴">' +
-      NAV.map(function(n){
-        return '<a href="' + esc(navHref(n)) + '">' + esc(n.name) + '</a>';
-      }).join("") +
+
+    /* ⚠️⚠️⚠️ **햄버거는 `hidden` 으로 내보냅니다.** `js/hdmenu.js` 가
+       켜질 때만 그 속성을 떼고 `.hd` 에 `nav-js` 를 붙입니다 — 그래야
+       자바스크립트가 꺼진 분에게는 **지금까지와 똑같이** 메뉴 일곱이
+       격자로 그대로 보입니다(단추만 내고 여는 길이 없으면 폰에서
+       메뉴가 통째로 사라집니다 · 절대 규칙 5). */
+    '<button class="hd-burger" type="button" hidden aria-expanded="false" ' +
+            'aria-controls="gnb" aria-label="메뉴 열기">' +
+      icon("menu", 24) + '</button>' +
+
+    '<nav class="gnb" id="gnb" aria-label="주요 메뉴">' +
+      NAV.map(navItem).join("") +
     '</nav>' +
 
-    /* ⚠️⚠️ **로그인 · 회원가입 단추를 아직 안 냅니다.** 지시서 3번의
-       머리말 목록에는 있지만, 회원 기능이 돌기 전에 내면 눌러도 아무
-       일이 안 나는 단추가 됩니다 (절대 규칙 5). 5단계에서 회원 · 업체
-       등록을 세울 때 같이 켭니다 — 자리는 .hd-r 그대로입니다. */
     '<div class="hd-r">' +
-      /* ⚠️⚠️ **시안의 오른쪽 돋보기**입니다 — 전에는 머리말 아래에 넓은
-         검색 띠가 제 줄로 있었습니다. 시안에는 그 띠가 없고 아이콘만
-         있습니다.
-         ⚠️⚠️⚠️ **단추가 아니라 링크**입니다 — `/search` 로 갑니다.
-         거기에 같은 검색 칸이 있습니다. 눌러도 아무 일이 안 나는
-         아이콘을 만들지 않습니다 (절대 규칙 5).
+      /* ⚠️⚠️ **시안의 오른쪽 돋보기**입니다 — 단추가 아니라 **링크**이고
+         `/search` 로 갑니다. 거기에 같은 검색 칸이 있습니다. 눌러도 아무
+         일이 안 나는 아이콘을 만들지 않습니다(절대 규칙 5).
          ⚠️ 아이콘만 있으면 화면 읽는 기계에 할 말이 없으므로
          `aria-label` 을 답니다. */
       '<a class="hd-sch" href="/search" aria-label="골프 서비스 · 업체 검색">' +
@@ -159,15 +250,6 @@ function header(){
       '<a class="btn btn-gold btn-sm" href="/join">' + icon("store", 18) + '업체 입점하기</a>' +
     '</div>' +
   '</div>' +
-
-  /* ⚠️⚠️⚠️ **열 분류 띠와 검색 띠를 뺐습니다** (2026-11-08 · 시안).
-     시안의 머리말은 **한 줄**입니다 — 로고 · 분류 메뉴 · 검색 아이콘 ·
-     로그인 · 회원가입 · 업체입점. 전에는 그 아래에 띠가 둘 더
-     있었습니다(열 분류 띠 · 넓은 검색 칸).
-     ⚠️ 길은 하나도 안 없어졌습니다 — 열 분류 가운데 아홉은 머리말
-     메뉴에 있고, **열 전부**가 푸터의 '서비스' 칸과 `/categories` 에
-     있으며, 검색은 오른쪽 돋보기가 `/search` 로 보냅니다.
-     ⚠️ 그래서 `js/hdnav.js`(띠를 여닫던 파일)도 같이 뺐습니다. */
   '</header>';
 }
 
@@ -225,7 +307,11 @@ function footer(){
     /* ⚠️⚠️ **업체찾기 · 매칭 요청이 여기 있어야 합니다** — 시안의
        머리말에는 그 둘이 없습니다. 길을 남기지 않으면 매칭 요청(손님이
        견적을 받는 주된 길)으로 가는 자리가 메인의 띠 하나뿐이 됩니다. */
+    /* ⚠️ `골프 회원권` 은 **분류가 아니라 독립 화면**이라 위 '서비스' 칸
+       (= `AM_CATS`)에 안 들어갑니다 — 그래서 여기 둡니다. 머리말 하위
+       메뉴에만 두면 자바스크립트가 꺼진 폰에서 길이 한 곳뿐입니다. */
     ["이용 안내", [["/search","업체찾기"], ["/match","매칭 요청"],
+                   ["/membership","골프 회원권"],
                    ["/guide","이용안내"], ["/help","고객센터"],
                    ["/join","업체 입점하기"]]],
     ["약관 · 방침", [["/terms","이용약관"], ["/privacy","개인정보처리방침"]]]
@@ -376,9 +462,11 @@ function page(o){
        한 장도 없었습니다 — 까닭 없이 무겁게 하지 않습니다).
        ⚠️⚠️ 차례가 뜻이 있습니다 (base → auth → hdauth) · **같은 파일을
        두 번 싣지 않습니다** (두 번 실으면 즉시실행이 두 번 돕니다). */
-    /* ⚠️ hdnav — 머리말의 열 분류 띠를 여는 것이라 **모든 화면**에
-       실립니다 (로그인과 상관없습니다). */
-    ['/js/components/base.js','/js/auth.js','/js/hdauth.js']
+    /* ⚠️⚠️ hdmenu — 머리말의 **하위 메뉴와 폰 햄버거**라 로그인과 상관없이
+       **모든 화면**에 실립니다. 빠뜨리면 그 화면만 햄버거가 안 열리고,
+       하위 메뉴가 손가락으로는 안 펼쳐집니다(PC 의 `:hover` 는 CSS 라
+       그 화면도 됩니다 — 그래서 빠뜨려도 **에러가 한 줄도 안 납니다**). */
+    ['/js/components/base.js','/js/auth.js','/js/hdauth.js','/js/hdmenu.js']
       .concat(o.js ? ['/js/data/brand.js','/js/data/catalog.js'] : [])
       .concat(o.js ? (Array.isArray(o.js) ? o.js : [o.js]) : [])
       .filter(function(f, i, L){ return L.indexOf(f) === i; })
@@ -444,7 +532,7 @@ if(require.main === module){
      목록에는 다른 화면과 같이 두어 제목 겹침 · 주소 검사 · 접근성 ·
      전수 점검이 **똑같이** 보게 합니다. */
   var flat = ["guide", "help", "join", "search", "match", "login", "my", "admin",
-               "desk", "terms", "privacy", "notfound"].map(function(n){
+               "desk", "terms", "privacy", "membership", "notfound"].map(function(n){
     return require("./pages/" + n + ".js").build();
   });
 

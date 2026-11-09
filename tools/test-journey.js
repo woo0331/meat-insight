@@ -195,6 +195,179 @@ const MY_BOXES = ["mybox", "reqbox", "joinmine", "lsmine", "mycq", "jobmine",
     ok("  href 없는 a 태그가 없다", r.noHref === 0, "a " + r.noHref + "개");
   }
 
+
+  /* ══════════════════════════════════════════════════════════════
+     머리말 메뉴 일곱 + 하위 메뉴   (2026-11-09 · 통합 지시서 §3 · §5)
+
+     ⚠️⚠️⚠️ **`check-screens` 는 이 자리를 못 봅니다.** 하위 메뉴는
+     `display:none` 으로 시작하고 그 도구는 **안 그려진 칸을 건너뜁니다**
+     (일부러 그렇게 고친 자리입니다). 그래서 펼친 뒤의 글자 대비 · 가로
+     밀림 · 누름 높이는 **여기서만** 재집니다.
+     ⚠️ 그리고 폰에서는 `js/hdmenu.js` 가 메뉴를 접으므로, 햄버거를
+     **눌러 보지 않으면** 메뉴 일곱이 영원히 안 재집니다.
+
+     ⚠️ 갯수를 박지 않습니다 — `build.js` 의 `NAV` 가 늘면 이 검사도
+     같이 늘어야 하므로, 화면에서 **세어서** 맞춰 봅니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── 머리말 메뉴 일곱과 하위 메뉴");
+  {
+    const p = await b.newPage({ viewport:{ width:1440, height:900 } });
+    await p.goto(base + "/", { waitUntil:"domcontentloaded" });
+
+    const top = await p.evaluate(function(){
+      var is = [].slice.call(document.querySelectorAll(".gnb .gnb-i"));
+      return {
+        n: is.length,
+        names: is.map(function(x){
+          var a = x.querySelector(".gnb-t");
+          return a ? (a.textContent||"").trim() : ""; }),
+        hrefs: is.map(function(x){
+          var a = x.querySelector(".gnb-t");
+          return a ? a.getAttribute("href") : null; }),
+        /* 하위가 있는 칸에는 펼치는 단추가 있어야 합니다 */
+        toggles: is.filter(function(x){ return x.querySelector(".gnb-x"); }).length,
+        subs: is.map(function(x){
+          return [].slice.call(x.querySelectorAll(".gnb-d a"))
+                   .map(function(a){ return a.getAttribute("href"); }); })
+      };
+    });
+    ok("PC 에서 상단 메뉴가 **일곱**이다", top.n === 7, top.n + "개 · " + top.names.join(" / "));
+    ok("  일곱 다 **링크**다 (단추만 있는 칸이 없습니다)",
+       top.hrefs.length === 7 && top.hrefs.every(function(h){ return h && h !== "#"; }),
+       JSON.stringify(top.hrefs));
+    ok("  일곱 다 하위 메뉴를 펼치는 단추가 있다", top.toggles === 7, top.toggles + "개");
+
+    /* ⚠️⚠️ **하위 링크가 전부 열리는 주소인가** — 여기가 유일한 자리입니다
+       (`check-links` 는 빌드가 찍은 HTML 의 링크를 보지만 `#` 뒤는 안 봅니다). */
+    const subAll = top.subs.reduce(function(a,b){ return a.concat(b); }, []);
+    const subDead = Array.from(new Set(subAll)).filter(function(h){ return !resolves(h); });
+    ok("  하위 메뉴 링크가 전부 열리는 주소다 (" + subAll.length + "개)",
+       subAll.length > 0 && subDead.length === 0, subDead.join(" · "));
+    ok("  ⚠️ 하위가 0개인 메뉴가 없다 (펼쳐도 빈 칸이면 절대 규칙 5)",
+       top.subs.every(function(l){ return l.length > 0; }),
+       JSON.stringify(top.subs.map(function(l){ return l.length; })));
+
+    /* 펼치기 — ⚠️ 단추를 **눌러서** 봅니다(`:hover` 는 CSS 라 따로 재야
+       하지만, 손가락 · 키보드로 되는지가 더 중요합니다). */
+    const before = await p.evaluate(function(){
+      var d = document.querySelector(".gnb .gnb-i .gnb-d");
+      return { shown: d ? d.getClientRects().length > 0 : null,
+               exp: document.querySelector(".gnb .gnb-x").getAttribute("aria-expanded") };
+    });
+    ok("  펼치기 전에는 하위가 **안 보인다**", before.shown === false, JSON.stringify(before));
+    ok("  펼치기 전 aria-expanded 가 false 다", before.exp === "false", String(before.exp));
+
+    await p.click(".gnb .gnb-i:first-child .gnb-x");
+    const after = await p.evaluate(function(){
+      var i = document.querySelector(".gnb .gnb-i");
+      var d = i.querySelector(".gnb-d");
+      var r = d.getBoundingClientRect();
+      /* 펼친 칸의 글자색 · 바탕색을 **재서** 봅니다 (계산이 아니라 값) */
+      var a = d.querySelector("a");
+      var cs = getComputedStyle(a);
+      return { shown: d.getClientRects().length > 0,
+               exp: i.querySelector(".gnb-x").getAttribute("aria-expanded"),
+               right: r.right, vw: window.innerWidth,
+               tapH: Math.round(a.getBoundingClientRect().height),
+               color: cs.color, bg: getComputedStyle(d).backgroundColor,
+               wide: document.documentElement.scrollWidth > window.innerWidth + 1 };
+    });
+    ok("  단추를 누르면 하위가 **펼쳐진다**", after.shown === true, JSON.stringify(after));
+    ok("  펼친 뒤 aria-expanded 가 true 다", after.exp === "true", String(after.exp));
+    ok("  펼친 칸이 **화면 밖으로 안 나간다**", after.right <= after.vw + 1,
+       after.right + " / " + after.vw);
+    ok("  펼쳐도 **가로로 안 밀린다**", after.wide === false, JSON.stringify(after));
+    /* ⚠️ 누르는 자리는 40px 이상입니다 (손님이 40~60대입니다) */
+    ok("  하위 링크의 누름 높이가 40px 이상이다", after.tapH >= 40, after.tapH + "px");
+
+    /* ⚠️⚠️ **하나만 열립니다** — 여럿이 같이 열리면 떠 있는 칸이 겹칩니다 */
+    await p.click(".gnb .gnb-i:nth-child(2) .gnb-x");
+    const onN = await p.evaluate(function(){
+      return document.querySelectorAll(".gnb .gnb-i.on").length; });
+    ok("  한 번에 **하나만** 펼쳐진다", onN === 1, onN + "개");
+
+    /* Esc — ⚠️ 닫고 **초점을 단추로 되돌립니다** (키보드 접근성 · §5) */
+    await p.keyboard.press("Escape");
+    const esc = await p.evaluate(function(){
+      return { on: document.querySelectorAll(".gnb .gnb-i.on").length,
+               focus: document.activeElement &&
+                      document.activeElement.className };
+    });
+    ok("  Esc 로 닫힌다", esc.on === 0, JSON.stringify(esc));
+    ok("  Esc 뒤 초점이 **펼치기 단추**로 돌아온다",
+       String(esc.focus || "").indexOf("gnb-x") >= 0, String(esc.focus));
+
+    /* 키보드로 펼치기 — ⚠️ 단추이므로 Enter 가 눌림과 같아야 합니다 */
+    await p.evaluate(function(){
+      document.querySelector(".gnb .gnb-i:nth-child(3) .gnb-x").focus(); });
+    await p.keyboard.press("Enter");
+    const kb = await p.evaluate(function(){
+      var i = document.querySelectorAll(".gnb .gnb-i")[2];
+      return i.querySelector(".gnb-d").getClientRects().length > 0; });
+    ok("  키보드(Enter)로도 펼쳐진다", kb === true, String(kb));
+    await p.close();
+  }
+
+  /* 폰 — 햄버거 */
+  for(const w of [360, 390, 430]){
+    const p = await b.newPage({ viewport:{ width:w, height:900 } });
+    await p.goto(base + "/", { waitUntil:"domcontentloaded" });
+    const shut = await p.evaluate(function(){
+      var b = document.querySelector(".hd-burger");
+      var g = document.querySelector(".gnb");
+      return { burger: b ? b.getClientRects().length > 0 : false,
+               hidden: b ? b.hasAttribute("hidden") : null,
+               menu: g ? g.getClientRects().length > 0 : null,
+               js: document.querySelector(".hd").classList.contains("nav-js") };
+    });
+    ok(w + "px — 햄버거가 **보인다**", shut.burger === true, JSON.stringify(shut));
+    ok("  " + w + "px — `hidden` 이 떨어졌다 (js 가 켜진 표)",
+       shut.hidden === false && shut.js === true, JSON.stringify(shut));
+    ok("  " + w + "px — 열기 전에는 메뉴가 접혀 있다", shut.menu === false, JSON.stringify(shut));
+
+    /* ⚠️⚠️ **눌리지 않아도 검사가 죽으면 안 됩니다.** 되돌려 보기로
+       햄버거를 숨겨 보니 `p.click` 이 그 자리에서 터져 **뒤 검사가 통째로
+       안 돌았습니다** — 그러면 무엇이 더 깨졌는지 알 수가 없습니다.
+       못 누른 것도 결과로 적고 계속 갑니다. */
+    let clicked = true;
+    try{ await p.click(".hd-burger", { timeout: 4000 }); }
+    catch(e){ clicked = false; }
+    ok("  " + w + "px — 햄버거를 **누를 수 있다**", clicked === true, "못 눌렀습니다");
+    const open = await p.evaluate(function(){
+      var is = [].slice.call(document.querySelectorAll(".gnb .gnb-i"));
+      var seen = is.filter(function(x){
+        var a = x.querySelector(".gnb-t");
+        return a && a.getClientRects().length > 0; });
+      var box = document.querySelector(".gnb").getBoundingClientRect();
+      /* ⚠️⚠️ **밀면 보이는 것은 보이는 것이 아닙니다** — 상자 밖으로
+         밀린 칸이 있는지 셉니다 (2026-11-04 에 넷째 메뉴로 겪은 자리). */
+      var out = seen.filter(function(x){
+        var r = x.getBoundingClientRect();
+        return r.right > box.right + 1 || r.left < box.left - 1; }).length;
+      return { n: seen.length, out: out,
+               wide: document.documentElement.scrollWidth > window.innerWidth + 1,
+               exp: document.querySelector(".hd-burger").getAttribute("aria-expanded") };
+    });
+    ok("  " + w + "px — 누르면 메뉴 **일곱이 다 보인다**", open.n === 7, JSON.stringify(open));
+    ok("  " + w + "px — 상자 밖으로 밀린 메뉴가 0개다", open.out === 0, JSON.stringify(open));
+    ok("  " + w + "px — 메뉴를 열어도 가로로 안 밀린다", open.wide === false, JSON.stringify(open));
+    ok("  " + w + "px — 햄버거의 aria-expanded 가 true 다", open.exp === "true", String(open.exp));
+
+    /* 폰에서도 하위가 펼쳐져야 합니다 (아코디언) */
+    try{ await p.click(".gnb .gnb-i:first-child .gnb-x", { timeout: 4000 }); }catch(e){}
+    const acc = await p.evaluate(function(){
+      var d = document.querySelector(".gnb .gnb-i .gnb-d");
+      var r = d.getBoundingClientRect();
+      return { shown: d.getClientRects().length > 0,
+               right: Math.round(r.right), vw: window.innerWidth,
+               wide: document.documentElement.scrollWidth > window.innerWidth + 1 };
+    });
+    ok("  " + w + "px — 하위가 아코디언으로 펼쳐진다", acc.shown === true, JSON.stringify(acc));
+    ok("  " + w + "px — 펼쳐도 가로로 안 밀린다",
+       acc.wide === false && acc.right <= acc.vw + 1, JSON.stringify(acc));
+    await p.close();
+  }
+
   /* ⚠️⚠️⚠️ **열 분류 띠 묶음을 뺐습니다** (2026-11-08) — 머리말이 시안
      대로 **한 줄**이 되면서 띠(`#catnav`)와 `js/hdnav.js` 가 없어졌습니다.
      열 분류로 가는 길은 ① 머리말 메뉴 아홉 ② 푸터의 '서비스' 칸 **열**

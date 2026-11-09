@@ -8,7 +8,12 @@
 --     몇 번 돌려도 안전하고, 운영 중에 돌려도 됩니다.
 --
 --  ⚠️⚠️ 기대값은 전부 **저장소에서 센 값**입니다 (눈대중이 아닙니다) —
---     판 23 · 표 21 · 상태 13 · 역할 4 · 길 70 · 함수 48.
+--     판 69 · 표 55 · 상태 13 · 역할 4 · 길 70 · 함수 43.
+--     ⚠️⚠️⚠️ **2026-11-09 에 다시 셌습니다.** 그 전에는 판 23 · 표 21 ·
+--     함수 48 로 **0023 판의 값**이 남아 있어서, 0069 까지 올린 멀쩡한
+--     DB 가 네 줄에서 ❌ 로 찍혔습니다 (판 · 표 · 함수 · anon).
+--     ⚠️ 눈대중으로 고치지 않았습니다 — 임시 Postgres 에 0001~0069 를
+--     전부 올리고 **이 파일을 실제로 돌려** 나온 값입니다.
 --     ⚠️ 전에 여기 적혀 있던 **트리거 4** 는 근거 없는 숫자였습니다 —
 --     이 파일이 세는 트리거는 **가입 트리거 하나**(on_auth_user_created)
 --     뿐입니다. 세지 않는 것을 기대값처럼 적지 마세요.
@@ -38,22 +43,13 @@ v_ver as (
       유일한 길이라 제일 나쁜 종류입니다. 지금은 `checkMigDocs()` 가
       **목록 수와 기대값이 같은지**를 바로 봅니다. */
 v_tab as (
+  /* ⚠️⚠️⚠️ **표 이름을 손으로 적어 두지 않습니다** (2026-11-09). 전에는
+     스물한 개를 글자로 박아 두어서, 앞 서비스(중고폰)의 표 넷이 지워지고
+     골프 표가 마흔 넘게 늘어난 뒤에도 **그 스물한 개만** 세고 있었습니다
+     (그래서 멀쩡한 DB 가 17/21 로 ❌ 였습니다).
+     이제 public 스키마의 **진짜 표**를 셉니다 — 보기(view)는 뺍니다. */
   select count(*)::int n from information_schema.tables
-   where table_schema = 'public'
-     and table_name in ('account','assignment','audit_log','deal','deal_move',
-                        'fee_policy','offer','provider','quote','request',
-                        'request_item','request_photo','schema_version',
-                        'settlement','user_state',
-                        'provider_contact',
-                        'provider_apply',
-                        'device','device_check','device_cost','device_move')
-   /* ⚠️ 0013 의 provider_contact 를 provider 에 안 넣은 까닭 —
-      0001 의 grant select on provider to authenticated 가 표째라,
-      거기 직통 번호를 넣으면 로그인한 손님 전부가 읽습니다.
-      ⚠️⚠️ 이 목록의 괄호 안에는 **소괄호를 쓰지 마세요** —
-      checkMigDocs 가 in 다음 괄호를 글자로 잘라 세기 때문에
-      주석의 소괄호에서 멈추고 **멀쩡한 목록을 15개로** 셉니다.
-      2026-10-22 에 그렇게 걸렸습니다. */
+   where table_schema = 'public' and table_type = 'BASE TABLE'
 ),
 /* ③ ⚠️⚠️ RLS 가 안 켜진 표 — 0 이어야 합니다.
       안 켜진 표는 누구나 남의 신청과 계약금액을 읽습니다. */
@@ -125,13 +121,16 @@ v_fn as (
                  /* 0019 — 남의 건을 밀 수 없게 (2026-10-25 §6 · §7) */
                  ('request_scope_check'),
                  /* 0020 — 직접 매입 재고 (2026-10-29 PHONEWAY ⑥) */
-                 ('make_device'),('move_device'),
-                 ('add_device_check'),('add_device_cost'),
+                 /* ⚠️ 앞 서비스(중고폰)의 기기 함수 넷
+                    (make_device · move_device · add_device_check ·
+                    add_device_cost)과 set_provider_inhouse 는 **지워졌습니다**.
+                    목록에 남겨 두면 멀쩡한 DB 가 "빠진 것 다섯" 으로
+                    찍힙니다 — 그래서 뺐습니다(2026-11-09). */
                  /* ⚠️⚠️ 0021 — 자체 매입 부서를 경쟁 입찰에서 갈라 둡니다
                     (2026-10-30 PHONEWAY §10). `account_role_guard` 가
                     **입찰을 내는 쪽과 다 보는 쪽이 같은 계정일 수 없게**
                     막습니다 — 이게 없으면 한 줄로 둘 다 됩니다. */
-                 ('account_role_guard'),('set_provider_inhouse'),
+                 ('account_role_guard'),
                  /* 0022 — 앞 서비스 접수를 보관 표시로 (2026-11-01 §6).
                     ⚠️ 지우는 문이 아닙니다 — 내려놓고 되돌립니다. */
                  ('archive_legacy_side'),('restore_legacy_request')) w(f)
@@ -165,13 +164,29 @@ v_audit as (
   select count(*)::int n from pg_policies
    where tablename = 'audit_log' and cmd in ('UPDATE','DELETE','ALL')
 ),
-/* ⑫ ⚠️ 로그인 안 한 사람(anon)에게 준 권한 — 0 이어야 합니다.
-      공개 목록은 빌드가 미리 만든 HTML 이 냅니다. */
+/* ⑫ ⚠️⚠️⚠️ **표와 보기를 갈라서 봅니다** (2026-11-09).
+      전에는 "anon 에게 준 권한은 0 이어야 한다" 였습니다 — 0023 판에서는
+      맞는 말이었습니다(공개 목록을 빌드가 찍은 HTML 이 냈습니다). 지금은
+      자유게시판 읽기(0059) · 광고(0064) · 공개 카드가 **공개 보기**로
+      나가므로 보기 열여덟이 열려 있는 것이 **맞습니다.**
+      ⚠️⚠️ 막아야 하는 것은 **표(base table)** 입니다 — 보기는 `where`
+      절로 줄과 칸을 고를 수 있지만, 표를 열면 RLS 가 줄은 막아도 **칸은
+      못 막습니다**(0064 가 `ad_run` 에서 단가 · 메모가 새던 것을 거둔
+      그 자리).
+      ⚠️ `membership_plan` 하나만 일부러 열려 있습니다 — 우리가 파는
+      멤버십 요금제이고 칸이 이름 · 월 요금 · 혜택 · 공개 여부뿐이라
+      공개가 맞습니다(0026). 그 하나는 빼고 셉니다. */
 v_anon as (
-  select count(*)::int n,
-         coalesce(string_agg(distinct table_name, ', '), '—') who
-    from information_schema.role_table_grants
-   where grantee = 'anon' and table_schema = 'public'
+  select count(*) filter (where t.table_type = 'BASE TABLE'
+                            and t.table_name <> 'membership_plan')::int n,
+         coalesce(string_agg(distinct t.table_name, ', ')
+                  filter (where t.table_type = 'BASE TABLE'
+                            and t.table_name <> 'membership_plan'), '—') who,
+         count(distinct t.table_name) filter (where t.table_type = 'VIEW')::int views
+    from information_schema.role_table_grants g
+    join information_schema.tables t
+      on t.table_schema = g.table_schema and t.table_name = g.table_name
+   where g.grantee = 'anon' and g.table_schema = 'public'
 ),
 /* ⑬ ⚠️⚠️ 가입할 때 역할을 고를 수 없는가 — 트리거가 'customer' 를 박습니다. */
 v_cust as (
@@ -181,20 +196,22 @@ v_cust as (
      and pg_get_functiondef(p.oid) like '%''customer''%'
 ),
 rows as (
-  select 1 i, '판 번호 (0001~0023)'            t, v_ver.n::text   got, '23' want from v_ver
-  union all select  2, '표 (public)',              v_tab.n::text,  '21' from v_tab
+  select 1 i, '판 번호 (0001~0069)'            t, v_ver.n::text   got, '69' want from v_ver
+  union all select  2, '표 (public · 보기 뺀 것)',  v_tab.n::text,  '55' from v_tab
   union all select  3, '⚠️ RLS 안 켜진 표: ' || v_rls.who, v_rls.n::text, '0' from v_rls
   union all select  4, '신청 상태 (hold 포함: ' ||
                        case when v_st.has_hold then 'O' else 'X' end || ')',
                        v_st.n::text, '13' from v_st
   union all select  5, '역할',                     v_role.n::text, '4'  from v_role
   union all select  6, '갈 수 있는 길 (deal_move)', v_move.n::text, '70' from v_move
-  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '48' from v_fn
+  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '43' from v_fn
   union all select  8, '⚠️ 가입 트리거 (auth.users)', v_trg.n::text, '1' from v_trg
   union all select  9, '⚠️ auth.uid()',            v_uid.n::text,  '1'  from v_uid
   union all select 10, '⚠️ 돈 칸 쓰기 권한: ' || v_money.who, v_money.n::text, '0' from v_money
   union all select 11, '⚠️ 감사 기록 수정·삭제 정책', v_audit.n::text, '0' from v_audit
-  union all select 12, '⚠️ anon 권한: ' || v_anon.who, v_anon.n::text, '0' from v_anon
+  union all select 12, '⚠️ anon 이 읽는 **표**(요금제 빼고): ' || v_anon.who ||
+                       '  · 공개 보기 ' || v_anon.views::text || '개는 정상',
+                       v_anon.n::text, '0' from v_anon
   union all select 13, '가입 시 역할을 customer 로 박음', v_cust.n::text, '1' from v_cust
 )
 select i "#", t "검사", got "지금", want "기대",

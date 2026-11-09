@@ -1,20 +1,70 @@
-/* ════════════════════════════════════════════════════════════════════
-   입점 업체 — ⚠️⚠️ **손으로 고치지 마세요.**
-
-   이 파일은 `tools/pull-providers.js` 가 DB 에서 가져와 찍습니다.
-   업체의 참은 DB(`provider` 표) 한 곳입니다. 여기서 고치면 다음에
-   가져올 때 통째로 덮어씌워지고, 그 사이에는 화면과 DB 가 다른 말을
-   합니다.
-
-   ⚠️ 새 업체를 승인하신 날 —
-       node tools/pull-providers.js && node tools/ship.js --merge
-
-   ⚠️ `listed = true` 인 업체만 들어옵니다 (RLS 의 provider_public).
-   ⚠️ 연락처 · 담당자는 **안 들어옵니다** — 저장소는 공개입니다.
-   ⚠️⚠️ 평점 · 후기 수를 여기 넣지 마세요. 실제 후기에서 **계산**합니다.
-
-   가져온 때   아직 가져온 적 없음
-   업체        0곳
-   ════════════════════════════════════════════════════════════════════ */
-window.AM_PROVIDERS_AT = "아직 가져온 적 없음";
-window.AM_PROVIDERS = [];
+/* 검사용 씨앗 — tools/test-providers.js 가 잠깐 바꿔 둔 것입니다. */
+window.AM_PROVIDERS_AT = "검사용 씨앗";
+window.AM_PROVIDERS = [
+  {
+    "id": "green-pt",
+    "name": "성남 그린골프연습장",
+    "intro": "실내 타석 열두 개와 스크린 네 대를 둡니다.",
+    "regions": [
+      "gyeonggi"
+    ],
+    "subs": [
+      "rg-in",
+      "rg-sim",
+      "ls-solo"
+    ],
+    "since": 2019,
+    "consult_hours": "평일 09:00~22:00",
+    "verified": {
+      "brn": true,
+      "tel": true
+    },
+    "scale": "mid",
+    "brands": [
+      "타이틀리스트",
+      "캘러웨이"
+    ],
+    "prices": [
+      {
+        "sub": "rg-in",
+        "label": "타석 1시간",
+        "amount": 12000,
+        "unit": "1시간"
+      },
+      {
+        "sub": "ls-solo",
+        "label": "주 1회 · 8회권",
+        "amount": 400000,
+        "unit": "8회",
+        "note": "타석 이용료 별도"
+      }
+    ],
+    "photos": [
+      {
+        "url": "https://sb-test.supabase.co/storage/v1/object/public/pv/a.jpg",
+        "caption": "실내 타석"
+      },
+      {
+        "url": "https://sb-test.supabase.co/storage/v1/object/public/pv/b.jpg"
+      }
+    ],
+    "ceo": "박대표",
+    "addr": "<b>경기</b> 성남시 분당구 1",
+    "tel": "031-111-2222",
+    "email": "pt@green.test",
+    "brn": "123-45-67890"
+  },
+  {
+    "id": "xss-test",
+    "name": "<img src=x onerror=alert(1)>",
+    "intro": "<script>alert(2)</script> 소개글",
+    "regions": [
+      "seoul"
+    ],
+    "subs": [
+      "ft-mend",
+      "ft-grip"
+    ],
+    "scale": "small"
+  }
+];

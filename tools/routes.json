@@ -23,7 +23,10 @@
     "/desk",
     "/terms",
     "/privacy",
-    "/404"
+    "/membership",
+    "/404",
+    "/pro/green-pt",
+    "/pro/xss-test"
   ],
   "unlinked": [
     "/login",

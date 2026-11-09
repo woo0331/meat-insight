@@ -33,9 +33,25 @@ function env(name){
   return (typeof v === "string" && v.trim()) ? v.trim() : "";
 }
 
+/* 로그인에 꼭 있어야 하는 이름 — **여기 한 곳**입니다.
+   ⚠️ 이름을 늘리시는 날 `authReady()` 도 `authMissing()` 도 같이
+   따라옵니다 (두 곳에 적으면 한쪽만 고치는 날 어긋납니다). */
+const AUTH_ENV = ["SUPABASE_URL", "SUPABASE_ANON_KEY"];
+
 /* 로그인이 설정되어 있는가 */
 function authReady(){
-  return !!(env("SUPABASE_URL") && env("SUPABASE_ANON_KEY"));
+  return authMissing().length === 0;
+}
+
+/* 비어 있는 **이름**만 돌려줍니다 — 값은 한 글자도 담지 않습니다.
+   ⚠️⚠️ **2026-11-09 에 더했습니다.** 그 전에는 설정이 안 됐다는 것만
+   알 수 있고 **둘 중 어느 것이 비었는지 알 길이 없어서**, 사장님이
+   Vercel 에 넣고 다시 배포해도 화면이 그대로일 때 짐작만 오갔습니다
+   (철자가 틀렸나 · Production 에 체크를 안 했나 · 다른 프로젝트인가).
+   ⚠️ 이름은 비밀이 아닙니다 — `auth:false` 가 이미 "설정이 안 됐다" 를
+   말하고 있고, 여기서 **값 · 키는 여전히 한 글자도 안 나갑니다**. */
+function authMissing(){
+  return AUTH_ENV.filter(function(n){ return !env(n); });
 }
 
 function base(){
@@ -189,5 +205,5 @@ function publicConf(){
   return c;
 }
 
-module.exports = { authReady, bearer, whoami, roleOf, hatsOf, session, authWhy,
-                   publicConf, AUTH_TIMEOUT };
+module.exports = { authReady, authMissing, bearer, whoami, roleOf, hatsOf,
+                   session, authWhy, publicConf, AUTH_TIMEOUT };

@@ -16,7 +16,8 @@
    ⚠️ 역할은 **요청이 아니라 DB** 에서 읽습니다 — `api/_auth.js` 머리말.
    ════════════════════════════════════════════════════════════════════ */
 
-const { authReady, bearer, session, publicConf } = require("./_auth.js");
+const { authReady, authMissing, bearer, session, publicConf,
+        authWhy } = require("./_auth.js");
 
 module.exports = async function handler(req, res){
   if(req.method !== "GET"){
@@ -27,8 +28,18 @@ module.exports = async function handler(req, res){
      내 화면에 올 수 있습니다. */
   res.setHeader("cache-control", "no-store");
 
-  if(!authReady())
-    return res.status(200).json({ auth:false, signedIn:false });
+  if(!authReady()){
+    /* ⚠️⚠️ **어느 이름이 비었는지까지 말합니다** (2026-11-09) — 값은 한
+       글자도 안 나갑니다. 그 전에는 `auth:false` 하나뿐이라, Vercel 에
+       넣고 다시 배포해도 그대로일 때 **무엇이 어긋났는지 아무도 모르고**
+       짐작만 오갔습니다 (철자 · Production 체크 · 다른 프로젝트).
+       ⚠️ 운영자에게 할 말은 함수 기록에만 적습니다 (절대 규칙 3) —
+       Vercel → Logs 에서 보입니다. `authWhy()` 는 2026-10 에 만들어 두고
+       **부르는 자리가 0곳**이던 함수입니다. */
+    try{ console.warn("[session] " + authWhy("nowhere")); }catch(e){}
+    return res.status(200).json({
+      auth:false, signedIn:false, need: authMissing() });
+  }
 
   /* ⚠️⚠️ **공개 키만 나갑니다** (`publicConf()`). 화면이 Supabase Auth 를
      직접 불러 매직링크를 받으려면 주소와 공개 키가 필요합니다 —

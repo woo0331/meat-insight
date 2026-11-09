@@ -44,6 +44,13 @@ const STEPS = [
      붙여 넣는 날 조용히 내려갑니다). */
   ["덮는 짝이 적힌 대로인가",      ["tools/check-chains.js", "--prove"], false],
   ["분류 키가 옛 키와 겹치나",     ["tools/check-keys.js"],         false],
+  /* ⚠️⚠️ **빈 환경변수의 이름을 말해 주는가** (2026-11-09) — 사장님이
+     Vercel 에 넣고 다시 배포해도 /api/session 이 `auth:false` 일 때,
+     그 전에는 **둘 중 어느 것이 비었는지 알 길이 없었습니다.** 값은
+     한 글자도 안 나가야 하므로 그 선도 같이 잽니다.
+     ⚠️ ship 묶음 가운데 api/ 핸들러를 **직접 부르는 첫 자리**입니다
+     (tools/test-auth.js 는 ship 이 안 돌리고 지금 돌아가지도 않습니다). */
+  ["빈 환경변수 이름을 말하나",    ["tools/check-authenv.js", "--prove"], false],
   /* ⚠️ `--prove` 를 붙입니다 — esc() 검사가 함수를 따라가게 고친 뒤로는
      되돌려 보지 않으면 **느슨해진 자리**를 알 수 없습니다. */
   ["키 · 헤더 · CSP",            ["tools/check-safe.js", "--prove"], false],

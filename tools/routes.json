@@ -24,9 +24,7 @@
     "/terms",
     "/privacy",
     "/membership",
-    "/404",
-    "/pro/green-pt",
-    "/pro/xss-test"
+    "/404"
   ],
   "unlinked": [
     "/login",

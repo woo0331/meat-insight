@@ -365,6 +365,308 @@ const MY_BOXES = ["mybox", "reqbox", "joinmine", "lsmine", "mycq", "jobmine",
     ok("  " + w + "px — 하위가 아코디언으로 펼쳐진다", acc.shown === true, JSON.stringify(acc));
     ok("  " + w + "px — 펼쳐도 가로로 안 밀린다",
        acc.wide === false && acc.right <= acc.vw + 1, JSON.stringify(acc));
+
+    /* ⚠️⚠️ **펼친 메뉴가 화면 높이를 넘으면 메뉴 안에서 굴립니다**
+       (2026-11-10 · 지시서 4번). 메뉴 일곱에 하위가 하나 열리면 620px 가
+       넘어 폰 화면을 넘칩니다 — 그러면 **메뉴를 보려고 본문을 굴리는**
+       꼴이 됩니다. ⚠️ 굴리는 칸은 `.gnb` **한 곳**이고 `.gnb-d` 는
+       제 스크롤을 갖지 않습니다(둘이 겹치면 손가락이 어느 쪽을 굴리는지
+       기계마다 다릅니다). */
+    const sc = await p.evaluate(function(){
+      var g = document.querySelector(".gnb"), cs = getComputedStyle(g);
+      var d = document.querySelector(".gnb .gnb-i.on .gnb-d");
+      var ds = d ? getComputedStyle(d) : null;
+      return { h: Math.round(g.getBoundingClientRect().height),
+               내용: g.scrollHeight, vh: window.innerHeight,
+               최대: cs.maxHeight, overflowY: cs.overflowY,
+               overscroll: cs.overscrollBehaviorY,
+               굴릴수있나: g.scrollHeight > g.clientHeight + 1,
+               하위최대: ds ? ds.maxHeight : null,
+               하위overflow: ds ? ds.overflowY : null };
+    });
+    ok("  " + w + "px — 펼친 메뉴에 **최대 높이**가 걸려 있다",
+       sc.최대 !== "none" && sc.최대 !== "", JSON.stringify(sc));
+    ok("  " + w + "px — 펼친 메뉴가 **화면 높이를 안 넘는다**",
+       sc.h <= sc.vh, JSON.stringify(sc));
+    ok("  " + w + "px — 메뉴 **안쪽에서** 굴릴 수 있다",
+       sc.overflowY === "auto", JSON.stringify(sc));
+    ok("  " + w + "px — 그 손가락이 **본문을 안 끌고** 간다",
+       sc.overscroll === "contain", JSON.stringify(sc));
+    ok("  " + w + "px — ⚠️ 하위는 **제 스크롤을 안 갖는다** (겹치지 않게)",
+       sc.하위최대 === "none" && sc.하위overflow === "visible", JSON.stringify(sc));
+    if(sc.굴릴수있나){
+      await p.evaluate(function(){ document.querySelector(".gnb").scrollTop = 200; });
+      const st = await p.evaluate(function(){ return document.querySelector(".gnb").scrollTop; });
+      ok("  " + w + "px — 굴리면 **실제로** 움직인다", st > 0, "scrollTop=" + st);
+      await p.evaluate(function(){ document.querySelector(".gnb").scrollTop = 0; });
+    }else{
+      ok("  " + w + "px — 굴릴 것이 없으면 굴림도 없다 (내용 " + sc.내용 +
+         "px ≤ 칸 " + sc.h + "px)", true);
+    }
+
+    /* ⚠️ **다른 카테고리를 누르면 앞의 것이 닫힙니다** (지시서 4번) —
+       여럿이 같이 열리면 아코디언이 길어져 아래 메뉴가 화면 밖으로
+       밀립니다. 갯수를 박지 않고 **열린 것이 하나인지**를 셉니다. */
+    let two = true;
+    try{ await p.click(".gnb .gnb-i:nth-child(3) .gnb-x", { timeout: 4000 }); }
+    catch(e){ two = false; }
+    const only = await p.evaluate(function(){
+      var is = [].slice.call(document.querySelectorAll(".gnb .gnb-i"));
+      return { on: is.filter(function(x){ return x.classList.contains("on"); }).length,
+               보이는하위: is.filter(function(x){
+                 var d = x.querySelector(".gnb-d");
+                 return d && d.getClientRects().length > 0; }).length,
+               셋째: is[2].classList.contains("on") };
+    });
+    ok("  " + w + "px — 다른 카테고리를 누르면 **앞의 것이 닫힌다**",
+       two && only.on === 1 && only.보이는하위 === 1 && only.셋째 === true,
+       JSON.stringify(only));
+    await p.close();
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     ⚠️⚠️⚠️ **드롭다운이 마우스를 내리면 사라지던 자리** (2026-11-10)
+
+     사장님이 "골프마켓에 올리면 열리는데 아래로 내리거나 휠을 굴리면
+     사라진다" 고 하셨습니다. 원인은 **CSS 의 빈 틈**이었습니다 —
+     `.gnb-d` 가 `margin-top:6px` 로 떨어져 있어서 이름에서 하위로
+     내려가는 길에 **아무것도 안 걸린 6px 띠**가 있었고, 거기서
+     `:hover` 가 끊기고 `display` 는 전환이 안 되므로 **그 자리에서**
+     사라졌습니다. 재 보니 **3px** 만 내려도 닫혔습니다.
+
+     ⚠️⚠️ **앞 검사는 이것을 영원히 못 잡았습니다** — 펼치기 단추를
+     `click` 해서 `.on` 을 붙이고 "보이나" 만 보았으니, 마우스로 **지나
+     가는 길**은 한 번도 안 눌러 봤습니다. 지금은 `mouse.move` 로
+     실제로 지나갑니다.
+
+     ⚠️⚠️ 그리고 **Esc 가 눈에는 안 닫혔습니다** — 초점을 펼치기 단추로
+     되돌려 주는데 그 단추가 `.gnb-i` 안이라 `:focus-within` 이 그
+     자리에서 다시 참이 됐습니다. 앞 검사는 `.on` **클래스만** 세어서
+     초록이었습니다(보이는지는 아무도 안 봤습니다).
+
+     ⚠️ 갯수를 박지 않습니다 — 화면에서 **세어서** 일곱 전부를 돕니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── ⚠️⚠️ 드롭다운 — 마우스를 내려도 · 휠을 굴려도 안 사라지는가");
+  {
+    const p = await b.newPage({ viewport:{ width:1440, height:900 } });
+    await p.goto(base + "/", { waitUntil:"domcontentloaded" });
+    await p.waitForTimeout(200);
+
+    const shown = (i) => p.evaluate(function(n){
+      var it = document.querySelectorAll(".gnb .gnb-i")[n];
+      var d  = it && it.querySelector(".gnb-d");
+      return !!d && d.getClientRects().length > 0;
+    }, i);
+
+    /* 하위가 있는 메뉴 **전부** — 갯수를 박지 않습니다 */
+    const withSub = await p.evaluate(function(){
+      var is = [].slice.call(document.querySelectorAll(".gnb .gnb-i"));
+      return is.map(function(x, i){
+        return x.querySelector(".gnb-d") ? i : -1; }).filter(function(i){ return i >= 0; });
+    });
+    ok("하위가 있는 메뉴를 찾기는 했다 (0개면 잴 것이 없는 것입니다)",
+       withSub.length > 0, "n=" + withSub.length);
+
+    let gapBad = [];
+    for(const i of withSub){
+      const bx = await p.locator(".gnb .gnb-i").nth(i).locator(".gnb-t").boundingBox();
+      if(!bx){ gapBad.push(i + ":재지 못했습니다"); continue; }
+      await p.mouse.move(bx.x + bx.width / 2, bx.y + bx.height / 2);
+      await p.waitForTimeout(110);
+      const o1 = await shown(i);
+      /* ⚠️ 빈 틈 가운데 — 상위 칸 **바로 아래 3px** 입니다 */
+      await p.mouse.move(bx.x + bx.width / 2, bx.y + bx.height + 3);
+      await p.waitForTimeout(110);
+      const o2 = await shown(i);
+      /* 하위 맨 아래 줄까지 */
+      const db = await p.locator(".gnb .gnb-i").nth(i).locator(".gnb-d").boundingBox();
+      let o3 = false;
+      if(db){
+        await p.mouse.move(db.x + 40, db.y + db.height - 10);
+        await p.waitForTimeout(110);
+        o3 = await shown(i);
+      }
+      if(!(o1 && o2 && o3)) gapBad.push(i + ":" + o1 + "/" + o2 + "/" + o3);
+    }
+    ok("⚠️⚠️⚠️ 일곱 전부 — 올리면 열리고 **빈 틈 · 맨 아래 줄까지** 버틴다",
+       gapBad.length === 0, JSON.stringify(gapBad));
+
+    /* 200ms 유예 — ⚠️ 벗어난 **그 순간** 닫히면 비스듬히 지나가는 길이 끊깁니다
+       ⚠️⚠️ **정말로 벗어난 자리**로 옮겨야 합니다. 처음에 "상위 칸 아래
+       200px" 로 옮겼는데 그 자리가 **펼침 칸 안쪽**이라 떠난 적이 없었고,
+       그래서 멀쩡한 코드를 "안 닫힌다" 로 잡았습니다. 펼침 칸의 **아래**
+       로 옮깁니다. */
+    const bx0 = await p.locator(".gnb .gnb-i").nth(withSub[0]).locator(".gnb-t").boundingBox();
+    const away = async () => {
+      const d = await p.locator(".gnb .gnb-i").nth(withSub[0]).locator(".gnb-d").boundingBox();
+      await p.mouse.move(bx0.x + bx0.width / 2, (d ? d.y + d.height : bx0.y + bx0.height) + 120);
+    };
+    await p.mouse.move(bx0.x + bx0.width / 2, bx0.y + bx0.height / 2);
+    await p.waitForTimeout(120);
+    await away();
+    await p.waitForTimeout(60);
+    ok("벗어난 직후(60ms)에는 아직 열려 있다 (유예)", await shown(withSub[0]));
+    await p.waitForTimeout(300);
+    ok("  그 뒤에는 닫힌다", !(await shown(withSub[0])));
+
+    /* 돌아오면 시계를 끈다 */
+    await p.mouse.move(bx0.x + bx0.width / 2, bx0.y + bx0.height / 2);
+    await p.waitForTimeout(120);
+    await away();
+    await p.waitForTimeout(70);
+    await p.mouse.move(bx0.x + bx0.width / 2, bx0.y + bx0.height / 2);
+    await p.waitForTimeout(280);
+    ok("나갔다 **돌아오면** 안 닫힌다 (시계를 끈다)", await shown(withSub[0]));
+
+    /* 휠 — ⚠️ 메뉴 위에서 굴려도 사라지지 않아야 합니다 */
+    const dw = await p.locator(".gnb .gnb-i").nth(withSub[0]).locator(".gnb-d").boundingBox();
+    await p.mouse.move(dw.x + 40, dw.y + 30);
+    await p.mouse.wheel(0, 500);
+    await p.waitForTimeout(160);
+    ok("메뉴 위에서 **휠을 굴려도** 안 사라진다", await shown(withSub[0]));
+
+    /* 하위를 누르면 그 주소로 갑니다 — ⚠️ 눌림을 가로채는 자리가 링크를
+       먹지 않는지 봅니다 (닫는 코드가 먼저 돌면 그 링크가 안 눌립니다) */
+    const a = p.locator(".gnb .gnb-i").nth(withSub[0]).locator(".gnb-d a").first();
+    const href = await a.getAttribute("href");
+    await a.click();
+    await p.waitForTimeout(400);
+    const went = new URL(p.url()).pathname;
+    ok("하위를 누르면 **그 주소로 간다** (" + href + ")",
+       !!href && went === href.split("#")[0].split("?")[0], "지금 " + went);
+
+    /* ⚠️⚠️ Esc — **눈에도** 닫혀야 합니다 (`.on` 만 보면 초록입니다) */
+    await p.goto(base + "/", { waitUntil:"domcontentloaded" });
+    await p.waitForTimeout(180);
+    await p.evaluate(function(){
+      document.querySelector(".gnb .gnb-i:nth-child(2) .gnb-x").focus(); });
+    await p.keyboard.press("Enter");
+    await p.waitForTimeout(120);
+    ok("Enter 로 열린다", await shown(1));
+    await p.keyboard.press("Escape");
+    await p.waitForTimeout(140);
+    const e2 = await p.evaluate(function(){
+      var it = document.querySelectorAll(".gnb .gnb-i")[1];
+      return { 보이나: it.querySelector(".gnb-d").getClientRects().length > 0,
+               on: it.classList.contains("on"),
+               초점: document.activeElement.className,
+               exp: it.querySelector(".gnb-x").getAttribute("aria-expanded") };
+    });
+    ok("⚠️⚠️ Esc 뒤 **그려지지 않는다** (:focus-within 이 다시 안 엽니다)",
+       e2.보이나 === false, JSON.stringify(e2));
+    ok("  Esc 뒤 초점이 펼치기 단추로 돌아온다",
+       String(e2.초점).indexOf("gnb-x") >= 0, JSON.stringify(e2));
+    ok("  aria-expanded 가 false 다", e2.exp === "false", JSON.stringify(e2));
+    await p.keyboard.press("Enter");
+    await p.waitForTimeout(120);
+    ok("⚠️ Esc 뒤에도 **다시 열 수 있다** (닫아 둔 표가 안 남는다)", await shown(1));
+    await p.close();
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     ⚠️⚠️⚠️ **자바스크립트가 꺼진 분 — 다리를 지키는 유일한 검사입니다.**
+
+     되돌려 보기에서 알았습니다: CSS 의 다리를 **줄째 떼어도** 위의 묶음이
+     초록이었습니다. `js/hdmenu.js` 의 200ms 유예가 가려 준 것입니다
+     (마우스를 순간이동시키는 검사에서는 틈을 지나는 데 걸리는 시간이
+     0 입니다). 그러면 그 다리를 **아무도 안 지키는** 것이고, 실제로는
+     손이 느리신 분(손님이 40~60대입니다)이 틈에서 200ms 넘게 머무는
+     순간 그대로 닫힙니다.
+     ⚠️ 그래서 자바스크립트를 **끄고** 잽니다 — 거기서는 유예가 없으므로
+     다리가 없으면 그 자리에서 사라집니다.
+     ⚠️ 그리고 이 자리가 "js 가 꺼져도 메뉴가 돈다"(절대 규칙 5)를 재는
+     유일한 자리이기도 합니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── ⚠️⚠️⚠️ 자바스크립트가 꺼져도 — 메뉴가 돌고 빈 틈에서 버티는가");
+  {
+    const ctx = await b.newContext({ viewport:{ width:1440, height:900 },
+                                     javaScriptEnabled:false });
+    const p = await ctx.newPage();
+    await p.goto(base + "/", { waitUntil:"domcontentloaded" });
+    await p.waitForTimeout(150);
+    const n = await p.locator(".gnb .gnb-i").count();
+    ok("메뉴가 그대로 보인다 (접기만 하고 여는 길이 없으면 안 됩니다)",
+       n > 0, "n=" + n);
+    ok("  햄버거는 **안 보인다** (js 가 꺼졌으니 hidden 그대로)",
+       0 === await p.locator(".hd-burger:visible").count());
+    const subs = await p.locator(".gnb .gnb-i").evaluateAll(function(xs){
+      return xs.map(function(x, i){ return x.querySelector(".gnb-d") ? i : -1; })
+               .filter(function(i){ return i >= 0; });
+    });
+    ok("  하위가 있는 메뉴를 찾기는 했다 (0개면 잴 것이 없는 것입니다)",
+       subs.length > 0, "n=" + subs.length);
+    let bad = [];
+    for(const i of subs){
+      const bx = await p.locator(".gnb .gnb-i").nth(i).locator(".gnb-t").boundingBox();
+      if(!bx){ bad.push(i + ":재지 못했습니다"); continue; }
+      const seen = () => p.locator(".gnb .gnb-i").nth(i).locator(".gnb-d:visible").count();
+      await p.mouse.move(bx.x + bx.width / 2, bx.y + bx.height / 2);
+      await p.waitForTimeout(110);
+      const o1 = (await seen()) > 0;
+      /* 빈 틈 가운데 — ⚠️ 여기가 다리가 없으면 닫히는 자리입니다 */
+      await p.mouse.move(bx.x + bx.width / 2, bx.y + bx.height + 3);
+      await p.waitForTimeout(110);
+      const o2 = (await seen()) > 0;
+      const db = await p.locator(".gnb .gnb-i").nth(i).locator(".gnb-d").boundingBox();
+      let o3 = false;
+      if(db){
+        await p.mouse.move(db.x + 40, db.y + db.height - 10);
+        await p.waitForTimeout(110);
+        o3 = (await seen()) > 0;
+      }
+      if(!(o1 && o2 && o3)) bad.push(i + ":" + o1 + "/" + o2 + "/" + o3);
+    }
+    ok("⚠️⚠️⚠️ js 없이도 — 올리면 CSS 가 펼치고 **빈 틈에서 버틴다**",
+       bad.length === 0, JSON.stringify(bad));
+    await ctx.close();
+  }
+
+  /* 낮은 창 — ⚠️⚠️ 최대 높이와 안쪽 스크롤 (지시서 2번) */
+  console.log("\n── ⚠️⚠️ 드롭다운 — 낮은 창에서 잘리지 않고 안쪽에서 굴리는가");
+  for(const h of [900, 320]){
+    const p = await b.newPage({ viewport:{ width:1440, height:h } });
+    await p.goto(base + "/", { waitUntil:"domcontentloaded" });
+    await p.waitForTimeout(180);
+    const r = await p.evaluate(function(){
+      var it = document.querySelectorAll(".gnb .gnb-i")[1];
+      it.classList.add("on");
+      var d = it.querySelector(".gnb-d"), cs = getComputedStyle(d);
+      var bb = d.getBoundingClientRect();
+      var o = { bottom: Math.round(bb.bottom), h: Math.round(bb.height),
+                내용: d.scrollHeight, vh: window.innerHeight,
+                굴릴수있나: d.scrollHeight > d.clientHeight + 1,
+                overflowY: cs.overflowY, overscroll: cs.overscrollBehaviorY,
+                docW: document.documentElement.scrollWidth, winW: window.innerWidth };
+      it.classList.remove("on");
+      return o;
+    });
+    ok(h + "px 창 — 펼침 칸이 **화면 아래로 안 넘친다**",
+       r.bottom <= r.vh, JSON.stringify(r));
+    ok("  " + h + "px — 가로로 안 밀린다", r.docW <= r.winW, JSON.stringify(r));
+    ok("  " + h + "px — 굴러 나가지 않는다 (overscroll contain)",
+       r.overscroll === "contain", JSON.stringify(r));
+    /* ⚠️⚠️ **굴릴 것이 있을 때만** 굴림을 요구합니다 — 안 그러면 높은 창에서
+       멀쩡한 화면을 실패로 잡습니다(제가 420px 에서 그렇게 떨어뜨렸습니다). */
+    if(r.내용 > r.h + 1){
+      ok("  " + h + "px — 넘치는 만큼은 **안쪽에서** 굴린다",
+         r.굴릴수있나 === true && r.overflowY === "auto", JSON.stringify(r));
+      await p.evaluate(function(){
+        document.querySelectorAll(".gnb .gnb-i")[1].classList.add("on"); });
+      const was = await p.evaluate(function(){ return window.scrollY; });
+      const dw = await p.locator(".gnb .gnb-i").nth(1).locator(".gnb-d").boundingBox();
+      await p.mouse.move(dw.x + 40, dw.y + 30);
+      await p.mouse.wheel(0, 600);
+      await p.waitForTimeout(200);
+      const r2 = await p.evaluate(function(){
+        return { st: document.querySelectorAll(".gnb .gnb-i")[1].querySelector(".gnb-d").scrollTop,
+                 win: window.scrollY }; });
+      ok("  " + h + "px — 안쪽이 **실제로** 굴러간다", r2.st > 0, JSON.stringify(r2));
+      ok("  " + h + "px — 그 바퀴가 **뒤 화면을 안 끌고** 간다",
+         r2.win === was, "before=" + was + " after=" + r2.win);
+    }else{
+      ok("  " + h + "px — 굴릴 것이 없으면 굴림도 없다 (내용 " + r.내용 +
+         "px ≤ 칸 " + r.h + "px)", r.굴릴수있나 === false, JSON.stringify(r));
+    }
     await p.close();
   }
 

@@ -668,6 +668,15 @@ const SCENES = [
      나눔입니다 · 0056). 가로로 밀리지도 · 글자가 작지도 않아 어떤
      검사도 "보기 흉한가" 는 못 잽니다. */
   ["used-free",       "/cat/used", CUS, T_LST, {}, ".lsf-free"],
+  /* ⚠️⚠️⚠️ 소셜 로그인 단추 셋 (2026-11-10) — 모양이 맞는지는 **눈으로만**
+     알 수 있습니다. 색 · 마크 · 높이는 검사가 숫자로 재지만 "공식 단추처럼
+     보이는가" 는 못 잽니다. `sso` 는 흉내 장치의 열쇠입니다(어느 공급자를
+     켠 것으로 칠까) — 진짜로는 Supabase 가 정합니다. */
+  ["login-sso",       "/login", { role:"customer", name:"", signedIn:false,
+                                  sso:["kakao","naver","google"] }, {}, {}],
+  /* ⚠️ 하나도 안 켜졌을 때(지금 운영) — 단추가 한 줄도 없고 메일 링크만 */
+  ["login-mail",      "/login", { role:"customer", name:"", signedIn:false },
+                      {}, {}],
   ["desk-notmine",    "/desk",  CUS, T_DESK,  {}],
   ["admin-notmine",   "/admin", CUS, T_ADMIN, { biz_metrics: MET }]
 ];
@@ -685,6 +694,9 @@ const WIDTHS = [[1280, "pc"], [360, "mo"]];
    상자만 영원히 아무도 안 보는 자리가 됩니다 (재는 범위와 같은
    규칙입니다). */
 const BOXES = {
+  /* ⚠️ 로그인 상자는 `/api/session` 뒤에 그려집니다 — 빌드가 찍은
+     HTML 만 보는 tools/shot.js 에는 **빈 상자**로만 보입니다. */
+  "/login": [["box", "#loginbox"]],
   "/desk": [["notice", "#noticebox"], ["start", "#dstbox"], ["assign", "#deskbox"],
             ["me", "#mebox"], ["contact", "#pvctbox"], ["staff", "#pvstbox"],
             ["photo", "#pvphbox"], ["price", "#pricebox"],

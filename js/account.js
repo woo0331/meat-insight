@@ -53,6 +53,45 @@
     });
   }
 
+  /* ── 소셜 로그인 단추 셋 ───────────────────────────────────────
+     ⚠️⚠️ 모양도 · 색도 · 마크도 **js/data/social.js 한 곳**에서 옵니다
+     — 여기서 또 정하면 한쪽만 고치는 날 두 곳이 다른 단추를 냅니다.
+     ⚠️ 모르는 키는 **건너뜁니다** (빈 단추를 지어내지 않습니다).
+     ⚠️ 하나도 못 그리면 **빈 글자**를 돌려줍니다 — 부르는 쪽이 그때
+     머리말만 남는 상자를 안 엽니다. */
+  function ssoHtml(list){
+    var rows = "", n = 0;
+    (list || []).forEach(function(k){
+      var s = window.amSocial ? window.amSocial(k) : null;
+      if(!s) return;
+      n++;
+      rows += '<button type="button" class="sso-b" data-sso="' + esc(s.key) + '" ' +
+        'style="background:' + esc(s.bg) + ';color:' + esc(s.fg) +
+        ';border-color:' + esc(s.line) + '">' +
+        s.mark + '<span class="sso-t">' + esc(s.name) + '</span></button>';
+    });
+    return n ? '<h2 class="sso-h">간편 로그인</h2>' + rows : "";
+  }
+
+  /* ⚠️⚠️ 눌림은 **감싼 자리 한 곳**에서 받습니다 — 단추마다 달면
+     공급자가 늘어나는 날 빠뜨리는 자리가 생깁니다.
+     ⚠️ 떠나는 사이에 두 번 눌리면 상태가 두 번 만들어집니다 — 눌린
+     **그 단추만** 잠급니다. 못 떠나면 **다시 풀어** 둡니다(잠긴 채로
+     두면 눌러도 아무 일이 안 나는 칸이 됩니다 · 절대 규칙 5). */
+  var SSO_BOUND = false;
+  function onSso(e){
+    var t = e.target, b = null;
+    while(t && t !== document){
+      if(t.getAttribute && t.getAttribute("data-sso")){ b = t; break; }
+      t = t.parentNode;
+    }
+    if(!b) return;
+    e.preventDefault();
+    b.disabled = true;
+    if(!(window.amAuthGo && window.amAuthGo(b.getAttribute("data-sso"))))
+      b.disabled = false;
+  }
+
   /* ── /login ──────────────────────────────────────────────────── */
   function paintLogin(a){
     var box = el("loginbox"); if(!box) return;
@@ -73,7 +112,14 @@
         '<a class="btn btn-pri" href="/my">내 정보로 가기</a>');
     }
     say(box,
-      "<h2>메일로 받은 링크로 들어옵니다.</h2>" +
+      /* ⚠️⚠️⚠️ 소셜 단추를 **여기서 미리 그리지 않습니다** — 어느 것이
+         실제로 켜져 있는지는 Supabase 만 알고 그 답은 조금 뒤에 옵니다.
+         미리 그리면 안 켜진 단추가 한 번 보였다 사라집니다. 자리만
+         두고 `hidden` 으로 내보냅니다.
+         ⚠️ 자리표시자도 · "준비 중" 도 안 찍습니다 (절대 규칙 2). */
+      '<div id="ssobox" class="sso" hidden></div>' +
+      '<div id="ssoor" class="sso-or" hidden><span>또는</span></div>' +
+      "<h2>메일로 받은 링크로도 들어오실 수 있습니다.</h2>" +
       "<p>비밀번호를 받지 않습니다. 적으신 주소로 한 번 쓰는 링크를 보내 드립니다." +
       /* ⚠️ 어디로 돌아오는지 **미리 말합니다** — 메일을 열고 한참 뒤에
          눌러도 어디로 가는지 알고 계시게 합니다. */
@@ -83,6 +129,21 @@
       '<input id="le" type="email" name="email" required autocomplete="email" ' +
       'placeholder="메일 주소"><button class="btn btn-pri" type="submit">링크 받기</button>' +
       '</form><p id="lmsg" class="lmsg" hidden></p>');
+
+    /* ⚠️⚠️⚠️ **켜진 것만 그립니다.** 목록을 화면에 박아 두면 아직 안 켠
+       공급자의 단추가 그려지고, 누르면 Supabase 가 거절합니다 (절대
+       규칙 5). 켜져 있는지는 `amAuthProviders()` 가 **Supabase 에게
+       물어서** 알아옵니다 — 켜시는 날 단추가 저절로 섭니다.
+       ⚠️ 못 읽었거나 0건이면 **한 줄도 안 그립니다** — 그때는 메일
+       링크만 보입니다 (메일 링크는 설정만 되면 늘 됩니다). */
+    if(window.amAuthProviders) window.amAuthProviders().then(function(list){
+      var sb = el("ssobox"), so = el("ssoor"), h = ssoHtml(list);
+      if(!sb || !h) return;
+      sb.innerHTML = h;
+      sb.hidden = false;
+      if(so) so.hidden = false;
+      if(!SSO_BOUND){ SSO_BOUND = true; sb.addEventListener("click", onSso); }
+    }).catch(function(){});
 
     el("lf").addEventListener("submit", function(e){
       e.preventDefault();

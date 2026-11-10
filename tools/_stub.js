@@ -103,9 +103,29 @@ function stub(p, who, tables, rpcs, up){
          값을 따릅니다 — 그래야 "버킷이 꺼진 화면" 을 잴 수 있습니다. */
       const cf = { url:FAKE, anonKey:"k" };
       if(up) cf.pubBucket = "pv-test";
+      /* ⚠️ `sso` 는 이 흉내 장치만 쓰는 열쇠입니다 (어느 소셜 로그인을
+         켠 것으로 칠까) — 진짜 `/api/session` 에는 없는 칸이라 답에
+         실어 보내지 않습니다. */
+      const w = Object.assign({}, who); delete w.sso;
       return r.fulfill({ status:200, contentType:"application/json",
         body: JSON.stringify(Object.assign({ auth:true, signedIn:true, hats:[],
-          conf:cf }, who)) });
+          conf:cf }, w)) });
+    }),
+    /* ⚠️⚠️⚠️ **어떤 소셜 로그인이 켜져 있나** — 진짜 Supabase 의
+       `/auth/v1/settings` 가 내주는 꼴 그대로입니다 (`external` 에
+       공급자마다 참 · 거짓). `js/auth.js` 의 `amAuthProviders()` 가
+       여기를 읽고, 참인 것만 단추로 그립니다.
+       ⚠️⚠️ **안 주면 아무것도 안 켜진 것**입니다 — 지금 운영이 그
+       상태이고, 그때는 단추가 한 개도 안 그려져야 합니다 (절대 규칙 5).
+       그래서 `who.sso` 를 안 적은 장면은 저절로 "소셜 없음" 을 잽니다.
+       ⚠️⚠️ **흉내가 진짜와 다른 꼴을 돌려주면 그 차이만큼이 영영 안
+       재는 자리가 됩니다** — `content-range` 를 안 내줘서 쪽 수가
+       여기서만 안 나온 그 자리입니다. */
+    p.route(FAKE + "/auth/v1/settings", function(r){
+      const ex = {};
+      ((who && who.sso) || []).forEach(function(k){ ex[k] = true; });
+      return r.fulfill({ status:200, contentType:"application/json",
+                         body: JSON.stringify({ external: ex }) });
     }),
     /* ⚠️⚠️ **서명받은 자리에 파일을 올리는 PUT** — 이 길을 안 내주면
        올리기가 그물에서 멈춰 "올리지 못했습니다" 로만 보입니다 (화면은

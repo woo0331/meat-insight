@@ -300,6 +300,67 @@ window.amAuthSend = function(email){
   });
 };
 
+/* ── 어떤 소셜 로그인이 **실제로 켜져 있나** ──────────────────────
+   ⚠️⚠️⚠️ **Supabase 에게 물어봅니다.** 화면에 목록을 박아 두면 아직
+   안 켠 공급자의 단추가 그려지고, 누르면 Supabase 가 거절합니다 —
+   눌러도 아무 일이 안 나는 단추입니다 (절대 규칙 5). 참값은
+   `/auth/v1/settings` 의 `external` 이고, 그것은 **공개로 열려 있는
+   자리**입니다(anon 키로 읽습니다 · 비밀이 아닙니다).
+   ⚠️⚠️ 그래서 **켜시는 날 단추가 저절로 섭니다** — 다시 배포할
+   것도, 코드를 고칠 것도 없습니다.
+   ⚠️⚠️ **못 읽으면 빈 배열입니다** — 모르는 것을 "켜져 있다" 로
+   읽지 않습니다(그때는 메일 링크만 그립니다). 0건과 못 읽은 것을
+   가르지 않는 까닭은, 둘 다 **그릴 수 없다**는 같은 뜻이기
+   때문입니다.
+   ⚠️ 차례는 `js/data/social.js` 한 곳이 정합니다 — Supabase 가 주는
+   차례로 그리면 단추 자리가 날마다 바뀝니다.
+   ⚠️ 한 화면에서 **한 번만** 묻습니다(`AM_SSO_FLY`) — `amAuthAsk` 가
+   같은 틱에 셋이 그물을 빠져나간 그 자리와 같은 꼴입니다. */
+var AM_SSO_FLY = null;
+window.amAuthProviders = function(){
+  if(AM_SSO_FLY) return AM_SSO_FLY;
+  var c = AM_AUTH.conf;
+  var keys = (window.AM_SOCIAL || []).map(function(s){ return s.key; });
+  if(!c || !keys.length) return Promise.resolve([]);
+  AM_SSO_FLY = fetch(c.url + "/auth/v1/settings", { headers:{ apikey: c.anonKey } })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      var ex = d && d.external ? d.external : null;
+      if(!ex) return [];
+      return keys.filter(function(k){ return ex[k] === true; });
+    })
+    .catch(function(){ return []; });
+  return AM_SSO_FLY;
+};
+
+/* ── 소셜 로그인으로 보냅니다 ─────────────────────────────────────
+   ⚠️⚠️ **fetch 가 아니라 주소를 바꿉니다.** 그쪽 회사 화면에서
+   로그인하고 돌아오는 길이라 화면이 통째로 넘어가야 합니다.
+   ⚠️⚠️⚠️ **양식(form)으로 보내면 막힙니다** — `vercel.json` 의 CSP 가
+   `form-action 'self'` 입니다. 맨 위 이동(`location.href`)은 그것도
+   `connect-src` 도 아닌 다른 자물쇠라 지나갑니다.
+   ⚠️⚠️ 돌아오는 자리는 매직링크와 **같은 함수**(`amAfterLogin()`)
+   입니다 — 두 곳에 적으면 한쪽만 고치는 날 소셜로 들어오신 분만
+   홈으로 떨어집니다. 그 주소가 Supabase 의 **Redirect URLs** 에
+   들어 있어야 합니다(안 넣으면 기본 주소로 갑니다).
+   ⚠️⚠️ 돌아올 때 토큰은 주소의 **해시**에 실려 옵니다 — 받는 자리는
+   `amAuthTakeHash()` 하나이고 **매직링크와 같은 길**입니다. 새로 만든
+   되돌아오는 화면이 없습니다.
+   ⚠️ 모르는 키는 **아무 데도 안 보냅니다**(거짓을 돌려줍니다) —
+   주소를 지어 보내면 Supabase 가 그 글자를 그대로 받습니다. */
+window.amAuthGo = function(key){
+  var c = AM_AUTH.conf;
+  if(!c) return false;
+  var known = (window.AM_SOCIAL || []).some(function(s){ return s.key === key; });
+  if(!known) return false;
+  try{
+    window.location.href = c.url + "/auth/v1/authorize?provider=" +
+      encodeURIComponent(key) + "&redirect_to=" +
+      encodeURIComponent(window.location.origin + window.amAfterLogin());
+    return true;
+  }catch(e){ return false; }
+};
+
 /* ── 나가기 ──────────────────────────────────────────────────────
    ⚠️ 서버에 알리는 것이 실패해도 **이 브라우저에서는 지웁니다** —
    지우지 않으면 "나갔다" 고 해 놓고 토큰이 남습니다 (절대 규칙 5). */

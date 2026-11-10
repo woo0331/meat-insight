@@ -262,6 +262,160 @@ function boardsOf(){
     await g.p.close();
   }
 
+  /* ══ 소셜 로그인 단추 셋 (2026-11-10) ═══════════════════════════
+     ⚠️⚠️⚠️ **이 저장소에는 2026-11-10 까지 OAuth 가 한 줄도 없었습니다.**
+     로그인은 메일 매직링크 하나였고, 그래서 "디자인만 바꾸는" 일이
+     될 수가 없었습니다 — 단추를 그리기만 하면 **눌러도 아무 일이 안
+     나는 단추 셋**이 됩니다(절대 규칙 5).
+     ⚠️⚠️ 그래서 재는 것도 **모양이 아니라 되는가**입니다:
+     ① 켜진 것만 그리나 ② 안 켠 것은 안 그리나 ③ 하나도 안 켜졌으면
+     한 줄도 안 그리나 ④ 누르면 **실제로** Supabase 로 가나
+     ⑤ 돌아올 자리가 매직링크와 같은가.
+     ⚠️ 목록 · 색 · 이름은 `js/data/social.js` 에서 **읽어서** 맞춰
+     봅니다 — 검사에 적어 두면 공급자를 늘리는 날 그 줄이 썩습니다. */
+  console.log("\n── 소셜 로그인 (카카오 · 네이버 · 구글)");
+  {
+    /* ⚠️⚠️ `global.window` 를 **빌려 쓰고 그대로 돌려놓습니다** —
+       check-deal 이 이것을 덮어써 빌드를 통째로 깨뜨린 자리입니다. */
+    const hadW = Object.prototype.hasOwnProperty.call(global, "window");
+    const oldW = global.window;
+    global.window = {};
+    delete require.cache[require.resolve("../js/data/social.js")];
+    require("../js/data/social.js");
+    const SOC = global.window.AM_SOCIAL;
+    if(hadW) global.window = oldW; else delete global.window;
+
+    ok("js/data/social.js 가 공급자를 내놓는다 (0개면 읽은 적이 없는 것입니다)",
+       Array.isArray(SOC) && SOC.length > 0, "공급자 " + (SOC || []).length + "개");
+    const KEYS = (SOC || []).map(x => x.key);
+
+    /* ① 전부 켜진 경우 — 차례도 social.js 가 정합니다 */
+    {
+      const g = await open("/login",
+        { role:"customer", name:"", signedIn:false, sso:KEYS }, {});
+      const got = await g.p.evaluate(() =>
+        [...document.querySelectorAll(".sso-b")].map(e => ({
+          key: e.dataset.sso,
+          txt: (e.querySelector(".sso-t") || {}).textContent || "",
+          bg: getComputedStyle(e).backgroundColor,
+          svg: e.querySelectorAll("svg").length })));
+      ok("켜진 공급자는 **전부** 단추가 선다 (" + KEYS.join(" · ") + ")",
+         got.length === KEYS.length, JSON.stringify(got.map(x => x.key)));
+      ok("  차례는 social.js 가 정한다 (Supabase 가 주는 차례가 아닙니다)",
+         got.map(x => x.key).join(",") === KEYS.join(","),
+         got.map(x => x.key).join(",") + " ← " + KEYS.join(","));
+      ok("  이름도 social.js 한 곳에서 온다",
+         got.every((x, i) => x.txt === SOC[i].name),
+         JSON.stringify(got.map(x => x.txt)));
+      ok("  셋 다 **공식 마크(SVG)** 가 붙는다 (이모지 · 글자가 아닙니다)",
+         got.length > 0 && got.every(x => x.svg === 1),
+         JSON.stringify(got.map(x => x.svg)));
+      /* ⚠️ 높이 · 폭 · 모서리 · 마크 크기 · 글자 자리를 **재서** 봅니다 —
+         "통일했다" 는 눈으로는 말할 수 없습니다. 값을 박지 않고 **셋이
+         서로 같은지**만 봅니다(디자인이 바뀌어도 안 썩습니다). */
+      const m = await g.p.evaluate(() =>
+        [...document.querySelectorAll(".sso-b")].map(e => {
+          const r = e.getBoundingClientRect();
+          const i = e.querySelector(".sso-i").getBoundingClientRect();
+          const t = e.querySelector(".sso-t").getBoundingClientRect();
+          const cs = getComputedStyle(e);
+          return [Math.round(r.width), Math.round(r.height), cs.borderRadius,
+                  Math.round(i.width), Math.round(i.height),
+                  Math.round(i.left - r.left),
+                  Math.round((t.left + t.right) / 2 - (r.left + r.right) / 2)];
+        }).map(a => a.join("/")));
+      ok("  높이 · 폭 · 모서리 · 마크 크기 · 글자 자리가 **셋이 똑같다**",
+         m.length > 1 && m.every(x => x === m[0]), m.join("  |  "));
+      ok("  누르는 높이가 40px 을 넘는다",
+         m.length > 0 && m.every(x => Number(x.split("/")[1]) >= 40), m[0]);
+      await g.p.close();
+    }
+
+    /* ② 일부만 켜진 경우 — 안 켠 것은 **안 그립니다** */
+    {
+      const some = KEYS.slice(0, 1);
+      const g = await open("/login",
+        { role:"customer", name:"", signedIn:false, sso:some }, {});
+      const got = await g.p.evaluate(() =>
+        [...document.querySelectorAll(".sso-b")].map(e => e.dataset.sso));
+      ok("안 켠 공급자는 단추를 **안 그린다** (누르면 거절당할 단추)",
+         got.join(",") === some.join(","), got.join(",") || "(없음)");
+      await g.p.close();
+    }
+
+    /* ③ 하나도 안 켜졌으면 — 지금 운영이 그 상태입니다 */
+    {
+      const g = await open("/login", { role:"customer", name:"", signedIn:false }, {});
+      const r = await g.p.evaluate(() => {
+        const sb = document.getElementById("ssobox");
+        const so = document.getElementById("ssoor");
+        return { n: document.querySelectorAll(".sso-b").length,
+                 boxOn: !!(sb && sb.getClientRects().length),
+                 orOn: !!(so && so.getClientRects().length),
+                 mail: !!document.getElementById("lf"),
+                 txt: ((sb || {}).textContent || "").trim() };
+      });
+      ok("하나도 안 켜졌으면 단추를 **한 줄도 안 그린다**", r.n === 0, JSON.stringify(r));
+      ok("  빈 상자도 · 「준비 중」 도 안 남긴다 (절대 규칙 2)",
+         !r.boxOn && !r.orOn && r.txt === "", JSON.stringify(r));
+      ok("  그래도 **메일 링크는 그대로 열린다** (들어올 길이 사라지지 않습니다)",
+         r.mail, JSON.stringify(r));
+      await g.p.close();
+    }
+
+    /* ④ 눌러 봅니다 — 진짜로 Supabase 로 가는가 */
+    {
+      const g = await open("/login?next=/my",
+        { role:"customer", name:"", signedIn:false, sso:KEYS }, {});
+      let went = "";
+      /* ⚠️ 그쪽 화면은 우리 것이 아니므로 **가로채서** 어디로 가려
+         했는지만 적어 둡니다. 진짜로 나가게 두면 그물 밖입니다. */
+      await g.p.route("**/auth/v1/authorize*", function(r){
+        went = r.request().url();
+        return r.fulfill({ status:200, contentType:"text/html", body:"<p>ok</p>" });
+      });
+      await g.p.click('.sso-b[data-sso="' + KEYS[0] + '"]');
+      await g.p.waitForTimeout(600);
+      ok("단추를 누르면 **실제로 Supabase 로 간다** (그려 놓기만 한 것이 아닙니다)",
+         went.indexOf("/auth/v1/authorize") > 0, went || "(아무 데도 안 갔습니다)");
+      ok("  어느 공급자인지 싣는다",
+         went.indexOf("provider=" + encodeURIComponent(KEYS[0])) > 0, went);
+      /* ⚠️⚠️ 돌아올 자리는 매직링크와 **같은 함수**(amAfterLogin)입니다 —
+         두 곳에 적으면 소셜로 들어오신 분만 홈으로 떨어집니다. */
+      ok("  돌아올 자리가 **보시던 화면**이다 (매직링크와 같은 규칙)",
+         decodeURIComponent(went).indexOf("redirect_to=") > 0 &&
+         decodeURIComponent(went).indexOf("/my") > 0, decodeURIComponent(went));
+      await g.p.close();
+    }
+
+    /* ⑤ 이미 들어와 계시면 단추를 안 냅니다 */
+    {
+      const g = await open("/login", { role:"customer", name:"김손님", sso:KEYS }, {});
+      await g.p.waitForTimeout(400);
+      const n = await g.p.evaluate(() => document.querySelectorAll(".sso-b").length);
+      ok("이미 로그인하셨으면 단추를 **안 그린다**", n === 0, "단추 " + n + "개");
+      await g.p.close();
+    }
+
+    /* ⑥ 설정(Supabase)이 없으면 — 묻지도 않고 그리지도 않습니다 */
+    {
+      const p2 = await b.newPage({ viewport: view });
+      await p2.route("**/api/session", r => r.fulfill({ status:200,
+        contentType:"application/json",
+        body: JSON.stringify({ auth:false, signedIn:false, conf:null,
+                               need:["SUPABASE_ANON_KEY"] }) }));
+      let asked = 0;
+      await p2.route("**/auth/v1/settings", r => { asked++; return r.fulfill({
+        status:200, contentType:"application/json", body:"{}" }); });
+      await p2.goto(base + "/login", { waitUntil:"networkidle" });
+      await p2.waitForTimeout(400);
+      const n = await p2.evaluate(() => document.querySelectorAll(".sso-b").length);
+      ok("설정 전에는 단추도 **안 그리고** Supabase 에 묻지도 않는다",
+         n === 0 && asked === 0, "단추 " + n + "개 · 물음 " + asked + "번");
+      await p2.close();
+    }
+  }
+
   /* ══ /desk — 문 ═══════════════════════════════════════════════ */
   console.log("\n── /desk 업체가 아니면 한 줄도 안 보입니다");
   let s = await open("/desk", { role:"customer", name:"일반회원" },
@@ -3193,7 +3347,17 @@ function boardsOf(){
     /* ⚠️⚠️ **폰에서는 거르개가 아래 시트라 눌러야 그려집니다** — 안
        누르면 고르개 여섯이 폰에서 미는지 아무도 안 잽니다 */
     ["/cat/used 거르개 시트", "/cat/used", { role:"customer", name:"손님" },
-     { v_listing_open:[] }, {}, "#lf-open"]
+     { v_listing_open:[] }, {}, "#lf-open"],
+    /* ⚠️⚠️⚠️ **로그인 화면이 폰 폭에도 · 글자 대비에도 한 번도 없었습니다** —
+       소셜 단추 셋을 더하면서 같이 넣습니다. 그 상자는 로그인한 뒤가
+       아니라 `/api/session` 뒤에 그려져서 `check-screens` 에는 **빈
+       상자**로만 보입니다(작업 기억의 그 줄: 새 상자를 만드는 날 재는
+       범위에 같이 넣으세요).
+       ⚠️ `signedIn:false` 여야 로그인 양식이 그려집니다 — 참이면
+       "이미 로그인하셨습니다" 한 줄만 나와 아무것도 안 재집니다. */
+    ["/login 소셜 단추 셋", "/login",
+     { role:"customer", name:"", signedIn:false,
+       sso:["kakao","naver","google"] }, {}, {}]
   ];
   for(const [label, path, who, tables, rpcs, pre] of phones){
     for(const w of PHONES){
@@ -3242,7 +3406,17 @@ function boardsOf(){
       function lum(c){ return c.map(function(x){ x /= 255;
           return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); })
         .reduce(function(a, x, i){ return a + x * [0.2126,0.7152,0.0722][i]; }, 0); }
-      var seen = 0, bad = [];
+      var seen = 0, bad = [], skipped = 0;
+      /* ⚠️⚠️⚠️ **소셜 로그인 단추 셋은 건너뜁니다 — 그리고 그 셋뿐인지
+         아래에서 셉니다.** 네이버의 공식 단추는 녹색 바탕(#03C75A)에
+         흰 글자라 2.25 로 AA(4.5)를 못 넘습니다. 저희가 고른 색이
+         아니라 네이버가 정한 색이고, 바꾸면 손님이 아는 그 단추가
+         아니게 됩니다(카카오 16.42 · 구글 16.48 은 넘습니다 —
+         js/data/social.js 가 잰 값을 적어 둡니다).
+         ⚠️⚠️ **건너뛰는 자리를 열어 두면 거기로 다 빠져나갑니다** —
+         그래서 `data-sso` 를 단 칸만 건너뛰고, **몇 개를 건너뛰었는지**
+         돌려줘서 부르는 쪽이 셋인지 셉니다. 남이 이 꼬리표를 다른
+         칸에 달면 그 줄이 빨개집니다. */
       var all = document.querySelectorAll("main *, header *, footer *");
       for(var i = 0; i < all.length; i++){
         var e = all[i], own = "";
@@ -3268,6 +3442,12 @@ function boardsOf(){
           n = n.parentElement;
         }
         if(onPhoto || !bg) continue;
+        var inSso = false, q = e;
+        while(q && q !== document.documentElement){
+          if(q.getAttribute && q.getAttribute("data-sso")){ inSso = true; break; }
+          q = q.parentElement;
+        }
+        if(inSso){ skipped++; continue; }
         var px = parseFloat(cs.fontSize), wt = parseInt(cs.fontWeight) || 400;
         var big = px >= 24 || (px >= 18.66 && wt >= 700);
         var need = big ? 3.0 : 4.5;
@@ -3279,22 +3459,29 @@ function boardsOf(){
                    " ." + String(e.className || "").slice(0, 24) +
                    " \"" + own.slice(0, 20) + "\"");
       }
-      return { seen: seen, bad: bad };
+      return { seen: seen, bad: bad, skipped: skipped };
     });
     await p.close();
     return r;
   }
-  let dimSeen = 0;
+  let dimSeen = 0, dimSkip = 0;
   for(const [label, path, who, tables, rpcs, pre] of phones){
     /* ⚠️ 색은 폭에 따라 안 바뀝니다 — **한 폭만** 재서 시간을 아낍니다.
        (가로 밀림 · 12px 는 위에서 세 폭을 다 재고 있습니다.) */
     const r = await dim(path, who, tables, rpcs, pre, 390);
     dimSeen += r.seen;
+    dimSkip += r.skipped || 0;
     ok(label + " — 글자 대비가 AA 를 넘는다 (잰 칸 " + r.seen + "개)",
        r.bad.length === 0, r.bad.slice(0, 4).join("  |  "));
   }
   ok("⚠️ 대비를 **실제로 쟀다** (0칸이면 자리를 못 찾은 것입니다)",
      dimSeen > 200, "잰 글자 칸 " + dimSeen + "개");
+  /* ⚠️⚠️⚠️ **건너뛴 칸이 소셜 단추 셋뿐인가.** 이 줄이 없으면
+     `data-sso` 가 "대비 검사를 피하는 꼬리표" 가 되어, 누군가 다른
+     칸에 달면 그 글자가 영영 안 재집니다(검사가 스스로 구멍을 내는
+     자리). /login 장면에서 셋 · 다른 장면에서 0이어야 합니다. */
+  ok("⚠️⚠️ 대비 검사가 건너뛴 칸은 **소셜 단추 셋뿐이다**",
+     dimSkip === 3, "건너뛴 글자 칸 " + dimSkip + "개 (셋이어야 합니다)");
 
   /* ══════════════════════════════════════════════════════════════
      골프 조인 (0046) — ⚠️ **빌드가 찍은 HTML 만 보는 검사는 영원히

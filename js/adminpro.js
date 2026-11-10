@@ -29,6 +29,8 @@
   var TAB = "pv";          /* pv 업체 · ap 입점 신청 · new 업체 등록 */
   var LIST = [];           /* 읽어 둔 업체 — 겹치는 id 를 미리 묻습니다 */
   var APL  = [];           /* 읽어 둔 입점 신청 */
+  /* ⚠️ 신청을 **읽었는가** — 못 읽었으면 수를 안 적습니다(0 과 다릅니다) */
+  var APOK = false;
   var INV  = [];           /* 살아 있는 담당자 초대 코드 */
   var EDIT = "";           /* 사업자 정보를 지금 적고 있는 업체 id (0057) */
 
@@ -67,7 +69,7 @@
          이어서, 신청서에 적혀 온 번호 · 전화를 **미리 채워** 둡니다
          (운영자가 같은 것을 두 번 받아 적지 않게). */
       get("provider_apply?select=id,no,company,brn,name,tel,email,region," +
-          "services,note,state,provider_id,created_at&order=created_at.desc&limit=200"),
+          "services,note,state,provider_id,by_user,created_at&order=created_at.desc&limit=200"),
       /* 담당자 초대 (0043) — ⚠️ 표는 아무도 못 읽습니다. 운영자가 보는
          길은 이 **보기** 하나이고, 그 where 절이 자물쇠입니다. */
       get("v_provider_invite_admin?select=code,provider_id,made_at,expires_at," +
@@ -96,13 +98,36 @@
   function stOf(k){ return ST[k] || { name:String(k || ""), tone:"ink" }; }
   function apOf(k){ return AP[k] || { name:String(k || ""), tone:"ink" }; }
 
+  /* ⚠️⚠️⚠️ **안 처리한 신청 수를 탭에 적습니다** (2026-11-10).
+     `provider_apply` 에는 알림 트리거가 **0개**입니다 — 0050 의 트리거
+     열셋 가운데 입점 신청에 붙은 것이 하나도 없어서, 신청이 들어와도
+     사장님께 아무 소식이 안 갔습니다. `/admin` 을 직접 열어 보셔야
+     아셨습니다.
+     ⚠️ 알림을 **밖으로 보내지 않는 규칙은 그대로** 지킵니다(문자 · 카톡 ·
+     메일을 붙이면 정보통신망법 제50조 · 수탁자 · 환경변수 셋이 같이
+     움직입니다). 운영자 화면에서 **세어서** 보여 주는 것뿐입니다.
+     ⚠️⚠️ **0 이면 아무것도 안 적습니다** — 「0건」을 뱃지로 달면 늘 켜져
+     있는 잔소리가 됩니다. 그리고 **못 읽었을 때도 안 적습니다**(아래
+     `APOK` 가 거짓이면 null) — 0 과 「못 읽음」은 다릅니다(절대 규칙 1).
+     ⚠️ 세는 규칙은 **여기 한 곳**입니다. `new` 와 `called` 가 "아직
+     운영자 손이 필요한" 상태이고, `done` · `drop` 은 끝난 것입니다. */
+  function apTodo(){
+    if(!APOK) return null;
+    return (APL || []).filter(function(a){
+      return a.state === "new" || a.state === "called"; }).length;
+  }
+
   function tabs(){
+    var n = apTodo();
     return '<div class="bz-tabs" role="tablist">' +
       [["pv","업체"],["ap","입점 신청"],["new","업체 등록"]].map(function(t){
+        var lab = esc(t[1]);
+        /* ⚠️ 0건 · 못 읽음에는 안 붙입니다 */
+        if(t[0] === "ap" && n) lab += ' <span class="bz-n">' + n + '</span>';
         return '<button type="button" class="btn btn-sm ' +
           (TAB === t[0] ? "btn-pri" : "btn-line") + '" data-ptab="' + t[0] + '" ' +
           'role="tab" aria-selected="' + (TAB === t[0] ? "true" : "false") + '">' +
-          esc(t[1]) + '</button>';
+          lab + '</button>';
       }).join("") + '</div>';
   }
 
@@ -141,7 +166,7 @@
               '<button class="btn btn-sm btn-line" data-pvasg="' + esc(p.id) + '" ' +
               'data-on="' + (p.assignable ? "1" : "0") + '">' +
               (p.assignable ? "배정 끄기" : "배정 켜기") + '</button>') +
-          '</div>' + identBlock(p) + inviteBlock(p) + '</li>';
+          '</div>' + kindBlock(p) + identBlock(p) + inviteBlock(p) + '</li>';
       }).join("") + '</ul>';
   }
 
@@ -220,6 +245,44 @@
       '<button class="btn btn-pt btn-sm" type="submit">사업자 정보 저장</button>' +
       '<button class="btn btn-line btn-sm" type="button" data-pvidx="1">그만</button>' +
       '</form>';
+  }
+  /* ════════════════════════════════════════════════════════════════
+     개인인가 사업자인가 — 전자상거래법 제20조의4 ③   (0071)
+
+     ⚠️⚠️⚠️ **구분해 표시해야 합니다.** `/join` 이 「사업자등록 없어도
+     신청하실 수 있습니다」 로 문을 열었으므로, 손님 화면에 개인 프로와
+     사업자가 섞입니다. 그때 법이 구분해 표시하라고 합니다.
+     ⚠️⚠️ **모르면 아무 딱지도 안 찍습니다**(`kind` 가 null) — 「미확인」
+     같은 말도 안 찍습니다(그것도 우리가 만든 평가입니다 · 절대 규칙 1).
+     ⚠️⚠️ **`brn` 이 비었다고 '개인' 으로 읽으면 안 됩니다** — 사업자인데
+     번호를 아직 안 적은 업체가 개인으로 찍힙니다.
+     ⚠️ **관리자만** 그립니다 — 문이 직원을 거절하므로, 그리면 눌러도
+     거절되는 칸입니다(절대 규칙 5). 왜 없는지는 한 줄로 적습니다.
+     ════════════════════════════════════════════════════════════════ */
+  function kindBlock(p){
+    var k = window.amPvKind ? window.amPvKind(p) : null;
+    var admin = !!(A && A.role === "admin");
+    var head = '<p class="fe-r">손님 화면 구분 — ' +
+      (k ? '<b>' + esc(k.name) + '</b>' + (k.note ? ' <span class="dk-hint">' +
+            esc(k.note) + '</span>' : '')
+         : '<span class="dk-hint">아직 정하지 않았습니다 ' +
+           '(손님 화면에 아무 표시도 안 나갑니다)</span>') + '</p>';
+    if(!admin)
+      return head + '<p class="dk-hint">이 구분은 <b>관리자</b>만 정합니다 — ' +
+        '사업자등록증을 보는 사람과 같은 사람이어야 합니다.</p>';
+    var bt = "";
+    if(k === null || k.key !== "biz")
+      bt += '<button class="btn btn-sm btn-line" data-pvkind="' + esc(p.id) +
+            '" data-kindto="biz">사업자로</button>';
+    if(k === null || k.key !== "person")
+      bt += '<button class="btn btn-sm btn-line" data-pvkind="' + esc(p.id) +
+            '" data-kindto="person">개인으로</button>';
+    /* ⚠️ 되돌리는 길을 꼭 냅니다 — 잘못 켠 구분이 손님 화면에 그대로
+       남으면 법이 요구한 표시가 거꾸로 나갑니다. */
+    if(k !== null)
+      bt += '<button class="btn btn-sm btn-bad" data-pvkind="' + esc(p.id) +
+            '" data-kindto="">모름으로</button>';
+    return head + '<div class="dk-b">' + bt + '</div>';
   }
   function identBlock(p){
     /* ⚠️ 값을 읽는 파일이 안 실렸으면 **지어내지 않고 안 그립니다** —
@@ -319,6 +382,27 @@
               '">등록 완료로</button>' +
             '</div>'
           : '') +
+          /* ⚠️⚠️⚠️ **초대 코드를 돌리지 않고 바로 잇습니다** (0071).
+             전에는 등록까지 끝낸 뒤에도 ⑤ 초대 코드를 내고 ⑥ 전화 · 메일로
+             전해 주고 ⑦ 프로가 그것을 넣어야 했습니다 — 프로 한 분당
+             저장소 **밖의** 걸음이 셋이었습니다. 신청하실 때 로그인하셨으면
+             그 계정이 `by_user` 에 담겨 있으므로 여기서 한 번에 잇습니다.
+             ⚠️ 비로그인으로 넣으신 신청은 `by_user` 가 비어 이 단추를
+             **안 냅니다** — 그때는 초대 코드 길(0043)이 맞습니다(막다른
+             길로 두지 않습니다 · 아래 한 줄로 그렇게 말합니다).
+             ⚠️⚠️ 화면이 계정 uuid 를 **안 보냅니다** — 접수번호만 보내고
+             이을 계정은 문이 그 신청 줄에서 꺼냅니다(보내게 두면 운영자
+             화면이 뚫리는 날 아무 계정이나 올릴 수 있습니다). */
+          (a.state === "done" && a.provider_id
+            ? (a.by_user
+                ? '<div class="dk-b"><button class="btn btn-sm btn-pt" ' +
+                  'data-aplink="' + esc(a.no || "") + '">' +
+                  '신청하신 분을 담당자로 잇기</button>' +
+                  '<span class="dk-hint">초대 코드 없이 바로 ' +
+                  '/desk 에 들어가십니다.</span></div>'
+                : '<p class="dk-hint">로그인하지 않고 넣으신 신청입니다 — ' +
+                  '업체 줄에서 <b>초대 코드</b>를 내 주세요.</p>')
+            : '') +
       '</li>';
     }).join("") + '</ul>';
   }
@@ -474,7 +558,7 @@
           '<button class="btn btn-sm btn-line" data-do="again">다시 읽기</button></p>';
         return;
       }
-      LIST = pvs; APL = aps; INV = got[2] || [];
+      LIST = pvs; APL = aps; APOK = true; INV = got[2] || [];
       box.innerHTML = '<h2 class="adm-h">업체 심사 · 정지 · 등록</h2>' + tabs() +
         '<div class="bz-body">' +
         (TAB === "pv" ? pvView(pvs) : TAB === "ap" ? apView(aps) : newForm()) +
@@ -589,6 +673,43 @@
         .then(paint).catch(function(err){ apd.disabled = false; say(why(err)); });
       return;
     }
+      /* ⚠️⚠️⚠️ 0071 — 신청하신 분을 담당자로 잇습니다 (초대 코드 없이).
+         ⚠️ 접수번호만 보냅니다 — 이을 계정은 **문이** 그 신청 줄에서
+         꺼냅니다(화면이 계정 uuid 를 보내면 거기가 구멍입니다).
+         ⚠️ 되돌리기 어려운 일이라 **한 번 여쭙습니다** — 끊는 길은
+         0052 의 `drop_provider_staff` 입니다. */
+      var lk = e.target.closest ? e.target.closest("button[data-aplink]") : null;
+      if(lk){
+        var w5 = prompt("잇는 까닭을 적어 주세요 (기록에 남습니다)\n" +
+                        "⚠️ 이으면 그분이 업체 담당자가 되어 그 업체의 요청 · " +
+                        "견적 · 손님 연락처를 보십니다.");
+        if(!(w5 && w5.trim())) return;
+        lk.disabled = true; say("잇는 중입니다…");
+        rpc("link_apply_account", { p: { no: lk.getAttribute("data-aplink"),
+                                         why: w5.trim() } })
+          .then(paint)
+          .then(function(){ say("이었습니다. 그분이 /desk 에 바로 들어가십니다."); })
+          .catch(function(err){ lk.disabled = false; say(why(err)); });
+        return;
+      }
+      /* ⚠️⚠️⚠️ 0071 — 개인인가 사업자인가 (제20조의4 ③).
+         ⚠️ **관리자만** 눌립니다 — 문이 직원을 거절합니다. 그래서 단추도
+         관리자에게만 그립니다(그리면 눌러도 거절되는 칸입니다 · 절대 규칙 5).
+         ⚠️ 빈 값으로 보내면 **모름으로 되돌립니다** — 잘못 켠 것을 되돌릴
+         길이 없으면 손님 화면에 법이 요구한 구분이 거꾸로 남습니다. */
+      var kb = e.target.closest ? e.target.closest("button[data-pvkind]") : null;
+      if(kb){
+        var k2 = kb.getAttribute("data-kindto") || "";
+        var w6 = prompt((k2 ? "이 업체를 " + (k2 === "biz" ? "사업자" : "개인") +
+                              "로 정하시는" : "구분을 모름으로 되돌리시는") +
+                        " 까닭을 적어 주세요 (기록에 남습니다)");
+        if(!(w6 && w6.trim())) return;
+        kb.disabled = true; say("바꾸는 중입니다…");
+        rpc("set_provider_kind", { p: { id: kb.getAttribute("data-pvkind"),
+                                        kind: k2, why: w6.trim() } })
+          .then(paint).catch(function(err){ kb.disabled = false; say(why(err)); });
+        return;
+      }
     /* 입점 신청 */
     var pb = e.target.closest ? e.target.closest("button[data-apto]") : null;
     if(pb){

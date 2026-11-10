@@ -164,6 +164,35 @@ window.amProviderIdent = function(p){
     return v ? { key:f.key, name:f.name, value:v } : null;
   }).filter(Boolean);
 };
+/* ════════════════════════════════════════════════════════════════════
+   개인인가 사업자인가 — 전자상거래법 제20조의4 ③   (0071 · 2026-11-10)
+
+   ⚠️⚠️⚠️ **구분해 표시해야 합니다.** 레슨 프로는 사업자등록 없이
+   연습장에 소속해 가르치는 분이 많아서, `/join` 이 「사업자등록 없어도
+   신청하실 수 있습니다」 로 문을 여는 순간 손님 화면에 **개인과 사업자가
+   섞입니다.** 그때 법이 구분해 표시하라고 합니다.
+
+   ⚠️⚠️⚠️ **모르면 아무 딱지도 안 찍습니다** (`kind` 가 null). 확인한
+   사람이 켜고(0071 의 `set_provider_kind` · 관리자만), 그 전에는 빈
+   글자입니다 — 「미확인」 같은 말도 안 찍습니다(그것도 우리가 만든
+   평가입니다 · 절대 규칙 1 · 2).
+   ⚠️⚠️ **`brn` 이 비었다고 '개인' 으로 읽지 마세요** — 사업자인데 번호를
+   아직 안 적은 업체가 **개인으로 찍힙니다.** 가르는 것은 `kind` 한 칸뿐입니다.
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_PV_KIND = {
+  biz:    { name:"사업자",      note:"사업자등록을 확인했습니다" },
+  person: { name:"개인",        note:"사업자등록이 없는 개인입니다" }
+};
+/* ⚠️ 모르는 값이면 **그 글자를 그대로** 돌려줍니다 (이름을 지어내지
+   않습니다 — 0056 의 상태 말과 같은 규칙). null · 빈 값이면 null 입니다. */
+window.amPvKind = function(p){
+  var k = (p && p.kind) ? String(p.kind).trim() : "";
+  if(!k) return null;
+  var row = window.AM_PV_KIND[k];
+  return row ? { key:k, name:row.name, note:row.note }
+             : { key:k, name:k, note:"" };
+};
+
 /* ⚠️ 한 칸이라도 있는가 — 0건이면 화면이 구간을 **줄째** 뺍니다 */
 window.amProviderHasIdent = function(p){
   return window.amProviderIdent(p).length > 0;

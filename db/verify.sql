@@ -8,7 +8,7 @@
 --     몇 번 돌려도 안전하고, 운영 중에 돌려도 됩니다.
 --
 --  ⚠️⚠️ 기대값은 전부 **저장소에서 센 값**입니다 (눈대중이 아닙니다) —
---     판 70 · 표 55 · 상태 13 · 역할 4 · 길 70 · 함수 43.
+--     판 71 · 표 55 · 상태 13 · 역할 4 · 길 70 · 함수 43.
 --     ⚠️ 2026-11-09 — 0070 이 판 하나를 더했습니다(표 · 함수는 그대로입니다:
 --       `move_listing` 을 **덮어쓴** 것이고 새 함수가 아닙니다).
 --     ⚠️⚠️⚠️ **2026-11-09 에 다시 셌습니다.** 그 전에는 판 23 · 표 21 ·
@@ -33,7 +33,10 @@
 -- ════════════════════════════════════════════════════════════════════
 
 with
-/* ① 판 번호 — 스물세 줄이어야 합니다 (0001~0023) */
+/* ① 판 번호 — 마이그레이션 수와 같아야 합니다 (0001~0071).
+      ⚠️⚠️ 마이그레이션을 더하는 날 아래 want 도 같이 올리세요 —
+      안 올리면 **멀쩡히 올린 DB 를 ❌ 로** 읽습니다. 세는 법은
+      ls db/migrations 입니다 (2026-11-10 — 0071 이 한 줄 더했습니다). */
 v_ver as (
   select count(*)::int n from schema_version
 ),
@@ -198,7 +201,7 @@ v_cust as (
      and pg_get_functiondef(p.oid) like '%''customer''%'
 ),
 rows as (
-  select 1 i, '판 번호 (0001~0070)'            t, v_ver.n::text   got, '70' want from v_ver
+  select 1 i, '판 번호 (0001~0071)'            t, v_ver.n::text   got, '71' want from v_ver
   union all select  2, '표 (public · 보기 뺀 것)',  v_tab.n::text,  '55' from v_tab
   union all select  3, '⚠️ RLS 안 켜진 표: ' || v_rls.who, v_rls.n::text, '0' from v_rls
   union all select  4, '신청 상태 (hold 포함: ' ||

@@ -3219,7 +3219,18 @@ function boardsOf(){
     };
     const sql = owner
       ? stripSql(fs.readFileSync(path.join(MDIR, owner), "utf8")) : "";
-    const i = sql.indexOf("update provider set");
+    /* ⚠️⚠️⚠️ **그 문 안쪽에서 찾습니다 — 파일 맨 앞이 아닙니다.**
+       0071 이 같은 파일에 `set_provider_kind` 를 넣었고 그 안에
+       `update provider set kind = … where id = v_id;` 한 줄이 있습니다.
+       그것이 `save_provider_self` 보다 **파일에서 앞**이라, 맨 앞부터
+       찾으면 그 한 줄을 집어 **칸이 0개**가 됩니다(그래서 이 검사가
+       빨개졌습니다 — 코드가 맞고 검사가 틀린 자리). 0057 머리말의
+       글자를 집던 자리(주석을 떼어 고쳤습니다)와 같은 결이고, 이번은
+       **다른 문의 같은 글자**였습니다.
+       ⚠️ 그래서 `function save_provider_self` 를 먼저 찾고 그 **뒤에서**
+       봅니다. 번호도 · 글자 자리도 박지 않습니다. */
+    const fi = sql.indexOf("function save_provider_self");
+    const i = fi < 0 ? -1 : sql.indexOf("update provider set", fi);
     const blk = i < 0 ? "" : sql.slice(i, sql.indexOf("where id = v_pv", i));
     /* 줄머리의 `칸 =` 만 모읍니다 (주석 줄과 식 안쪽은 안 셉니다) */
     const cols = blk.split("\n").map(function(ln){

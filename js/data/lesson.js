@@ -135,3 +135,48 @@ window.amLessonLow = function(p){
   if(!only.length) return null;
   return window.amPriceLow ? window.amPriceLow({ prices: only }) : null;
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   레슨 목적 — 0071 이 담는 칸이 생겨서 냅니다   (2026-11-10)
+
+   ⚠️⚠️⚠️ **2026-11-10 오전까지 이 거르개를 안 만들었습니다** — 레슨
+   지시서 §3 이 요구했는데 `provider` 에 담는 칸이 없었습니다. 칸 없이
+   고르개를 내면 골라도 걸러 주지 못하는 칸이고, 그건 눌러도 아무 일이
+   안 나는 칸입니다(절대 규칙 5). 0071 이 `provider.lesson_goals` 를
+   더해서 이제 참말이 됩니다.
+
+   ⚠️⚠️ **키를 DB 에 박지 않았습니다** — `lesson_goals` 는 글자 배열입니다
+   (0056 의 `listing.sub` · 0061 의 `wanted.region` 과 같은 규칙). 목록을
+   쥐는 자리는 **여기 하나**이고, 늘리실 때는 **더하기만** 하십니다
+   (이미 고르신 프로가 그 글자를 들고 있습니다).
+   ⚠️ 모르는 키가 오면 화면이 **그 글자를 그대로** 보여 줍니다
+   (이름을 지어내지 않습니다).
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_LESSON_GOAL = [
+  { key:"beginner", name:"처음 배웁니다" },
+  { key:"score",    name:"스코어 줄이기" },
+  { key:"swing",    name:"스윙 교정" },
+  { key:"field",    name:"필드 준비" },
+  { key:"short",    name:"숏게임 · 퍼팅" },
+  { key:"distance", name:"비거리 늘리기" },
+  { key:"junior",   name:"주니어" },
+  { key:"senior",   name:"시니어" },
+  { key:"women",    name:"여성" },
+  { key:"pro",      name:"선수 · 프로 준비" }
+];
+/* ⚠️ 이름을 푸는 자리도 **하나**입니다 — 못 찾으면 받은 글자를 그대로
+   돌려줍니다 (조인에서 영문 `closed` 가 손님 화면에 찍힌 그 자리의 반대). */
+window.amLessonGoalName = function(k){
+  var key = String(k || "").trim();
+  if(!key) return "";
+  for(var i = 0; i < window.AM_LESSON_GOAL.length; i++)
+    if(window.AM_LESSON_GOAL[i].key === key) return window.AM_LESSON_GOAL[i].name;
+  return key;
+};
+/* 프로가 고른 목적을 이름으로 — ⚠️ 0건이면 **빈 배열**이고 화면이 그
+   줄을 줄째 뺍니다 (「목적 0개」 를 찍지 않습니다). */
+window.amLessonGoalsOf = function(p){
+  var L = (p && Array.isArray(p.lesson_goals)) ? p.lesson_goals : [];
+  return L.map(function(k){ return window.amLessonGoalName(k); })
+          .filter(function(x){ return !!x; });
+};

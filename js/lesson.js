@@ -35,7 +35,7 @@
   function now(){
     var u = new URLSearchParams(W.location.search);
     return { rg: u.get("rg") || "", sub: u.get("sub") || "",
-             p: u.get("p") || "", q: (u.get("q") || "").trim(),
+             p: u.get("p") || "", g: u.get("g") || "", q: (u.get("q") || "").trim(),
              o: u.get("o") || "name" };
   }
   function urlOf(f){
@@ -43,6 +43,7 @@
     if(f.rg)  u.set("rg", f.rg);
     if(f.sub) u.set("sub", f.sub);
     if(f.p)   u.set("p", f.p);
+    if(f.g)   u.set("g", f.g);
     if(f.q)   u.set("q", f.q);
     /* ⚠️ 차례는 **좁히는 조건이 아닙니다** — 기본값이면 주소에 안 싣습니다
        (주소가 길어지기만 하고 뜻이 같습니다). */
@@ -57,7 +58,7 @@
   function fill(f){
     var set = function(id, v){ var e = d.getElementById(id); if(e) e.value = v; };
     set("lsn-rg", f.rg); set("lsn-sub", f.sub);
-    set("lsn-p", f.p);   set("lsn-q", f.q);
+    set("lsn-p", f.p);   set("lsn-g", f.g);   set("lsn-q", f.q);
     set("lsn-o", f.o);
   }
 
@@ -94,6 +95,13 @@
         if(R.indexOf(f.rg) < 0) return false;
       }
       if(f.sub && lessonSubsOf(p).indexOf(f.sub) < 0) return false;
+      /* ⚠️⚠️ 0071 — 레슨 목적. **안 고르신 프로는 빠집니다** —
+         모르는 것을 아무 목적에나 넣으면 지어낸 것입니다(절대 규칙 1).
+         가격대와 같은 결이고, 화면이 그 사실을 그 자리에서 적습니다. */
+      if(f.g){
+        var G = (p && Array.isArray(p.lesson_goals)) ? p.lesson_goals : [];
+        if(G.indexOf(f.g) < 0) return false;
+      }
       if(band){
         /* ⚠️⚠️ 값을 **안 올리신 프로는 빠집니다** — 모르는 값을 아무
            가격대에나 넣으면 그건 지어낸 값입니다(절대 규칙 1). 화면이
@@ -186,7 +194,7 @@
 
   function fromForm(){
     var v = function(id){ var e = d.getElementById(id); return e ? e.value : ""; };
-    return { rg:v("lsn-rg"), sub:v("lsn-sub"), p:v("lsn-p"),
+    return { rg:v("lsn-rg"), sub:v("lsn-sub"), p:v("lsn-p"), g:v("lsn-g"),
              q:(v("lsn-q") || "").trim(), o:v("lsn-o") || "name" };
   }
 
@@ -215,8 +223,8 @@
     /* ⚠️⚠️ 칩 하나를 누르면 **그 조건만** 바뀝니다 — 나머지는 그대로
        둡니다(지우려면 「조건 모두 지우기」가 있습니다). 주소에 아무것도
        없는 링크는 **전부 지우기**입니다. */
-    var f = q.toString() ? now() : { rg:"", sub:"", p:"", q:"", o:now().o };
-    ["rg", "sub", "p", "q"].forEach(function(k){
+    var f = q.toString() ? now() : { rg:"", sub:"", p:"", g:"", q:"", o:now().o };
+    ["rg", "sub", "p", "g", "q"].forEach(function(k){
       if(q.has(k)) f[k] = q.get(k) || "";
     });
     go(f, true);

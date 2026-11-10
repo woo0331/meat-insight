@@ -44,8 +44,14 @@ const COLS = "id,name,intro,regions,gu,subs,since,consult_hours,verified,brands,
                 ⚠️ 비어 있으면 화면에서 그 줄이 빠집니다 — 지어내지 않습니다.
                 ⚠️⚠️ 배정받을 때 쓰는 담당자 직통(provider_contact · 0013)은
                 **여기 없습니다** — 그쪽은 운영자와 그 업체만 봅니다. */
-             "ceo,addr,tel,email,brn," +
-             "is_test";
+               "ceo,addr,tel,email,brn," +
+               /* ⚠️⚠️⚠️ 0071 — 개인인가 사업자인가(제20조의4 ③) · 레슨 장소 ·
+                  레슨 목적. **안 가져오면 `/pro` 에 구분 표시가 안 나갑니다**
+                  (빌드가 찍는 화면이라 이 도구가 가져온 것만 들어갑니다).
+                  ⚠️ `kind` 가 null 이면 화면이 **아무 딱지도 안 찍습니다** —
+                  「미확인」 같은 말도 안 찍습니다(절대 규칙 1). */
+               "kind,place_name,lesson_goals," +
+               "is_test";
 
 /* ⚠️⚠️ **검사용 업체를 두 겹으로 거릅니다** (0030 · 2차 지시서 §8).
    ① RLS 의 provider_public 이 anon 에게 `is_test = true` 를 안 내줍니다

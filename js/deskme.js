@@ -60,10 +60,38 @@
                   ⚠️ 그래도 읽는 까닭: "여기서 못 고치는 것" 에 지금
                   적힌 번호를 보여 주어야 **무엇이 비었는지** 아십니다. */
                "ceo,addr,tel,email,brn," +
+               /* ⚠️⚠️ 0071 — 레슨 장소 · 레슨 목적. **읽지 않으면 저장할 때마다 비워집니다** */
+               "place_name,lesson_goals," +
                "brands,scale,contact_ways,verified,listed,assignable,state,state_why" +
                "&id=eq." + encodeURIComponent(PV) + "&limit=1");
   }
 
+  /* ⚠️⚠️⚠️ **안 그려진 칸은 읽은 값을 그대로 돌려보냅니다.** 이 문은
+     보낸 것으로 통째로 덮으므로, 빈 값을 보내면 그 칸이 **지워집니다** —
+     `industries` 가 그래서 저장할 때마다 비워지고 있었습니다(2026-11-05).
+     레슨 목적 칸은 레슨을 하시는 업체에만 그리므로 이 가지가 필요합니다. */
+  function placeVal(f){
+    var el = f.querySelector("#me-place");
+    return el ? (el.value || "").trim()
+              : ((ME && ME.place_name) ? ME.place_name : "");
+  }
+  function goalVal(f){
+    var b = f.querySelectorAll('input[name="goal"]');
+    /* ⚠️ 그려지지 않았으면 **읽은 값을 그대로** 돌려줍니다 */
+    if(!b.length) return (ME && Array.isArray(ME.lesson_goals)) ? ME.lesson_goals : [];
+    return [].slice.call(b).filter(function(x){ return x.checked; })
+      .map(function(x){ return x.value; });
+  }
+  /* 레슨을 하시는 업체인가 — ⚠️ 분류 키를 글자로 안 박습니다
+     (`amSub()` 이 하위 키에서 분류를 찾아 줍니다). */
+  function doesLesson(p){
+    var S = (p && Array.isArray(p.subs)) ? p.subs : [];
+    for(var i = 0; i < S.length; i++){
+      var s = window.amSub ? window.amSub(S[i]) : null;
+      if(s && s.cat && s.cat.key === "lesson") return true;
+    }
+    return false;
+  }
   function cb(nm, key, label, on){
     return '<label class="chk"><input type="checkbox" name="' + nm + '" value="' +
       esc(key) + '"' + (on ? " checked" : "") + '><span>' + esc(label) + '</span></label>';
@@ -93,6 +121,35 @@
         '<input id="me-hours" name="hours" maxlength="60" placeholder="평일 10~19시" ' +
         'value="' + esc(p.consult_hours || "") + '">' +
       '</div>' +
+        /* ⚠️⚠️ 0071 — 레슨 · 연습 장소. 어느 연습장에서 가르치시는지는
+           손님이 가장 먼저 보는 것인데 담는 칸이 없었습니다. */
+        '<div class="jrow">' +
+          '<label for="me-place">레슨 · 연습 장소</label>' +
+          '<input id="me-place" name="place" maxlength="80" ' +
+          'placeholder="OO골프클럽 연습장 · OO스크린" ' +
+          'value="' + esc(p.place_name || "") + '">' +
+          '<span class="jhint">가르치시는 곳 이름입니다. 비워 두셔도 됩니다.</span>' +
+        '</div>' +
+        /* ⚠️⚠️⚠️ **레슨을 하시는 업체에만 그립니다.** 중고 매입만 하시는
+           업체에 레슨 목적 칸을 내면 골라도 쓰이지 않는 죽은 칸입니다
+           (절대 규칙 5). 그려지지 않은 업체는 `goalVal()` 이 **읽은 값을
+           그대로** 돌려보냅니다 — 빈 배열을 보내면 지워집니다. */
+        (doesLesson(p)
+          ? '<div class="jrow jrow-full">' +
+              '<label>레슨 목적 <span class="jhint">(고르신 것으로 손님이 좁혀 찾습니다)</span></label>' +
+              '<div class="svcs"><fieldset class="svc">' +
+              '<legend>어떤 분을 가르치시나요</legend>' +
+                (window.AM_LESSON_GOAL || []).map(function(g){
+                  /* ⚠️ 칸 하나하나는 `cb()` **한 곳**에서 그립니다 —
+                     두 벌로 적으면 한쪽만 고치는 날 모양이 달라집니다.
+                     그래서 `name="goal"` 이 붙고 `goalVal()` 이 그것으로
+                     집습니다. */
+                  return cb("goal", g.key, g.name,
+                            (p.lesson_goals || []).indexOf(g.key) >= 0);
+                }).join("") +
+              '</fieldset></div>' +
+            '</div>'
+          : "") +
       '<div class="jrow">' +
         '<label for="me-since">개업 연도</label>' +
         '<input id="me-since" name="since" inputmode="numeric" maxlength="4" ' +
@@ -244,7 +301,10 @@
          주석이 맞는다고 믿을 수 없습니다. */
       gu: ME.gu || [],
       industries: ME.industries || [],
-      scale: ME.scale || ""
+      scale: ME.scale || "",
+      /* ⚠️⚠️ 0071 — 네 칸이 라 **보내지 않으면 지워집니다** */
+      placeName: placeVal(f),
+      lessonGoals: goalVal(f)
     };
     bt.disabled = true;
     if(m){ m.hidden = false; m.textContent = "보내는 중입니다…"; }

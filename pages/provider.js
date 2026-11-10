@@ -250,6 +250,50 @@ exports.build = function(p){
       "(전자상거래법 제20조 제2항) — /admin 업체 심사에서 적어 주세요.");
   }
 
+  /* ══ 개인인가 사업자인가 — 전자상거래법 제20조의4 ③   (0071) ══════
+     ⚠️⚠️⚠️ **구분해 표시해야 합니다.** `/join` 이 「사업자등록 없어도
+     신청하실 수 있습니다」 로 문을 열었으므로 손님 화면에 개인 프로와
+     사업자가 섞입니다. 그때 법이 구분해 표시하라고 합니다.
+     ⚠️⚠️ **모르면 그 줄을 줄째 뺍니다**(`kind` 가 null) — 「미확인」 같은
+     말도 안 찍습니다(그것도 우리가 만든 평가입니다 · 절대 규칙 1 · 2).
+     ⚠️ 켜는 자리는 `/admin` 의 `set_provider_kind`(**관리자만**)이고,
+     `brn` 이 비었다고 '개인' 으로 읽지 않습니다. */
+  var pkind = W.amPvKind ? W.amPvKind(p) : null;
+
+  /* ══ 레슨 장소 · 레슨 목적 (0071) ═══════════════════════════════
+     ⚠️ 비면 **줄째 빠집니다** — 「미정」 을 지어 적지 않습니다.
+     ⚠️ 레슨 목적 이름을 푸는 자리는 `amLessonGoalsOf()` 한 곳이고,
+     모르는 키는 **그 글자를 그대로** 냅니다(이름을 지어내지 않습니다). */
+  var pgoals = W.amLessonGoalsOf ? W.amLessonGoalsOf(p) : [];
+  var pplace = (p.place_name || "").trim();
+  if(pkind || pplace || pgoals.length){
+    body += '<section class="sec"><div class="wrap">' +
+      '<div class="sec-hd"><h2>이 프로 · 업체에 대해</h2></div>' +
+      '<dl class="pvid">' +
+        (pkind
+          ? '<dt>구분</dt><dd><b>' + esc(pkind.name) + '</b>' +
+            (pkind.note ? ' <span class="pvid-s">' + esc(pkind.note) + '</span>' : '') +
+            '</dd>'
+          : '') +
+        (pplace ? '<dt>레슨 · 연습 장소</dt><dd>' + esc(pplace) + '</dd>' : '') +
+        (pgoals.length
+          ? '<dt>이런 분을 가르칩니다</dt><dd>' +
+            pgoals.map(function(g){ return esc(g); }).join(" · ") + '</dd>'
+          : '') +
+      '</dl>' +
+      /* ⚠️⚠️ 개인이면 **분쟁 때 무엇을 하는지**를 그 자리에서 말합니다
+         (제20조의4 ②) — 받아 두기만 하고 언제 누구에게 내는지 안 적으면
+         정작 분쟁이 났을 때 근거가 없습니다(약관 제10조에 같은 말이
+         있습니다). 사업자는 위의 「사업자 정보」가 그 자리입니다. */
+      (pkind && pkind.key === "person"
+        ? '<p class="pvid-s">사업자등록이 없는 <b>개인</b>입니다. ' +
+          '저희는 거래 당사자가 아니며, 분쟁이 생기면 분쟁조정기구 · 법원 · ' +
+          '(이분이 동의한) 소비자의 요청에 따라 확인한 신원정보와 거래내역을 ' +
+          '제공합니다.</p>'
+        : '') +
+      '</div></section>';
+  }
+
   body += '<section class="sec"><div class="wrap"><ul class="notes">' +
     '<li>골프올인원은 <b>통신판매중개자</b>이며 이 업체와의 거래 당사자가 아닙니다. ' +
     '거래 조건과 이행에 관한 책임은 이 업체에 있습니다.</li>' +

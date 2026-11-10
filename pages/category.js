@@ -242,9 +242,15 @@ function safeGuide(){
        같은 칩을 **「자주 찾는 조건」** 으로 냅니다.
      · **스폰서 프로 자리** — 광고 자리 이름(`ad_place`)에 레슨 사이드
        자리가 없습니다. 자리를 더하는 마이그레이션과 같이 옵니다.
-     · **지도형 보기 · 레슨 목적 거르개 · 연습장 이름** — 담는 칸이
-       없습니다(좌표도 · 목적도 · 장소도). 프로 직접 등록(§8)에서
-       그 칸을 만들 때 같이 냅니다.
+     · **레슨 목적 거르개 · 레슨 장소** — 2026-11-10 저녁에 냈습니다.
+       0071 이 `provider.lesson_goals` · `provider.place_name` 을 더해서
+       이제 참말입니다. ⚠️ 그 전에는 담는 칸이 없어 **일부러 안**
+       만들었습니다 — 칸 없이 고르개를 내면 골라도 걸러 주지 못하는
+       칸이고 그건 눌러도 아무 일이 안 나는 칸입니다(절대 규칙 5).
+       목록은 `js/data/lesson.js` 의 `AM_LESSON_GOAL` **한 곳**입니다.
+     · **지도형 보기** — 좌표를 담는 칸이 없습니다. 0066 이 골프장
+       좌표를 **확인 전에는 비워 둔** 그 까닭과 같습니다(틀린 좌표로
+       찍으면 손님을 엉뚱한 곳으로 보냅니다).
 
    ⚠️⚠️ 히어로는 메인 · 중고장터와 **같은 클래스**(`.hero.hero-ph`)를
    씁니다 — 글자 대비를 책임지는 딥그린 막이 거기 있습니다.
@@ -310,6 +316,17 @@ function lessonFind(c){
       '<p class="lsnf-i"><label for="lsn-p">' + icon("coin", 16) + '가격대 (1회 기준)</label>' +
         '<select id="lsn-p" name="p"><option value="">전체</option>' +
         opts(P, function(x){ return x.key; }, function(x){ return x.name; }) +
+        '</select></p>' +
+      /* ⚠️⚠️⚠️ **레슨 목적 거르개는 0071 이 담는 칸을 내 준 뒤에 냈습니다**
+         (2026-11-10 저녁). 그 전에는 `pages/category.js` 머리말에 "담는
+         칸이 없어 안 만들었습니다" 로 적어 두었습니다 — 칸 없이 고르개를
+         내면 골라도 걸러 주지 못하는 칸이고, 그건 눌러도 아무 일이 안 나는
+         칸입니다(절대 규칙 5). 이제 `provider.lesson_goals` 가 있습니다.
+         ⚠️ 목록은 `js/data/lesson.js` 의 `AM_LESSON_GOAL` **한 곳**입니다. */
+      '<p class="lsnf-i"><label for="lsn-g">' + icon("flag", 16) + '레슨 목적</label>' +
+        '<select id="lsn-g" name="g"><option value="">전체</option>' +
+        opts(W.AM_LESSON_GOAL || [], function(x){ return x.key; },
+             function(x){ return x.name; }) +
         '</select></p>' +
       '<p class="lsnf-q"><label class="sr" for="lsn-q">찾는 말</label>' +
         icon("search", 17) +

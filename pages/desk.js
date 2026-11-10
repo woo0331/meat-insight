@@ -97,6 +97,10 @@ exports.build = function(){
     body: body,
     js: ["/js/data/korean.js", "/js/data/deal.js", "/js/data/review.js",
          "/js/data/regions.js", "/js/data/providers.js",
+         /* ⚠️⚠️⚠️ 0071 — 레슨 목적 목록(AM_LESSON_GOAL)이 여기 있습니다.
+            안 실으면 그 칸이 **조용히 안 그려집니다**(에러 0줄).
+            **값을 읽는 파일을 싣는 것까지가 기능입니다.** */
+         "/js/data/lesson.js",
          /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** —
             0060 의 `teeAhead`(며칠 뒤까지 올리실 수 있나)가 site.js 에
             있습니다. 안 실으면 날짜 칸의 최대값이 조용히 안 걸립니다. */

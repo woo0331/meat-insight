@@ -700,8 +700,12 @@
       var kb = e.target.closest ? e.target.closest("button[data-pvkind]") : null;
       if(kb){
         var k2 = kb.getAttribute("data-kindto") || "";
-        var w6 = prompt((k2 ? "이 업체를 " + (k2 === "biz" ? "사업자" : "개인") +
-                              "로 정하시는" : "구분을 모름으로 되돌리시는") +
+        /* ⚠️⚠️ 조사를 글자로 박지 않습니다 — 「사업자로」는 맞지만
+           「개인로」는 틀립니다(「개인으로」). 문법도 · 빌드도 · 검사도 전부
+           통과하고 **띄워 봐야** 압니다 — 붙이는 자리는 josa() 한 곳입니다. */
+        var kn = k2 === "biz" ? "사업자" : "개인";
+        var w6 = prompt((k2 ? "이 업체를 " + (window.koWith ? window.koWith(kn, "으로로") : kn + "로") +
+                              " 정하시는" : "구분을 모름으로 되돌리시는") +
                         " 까닭을 적어 주세요 (기록에 남습니다)");
         if(!(w6 && w6.trim())) return;
         kb.disabled = true; say("바꾸는 중입니다…");

@@ -1923,7 +1923,11 @@ function boardsOf(){
       state_at:null, listed:true, assignable:true, is_test:false,
       subs:["ls-solo"], regions:["seoul"],
       ceo:"박대표", addr:"서울 강남구", tel:"02-111-2222",
-      email:"a@green.test", brn:"123-45-67890" },
+      email:"a@green.test", brn:"123-45-67890",
+      /* ⚠️ 0071 — 한 곳은 정해 두고 한 곳은 **모름으로** 둡니다.
+         둘 다 정해 두면 "아직 정하지 않았습니다" 갈래를 아무도 안 눌러 봅니다. */
+      kind:"person", place_name:"일산 인도어 연습장",
+      lesson_goals:["beginner","swing"] },
     { id:"sus-1", name:"정지된 업체", state:"suspended",
       state_why:"서류가 확인되지 않았습니다", state_at:"2026-11-02T01:00:00Z",
       listed:false, assignable:false, is_test:false,
@@ -1934,7 +1938,18 @@ function boardsOf(){
     { id:"aaaa-ap-1", no:"AP-0001", company:"새 골프샵", brn:"111-22-33333",
       name:"김신청", tel:"010-2222-3333", email:"a@x.test", region:"서울",
       services:"피팅 · 수리", note:"입점 문의드립니다",
-      state:"new", provider_id:"sus-1", created_at:"2026-11-03T01:00:00Z" }
+      state:"new", provider_id:"sus-1", created_at:"2026-11-03T01:00:00Z" },
+    /* ⚠️⚠️ 0071 — **로그인해서 넣으신 신청과 비로그인 신청**을
+       갈라 둡니다. 앞에만 잇는 단추가 서고, 뒤는 초대 코드 길로
+       보냅니다 — 둘 다 넣어야 두 갈래가 다 눌립니다. */
+    { id:"aaaa-ap-2", no:"AP-0002", company:"프로가 직접", brn:null,
+      name:"이프로", tel:"010-7777-8888", email:"b@x.test", region:"서울",
+      services:"개인 레슨", note:"", state:"done", provider_id:"real-1",
+      by_user:"u-pro-1", created_at:"2026-11-04T01:00:00Z" },
+    { id:"aaaa-ap-3", no:"AP-0003", company:"전화로 받은 곳", brn:null,
+      name:"최사장", tel:"010-9999-0000", email:"c@x.test", region:"서울",
+      services:"피팅", note:"", state:"done", provider_id:"sus-1",
+      by_user:null, created_at:"2026-11-05T01:00:00Z" }
   ];
   const PROT = { provider:PVS, provider_apply:APS };
 
@@ -2026,6 +2041,113 @@ function boardsOf(){
      JSON.parse(apSt.body).p_to === "called", apSt && apSt.body);
   ok("업체 심사 자리의 누르는 것이 40px 이상이다",
      (await tapsOk(s.p, "#probox")) === 0, await tapsOk(s.p, "#probox"));
+
+  /* ══ 0071 — 프로가 직접 등록 · 개인과 사업자 구분 (2026-11-10) ═══
+     ⚠️⚠️⚠️ **이 자리에 화면 검사가 0건이었습니다.** DB 쪽은
+     `tools/sql/proself.js` 36건이 누르는데, 화면의 단추 셋(안 처리한
+     수 배지 · 담당자로 잇기 · 개인/사업자 구분)은 **아무도 안 눌러
+     봤습니다** — 찍어 보고 알았습니다. 문이 멀쩡해도 단추가 그 문을
+     안 부르면 그건 눌러도 아무 일이 안 나는 칸입니다(절대 규칙 5). */
+  console.log("\n── /admin 0071 — 안 처리한 수 · 담당자로 잇기 · 구분");
+  /* ⚠️ 배지는 **안 처리한 것만** 셉니다 (new · called) — 등록 완료 ·
+     진행 안 함까지 세면 영영 안 줄어드는 수가 됩니다. */
+  /* ⚠️⚠️ **없는 칸을 textContent 로 읽지 않습니다** — 30초를
+     기다리다 터져서 **뒤 검사가 통째로 안 돕니다**(무엇이 더
+     깨졌는지 알 수가 없습니다). 세고 있을 때만 읽습니다 —
+     되돌려 보기가 바로 이 자리를 잡았습니다(2026-11-10). */
+  const bzN = await s.p.locator("#probox button[data-ptab='ap'] .bz-n").count();
+  let bz = bzN ? ((await s.p.textContent("#probox button[data-ptab='ap'] .bz-n")) || "") : "";
+  ok("⚠️ 탭에 **안 처리한 신청 수**가 붙는다", bz.trim() === "1", bz);
+  ok("  등록 완료 둘은 안 센다 (신청은 셋입니다)",
+     bz.trim() !== "3" && bz.trim() !== "2", bz);
+
+  /* ⚠️⚠️ 로그인해서 넣으신 신청에만 잇는 단추를 냅니다 — 비로그인
+     신청은 `by_user` 가 비어 **이을 계정이 없습니다**(초대 코드 길). */
+  ok("⚠️ 로그인해 넣으신 등록 완료 신청에만 **잇는 단추**가 있다",
+     (await s.p.locator("button[data-aplink='AP-0002']").count()) === 1 &&
+     (await s.p.locator("button[data-aplink]").count()) === 1,
+     await s.p.locator("button[data-aplink]").count());
+  t = (await s.p.textContent("#probox")) || "";
+  ok("  비로그인 신청은 **초대 코드 길**로 보낸다 (막다른 길이 아니다)",
+     /초대 코드/.test(t), t.slice(-400));
+
+  await s.p.evaluate(function(){ window.prompt = function(){ return ""; }; });
+  await s.p.click("button[data-aplink='AP-0002']");
+  await s.p.waitForTimeout(200);
+  ok("⚠️ 까닭을 안 적으면 **보내지 않는다**",
+     s.sent.filter(function(x){ return x.name === "link_apply_account"; }).length === 0);
+  await s.p.evaluate(function(){
+    window.prompt = function(){ return "서류 확인했습니다"; }; });
+  await s.p.click("button[data-aplink='AP-0002']");
+  await s.p.waitForTimeout(300);
+  const lnk = s.sent.filter(function(x){ return x.name === "link_apply_account"; })[0];
+  ok("잇는 단추가 **link_apply_account 를 실제로 부른다**", !!lnk,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  let lp = null;
+  try{ lp = JSON.parse(lnk.body).p; }catch(_){}
+  ok("  꾸러미에 접수번호와 까닭이 담긴다",
+     !!lp && lp.no === "AP-0002" && lp.why === "서류 확인했습니다", lnk && lnk.body);
+  /* ⚠️⚠️⚠️ **화면이 계정 uuid 를 안 보냅니다** — 보내게 두면 운영자
+     화면이 뚫리는 날 아무 계정이나 업체 담당자로 올릴 수 있습니다.
+     이을 계정은 문이 그 신청 줄(`by_user`)에서 꺼냅니다. */
+  ok("⚠️⚠️ 화면이 **계정 uuid 를 한 글자도 안 보낸다**",
+     !!lp && Object.keys(lp).length === 2 &&
+     (lnk.body || "").indexOf("u-pro-1") < 0, lnk && lnk.body);
+
+  /* ── 개인인가 사업자인가 (제20조의4 ③) ── */
+  await s.p.click("#probox button[data-ptab='pv']");
+  await s.p.waitForTimeout(250);
+  t = (await s.p.textContent("#probox")) || "";
+  ok("정해 둔 업체는 **그 구분을 사람 말로** 적는다",
+     /개인/.test(t) && t.indexOf("person") < 0, t.slice(0, 500));
+  /* ⚠️⚠️ **기본은 모름이고 모름이면 아무 딱지도 안 찍습니다** —
+     「미확인」도 안 찍습니다(그것도 우리가 만든 평가입니다). */
+  ok("⚠️ 안 정한 업체는 **아무 딱지도 안 찍는다**",
+     /아직 정하지 않았습니다/.test(t) && t.indexOf("미확인") < 0, t.slice(0, 600));
+  /* ⚠️ 이미 개인인 업체에 「개인으로」를 또 내지 않습니다 — 같은 값으로
+     옮기는 것은 문이 거절합니다(눌러도 거절되는 칸 · 절대 규칙 5). */
+  ok("⚠️ 이미 그 구분인 단추는 **안 낸다**",
+     (await s.p.locator("button[data-pvkind='real-1'][data-kindto='person']").count()) === 0 &&
+     (await s.p.locator("button[data-pvkind='real-1'][data-kindto='biz']").count()) === 1);
+  ok("  **모름으로 되돌리는 길**을 낸다 (잘못 켠 구분이 손님 화면에 남지 않게)",
+     (await s.p.locator("button[data-pvkind='real-1'][data-kindto='']").count()) === 1);
+  ok("  안 정한 업체에는 되돌리는 단추를 안 내고 둘 다 낸다",
+     (await s.p.locator("button[data-pvkind='sus-1'][data-kindto='']").count()) === 0 &&
+     (await s.p.locator("button[data-pvkind='sus-1'][data-kindto='biz']").count()) === 1 &&
+     (await s.p.locator("button[data-pvkind='sus-1'][data-kindto='person']").count()) === 1);
+
+  await s.p.evaluate(function(){ window.prompt = function(){ return ""; }; });
+  await s.p.click("button[data-pvkind='sus-1'][data-kindto='biz']");
+  await s.p.waitForTimeout(200);
+  ok("⚠️ 구분에도 까닭을 안 적으면 **보내지 않는다**",
+     s.sent.filter(function(x){ return x.name === "set_provider_kind"; }).length === 0);
+  await s.p.evaluate(function(){
+    window.prompt = function(){ return "사업자등록증 확인"; }; });
+  await s.p.click("button[data-pvkind='sus-1'][data-kindto='biz']");
+  await s.p.waitForTimeout(300);
+  const kc = s.sent.filter(function(x){ return x.name === "set_provider_kind"; })[0];
+  ok("구분 단추가 **set_provider_kind 를 실제로 부른다**", !!kc,
+     s.sent.map(function(x){ return x.name; }).join(" "));
+  let kp = null;
+  try{ kp = JSON.parse(kc.body).p; }catch(_){}
+  ok("  꾸러미의 칸 이름이 문과 같다 (id · kind · why)",
+     !!kp && kp.id === "sus-1" && kp.kind === "biz" &&
+     kp.why === "사업자등록증 확인", kc && kc.body);
+  await s.p.close();
+
+  /* ⚠️⚠️ **직원에게는 단추를 아예 안 냅니다** — 그 딱지를 켜는 일과
+     사업자등록증을 보는 일은 **같은 사람**이어야 해서 문이 직원을
+     거절합니다(0057 이 `brn` 을 관리자에게만 연 그 까닭). 그리면
+     눌러도 거절되는 칸입니다. */
+  s = await open("/admin", { role:"staff", name:"직원" },
+                 Object.assign({}, ADMT, BIZ, PROT), { biz_metrics: MET });
+  ok("⚠️⚠️ 직원에게는 구분 단추를 **한 개도 안 낸다**",
+     (await s.p.locator("button[data-pvkind]").count()) === 0);
+  t = (await s.p.textContent("#probox")) || "";
+  ok("  대신 **관리자만 정한다**고 그 자리에서 말한다",
+     /관리자/.test(t), t.slice(0, 500));
+  ok("  직원도 지금 구분이 무엇인지는 본다 (읽기는 막지 않습니다)",
+     /개인/.test(t), t.slice(0, 500));
   await s.p.close();
 
   /* ══ 사업자 신원정보 (0057 · 제20조 제2항) ══════════════════════

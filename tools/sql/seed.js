@@ -261,4 +261,100 @@ module.exports = function(T){
   ok("  ⚠️ 참 글은 **그대로 남는다** (너무 넓게 지우지 않는다)",
      psql("select count(*)::text from cq " +
           "where title = '예시가 아닌 참 글입니다'") === "1");
+
+
+  /* ── db/seed/test-listings.sql — 중고 매물 열다섯 (0056 · 0069) ──
+     ⚠️⚠️⚠️ **게시판 씨앗과 같은 자리입니다** — `listing` 에도 `is_test`
+     칸이 없어서, 넣은 매물은 **비로그인 손님에게 그대로 보입니다.**
+     업체 씨앗(`is_test`)과 정반대이므로 그 사실을 못 박습니다.
+     ⚠️⚠️ **사장님이 붙여 넣으실 파일은 "글" 이라 아무 검사도 안 봅니다 —
+     그 파일을 실제로 붙여 넣어 봅니다**(test-providers.sql 첫 판이 없는
+     함수를 적어 두어 거기서 멈췄던 그 자리). */
+  console.log("\n── db/seed/test-listings.sql 을 **그대로** 붙여 넣어 봅니다");
+  const LSEED = fs2.readFileSync(
+    path2.join(__dirname, "..", "..", "db", "seed", "test-listings.sql"), "utf8");
+
+  /* ① 안 바꾸고 돌리면 **멈추는가** (파일이 약속한 것) */
+  const lRaw = denied(LSEED);
+  ok("UUID 를 안 바꾸면 **그 자리에서 거절한다** (조용히 안 들어간다)",
+     lRaw.no, "들어갔습니다 — 없는 사람 이름으로 매물이 섭니다");
+  ok("  그 까닭이 **사람이 알아볼 말**이다 (auth.users 를 가리킨다)",
+     /users|foreign key|violates/i.test(String(lRaw.why || "")), String(lRaw.why));
+
+  /* ② 바꿔서 돌리면 들어가는가 */
+  const LU = psql("insert into auth.users (email) values ('seed-lst@x.test') returning id");
+  const lr1 = allowed(LSEED.split(PLACE).join(LU));
+  ok("UUID 를 바꾸면 파일이 끝까지 돈다", lr1.yes, String(lr1.why).slice(0, 160));
+
+  /* ⚠️ **갯수를 박지 않습니다** — 물건 종류를 `catalog.js` 에서 셉니다.
+     종류가 느는 날(0069 가 일곱→열셋 · 2026-11-09 가 열다섯) 이 검사가
+     스스로 "그 종류가 빠졌다" 고 말합니다. */
+  const keepW3 = global.window;
+  global.window = {};
+  delete require.cache[require.resolve("../../js/data/catalog.js")];
+  require("../../js/data/catalog.js");
+  const SUBS = (global.window.amCatItems
+    ? global.window.amCatItems(global.window.amCat("used")) : [])
+    .filter(function(s){ return !s.pv; }).map(function(s){ return s.key; });
+  global.window = keepW3;            /* ⚠️ 빌려 쓰고 **그대로 돌려놓습니다** */
+
+  ok("물건 종류 " + SUBS.length + "가지에 하나씩 선다 (갯수를 박지 않습니다)",
+     SUBS.length > 0 &&
+     psql("select count(distinct sub)::text from listing where title like '[검사용]%'")
+       === String(SUBS.length),
+     psql("select string_agg(distinct sub, ',') from listing where title like '[검사용]%'"));
+  ok("  ⚠️ `catalog.js` 에 **없는 종류 키가 섞이지 않았다** (어느 탭에도 안 보입니다)",
+     psql("select count(*)::text from listing where title like '[검사용]%' and sub not in ("
+          + SUBS.map(function(k){ return "'" + k + "'"; }).join(",") + ")") === "0");
+
+  /* ⚠️ 눌러 보실 것들이 실제로 들어갔는지 — 덮개 둘과 0원 하나 */
+  ok("  예약중 · 판매완료가 한 개씩 있다 (덮개를 보시려고)",
+     psql("select count(*)::text from listing where title like '[검사용]%' " +
+          "and state = 'reserved'") === "1" &&
+     psql("select count(*)::text from listing where title like '[검사용]%' " +
+          "and state = 'done'") === "1");
+  ok("  ⚠️⚠️ 값 **0 이 한 개 있다** (「무료로 나눔」이 나오는지 보시려고)",
+     psql("select count(*)::text from listing where title like '[검사용]%' " +
+          "and price = 0") === "1");
+
+  /* ③ ⚠️⚠️ **사진을 한 줄도 안 넣었는지** — 없는 파일을 가리키면
+     카드가 깨진 그림으로 찍힙니다 (0장이면 아이콘 타일이 맞습니다) */
+  ok("⚠️⚠️ 사진 줄을 **한 줄도 안 넣는다** (없는 파일을 가리키지 않습니다)",
+     psql("select count(*)::text from listingphoto p join listing l on l.id = p.listing_id " +
+          "where l.title like '[검사용]%'") === "0");
+
+  /* ④ ⚠️ **참 전화번호를 안 넣었는지** — 지어낸 번호는 엉뚱한 분께
+     전화가 갑니다 (그 칸은 공개 보기에 아예 없습니다) */
+  ok("⚠️ 연락처에 **숫자로 된 번호가 없다** (엉뚱한 분께 전화가 갑니다)",
+     psql("select count(*)::text from listing where title like '[검사용]%' " +
+          "and contact ~ '[0-9]{3}'") === "0");
+
+  /* ⑤ ⚠️⚠️ **손님 눈에 실제로 보이는가** — 안 보이면 넣는 뜻이 없고,
+     보이기 때문에 **지우는 것이 중요합니다**(업체 씨앗과 정반대) */
+  ok("⚠️⚠️ 비로그인 손님에게 **그대로 보인다** (업체 씨앗과 반대입니다)",
+     psql("select become(null); set role anon; " +
+          "select count(*) from v_listing_open where title like '[검사용]%'")
+       === String(SUBS.length - 1),
+     "판매완료 한 개는 목록에서 빠지므로 " + (SUBS.length - 1) + " 입니다");
+
+  /* ⑥ 지우는 길 — ⚠️ 글자를 **파일에서 꺼내** 돌립니다 */
+  const LDEL = "delete from listing where title like '[검사용]%';";
+  ok("지우는 SQL 이 파일에 적힌 그대로다",
+     flat(LSEED).indexOf(flat(LDEL)) >= 0, flat(LDEL));
+
+  /* ⚠️ 참 손님 매물을 **안 건드리는지**까지 — 안 보면 "지워진다" 만
+     재고 **너무 넓게 지우는 것**을 놓칩니다. */
+  psql("select become(null); insert into listing " +
+       "(by_user, sub, region, ship, title, body, price, cond, contact, agree_at) " +
+       "values ('" + LU + "', 'us-iron', 'seoul', false, " +
+       "'참 손님이 올린 매물입니다', '이 매물은 지워지면 안 됩니다.', " +
+       "100000, 'good', '연락처', now())");
+  const lr2 = allowed(LDEL);
+  ok("지우는 SQL 이 돈다", lr2.yes, String(lr2.why));
+  ok("  검사용 매물이 **한 개도 안 남는다**",
+     psql("select count(*)::text from listing where title like '[검사용]%'") === "0");
+  ok("  ⚠️ 참 손님 매물은 **그대로 남는다** (너무 넓게 지우지 않습니다)",
+     psql("select count(*)::text from listing " +
+          "where title = '참 손님이 올린 매물입니다'") === "1");
+
 };

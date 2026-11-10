@@ -107,7 +107,7 @@ function amAuthToken(){
      빈 칸이었습니다). 없는 것으로 보면 로그인 칸이 다시 서서 손님이
      빠져나올 수 있습니다.
      ⚠️ `realm` 에 한글을 넣으면 응답이 터지는 것과 같은 자리입니다
-     (`middleware.js`). */
+     (앞 서비스의 `middleware.js` — 지금은 없습니다). */
   var tk = String(t.access_token);
   if(!/^[A-Za-z0-9._-]+$/.test(tk)) return "";
   return tk;

@@ -34,7 +34,11 @@ global.window = {};
  /* 전국 골프장 · 연습장 (0066) — ⚠️ 참은 DB 한 곳입니다
     (node tools/pull-courses.js 가 찍습니다) */
  "js/data/courses.generated.js","js/data/courses.js",
- "js/data/photos.js","js/card.js",
+ "js/data/photos.js",
+ /* 골프 레슨 (2026-11-10) — ⚠️⚠️ **card.js 보다 먼저** 싣습니다:
+    거기서 가격대 · 차례 · 카테고리 카드를 읽습니다. 안 실으면
+    그 고르개들이 **조용히 빈 칸**으로 찍힙니다(에러 0줄). */
+ "js/data/lesson.js","js/card.js",
  "js/data/legal-terms.js","js/data/legal-privacy.js"]
   .forEach(function(f){ require("./" + f); });
 /* ⚠️⚠️ **srcset 에 없는 파일을 적지 않게** — 빌드가 파일을 보고

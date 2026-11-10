@@ -44,6 +44,12 @@ const STEPS = [
      붙여 넣는 날 조용히 내려갑니다). */
   ["덮는 짝이 적힌 대로인가",      ["tools/check-chains.js", "--prove"], false],
   ["분류 키가 옛 키와 겹치나",     ["tools/check-keys.js"],         false],
+  /* ⚠️⚠️⚠️ **글은 아무 검사도 안 봅니다** — 2026-11-10 에 db/README.md 가
+     이미 지워진 함수(`set_provider_inhouse`)를 붙여 넣으라고 적고 있었고,
+     없는 파일 넷(build-pages.js · api/quote.js · api/deal.js · api/me.js)을
+     가리키고 있었습니다. 사장님이 **그대로 따라 하시는 글 셋**만 봅니다
+     (CLAUDE.md · docs/ 는 지난 일을 적는 자리라 뺍니다). */
+  ["따라 하시는 글이 맞나",       ["tools/check-docs.js", "--prove"], false],
   /* ⚠️⚠️ **빈 환경변수의 이름을 말해 주는가** (2026-11-09) — 사장님이
      Vercel 에 넣고 다시 배포해도 /api/session 이 `auth:false` 일 때,
      그 전에는 **둘 중 어느 것이 비었는지 알 길이 없었습니다.** 값은

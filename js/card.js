@@ -139,6 +139,91 @@
     '</div>';
   };
 
+
+  /* ── 레슨 프로 카드 (2026-11-10 · 레슨 지시서 §6) ────────────────
+     ⚠️⚠️ **`amCard` 와 모양이 다릅니다** — 거기는 가로 썸네일 + 글,
+     여기는 **1:1 정사각 사진이 위**입니다(시안). 그렇다고 `amCard` 를
+     고치면 메인 · 업체찾기 · 다른 분류 화면이 **같이** 바뀝니다. 그래서
+     이름을 갈라 두되 **같은 파일 한 곳**에 둡니다 — 빌드와 브라우저가
+     둘 다 이것을 부릅니다(`.lg` 가 로고이면서 약관이었던 그 자리를
+     피하려고 클래스도 `.lsn*` 로 갈랐습니다).
+
+     ⚠️⚠️⚠️ **시안에 있는데 안 그리는 것 둘** —
+       · **찜 하트** — 프로를 찜하는 표가 아직 없습니다. 그리면 눌러도
+         아무 일이 안 나는 단추입니다(절대 규칙 5 · 0068 에서 그림만
+         그려 놓고 만들기 전에 뺀 그 자리).
+       · **연습장 이름** — 담는 칸이 없습니다(`provider` 에 레슨 장소가
+         없습니다). 지역만 적고, 장소 칸은 프로 직접 등록(§8)에서
+         더합니다.
+     ⚠️ 평점 · 후기 수는 **센 값**입니다(`amRating`) — 0건이면 그 줄이
+     **줄째 빠집니다**. "후기 0건" 을 찍으면 새로 들어온 프로가 전부
+     나쁜 프로로 보이고, 그건 우리가 만든 평가입니다(절대 규칙 1 · 2). */
+  window.amLessonCard = function(p){
+    var ok   = window.amProviderVerified(p);
+    var rate = window.amRating ? window.amRating(p.id) : null;
+    /* ⚠️⚠️ **레슨 값만** 봅니다 — `amPriceLow()` 는 분류를 안
+       가려서, 연습장을 같이 하시는 분의 카드에 타석 요금이
+       「1회 레슨 가격」 인 것처럼 찍힙니다(검사가 잡았습니다). */
+    var low  = window.amLessonLow ? window.amLessonLow(p) : window.amPriceLow(p);
+    var url  = window.amProviderUrl(p);
+    var shots = window.amProviderPhotos ? window.amProviderPhotos(p) : [];
+    /* 지역 — ⚠️ 시·군·구까지 적어 주셨으면 같이 냅니다(시안이 그렇습니다).
+       ⚠️ 비면 그 줄이 **줄째 빠집니다**. */
+    var regs = window.amProviderRegions(p);
+    var gu   = (p && Array.isArray(p.gu)) ? p.gu.filter(Boolean) : [];
+    var where = regs.concat(gu.slice(0, 1)).join(" ");
+    /* 전문 레슨 분야 — ⚠️ **레슨 하위만** 냅니다. 그 프로가 다른 분류도
+       하시면 그 하위까지 칩으로 내면 레슨 화면에서 엉뚱한 말이 됩니다. */
+    var subs = (window.amProviderSubs ? window.amProviderSubs(p) : [])
+      .map(function(k){ return window.amSub ? window.amSub(k) : null; })
+      .filter(function(s){ return s && s.cat && s.cat.key === "lesson" &&
+                                  s.item && s.item.name; });
+
+    return '<a class="lsn-c" href="' + esc(url) + '">' +
+      '<span class="lsn-ph' + (shots.length ? " lsn-ph-on" : "") + '"' +
+        (shots.length ? "" : ' aria-hidden="true"') + '>' +
+        (shots.length
+          ? '<img src="' + esc(shots[0].url) + '" alt="' +
+            esc(p.name + " 사진") + '" loading="lazy" decoding="async">'
+          : ico("swing", 30)) +
+      '</span>' +
+      '<span class="lsn-b">' +
+        '<span class="lsn-n">' + esc(p.name) +
+          (ok.length ? '<i class="lsn-ok">' + ico("check", 14) +
+            '<span class="sr">확인된 자격이 있습니다</span></i>' : "") +
+        '</span>' +
+        (where ? '<span class="lsn-loc">' + ico("pin", 14) + esc(where) + '</span>' : "") +
+        (rate
+          ? '<span class="lsn-r">' +
+              '<span class="stars" aria-hidden="true">' +
+                window.amStarGlyphs(rate.round) + '</span>' +
+              '<b>' + esc(rate.avg.toFixed(1)) + '</b>' +
+              '<span>(' + esc(String(rate.n)) + ')</span>' +
+              '<span class="sr">' + esc(window.amStarLabel(rate.round)) + '</span>' +
+            '</span>'
+          : "") +
+        (subs.length
+          ? '<span class="lsn-s">' + subs.slice(0, 3).map(function(s){
+              return '<i>' + esc(s.item.name) + '</i>';
+            }).join("") + '</span>'
+          : "") +
+        /* ⚠️⚠️ 값은 **프로가 등록한 것만** 냅니다. 0건이면 "가격 문의" 도
+           안 적습니다 — 그건 우리가 지어낸 약속입니다(절대 규칙 5).
+           대신 **등록 전이라는 사실**을 적습니다. */
+        (low
+          ? '<span class="lsn-p">' + esc(window.amPriceText(low)) +
+            (low.n > 1 ? '<i>부터</i>' : "") + '</span>'
+          : '<span class="lsn-p lsn-p0">등록된 레슨 가격이 아직 없습니다</span>') +
+      '</span>' +
+    '</a>';
+  };
+
+  window.amLessonGrid = function(list){
+    return '<div class="lsn-g">' + (list || []).map(function(p){
+      return window.amLessonCard(p);
+    }).join("") + '</div>';
+  };
+
   window.amCardGrid = function(list, opt){
     return '<div class="pvs">' + (list || []).map(function(p){
       return window.amCard(p, opt);

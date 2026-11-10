@@ -101,6 +101,11 @@ window.AM_CATS = [
       { key:"ls-solo",   name:"개인 레슨" },
       { key:"ls-group",  name:"그룹 레슨" },
       { key:"ls-field",  name:"필드 레슨" },
+      /* ⚠️ 2026-11-10 에 더했습니다 — 레슨 지시서 §4 의 「레슨 종류」와
+         §5 의 카테고리 카드가 둘 다 숏게임을 적었는데 저희에게 없던
+         하나입니다. **키는 더하기만 합니다**(이미 그 키를 들고 있는
+         업체가 있으면 빼는 날 갈 자리가 없어집니다). */
+      { key:"ls-short",  name:"숏게임 레슨" },
       { key:"ls-point",  name:"원포인트 레슨" },
       { key:"ls-junior", name:"주니어 레슨" },
       { key:"ls-online", name:"온라인 레슨" }
@@ -494,6 +499,15 @@ window.amSubUrl = function(catKey, subKey){
     return "/cat/community" + (subKey ? "?s=" + encodeURIComponent(subKey) : "");
   if(c === "used" && subKey && !amSubIsPv("used", first))
     return "/cat/used?s=" + encodeURIComponent(subKey);
+  /* ⚠️⚠️⚠️ **레슨은 2026-11-10 부터 제 화면에서 좁힙니다** (레슨 지시서
+     §5 — "각 카드를 누르면 해당 카테고리로 필터링된 프로 목록을 표시한다").
+     전에는 업체찾기로 보냈는데, 그러면 시안의 카테고리 카드를 누를 때마다
+     **화면이 통째로 바뀌어** 거르개 · 정렬 · 우측 레일이 사라집니다.
+     ⚠️ `/search?cat=lesson&sub=` 로 직접 들어오셔도 그대로 돕니다
+     (`js/search.js` 가 `sub` 를 그대로 읽습니다) — 길을 **없앤 것이
+     아니라 기본을 바꾼 것**입니다. */
+  if(c === "lesson")
+    return "/cat/lesson" + (subKey ? "?sub=" + encodeURIComponent(subKey) : "");
   var qs = [];
   if(c)      qs.push("cat=" + encodeURIComponent(c));
   if(subKey) qs.push("sub=" + encodeURIComponent(subKey));

@@ -204,6 +204,116 @@ Vercel → Settings → Environment Variables
 > 확인하거나 빼는 일은 운영자가 합니다 — 업체 화면에는 내보내는
 > 단추가 아예 없습니다.
 
+### ③-A 간편 로그인(카카오 · 네이버 · 구글)을 켭니다 — **안 켜도 사이트는 돕니다**
+
+`/login` 에는 단추 셋이 **늘 서 있습니다.** 아직 안 켠 것은 눌리지 않고
+**「준비 중」** 이라고 적혀 있고, 그 아래 **메일 링크 로그인은 지금도
+됩니다.** 켜시는 날 **코드를 고칠 것도 · 다시 배포할 것도 없습니다** —
+화면이 Supabase 에게 "무엇이 켜졌나" 를 물어보기 때문입니다
+(`/auth/v1/settings`). 켜고 새로고침하시면 그 단추가 그 자리에서 눌립니다.
+
+⚠️⚠️ **Client Secret 은 Supabase 대시보드에만 넣으십니다.** 저장소에도 ·
+Vercel 환경변수에도 넣지 마세요 — 공개 저장소이고, 화면에 내려가는 값은
+`SUPABASE_ANON_KEY` 하나입니다.
+
+**먼저 한 번만 — 돌아올 주소를 적어 둡니다**
+
+```
+Supabase → Authentication → URL Configuration
+  Site URL        https://storeway.co.kr
+  Redirect URLs   https://storeway.co.kr/**
+                  https://www.storeway.co.kr/**   (www 로도 들어오시면 둘 다)
+```
+
+⚠️ 이 줄이 없으면 카카오 · 구글에서 돌아올 때 **Supabase 가 거절합니다.**
+로그인은 끝났는데 우리 화면으로 못 돌아오는 꼴이라, 손님에게는 "로그인이
+안 된다" 로 보입니다.
+
+**카카오** — Supabase 의 기본 공급자입니다
+
+```
+① kakao developers → 내 애플리케이션 → 애플리케이션 추가
+② 앱 키 → REST API 키        ← Supabase 의 Client ID 칸
+③ 카카오 로그인 → 활성화 ON
+④ 카카오 로그인 → Redirect URI 등록
+     https://<프로젝트>.supabase.co/auth/v1/callback
+⑤ 카카오 로그인 → 보안 → Client Secret 코드 생성 · 활성화 ON
+⑥ 동의항목 → 카카오계정(이메일) 을 **필수**로
+⑦ Supabase → Authentication → Providers → Kakao → Enable
+     Client ID = ②  ·  Client Secret = ⑤
+```
+
+⚠️ ⑥을 빼면 이메일이 없는 계정이 들어와 Supabase 가 거절할 수 있습니다
+(우리 쪽은 메일 주소로 회원을 가립니다).
+
+**구글** — Supabase 의 기본 공급자입니다
+
+```
+① Google Cloud Console → APIs & Services → OAuth consent screen 작성
+② Credentials → Create credentials → OAuth client ID → Web application
+③ Authorized redirect URIs
+     https://<프로젝트>.supabase.co/auth/v1/callback
+④ 받은 Client ID · Client Secret 을
+   Supabase → Authentication → Providers → Google → Enable 에 넣습니다
+```
+
+**네이버** — ⚠️⚠️⚠️ **Supabase 의 기본 공급자 목록에 없습니다**
+
+카카오 · 구글은 Supabase 가 그 자리를 만들어 두었지만 네이버는 없습니다.
+그래서 네이버 개발자센터에만 등록해 두어도 `external.naver` 가 참이 되지
+않고, 우리 화면의 네이버 단추는 **「준비 중」 으로 그대로 섭니다.**
+넣는 길은 둘이고, **저희는 아직 둘 다 세우지 않았습니다** —
+
+```
+① Supabase 의 Custom OAuth / OIDC 자리에 네이버를 넣는 길
+     ⚠️ 네이버가 그 방식(OIDC)을 지원하는지는 네이버 문서에서
+        확인하셔야 합니다. 이 저장소에서 확인한 것이 아닙니다.
+② 우리 쪽 `api/` 에 콜백을 하나 만들어 서버에서 세션을 만드는 길
+     ⚠️ 그 길은 `SUPABASE_SERVICE_KEY`(RLS 를 통째로 지나가는 키)를
+        써야 합니다. 열쇠 없이는 **한 번도 눌러 볼 수 없는 코드**가
+        되므로, 눌러 보지 못한 로그인 길을 미리 만들지 않았습니다
+        (절대 규칙 5).
+```
+
+⚠️ 어느 쪽으로 가실지 정해 주시면 그때 만듭니다. 그 전까지 네이버 단추는
+**눌리지 않고 「준비 중」 이라고 말합니다** — 눌러도 오류가 나지 않습니다.
+
+**켠 뒤에 꼭 눌러 보실 것 — 같은 분이 둘로 갈리지 않나**
+
+⚠️⚠️⚠️ **메일로 들어오신 분과 카카오 · 구글로 들어오신 분이 같은 회원이
+되어야 합니다.** 우리 DB 는 회원을 `auth.users` 의 id 로 묶습니다 —
+Supabase 가 같은 메일 주소를 **다른 회원**으로 만들면, 그분은 올리신
+매물도 · 받은 견적도 **하나도 안 보이는 빈 `/my`** 를 보십니다(글은 DB 에
+그대로 있고 화면에서만 사라진 것이라 더 알아채기 어렵습니다).
+
+Supabase 는 **공급자가 메일 주소를 확인해 준 경우에만** 기존 회원에
+이어 붙입니다. 그 동작이 프로젝트에서 실제로 그런지는 **눌러 봐야**
+압니다 — 저희가 확인할 수 있는 자리가 아닙니다(운영 키가 필요합니다).
+
+```
+① /login 에서 메일 링크로 들어옵니다 → /my 에 무엇이 있는지 적어 둡니다
+② 로그아웃 → 같은 메일 주소를 쓰는 카카오(또는 구글) 단추로 들어옵니다
+③ /my 가 ①과 **같은 것**을 보여 주면 이어진 것입니다
+   ⚠️ 비어 있으면 회원이 둘로 갈린 것입니다 — 그때는
+      Supabase → Authentication → Providers 에서 그 공급자를 **끄시고**
+      알려 주십시오 (갈린 회원을 합치는 일은 손으로 할 일이 아닙니다)
+```
+
+⚠️ ②를 **실제 계정으로** 해 보기 전에는 "소셜 로그인이 됩니다" 라고
+적지 않습니다 (절대 규칙 5). 지금 이 저장소가 확인한 것은 "단추를 누르면
+Supabase 의 `authorize` 로 **실제로 간다**" 까지입니다 — 그 뒤는 카카오 ·
+구글 · 네이버 쪽 설정이고 이 세션은 그곳으로 나갈 수 없습니다.
+
+**켜졌는지 보는 법 — 10초**
+
+```
+https://<프로젝트>.supabase.co/auth/v1/settings?apikey=<ANON_KEY>
+→ "external": { "google": true, "kakao": true, … }
+```
+
+`true` 인 것만 `/login` 에서 눌립니다. 참값은 늘 이 줄이고, 우리 화면은
+목록을 들고 있지 않습니다.
+
 ### ④ 검색에 올라가게 합니다
 
 ```

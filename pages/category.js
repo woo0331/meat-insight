@@ -228,6 +228,211 @@ function safeGuide(){
   '</div></section>';
 }
 
+/* ══ 골프 레슨 — 머리 · 찾는 칸 · 카테고리 카드 (2026-11-10) ════════
+   레슨 지시서 §3 · §4 · §5 · §6 · §10 · §13.
+
+   ⚠️⚠️⚠️ **시안에 있는데 안 그리는 것을 여기 적어 둡니다** — 다음 차수가
+   "왜 빠졌지" 하고 다시 만들지 않게.
+     · **프로 찜 하트** — 프로를 찜하는 표가 아직 없습니다(지시서 §6).
+       그리면 눌러도 아무 일이 안 나는 단추입니다(절대 규칙 5).
+     · **「인기순」 · 「최신 등록순」 정렬** — 조회도 · 등록일도 공개
+       보기에 없습니다. 없는 값으로 줄을 세우면 아무 차례도 아닌 것을
+       "인기" 라고 적는 꼴입니다(절대 규칙 1).
+     · **「인기 검색어」라는 이름** — 세어 본 적이 없습니다.
+       같은 칩을 **「자주 찾는 조건」** 으로 냅니다.
+     · **스폰서 프로 자리** — 광고 자리 이름(`ad_place`)에 레슨 사이드
+       자리가 없습니다. 자리를 더하는 마이그레이션과 같이 옵니다.
+     · **지도형 보기 · 레슨 목적 거르개 · 연습장 이름** — 담는 칸이
+       없습니다(좌표도 · 목적도 · 장소도). 프로 직접 등록(§8)에서
+       그 칸을 만들 때 같이 냅니다.
+
+   ⚠️⚠️ 히어로는 메인 · 중고장터와 **같은 클래스**(`.hero.hero-ph`)를
+   씁니다 — 글자 대비를 책임지는 딥그린 막이 거기 있습니다.
+   ⚠️⚠️⚠️ **시안의 사진을 안 씁니다** — 모자의 Titleist · 셔츠의 PGA
+   글자가 또렷해서, 그대로 깔면 제휴 · 보증으로 읽힙니다(표시광고법
+   제3조 · 2026-11-04 에 분류 사진 두 장에서 겪은 그 자리). 지금은
+   들여올 때 상표를 확인한 **레슨 분류 사진**을 씁니다. */
+function lessonHead(c){
+  var ph = W.amPhoto ? W.amPhoto("cat-lesson") : null;
+  /* ⚠️ 딱지 셋은 **지금 실제로 되는 것**만 적습니다 — 시안 셋째는
+     「레슨 예약」인데 예약을 받는 표가 아직 없어, 지금 참인
+     「상담 신청」으로 적습니다(절대 규칙 5). 예약이 서는 날 바꿉니다. */
+  var B = [
+    ["pin",   "지역별 검색",  "내 주변 프로 찾기"],
+    ["user",  "프로 비교",    "경력 · 전문 분야 확인"],
+    ["chat",  "상담 신청",    "조건을 적으면 이어 드립니다"]
+  ];
+  return '<section class="hero hero-sm' + (ph ? " hero-ph" : "") + '">' +
+    (ph ? W.amPhotoImg("cat-lesson", { cls:"hero-bg", eager:true }) : "") +
+    '<div class="wrap hero-in">' +
+      '<p class="lsn-eyebrow">GOLF LESSON</p>' +
+      '<h1>나에게 맞는 골프 프로를 찾아보세요</h1>' +
+      '<p class="hero-sub">전국 골프 프로 · 레슨 가격 비교 · ' +
+      '상담까지 한 번에</p>' +
+      '<ul class="lsn-hb">' + B.map(function(x){
+        return '<li>' + icon(x[0], 20) +
+          '<b>' + esc(x[1]) + '</b><span>' + esc(x[2]) + '</span></li>';
+      }).join("") + '</ul>' +
+    '</div>' +
+  '</section>' +
+  '<section class="pghd pghd-ls"><div class="wrap">' + crumbs(c) + '</div></section>';
+}
+
+/* ── 찾는 칸 (§4) ────────────────────────────────────────────────
+   ⚠️⚠️⚠️ **양식(form)입니다 — 단추가 아닙니다.** 자바스크립트가 꺼진
+   분 · 크롤러에게도 그대로 돕니다(GET 으로 같은 주소에 다시 들어옵니다).
+   브라우저가 켜져 있으면 `js/lesson.js` 가 가로채서 **새로고침 없이**
+   목록만 갈아 끼웁니다.
+   ⚠️⚠️ 고르개의 값은 전부 **키**입니다 — 이름(「서울」 · 「개인 레슨」)을
+   보내면 받는 쪽이 못 찾아 **영원히 0건**이 됩니다(광고 분류 · 지역을
+   손으로 적게 두었다가 겪은 그 자리).
+   ⚠️ 가격대 · 정렬 목록은 `js/data/lesson.js` **한 곳**입니다. */
+function lessonFind(c){
+  var items = W.amCatItems(c);
+  var regs  = (W.amRegionsOf ? W.amRegionsOf(c.key) : (W.AM_REGIONS || []));
+  var P     = W.AM_LESSON_PRICE || [];
+  function opts(L, kf, nf){
+    return L.map(function(x){
+      return '<option value="' + esc(kf(x)) + '">' + esc(nf(x)) + '</option>';
+    }).join("");
+  }
+  return '<section class="sec sec-alt lsn-find"><div class="wrap">' +
+    '<form id="lsnform" class="lsnf" method="get" action="/cat/lesson" ' +
+      'role="search" aria-label="골프 프로 찾기">' +
+      '<p class="lsnf-i"><label for="lsn-rg">' + icon("pin", 16) + '지역</label>' +
+        '<select id="lsn-rg" name="rg"><option value="">전체 지역</option>' +
+        opts(regs, function(r){ return r.key; }, function(r){ return r.name; }) +
+        '</select></p>' +
+      '<p class="lsnf-i"><label for="lsn-sub">' + icon("swing", 16) + '레슨 종류</label>' +
+        '<select id="lsn-sub" name="sub"><option value="">전체 레슨</option>' +
+        opts(items, function(i){ return i.key; }, function(i){ return i.name; }) +
+        '</select></p>' +
+      '<p class="lsnf-i"><label for="lsn-p">' + icon("coin", 16) + '가격대 (1회 기준)</label>' +
+        '<select id="lsn-p" name="p"><option value="">전체</option>' +
+        opts(P, function(x){ return x.key; }, function(x){ return x.name; }) +
+        '</select></p>' +
+      '<p class="lsnf-q"><label class="sr" for="lsn-q">찾는 말</label>' +
+        icon("search", 17) +
+        '<input id="lsn-q" name="q" type="search" ' +
+        'placeholder="프로 이름 · 연습장 · 전문 분야 · 지역"></p>' +
+      '<p class="lsnf-go"><button class="btn btn-pri" type="submit">' +
+        icon("search", 18) + '검색</button></p>' +
+    '</form>' +
+    /* ⚠️ 칩마다 **실제로 걸리는 열쇠**를 답니다. 이름을 못 찾은 칩은
+       줄째 뺍니다(키를 그대로 찍지 않습니다 · 절대 규칙 2). */
+    lessonTags() +
+  '</div></section>';
+}
+
+function lessonTags(){
+  var L = (W.AM_LESSON_TAGS || []).map(function(t){
+    var nm = W.amLessonTagName ? W.amLessonTagName(t) : null;
+    if(!nm) return "";
+    var q = t.rg ? ("rg=" + encodeURIComponent(t.rg))
+                 : ("sub=" + encodeURIComponent(t.sub));
+    return '<li><a class="chip chip-go" href="/cat/lesson?' + q + '">#' +
+      esc(nm) + '</a></li>';
+  }).filter(Boolean);
+  if(!L.length) return "";
+  return '<p class="lsnf-t"><span>자주 찾는 조건</span></p>' +
+    '<ul class="chips lsnf-tags">' + L.join("") + '</ul>';
+}
+
+/* ── 카테고리 카드 (§5) ───────────────────────────────────────────
+   ⚠️⚠️⚠️ **이것이 곧 하위 칩입니다** — `.chips-sub` 를 두 번 내면
+   `test-providers` 가 세는 수가 두 배가 되고, 안 내면 레슨 하위 일곱이
+   **놓을 자리가 없어 조용히 사라집니다**(2026-11-08 에 칩을 둘로 가르며
+   적어 둔 그 함정). 그래서 시안의 가로 카드를 **칩 자리에** 그립니다.
+   ⚠️ 이름 · 한 줄은 `js/data/lesson.js` 한 곳에서 옵니다. */
+function lessonCats(c){
+  var L = W.amLessonCards ? W.amLessonCards() : [];
+  if(!L.length) return "";
+  return '<section class="sec lsn-catsec"><div class="wrap">' +
+    '<ul class="chips chips-sub lsn-cats">' + L.map(function(x){
+      return '<li><a class="lsn-cat" href="' +
+        esc(W.amSubUrl(c.key, x.key)) + '">' +
+        '<b>' + esc(x.name) + '</b>' +
+        (x.lead ? '<span>' + esc(x.lead) + '</span>' : "") +
+        icon("arrow", 15) + '</a></li>';
+    }).join("") + '</ul>' +
+  '</div></section>';
+}
+
+/* ── 프로 목록 + 우측 레일 (§6 · §10 · §13) ──────────────────────
+   ⚠️⚠️⚠️ **0곳이면 지어낸 카드를 한 장도 안 냅니다** (§13 · 절대 규칙 1).
+   시안의 프로 여덟 · 평점 · 후기 수 · 가격 · 인증 배지는 **전부 예시**
+   입니다. 지금 등록된 프로는 0분이라 §13 의 안내가 나오는 것이 맞습니다.
+   ⚠️⚠️ 목록은 **빌드가 찍고**(크롤러 · 자바스크립트 꺼진 분 몫) 거르개를
+   누르면 `js/lesson.js` 가 **같은 함수**(`amLessonCard`)로 다시 그립니다 —
+   두 벌로 적으면 거르개를 누르는 순간 카드가 조용히 달라지고 그려진
+   화면만 보는 검사는 영원히 통과합니다. */
+function lessonSec(c, list){
+  var S = W.AM_LESSON_SORT || [];
+  var grid = list.length
+    ? W.amLessonGrid(list)
+    : '<div class="none"><h3>현재 등록된 레슨 프로가 없습니다.</h3>' +
+      '<p>골프 프로라면 지금 입점 신청해 주세요. 신청하신 자격과 경력을 ' +
+      '운영자가 확인한 뒤 이 자리에 올려 드립니다.</p>' +
+      '<div class="none-b"><a class="btn btn-pri" href="/join">' +
+      icon("store", 20) + '프로 입점 신청</a></div>' +
+      nowOpen(c) + '</div>';
+
+  return '<section class="sec sec-alt lsn-sec"><div class="wrap lsn-w">' +
+    '<div class="lsn-main">' +
+      '<div class="sec-hd lsn-hd"><h2>레슨 프로</h2>' +
+      '<p>골프올인원은 통신판매중개자이며 거래 당사자가 아닙니다. ' +
+      '레슨 조건 · 가격은 프로가 직접 등록한 값입니다.</p></div>' +
+      '<div class="lsn-bar">' +
+        '<p class="lsn-cnt" id="lsncnt">' +
+          (list.length ? esc(W.won(list.length)) + '분' : '0분') + '</p>' +
+        '<p class="lsn-sort"><label class="sr" for="lsn-o">차례</label>' +
+          '<select id="lsn-o" name="o" form="lsnform">' + S.map(function(x){
+            return '<option value="' + esc(x.key) + '">' + esc(x.name) + '</option>';
+          }).join("") + '</select></p>' +
+      '</div>' +
+      '<div id="lsnlist">' + grid + '</div>' +
+      /* ⚠️ 값이 0건인 프로가 섞일 수 있습니다 — 가격대로 좁히면 그분들이
+         빠진다는 것을 **그 자리에서** 말합니다(0건을 "없다" 로 읽지
+         않게 · 티타임의 빈 `tee_at` 에서 겪은 그 자리). */
+      '<p class="jnote">⚠️ 가격대로 좁히면 <b>레슨 가격을 아직 등록하지 ' +
+      '않은 프로</b>는 빠집니다. 값을 모르는 분을 아무 가격대에나 넣으면 ' +
+      '그건 저희가 지어낸 값입니다.</p>' +
+      /* ⚠️⚠️⚠️ **「요청에 적는 것」을 여기 둡니다** — 레슨은 업체 덩이
+         (`pvBlock`)를 안 쓰므로, 안 두면 그 구간이 통째로 사라지고
+         `tools/test-match.js` 가 "여쭙는다고 적어 놓고 안 여쭙는" 자리로
+         잡습니다(화면의 목록과 `/match` 양식이 **같은 줄**을 읽습니다). */
+      asksBlock(c) +
+    '</div>' +
+    '<aside class="lsn-side" aria-label="레슨 안내">' +
+      '<div class="lsn-box lsn-box-dark">' +
+        '<p class="lsn-box-h">' + icon("user", 20) + '골프 프로로 입점하세요</p>' +
+        '<p>내 프로필과 레슨 상품을 등록하고 더 많은 골퍼를 만나 보세요. ' +
+        '자격과 경력은 운영자가 확인합니다.</p>' +
+        '<a class="btn btn-gold" href="/join">프로 입점 신청' +
+          icon("arrow", 15) + '</a>' +
+      '</div>' +
+      '<div class="lsn-box">' +
+        '<p class="lsn-box-h">' + icon("cal", 20) + '원하는 레슨을 못 찾으셨나요?</p>' +
+        '<p>지역 · 예산 · 레슨 목적을 남기시면 조건에 맞는 프로를 ' +
+        '찾아 이어 드립니다. 업체에 넘길 때는 상호를 알려 드리고 ' +
+        '다시 여쭙습니다.</p>' +
+        '<a class="btn btn-line" href="/match?cat=lesson">맞춤 레슨 요청하기' +
+          icon("arrow", 15) + '</a>' +
+      '</div>' +
+      '<div class="lsn-box">' +
+        '<p class="lsn-box-h">' + icon("info", 20) + '이용 가이드</p>' +
+        '<ul class="lsn-gd">' +
+          '<li><a href="/guide">프로 찾는 방법과 상담 절차' +
+            icon("arrow", 14) + '</a></li>' +
+          '<li><a href="/join">프로 입점 안내' + icon("arrow", 14) + '</a></li>' +
+          '<li><a href="/help">고객센터 · 자주 묻는 것' +
+            icon("arrow", 14) + '</a></li>' +
+        '</ul>' +
+      '</div>' +
+    '</aside>' +
+  '</div></section>';
+}
+
 function crumbs(c){
   return '<nav class="crumb" aria-label="현재 위치">' +
     '<a href="/">홈</a>' + icon("arrow", 14) +
@@ -378,6 +583,8 @@ exports.build = function(c){
      퀵액션 줄을 요구합니다(개편 지시서 §2-2 · §2-3). 다른 아홉 장은
      그대로입니다 (한 장 때문에 열 장을 바꾸지 않습니다). */
   var head = (c.key === "used") ? usedHead(c)
+    /* ⚠️ 레슨도 **머리가 다릅니다** (2026-11-10 · 레슨 지시서 §3) */
+    : (c.key === "lesson") ? lessonHead(c)
     : '<section class="pghd"><div class="wrap">' +
     crumbs(c) +
     '<h1>' + esc(c.name) + '</h1>' +
@@ -685,7 +892,23 @@ exports.build = function(c){
      지금은 줄기가 하나이고, 업체 쪽은 `pvBlock()` 한 함수가 **있을 때와
      없을 때를 같이** 그립니다. */
   var list  = W.amProvidersOf(c.key);
-  var pvSec = pvBlock(c, k, list, pvItems);
+  /* ⚠️⚠️⚠️ **레슨은 업체 덩이를 제 것으로 바꿔 넣습니다** (2026-11-10).
+     `pvBlock` 은 「칩 + 카드 또는 0곳 안내 + 요청에 적는 것」 한 덩이인데,
+     레슨 시안은 **찾는 칸 · 카테고리 카드 · 4열 카드 · 우측 레일**을
+     요구합니다. 그래서 레슨만 `lessonFind + lessonCats + lessonSec` 로
+     갈아 끼우고 **나머지 아홉 장은 그대로 둡니다**(한 장 때문에 열 장을
+     바꾸지 않습니다 · 중고장터 머리와 같은 규칙).
+     ⚠️ 그 셋이 `pvBlock` 이 내던 것을 **빠짐없이** 냅니다 — 하위 칩
+     (`lessonCats`) · 0곳 안내(§13) · 요청에 적는 것(`asksBlock`).
+     하나라도 빠지면 `test-providers` · `test-match` 가 잡습니다. */
+  var pvSec = (c.key === "lesson")
+    ? lessonSec(c, list)
+    : pvBlock(c, k, list, pvItems);
+  /* ⚠️⚠️ **찾는 칸과 카테고리 카드는 늘 맨 위**입니다 — 시안이 그렇고,
+     아래 차례(회원 것 ↔ 업체 것)가 뒤집혀도 흔들리면 안 되는 자리라
+     `teeFind` 처럼 **덩이 밖**에 둡니다. 전에 덩이 안에 두었더니 프로가
+     0분일 때 「이런 걸 찾고 있어요」(구합니다) 아래로 내려갔습니다. */
+  var lsnTop = (c.key === "lesson") ? (lessonFind(c) + lessonCats(c)) : "";
 
   /* ⚠️⚠️⚠️ **조인은 막다른 길이 아닙니다** (0046 · 지시서 §2.A).
      여기는 업체를 찾는 자리가 아니라 **회원끼리 여는** 자리라,
@@ -772,14 +995,28 @@ exports.build = function(c){
           ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
              "/js/wanted.js"]
           : [])))))).concat(["/js/data/providers.generated.js",
-                          "/js/data/providers.js", "/js/adslot.js"]),
+                          "/js/data/providers.js", "/js/adslot.js"])
+    /* ⚠️⚠️ 레슨은 **카드를 브라우저도 그립니다** — `js/card.js` 를 안
+       실으면 `amLessonCard` 가 없어 거르개를 누르는 순간 목록이 조용히
+       비어 버립니다(에러 0줄). `data/lesson.js` 는 가격대 · 정렬 ·
+       카테고리 카드를 주는 한 곳이고, `data/review.js` 는 평점을
+       셉니다(별이 조용히 빠집니다). */
+    .concat(c.key === "lesson"
+      ? ["/js/data/reviews.generated.js", "/js/data/review.js",
+         "/js/data/lesson.js", "/js/card.js", "/js/lesson.js"]
+      : []),
     /* ⚠️⚠️ **차례 한 줄이 이 화면의 뜻입니다** — 찾는 칸이 맨 위,
        그 다음이 **지금 실제로 되는 것**(회원 것), 그 다음이 업체 것.
        업체가 실제로 있으면 그때만 업체가 앞으로 옵니다. */
     /* ⚠️ 안전거래 가이드는 **중고장터에만** 섭니다 — 히어로의 그 링크가
        갈 자리이고(절대 규칙 5), 회원끼리 돈이 오가는 자리가 여기입니다. */
-    body: head + adTop + teeFind +
-          (list.length ? (pvSec + teeSec + ownSec)
+    body: head + adTop + teeFind + lsnTop +
+          /* ⚠️⚠️ 레슨은 **프로 목록이 알맹이**라 프로가 0분이어도
+             맨 앞입니다 — 그 자리가 §13 의 「등록된 프로가 없습니다」와
+             입점 신청을 냅니다. 뒤로 미루면 시안에서 가장 중요한 구간이
+             「이런 걸 찾고 있어요」 아래로 내려갑니다(찍어 보고 알았습니다). */
+          ((list.length || c.key === "lesson")
+                       ? (pvSec + teeSec + ownSec)
                        : (ownSec + teeSec + pvSec)) +
           (c.key === "used" ? safeGuide() : "") +
           related(c)

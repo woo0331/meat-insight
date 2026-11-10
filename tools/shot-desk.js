@@ -674,9 +674,14 @@ const SCENES = [
      켠 것으로 칠까) — 진짜로는 Supabase 가 정합니다. */
   ["login-sso",       "/login", { role:"customer", name:"", signedIn:false,
                                   sso:["kakao","naver","google"] }, {}, {}],
-  /* ⚠️ 하나도 안 켜졌을 때(지금 운영) — 단추가 한 줄도 없고 메일 링크만 */
-  ["login-mail",      "/login", { role:"customer", name:"", signedIn:false },
+  /* ⚠️⚠️ 하나도 안 켜졌을 때 — **지금 운영이 그 상태입니다.** 셋이 다
+     「준비 중」 으로 서고 그 아래 메일 링크가 열립니다. 전에는 이 자리가
+     단추 0개여서 사장님 눈에 "아무것도 안 뜨는" 화면이었습니다. */
+  ["login-off",       "/login", { role:"customer", name:"", signedIn:false },
                       {}, {}],
+  /* ⚠️ 일부만 켠 때 — 켜진 것과 「준비 중」 이 한 화면에 섭니다 */
+  ["login-some",      "/login", { role:"customer", name:"", signedIn:false,
+                                  sso:["google"] }, {}, {}],
   ["desk-notmine",    "/desk",  CUS, T_DESK,  {}],
   ["admin-notmine",   "/admin", CUS, T_ADMIN, { biz_metrics: MET }]
 ];

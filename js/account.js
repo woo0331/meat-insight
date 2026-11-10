@@ -56,21 +56,43 @@
   /* ── 소셜 로그인 단추 셋 ───────────────────────────────────────
      ⚠️⚠️ 모양도 · 색도 · 마크도 **js/data/social.js 한 곳**에서 옵니다
      — 여기서 또 정하면 한쪽만 고치는 날 두 곳이 다른 단추를 냅니다.
+
+     ⚠️⚠️⚠️ **셋을 늘 그립니다 — 켜진 것만 그리던 것을 2026-11-10 에
+     뒤집었습니다.** 처음에는 안 켜진 공급자를 **아예 안 그렸습니다**
+     (눌러도 아무 일이 안 나는 단추를 만들지 않는다 · 절대 규칙 5).
+     그런데 운영에서 셋 다 안 켜져 있으니 손님에게도 · 사장님에게도
+     **화면이 통째로 비어** 보였고, "만들었다는 것이 어디 있나" 를
+     알 길이 없었습니다. 지금은 셋을 늘 그리되 **안 켜진 것은 눌리지
+     않게**(`disabled`) 두고 **그 자리에서 준비 중이라고 말합니다** —
+     절대 규칙 5 가 막는 것은 "눌렀는데 **말없이** 아무 일도 안 나는"
+     칸이지, 제 상태를 밝히고 서 있는 칸이 아닙니다.
+     ⚠️ `disabled` 라 브라우저가 눌림을 아예 안 보냅니다 — 오류가 날
+     자리가 없습니다.
      ⚠️ 모르는 키는 **건너뜁니다** (빈 단추를 지어내지 않습니다).
      ⚠️ 하나도 못 그리면 **빈 글자**를 돌려줍니다 — 부르는 쪽이 그때
      머리말만 남는 상자를 안 엽니다. */
-  function ssoHtml(list){
-    var rows = "", n = 0;
-    (list || []).forEach(function(k){
-      var s = window.amSocial ? window.amSocial(k) : null;
-      if(!s) return;
+  function ssoHtml(on){
+    var ready = {}, rows = "", n = 0, off = 0;
+    (on || []).forEach(function(k){ ready[k] = true; });
+    (window.AM_SOCIAL || []).forEach(function(s){
+      if(!s || !s.key) return;
       n++;
-      rows += '<button type="button" class="sso-b" data-sso="' + esc(s.key) + '" ' +
-        'style="background:' + esc(s.bg) + ';color:' + esc(s.fg) +
+      var ok = !!ready[s.key];
+      if(!ok) off++;
+      rows += '<button type="button" class="sso-b' + (ok ? "" : " sso-off") +
+        '" data-sso="' + esc(s.key) + '" data-on="' + (ok ? "1" : "0") + '"' +
+        (ok ? "" : ' disabled aria-disabled="true"') +
+        ' style="background:' + esc(s.bg) + ';color:' + esc(s.fg) +
         ';border-color:' + esc(s.line) + '">' +
-        s.mark + '<span class="sso-t">' + esc(s.name) + '</span></button>';
+        s.mark + '<span class="sso-t">' + esc(s.name) + '</span>' +
+        (ok ? "" : '<span class="sso-badge">준비 중</span>') + '</button>';
     });
-    return n ? '<h2 class="sso-h">간편 로그인</h2>' + rows : "";
+    if(!n) return "";
+    /* ⚠️⚠️ 무엇을 설정해야 하는지는 **손님에게 안 적습니다**(절대 규칙 3) —
+       운영자에게는 아래 paintLogin 이 console.warn 으로 말합니다. */
+    return '<h2 class="sso-h">간편 로그인</h2>' + rows +
+      (off ? '<p class="sso-note">「준비 중」 으로 보이는 것은 아직 연결 전입니다. ' +
+             '아래 메일 링크로는 지금 바로 들어오실 수 있습니다.</p>' : "");
   }
 
   /* ⚠️⚠️ 눌림은 **감싼 자리 한 곳**에서 받습니다 — 단추마다 달면
@@ -87,6 +109,11 @@
     }
     if(!b) return;
     e.preventDefault();
+    /* ⚠️⚠️ 아직 연결 전인 단추는 **아무 데도 안 보냅니다.** `disabled` 라
+       브라우저가 눌림을 보내지도 않지만, 거품으로 올라오는 길이 하나라도
+       있으면 그때 Supabase 가 "Unsupported provider" 로 거절합니다 —
+       여기서 끊어 **오류가 날 자리를 없앱니다.** */
+    if(b.getAttribute("data-on") !== "1") return;
     b.disabled = true;
     if(!(window.amAuthGo && window.amAuthGo(b.getAttribute("data-sso"))))
       b.disabled = false;
@@ -116,7 +143,9 @@
          실제로 켜져 있는지는 Supabase 만 알고 그 답은 조금 뒤에 옵니다.
          미리 그리면 안 켜진 단추가 한 번 보였다 사라집니다. 자리만
          두고 `hidden` 으로 내보냅니다.
-         ⚠️ 자리표시자도 · "준비 중" 도 안 찍습니다 (절대 규칙 2). */
+         ⚠️ 그래서 빌드가 찍은 HTML 에는 이 자리가 **빈 채로** 있습니다 —
+         `check-screens` 가 이 상자를 영원히 못 보는 까닭이고, 재는
+         자리는 `test-desk` 입니다. */
       '<div id="ssobox" class="sso" hidden></div>' +
       '<div id="ssoor" class="sso-or" hidden><span>또는</span></div>' +
       "<h2>메일로 받은 링크로도 들어오실 수 있습니다.</h2>" +
@@ -130,14 +159,23 @@
       'placeholder="메일 주소"><button class="btn btn-pri" type="submit">링크 받기</button>' +
       '</form><p id="lmsg" class="lmsg" hidden></p>');
 
-    /* ⚠️⚠️⚠️ **켜진 것만 그립니다.** 목록을 화면에 박아 두면 아직 안 켠
-       공급자의 단추가 그려지고, 누르면 Supabase 가 거절합니다 (절대
-       규칙 5). 켜져 있는지는 `amAuthProviders()` 가 **Supabase 에게
-       물어서** 알아옵니다 — 켜시는 날 단추가 저절로 섭니다.
-       ⚠️ 못 읽었거나 0건이면 **한 줄도 안 그립니다** — 그때는 메일
-       링크만 보입니다 (메일 링크는 설정만 되면 늘 됩니다). */
+    /* ⚠️⚠️⚠️ **무엇이 켜졌는지는 Supabase 에게 물어봅니다**
+       (`amAuthProviders()`) — 목록을 화면에 박아 두면 켜시는 날 두 곳이
+       어긋나고, 안 켠 것이 **눌릴 수 있는 단추**로 그려집니다. 켜시면
+       코드를 안 고쳐도 그날 저절로 눌립니다.
+       ⚠️ 못 읽었거나 0건이면 셋 다 **「준비 중」** 으로 섭니다 — 눌리지
+       않고(`disabled`) 그 자리에서 연결 전이라고 말합니다. 메일 링크는
+       그때도 그대로 열립니다. */
     if(window.amAuthProviders) window.amAuthProviders().then(function(list){
       var sb = el("ssobox"), so = el("ssoor"), h = ssoHtml(list);
+      /* ⚠️ 무엇이 안 켜졌는지는 **운영자에게만** 말합니다 (절대 규칙 3) */
+      try{
+        var offK = (window.AM_SOCIAL || []).map(function(s){ return s.key; })
+          .filter(function(k){ return (list || []).indexOf(k) < 0; });
+        if(offK.length) console.warn("[account] 아직 연결 전인 소셜 로그인: " +
+          offK.join(" · ") + " — Supabase → Authentication → Providers 에서 " +
+          "켜시면 코드를 안 고쳐도 바로 켜집니다.");
+      }catch(e){}
       if(!sb || !h) return;
       sb.innerHTML = h;
       sb.hidden = false;

@@ -267,10 +267,22 @@ function boardsOf(){
      로그인은 메일 매직링크 하나였고, 그래서 "디자인만 바꾸는" 일이
      될 수가 없었습니다 — 단추를 그리기만 하면 **눌러도 아무 일이 안
      나는 단추 셋**이 됩니다(절대 규칙 5).
-     ⚠️⚠️ 그래서 재는 것도 **모양이 아니라 되는가**입니다:
-     ① 켜진 것만 그리나 ② 안 켠 것은 안 그리나 ③ 하나도 안 켜졌으면
-     한 줄도 안 그리나 ④ 누르면 **실제로** Supabase 로 가나
-     ⑤ 돌아올 자리가 매직링크와 같은가.
+
+     ⚠️⚠️⚠️ **같은 날 저녁에 뒤집었습니다 — 셋을 늘 그립니다.** 처음에는
+     안 켠 공급자를 아예 안 그렸는데, 운영에서 셋 다 안 켜져 있으니
+     화면이 통째로 비어 보여 "만들었다는 것이 어디 있나" 를 알 길이
+     없었습니다. 절대 규칙 5 가 막는 것은 "눌렀는데 **말없이** 아무
+     일도 안 나는" 칸이지, **제 상태를 밝히고 서 있는** 칸이 아닙니다.
+     ⚠️⚠️ 그래서 이 검사도 같이 뒤집었습니다 — 옛 뜻을 그대로 두면
+     **고장을 지키는 검사**가 됩니다(2026-11-10 아침에 `#lsbox` 에서
+     겪은 그 자리: 검사가 `boxHtml === ""` 를 요구해 빈 자리를 지키고
+     있었습니다).
+
+     ⚠️⚠️ 재는 것은 **모양이 아니라 되는가**입니다:
+     ① 켜진 것은 눌린다 ② 안 켠 것도 **보이고** 눌리지 않고 **왜인지
+     말한다** ③ 눌러도 아무 데도 안 가고 **오류가 안 난다**
+     ④ 켜진 것을 누르면 **실제로** Supabase 로 간다 ⑤ 돌아올 자리가
+     매직링크와 같다 ⑥ 설정 전에는 묻지도 그리지도 않는다.
      ⚠️ 목록 · 색 · 이름은 `js/data/social.js` 에서 **읽어서** 맞춰
      봅니다 — 검사에 적어 두면 공급자를 늘리는 날 그 줄이 썩습니다. */
   console.log("\n── 소셜 로그인 (카카오 · 네이버 · 구글)");
@@ -298,6 +310,8 @@ function boardsOf(){
           key: e.dataset.sso,
           txt: (e.querySelector(".sso-t") || {}).textContent || "",
           bg: getComputedStyle(e).backgroundColor,
+          on: e.dataset.on, dis: e.disabled,
+          badge: !!e.querySelector(".sso-badge"),
           svg: e.querySelectorAll("svg").length })));
       ok("켜진 공급자는 **전부** 단추가 선다 (" + KEYS.join(" · ") + ")",
          got.length === KEYS.length, JSON.stringify(got.map(x => x.key)));
@@ -310,6 +324,11 @@ function boardsOf(){
       ok("  셋 다 **공식 마크(SVG)** 가 붙는다 (이모지 · 글자가 아닙니다)",
          got.length > 0 && got.every(x => x.svg === 1),
          JSON.stringify(got.map(x => x.svg)));
+      /* ⚠️ 켜진 것에는 「준비 중」 을 안 붙입니다 — 붙으면 켜 두신
+         공급자를 **아직 안 된다고** 말하는 꼴입니다(절대 규칙 5 의 뒤집힌 판). */
+      ok("  켜진 것은 **눌릴 수 있고** 「준비 중」 이 안 붙는다",
+         got.length > 0 && got.every(x => x.on === "1" && !x.dis && !x.badge),
+         JSON.stringify(got.map(x => [x.key, x.on, x.dis, x.badge])));
       /* ⚠️ 높이 · 폭 · 모서리 · 마크 크기 · 글자 자리를 **재서** 봅니다 —
          "통일했다" 는 눈으로는 말할 수 없습니다. 값을 박지 않고 **셋이
          서로 같은지**만 봅니다(디자인이 바뀌어도 안 썩습니다). */
@@ -331,33 +350,90 @@ function boardsOf(){
       await g.p.close();
     }
 
-    /* ② 일부만 켜진 경우 — 안 켠 것은 **안 그립니다** */
+    /* ② 일부만 켜진 경우 — 안 켠 것도 **보여 주고** 연결 전이라고 말합니다
+       ⚠️⚠️ 여기가 지시서 §4 입니다 — "OAuth 설정이 완료되지 않은 버튼은
+       클릭 시 오류가 나지 않도록 처리하고, 실제 연동 상태를 명확하게
+       안내합니다." 그래서 **셋이 다 서는지** · **켜진 것만 눌리는지** ·
+       **안 켠 것을 눌러도 아무 데도 안 가고 오류가 안 나는지** 셋을
+       갈라서 봅니다(한 자리에서 재면 "안 갔다" 와 "못 눌렀다" 가 섞입니다). */
     {
       const some = KEYS.slice(0, 1);
+      const offk = KEYS.slice(1);
       const g = await open("/login",
         { role:"customer", name:"", signedIn:false, sso:some }, {});
+      const errs = [];
+      g.p.on("pageerror", e => errs.push(String(e.message || e)));
       const got = await g.p.evaluate(() =>
-        [...document.querySelectorAll(".sso-b")].map(e => e.dataset.sso));
-      ok("안 켠 공급자는 단추를 **안 그린다** (누르면 거절당할 단추)",
-         got.join(",") === some.join(","), got.join(",") || "(없음)");
+        [...document.querySelectorAll(".sso-b")].map(e => ({
+          key: e.dataset.sso, on: e.dataset.on, dis: e.disabled,
+          aria: e.getAttribute("aria-disabled") || "",
+          badge: !!e.querySelector(".sso-badge") })));
+      ok("안 켠 공급자도 **단추는 섭니다** (셋이 다 보입니다)",
+         got.length === KEYS.length, JSON.stringify(got.map(x => x.key)));
+      ok("  켜진 것만 **눌릴 수 있다** (" + some.join(" · ") + ")",
+         got.filter(x => x.on === "1").map(x => x.key).join(",") === some.join(",") &&
+         got.filter(x => x.on === "1").every(x => !x.dis),
+         JSON.stringify(got));
+      ok("  안 켠 것은 `disabled` 이고 **「준비 중」** 이 붙는다",
+         offk.length > 0 &&
+         got.filter(x => offk.indexOf(x.key) >= 0)
+            .every(x => x.on === "0" && x.dis && x.aria === "true" && x.badge),
+         JSON.stringify(got.filter(x => offk.indexOf(x.key) >= 0)));
+      /* ⚠️⚠️ **눌러 봅니다** — `disabled` 라 브라우저가 눌림을 안 보내지만,
+         거품으로 올라오는 길이 하나라도 있으면 그때 Supabase 가
+         "Unsupported provider" 로 거절합니다. `force:true` 로 그 자리를
+         직접 때려 보고, **어디로도 안 가는지 · 오류가 0건인지**를 봅니다. */
+      let went = 0;
+      await g.p.route("**/auth/v1/authorize*", function(r){
+        went++;
+        return r.fulfill({ status:200, contentType:"text/html", body:"<p>no</p>" });
+      });
+      const was = g.p.url();
+      try{
+        await g.p.click('.sso-b[data-sso="' + offk[0] + '"]',
+                        { force:true, timeout:3000 });
+      }catch(e){}
+      await g.p.waitForTimeout(500);
+      ok("  안 켠 단추를 눌러도 **아무 데도 안 가고 오류도 안 난다**",
+         went === 0 && g.p.url() === was && errs.length === 0,
+         "간 횟수 " + went + " · 주소 " + g.p.url() + " · 오류 " +
+         (errs.join(" | ") || "0건"));
       await g.p.close();
     }
 
-    /* ③ 하나도 안 켜졌으면 — 지금 운영이 그 상태입니다 */
+    /* ③ 하나도 안 켜졌으면 — 지금 운영이 그 상태입니다
+       ⚠️⚠️⚠️ **여기가 사장님이 "아무것도 안 떠" 라고 하신 자리입니다.**
+       전에는 이 자리에서 단추를 한 줄도 안 그렸고, 그러면 손님에게도 ·
+       사장님에게도 화면이 메일 양식 하나로만 보였습니다. */
     {
       const g = await open("/login", { role:"customer", name:"", signedIn:false }, {});
       const r = await g.p.evaluate(() => {
         const sb = document.getElementById("ssobox");
         const so = document.getElementById("ssoor");
-        return { n: document.querySelectorAll(".sso-b").length,
+        const bs = [...document.querySelectorAll(".sso-b")];
+        return { n: bs.length,
+                 on: bs.filter(e => e.dataset.on === "1").length,
+                 dis: bs.filter(e => e.disabled).length,
+                 badge: bs.filter(e => e.querySelector(".sso-badge")).length,
                  boxOn: !!(sb && sb.getClientRects().length),
                  orOn: !!(so && so.getClientRects().length),
+                 note: ((document.querySelector(".sso-note") || {}).textContent || "").trim(),
                  mail: !!document.getElementById("lf"),
                  txt: ((sb || {}).textContent || "").trim() };
       });
-      ok("하나도 안 켜졌으면 단추를 **한 줄도 안 그린다**", r.n === 0, JSON.stringify(r));
-      ok("  빈 상자도 · 「준비 중」 도 안 남긴다 (절대 규칙 2)",
-         !r.boxOn && !r.orOn && r.txt === "", JSON.stringify(r));
+      ok("하나도 안 켜졌어도 **단추 셋은 보입니다** (빈 화면을 내지 않습니다)",
+         r.n === KEYS.length && r.boxOn, JSON.stringify(r));
+      ok("  셋 다 눌리지 않고 **「준비 중」** 이 붙는다",
+         r.on === 0 && r.dis === KEYS.length && r.badge === KEYS.length,
+         JSON.stringify(r));
+      ok("  **연결 전이라고 그 자리에서 말한다** (지시서 §4)",
+         r.note.length > 0, r.note || "(한 글자도 없습니다)");
+      /* ⚠️⚠️ **운영자에게 할 말을 손님 화면에 적지 않습니다**(절대 규칙 3) —
+         무엇을 켜야 하는지는 console.warn 으로만 말합니다. */
+      ok("  설정 이름 · Supabase 를 손님 화면에 **안 적는다** (절대 규칙 3)",
+         ["Supabase","SUPABASE","환경변수","Provider","Authentication"]
+           .every(w => r.txt.indexOf(w) < 0 && r.note.indexOf(w) < 0),
+         r.txt.slice(0, 90));
       ok("  그래도 **메일 링크는 그대로 열린다** (들어올 길이 사라지지 않습니다)",
          r.mail, JSON.stringify(r));
       await g.p.close();
@@ -3406,7 +3482,7 @@ function boardsOf(){
       function lum(c){ return c.map(function(x){ x /= 255;
           return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); })
         .reduce(function(a, x, i){ return a + x * [0.2126,0.7152,0.0722][i]; }, 0); }
-      var seen = 0, bad = [], skipped = 0;
+      var seen = 0, bad = [], skipped = [];
       /* ⚠️⚠️⚠️ **소셜 로그인 단추 셋은 건너뜁니다 — 그리고 그 셋뿐인지
          아래에서 셉니다.** 네이버의 공식 단추는 녹색 바탕(#03C75A)에
          흰 글자라 2.25 로 AA(4.5)를 못 넘습니다. 저희가 고른 색이
@@ -3415,8 +3491,12 @@ function boardsOf(){
          js/data/social.js 가 잰 값을 적어 둡니다).
          ⚠️⚠️ **건너뛰는 자리를 열어 두면 거기로 다 빠져나갑니다** —
          그래서 `data-sso` 를 단 칸만 건너뛰고, **몇 개를 건너뛰었는지**
-         돌려줘서 부르는 쪽이 셋인지 셉니다. 남이 이 꼬리표를 다른
-         칸에 달면 그 줄이 빨개집니다. */
+         **건너뛴 칸의 클래스 이름을** 돌려줘서 부르는 쪽이 그것이 전부
+         `sso-` 로 시작하는지 봅니다. 남이 이 꼬리표를 다른 칸에 달면
+         그 줄이 빨개집니다.
+         ⚠️⚠️ **갯수를 박지 않습니다** — 2026-11-10 저녁에 안 켠 단추가
+         「준비 중」(`.sso-badge`) 을 달면서 건너뛰는 칸 수가 바뀌었고,
+         `=== 3` 으로 박아 두었으면 **멀쩡한 화면을 실패로** 잡았습니다. */
       var all = document.querySelectorAll("main *, header *, footer *");
       for(var i = 0; i < all.length; i++){
         var e = all[i], own = "";
@@ -3447,7 +3527,7 @@ function boardsOf(){
           if(q.getAttribute && q.getAttribute("data-sso")){ inSso = true; break; }
           q = q.parentElement;
         }
-        if(inSso){ skipped++; continue; }
+        if(inSso){ skipped.push(String(e.className || "(이름 없음)")); continue; }
         var px = parseFloat(cs.fontSize), wt = parseInt(cs.fontWeight) || 400;
         var big = px >= 24 || (px >= 18.66 && wt >= 700);
         var need = big ? 3.0 : 4.5;
@@ -3464,13 +3544,13 @@ function boardsOf(){
     await p.close();
     return r;
   }
-  let dimSeen = 0, dimSkip = 0;
+  let dimSeen = 0, dimSkip = [];
   for(const [label, path, who, tables, rpcs, pre] of phones){
     /* ⚠️ 색은 폭에 따라 안 바뀝니다 — **한 폭만** 재서 시간을 아낍니다.
        (가로 밀림 · 12px 는 위에서 세 폭을 다 재고 있습니다.) */
     const r = await dim(path, who, tables, rpcs, pre, 390);
     dimSeen += r.seen;
-    dimSkip += r.skipped || 0;
+    dimSkip = dimSkip.concat(r.skipped || []);
     ok(label + " — 글자 대비가 AA 를 넘는다 (잰 칸 " + r.seen + "개)",
        r.bad.length === 0, r.bad.slice(0, 4).join("  |  "));
   }
@@ -3480,8 +3560,11 @@ function boardsOf(){
      `data-sso` 가 "대비 검사를 피하는 꼬리표" 가 되어, 누군가 다른
      칸에 달면 그 글자가 영영 안 재집니다(검사가 스스로 구멍을 내는
      자리). /login 장면에서 셋 · 다른 장면에서 0이어야 합니다. */
-  ok("⚠️⚠️ 대비 검사가 건너뛴 칸은 **소셜 단추 셋뿐이다**",
-     dimSkip === 3, "건너뛴 글자 칸 " + dimSkip + "개 (셋이어야 합니다)");
+  ok("⚠️⚠️ 대비 검사가 건너뛴 칸은 **소셜 단추 안쪽뿐이다**",
+     dimSkip.length > 0 &&
+     dimSkip.every(c => (" " + c + " ").indexOf(" sso-") >= 0),
+     "건너뛴 글자 칸 " + dimSkip.length + "개 — " +
+     (dimSkip.join(" · ") || "(0개 — 단추를 못 찾은 것입니다)"));
 
   /* ══════════════════════════════════════════════════════════════
      골프 조인 (0046) — ⚠️ **빌드가 찍은 HTML 만 보는 검사는 영원히

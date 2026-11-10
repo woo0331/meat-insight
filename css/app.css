@@ -3168,3 +3168,189 @@ picture{ display: contents; }
 .sso-or[hidden]{ display:none; }
 .sso-or::before, .sso-or::after{ content:""; flex:1; height:1px;
                                  background:var(--line); }
+
+/* ── 아직 연결 전인 소셜 단추 (2026-11-10) ─────────────────────
+   ⚠️⚠️ 처음에는 **안 켜진 공급자를 아예 안 그렸습니다.** 그랬더니
+   운영에서 셋 다 꺼져 있어 화면이 통째로 비었고, 손님도 사장님도
+   "만들었다는 것이 어디 있나" 를 알 길이 없었습니다. 지금은 셋을 늘
+   그리되 **눌리지 않게 두고 그 자리에서 준비 중이라고 말합니다.**
+   ⚠️ 절대 규칙 5 가 막는 것은 "눌렀는데 **말없이** 아무 일도 안 나는"
+   칸이지, 제 상태를 밝히고 서 있는 칸이 아닙니다.
+   ⚠️ 색은 js/data/social.js 가 입히므로 여기서는 **흐리기만** 합니다 —
+   색을 또 적으면 두 곳이 다른 단추를 냅니다. */
+.sso-b.sso-off{ filter: grayscale(.85) opacity(.55); cursor: default; }
+.sso-b.sso-off:hover{ filter: grayscale(.85) opacity(.55); }
+/* 「준비 중」 딱지 — 마크와 같은 쪽(오른쪽)에 띄웁니다 */
+.sso-badge{
+  position:absolute; right:14px; top:50%; margin-top:-11px;
+  padding:2px 8px; border-radius: var(--r-pill);
+  background: rgba(0,0,0,.26); color:#fff;
+  font-size:12px; font-weight:700; line-height:18px;
+}
+.sso-note{
+  width:100%; max-width:360px; margin:4px auto 0;
+  color: var(--ink3); font-size:14px; line-height:1.5;
+}
+
+/* ══ 골프 레슨 (2026-11-10 · 레슨 지시서) ═══════════════════════════
+   ⚠️⚠️ 이름을 `.lsn*` 로 갈랐습니다 — `.lsc*`(중고 카드) · `.lsf*`(중고
+   거르개) · `.lsd*`(중고 상세) · `.lsp*` · `.lspk*`(매물 사진)와 **다른
+   것**입니다. 짧은 이름을 두 곳에 쓰면 한쪽을 고치는 날 다른 화면이
+   조용히 바뀝니다(`.lg` 가 로고이면서 약관이었던 그 자리).
+   ⚠️ 색 · 모서리 · 그림자는 전부 `tokens.css` 의 변수입니다 — 없는
+   변수를 쓰면 **조용히 기본값으로** 떨어집니다(check-safe ⑧).
+   ══════════════════════════════════════════════════════════════════ */
+
+/* 히어로 — ⚠️ `.hero.hero-ph` 의 딥그린 막을 그대로 씁니다(대비) */
+.lsn-eyebrow{ margin:0 0 6px; color:var(--gold); font-size:14px;
+  font-weight:800; letter-spacing:.14em; }
+.lsn-hb{ list-style:none; margin:20px 0 0; padding:0; display:flex;
+  flex-wrap:wrap; gap:10px 28px; }
+@media (min-width:900px){
+  /* ⚠️ 셋을 나란히 — flex 로만 두면 셋째가 혼자 아랫줄로 떨어집니다
+     (찍어 보고 알았습니다 · 글자가 작지도 가로로 밀리지도 않습니다) */
+  .lsn-hb{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr));
+    gap:16px; max-width:900px; }
+  .lsn-hb > li{ min-width:0; }
+  .lsn-hb b{ white-space:nowrap; }
+}
+/* ⚠️ 아이콘 한 칸 · 글 한 칸(제목 위 · 한 줄 아래) — 나란히 두면
+   좋은 칸에서 「내 주변 프로 / 찾기」처럼 어색하게 끊깁니다(찍어 보고 알았습니다). */
+.lsn-hb li{ display:grid; grid-template-columns:auto minmax(0,1fr);
+  align-items:center; gap:2px 10px; color:#fff; min-height:44px; }
+.lsn-hb li svg{ flex:none; color:var(--gold); grid-row:1 / span 2; }
+.lsn-hb b{ font-size:16px; }
+.lsn-hb span{ grid-column:2; color:var(--on-dark-2); font-size:14px; }
+@media (max-width:700px){
+  .lsn-hb{ gap:8px 16px; }
+  .lsn-hb b{ font-size:15px; }
+}
+
+/* 찾는 칸 — ⚠️ `<select>` 는 제 내용만큼 넓어집니다. 격자 칸이 벌어져
+   화면이 가로로 밀리지 않게 `min-width:0` 을 같이 둡니다(작업 기억). */
+/* ⚠️⚠️ 폰에서는 **한 줄에 하나**입니다 — 셋을 나란히 두면
+   390px 에서 고르개가 110px 가 되어 「전체 지…」 로 잘립니다.
+   ⚠️ `<select>` 안의 글자는 **낱말 잘림 검사에도 · 가로 스크롤
+   검사에도 안 걸립니다**(작업 기억 — 세 번 당했습니다). 찍어 보고 고놠습니다. */
+.lsnf{ display:grid; gap:12px 16px; align-items:end;
+  grid-template-columns:minmax(0,1fr); margin:0; }
+@media (min-width:620px){
+  .lsnf{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+}
+.lsnf > *{ min-width:0; margin:0; }
+.lsnf-i{ display:flex; flex-direction:column; gap:6px; }
+.lsnf-i label{ display:flex; align-items:center; gap:6px;
+  color:var(--ink2); font-size:14px; font-weight:700; }
+.lsnf-i label svg{ color:var(--gold-text); }
+.lsnf select, .lsnf input[type="search"]{
+  width:100%; min-width:0; min-height:var(--tap);
+  padding:10px 12px; border:1.6px solid var(--line);
+  border-radius:var(--r-sm); background:var(--surface); color:var(--ink);
+  font-size:16px; }
+.lsnf-q{ grid-column:1 / -1; position:relative; display:flex;
+  align-items:center; }
+.lsnf-q svg{ position:absolute; left:14px; color:var(--ink3); }
+/* ⚠️⚠️ **특정도를 재서 고쳤습니다** — `.lsnf input[type="search"]`(0,2,1)
+   가 `.lsnf-q input`(0,1,1) 를 이겨서 왼쪽 여백이 안 먹었고, 돋보기가
+   첫 글자를 덮었습니다. 파일 뒤에 적었다고 이기는 것이 아닙니다. */
+.lsnf .lsnf-q input[type="search"]{ padding-left:42px; }
+.lsnf-go{ grid-column:1 / -1; }
+.lsnf-go .btn{ width:100%; }
+@media (min-width:900px){
+  .lsnf{ grid-template-columns:repeat(3, minmax(0,1fr)) 2fr auto; }
+  .lsnf-q{ grid-column:auto; }
+  .lsnf-go{ grid-column:auto; }
+  .lsnf-go .btn{ width:auto; }
+}
+.lsnf-t{ margin:16px 0 8px; color:var(--ink2); font-size:14px;
+  font-weight:700; }
+.lsnf-tags{ margin:0; }
+
+/* 카테고리 카드 — ⚠️ 칸 수를 안 박습니다(종류가 몇 개가 되든 마지막
+   줄에 구멍이 없게 · 머리말 메뉴에서 배운 그 자리) */
+.lsn-catsec{ padding-block:24px; }
+.lsn-cats{ display:flex; flex-wrap:wrap; gap:12px; margin:0; padding:0;
+  list-style:none; }
+/* ⚠️ 칸 수를 안 박고 **늘어나게** 둡니다 — 종류가 몇 개가 되든 마지막
+   줄에 구멍이 없습니다(머리말 메뉴에서 배운 그 자리). */
+.lsn-cats li{ flex:1 1 150px; min-width:0; }
+.lsn-cat{ display:grid; grid-template-columns:1fr auto; align-items:center;
+  gap:2px 6px; width:100%; min-height:var(--tap);
+  padding:14px 14px; border:1.6px solid var(--line);
+  border-radius:var(--r); background:var(--surface);
+  text-decoration:none; color:var(--ink); }
+.lsn-cat b{ font-size:15px; }
+.lsn-cat span{ grid-column:1; color:var(--ink2); font-size:13px;
+  line-height:1.4; }
+.lsn-cat svg{ grid-column:2; grid-row:1 / span 2; flex:none;
+  color:var(--ink3); }
+.lsn-cat:hover{ border-color:var(--grn-line); background:var(--grn-soft); }
+
+/* 목록 + 우측 레일 — ⚠️ 1000px 아래에서는 레일이 **아래로** 내려옵니다 */
+.lsn-w{ display:grid; gap:24px; grid-template-columns:minmax(0,1fr); }
+.lsn-w > *{ min-width:0; }
+@media (min-width:1000px){
+  .lsn-w{ grid-template-columns:minmax(0,1fr) 300px; }
+}
+.lsn-bar{ display:flex; flex-wrap:wrap; align-items:center; gap:10px;
+  margin:0 0 14px; }
+.lsn-cnt{ margin:0; color:var(--ink2); font-size:15px; font-weight:700; }
+.lsn-sort{ margin:0 0 0 auto; }
+.lsn-sort select{ min-height:var(--tap); padding:8px 12px;
+  border:1.6px solid var(--line); border-radius:var(--r-sm);
+  background:var(--surface); color:var(--ink); font-size:15px; }
+
+/* 프로 카드 — ⚠️ 사진은 **1:1 정사각**이고 칸 수를 폭마다 박습니다
+   (auto-fill 을 쓰면 폭마다 칸 수가 달라져 사진이 들쭉날쭉합니다 ·
+   0069 에서 중고 카드에 적어 둔 그 규칙). PC 4 · 태블릿 3 · 폰 2. */
+.lsn-g{ display:grid; gap:16px; grid-template-columns:repeat(2, minmax(0,1fr)); }
+.lsn-g > *{ min-width:0; }
+@media (min-width:700px){ .lsn-g{ grid-template-columns:repeat(3, minmax(0,1fr)); } }
+@media (min-width:1100px){ .lsn-g{ grid-template-columns:repeat(4, minmax(0,1fr)); } }
+.lsn-c{ display:flex; flex-direction:column; border:1.6px solid var(--line);
+  border-radius:var(--r); background:var(--surface); overflow:hidden;
+  text-decoration:none; color:var(--ink); }
+.lsn-c:hover{ border-color:var(--grn-line); box-shadow:var(--shadow-soft); }
+.lsn-ph{ display:flex; align-items:center; justify-content:center;
+  aspect-ratio:1 / 1; background:var(--ic-bg); color:var(--ic-ink); }
+.lsn-ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+.lsn-b{ display:flex; flex-direction:column; gap:6px; padding:14px; }
+.lsn-n{ display:flex; align-items:center; gap:6px; font-size:16px;
+  font-weight:800; }
+.lsn-ok{ display:inline-flex; color:var(--ok-text); }
+.lsn-loc{ display:flex; align-items:center; gap:4px;
+  color:var(--ink2); font-size:14px; }
+.lsn-loc svg{ flex:none; color:var(--ink3); }
+.lsn-r{ display:flex; align-items:center; gap:4px; font-size:14px; }
+.lsn-r .stars{ color:var(--gold-text); }
+.lsn-r span{ color:var(--ink3); }
+.lsn-s{ display:flex; flex-wrap:wrap; gap:4px; }
+.lsn-s i{ font-style:normal; padding:3px 8px; border-radius:var(--r-pill);
+  background:var(--grn-soft); color:var(--grn-text); font-size:13px; }
+.lsn-p{ margin-top:2px; font-size:16px; font-weight:800; color:var(--ink); }
+.lsn-p i{ font-style:normal; font-weight:600; color:var(--ink2);
+  font-size:14px; margin-left:2px; }
+.lsn-p0{ font-size:14px; font-weight:600; color:var(--ink3); }
+
+/* 우측 레일 */
+.lsn-side{ display:flex; flex-direction:column; gap:16px; }
+.lsn-box{ padding:18px; border:1.6px solid var(--line);
+  border-radius:var(--r); background:var(--surface); }
+.lsn-box p{ margin:0 0 10px; color:var(--ink2); font-size:14px;
+  line-height:1.6; }
+.lsn-box-h{ display:flex; align-items:center; gap:8px;
+  color:var(--ink) !important; font-size:16px; font-weight:800; }
+.lsn-box-h svg{ flex:none; color:var(--gold-text); }
+.lsn-box .btn{ width:100%; }
+/* ⚠️⚠️ 어두운 상자 안에서만 골드 단추를 씁니다 — `--gold` 는 흰 바탕에
+   2.30 이라 밝은 바탕에 놓으면 안 읽힙니다(작업 기억의 그 줄). */
+.lsn-box-dark{ border-color:var(--grn-deep); background:var(--grn-deep); }
+.lsn-box-dark .lsn-box-h{ color:#fff !important; }
+.lsn-box-dark .lsn-box-h svg{ color:var(--gold); }
+.lsn-box-dark p{ color:var(--on-dark-2); }
+.lsn-gd{ list-style:none; margin:0; padding:0; }
+.lsn-gd li + li{ border-top:1px solid var(--line-soft); }
+.lsn-gd a{ display:flex; align-items:center; gap:8px; min-height:var(--tap);
+  padding:10px 0; color:var(--ink); text-decoration:none; font-size:15px; }
+.lsn-gd a svg{ margin-left:auto; flex:none; color:var(--ink3); }
+.lsn-gd a:hover{ color:var(--grn-text); }

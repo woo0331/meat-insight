@@ -343,15 +343,109 @@ function nowServe(){ return serve(0); }
     ok("몇 곳인지 말한다", /업체 1곳/.test(t), t.slice(0, 60));
     ok("중개자임을 그 자리에서 다시 말한다", /통신판매중개자/.test(t));
 
-    /* 한 업체가 여러 분류에 걸치면 그 분류마다 떠야 합니다 */
+    /* 한 업체가 여러 분류에 걸치면 그 분류마다 떠야 합니다
+       ⚠️⚠️ **레슨만 카드가 다릅니다**(2026-11-10 · `.lsn-c`) — 시안이
+       1:1 정사각 사진 카드를 요구해 `amLessonCard()` 로 갈랐습니다.
+       재려는 뜻은 "그 분류에 그 업체가 뜨는가" 하나이므로 **둘 다**
+       셉니다 — 클래스 이름을 하나만 박으면 모양을 바꾸는 날 멀쩡한
+       화면을 실패로 잡습니다(작업 기억의 그 줄). */
     await p.goto("http://127.0.0.1:" + h.port + "/cat/lesson", { waitUntil:"networkidle" });
     ok("레슨 분류에도 같은 업체가 뜬다 (subs 가 걸쳐 있습니다)",
-       (await p.locator(".pv").count()) === 1);
+       (await p.locator(".pv, .lsn-c").count()) === 1,
+       await p.locator(".pv, .lsn-c").count());
     await p.goto("http://127.0.0.1:" + h.port + "/cat/fitting", { waitUntil:"networkidle" });
     ok("피팅 분류에는 다른 업체가 뜬다", (await p.locator(".pv").count()) === 1);
     await p.goto("http://127.0.0.1:" + h.port + "/cat/travel", { waitUntil:"networkidle" });
     ok("업체가 없는 분류는 그대로 0곳이라고 말한다",
        /아직 등록된 업체가 없습니다/.test((await p.textContent("main")) || ""));
+
+    /* ══ 골프 레슨 거르개 · 정렬 (2026-11-10 · 레슨 지시서 §4 · §6) ══
+       ⚠️⚠️⚠️ **거르개는 "눌러 봐야" 압니다.** 빌드가 찍은 목록만 보면
+       거르개를 통째로 떼어도 영원히 초록입니다(조인 · 중고에서 두 번
+       겪은 자리). 여기는 씨앗으로 업체를 넣어 둔 뒤라 **실제로 좁혀지는지**
+       셀 수 있는 유일한 자리입니다.
+       ⚠️ 씨앗 `green-pt` 는 경기 · `ls-solo` · 레슨 가격 400,000원입니다 —
+       그 값에서 **걸리는 조건과 안 걸리는 조건**을 짝으로 눌러 봅니다
+       (한쪽만 재면 "아무것도 안 거르는 거르개" 가 초록으로 지나갑니다). */
+    console.log("\n── 골프 레슨 거르개 · 정렬");
+    async function lsn(q){
+      await p.goto("http://127.0.0.1:" + h.port + "/cat/lesson" + q,
+                   { waitUntil:"networkidle" });
+      await p.waitForTimeout(250);
+      return { n: await p.locator("#lsnlist .lsn-c").count(),
+               t: (await p.textContent("#lsnlist")) || "" };
+    }
+    const lsAll = await lsn("");
+    ok("⚠️ 잴 것이 0개면 실패입니다 (레슨 목록에 카드가 그려지기는 했는가)",
+       lsAll.n === 1, JSON.stringify(lsAll.n));
+    const lsYes = await lsn("?sub=ls-solo");
+    ok("하위로 좁히면 **그 레슨을 하는 프로만** 남는다", lsYes.n === 1, lsYes.n);
+    const lsNo = await lsn("?sub=ls-field");
+    ok("  안 하는 레슨으로 좁히면 **0건**이 된다", lsNo.n === 0, lsNo.n);
+    ok("  0건을 **조건 때문**이라고 말한다 (「등록된 프로가 없습니다」가 아닙니다)",
+       lsNo.t.indexOf("고르신 조건에 맞는") >= 0, lsNo.t.slice(0, 60));
+    ok("  조건을 지우는 길을 그 자리에서 낸다 (막다른 길이 아닙니다)",
+       lsNo.t.indexOf("조건 모두 지우기") >= 0, lsNo.t.slice(0, 80));
+    ok("지역으로 좁힌다 — 맞는 지역", (await lsn("?rg=gyeonggi")).n === 1);
+    ok("  다른 지역이면 0건", (await lsn("?rg=seoul")).n === 0);
+    /* ⚠️ 가격대 경계 — 씨앗이 400,000원이라 「20만원 이상」에 걸리고
+       「5만원 미만」에는 안 걸립니다. 둘을 짝으로 봅니다. */
+    ok("가격대로 좁힌다 — 맞는 칸", (await lsn("?p=p5")).n === 1);
+    ok("  안 맞는 칸이면 0건", (await lsn("?p=p1")).n === 0);
+    ok("찾는 말로 좁힌다 — 이름의 한 조각",
+       (await lsn("?q=" + encodeURIComponent("그린골프"))).n === 1);
+    ok("  **지역 이름**으로도 찾아진다 (키가 아니라 사람이 읽는 이름)",
+       (await lsn("?q=" + encodeURIComponent("경기"))).n === 1);
+    ok("  없는 말이면 0건",
+       (await lsn("?q=" + encodeURIComponent("없는말123"))).n === 0);
+    /* ⚠️⚠️ **고르개가 지금 조건에 맞춰져 있는가** — 안 맞추면 주소로
+       들어오신 분께 "전체" 라고 적힌 칸 아래 좁혀진 목록이 나옵니다
+       (무엇으로 좁혔는지 알 수 없는 자리). */
+    await p.goto("http://127.0.0.1:" + h.port + "/cat/lesson?sub=ls-solo&rg=gyeonggi",
+                 { waitUntil:"networkidle" });
+    await p.waitForTimeout(250);
+    ok("고르개가 **지금 조건**을 보여 준다",
+       (await p.inputValue("#lsn-sub")) === "ls-solo" &&
+       (await p.inputValue("#lsn-rg")) === "gyeonggi",
+       (await p.inputValue("#lsn-sub")) + " · " + (await p.inputValue("#lsn-rg")));
+
+    /* ⚠️⚠️⚠️ **카테고리 카드를 실제로 눌러 봅니다** (§5 — "각 카드를
+       누르면 해당 카테고리로 필터링된 프로 목록을 표시한다").
+       주소만 맞고 안 걸리면 아무 뜻이 없습니다. 그리고 **새로고침 없이**
+       바뀌어야 합니다 — 다시 읽으면 걸어 둔 표시가 날아갑니다. */
+    await p.goto("http://127.0.0.1:" + h.port + "/cat/lesson", { waitUntil:"networkidle" });
+    await p.evaluate(function(){ window.__lsnKept = "있습니다"; });
+    await p.click('.lsn-cat[href="/cat/lesson?sub=ls-field"]');
+    await p.waitForTimeout(350);
+    ok("⚠️⚠️ 카테고리 카드를 누르면 **새로고침 없이** 좁혀진다",
+       (await p.evaluate(function(){ return window.__lsnKept; })) === "있습니다" &&
+       (await p.locator("#lsnlist .lsn-c").count()) === 0,
+       await p.evaluate(function(){ return location.search; }));
+    ok("  주소도 같이 바뀐다 (복사해 보내도 같은 화면)",
+       (await p.evaluate(function(){ return location.search; })).indexOf("sub=ls-field") >= 0,
+       await p.evaluate(function(){ return location.search; }));
+    /* ⚠️ 뒤로 가기 — `pushState` 로 바꿨으니 받는 줄이 없으면 주소만
+       바뀌고 **목록이 그대로** 있습니다. */
+    await p.goBack();
+    await p.waitForTimeout(350);
+    ok("  뒤로 가면 **목록도 같이** 돌아온다",
+       (await p.locator("#lsnlist .lsn-c").count()) === 1,
+       await p.locator("#lsnlist .lsn-c").count());
+
+    /* 카드를 누르면 그 프로의 상세로 — ⚠️ 지시서 §6 이 "사진 또는 카드
+       클릭 시 반드시 상세 페이지로 이동한다" 고 적었습니다. */
+    ok("카드가 **그 프로의 상세 주소**를 가리킨다",
+       (await p.locator("#lsnlist .lsn-c").first().getAttribute("href")) ===
+       "/pro/green-pt",
+       await p.locator("#lsnlist .lsn-c").first().getAttribute("href"));
+    /* ⚠️⚠️ 지어낸 것이 한 줄도 없는가 — 시안의 평점 · 후기 수 · 인증
+       배지는 전부 예시입니다(지시서 §2 · §13). */
+    ok("⚠️⚠️ 후기가 0건이면 **별도 숫자도 안 찍는다** (절대 규칙 1)",
+       (await p.locator("#lsnlist .lsn-r").count()) === 0,
+       await p.locator("#lsnlist .lsn-r").count());
+    ok("  등록된 레슨 가격은 **그 값 그대로** 나온다",
+       ((await p.textContent("#lsnlist")) || "").indexOf("400,000원") >= 0,
+       ((await p.textContent("#lsnlist")) || "").slice(0, 120));
 
     /* 업체 화면 */
     const res = await p.goto("http://127.0.0.1:" + h.port + "/pro/green-pt",
@@ -1067,10 +1161,19 @@ function nowServe(){ return serve(0); }
        /후기 3건/.test(ct) && ct.indexOf("4.3") >= 0, ct.slice(0, 300));
     /* ⚠️⚠️ 후기 0건인 업체 카드에 "후기 0건" 을 찍으면 새로 입점한
        업체가 전부 나쁜 업체로 보입니다 — 우리가 만든 평가입니다. */
+    /* ⚠️ 레슨 카드는 `.lsn-c` 이고 평점 줄은 `.lsn-r` 입니다 — 모양만
+       다르고 **규칙은 같습니다**(0건이면 줄째 없음). 잴 것이 0개면
+       실패로 두어 "카드를 못 찾고 통과" 하지 않게 합니다. */
     await p2.goto("http://127.0.0.1:" + h.port + "/cat/lesson", { waitUntil:"networkidle" });
+    const lsnN = await p2.locator(".pv, .lsn-c").count();
+    const lsnR = await p2.locator(".pv .pv-r, .lsn-c .lsn-r").count();
+    ok("⚠️ 잴 것이 0개면 실패입니다 (레슨 카드를 찾기는 했는가)",
+       lsnN > 0, "카드 " + lsnN + "장");
+    /* ⚠️ 이 씨앗에서 레슨 화면에 서는 카드는 **한 장**이고 그분께는
+       후기가 3건 있습니다 — 그래서 평점 줄이 딱 하나입니다. 0건인
+       카드가 그 줄을 안 내는지는 위 `/cat/range` 에서 같이 재집니다. */
     ok("⚠️ 후기가 0건인 카드에는 그 줄이 **아예 없다**",
-       (await p2.locator(".pv .pv-r").count()) === 1,
-       await p2.locator(".pv .pv-r").count());
+       lsnR === 1, "카드 " + lsnN + "장 · 평점 줄 " + lsnR + "개");
     ok("후기 화면에서도 에러 · CSP 거절이 0건이다", hits2.length === 0, hits2.join(" | "));
     await p2.close();
 

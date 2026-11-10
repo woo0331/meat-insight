@@ -812,7 +812,15 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
        padding:24px; }
 .jform{ display:grid; gap:16px; grid-template-columns: repeat(2, 1fr); }
 @media (max-width: 760px){ .jform{ grid-template-columns: 1fr; } }
-.jrow{ display:grid; gap:6px; }
+/* ⚠️⚠️⚠️ **align-content 를 안 두면 옆 칸 높이에 맞춰 줄이 늘어납니다**
+   (2026-11-10 에 찍어 보고 찾았습니다). `.jrow` 는 `.jform` 격자의 칸이고
+   제 안도 격자라, 옆 칸에 길잡이 글이 한 줄 더 있으면 **이쪽 줄들이
+   늘어나** 이름표와 입력 칸이 벌어지고 입력 칸까지 커집니다 —
+   재 보니 `top 50 · 높이 63` 대 `top 33 · 높이 46` 이었습니다.
+   ⚠️ 가로로 밀리지도 · 글자가 작지도 · 대비가 낮지도 않아 **어떤 검사도
+   안 잡습니다.** 두 칸이 나란히 서는 양식 전부에 걸립니다
+   (`/join` · `/match` · `/help` · `/desk`). */
+.jrow{ display:grid; gap:6px; align-content:start; }
 .jrow-full{ grid-column: 1 / -1; }
 .jrow label{ font-size:14.5px; font-weight:700; color: var(--ink); }
 .jrow label b{ color: var(--bad-text); }
@@ -1315,6 +1323,13 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
         word-break:keep-all; overflow-wrap:anywhere; }
 /* ⚠️ 경고가 잇따르면 간격을 좁힙니다 (한 덩이로 읽히게) */
 .jnote + .jnote{ margin-top:6px; }
+/* ⚠️⚠️ **머리말 안의 길잡이 글도 70ch 로 좁힙니다** (2026-11-10).
+   `.pghd-l` 에는 `max-width:70ch` 가 있는데 그 아래 `.jnote` 에는 없어서,
+   1280px 에서 **바로 위 문단은 절반 폭 · 아래 문단은 전체 폭**으로
+   흘렀습니다(13.5px 글자가 한 줄에 120자 넘게 갑니다 · 손님이 40~60대).
+   ⚠️ `.pghd` 안쪽으로만 좁힙니다 — `.jnote` 는 좁은 상자 안에서도
+   열 곳 넘게 쓰이고 거기는 이미 상자가 폭을 정합니다. */
+.pghd .jnote{ max-width:70ch; }
 
 @media (max-width: 620px){
   /* ⚠️ 폰에서는 한 칸으로 — 두 칸이면 글자가 두 글자씩 끊겨 내려갑니다 */

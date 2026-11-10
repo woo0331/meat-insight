@@ -1183,6 +1183,47 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
    브라우저 기본을 이기는 자리를 여러 번 겪었습니다 */
 #l-brand2[hidden], .ls-br2[hidden]{ display:none; }
 
+/* ── 양식에서 미리 고르는 사진 (js/lstphoto.js · 2026-11-10) ──────────
+   ⚠️⚠️ 이름을 `.lsp*` 와 **갈라 두었습니다**(`.lspk*`) — 올린 뒤에 붙이는
+   상자와 모양이 다릅니다(여기는 정사각 타일 · 거기는 가로 썸네일에 차례
+   바꾸는 단추까지). 같은 이름을 쓰면 한쪽을 고치는 날 둘이 같이 바뀌고,
+   집는 검사도 엉뚱한 칸을 집습니다(`.lg` · `.pvst-n` · `.lsd-t` 에서 세 번
+   겪은 자리입니다). */
+.lspk{ display:grid; gap:10px; min-width:0; }
+.lspk-h{ margin:0; font-size:14.5px; font-weight:700; color: var(--ink); }
+.lspk-l{ list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap;
+         gap:10px; }
+/* 고르는 타일 — ⚠️⚠️ 파일 칸을 타일 **전체에 깔아** 어디를 눌러도
+   열립니다. 숨겨 두고 단추로 `click()` 을 부르면 자바스크립트가 꺼진
+   분에게는 눌러도 아무 일이 안 나는 칸입니다(절대 규칙 5). */
+.lspk-add{ position:relative; flex:0 0 auto; width:96px; height:96px;
+           display:grid; place-items:center; align-content:center; gap:4px;
+           border:1.5px dashed var(--line); border-radius: var(--r-sm);
+           background:#fff; color: var(--ink2); cursor:pointer; }
+.lspk-add:hover{ border-color: var(--grn-deep); color: var(--ink); }
+/* ⚠️ 파일 칸이 투명이라 초점 테두리가 안 보입니다 — 타일에 그립니다 */
+.lspk-add:focus-within{ outline:2px solid var(--grn-deep); outline-offset:2px; }
+.lspk-i{ position:absolute; inset:0; width:100%; height:100%; opacity:0;
+         cursor:pointer; }
+.lspk-n{ font-size:12.5px; font-weight:700; }
+/* ⚠️⚠️ flex 칸은 `[hidden]` 속성만으로 **안 가려집니다** — 작성자 CSS 가
+   브라우저 기본을 이기는 자리를 여러 번 겪었습니다. */
+.lspk-add[hidden]{ display:none; }
+.lspk-t{ position:relative; display:grid; gap:6px; justify-items:center; }
+.lspk-t img{ width:96px; height:96px; object-fit:cover; display:block;
+             border-radius: var(--r-sm); border:1px solid var(--line); }
+/* ⚠️ **대표는 첫째**입니다 — 따로 "대표로" 단추를 두면 차례와 대표가
+   두 값이 되고 카드와 상세가 다른 사진을 냅니다(0069). */
+.lspk-b{ position:absolute; left:4px; top:4px; padding:2px 7px;
+         border-radius: var(--r-pill); font-size:11.5px; font-weight:800;
+         background: var(--grn-deep); color:#fff; }
+
+/* 판매하기 · 나눔하기 (js/listing.js · 시안) — ⚠️ 나눔은 0원입니다 */
+.lsf-pk{ display:flex; flex-wrap:wrap; gap:8px; }
+/* ⚠️ 가릴 때 `required` 도 같이 뗍니다(js/listing.js 의 `kind()`) —
+   숨은 칸이 required 면 제출이 **아무 말 없이** 막힙니다. */
+#l-price[hidden]{ display:none; }
+
 /* ── 구합니다 글 카드 (js/wanted.js · js/mywanted.js · 0061) ─────────
    ⚠️⚠️⚠️ **2026-11-08 까지 이 화면이 중고 카드(`.lsc*`)를 빌려 쓰고
    있었습니다.** 0068 이 중고를 **사진 격자**로 바꾸는 순간 구합니다 글이

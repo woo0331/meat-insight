@@ -1247,6 +1247,14 @@
         esc(n === "기타" ? "기타 (직접 적기)" : n) + '</option>';
     }).join("");
     return '<form id="lsf" class="jform">' +
+      /* ⚠️⚠️⚠️ **사진이 글보다 위입니다** (시안 · 2026-11-10) — 2026-11-09
+         까지는 사진을 붙이는 칸이 **올린 뒤에야** 나왔습니다.
+         ⚠️⚠️ 여기서는 **빈 자리만** 냅니다 — 상자는 `js/lstphoto.js` 가
+         만들고 `mountForm` 이 끼웁니다(`insertAdjacentHTML`). 글자로 이어
+         붙이면 `check-safe` 가 "esc() 없이 변수를 넣었다" 로 잡습니다.
+         ⚠️ 버킷이 꺼져 있으면 `mountForm` 이 이 줄을 **줄째 뺍니다**
+         (빈 칸을 남기지 않습니다 · 절대 규칙 2). */
+      '<div class="jrow jrow-full lsf-pbox"></div>' +
       '<div class="jrow jrow-full">' +
         '<label for="l-title">제목 <b>*</b></label>' +
         '<input id="l-title" name="title" required minlength="2" maxlength="60" ' +
@@ -1297,10 +1305,21 @@
       '</div>' +
       '<div class="jrow">' +
         '<label for="l-price">값 <b>*</b></label>' +
+        /* ⚠️⚠️ 시안의 「판매하기 · 나눔하기」입니다 — **DB 는 한 글자도
+           안 바뀌었습니다**(0 원이 곧 무료로 나눔입니다 · 0056). 그 전에는
+           그 사실을 "0 을 적어 주세요" 라는 **글로만** 알려 드렸습니다.
+           ⚠️ 눌러도 아무 일이 안 나는 칸이 아닙니다 — 「나눔하기」는 값
+           칸을 가리고 **0 을 보냅니다**(절대 규칙 5). */
+        '<span class="lsf-pk">' +
+          '<button type="button" class="btn btn-sm btn-deep lsf-sell" ' +
+            'aria-pressed="true">판매하기</button>' +
+          '<button type="button" class="btn btn-sm btn-line lsf-free" ' +
+            'aria-pressed="false">나눔하기</button>' +
+        '</span>' +
         '<input id="l-price" name="price" type="number" min="0" max="100000000" ' +
         'step="1000" inputmode="numeric" required placeholder="원">' +
         /* ⚠️ "협의" 를 우리가 지어 적지 않습니다 — 0 은 무료입니다 */
-        '<span class="jhint">무료로 나누시면 <b>0</b> 을 적어 주세요.</span>' +
+        '<span class="jhint">무료로 나누시면 <b>나눔하기</b> 를 골라 주세요.</span>' +
       '</div>' +
       '<div class="jrow jrow-full">' +
         '<label class="jchk"><input type="checkbox" id="l-ship" name="ship"> ' +
@@ -1330,11 +1349,24 @@
   }
 
   /* 올린 뒤 안내 — ⚠️ **글자만** 잇습니다 (사진 상자는 따로 이어 붙입니다) */
-  function doneHtml(hasPhoto){
-    return '<h3>매물을 올렸습니다.</h3>' +
+  function doneHtml(hasPhoto, up){
+    /* ⚠️⚠️⚠️ **사진이 안 올라간 것을 "올렸습니다" 로 덮지 않습니다.**
+       매물은 이미 올라가 있고 사진만 실패할 수 있습니다 — 몇 장이
+       갔는지 · 어디서 다시 올리는지를 그 자리에서 적습니다(절대 규칙 5).
+       ⚠️ `up` 이 null 이면 **미리 고르신 사진이 없었다**는 뜻이라 그
+       줄을 아예 안 찍습니다("0장 올렸습니다" 는 우리가 만든 말입니다). */
+    var shot = "";
+    if(up && up.total){
+      shot = up.error
+        ? '<p class="jmsg">사진은 ' + up.done + ' / ' + up.total +
+          '장만 올라갔습니다 — ' + esc(up.error) +
+          ' 아래에서 다시 올리실 수 있습니다.</p>'
+        : '<p>사진 ' + up.total + '장을 같이 올렸습니다.</p>';
+    }
+    return '<h3>매물을 올렸습니다.</h3>' + shot +
       (hasPhoto
-        ? '<p>목록에 바로 보입니다. <b>사진을 지금 붙이실 수 있습니다</b> — ' +
-          '나중에 내 정보에서도 붙이실 수 있습니다.</p>'
+        ? '<p>목록에 바로 보입니다. <b>사진을 더 붙이거나 차례를 바꾸실 수 ' +
+          '있습니다</b> — 나중에 내 정보에서도 됩니다.</p>'
         : '<p>목록에 바로 보입니다. 문의가 들어오면 내 정보에서 ' +
           '받아들이실 수 있습니다.</p>') +
       /* ⚠️ 문단 한가운데 링크를 박지 않습니다 — 단추로 냅니다 */
@@ -1365,48 +1397,52 @@
     '</form>';
   }
 
-  window.amAuthAsk().then(function(a){
-    if(!a || !a.on){
-      try{ console.warn("[listing] 로그인 · 접수가 설정되지 않아 중고 직거래를 " +
-        "열지 않았습니다 (Vercel 의 SUPABASE_URL · SUPABASE_ANON_KEY)."); }catch(e){}
-      /* ⚠️ 빌드가 찍어 둔 "아직 없는 것입니다" 를 그대로 두면
-         0건이라고 말하는 것입니다 — 열지 않았다고 적습니다. */
-      window.amShut("lslist");
-      return;                       /* 빌드가 찍어 둔 글 그대로 */
-    }
-    if(!KEEP){
-      /* ⚠️⚠️ 보유 기간을 못 보여 주면 동의를 받을 수 없습니다 (제15조
-         제2항). 운영자에게만 말하고 양식은 안 엽니다 (절대 규칙 3). */
-      try{ console.warn("[listing] js/data/site.js 의 listingKeep(보유 기간)이 " +
-        "비어 매물 양식을 열지 않았습니다 — 개인정보보호법 제15조 제2항."); }catch(e){}
-      return;
+  /* ════════════════════════════════════════════════════════════════
+     양식을 세웁니다 — ⚠️ `amLstPhoto.ready()` **뒤에** 부릅니다
+     (사진 칸이 있는지는 서버에 물어봐야 압니다).
+     ════════════════════════════════════════════════════════════════ */
+  function mountForm(a, box){
+    box.innerHTML = openForm();
+
+    /* ⚠️⚠️ **사진 상자를 끼웁니다** — 만드는 자리는 `js/lstphoto.js`
+       **한 곳**이고(올린 뒤에 붙이는 상자와 같은 파일입니다), 여기서는
+       받아서 넣기만 합니다.
+       ⚠️ 버킷이 꺼져 있으면 빈 글자이므로 그 줄을 **줄째 뺍니다** —
+       남겨 두면 아무것도 없는 빈 칸이 양식 맨 위에 섭니다(절대 규칙 2). */
+    var slot = box.querySelector(".lsf-pbox");
+    var pbox = window.amLstPhoto ? window.amLstPhoto.pick() : "";
+    var PICKED = null;
+    if(slot){
+      if(pbox){
+        slot.insertAdjacentHTML("beforeend", pbox);
+        PICKED = window.amLstPhoto.pickBind(slot.querySelector(".lspk"));
+      }else{
+        slot.parentNode.removeChild(slot);
+      }
     }
 
-    SIGNED = !!a.signedIn;
-    CONF = a.conf;
-    readUrl();
-    mountBar();
-    bindBar(a);
-    /* ⚠️⚠️ **찜을 먼저 받고 그립니다** — 안 기다리면 카드가 꺼진 하트로
-       먼저 그려지고, 답이 온 뒤에 다시 그려야 합니다(그러면 보고 계신
-       자리가 맨 위로 튕깁니다). 못 읽으면 빈 묶음이고 그대로 그립니다. */
-    loadFav(a).then(function(m){ FAV = m; draw(a); });
-    /* ⚠️⚠️⚠️ **뒤로 가기를 받습니다** — 상세로 들어가는 길이 `pushState`
-       라, 이 줄이 없으면 뒤로 가기를 눌러도 **화면이 그대로** 있습니다
-       (주소만 바뀌어서, 손님은 뒤로 가기가 고장난 것으로 읽습니다). */
-    window.addEventListener("popstate", function(){ readUrl(); draw(a); });
-
-    var box = document.getElementById("lsbox");
-    if(!box) return;
-    box.className = "jbox";
-    box.innerHTML = a.signedIn
-      ? openForm()
-      : '<div class="none"><h3>매물을 올리려면 로그인하셔야 합니다.</h3>' +
-        '<p>올리신 분과 사실 분을 잇는 자리라, 누가 올렸는지 알아야 합니다.</p>' +
-        '<a class="btn btn-pt" href="' +
-          (window.amLoginUrl ? esc(window.amLoginUrl(window.location.pathname)) : "/login") +
-        '">로그인하기</a></div>';
-    if(!a.signedIn) return;
+    /* 판매하기 · 나눔하기 — ⚠️⚠️ 가리는 칸은 `required` 를 **같이**
+       뗍니다. 안 떼면 숨은 칸 하나 때문에 제출이 막히는데 브라우저가
+       보이지 않는 칸을 가리키지 못해 **아무 말도 안 나옵니다**
+       (누르는데 아무 일이 안 일어나는 꼴로 보입니다). */
+    var pv = document.getElementById("l-price");
+    var bSell = box.querySelector(".lsf-sell");
+    var bFree = box.querySelector(".lsf-free");
+    function kind(free){
+      if(!pv || !bSell || !bFree) return;
+      bSell.className = "btn btn-sm " + (free ? "btn-line" : "btn-deep") + " lsf-sell";
+      bFree.className = "btn btn-sm " + (free ? "btn-deep" : "btn-line") + " lsf-free";
+      bSell.setAttribute("aria-pressed", free ? "false" : "true");
+      bFree.setAttribute("aria-pressed", free ? "true" : "false");
+      pv.hidden = !!free;
+      pv.required = !free;
+      /* ⚠️ 나눔은 **0 원**입니다(0056 — 0 이 곧 무료로 나눔입니다).
+         되돌리실 때 0 을 그대로 두면 "0원에 판다" 가 되므로 비웁니다. */
+      if(free) pv.value = "0";
+      else if(String(pv.value) === "0") pv.value = "";
+    }
+    if(bSell) bSell.addEventListener("click", function(){ kind(false); });
+    if(bFree) bFree.addEventListener("click", function(){ kind(true); });
 
     /* ⚠️ 「기타」를 고르시면 직접 적는 칸이 나옵니다 — 그때까지는 가려
        둡니다 (늘 내면 목록에서 고르신 분에게 쓸 데 없는 칸입니다). */
@@ -1446,21 +1482,32 @@
         body: f.body.value, contact: f.contact.value,
         agree_at: new Date().toISOString()
       }).then(function(id){
-        /* ⚠️ `open_listing` 은 **새 매물의 id** 를 돌려줍니다 — 그 자리에서
-           사진을 붙이실 수 있게 상자를 엽니다. 버킷이 꺼져 있으면
-           `amLstPhoto.box()` 가 빈 글자라 그 줄이 아예 안 나옵니다.
-           ⚠️⚠️ **먼저 물어보고 그립니다** — `ready()` 는 서버에 한 번
-           묻습니다. 안 기다리면 그 답이 오기 전에는 꺼진 것으로 읽혀
-           사진 칸이 **조용히 안 그려집니다** (스크립트 차례에 기댄 자리를
-           두 번 겪었습니다 — `window.amAdPlace` · `AM_TEE_BAND`). */
+        /* ⚠️ `open_listing` 은 **새 매물의 id** 를 돌려줍니다 — 사진
+           경로를 문이 그 id 로 짓습니다(`lst/<매물>/photo/…`). 그래서
+           미리 고르신 사진은 **이 자리에서야** 보낼 수 있습니다. */
         var lid = String(id == null ? "" : id).replace(/"/g, "");
-        return (lid && window.amLstPhoto
-          ? window.amLstPhoto.ready() : Promise.resolve(false))
-          .then(function(){ return lid; });
-      }).then(function(lid){
+        var picked = PICKED ? PICKED.items() : [];
+        if(!lid || !picked.length) return { lid: lid, up: null };
+        /* ⚠️⚠️⚠️ **여기서부터 매물은 이미 올라가 있습니다.** 사진이
+           실패해도 "매물을 올리지 못했습니다" 로 적으면 거짓말입니다 —
+           `sendPicked` 는 거절하지 않고 **몇 장이 갔는지**를 돌려줍니다. */
+        msg.textContent = "매물을 올렸습니다 — 사진을 올리는 중입니다… 1 / " +
+                          picked.length;
+        return window.amLstPhoto.sendPicked(lid, picked, function(i, n){
+          msg.textContent = "매물을 올렸습니다 — 사진을 올리는 중입니다… " +
+                            i + " / " + n;
+        }).then(function(up){ return { lid: lid, up: up }; });
+      }).then(function(r){
+        var lid = r.lid;
+        /* ⚠️ 미리 보기 주소를 **거둡니다** — 안 거두면 그 탭이 사진을
+           계속 들고 있습니다(`URL.createObjectURL`). */
+        if(PICKED) PICKED.clear();
+        /* ⚠️ 올린 **뒤에** 붙이는 상자는 그대로 둡니다 — 사진을 안
+           고르고 올리신 분 · 몇 장이 실패한 분이 여기서 붙이십니다
+           (막다른 길로 두지 않습니다 · 절대 규칙 2). */
         var ph = (lid && window.amLstPhoto) ? window.amLstPhoto.box() : "";
         box.className = ph ? "jbox" : "none";
-        box.innerHTML = doneHtml(!!ph);
+        box.innerHTML = doneHtml(!!ph, r.up);
         /* ⚠️⚠️ 사진 상자는 **이어 붙입니다**(`insertAdjacentHTML`) —
            `innerHTML` 에 이어 적으면 `check-safe` 가 "esc() 없이 변수를
            넣었다" 로 잡습니다. 그 검사가 맞습니다 — 그 상자는 **다른
@@ -1478,5 +1525,61 @@
         msg.textContent = String((err && err.message) || "올리지 못했습니다.");
       });
     });
+  }
+
+  window.amAuthAsk().then(function(a){
+    if(!a || !a.on){
+      try{ console.warn("[listing] 로그인 · 접수가 설정되지 않아 중고 직거래를 " +
+        "열지 않았습니다 (Vercel 의 SUPABASE_URL · SUPABASE_ANON_KEY)."); }catch(e){}
+      /* ⚠️ 빌드가 찍어 둔 "아직 없는 것입니다" 를 그대로 두면
+         0건이라고 말하는 것입니다 — 열지 않았다고 적습니다. */
+      window.amShut("lslist");
+      return;                       /* 빌드가 찍어 둔 글 그대로 */
+    }
+    if(!KEEP){
+      /* ⚠️⚠️ 보유 기간을 못 보여 주면 동의를 받을 수 없습니다 (제15조
+         제2항). 운영자에게만 말하고 양식은 안 엽니다 (절대 규칙 3). */
+      try{ console.warn("[listing] js/data/site.js 의 listingKeep(보유 기간)이 " +
+        "비어 매물 양식을 열지 않았습니다 — 개인정보보호법 제15조 제2항."); }catch(e){}
+      return;
+    }
+
+    SIGNED = !!a.signedIn;
+    CONF = a.conf;
+    readUrl();
+    mountBar();
+    bindBar(a);
+    /* ⚠️⚠️ **찜을 먼저 받고 그립니다** — 안 기다리면 카드가 꺼진 하트로
+       먼저 그려지고, 답이 온 뒤에 다시 그려야 합니다(그러면 보고 계신
+       자리가 맨 위로 튕깁니다). 못 읽으면 빈 묶음이고 그대로 그립니다. */
+    loadFav(a).then(function(m){ FAV = m; draw(a); });
+    /* ⚠️⚠️⚠️ **뒤로 가기를 받습니다** — 상세로 들어가는 길이 `pushState`
+       라, 이 줄이 없으면 뒤로 가기를 눌러도 **화면이 그대로** 있습니다
+       (주소만 바뀌어서, 손님은 뒤로 가기가 고장난 것으로 읽습니다). */
+    window.addEventListener("popstate", function(){ readUrl(); draw(a); });
+
+    var box = document.getElementById("lsbox");
+    if(!box) return;
+    box.className = "jbox";
+    if(!a.signedIn){
+      box.innerHTML =
+        '<div class="none"><h3>매물을 올리려면 로그인하셔야 합니다.</h3>' +
+        '<p>올리신 분과 사실 분을 잇는 자리라, 누가 올렸는지 알아야 합니다.</p>' +
+        '<a class="btn btn-pt" href="' +
+          (window.amLoginUrl ? esc(window.amLoginUrl(window.location.pathname)) : "/login") +
+        '">로그인하기</a></div>';
+      return;
+    }
+    /* ⚠️⚠️⚠️ **사진 칸이 있는지 먼저 물어보고 그립니다.** `ready()` 는
+       서버에 한 번 묻습니다 — 버킷이 켜졌는지는 **서버만** 압니다. 안
+       기다리고 그리면 그 답이 오기 전에는 꺼진 것으로 읽혀 **사진 칸이
+       조용히 안 그려집니다**(에러 0줄). 늦게 오는 값에 기댄 자리를 이
+       저장소가 세 번 겪었습니다 — `window.amAdPlace` · `AM_TEE_BAND` ·
+       0051 의 사진 상자.
+       ⚠️ 못 물어봤으면 **사진 칸 없이** 그립니다(양식은 열립니다). */
+    (window.amLstPhoto ? window.amLstPhoto.ready() : Promise.resolve(false))
+      .catch(function(){ return false; })
+      .then(function(){ mountForm(a, box); });
+
   }).catch(function(){ /* 못 물어봤으면 빌드가 찍은 글 그대로 */ });
 })();

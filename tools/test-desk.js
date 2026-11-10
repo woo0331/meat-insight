@@ -6066,8 +6066,93 @@ function boardsOf(){
       await g.p.fill("#l-body", "검사로 올리는 매물입니다");
       await g.p.fill("#l-contact", "010-5555-5555");
       await g.p.check(".jconsent input[type=checkbox]");
+
+      /* ⚠️⚠️⚠️ **사진을 글보다 먼저 고릅니다** (2026-11-10 · 시안) —
+         2026-11-09 까지는 올린 **뒤에야** 사진 칸이 나왔습니다. 글을 다
+         적고 단추를 누르고 나서야 사진을 붙이는 꼴이라, 그 화면을 닫으신
+         분의 매물은 사진이 0장인 채로 남았습니다.
+         ⚠️⚠️ 흉내 장치는 걸러 주지 않으므로 **보내는 꾸러미를 뜯어**
+         봅니다 — 줄 수로 재면 미리 고른 사진을 통째로 안 보내도 영원히
+         초록입니다. */
+      const pk0 = await g.p.evaluate(function(){
+        const f = document.getElementById("lsf");
+        if(!f) return { on:false };
+        const pk = f.querySelector(".lspk");
+        const ti = document.getElementById("l-title");
+        return {
+          on: !!pk,
+          /* 사진 칸이 **제목보다 위**인가 — 시안의 그 자리입니다 */
+          first: !!(pk && ti &&
+            (pk.compareDocumentPosition(ti) & Node.DOCUMENT_POSITION_FOLLOWING)),
+          n: pk ? ((pk.querySelector(".lspk-n") || {}).textContent || "") : "",
+          thumbs: pk ? pk.querySelectorAll(".lspk-t").length : -1
+        };
+      });
+      ok("⚠️⚠️⚠️ 2026-11-10 — 양식 안에 **사진 고르는 칸**이 있다",
+         pk0.on === true, JSON.stringify(pk0));
+      ok("  ⚠️ 그 칸이 **제목보다 위**다 (시안의 그 자리)",
+         pk0.first === true, JSON.stringify(pk0));
+      ok("  ⚠️ 0장이면 **0/10** 이라고 적는다 (지어낸 숫자가 아닙니다)",
+         String(pk0.n).replace(/\s/g, "") === "0/10" && pk0.thumbs === 0,
+         JSON.stringify(pk0));
+
+      /* ⚠️⚠️ **적어 보낸 종류를 안 믿습니다** — `file.type` 은 확장자만
+         보고 쓰는 값이라 이름만 바꾼 파일이 통과합니다. 첫 바이트로
+         봅니다(`js/imgprep.js`). 고르는 그 자리에서 거절해야 올리고
+         나서야 모자란 것을 아시는 일이 없습니다. */
+      await g.p.setInputFiles("#lsf .lspk-i", { name:"b.jpg",
+        mimeType:"image/jpeg", buffer: NOTIMG });
+      await g.p.waitForTimeout(400);
+      const pk1 = await g.p.evaluate(function(){
+        const pk = document.querySelector("#lsf .lspk");
+        return { thumbs: pk.querySelectorAll(".lspk-t").length,
+                 say: (pk.querySelector(".lspk-m") || {}).textContent || "" };
+      });
+      ok("  ⚠️⚠️ 이름만 `.jpg` 인 파일은 **고르는 자리에서** 거절한다",
+         pk1.thumbs === 0 && pk1.say.indexOf("사진 파일이 아닙니다") >= 0,
+         JSON.stringify(pk1));
+
+      /* ⚠️ **참 PNG** 를 넣습니다 — 아래에서 보내는 종류가 `image/jpeg`
+         로 바뀌는 것이 "다시 그렸다 = EXIF 가 사라졌다" 의 증거입니다 */
+      await g.p.setInputFiles("#lsf .lspk-i", { name:"b.png",
+        mimeType:"image/png", buffer: PNG1 });
+      await g.p.waitForTimeout(600);
+      const pk2 = await g.p.evaluate(function(){
+        const pk = document.querySelector("#lsf .lspk");
+        const t = pk.querySelector(".lspk-t");
+        const im = t ? t.querySelector("img") : null;
+        return { thumbs: pk.querySelectorAll(".lspk-t").length,
+                 n: (pk.querySelector(".lspk-n") || {}).textContent || "",
+                 blob: !!(im && String(im.src).indexOf("blob:") === 0),
+                 badge: !!(t && t.querySelector(".lspk-b")) };
+      });
+      ok("  ⚠️ 고른 사진이 **미리 보기로** 선다 (1/10 · 대표 딱지)",
+         pk2.thumbs === 1 && String(pk2.n).replace(/\s/g, "") === "1/10" &&
+         pk2.blob === true && pk2.badge === true, JSON.stringify(pk2));
+
+      /* ⚠️⚠️ 시안의 **판매하기 · 나눔하기** — DB 는 한 글자도 안 바뀌었고
+         (0 원이 곧 무료로 나눔입니다 · 0056) 화면이 그 값을 넣습니다.
+         ⚠️ 가리는 칸은 `required` 를 **같이** 떼야 합니다 — 안 떼면 숨은
+         칸 때문에 제출이 **아무 말 없이** 막힙니다. */
+      await g.p.click(".lsf-free");
+      const kf = await g.p.evaluate(function(){
+        const pv = document.getElementById("l-price");
+        return { v: pv.value, req: pv.required, shown: pv.getClientRects().length };
+      });
+      ok("⚠️ 시안의 **나눔하기** — 값 칸을 가리고 **0** 을 넣는다",
+         kf.v === "0" && kf.req === false && kf.shown === 0, JSON.stringify(kf));
+      await g.p.click(".lsf-sell");
+      const ks = await g.p.evaluate(function(){
+        const pv = document.getElementById("l-price");
+        return { v: pv.value, req: pv.required, shown: pv.getClientRects().length };
+      });
+      ok("  ⚠️ **판매하기** 로 되돌리면 0 을 지운다 (0원 판매가 아닙니다)",
+         ks.v === "" && ks.req === true && ks.shown > 0, JSON.stringify(ks));
+      await g.p.fill("#l-price", "250000");
+
+      const n10 = g.sent.length;
       await g.p.click("#lsf button[type=submit]");
-      await g.p.waitForTimeout(500);
+      await g.p.waitForTimeout(900);
       const sent = g.sent.filter(function(x){ return x.name === "open_listing"; });
       ok("⚠️ 올리기 단추가 **open_listing 을 실제로 부른다**", sent.length === 1,
          JSON.stringify(g.sent.map(function(x){ return x.name; })));
@@ -6084,6 +6169,42 @@ function boardsOf(){
       ok("  ⚠️ 택배 여부를 **참 · 거짓**으로 보낸다 ('on' 이 아닙니다)",
          pl.ship === true, JSON.stringify(pl.ship));
       ok("  ⚠️ 동의 시각을 같이 보낸다", !!pl.agree_at, String(pl.agree_at));
+
+      /* ⚠️⚠️⚠️ **미리 고른 사진이 매물을 올린 뒤에 실제로 올라가는가.**
+         사진 경로는 문이 **매물 id 로** 짓습니다(lst/<매물>/photo/…) —
+         그래서 차례가 반드시 **매물 먼저 · 사진 나중**입니다. 거꾸로면
+         경로를 지을 id 가 없습니다. */
+      await g.p.waitForTimeout(600);
+      const seq10 = g.sent.slice(n10).map(function(x){ return x.name; });
+      ok("  ⚠️ 차례가 **매물 먼저 · 사진 나중**이다 (경로를 id 로 짓습니다)",
+         seq10.indexOf("open_listing") >= 0 &&
+         seq10.indexOf("upload") > seq10.indexOf("open_listing"),
+         JSON.stringify(seq10));
+      const up10 = g.sent.slice(n10).filter(function(x){
+        return x.name === "upload" && String(x.body).indexOf("POST") === 0; })
+        .map(function(x){ return String(x.body); });
+      /* ⚠️⚠️ **방법으로 가립니다** — 같은 주소 꼴로 사진을 내려받는 GET 도
+         오므로 이름만 보면 올리지 않았는데도 "올렸다" 로 세어집니다. */
+      const put10 = g.sent.slice(n10).filter(function(x){
+        return x.name === "storage" && String(x.body).indexOf("PUT") === 0; });
+      ok("  ⚠️⚠️⚠️ 미리 고른 사진이 **실제로 올라간다** (POST → PUT)",
+         up10.length === 1 && put10.length === 1,
+         JSON.stringify({ up:up10.length, put:put10.length, seq:seq10 }));
+      /* ⚠️⚠️⚠️ **다시 그렸다는 증거**입니다 — PNG 를 골랐는데 보내는 종류가
+         `image/jpeg` 라는 것은 canvas 를 한 번 지났다는 뜻이고, canvas 를
+         지나면 EXIF(위치정보)가 통째로 사라집니다. 여기가 초록이 아니면
+         폰으로 찍은 사진의 집 좌표가 **공개 버킷**에 그대로 올라갑니다. */
+      ok("  ⚠️⚠️⚠️ 그 사진도 **다시 그려서** 보낸다 (PNG 를 골라도 image/jpeg)",
+         up10.join(" ").indexOf('"mime":"image/jpeg"') >= 0 &&
+         /"bytes":[1-9]/.test(up10.join(" ")), up10.join(" ").slice(0, 200));
+      /* ⚠️⚠️ **몇 장이 올라갔는지 그 자리에서 말합니다** — 매물은 이미
+         올라가 있고 사진만 실패할 수 있습니다. "올렸습니다" 로 덮으면
+         거짓말입니다(절대 규칙 5). */
+      const dtx = await g.p.evaluate(function(){
+        const bx = document.getElementById("lsbox");
+        return bx ? bx.innerText : ""; });
+      ok("  ⚠️⚠️ 사진이 **몇 장** 올라갔는지 그 자리에서 말한다",
+         dtx.indexOf("사진 1장을 같이 올렸습니다") >= 0, dtx.slice(0, 160));
 
       /* ⚠️⚠️⚠️ 0068 — **올린 그 자리에서 사진을 붙입니다.** 올리신 직후에만
          붙일 수 있게 두면 그 화면을 닫은 분의 매물은 영원히 사진이 없으므로

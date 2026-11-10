@@ -135,8 +135,9 @@ module.exports = async function handler(req, res){
     partner: { webhook: has("PARTNER_WEBHOOK_URL"), mailTo: has("PARTNER_EMAIL_TO") }
   };
 
-  /* 한 종류라도 받을 곳이 있는가 — api/_send.js 가 판단하는 것과
-     같은 규칙입니다 (웹훅 하나, 또는 키와 받는 주소가 **둘 다**). */
+  /* 한 종류라도 받을 곳이 있는가 — ⚠️ 이 규칙이 적힌 자리는 지금
+     **여기 하나**입니다(앞 서비스의 `api/_send.js` 를 2026-11-10 에
+     걷어냈습니다). 웹훅 하나, 또는 키와 받는 주소가 **둘 다**. */
   function ready(k){
     var b = byKind[k];
     return !!(b.webhook || common.webhook ||

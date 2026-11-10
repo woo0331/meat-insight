@@ -6124,11 +6124,23 @@ function boardsOf(){
         return { thumbs: pk.querySelectorAll(".lspk-t").length,
                  n: (pk.querySelector(".lspk-n") || {}).textContent || "",
                  blob: !!(im && String(im.src).indexOf("blob:") === 0),
+                 /* ⚠️⚠️⚠️ **주소만 보면 안 됩니다 — 그려졌는지를 봅니다.**
+                    처음에 "src 가 blob: 으로 시작하나" 만 재어 두었는데,
+                    `vercel.json` 의 CSP 가 `img-src` 에 `blob:` 을 안 적어
+                    두어 브라우저가 **한 장도 안 그리고** 있었습니다(손님
+                    눈에는 깨진 그림의 대체 글자만 보입니다). 그런데도 그
+                    검사는 초록이었습니다 — 0051 에서 Supabase 사진이 CSP
+                    에 막혀 한 장도 안 뜬 자리와 **같은 꼴**이고, 그때도
+                    눌러 보는 검사가 잡았습니다. `naturalWidth` 는 실제로
+                    디코딩된 그림만 0보다 큽니다. */
+                 drawn: !!(im && im.complete && im.naturalWidth > 0),
                  badge: !!(t && t.querySelector(".lspk-b")) };
       });
       ok("  ⚠️ 고른 사진이 **미리 보기로** 선다 (1/10 · 대표 딱지)",
          pk2.thumbs === 1 && String(pk2.n).replace(/\s/g, "") === "1/10" &&
          pk2.blob === true && pk2.badge === true, JSON.stringify(pk2));
+      ok("  ⚠️⚠️⚠️ 그 미리 보기가 **실제로 그려진다** (CSP 가 blob: 을 막지 않는다)",
+         pk2.drawn === true, JSON.stringify(pk2));
 
       /* ⚠️⚠️ 시안의 **판매하기 · 나눔하기** — DB 는 한 글자도 안 바뀌었고
          (0 원이 곧 무료로 나눔입니다 · 0056) 화면이 그 값을 넣습니다.
@@ -6175,11 +6187,20 @@ function boardsOf(){
          그래서 차례가 반드시 **매물 먼저 · 사진 나중**입니다. 거꾸로면
          경로를 지을 id 가 없습니다. */
       await g.p.waitForTimeout(600);
-      const seq10 = g.sent.slice(n10).map(function(x){ return x.name; });
+      /* ⚠️⚠️⚠️ **방법까지 보고 셉니다** — 같은 이름(`upload`)으로 붙어
+         있는 사진을 **내려받는 GET**(`?lstq=`)도 옵니다. 이름만 보면 사진을
+         하나도 안 보내도 이 줄이 초록입니다 — 되돌려 보기가 그 꼴을
+         잡았습니다(미끼를 넣었더니 옆의 세 줄은 빨개졌는데 **이 줄만
+         혼자 통과**했습니다). 0068 에서 PUT 을 둘로 세어 밟은 자리와
+         같은 결입니다. */
+      const arr10 = g.sent.slice(n10);
+      const seq10 = arr10.map(function(x){
+        return x.name + ":" + String(x.body).slice(0, 4); });
+      const iOpen = arr10.findIndex(function(x){ return x.name === "open_listing"; });
+      const iUp = arr10.findIndex(function(x){
+        return x.name === "upload" && String(x.body).indexOf("POST") === 0; });
       ok("  ⚠️ 차례가 **매물 먼저 · 사진 나중**이다 (경로를 id 로 짓습니다)",
-         seq10.indexOf("open_listing") >= 0 &&
-         seq10.indexOf("upload") > seq10.indexOf("open_listing"),
-         JSON.stringify(seq10));
+         iOpen >= 0 && iUp > iOpen, JSON.stringify(seq10));
       const up10 = g.sent.slice(n10).filter(function(x){
         return x.name === "upload" && String(x.body).indexOf("POST") === 0; })
         .map(function(x){ return String(x.body); });

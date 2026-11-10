@@ -662,6 +662,12 @@ const SCENES = [
   /* ⚠️ 조건을 걸고 들어온 자리 — 칩 한 줄이 보이는지 눈으로 봅니다 */
   ["used-chips",      "/cat/used?br=" + encodeURIComponent("타이틀리스트") +
                       "&cd=good&rg=seoul&sh=1", CUS, T_LST, {}],
+  /* ⚠️⚠️⚠️ **2026-11-10 — 올리는 양식의 「나눔하기」** 입니다. 그 단추를
+     누르면 값 칸이 `hidden` 이 되고 `required` 도 같이 떨어지는데, 그
+     모습은 **눌러 보지 않으면 한 번도 안 찍힙니다**(0 원이 곧 무료로
+     나눔입니다 · 0056). 가로로 밀리지도 · 글자가 작지도 않아 어떤
+     검사도 "보기 흉한가" 는 못 잽니다. */
+  ["used-free",       "/cat/used", CUS, T_LST, {}, ".lsf-free"],
   ["desk-notmine",    "/desk",  CUS, T_DESK,  {}],
   ["admin-notmine",   "/admin", CUS, T_ADMIN, { biz_metrics: MET }]
 ];

@@ -5357,12 +5357,26 @@ function boardsOf(){
       await p0.goto(base + "/cat/used", { waitUntil:"networkidle" });
       await p0.waitForTimeout(400);
       const off = await p0.evaluate(function(){
+        const bx = document.getElementById("lsbox");
         return { form: !!document.getElementById("lsf"),
                  bar:  !!document.getElementById("lsfil"),
-                 boxHtml: (document.getElementById("lsbox") || {}).innerHTML || "" };
+                 /* ⚠️⚠️⚠️ **빈 글자를 요구하면 안 됩니다**(2026-11-10).
+                    전에는 `boxHtml === ""` 로 재고 있었는데, 그 자리는
+                    머리말 「판매글 등록」이 가는 자리라 **비어 있으면
+                    눌러도 아무 일이 안 나는 칸**입니다(절대 규칙 5). 즉
+                    그 검사는 고장을 **요구하고** 있었고, 고치는 순간
+                    멀쩡한 코드를 실패로 잡았습니다 — 또 한 번 "검사에
+                    그날의 값을 박은" 자리입니다.
+                    재려는 뜻은 **양식이 안 열린다**입니다: 적는 칸도 ·
+                    보내는 단추도 없어야 합니다(다 적고 누른 뒤 실패하지
+                    않게). 비었는지는 ⑮ 가 **거꾸로** 잽니다. */
+                 fields: bx ? bx.querySelectorAll(
+                   "input, select, textarea, button, [type=submit]").length : -1,
+                 boxHtml: (bx || {}).innerHTML || "" };
       });
       ok("⚠️ 설정 전에는 매물 양식을 **안 엽니다** (다 적고 누른 뒤 실패하지 않게)",
-         !off.form && !off.bar && off.boxHtml === "", JSON.stringify(off));
+         !off.form && !off.bar && off.fields === 0,
+         JSON.stringify(off).slice(0, 200));
       await p0.close();
     }
 
@@ -6624,6 +6638,52 @@ function boardsOf(){
       await g.p.close();
     }
   }
+
+  /* ⑮ ⚠️⚠️⚠️ **설정이 없을 때 「판매글 등록」이 갈 자리가 있는가**
+     (2026-11-10). 머리말 퀵액션의 그 단추는 `#lsbox` 로 가는데, 그 자리는
+     빌드가 **빈 `<div>`** 로 찍어 두고 `js/listing.js` 가 채웁니다 — 설정이
+     없으면 거기서 `return` 해 버려 **눌러도 아무 일이 안 나는 칸**이
+     됩니다(절대 규칙 5). 운영에서 실제로 그 꼴이었습니다.
+     ⚠️ `test-journey` 는 **그 자리가 있는지**(id)만 보고 있었고, id 는
+     빌드가 찍으므로 비어 있어도 영원히 초록이었습니다. 여기서는
+     **설정을 끄고** 그 자리가 **비었는지**까지 봅니다.
+     ⚠️⚠️ 목록 쪽(`#lslist`)과 **다른 말**이어야 합니다 — 같은 상자가 두
+     번 서면 고객센터 단추도 두 개가 됩니다(자물쇠마다 다른 말). */
+  {
+    const p0 = await b.newPage({ viewport: view });
+    await p0.route("**/api/session", function(r){
+      return r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ auth:false, signedIn:false, conf:null }) });
+    });
+    await p0.goto(base + "/cat/used", { waitUntil:"networkidle" });
+    await p0.waitForTimeout(500);
+    const s0 = await p0.evaluate(function(){
+      const bx = document.getElementById("lsbox");
+      const ls = document.getElementById("lslist");
+      const a  = document.querySelector('.lshd-q a[href="#lsbox"]');
+      return { has: !!bx, kids: bx ? bx.children.length : -1,
+               txt: bx ? (bx.innerText || "").trim() : "",
+               list: ls ? (ls.innerText || "").trim() : "",
+               btn: !!a,
+               /* ⚠️ 고객센터 단추가 **하나**여야 합니다 */
+               help: document.querySelectorAll(
+                 '#lslist a[href="/help"], #lsbox a[href="/help"]').length };
+    });
+    ok("⚠️⚠️⚠️ 설정이 없어도 「판매글 등록」이 가는 `#lsbox` 가 **비어 있지 않다**",
+       s0.btn && s0.has && s0.kids > 0 && s0.txt.length > 0,
+       JSON.stringify(s0).slice(0, 200));
+    ok("  ⚠️⚠️ 목록 쪽과 **다른 말**로 거절한다 (같은 상자가 두 번 서지 않습니다)",
+       s0.txt.length > 0 && s0.list.length > 0 && s0.txt !== s0.list,
+       JSON.stringify({ box: s0.txt.slice(0, 60), list: s0.list.slice(0, 60) }));
+    ok("  ⚠️ 고객센터로 가는 단추는 **하나뿐이다**", s0.help === 1,
+       "help " + s0.help + "개");
+    /* ⚠️ 운영자에게 할 말은 손님 화면에 안 찍습니다 (절대 규칙 3) */
+    ok("  ⚠️ 그 글에 **설정 이름이 한 글자도 없다** (절대 규칙 3)",
+       s0.txt.indexOf("SUPABASE") < 0 && s0.txt.indexOf("Vercel") < 0,
+       s0.txt.slice(0, 80));
+    await p0.close();
+  }
+
 
 
   /* ══════════════════════════════════════════════════════════════

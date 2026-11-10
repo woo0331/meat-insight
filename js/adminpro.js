@@ -332,12 +332,32 @@
       esc(p.id) + '">담당자 초대 코드 만들기</button></div>';
   }
 
+  /* ⚠️⚠️⚠️ **하위 키를 사람 말로 풉니다.** `provider_apply.services` 는
+     text[] 라 PostgREST 가 배열로 돌려줍니다 — 그대로 esc() 에 넣으면
+     자바스크립트가 쉼표로 이어 `rg-in,rg-sim` 처럼 **영문 키**가 찍힙니다.
+     ⚠️ 2026-11-10 에 입점 신청 목록을 이 한 곳으로 합치면서 드러났습니다 —
+     걷어낸 쪽(`js/account.js` 의 `applies()`)이 `amSub()` 로 풀어 적고
+     있었으므로, **그냥 지웠으면 그만큼이 나빠질** 자리였습니다. 목록을
+     합칠 때는 **빼는 쪽에만 있던 것**을 칸 단위로 세어 보세요.
+     ⚠️⚠️ **모르는 키는 키 그대로** 보여 줍니다 — 조용히 빠지면 화면과
+     DB 가 어긋난 것을 아무도 모릅니다.
+     ⚠️ 빈 배열은 **줄째 뺍니다** — `[]` 는 자바스크립트에서 참이라
+     그냥 물으면 「하려는 일 — 」 만 남습니다(절대 규칙 2). */
+  function subNames(v){
+    var ks = Array.isArray(v) ? v : (v ? [v] : []);
+    return ks.map(function(k){
+      var f = window.amSub ? window.amSub(k) : null;
+      return f ? f.item.name : k;
+    }).join(" · ");
+  }
+
   /* ── 입점 신청 ──────────────────────────────────────────────────── */
   function apView(list){
     if(!list.length)
       return '<p class="myhint">아직 들어온 입점 신청이 없습니다.</p>';
     return '<ul class="fe-p">' + list.map(function(a){
       var s = apOf(a.state);
+      var sv = subNames(a.services);
       return '<li><b>' + esc(a.company || "(상호 없음)") + '</b> ' +
         badge(s.name, s.tone) +
         '<p class="fe-r">' + esc(a.no || "") +
@@ -346,7 +366,7 @@
         '<p class="fe-r">' + esc(a.name || "") +
           (a.tel ? " · " + esc(a.tel) : "") +
           (a.email ? " · " + esc(a.email) : "") + '</p>' +
-        (a.services ? '<p class="fe-r">하려는 일 — ' + esc(a.services) + '</p>' : '') +
+        (sv ? '<p class="fe-r">하려는 일 — ' + esc(sv) + '</p>' : '') +
         (a.note ? '<p class="fe-r">' + esc(a.note) + '</p>' : '') +
         '<div class="dk-b">' +
           (a.state === "new"

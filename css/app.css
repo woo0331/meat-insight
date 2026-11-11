@@ -2977,7 +2977,7 @@ picture{ display: contents; }
 .svc-grid{ display:grid; gap:12px; grid-template-columns: repeat(6, 1fr); }
 @media (max-width: 1180px){ .svc-grid{ grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 760px){ .svc-grid{ grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 359px){ .svc-grid{ grid-template-columns: 1fr; } }
+@media (max-width: 299px){ .svc-grid{ grid-template-columns: 1fr; } }
 /* ⚠️⚠️⚠️ 2026-11-11 — 1열로 떨어지는 경계가 460px 였습니다. 그래서 폰에서
    카드 하나가 330px 이고 여섯이 1,990px 였습니다 (PC 에서는 368px —
    5.4배). 문서 전체가 7,534px 로 화면 8.4개였고, 사장님이 "화면이 지나치게
@@ -3012,7 +3012,7 @@ picture{ display: contents; }
    안 먹었습니다 — 화살표가 그대로 서고 오른쪽 여백 44px 이 남아 제목이
    넉 줄로 흘렀습니다. 작업 기억의 "파일 뒤에 붙였다고 이기는 것이
    아닙니다" 를 거꾸로 밟은 자리이고, **찍어 보고** 알았습니다. */
-@media (min-width: 360px) and (max-width: 460px){
+@media (min-width: 300px) and (max-width: 460px){
   /* 좁은 두 칸에서는 화살표를 안 그립니다 — 카드 전체가 링크라 장식이고,
      그 자리를 비우면 오른쪽 여백 44px 이 글자 몫으로 돌아옵니다. */
   .svc-go{ display:none; }

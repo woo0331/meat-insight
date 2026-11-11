@@ -351,11 +351,25 @@ window.amAuthProviders = function(){
 window.amAuthGo = function(key){
   var c = AM_AUTH.conf;
   if(!c) return false;
-  var known = (window.AM_SOCIAL || []).some(function(s){ return s.key === key; });
-  if(!known) return false;
+  /* ⚠️ 모르는 키는 아무 데도 안 보냅니다 — 줄을 **집어서** 씁니다
+     (아래에서 그 줄의 동의항목을 읽어야 합니다). */
+  var row = null;
+  (window.AM_SOCIAL || []).forEach(function(s){ if(s.key === key) row = s; });
+  if(!row) return false;
   try{
+    /* ⚠️⚠️⚠️ **동의항목을 우리가 싣습니다** (2026-11-11 · KOE205).
+       안 실으면 Supabase 가 제 기본값을 붙이는데, 카카오 기본값에
+       `account_email` 이 들어 있어 **카카오가 거절합니다**(그 동의항목을
+       켜려면 비즈 앱 전환이 필요하고 저희는 이메일을 안 씁니다).
+       ⚠️ 적는 자리는 `js/data/social.js` **한 곳**입니다 — 여기에
+       글자로 박으면 공급자가 느는 날 두 곳이 어긋납니다.
+       ⚠️⚠️ **비어 있으면 안 싣습니다** — 빈 `scopes=` 를 보내면
+       "아무것도 안 받겠다" 가 되어 공급자마다 다르게 읽습니다. */
+    var sc = (row.scopes || "").trim();
     window.location.href = c.url + "/auth/v1/authorize?provider=" +
-      encodeURIComponent(key) + "&redirect_to=" +
+      encodeURIComponent(key) +
+      (sc ? "&scopes=" + encodeURIComponent(sc) : "") +
+      "&redirect_to=" +
       encodeURIComponent(window.location.origin + window.amAfterLogin());
     return true;
   }catch(e){ return false; }

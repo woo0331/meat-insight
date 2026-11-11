@@ -461,28 +461,29 @@ function boardsOf(){
       ok("  돌아올 자리가 **보시던 화면**이다 (매직링크와 같은 규칙)",
          decodeURIComponent(went).indexOf("redirect_to=") > 0 &&
          decodeURIComponent(went).indexOf("/my") > 0, decodeURIComponent(went));
-      /* ⚠️⚠️⚠️ **보내는 동의항목을 뜯어 봅니다** (2026-11-11 · KOE205).
-         그 전에는 scope 를 한 글자도 안 실어서 Supabase 의 카카오
-         기본값(`account_email` 포함)이 그대로 나갔고, 카카오가
-         「설정하지 않은 동의 항목을 포함해 인가 코드를 요청했습니다」로
-         거절했습니다.
-         ⚠️⚠️ **「적어 뒀으면 싣는다」 로만 재면 아무것도 안 잡습니다** —
-         `scopes` 를 통째로 지우는 것이 바로 그 고장인데, 그러면 잴 것이
-         없어져 조용히 통과합니다. 그래서 **적혀 있는지를 따로** 봅니다. */
+      /* ⚠️⚠️⚠️ **`scopes` 를 안 싣는 것이 맞습니다** (2026-11-11 저녁 ·
+         증거를 받고 뒤집었습니다). 아침에는 이 자리가 「적어 둔 동의항목을
+         그대로 싣는다」를 요구했는데, 운영에서 카카오로 나간 **최종
+         요청**을 받아 보니 `profile_nickname` 이 **두 번**이었습니다 —
+           account_email  profile_image  profile_nickname  profile_nickname
+         GoTrue 는 우리가 보낸 값으로 제 기본값을 **덮지 않고 더합니다.**
+         그러니 화면 코드로는 `account_email` 을 뺄 수가 없고, 실으면
+         중복만 하나 늘어납니다.
+         ⚠️⚠️ **그 검사를 그대로 뒀으면 아침의 틀린 결론을 지켰을
+         것입니다** — 같은 날 #lsbox · /search 거르개에서 두 번 겪은
+         「옛 뜻을 그대로 둔 검사가 고장을 지킨다」 입니다. */
+      ok("  ⚠️ **`scopes` 를 안 싣는다** (GoTrue 가 덮지 않고 더하므로 중복만 생깁니다)",
+         decodeURIComponent(went).indexOf("scopes=") < 0, decodeURIComponent(went));
       const kko = (SOC || []).find(s => s.key === "kakao");
       if(kko){
-        ok("  ⚠️ 카카오 줄에 **동의항목이 적혀 있다** (비면 Supabase 기본값이 나갑니다)",
-           !!(kko.scopes || "").trim(), JSON.stringify(kko.scopes || ""));
+        ok("  카카오 줄에도 동의항목을 안 들고 있다 (쓰지 않는 칸을 남기지 않습니다)",
+           !(kko.scopes || "").trim(), JSON.stringify(kko.scopes || ""));
       }
-      const want = ((SOC || []).find(s => s.key === KEYS[0]) || {}).scopes || "";
-      ok("  그 공급자에 적어 둔 **동의항목을 그대로 싣는다**",
-         !!want && decodeURIComponent(went).indexOf("scopes=" + want) > 0,
-         decodeURIComponent(went));
-      /* ⚠️⚠️ 이메일은 **한 글자도** 안 보냅니다 — `account` 표에 이메일
-         칸이 아예 없고, 카카오에서 그 동의항목을 켜려면 비즈 앱
-         전환(사업자등록번호)이 필요합니다. 안 쓰는 것을 받아 두는 것은
-         개인정보보호법 제16조(최소 수집)와도 반대입니다. */
-      ok("  **이메일을 안 받는다** (account_email 이 한 글자도 없다)",
+      /* ⚠️⚠️⚠️ **이 줄이 증명하는 것을 좁혀 적습니다.** 우리 주소에
+         `account_email` 이 없다는 것뿐이고, **카카오에 그것이 안 간다는
+         뜻이 아닙니다** — GoTrue 가 서버에서 붙입니다. 넓게 적으면
+         이 초록이 "이메일을 안 받는다" 는 **거짓 안심**이 됩니다. */
+      ok("  **우리가 보내는 주소에는** 이메일 동의항목이 없다 (GoTrue 가 붙이는 것은 못 막습니다)",
          decodeURIComponent(went).indexOf("account_email") < 0 &&
          decodeURIComponent(went).indexOf("scope=email") < 0,
          decodeURIComponent(went));

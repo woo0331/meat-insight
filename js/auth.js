@@ -351,24 +351,29 @@ window.amAuthProviders = function(){
 window.amAuthGo = function(key){
   var c = AM_AUTH.conf;
   if(!c) return false;
-  /* ⚠️ 모르는 키는 아무 데도 안 보냅니다 — 줄을 **집어서** 씁니다
-     (아래에서 그 줄의 동의항목을 읽어야 합니다). */
+  /* ⚠️ 모르는 키는 아무 데도 안 보냅니다 — 우리가 아는 공급자인지
+     `AM_SOCIAL` 에서 찾아보고, 없으면 그대로 돌아갑니다. */
   var row = null;
   (window.AM_SOCIAL || []).forEach(function(s){ if(s.key === key) row = s; });
   if(!row) return false;
   try{
-    /* ⚠️⚠️⚠️ **동의항목을 우리가 싣습니다** (2026-11-11 · KOE205).
-       안 실으면 Supabase 가 제 기본값을 붙이는데, 카카오 기본값에
-       `account_email` 이 들어 있어 **카카오가 거절합니다**(그 동의항목을
-       켜려면 비즈 앱 전환이 필요하고 저희는 이메일을 안 씁니다).
-       ⚠️ 적는 자리는 `js/data/social.js` **한 곳**입니다 — 여기에
-       글자로 박으면 공급자가 느는 날 두 곳이 어긋납니다.
-       ⚠️⚠️ **비어 있으면 안 싣습니다** — 빈 `scopes=` 를 보내면
-       "아무것도 안 받겠다" 가 되어 공급자마다 다르게 읽습니다. */
-    var sc = (row.scopes || "").trim();
+    /* ⚠️⚠️⚠️ **`scopes` 를 안 싣습니다** (2026-11-11 저녁 · 증거를 받고 뒤집었습니다).
+       아침에는 "안 실으면 Supabase 가 제 기본값을 붙이니 우리가 싣자" 로
+       `scopes=profile_nickname` 을 실었습니다. 그런데 운영에서 카카오로
+       나간 **최종 요청**을 받아 보니 —
+         account_email  profile_image  profile_nickname  profile_nickname
+       `profile_nickname` 이 **두 번**입니다. 즉 GoTrue 는 우리가 보낸
+       값으로 기본값을 **덮는 것이 아니라 뒤에 더합니다.**
+       ⚠️⚠️ 그래서 **화면 코드로는 `account_email` 을 뺄 수가 없습니다.**
+       실어도 안 실어도 카카오에는 `account_email` 이 갑니다 — 실으면
+       거기에 중복만 하나 더 붙습니다. 그 중복을 없애려고 뗐습니다.
+       ⚠️ 고치는 길은 저장소 밖입니다(카카오 앱에서 그 동의항목을 켜거나,
+       Supabase Custom Provider 로 카카오를 직접 넣어 scope 를 우리가
+       정하거나, api/ 에 서버 측 OAuth 를 세우거나).
+       ⚠️⚠️⚠️ **다시 실으시려면 먼저 더하는지 덮는지를 재세요** — 최종
+       카카오 요청의 scope 를 눈으로 보는 것 말고는 아는 길이 없습니다. */
     window.location.href = c.url + "/auth/v1/authorize?provider=" +
       encodeURIComponent(key) +
-      (sc ? "&scopes=" + encodeURIComponent(sc) : "") +
       "&redirect_to=" +
       encodeURIComponent(window.location.origin + window.amAfterLogin());
     return true;

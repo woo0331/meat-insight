@@ -269,7 +269,15 @@ function lessonHead(c){
     ["chat",  "상담 신청",    "조건을 적으면 이어 드립니다"]
   ];
   return '<section class="hero hero-sm' + (ph ? " hero-ph" : "") + '">' +
-    (ph ? W.amPhotoImg("cat-lesson", { cls:"hero-bg", eager:true }) : "") +
+    /* ⚠️⚠️⚠️ 2026-11-11 — `sizes` 를 여기서 덮어씁니다. `cat-lesson` 의
+       규격은 메인의 **작은 서비스 카드**(139~189px)를 기준으로 적혀
+       있는데, 이 자리는 **화면 폭을 다 쓰는 히어로**입니다. 안 덮으면
+       390px 폰이 450px 짜리를 받아 780px 자리에 깔아 **흐립니다**
+       (재서 알았습니다 · 찌그러지지도 가로로 밀리지도 않아 어떤 검사도
+       안 잡습니다). 같은 사진을 크기가 다른 두 자리에 쓰는 날 이 줄을
+       다시 읽으세요. */
+    (ph ? W.amPhotoImg("cat-lesson", { cls:"hero-bg", eager:true,
+                                       sizes:"100vw" }) : "") +
     '<div class="wrap hero-in">' +
       '<p class="lsn-eyebrow">GOLF LESSON</p>' +
       '<h1>나에게 맞는 골프 프로를 찾아보세요</h1>' +

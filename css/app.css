@@ -32,6 +32,21 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
    그러면 .sr 이 그 상자 안에 갇히고 overflow 가 잘라 냅니다.
    ⚠️⚠️ 새로 가로 스크롤 상자를 만드는 날 이 줄에 **그 클래스를 더하세요.** */
 .doc-t, .cmp-s, .sf-c{ position:relative; }
+/* ⚠️⚠️ 2026-11-11 — 폰에서 이 표들은 상자 안에서 가로로 돕니다
+   (방침의 표가 520px · 폰 상자가 348px). 화면 전체는 안 밀리므로
+   check-screens 가 영원히 초록이고, 손님에게는 마지막 칸이
+   **없는 칸**으로 보입니다. 오른쪽 끝에 옅은 막을 깔아 "더 있다" 를
+   눈으로 알립니다 — 현황표(.tbd-s)에 단 것과 같은 결입니다.
+   ⚠️ 거르개 줄(.sf-c)에는 안 답니다 — 그 줄은 폰에서 **접으므로**
+   밀 것이 없습니다(막을 깔면 아무것도 안 가린 자리에 그림자가 집니다).
+   ⚠️ 상자가 position:relative 라 이 막이 그 안에 머뭅니다. */
+@media (max-width: 620px){
+  .doc-t::after, .cmp-s::after{
+    content:""; position:absolute; top:0; right:0; bottom:0;
+    width:24px; pointer-events:none;
+    background:linear-gradient(90deg,
+      rgba(255,255,255,0), rgba(255,255,255,.92)); }
+}
 
 /* 건너뛰기 — 키보드로 탭하면 나타납니다 */
 .skip{ position:absolute; left:-9999px; top:0; z-index:200;
@@ -2514,6 +2529,22 @@ picture{ display: contents; }
 @media (max-width: 760px){
   .sf-c{ flex-wrap:nowrap; overflow-x:auto; }
   .sf-r{ align-items:flex-start; }
+}
+/* ⚠️⚠️⚠️ 2026-11-11 — 업체찾기의 거르개 줄은 **접습니다.** 재 보니
+   390px 에서 분류 줄이 1,506px · 지역 줄이 1,234px 인데 보이는 폭이
+   310px 였습니다 — 분류 **열하나 가운데 둘** · 지역 **열여덟 가운데 셋**만
+   보이고 **스물넷이 밀어야** 나왔습니다. 화면 전체는 안 밀리므로
+   check-screens 가 영원히 초록입니다.
+   이 두 줄은 업체찾기로 **들어가는 유일한 길**이라, 밀어서 찾게 두면
+   머리말 메뉴가 폰에서 넷째 칸을 숨기던 그 자리가 됩니다 —
+   **밀면 보이는 것은 보이는 것이 아닙니다.**
+   ⚠️ 게시판 거르개(.cqb-c)를 2026-11-06 에 같은 까닭으로 접었고,
+   그때 적어 둔 "메뉴처럼 전부 보여야 하는 것을 그런 상자에 넣는 날
+   이 줄을 다시 읽으세요" 가 그대로 걸린 자리입니다.
+   ⚠️ 특정도로 이깁니다(.sf-r .sf-c 0,2,0 > @media .sf-c 0,1,0) —
+   파일 뒤에 적는 것만으로는 못 이깁니다. */
+@media (max-width: 760px){
+  .sf-r .sf-c{ flex-wrap:wrap; overflow-x:visible; }
 }
 /* 눌린 칸 — ⚠️ 흰 글자를 얹는 면은 --grn-btn 입니다 (12.59).
    --pt 는 **면 전용**이라 흰 글자를 얹으면 아무 기준도 못 넘습니다. */

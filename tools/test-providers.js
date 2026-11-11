@@ -1019,11 +1019,39 @@ function nowServe(){ return serve(0); }
       });
       ok("거르개가 있어도 화면이 **가로로 안 밀린다**", m.doc <= m.win + 1,
          "문서 " + m.doc + "px · 화면 " + m.win + "px");
-      ok("  거르개는 제 상자 안에서 가로로 미끄러진다 (쌓이지 않습니다)",
-         (await ph.evaluate(function(){
-           const c = document.querySelector(".sf-c");
-           return !!c && c.scrollWidth > c.clientWidth;
-         })), "거르개 상자가 미끄러지지 않습니다");
+      /* ⚠️⚠️⚠️ 2026-11-11 — 이 줄은 **뒤집었습니다.** 전에는
+         「거르개는 제 상자 안에서 가로로 미끄러진다」를 요구했는데,
+         그건 **그날 고른 방법**이지 재려는 뜻이 아닙니다. 뜻은 바로
+         위 줄("화면이 가로로 안 밀린다")과 **칩이 전부 손에 닿는가**
+         둘입니다.
+         재 보니 390px 에서 분류 줄이 1,506px · 지역 줄이 1,234px 인데
+         보이는 폭이 310px 라, 분류 열하나 중 둘 · 지역 열여덟 중 셋만
+         보이고 **스물넷이 밀어야** 나왔습니다. 머리말 메뉴가 폰에서
+         넷째 칸을 숨기던 그 자리입니다 — **밀면 보이는 것은 보이는
+         것이 아닙니다.** 지금은 폰에서 접습니다.
+         ⚠️ 그대로 뒀으면 이 검사가 **고장을 지키고** 있었을 것입니다
+         (같은 날 아침 #lsbox 에서 `boxHtml === ""` 를 요구하던 그 자리). */
+      const sfc = await ph.evaluate(function(){
+        return [].slice.call(document.querySelectorAll(".sf-c")).map(function(c){
+          /* 상자 밖으로 밀려난 칩을 셉니다 — 그려진 것만 봅니다
+             (안 그려진 칸은 사각형이 전부 0 이라 늘 밖으로 읽힙니다). */
+          const box = c.getBoundingClientRect();
+          let out = 0, n = 0;
+          [].slice.call(c.children).forEach(function(e){
+            if(!e.getClientRects().length) return;
+            n++;
+            const r = e.getBoundingClientRect();
+            if(r.right > box.right + 1 || r.left < box.left - 1) out++;
+          });
+          return { n: n, out: out, hid: c.scrollWidth - c.clientWidth };
+        });
+      });
+      ok("  거르개 칸이 **하나도 상자 밖에 숨지 않는다**",
+         sfc.length > 0 && sfc.every(function(x){ return x.out === 0 && x.hid <= 1; }),
+         JSON.stringify(sfc));
+      ok("  잴 거르개 줄을 찾기는 했다 (0줄이면 이 검사가 고장입니다)",
+         sfc.length > 0 && sfc.every(function(x){ return x.n > 1; }),
+         JSON.stringify(sfc));
       /* 폰에서도 거르개가 돌아야 합니다 */
       await ph.click('a[data-sf="cat"][data-v="fitting"]');
       await ph.waitForTimeout(250);

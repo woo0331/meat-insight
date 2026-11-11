@@ -341,7 +341,8 @@ window.amPhotoImg = function(key, o){
   var img = '<img' + (o.cls ? ' class="' + window.esc(o.cls) + '"' : '') +
     ' src="' + window.esc(window.amPhotoUrl(p.src)) + '"' +
     (ss ? ' srcset="' + window.esc(ss) + '"' : '') +
-    (ss && sp.sizes ? ' sizes="' + window.esc(sp.sizes) + '"' : '') +
+    (ss && (o.sizes || sp.sizes)
+      ? ' sizes="' + window.esc(o.sizes || sp.sizes) + '"' : '') +
     ' alt="" aria-hidden="true"' +
     (sp.w ? ' width="' + sp.w + '" height="' + sp.h + '"' : '') +
     /* ⚠️ 그리는 일을 주 흐름에서 떼어 놓습니다 — 큰 사진이 올 때
@@ -360,9 +361,15 @@ window.amPhotoImg = function(key, o){
      집는 규칙이 늘어난 `<picture>` 를 집으면 사진이 글 위로 올라옵니다
      — 그 규칙에서 `picture` 를 같이 빼 두었습니다. 새로 그런 규칙을
      적으시는 날 이 줄을 다시 읽으세요. */
+  /* ⚠️⚠️⚠️ **`sizes` 는 `<source>` 에도 같이 넣어야 합니다** (2026-11-11).
+     webp 를 읽는 브라우저는 이 `<source>` 를 쓰고 아래 `<img>` 의 sizes 를
+     **안 봅니다.** 처음에 `<img>` 만 덮어썼더니 레슨 히어로가 그대로
+     흐렸고, 찍힌 HTML 을 열어 보고서야 알았습니다 — 두 자리가 다른 말을
+     하면 **읽히는 쪽만** 이깁니다. */
+  var sz = o.sizes || sp.sizes;
   return '<picture>' +
     '<source type="image/webp" srcset="' + window.esc(wp) + '"' +
-      (sp.sizes ? ' sizes="' + window.esc(sp.sizes) + '"' : '') + '>' +
+      (sz ? ' sizes="' + window.esc(sz) + '"' : '') + '>' +
     img +
   '</picture>';
 };

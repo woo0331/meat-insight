@@ -1971,6 +1971,21 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
   .join-ph .join-t{ width:100%; flex:1 1 100%; }
   .join-ph .btn{ width:100%; justify-content:center; }
 }
+/* ⚠️⚠️⚠️ 2026-11-11 — 폰에서 띠의 여백을 줄입니다. 재 보니 매칭 띠가
+   426px · 입점 띠가 297px 였고, 그 높이의 대부분이 흰 판 **바깥**의
+   사진 테두리였습니다 — 그 자리에 보이는 것은 3배 넘게 잘린 사진의
+   흐릿한 가장자리뿐입니다(원본 비 2.5 · 4.18 → 표시 비 0.82 · 1.17).
+   ⚠️ 사진을 빼지는 않습니다 — 테두리로나마 분위기를 냅니다.
+   ⚠️ 이 블록은 위 규칙들보다 **뒤에** 있어야 이깁니다. */
+@media (max-width: 560px){
+  .mband-ph{ padding: 12px; }
+  .join-ph{ padding: 12px; }
+  .mband-ph .mband-t, .join-ph .join-t{ padding: 16px 16px 18px; }
+  /* 단계 카드도 같이 — 셋이 세로로 쌓이므로 여백이 세 배로 듭니다 */
+  .step{ padding: 14px 16px 16px; }
+  .step h3{ font-size:16px; margin-top:4px; }
+  .step p{ margin-top:5px; }
+}
 
 /* ── 작업실 · 배정 · 내 요청 (2차 지시서 §5 · §6 · §7) ─────────
    ⚠️⚠️ 클래스 이름을 **두 글자로 줄이지 않았습니다.** 짧은 이름(.lg)을
@@ -2585,6 +2600,21 @@ picture{ display: contents; }
 @media (max-width: 560px){
   .none-b .btn{ width:100%; }
   .sf-l{ width:auto; }
+}
+/* ⚠️⚠️⚠️ 2026-11-11 — 폰에서 이 단추들을 두 칸으로 놓습니다.
+   「업체를 기다리지 않고 지금 하실 수 있는 것」이 **다섯**이라
+   한 줄씩 쌓으면 그 상자만 500px 입니다(재서 알았습니다).
+   ⚠️ 위 블록(폭 100%)보다 **뒤에** 있어야 이깁니다 — 특정도가
+   같으므로(0,2,0) 앞에 적으면 한 줄도 안 먹습니다.
+   ⚠️ 다섯은 2 로 나누어떨어지지 않아 마지막 한 칸이 혼자 남습니다 —
+   그 줄만 두 칸을 다 쓰게 둡니다(빈 칸이 안 보이게).
+   ⚠️ 300px 아래에서는 한 칸으로 둡니다(「구인 · 구직 올리기」가
+   두 줄로 흐릅니다). */
+@media (min-width: 300px) and (max-width: 560px){
+  .none-b{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr));
+           gap:8px; }
+  .none-b .btn{ width:100%; padding:0 10px; font-size:13.5px; }
+  .none-b .btn:last-child:nth-child(odd){ grid-column:1 / -1; }
 }
 
 /* ── 등록된 가격 (0042) ─────────────────────────────────────────

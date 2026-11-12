@@ -127,6 +127,23 @@ function keepNum(name){
   const v = Number(keepOf(name));
   return isFinite(v) ? v : 0;
 }
+/* 구인 · 구직 갈래 수 — ⚠️ `js/data/deal.js` 한 곳에서 읽습니다.
+   개수를 박아 두었다가 0072 가 「시설 · 장비 거래」를 더하는 날
+   멀쩡한 화면을 실패로 잡았습니다.
+   ⚠️ `window` 를 빌려 쓰고 **그대로 돌려놓습니다**. */
+function jobKinds(){
+  const had = Object.prototype.hasOwnProperty.call(global, "window");
+  const old = global.window;
+  global.window = {};
+  try{
+    delete require.cache[require.resolve("../js/data/deal.js")];
+    require("../js/data/deal.js");
+    const L = global.window.AM_JOB_KIND;
+    return Array.isArray(L) ? L.length : 0;
+  }catch(e){ return 0; }
+  finally{ if(had) global.window = old; else delete global.window; }
+}
+
 /* 지역 묶음 — ⚠️ `js/data/regions.js` 한 곳에서 읽습니다 (갯수를 안 박습니다) */
 function zonesOf(){
   const had = Object.prototype.hasOwnProperty.call(global, "window");
@@ -5477,12 +5494,116 @@ function boardsOf(){
       return { body: document.body.innerText,
                go: document.querySelectorAll("#cqlist .cq-new").length };
     });
-    ok("0건이면 **0건이라고 말한다**",
-       r.body.indexOf("아직 작성된 글이 없습니다. 첫 번째 이야기를 남겨보세요.") >= 0,
+    /* ⚠️⚠️ **문장을 글자 그대로 박지 않습니다.** 전에는 그날의 한
+       문장을 통째로 두었는데, 확정 시안 ⑩ 의 문구로 바꾸자
+       **멀쩡한 화면을 실패로** 잡았습니다. 재려는 뜻은 셋입니다 —
+       ① 없다고 말하고 ② **세어 본 값(0건)**을 밝히고 ③ 첫 글로 가는 길을
+       냅니다. 문구는 시안이 바뀔 때마다 바뀝니다. */
+    ok("0건이면 **0건이라고 말한다** (세어 본 값입니다)",
+       r.body.indexOf("아직 작성된 글이 없습니다") >= 0 &&
+       r.body.indexOf("0건") >= 0,
        r.body.slice(0, 160));
     ok("  ⚠️ 막다른 길로 두지 않는다 (첫 글 작성하기)", r.go >= 1, "단추 " + r.go);
     ok("  ⚠️⚠️ **지어낸 글을 안 채운다** (가짜 제목 · 가짜 조회 수가 없습니다)",
        r.body.indexOf("회원 조회") < 0, r.body.slice(0, 160));
+    await g.p.close();
+  }
+
+  /* ⑦-b ⚠️⚠️⚠️ **PC 왼쪽 게시판 메뉴**(확정 시안 ⑩ · 2026-11-12) —
+     `#cqlist` **밖**에 서고, 빌드가 링크로 찍어 두고, 눌러도 **새로고침이
+     없습니다**. 메뉴를 밖으로 빼면서 눌림을 받는 자리를 같이 안 옮기면
+     **탭이 조용히 안 눌립니다**(에러 0줄) — 그 자리를 여기서 잽니다. */
+  {
+    const g = await open("/cat/community?s=cm-open",
+                         { role:"customer", name:"손님", signedIn:true },
+                         { v_cq_public: CQ, v_ca_public: [] }, {}, true);
+    const BD = boardsOf().length;
+    ok("  게시판 목록을 catalog.js 에서 읽었다 (0개면 이 검사가 고장입니다)",
+       BD > 0, BD + "곳");
+    const r0 = await g.p.evaluate(function(){
+      const bd = document.getElementById("cqbd");
+      const ls = document.getElementById("cqlist");
+      return { 있음: !!bd,
+               바깥: !!(bd && ls && !ls.contains(bd)),
+               칸: bd ? bd.querySelectorAll("a[data-bd]").length : 0,
+               링크: bd ? bd.querySelectorAll('a[href^="/cat/community"]').length : 0,
+               켜짐: bd ? (bd.querySelector("a.chip-on") || {}).textContent || "" : "" };
+    });
+    ok("⚠️⚠️ 왼쪽 게시판 메뉴가 **목록 상자 밖에** 선다 (확정 시안 ⑩)",
+       r0.있음 && r0.바깥, JSON.stringify(r0));
+    ok("  칸이 **게시판 수 + 모아보기 + 전체 글** 이다 (갯수를 안 박습니다)",
+       r0.칸 === BD + 2, "칸 " + r0.칸 + "개 · 게시판 " + BD + "곳");
+    ok("  ⚠️ 전부 **링크**다 (자바스크립트가 꺼져도 눌립니다)",
+       r0.링크 === r0.칸, "링크 " + r0.링크 + " / 칸 " + r0.칸);
+    ok("  보고 있던 게시판이 켜져 있다", r0.켜짐.indexOf("자유게시판") >= 0, r0.켜짐);
+    /* ⚠️⚠️ **눌러 봅니다** — 그려진 모양만 보면 "안 눌리는 메뉴" 를 영원히
+       못 잡습니다. `window` 에 표를 하나 찍어 두고, 누른 뒤에도 그 표가
+       살아 있으면 **새로고침이 아니라 pushState** 입니다. */
+    await g.p.evaluate(function(){ window.__same = 1; });
+    await g.p.click('#cqbd a[data-bd="cm-ask"]');
+    await g.p.waitForTimeout(400);
+    const r1 = await g.p.evaluate(function(){
+      const bd = document.getElementById("cqbd");
+      return { 주소: location.search, 같은문서: window.__same === 1,
+               켜짐: bd ? (bd.querySelector("a.chip-on") || {}).textContent || "" : "",
+               제목: (document.querySelector(".cqh-t") || {}).textContent || "" };
+    });
+    ok("⚠️⚠️⚠️ 메뉴를 누르면 **새로고침 없이** 그 게시판으로 간다",
+       r1.주소.indexOf("s=cm-ask") >= 0 && r1.같은문서, JSON.stringify(r1));
+    ok("  켜진 칸과 제목이 같이 바뀐다",
+       r1.켜짐.indexOf("골프 질문") >= 0 && r1.제목.indexOf("골프 질문") >= 0,
+       JSON.stringify(r1));
+    await g.p.close();
+  }
+
+  /* ⑦-c ⚠️⚠️⚠️ **조회 실패를 0건으로 적지 않습니다**(2026-11-12).
+     전에는 `get()` 이 실패를 전부 삼켜 `{rows:[]}` 로 돌려주었고, 그래서
+     그물이 끊기면 화면이 **「아직 작성된 글이 없습니다 · 첫 이야기를
+     남겨보세요」** 를 적었습니다 — 세어 본 것처럼 말하는 것이라 절대
+     규칙 1 이고, 글이 있는데 못 본 분께 글을 또 쓰라고 하는 꼴입니다.
+     ⚠️ 재는 것은 넷입니다: ① 다른 상자 ② 「없습니다」를 **안 적음**
+     ③ **다시 시도** 단추 ④ 설정 이름이 한 글자도 없음(절대 규칙 3). */
+  {
+    const g = await open("/cat/community?s=cm-open",
+                         { role:"customer", name:"손님", signedIn:true },
+                         { v_cq_public: CQ, v_ca_public: [] }, {}, true);
+    await g.p.route("**/rest/v1/v_cq_public*", function(r){
+      return r.fulfill({ status:500, contentType:"application/json",
+                         body:'{"message":"boom"}' });
+    });
+    await g.p.reload({ waitUntil:"networkidle" });
+    await g.p.waitForTimeout(500);
+    const r = await g.p.evaluate(function(){
+      const ls = document.getElementById("cqlist");
+      const t = ls ? ls.innerText : "";
+      return { 실패상자: document.querySelectorAll("#cqlist .cqfail").length,
+               빈상자: document.querySelectorAll("#cqlist .cqnone").length,
+               다시시도: document.querySelectorAll("#cqlist .cq-retry").length,
+               첫글단추: document.querySelectorAll("#cqlist .cq-new").length,
+               글: t };
+    });
+    ok("⚠️⚠️⚠️ 조회가 실패하면 **0건 상자가 아니라 실패 상자**가 선다",
+       r.실패상자 === 1 && r.빈상자 === 0,
+       JSON.stringify({ 실패:r.실패상자, 빈:r.빈상자 }));
+    ok("  ⚠️ 「아직 작성된 글이 없습니다」를 **안 적는다**",
+       r.글.indexOf("아직 작성된 글이 없습니다") < 0, r.글.slice(0, 120));
+    ok("  ⚠️ 「글이 없다는 뜻이 아닙니다」를 **그 자리에서** 말한다",
+       r.글.indexOf("글이 없다는 뜻이") >= 0, r.글.slice(0, 120));
+    ok("  ⚠️⚠️ **다시 시도** 단추가 있다 (막다른 길로 두지 않습니다)",
+       r.다시시도 >= 1, "단추 " + r.다시시도 + "개");
+    ok("  ⚠️ 설정 이름을 손님 화면에 안 적는다 (절대 규칙 3)",
+       r.글.indexOf("SUPABASE") < 0 && r.글.indexOf("Vercel") < 0,
+       r.글.slice(0, 120));
+    /* ⚠️ 다시 시도를 누르면 **다시 부릅니다** — 그물이 돌아오면 목록이 섭니다 */
+    await g.p.unroute("**/rest/v1/v_cq_public*");
+    await g.p.click("#cqlist .cq-retry");
+    await g.p.waitForTimeout(500);
+    const r2 = await g.p.evaluate(function(){
+      return { 목록: document.querySelectorAll("#cqlist .cql .cqr").length,
+               실패상자: document.querySelectorAll("#cqlist .cqfail").length };
+    });
+    ok("⚠️⚠️ **다시 시도를 누르면 실제로 다시 불러온다**",
+       r2.목록 >= 1 && r2.실패상자 === 0, JSON.stringify(r2));
     await g.p.close();
   }
 
@@ -7623,8 +7744,16 @@ function boardsOf(){
        JSON.stringify({ login:r.login, form:r.form }));
     /* ⚠️⚠️ 거르개는 **단추가 아니라 링크**입니다 (주소를 복사해 보낼 수
        있게 · 자바스크립트가 꺼진 분에게 죽은 칸이 되지 않게) */
-    ok("⚠️ 거르개가 **링크**로 나온다 (전체 + 갈래 셋)", r.chips === 4,
-       "칸 " + r.chips + "개");
+    /* ⚠️⚠️⚠️ **개수를 박지 않습니다.** 처음에 `=== 4`(전체 + 갈래 셋)로
+       박아 두었는데, 0072 가 「시설 · 장비 거래」를 더하자 **멀쩡한
+       화면을 실패로** 잡았습니다. 재려는 뜻은 "전체 + 갈래 **전부**" 이므로
+       `js/data/deal.js` 에서 **읽어** 셌니다. ⚠️ 읽은 개수가 0이면 실패입니다
+       (못 읽으면 재는 것이 없는데 초록으로 지나갑니다). */
+    const JK = jobKinds();
+    ok("  갈래 목록을 js/data/deal.js 에서 읽었다 (0개면 이 검사가 고장입니다)",
+       JK > 0, JK + "개");
+    ok("⚠️ 거르개가 **링크**로 나온다 (전체 + 갈래 전부)", r.chips === JK + 1,
+       "칸 " + r.chips + "개 · 갈래 " + JK + "개");
     const tag = await g.p.evaluate(function(){
       const a = document.querySelector(".jbf-c .chip");
       return { tag: a ? a.tagName : "", href: a ? a.getAttribute("href") : "",
@@ -7721,7 +7850,8 @@ function boardsOf(){
          return r.req.indexOf(k) >= 0; }), r.req.join(","));
     ok("  하위분류 여섯을 catalog.js 에서 읽어 채운다 (고르세요 + 6)",
        r.subs === 7, "칸 " + r.subs + "개");
-    ok("  갈래 셋을 채운다 (고르세요 + 3)", r.kinds === 4, "칸 " + r.kinds + "개");
+    ok("  갈래를 다 채운다 (고르세요 + 갈래 전부)", r.kinds === jobKinds() + 1,
+       "칸 " + r.kinds + "개 · 갈래 " + jobKinds() + "개");
     /* ⚠️⚠️ 제15조 제2항 — 수집 항목 · 목적 · 보유 기간을 **그 자리에서** */
     ok("  ⚠️ 동의 상자에 수집 항목 · 목적 · 보유 기간 · 제공이 같이 있다",
        r.consent.indexOf("수집 항목") >= 0 && r.consent.indexOf("이용 목적") >= 0 &&

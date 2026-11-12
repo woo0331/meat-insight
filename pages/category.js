@@ -750,6 +750,23 @@ exports.build = function(c){
          없습니다(0047 §2.C · 절대 규칙 1).
          ⚠️ 폰에서는 CSS 한 곳이 목록 **아래**로 내립니다. */
       '<div class="cqw">' +
+      /* ⚠️⚠️⚠️ **게시판 메뉴 — 확정 시안 ⑩ 의 PC 왼쪽 기둥.**
+         빌드가 **링크로** 찍습니다 — 자바스크립트가 꺼진 분도 누를 수
+         있고 크롤러도 게시판 열둘을 봅니다. 화면(`js/community.js` 의
+         `paintBd()`)은 **켜진 칸만** 갈아 끼웁니다.
+         ⚠️⚠️ 주소 꼴은 `js/community.js` 의 `url()` 과 **같아야** 합니다
+         (`?s=<키>`) — 두 곳이 다른 주소를 지으면 눌러도 안 걸립니다.
+         ⚠️ 폰에서는 CSS 한 곳이 **가로 알약 줄**로 되돌립니다. */
+      '<nav class="cqw-bd" id="cqbd" aria-label="게시판">' +
+        '<div class="sf-c cqb-c">' +
+          '<a class="chip chip-on" href="' + W.esc(W.amCatUrl(c)) + '">게시판 모아보기</a>' +
+          '<a class="chip" href="' + W.esc(W.amCatUrl(c)) + '?s=all">전체 글</a>' +
+          W.amCatItems(c).map(function(b){
+            return '<a class="chip" href="' + W.esc(W.amCatUrl(c)) +
+              '?s=' + W.esc(encodeURIComponent(b.key)) + '">' + W.esc(b.name) + '</a>';
+          }).join("") +
+        '</div>' +
+      '</nav>' +
       '<div class="cqw-main" id="cqlist">' +
         '<div class="none"><h3>글을 보시려면 잠시만 기다려 주세요.</h3>' +
         '<p>올라온 글을 불러옵니다. 보이지 않으면 아직 올라온 글이 ' +

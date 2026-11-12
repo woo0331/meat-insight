@@ -145,12 +145,19 @@
         /* ⚠️ 몇 줄인지 모를 때는 **null** 입니다 — 0 으로 두면 "0건" 과
            "모름" 이 섞여 쪽 수를 지어내게 됩니다. */
         var tot = (tail && tail !== "*" && isFinite(Number(tail))) ? Number(tail) : null;
-        if(!r.ok) return { rows:[], total:null };
+        /* ⚠️⚠️⚠️ **못 읽은 것과 0건은 다릅니다.** 전에는 여기서
+           실패를 전부 삼켜 `{rows:[]}` 로 돌려주었고, 그래서 그물이
+           끊기거나 질의가 거절되면 화면이 **「아직 작성된 글이
+           없습니다 · 첫 이야기를 남겨보세요」** 를 적었습니다 — 세어
+           본 것처럼 말하는 것이라 절대 규칙 1 입니다(그리고 손님은
+           고칠 길이 없습니다). 지금은 `failed` 를 같이 내고 부르는
+           쪽이 **갈라서** 적습니다. */
+        if(!r.ok) return { rows:[], total:null, failed:true };
         return r.json().then(function(rows){
           return { rows: Array.isArray(rows) ? rows : [], total: tot };
-        }, function(){ return { rows:[], total:null }; });
+        }, function(){ return { rows:[], total:null, failed:true }; });
       })
-      .catch(function(){ return { rows:[], total:null }; });
+      .catch(function(){ return { rows:[], total:null, failed:true }; });
   }
   function call(fn, p){
     return fetch(A.conf.url + "/rest/v1/rpc/" + fn, {
@@ -193,6 +200,14 @@
       .filter(function(x){ return x; });
   }
 
+  /* ⚠️⚠️⚠️ **게시판 메뉴는 `#cqlist` 밖에 섭니다**(확정 시안 ⑩ —
+     PC 에서 왼쪽 기둥). 빌드가 `#cqbd` 에 **링크로** 찍어 두고(자바스크립트가
+     꺼져도 · 크롤러에게도 보입니다) 화면은 **켜진 칸만** 갈아 끼웁니다.
+     ⚠️⚠️ 그래서 **눌림을 받는 자리도 같이 옮겼습니다** — 전에는 `bind()` 가
+     `#cqlist` 안에서만 `[data-bd]` 를 집었습니다. 메뉴만 밖으로 빼고 그대로
+     두었으면 **탭이 조용히 안 눌립니다**(에러 0줄). 지금은 `.cqw` 한 곳에서
+     거품으로 올라오는 눌림을 **한 번만** 묶습니다(`bindNav()`) — 다시 그릴
+     때마다 묶으면 한 번 눌렀는데 호출이 여러 번 돕니다. */
   function bar(){
     var picked = boardKeys();
     var one = function(k, name){
@@ -208,6 +223,27 @@
       '<a class="chip' + (S.s === "all" ? " chip-on" : "") + '" href="' +
         esc(url({ s:"all", q:"", p:0 })) + '" data-bd="all">' + esc("전체 글") + '</a>' +
       boards().map(function(b){ return one(b.key, b.name); }).join("") + '</div>';
+  }
+
+  /* 메뉴를 제 자리에 다시 그립니다 — 켜진 칸만 바뀝니다.
+     ⚠️ 그 자리가 없으면(옛 빌드) 조용히 넘어갑니다 — 빌드가 찍은
+     메뉴가 그대로 서 있습니다. */
+  function paintBd(){
+    var el = document.getElementById("cqbd");
+    if(el) el.innerHTML = bar();
+  }
+  var NAVBOUND = false;
+  function bindNav(){
+    if(NAVBOUND) return;
+    var w = document.querySelector(".cqw");
+    if(!w) return;
+    w.addEventListener("click", function(e){
+      var a = e.target && e.target.closest ? e.target.closest("a[data-bd]") : null;
+      if(!a || !w.contains(a)) return;
+      e.preventDefault();
+      go({ s:a.getAttribute("data-bd"), q:"", p:0 });
+    });
+    NAVBOUND = true;
   }
 
   /* ── 목록 ──────────────────────────────────────────────────────── */
@@ -277,6 +313,26 @@
       esc(!S.s ? "커뮤니티 게시판" : (S.s === "all" ? "전체 글" : bname(S.s))) +
     '</h2>';
   }
+  /* ⚠️⚠️⚠️ **조회 실패는 0건이 아닙니다.** 그물이 끊기거나 질의가
+     거절되면 받은 줄은 0줄이지만, 그것을 「아직 작성된 글이 없습니다」로
+     적으면 **세어 본 것처럼** 말하는 것입니다(절대 규칙 1). 더 나쁜 것은
+     「첫 이야기 작성」으로 보내는 것입니다 — 글이 있는데도 안 보이는
+     분께 글을 또 쓰라고 하는 꼴입니다.
+     ⚠️ 그래서 **다른 상자 · 다른 말 · 다시 시도 단추**입니다.
+     ⚠️ 설정 이름(SUPABASE…)은 손님 화면에 한 글자도 안 적습니다
+     (절대 규칙 3 — 그건 `console.warn` 몫입니다). */
+  function failBox(what){
+    return '<div class="none cqfail">' +
+      '<p class="cqnone-i">' + window.icon("info") + '</p>' +
+      '<h3>지금 ' + esc(what) + '을 불러오지 못했습니다</h3>' +
+      '<p>글이 없다는 뜻이 <b>아닙니다.</b> 잠시 뒤에 다시 눌러 주세요. ' +
+      '계속 같으면 고객센터로 알려 주세요.</p>' +
+      '<p class="cqfail-b">' +
+        '<button type="button" class="btn btn-pt cq-retry">다시 시도</button>' +
+        '<a class="btn btn-bad" href="/help">고객센터</a>' +
+      '</p>' +
+    '</div>';
+  }
   function zero(){
     /* ⚠️⚠️ 0건은 고장이 아닙니다 — 그리고 **막다른 길로 두지 않습니다**
        (절대 규칙 2). 지시서 §3 의 문구를 그대로 씁니다. */
@@ -323,7 +379,7 @@
   }
 
   function paintList(){
-    list.innerHTML = bar() + head() + searchBox() +
+    list.innerHTML = head() + searchBox() +
       '<p class="cqz">불러오는 중입니다…</p>';
     var qs = ["select=id,cat,title,who,named,created_at,answer_n,view_n," +
               /* ⚠️ 0075 가 더한 칸 — 첫 사진 한 장입니다. 안 받으면
@@ -345,6 +401,12 @@
     var qw = qSafe(S.q2);
     if(qw) qs.push("title=ilike.*" + encodeURIComponent(qw) + "*");
     return get("v_cq_public?" + qs.join("&"), true).then(function(r){
+      /* ⚠️⚠️ **못 읽은 것을 0건으로 읽지 않습니다** — 갈라서 적습니다. */
+      if(r.failed){
+        list.innerHTML = head() + searchBox() + failBox("글목록");
+        bind();
+        return;
+      }
       var rows = r.rows;
       /* ⚠️⚠️ 0건을 **두 가지로 갈라** 말합니다 — 아직 아무도 안 썼다와
          찾으시는 글자에 맞는 것이 없다는 다른 말입니다 (조인에서 적어
@@ -354,7 +416,7 @@
           '<p><b>' + esc(qw) + '</b> 가 제목에 든 글이 0건입니다. ' +
           '다른 낱말로 찾아보시거나 조건을 지워 보세요.</p></div>'
         : zero();
-      list.innerHTML = bar() + head() + searchBox() +
+      list.innerHTML = head() + searchBox() +
         (rows.length ? '<ul class="cql">' + rows.map(row).join("") + '</ul>' : none) +
         (rows.length ? pager(r.total, rows.length) : "");
       bind();
@@ -387,7 +449,12 @@
         '<a class="cqg-more" href="' + esc(url({ s:x.b.key, q:"", p:0 })) +
           '" data-bd="' + esc(x.b.key) + '">더 보기</a>' +
       '</h3>' +
-      (x.rows.length
+      (x.failed
+        /* ⚠️⚠️ **못 읽은 칸에 「아직 글이 없습니다」를 적으면 거짓말입니다** */
+        ? '<p class="cqz cqz-fail">지금 불러오지 못했습니다 — 글이 없다는 ' +
+          '뜻이 아닙니다. ' +
+          '<button type="button" class="btn btn-sm btn-line cq-retry">다시 시도</button></p>'
+      : x.rows.length
         ? '<ul class="cqg-l">' + x.rows.map(bdRow).join("") + '</ul>'
         /* ⚠️ 0건은 고장이 아닙니다 — 그리고 첫 글을 남길 길을 같이 냅니다 */
         : '<p class="cqz">아직 글이 없습니다. ' +
@@ -396,16 +463,26 @@
     '</section>';
   }
   function paintHome(){
-    list.innerHTML = bar() + head() +
+    list.innerHTML = head() +
       '<p class="cqz">불러오는 중입니다…</p>';
     var bs = boards();
     return Promise.all(bs.map(function(b){
       return get("v_cq_public?select=id,cat,title,who,created_at" +
                  "&cat=eq." + encodeURIComponent(b.key) +
                  "&order=created_at.desc&limit=3", true)
-        .then(function(r){ return { b:b, rows:r.rows, total:r.total }; });
+        .then(function(r){
+          return { b:b, rows:r.rows, total:r.total, failed:!!r.failed };
+        });
     })).then(function(all){
-      list.innerHTML = bar() + head() + searchBox() +
+      /* ⚠️⚠️ 게시판이 **전부** 실패했으면 그물이 끊긴 것입니다 —
+         상자 열두에 「0건」을 줄줄이 적지 않고 한 번만 말합니다.
+         일부만 실패했으면 **그 게시판 칸에만** 적습니다(`bdBox`). */
+      if(all.length && all.every(function(x){ return x.failed; })){
+        list.innerHTML = head() + searchBox() + failBox("게시판");
+        bind();
+        return;
+      }
+      list.innerHTML = head() + searchBox() +
         '<div class="cqg">' + all.map(bdBox).join("") + '</div>';
       bind();
     });
@@ -477,7 +554,7 @@
   }
 
   function paintOne(){
-    list.innerHTML = bar() + '<p class="cqz">불러오는 중입니다…</p>';
+    list.innerHTML = '<p class="cqz">불러오는 중입니다…</p>';
     var one = "v_cq_public?select=id,cat,title,body,who,named,created_at,updated_at," +
               "answer_n,view_n,photo_n,mine,guest&id=eq." + encodeURIComponent(S.q) + "&limit=1";
     return Promise.all([
@@ -486,10 +563,17 @@
           "&q_id=eq." + encodeURIComponent(S.q) + "&order=created_at.asc&limit=200"),
       cqPhotos(S.q)
     ]).then(function(r){
+      /* ⚠️⚠️ 못 읽은 것을 **「그 글을 찾을 수 없습니다」로 읽지 않습니다** —
+         그쪽은 「내려갔거나 운영자가 가린 글」이라고 **단정**합니다. */
+      if(r[0].failed){
+        list.innerHTML = failBox("글");
+        bind();
+        return;
+      }
       var q = (r[0].rows || [])[0];
       if(!q){
         /* ⚠️ 없는 글 · 내려간 글 — 막다른 길로 두지 않습니다 */
-        list.innerHTML = bar() + '<div class="none">' +
+        list.innerHTML = '<div class="none">' +
           '<h3>그 글을 찾을 수 없습니다.</h3>' +
           '<p>내려갔거나 운영자가 가린 글일 수 있습니다.</p>' +
           '<a class="btn btn-pt" href="' + esc(url({ q:"", p:0 })) +
@@ -497,7 +581,7 @@
         bind();
         return;
       }
-      list.innerHTML = bar() +
+      list.innerHTML =
         '<article class="cqd">' +
           '<h2 class="cqd-t">' + esc(q.title) + '</h2>' +
           '<p class="cqd-m">' +
@@ -852,11 +936,6 @@
 
   /* ── 눌림 ──────────────────────────────────────────────────────── */
   function bind(){
-    Array.prototype.forEach.call(list.querySelectorAll("[data-bd]"), function(ln){
-      ln.addEventListener("click", function(e){
-        e.preventDefault(); go({ s:ln.getAttribute("data-bd"), q:"", p:0 });
-      });
-    });
     Array.prototype.forEach.call(list.querySelectorAll("[data-qid]"), function(ln){
       ln.addEventListener("click", function(e){
         e.preventDefault(); go({ q:ln.getAttribute("data-qid") });
@@ -870,6 +949,16 @@
     Array.prototype.forEach.call(list.querySelectorAll("[data-back]"), function(ln){
       ln.addEventListener("click", function(e){
         e.preventDefault(); go({ q:"", p:S.p });
+      });
+    });
+    /* ⚠️⚠️ 다시 시도 — 조회가 실패했을 때만 서는 단추입니다. 없으면
+       손님은 **화면을 통째로 다시 여는 길밖에** 없습니다(막다른 길 ·
+       절대 규칙 2). `draw()` 를 다시 부르므로 보고 있던 게시판 · 쪽 ·
+       찾는 말이 그대로 살아 있습니다(주소에서 읽습니다). */
+    Array.prototype.forEach.call(list.querySelectorAll(".cq-retry"), function(bt){
+      bt.addEventListener("click", function(){
+        bt.disabled = true;
+        draw();
       });
     });
     /* 찾기 — ⚠️ 보고 있던 게시판은 그대로 두고 **쪽만 처음으로** */
@@ -1013,9 +1102,11 @@
   }
 
   function draw(){
+    paintBd();
+    bindNav();
     return (S.q ? paintOne() : (S.s ? paintList() : paintHome())).catch(function(){
       /* ⚠️ 못 읽었으면 **0건이라고 말하지 않습니다** */
-      list.innerHTML = bar() +
+      list.innerHTML =
         '<p class="cqz">지금 불러오지 못했습니다. 잠시 뒤에 다시 열어 주세요.</p>';
     });
   }

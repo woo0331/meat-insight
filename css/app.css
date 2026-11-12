@@ -869,6 +869,19 @@ ul,ol{ margin: 0; padding: 0; list-style: none; }
   padding:10px 14px; font-size:16px; color: var(--ink); background:#fff;
   font-family: inherit; }
 .jform textarea{ min-height:96px; resize: vertical; }
+/* ⚠️⚠️⚠️ **격자 칸은 제 내용만큼 벌어집니다** — 칸의 기본값이
+   `min-width:auto` 라, 긴 글이 든 `<select>` 하나가 칸을 통째로
+   넓힙니다. 2026-11-12 에 `/cat/career` 에서 재 보니 270px 양식 안의
+   `#b-kind` 가 **416px**(문서 461px · 화면 360px)였습니다 — 갈래에
+   「시설 · 장비 거래」를 더하면서 가장 긴 글이 길어진 것입니다.
+   ⚠️⚠️ **`<select>` 안의 글자는 낱말 잘림 검사에도 가로 스크롤 검사에도
+   안 걸립니다**(작업 기억에 세 번 당했다고 적힌 자리). 잡은 것은
+   `test-desk` 의 폰 폭 가로 밀림뿐이었습니다.
+   ⚠️ 고치는 법은 두 줄입니다 — 칸을 `min-width:0` 으로 내려놓고,
+   안의 칸이 제 칸을 못 넘게 합니다. 고르개 글을 줄여서 피하지
+   않습니다(다음에 긴 이름이 하나 들어오면 또 납니다). */
+.jform > *{ min-width:0; }
+.jrow > *{ min-width:0; max-width:100%; }
 .jform select{ appearance:none; background-image:none; }
 .jform input:focus, .jform textarea:focus, .jform select:focus{ outline:2px solid var(--grn); outline-offset:1px; }
 
@@ -3578,17 +3591,36 @@ picture{ display: contents; }
    (2026-11-04 에 머리말 메뉴로 겪은 자리). 그래서 줄이 바뀝니다.
    ════════════════════════════════════════════════════════════════ */
 /* 두 칸 — 왼쪽 목록 · 오른쪽 안내 레일 */
-.cqw{ display:grid; grid-template-columns: minmax(0,1fr) 280px; gap:22px;
+/* ⚠️⚠️⚠️ **세 기둥 — 확정 시안 ⑩.** 왼쪽은 게시판 메뉴 ·
+   가운데는 글 · 오른쪽은 이용 안내입니다.
+   ⚠️ 게시판이 열둘이라 앞서는 알약 줄이 두 줄로 접혀 가운데 칸을
+   좁혔습니다. 세로 기둥으로 세우면 게시판이 몇이 되든 한 칸에
+   들어가고, 가운데가 글 폭을 그대로 씭니다.
+   ⚠️ 칸 수를 박은 것이 아니라 **왼쪽 200 · 오른쪽 280** 고정에
+   가운데가 나머지를 가집니다 — 게시판이 늘어도 안 바뀝니다. */
+.cqw{ display:grid; grid-template-columns: 200px minmax(0,1fr) 280px; gap:22px;
       align-items:start; }
+/* ⚠️⚠️ 왼쪽 기둥은 **세로**입니다 — `.sf-c` 는 기본이 가로줄이라
+   여기서만 방향을 바꿉니다(폰에서는 아래 규칙이 되돌립니다). */
+.cqw-bd .sf-c{ flex-direction:column; align-items:stretch; gap:6px;
+               margin-bottom:0; }
+.cqw-bd .chip{ justify-content:flex-start; width:100%; }
 /* ⚠️ 격자 칸은 제 내용만큼 벌어집니다 — `min-width:0` 이 없으면 긴
    제목 하나가 화면을 가로로 밉니다 (2026-11-03 의 그 자리) */
 .cqw > *{ min-width:0; }
 .cqw-main{ display:flex; flex-direction:column; gap:14px; }
-@media (max-width: 1000px){
+@media (max-width: 1100px){
+  /* ⚠️ 좀아지면 게시판 메뉴를 **위로 올리고 가로 알약 줄로** 되돌립니다
+     — 세로 기둥을 좁은 화면에 두면 글이 들어갈 자리가 없습니다. */
   .cqw{ grid-template-columns: 1fr; }
-  /* ⚠️ 레일이 목록 **아래**로 내려갑니다 — 폰에서 위에 두면 글을 보러
+  .cqw-bd{ order:1; }
+  .cqw-main{ order:2; }
+  /* ⚠️ 레일은 목록 **아래**로 내려갑니다 — 폰에서 위에 두면 글을 보러
      오신 분이 안내문부터 밀어 내려야 합니다 */
-  .cqw-side{ order:2; }
+  .cqw-side{ order:3; }
+  .cqw-bd .sf-c{ flex-direction:row; flex-wrap:wrap; align-items:center;
+                 gap:8px; }
+  .cqw-bd .chip{ width:auto; }
 }
 
 /* 도구줄 — 찾는 칸이 넓게 깔리고 오른쪽 끝에 글쓰기 */
@@ -3672,3 +3704,13 @@ picture{ display: contents; }
   /* ⚠️ 띠 높이 + 안전영역만큼 바닥을 띄웁니다 */
   body.has-botnav{ padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
 }
+
+/* ⚠️⚠️⚠️ **조회 실패는 0건이 아닙니다** — 상자를 갈라 두는 까닭입니다.
+   `.cqnone`(0건)은 초록 쪽으로, `.cqfail`(못 읽음)은 경고 쪽으로 읽히게
+   둡니다. 같은 모양이면 손님이 둘을 못 가립니다. */
+.cqfail{ border-color: var(--bad); background: var(--bad-soft); }
+.cqfail .cqnone-i{ color: var(--bad-text); }
+.cqfail-b{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center;
+           margin-top:14px; }
+.cqz-fail{ color: var(--bad-text); display:flex; flex-wrap:wrap; gap:8px;
+           align-items:center; }

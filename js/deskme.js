@@ -62,6 +62,9 @@
                "ceo,addr,tel,email,brn," +
                /* ⚠️⚠️ 0071 — 레슨 장소 · 레슨 목적. **읽지 않으면 저장할 때마다 비워집니다** */
                "place_name,lesson_goals," +
+               /* ⚠️⚠️ 0074 — 연습장 시설 속성 · 이용 시간.
+                  **읽지 않으면 저장할 때마다 비워집니다**(`industries` 자리) */
+               "range_opts,open_hours," +
                "brands,scale,contact_ways,verified,listed,assignable,state,state_why" +
                "&id=eq." + encodeURIComponent(PV) + "&limit=1");
   }
@@ -91,6 +94,29 @@
       if(s && s.cat && s.cat.key === "lesson") return true;
     }
     return false;
+  }
+  /* ⚠️ 0074 — 연습장을 하시는 업체에만 그립니다(레슨 목적과 같은 규칙) */
+  function doesRange(p){
+    var S = (p && Array.isArray(p.subs)) ? p.subs : [];
+    for(var i = 0; i < S.length; i++){
+      var s = window.amSub ? window.amSub(S[i]) : null;
+      if(s && s.cat && s.cat.key === "range") return true;
+    }
+    return false;
+  }
+  /* ⚠️⚠️ 그려지지 않은 업체는 **읽은 값을 그대로** 돌려보냅니다 —
+     빈 값을 보내면 그 칸이 지워집니다(`placeVal` · `goalVal` 과 같은 꼴). */
+  function optsVal(f){
+    var b = Array.prototype.slice.call(f.querySelectorAll('input[name="ropt"]:checked'))
+              .map(function(x){ return x.value; });
+    if(!f.querySelector('input[name="ropt"]'))
+      return (ME && Array.isArray(ME.range_opts)) ? ME.range_opts : [];
+    return b;
+  }
+  function hoursVal(f){
+    var el = f.querySelector("#me-open");
+    return el ? (el.value || "").trim()
+              : ((ME && ME.open_hours) ? ME.open_hours : "");
   }
   function cb(nm, key, label, on){
     return '<label class="chk"><input type="checkbox" name="' + nm + '" value="' +
@@ -148,6 +174,29 @@
                             (p.lesson_goals || []).indexOf(g.key) >= 0);
                 }).join("") +
               '</fieldset></div>' +
+            '</div>'
+          : "") +
+        /* ⚠⚠ 0074 — 연습장을 하시는 업체에만. 여기서 고르신 것으로
+           손님이 좌힙니다(`/cat/range` 거르개). 안 고르신 업체는 그
+           거르개에서 **빠집니다** — 모르는 것을 아무 칸에나 넣으면
+           지어낸 값입니다(절대 규칙 1). */
+        (doesRange(p)
+          ? '<div class="jrow jrow-full">' +
+              '<label>시설 <span class="jhint">(고르신 것으로 손님이 좁혀 찾습니다)</span></label>' +
+              '<div class="svcs"><fieldset class="svc">' +
+              '<legend>어떤 시설이 있나요</legend>' +
+                (window.AM_RANGE_OPT || []).map(function(o){
+                  return cb("ropt", o.key, o.name,
+                            (p.range_opts || []).indexOf(o.key) >= 0);
+                }).join("") +
+              '</fieldset></div>' +
+            '</div>' +
+            '<div class="jrow">' +
+              '<label for="me-open">이용 시간</label>' +
+              '<input id="me-open" name="open" maxlength="60" ' +
+              'placeholder="06:00 ~ 23:00" ' +
+              'value="' + esc(p.open_hours || "") + '">' +
+              '<span class="jhint">여는 시간과 닫는 시간입니다. 비워 두셔도 됩니다.</span>' +
             '</div>'
           : "") +
       '<div class="jrow">' +
@@ -304,7 +353,10 @@
       scale: ME.scale || "",
       /* ⚠️⚠️ 0071 — 네 칸이 라 **보내지 않으면 지워집니다** */
       placeName: placeVal(f),
-      lessonGoals: goalVal(f)
+      lessonGoals: goalVal(f),
+      /* ⚠⚠ 0074 — 칸 둘을 더했으니 **읽고 또 보내야** 합니다 */
+      rangeOpts: optsVal(f),
+      openHours: hoursVal(f)
     };
     bt.disabled = true;
     if(m){ m.hidden = false; m.textContent = "보내는 중입니다…"; }

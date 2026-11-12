@@ -2368,7 +2368,15 @@ function boardsOf(){
 
   console.log("\n── /admin 신고함 — 끝난 것 갈래");
   await s.p.click("#repbox button[data-rtab='done']");
-  await s.p.waitForTimeout(250);
+  /* ⚠️⚠️ **시간으로 기다리지 않습니다.** 갈래를 누르면 `paint()` 가
+     「읽는 중입니다…」를 먼저 찍고 다시 읽습니다 — 250ms 로 재면
+     바쁜 날 그 글자를 읽어 **멀쩡한 화면을 실패로** 잡습니다(실제로
+     2026-11-12 에 2건이 그렇게 떨어졌습니다). 그 줄이 **없어지는 것**을
+     기다립니다. */
+  await s.p.waitForFunction(function(){
+    var b = document.querySelector("#repbox");
+    return !!b && !b.querySelector(".lmsg");
+  }, null, { timeout: 15000 });
   t = (await s.p.textContent("#repbox")) || "";
   ok("끝난 신고가 그려진다", /광고 글을/.test(t), t.slice(0, 300));
   ok("어떻게 처리했는지가 남아 보인다", /글을 가렸습니다/.test(t), t.slice(0, 300));

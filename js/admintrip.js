@@ -168,7 +168,14 @@
     return '<p class="none-l">아직 올라온 여행 상품이 없습니다.</p>';
   }
   function draw(){
-    box.hidden = false;
+      /* ⚠️⚠️⚠️ **`none` 을 떼야 합니다.** 빌드가 이 그릇을
+         `class="none"` 으로 찍어 두는데(0건 안내용), 그대로 두고 내용을
+         채우면 `.none` 의 `text-align:center` 가 **모든 줄을 가운데로**
+         밀어 제목만 왼쪽이고 나머지가 가운데인 꼴이 됩니다. 가로로
+         밀리지도 · 글자가 작지도 · 대비가 낮지도 않아 **어떤 검사도 안
+         잡습니다** — 찍어 보고 알았습니다(`js/adminlst.js` 가 이미
+         그렇게 하고 있었습니다). */
+    box.hidden = false; box.className = "deskbox";
     var head = headHtml();
     if(ROWS === null){
       box.innerHTML = head + failHtml();

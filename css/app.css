@@ -4070,6 +4070,28 @@ picture{ display: contents; }
 .tpr-new-s:empty{ display:none; }
 .tpr-new-s{ margin:12px 0 0; }
 .tpa-back-n{ margin:0 0 8px; color:var(--ink2); font-size:14px; }
+/* ⚠️⚠️⚠️ **없는 클래스는 조용히 아무 모양도 안 입습니다.** 사진 목록
+   (`.tpr-sl` · `.tpr-s` …)에 CSS 를 한 줄도 안 적어 두어서, 여행사
+   작업실의 썸네일이 **한 장에 1,000px** 로 나왔습니다(사진 셋이면 화면
+   석 장). 가로로 밀리지도 · 글자가 작지도 · 대비가 낮지도 않아 **어떤
+   검사도 안 잡습니다** — 찍어 보고 알았습니다(0068 의 `.lsp-t` 와 같은
+   꼴로 맞췄습니다). */
+.tpr-sl{ list-style:none; margin:10px 0 0; padding:0;
+  display:flex; flex-wrap:wrap; gap:12px; }
+/* ⚠️ 칸 너비를 사진에 맞춰 **박아** 둡니다 — 단추가 둘인 칸과 하나인
+   칸이 섞이면 칸마다 너비가 달라져 사진이 들쭉날쭉해집니다. */
+/* ⚠️⚠️ **`align-content:start` 를 꼭** — `.tpr-s` 는 flex 줄의 칸이면서
+   제 안도 격자라, 옆 칸이 길면(단추가 둘인 칸) 이쪽 줄들이 **같이
+   늘어나** 이름표와 단추가 칸마다 다른 높이에 앉습니다. `.jrow` 에서
+   겪은 그 자리입니다. */
+.tpr-s{ display:grid; gap:6px; justify-items:center; align-content:start; width:108px; }
+.tpr-s img{ width:108px; height:81px; object-fit:cover; display:block;
+  border-radius:10px; border:1.4px solid var(--line); }
+.tpr-s-x{ display:flex; align-items:center; justify-content:center;
+  width:108px; height:81px; border-radius:10px; background:var(--bg-2);
+  border:1.4px solid var(--line); color:var(--ink3); }
+.tpr-s-t{ font-size:12.5px; font-weight:700; color:var(--ink2); }
+.tpr-s-b{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
 .tpr-ph{ margin:8px 0 0; }
 .tpr-ph-h{ display:flex; align-items:center; gap:6px; margin:0 0 6px;
   font-size:14px; font-weight:700; }

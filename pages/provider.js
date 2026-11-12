@@ -70,6 +70,16 @@ exports.build = function(p){
      ("미정" 을 찍지 않습니다 · 절대 규칙 2). */
   var ways = W.amContactWays ? W.amContactWays(p) : [];
   if(ways.length)     rows.push(["상담 방식", ways.join(" · ")]);
+  /* 피팅 이용 방식 (0076) · 거래 조건 (0079) — ⚠️⚠️⚠️ **업체가 적은
+     값만** 냅니다. 「부품비 별도」 같은 말을 저희가 지어 적으면 그
+     순간 **업체가 하지 않은 약속**이 손님 화면에 나갑니다(절대 규칙
+     1 · 5). 안 적으신 업체는 그 줄이 **줄째 빠집니다**.
+     ⚠️ 카드(`js/card.js` 의 `.fit-t`)와 **같은 값**을 냅니다 — 두 곳이
+     다른 말을 하면 카드를 보고 들어온 분이 상세에서 다른 조건을
+     읽습니다. */
+  var fw = W.amFitWaysOf ? W.amFitWaysOf(p) : [];
+  if(fw.length)       rows.push(["클럽 받는 방식", fw.join(" · ")]);
+  if(p.fit_terms)     rows.push(["거래 조건", p.fit_terms]);
 
   if(rows.length){
     body += '<section class="sec"><div class="wrap">' +

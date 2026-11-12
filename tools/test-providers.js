@@ -1037,10 +1037,30 @@ function nowServe(){ return serve(0); }
     ok("⚠️ 잴 것이 0개면 실패입니다 (피팅 업체가 씨앗에 있는가)",
        (await p.locator(".fit-c").count()) === 1,
        await p.locator(".fit-c").count());
-    ok("  서비스 종류 탭이 선다 (전체 + 하위)",
-       (await p.locator(".fit-tab-a").count()) ===
-         (await p.locator(".chips-sub li").count()) + 1,
-       await p.locator(".fit-tab-a").count());
+    /* ⚠️⚠️⚠️ **묶음 탭과 하위 칩이 둘 다 섭니다**(2026-11-12 · 시안 ⑦).
+       시안은 「클럽 피팅」 하나로 묶었는데 우리 하위는 **둘**(드라이버 ·
+       아이언)이라, 묶음만 내면 그 둘로 바로 가는 길이 없어집니다.
+       ⚠️ 갯수를 박지 않습니다 — `AM_FIT_GROUP` 과 `amCatItems()` 에서
+       **읽어서** 셉니다(묶음이 느는 날 썩지 않게). */
+    const fitG = await p.evaluate(function(){
+      return (window.AM_FIT_GROUP || []).length; });
+    const fitI = await p.evaluate(function(){
+      var c = window.amCat ? window.amCat("fitting") : null;
+      return (c && window.amCatItems) ? window.amCatItems(c).length : 0; });
+    ok("⚠️ 잴 것이 0개면 실패입니다 (묶음 · 하위 목록을 읽기는 했는가)",
+       fitG > 0 && fitI > 0, fitG + " / " + fitI);
+    ok("  시안의 **묶음 탭**이 선다 (아이콘 카드)",
+       (await p.locator(".fitsv-a").count()) === fitG,
+       await p.locator(".fitsv-a").count() + " / " + fitG);
+    ok("  ⚠️⚠️ **하위 키가 하나도 안 줄었다** (묶어도 제 길이 그대로)",
+       (await p.locator(".chips-sub li").count()) === fitI,
+       await p.locator(".chips-sub li").count() + " / " + fitI);
+    ok("  ⚠️ 묶음 카드에 **빈 아이콘 자리가 없다**",
+       (await p.evaluate(function(){
+         return Array.prototype.filter.call(
+           document.querySelectorAll(".fitsv-i"),
+           function(e){ return !e.querySelector("svg"); }).length;
+       })) === 0);
     ok("  왼쪽 레일에 고르개 셋 (지역 · 서비스 방식 · 가격)",
        (await p.locator(".fit-rail select").count()) === 3,
        await p.locator(".fit-rail select").count());
@@ -1049,11 +1069,18 @@ function nowServe(){ return serve(0); }
     const fitSrt = (await p.textContent("#fit-o")) || "";
     ok("⚠️⚠️ 차례에 「추천순」이 **없다** (세어 본 적이 없습니다)",
        fitSrt.indexOf("추천") < 0, fitSrt.replace(/\s+/g, " ").trim());
-    /* ⚠️⚠️ 시안의 「부품비 별도」를 **안 적습니다** — 우리가 모르는
-       거래 조건입니다(0076 머리말 · 절대 규칙 5). */
+    /* ⚠️⚠️⚠️ **거래 조건은 업체가 적는 값입니다**(0079 · 2026-11-12).
+       시안 카드의 「부품비 별도 · 최종 견적 상담」이 그 줄인데, 저희가
+       지어 적으면 그 순간 **업체가 하지 않은 약속**이 손님 화면에
+       나갑니다(절대 규칙 1 · 5). 씨앗 업체는 그 칸을 **안 적었으므로**
+       그 줄이 **줄째 빠져야** 합니다.
+       ⚠️ 적으신 업체에 그 글자가 그대로 나가는지는 `/desk` 쪽에서
+       봅니다(`test-desk` 가 문이 덮어쓰는 칸을 읽어 세는 자리). */
     const fitCard = (await p.textContent(".fit-c")) || "";
-    ok("⚠️⚠️ 카드가 「부품비 별도」를 **안 적는다** (모르는 거래 조건)",
-       fitCard.indexOf("부품비") < 0, fitCard.replace(/\s+/g, " ").slice(0, 160));
+    ok("⚠️⚠️ 안 적으신 업체는 거래 조건 줄이 **줄째 빠진다**",
+       fitCard.indexOf("부품비") < 0 &&
+       (await p.locator(".fit-c .fit-t").count()) === 0,
+       fitCard.replace(/\s+/g, " ").slice(0, 160));
     /* ⚠️⚠️ 값을 **안 올리신** 업체는 그 줄이 아예 없어야 합니다 —
        "상담 후 견적" 같은 말을 우리가 지어 넣지 않습니다(절대 규칙 5). */
     ok("⚠️ 공임을 안 올린 업체는 **등록 전이라는 사실**만 적는다",
@@ -1072,8 +1099,27 @@ function nowServe(){ return serve(0); }
        (await p.evaluate(function(){ return location.search; }))
          .indexOf("sub=ft-grip") >= 0,
        await p.evaluate(function(){ return location.search; }));
+    /* ⚠️⚠️⚠️ **묶음 탭은 쉼표로 둘을 보냅니다** — 길만 내고 받는 쪽을
+       안 고치면 눌러도 **아무것도 안 걸립니다**(에러 0줄 · 2026-11-09 에
+       머리말 「골프 정보 · 후기」가 모아보기로 떨어진 그 자리). 그래서
+       **주소와 걸린 결과를 같이** 봅니다. */
+    await p.click('.fitsv-a[data-sub="ft-driver,ft-iron"]');
+    await p.waitForTimeout(250);
+    const fitQ = await p.evaluate(function(){ return location.search; });
+    ok("⚠️⚠️ 묶음 탭이 **쉼표로 둘**을 보낸다",
+       fitQ.indexOf("sub=ft-driver%2Cft-iron") >= 0 ||
+       fitQ.indexOf("sub=ft-driver,ft-iron") >= 0, fitQ);
+    ok("  ⚠️⚠️⚠️ 받는 쪽이 쉼표를 **갈라서 거른다** (둘 중 하나라도 하면 남습니다)",
+       (await p.locator(".fit-c").count()) === 0,
+       await p.locator(".fit-c").count());
+    ok("  그 묶음 카드가 **켜진 채**로 보인다",
+       ((await p.textContent(".fitsv-a.on")) || "").indexOf("클럽 피팅") >= 0,
+       (await p.textContent(".fitsv-a.on")) || "");
     await p.click('.fit-tab-a[data-sub="ft-driver"]');
     await p.waitForTimeout(250);
+    ok("  ⚠️⚠️ 하위 칩을 고르면 **그것을 담은 묶음**이 켜진다",
+       ((await p.textContent(".fitsv-a.on")) || "").indexOf("클럽 피팅") >= 0,
+       (await p.textContent(".fitsv-a.on")) || "");
     ok("  안 하는 하위를 누르면 0건이고 **다른 말**을 한다",
        (await p.locator(".fit-c").count()) === 0 &&
        ((await p.textContent("#fitlist")) || "")
@@ -1081,6 +1127,25 @@ function nowServe(){ return serve(0); }
        ((await p.textContent("#fitlist")) || "").replace(/\s+/g, " ").slice(0, 120));
     ok("  ⚠️ 「등록된 피팅 · 수리 업체가 없습니다」 라고 **말하지 않는다**",
        ((await p.textContent("#fitlist")) || "").indexOf("등록된 피팅") < 0);
+
+    /* `/pro` — ⚠️⚠️⚠️ **거래 조건은 업체가 적는 값입니다**(0079). 씨앗
+       업체는 그 칸을 안 적었으므로 **줄째 빠져야** 합니다. 저희가
+       「부품비 별도」를 지어 적으면 그 순간 업체가 하지 않은 약속이
+       손님 화면에 나갑니다(절대 규칙 1 · 5).
+       ⚠️ 카드와 **같은 값**을 내야 합니다 — 두 곳이 다른 말을 하면
+       카드를 보고 들어온 분이 상세에서 다른 조건을 읽습니다. */
+    await p.goto("http://127.0.0.1:" + h.port + "/pro/t-fit",
+                 { waitUntil:"domcontentloaded" });
+    const proTxt = (await p.textContent("main")) || "";
+    ok("⚠️⚠️ `/pro` 가 안 적으신 거래 조건을 **지어 적지 않는다**",
+       proTxt.indexOf("거래 조건") < 0 && proTxt.indexOf("부품비") < 0,
+       proTxt.replace(/\s+/g, " ").slice(0, 160));
+    ok("  ⚠️ 그래도 업체 정보 표는 선다 (빈 자리로 두지 않습니다)",
+       proTxt.indexOf("하는 일") >= 0 && proTxt.indexOf("영업 지역") >= 0,
+       proTxt.replace(/\s+/g, " ").slice(0, 200));
+    await p.goto("http://127.0.0.1:" + h.port + "/cat/fitting",
+                 { waitUntil:"networkidle" });
+    await p.waitForTimeout(200);
 
     /* 서비스 방식 — ⚠️⚠️ **안 고르신 업체는 빠집니다**(지어내지 않습니다) */
     await p.goto("http://127.0.0.1:" + h.port + "/cat/fitting?w=visit",

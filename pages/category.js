@@ -670,9 +670,24 @@ function rangeNone(){
      칩 수가 하위 수보다 하나 많아져 멀쩡한 화면이 실패로 잡힙니다.
    ════════════════════════════════════════════════════════════════════ */
 function fitTabs(c, items){
-  var cur = '<a class="fit-tab-a on" data-sub="" href="' + esc(W.amCatUrl(c)) +
-    '" aria-current="true">전체</a>';
-  return '<nav class="fit-tab" aria-label="서비스 종류">' + cur +
+  /* ⚠️⚠️⚠️ **묶음 탭과 하위 칩을 둘 다 냅니다** — 시안은 「클럽 피팅」
+     하나로 묶었는데 우리 하위는 **둘**(드라이버 · 아이언)입니다. 묶음만
+     내면 그 둘로 바로 가는 길이 없어지고(절대 규칙 2), 하위만 내면
+     시안의 생김새가 안 나옵니다. 묶음 줄이 시안의 **아이콘 카드**이고,
+     그 아래 하위 칩이 키마다 제 길을 그대로 가집니다.
+     ⚠️ 묶음 줄은 `.chips-sub` **바깥**입니다 — 안에 넣으면 `test-providers`
+     가 세는 칩 수가 하위 수보다 많아져 멀쩡한 화면이 실패로 잡힙니다. */
+  var G = W.AM_FIT_GROUP || [];
+  var grp = '<ul class="fitsv">' + G.map(function(g){
+    var on = (g.key === "");
+    return '<li><a class="fitsv-a' + (on ? " on" : "") + '" data-sub="' +
+      esc(g.key) + '" href="' +
+      esc(g.key ? W.amSubUrl(c, g.key) : W.amCatUrl(c)) + '"' +
+      (on ? ' aria-current="true"' : '') + '>' +
+      '<i class="fitsv-i">' + icon(g.icon, 22) + '</i>' +
+      '<span>' + esc(g.name) + '</span></a></li>';
+  }).join("") + '</ul>';
+  return '<nav class="fit-tab" aria-label="서비스 종류">' + grp +
     '<ul class="chips chips-sub">' + items.map(function(i){
       return '<li><a class="fit-tab-a" data-sub="' + esc(i.key) + '" href="' +
         esc(W.amSubUrl(c, i.key)) + '">' + esc(i.name) + '</a></li>';

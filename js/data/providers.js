@@ -363,3 +363,38 @@ window.AM_PV_SORT = [
      없는 날짜를 지어내지 않습니다. */
   { key:"new",  name:"최신 등록순" }
 ];
+
+/* 피팅 서비스 — 확정 시안 ⑦ 의 **선택 UI** (2026-11-12)
+
+   ⚠️⚠️⚠️ **하위 키를 하나도 안 줄입니다.** 시안의 「클럽 피팅」이 우리
+   하위 **둘**(드라이버 피팅 · 아이언 피팅)이라, 묶음만 내고 끝내면 그
+   둘로 바로 가는 길이 없어집니다. 그래서 —
+     · **묶음 탭**(시안의 생김새) — 「클럽 피팅」이 둘을 쉼표로 보냅니다
+     · **하위 칩 여섯**(`.chips-sub`) — 키마다 제 길이 그대로 있습니다
+   둘 다 `amSubUrl()` 한 곳에서 주소를 짓습니다.
+
+   ⚠️⚠️ **쉼표를 받는 쪽을 같이 고쳐야 합니다** — `js/fitting.js` 의
+   `subKeys()` 입니다. 길만 내고 받는 쪽을 안 고치면 **눌러도 아무것도
+   안 걸립니다**(에러 0줄 · 2026-11-09 에 머리말에서 겪은 자리).
+
+   ⚠️ 아이콘은 **있는 이름만** 씁니다 — 없는 이름은 `console.warn` 만
+   내고 **빈 글자**를 돌려주어 그 칸에 아이콘만 조용히 빠집니다
+   (`check-safe` ⑨ 가 세는 자리). 시안의 샤프트 · 그립 그림은 저희에게
+   없어서, 뜻이 가까운 것으로 둡니다(지어낸 이름을 적지 않습니다). */
+window.AM_FIT_GROUP = [
+  { key:"",                  name:"전체",          icon:"menu"   },
+  { key:"ft-driver,ft-iron", name:"클럽 피팅",     icon:"clubs"  },
+  { key:"ft-shaft",          name:"샤프트 교체",   icon:"bolt"   },
+  { key:"ft-grip",           name:"그립 교체",     icon:"bag"    },
+  { key:"ft-mend",           name:"클럽 수리",     icon:"shield" },
+  { key:"ft-angle",          name:"로프트 · 라이 조정", icon:"match" }
+];
+
+/* 지금 켜진 묶음 — ⚠️ 못 찾으면 **null** 입니다(`""` 로 돌려주면 모르는
+   값이 「전체」로 읽혀 탭이 엉뚱한 곳에 켜집니다 · 0069 의 그 규칙). */
+window.amFitGroupOf = function(sub){
+  var s = String(sub || "");
+  var L = window.AM_FIT_GROUP || [];
+  for(var i = 0; i < L.length; i++) if(L[i].key === s) return L[i];
+  return null;
+};

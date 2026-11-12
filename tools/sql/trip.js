@@ -261,6 +261,94 @@ module.exports = function(T){
      좁히면 빠집니다 — 그것이 맞습니다(그 달에 출발한다고 말할 근거가
      없습니다). 빈 배열인지를 **세어서** 봅니다.
      ══════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════════════
+     사진 — **재심사 중인 것이 공개본을 바꾸지 않는가** (지시서 7번)
+
+     ⚠️⚠️⚠️ **사진 칸이 그려지는 것으로 「된다」고 판정하지 않습니다.**
+     여기서 재는 것은 올리기 · 저장 · 공개 조회 · 빼기 · **권한** 넷이
+     DB 에서 실제로 갈리는가입니다.
+
+     ⚠️⚠️ 가장 위험한 자리 — 팔고 있는 상품에 **새 사진을 올린 순간**
+     그것이 손님 화면에 나가면 **심사도 안 거친 그림이 공개**됩니다.
+     반대로 올렸다고 **기존 승인본이 사라지면** 멀쩡히 팔리던 상품이
+     사진 0장으로 떨어집니다. 그 둘을 **갈라서** 눌러 봅니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── 0073 사진 — 재심사 중인 것이 공개본을 바꾸는가 (7번)");
+  {
+    /* 지금 이 상품은 approved 이고 live 사진이 **0장**입니다
+       (바로 위에서 하나 올리고 빼는 중으로 표시했습니다). 눈에 보이는
+       상태를 **세어서** 적어 둡니다 — 갯수를 박지 않습니다. */
+    const before = psql(anon + "select count(*) from v_trip_photo_public " +
+                        "where trip_id = '" + TRIP + "'");
+    const beforeN = psql(anon + "select photo_n::text from v_trip_open " +
+                         "where id = '" + TRIP + "'");
+    /* 새 사진을 하나 올립니다 — 승인된 상품에 올리면 `live` 가 **거짓** */
+    const nw = allowed(as(PRO) + "select claim_trip_photo('" +
+      J({ trip:TRIP, mime:"image/jpeg", bytes:"90000" }) + "'::jsonb)");
+    ok("⚠️ 잴 것이 0개면 실패입니다 (새 사진이 올라갔는가)", nw.yes, nw.why);
+    ok("⚠️⚠️⚠️ 새로 올린 사진은 **심사 전**이다 (live = false)",
+       psql(as(PRO) + "select count(*) from v_trip_photo_mine where trip_id = '" +
+            TRIP + "' and not live") === "1",
+       psql(as(PRO) + "select count(*) from v_trip_photo_mine where trip_id = '" +
+            TRIP + "' and not live"));
+    ok("⚠️⚠️⚠️ **공개 목록이 안 바뀐다** (심사도 안 거친 그림이 안 나갑니다)",
+       psql(anon + "select count(*) from v_trip_photo_public where trip_id = '" +
+            TRIP + "'") === before,
+       "전 " + before + " · 후 " + psql(anon +
+         "select count(*) from v_trip_photo_public where trip_id = '" + TRIP + "'"));
+    ok("  ⚠️⚠️ **카드의 사진 수도 안 바뀐다** (기존 승인본이 안 사라집니다)",
+       psql(anon + "select photo_n::text from v_trip_open where id = '" +
+            TRIP + "'") === beforeN,
+       "전 " + beforeN + " · 후 " + psql(anon +
+         "select photo_n::text from v_trip_open where id = '" + TRIP + "'"));
+    /* ⚠️⚠️ 여행사는 **제 심사 중 사진의 id 를 봅니다** — 안 보이면 빼거나
+       차례를 바꿀 길이 없습니다(0073 이 `v_trip_photo_mine` 을 낸 까닭). */
+    const NEWID = psql(as(PRO) + "select id from v_trip_photo_mine where trip_id = '" +
+                       TRIP + "' and not live limit 1");
+    ok("  여행사는 심사 중 사진의 **id 를 읽는다**",
+       /^[0-9a-f-]{36}$/.test(NEWID), NEWID);
+    /* ⚠️⚠️⚠️ **권한** — 남은 그 사진을 못 보고 못 뺍니다 */
+    ok("⚠️⚠️ **남의 여행사는 그 사진이 안 보인다**",
+       psql(as(PR2) + "select count(*) from v_trip_photo_mine where id = '" +
+            NEWID + "'") === "0");
+    const dOther = denied(as(PR2) + "select drop_trip_photo('" +
+                          J({ id:NEWID }) + "'::jsonb)");
+    ok("  남의 여행사는 **못 뺀다**", dOther.no, dOther.why);
+    const dCus = denied(as(CUS) + "select drop_trip_photo('" +
+                        J({ id:NEWID }) + "'::jsonb)");
+    ok("  손님도 못 뺀다", dCus.no, dCus.why);
+    const dAnon = denied(anon + "select drop_trip_photo('" +
+                         J({ id:NEWID }) + "'::jsonb)");
+    ok("  비로그인은 문을 아예 못 부른다", dAnon.no, dAnon.why);
+    /* ⚠️⚠️ **심사 전 사진은 그 자리에서 지웁니다** — 한 번도 안 보인
+       그림이라 기록에 남길 것이 없습니다(0073 ⑧ 에서 세운 규칙). */
+    allowed(as(PRO) + "select drop_trip_photo('" + J({ id:NEWID }) + "'::jsonb)");
+    ok("⚠️ 올린 분은 빼고, **심사 전 사진은 줄째 사라진다**",
+       psql("select count(*) from tripphoto where id = '" + NEWID + "'") === "0",
+       psql("select count(*) from tripphoto where id = '" + NEWID + "'"));
+    ok("  빼고 나서도 **공개 목록이 그대로**다",
+       psql(anon + "select count(*) from v_trip_photo_public where trip_id = '" +
+            TRIP + "'") === before);
+    /* ⚠️⚠️⚠️ **승인해야 비로소 보입니다** — 다시 올리고 승인을 거칩니다.
+       ⚠️ `move_trip` 은 **같은 상태로 못 옮깁니다**("이미 그 상태입니다") —
+       지금 이 상품은 이미 approved 라, 그냥 승인을 부르면 **거절당하고
+       아무 일도 안 일어납니다**. 처음에 그렇게 적어 멀쩡한 코드를 실패로
+       잡았습니다(검사가 틀린 자리). 판매 중지 → 다시 판매로 **심사 중**
+       으로 내린 뒤 승인합니다(이 파일이 ⑧ 에서 쓴 그 차례). */
+    allowed(as(PRO) + "select close_trip('" + J({ id:TRIP }) + "'::jsonb)");
+    allowed(as(PRO) + "select reopen_trip('" + J({ id:TRIP }) + "'::jsonb)");
+    allowed(as(PRO) + "select claim_trip_photo('" +
+      J({ trip:TRIP, mime:"image/jpeg", bytes:"90000" }) + "'::jsonb)");
+    const mv = allowed(as(ADM) + "select move_trip('" +
+      J({ id:TRIP, to:"approved" }) + "'::jsonb)");
+    ok("⚠️ 잴 것이 0개면 실패입니다 (승인이 실제로 돌았는가)", mv.yes, mv.why);
+    ok("⚠️⚠️ **승인을 거치면** 그때 공개 목록에 들어온다",
+       Number(psql(anon + "select count(*) from v_trip_photo_public " +
+                   "where trip_id = '" + TRIP + "'")) === Number(before) + 1,
+       "전 " + before + " · 후 " + psql(anon +
+         "select count(*) from v_trip_photo_public where trip_id = '" + TRIP + "'"));
+  }
+
   console.log("\n── 0077 출발일 · 출발 가능 기간");
   const D1 = psql("select to_char(kst_today() + 30, 'YYYY-MM-DD')");
   const D2 = psql("select to_char(kst_today() + 60, 'YYYY-MM-DD')");

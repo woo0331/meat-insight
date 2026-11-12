@@ -42,8 +42,18 @@
     var set = function(id, v){ var e = d.getElementById(id); if(e) e.value = v; };
     set("fit-rg", f.rg); set("fit-w", f.w); set("fit-p", f.p);
     set("fit-o", f.o);   set("fit-q", f.q);
+    /* ⚠️⚠️ **묶음 탭은 「담고 있으면」 켭니다** — 아래 하위 칩에서
+       「드라이버 피팅」을 고르시면 그것은 시안의 「클럽 피팅」 안에
+       있습니다. 똑같을 때만 켜면 그때 **아무 묶음도 안 켜져**, 손님이
+       지금 무엇으로 보고 계신지 알 길이 없습니다. */
+    var cur = subKeys(f.sub);
     Array.prototype.forEach.call(d.querySelectorAll(".fit-tab a"), function(a){
-      var on = (a.getAttribute("data-sub") || "") === f.sub;
+      var k  = a.getAttribute("data-sub") || "";
+      var on = a.classList.contains("fitsv-a")
+        ? (k === f.sub ||
+           (cur.length > 0 && subKeys(k).length > 0 &&
+            cur.every(function(x){ return subKeys(k).indexOf(x) >= 0; })))
+        : (k === f.sub);
       a.classList.toggle("on", on);
       if(on) a.setAttribute("aria-current", "true");
       else   a.removeAttribute("aria-current");
@@ -72,13 +82,26 @@
     return L.join(" ").toLowerCase();
   }
 
+  /* 쉼표를 가르는 자리 — **한 곳**입니다(거르는 쪽과 켜진 탭을 집는 쪽이
+     같은 줄을 읽어야 「켜졌는데 안 걸러 준다」가 안 납니다). */
+  function subKeys(s){
+    return String(s || "").split(",").map(function(x){ return x.trim(); })
+      .filter(Boolean);
+  }
+
   function pick(f){
     var all  = (W.amProvidersOf ? W.amProvidersOf("fitting") : []);
     var band = f.p && W.amFitPrice ? W.amFitPrice(f.p) : null;
     return all.filter(function(p){
+      /* ⚠️⚠️⚠️ **쉼표로 여럿이 올 수 있습니다** — 시안의 「클럽 피팅」이
+         우리 하위 **둘**(드라이버 · 아이언)이기 때문입니다. 한 키만
+         받아들이면 그 탭을 눌러도 **아무것도 안 걸립니다**(에러 0줄 ·
+         2026-11-09 에 머리말 「골프 정보 · 후기」가 모아보기로 떨어진
+         그 자리). 길을 내는 날 **받는 쪽도 같이** 고칩니다. */
       if(f.sub){
         var S = (p && Array.isArray(p.subs)) ? p.subs : [];
-        if(S.indexOf(f.sub) < 0) return false;
+        var want = subKeys(f.sub);
+        if(!want.some(function(k){ return S.indexOf(k) >= 0; })) return false;
       }
       if(f.rg){
         var R = (p && Array.isArray(p.regions)) ? p.regions : [];

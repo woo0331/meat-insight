@@ -200,6 +200,20 @@
      ⚠️⚠️ **로그인하지 않으셨으면 단추를 안 냅니다** — 그리면 눌러도
      거절되는 칸입니다(절대 규칙 5). 대신 상세에서 로그인 길을 냅니다.
      ⚠️ 글자를 짓는 자리는 `favLabel()` **한 곳**입니다. */
+  /* 받은 지원 · 제안 수 — ⚠️⚠️⚠️ **못 읽었으면 그 줄을 안 찍습니다.**
+     전에는 `String(j.apply_n)` 이라 그 칸이 안 오면 손님 화면에
+     **「받은 것 undefined」** 가 그대로 찍혔습니다(2026-11-12 에 찍어
+     보고 알았습니다 · 절대 규칙 2).
+     ⚠️ **0건도 안 찍습니다** — 「받은 것 0」은 우리가 만든 평가이고,
+     새로 올리신 분의 공고가 전부 인기 없는 글로 보입니다(0061 이
+     답 수를 0건이면 안 찍는 그 까닭).
+     ⚠️ 센 값은 공개 보기가 **세어서** 냅니다(칸에 저장하지 않습니다). */
+  function applyN(j){
+    var n = Number(j && j.apply_n);
+    if(!isFinite(n) || n <= 0) return "";
+    return '<span class="jbc-n">받은 것 ' + esc(String(n)) + '</span>';
+  }
+
   function favLabel(on){ return on ? "저장 해제" : "저장"; }
   function favBtn(j){
     if(!ME || !ME.signedIn) return "";
@@ -245,7 +259,7 @@
         '<a class="btn btn-line btn-sm" href="' +
           esc(urlOf(Object.assign({}, nowAll(), { v:j.id }))) + '">공고 상세</a>' +
         favBtn(j) +
-        '<span class="jbc-n">받은 것 ' + esc(String(j.apply_n)) + '</span>' +
+        applyN(j) +
       '</p>' +
     '</li>';
   }
@@ -635,7 +649,7 @@
         '<button type="button" class="btn btn-pt jbc-go">' +
           (j.kind === "hire" || j.kind === "seek" ? "지원하기" : "제안 보내기") +
         '</button>' +
-        '<span class="jbc-n">받은 것 ' + esc(String(j.apply_n)) + '</span>' +
+        applyN(j) +
       '</div>' +
     '</div>';
   }

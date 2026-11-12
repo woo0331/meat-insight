@@ -36,7 +36,11 @@
 
   var REG = {};
   (window.AM_REGIONS || []).forEach(function(r){ REG[r.key] = r.name; });
-  function rgName(k){ return REG[k] || String(k || ""); }
+  /* ⚠️ 손님 화면(`js/booking.js`)과 **같은 말**을 씁니다 — 두 곳이
+     다른 꼴을 내면 업체가 보는 지역과 손님이 보는 지역이 달라집니다. */
+  function rgName(k){
+    return window.amKeyName ? window.amKeyName(REG, k, "지역") : "";
+  }
 
   function get(path){
     return fetch(A.conf.url + "/rest/v1/" + path, {

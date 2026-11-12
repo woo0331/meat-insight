@@ -25,7 +25,11 @@
 
   var REG = {};
   (window.AM_REGIONS || []).forEach(function(r){ REG[r.key] = r.name; });
-  function rgName(k){ return REG[k] || String(k || ""); }
+  /* ⚠️⚠️ **못 찾은 키를 그대로 찍지 않습니다**(지시 6번 · 2026-11-12).
+     중립 문구를 내고 누락은 `console.warn` 으로 운영자에게만 갑니다. */
+  function rgName(k){
+    return window.amKeyName ? window.amKeyName(REG, k, "지역") : "";
+  }
 
   function get(path){
     return fetch(A.conf.url + "/rest/v1/" + path, {

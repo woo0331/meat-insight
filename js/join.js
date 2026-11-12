@@ -29,7 +29,11 @@
   var REG  = {};
   (window.AM_REGIONS || []).forEach(function(r){ REG[r.key] = r.name; });
 
-  function rgName(k){ return REG[k] || k; }
+  /* ⚠️⚠️ **못 찾은 키를 그대로 찍지 않습니다**(지시 6번 · 2026-11-12).
+     중립 문구를 내고 누락은 `console.warn` 으로 운영자에게만 갑니다. */
+  function rgName(k){
+    return window.amKeyName ? window.amKeyName(REG, k, "지역") : "";
+  }
 
   /* 날짜 — ⚠️ 한글 조사를 글자로 박지 않습니다 (받침에 따라 갈립니다) */
   function dayText(iso){

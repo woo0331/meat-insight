@@ -633,18 +633,29 @@ function stripJsComments(txt){
 }
 function scanRawKey(srcs){
   const out = [];
-  /* `XXX[a.b] || a.b` — 앞뒤의 알맹이가 **같은 자리**일 때만 잡습니다.
-     ⚠️ `byAd[b.ad_id] = byAd[b.ad_id] || []` 같은 모으는 자리는 뒤가
-     배열이라 안 걸립니다. */
-  const re = /\[\s*([A-Za-z_$][\w$]*)\.([\w$]+)\s*\]\s*\|\|\s*\1\.\2\b/g;
+  /* ⚠️⚠️⚠️ **꼴이 하나가 아닙니다** — 2026-11-12 에 찍어 보니 목적지
+     키가 손님 화면에 날것(`japan`)으로 나가고 있었는데, 그 자리는
+     `MAP[a.b] || a.b` 가 아니라 **못 찾으면 `String(k)` 를 돌려주는
+     함수**였습니다. 한 꼴만 세면 나머지 꼴로 그대로 샙니다.
+     ⚠️ 그래서 셋을 봅니다 —
+       ① `MAP[a.b] || a.b`        (같은 자리를 뒷가지로)
+       ② `MAP[k]   || k`          (변수 하나짜리)
+       ③ `MAP[k]   || String(k`   (글자로 바꿔서 내보내는 자리)
+     ⚠️ `k ? String(k) : ""` 꼴은 **못 셉니다**(무엇을 찍는 자리인지
+     코드만 보고는 알 수 없습니다) — 그 자리는 찍어 봐야 압니다. */
+  const RES = [
+    /\[\s*([A-Za-z_$][\w$]*)\.([\w$]+)\s*\]\s*\|\|\s*\1\.\2\b/g,
+    /\[\s*([A-Za-z_$][\w$]*)\s*\]\s*\|\|\s*\1\b(?!\s*\.)/g,
+    /\[\s*([A-Za-z_$][\w$]*)\s*\]\s*\|\|\s*String\(\s*\1\b/g
+  ];
   srcs.forEach(function(f){
     const name = f[0], txt = stripJsComments(f[1]);
     if(name.indexOf("js" + path.sep + "admin") === 0) return;
-    let m;
-    re.lastIndex = 0;
-    while((m = re.exec(txt))){
-      out.push(name + " — " + m[1] + "[" + m[0].slice(m[0].indexOf(".") + 1));
-    }
+    RES.forEach(function(re){
+      let m;
+      re.lastIndex = 0;
+      while((m = re.exec(txt))) out.push(name + " — " + m[0].trim());
+    });
   });
   return out;
 }
@@ -677,7 +688,17 @@ if(process.argv.indexOf("--prove") >= 0){
    ["여러 줄 주석 속 글자는 안 잡는다",
     '/* 전에는\n   `ST[r.state] || r.state` 였습니다\n   그 자리입니다 */\nvar z = 1;', false],
    ["글자(따옴표) 안의 /* 는 주석이 아니다",
-    'var s = "/*"; x.innerHTML = esc(ST[r.state] || r.state);', true]
+    'var s = "/*"; x.innerHTML = esc(ST[r.state] || r.state);', true],
+   /* ⚠️⚠️⚠️ **꼴 둘을 2026-11-12 에 더했습니다** — 목적지 키가 손님
+      화면에 날것(`japan`)으로 나간 자리가 `MAP[a.b] || a.b` 가 아니라
+      변수 하나짜리였습니다. 미끼를 안 넣으면 넓힌 자리가 **아무것도
+      안 잡는지** 알 수 없습니다. */
+   ["변수 하나짜리 뒷가지", 'function f(k){ return REG[k] || k; }', true],
+   ["글자로 바꿔 내보내는 뒷가지",
+    'function f(k){ return REG[k] || String(k || ""); }', true],
+   /* ⚠️ 뒤가 **다른 자리**면 잡으면 안 됩니다 (기본값을 주는 흔한 꼴) */
+   ["다른 값을 기본으로 주는 자리는 안 잡는다",
+    'var n = CNT[k] || 0; var L = BY[k] || [];', false]
   ].forEach(function(pr){
     const got = scanRawKey([["js" + path.sep + "probe.js", pr[1]]]).length > 0;
     const good = got === pr[2];

@@ -154,72 +154,88 @@ function build(){
    다르면 찍는 화면과 재는 화면이 조용히 달라집니다. */
 const TRIP = [
   { id:"11111111-0073-4000-8000-000000000001", provider_id:"spec-ft-1",
-    pro_name:"(예시) 여행사 1", scope:"abroad", sub:"tr-pkg",
-    region:"japan", title:"(예시) 일본 3박 4일 36홀 패키지",
-    nights:3, rounds:2, price:890000, price_note:"2인 1실 기준",
+    provider_name:"(예시) 여행사 1", scope:"abroad", sub:"tr-pkg",
+    dest:"japan", title:"(예시) 일본 3박 4일 36홀 패키지",
+    body:"후지산이 보이는 코스에서 이틀 라운드합니다.",
+    nights:3, days:4, price_from:890000, price_note:"2인 1실 기준",
     depart_kind:"dates", depart_from:null, depart_to:null,
-    months:["2026-12","2027-01"],
-    days:["2026-12-12","2026-12-26","2027-01-09"],
-    incl:"항공 · 숙박 · 그린피", excl:"캐디피 · 카트비",
-    state:"live", thumb:null, photo_n:0,
+    months:["2026-12","2027-01"], depart_next:"2026-12-12",
+    incl:["항공","숙박","그린피"], excl:["캐디피","카트비"],
+    state:"approved", thumb:null, photo_n:0,
     created_at:"2026-11-05T01:00:00Z" },
   { id:"11111111-0073-4000-8000-000000000002", provider_id:"spec-ft-2",
-    pro_name:"(예시) 여행사 2", scope:"home", sub:"tr-home",
-    region:"jeju", title:"(예시) 제주 2박 3일 자유 라운드",
-    nights:2, rounds:2, price:420000, price_note:null,
+    provider_name:"(예시) 여행사 2", scope:"home", sub:"tr-home",
+    dest:"jeju", title:"(예시) 제주 2박 3일 자유 라운드",
+    body:"원하시는 날짜에 맞춰 티타임을 잡아 드립니다.",
+    nights:2, days:3, price_from:420000, price_note:null,
     depart_kind:"range", depart_from:"2026-12-01", depart_to:"2027-02-28",
-    months:["2026-12","2027-01","2027-02"], days:null,
-    incl:"숙박 · 그린피", excl:"항공 · 렌터카",
-    state:"live", thumb:null, photo_n:0,
+    months:["2026-12","2027-01","2027-02"], depart_next:null,
+    incl:["숙박","그린피"], excl:["항공","렌터카"],
+    state:"approved", thumb:null, photo_n:0,
     created_at:"2026-11-04T01:00:00Z" },
-  { id:"11111111-0073-4000-8000-000000000003", provider_id:null,
-    pro_name:null, scope:"home", sub:"tr-tel",
-    region:"gangwon", title:"(예시) 강원 골프텔 1박 2일",
-    nights:1, rounds:1, price:260000, price_note:null,
+  /* ⚠️ 출발일을 **아직 안 올리신** 상품 — 「없음」과 다른 말을 하는지
+     그림으로 봐야 하는 자리입니다(0077). */
+  { id:"11111111-0073-4000-8000-000000000003", provider_id:"spec-rg-1",
+    provider_name:"(예시) 여행사 3", scope:"home", sub:"tr-tel",
+    dest:"gangwon", title:"(예시) 강원 골프텔 1박 2일",
+    body:"골프텔에서 묵고 아침에 바로 라운드합니다.",
+    nights:1, days:2, price_from:260000, price_note:null,
     depart_kind:"none", depart_from:null, depart_to:null,
-    months:null, days:null,
-    incl:"숙박 · 그린피", excl:null,
-    state:"live", thumb:null, photo_n:0,
+    months:[], depart_next:null,
+    incl:["숙박","그린피"], excl:[],
+    state:"approved", thumb:null, photo_n:0,
     created_at:"2026-11-03T01:00:00Z" }
-];
-const JOB = [
+];const JOB = [
+  /* ⚠️⚠️ 키는 **DB 가 받는 값**이어야 합니다 — 하위는 `cr-*`(catalog.js) ·
+     직무는 `jr-*` · 고용 형태는 `je-*` · 급여 종류는 `AM_JOB_PAY` 입니다.
+     아무 글자나 적으면 화면이 「하위분류 미확인」을 내는 것이 **맞고**,
+     그것을 보고 멀쩡한 화면을 고치려 들게 됩니다(이 저장소가 여섯 번
+     밟은 자리). */
   { id:"bbbbbbbb-0048-4000-8000-000000000001", kind:"hire",
-    sub:"jr-caddy", region:"gyeonggi", title:"(예시) 캐디 모집 — 주 5일",
-    pay:"일 12만원", terms:"숙소 제공 · 4대보험",
-    role:"caddy", emp_type:"full", pay_type:"day", pay_min:120000,
-    close_at:"2026-12-31", state:"open", pro_name:"(예시) 골프장 1",
-    reply_n:2, created_at:"2026-11-06T01:00:00Z" },
+    sub:"cr-caddy", region:"gyeonggi", title:"(예시) 캐디 모집 — 주 5일",
+    pay:"주말 라운드 우선", terms:"숙소 제공 · 4대보험",
+    role:"jr-etc", emp_type:"je-full", pay_type:"per_round", pay_min:120000,
+    close_at:"2026-12-31", state:"open",
+    pro_name:"(예시) 골프장 1", who:null,
+    apply_n:2, created_at:"2026-11-06T01:00:00Z" },
   { id:"bbbbbbbb-0048-4000-8000-000000000002", kind:"hire",
-    sub:"jr-pro", region:"seoul", title:"(예시) 레슨 프로 채용",
-    pay:"월 300만원부터", terms:"수업료 별도 배분",
-    role:"pro", emp_type:"full", pay_type:"month", pay_min:3000000,
-    close_at:null, state:"open", pro_name:"(예시) 아카데미 1",
-    reply_n:0, created_at:"2026-11-05T01:00:00Z" },
+    sub:"cr-coach", region:"seoul", title:"(예시) 레슨 프로 채용",
+    pay:"수업료 별도 배분", terms:"4대보험",
+    role:"jr-coach", emp_type:"je-full", pay_type:"monthly", pay_min:3000000,
+    close_at:null, state:"open",
+    pro_name:"(예시) 아카데미 1", who:null,
+    apply_n:0, created_at:"2026-11-05T01:00:00Z" },
+  /* ⚠️ 급여를 「협의」로 두신 글 — 금액 거르개에서 **빠져야** 합니다
+     (단위를 모르는 값을 숫자로 견주지 않습니다 · 지시 4번). */
   { id:"bbbbbbbb-0048-4000-8000-000000000003", kind:"seek",
-    sub:"jr-mgr", region:"busan", title:"(예시) 운영 관리 경력 7년 구직",
+    sub:"cr-hire", region:"busan", title:"(예시) 운영 관리 경력 7년 구직",
     pay:"협의", terms:null,
-    role:"mgr", emp_type:null, pay_type:null, pay_min:null,
-    close_at:null, state:"open", pro_name:null,
-    reply_n:1, created_at:"2026-11-04T01:00:00Z" }
-];
-const CQ = [
+    role:"jr-manage", emp_type:null, pay_type:"negotiate", pay_min:null,
+    close_at:null, state:"open",
+    pro_name:null, who:"김**",
+    apply_n:1, created_at:"2026-11-04T01:00:00Z" }
+];const CQ = [
+  /* ⚠️ 칸 이름은 `v_cq_public`(0075)을 그대로 씁니다 — 댓글 수는
+     `answer_n` 이고 `ca_n` 이 아닙니다. */
   { id:"11111111-1111-1111-1111-111111111111", cat:"cm-open",
     title:"(예시) 드라이버 슬라이스 교정 방법 있을까요?",
     body:"요즘 계속 오른쪽으로 휘어서 고민입니다.",
-    who:"골프초보", view_n:128, ca_n:4, state:"open",
-    created_at:"2026-11-10T01:00:00Z", photo_n:0 },
+    who:"골프초보", named:true, guest:false, mine:false,
+    answer_n:4, view_n:128, photo_n:0, thumb:null, state:"live",
+    created_at:"2026-11-10T01:00:00Z" },
   { id:"22222222-2222-2222-2222-222222222222", cat:"cm-course",
     title:"(예시) 지난주 다녀온 골프장 후기입니다",
     body:"코스 관리가 아주 좋았습니다.",
-    who:"김**", view_n:64, ca_n:2, state:"open",
-    created_at:"2026-11-09T01:00:00Z", photo_n:0 },
+    who:"김**", named:false, guest:false, mine:false,
+    answer_n:2, view_n:64, photo_n:0, thumb:null, state:"live",
+    created_at:"2026-11-09T01:00:00Z" },
   { id:"33333333-3333-3333-3333-333333333333", cat:"cm-ask",
     title:"(예시) 아이언 세트 추천 부탁드립니다",
     body:"입문 1년차입니다.",
-    who:"박**", view_n:31, ca_n:0, state:"open",
-    created_at:"2026-11-08T01:00:00Z", photo_n:0 }
+    who:"박**", named:false, guest:false, mine:false,
+    answer_n:0, view_n:31, photo_n:0, thumb:null, state:"live",
+    created_at:"2026-11-08T01:00:00Z" }
 ];
-
 const CUST = { id:"cc000000-0000-4000-8000-000000000001", role:"customer" };
 
 const SCENES = [

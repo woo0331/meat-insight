@@ -53,7 +53,12 @@
 
   var REG = {};
   (window.AM_REGIONS || []).forEach(function(r){ REG[r.key] = r.name; });
-  function rgName(k){ return REG[k] || String(k || ""); }
+  /* ⚠️⚠️ **못 찾은 키를 그대로 찍지 않습니다**(지시 6번) — 전에는
+     `String(k)` 라 지역 키가 손님 화면에 날것으로 나갔습니다. 중립
+     문구를 내고 누락은 `console.warn` 으로 운영자에게만 갑니다. */
+  function rgName(k){
+    return window.amKeyName ? window.amKeyName(REG, k, "지역") : "";
+  }
 
   /* ⚠️⚠️ **한국 날짜**로 셉니다 (UTC 로 지으면 새벽에 하루 밀립니다) */
   function kstISO(plusDays){

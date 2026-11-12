@@ -736,6 +736,12 @@ window.amJobPay = function(r){
   for(var i = 0; i < L.length; i++) if(L[i].key === t) row = L[i];
   var free = (r.pay && String(r.pay).trim()) ? String(r.pay).trim() : "";
   if(!row) return free || null;
+  /* ⚠️⚠️ **같은 말을 두 번 적지 않습니다** — 급여 종류를 「협의」로
+     고르시고 적는 칸에도 「협의」라고 쓰시면 「협의 · 협의」가 됩니다
+     (2026-11-12 에 찍어 보고 알았습니다). 올리신 분이 적은 글이
+     우리가 낼 말과 **똑같을 때만** 뺍니다 — 다르면 둘 다 냅니다
+     (「월 300만원부터 · 식대 별도」는 두 가지 사실입니다). */
+  if(free === row.name) free = "";
   if(t === "negotiate") return free ? (row.name + " · " + free) : row.name;
   if(n === null || n === undefined || n === "") return free || row.name;
   var won = Number(n);

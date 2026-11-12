@@ -33,7 +33,10 @@
 
   var REG = {};
   (window.AM_REGIONS || []).forEach(function(r){ REG[r.key] = r.name; });
-  function rgName(k){ return REG[k] || k; }
+  /* ⚠️⚠️ **못 찾은 키를 그대로 찍지 않습니다**(지시 6번 · 2026-11-12). */
+  function rgName(k){
+    return window.amKeyName ? window.amKeyName(REG, k, "지역") : "";
+  }
   function subName(k){
     var f = window.amSub ? window.amSub(k) : null;
     /* ⚠️ 모르는 키는 **키 그대로** 냅니다 (지어내지 않습니다) */

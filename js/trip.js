@@ -50,10 +50,14 @@
     if(scope === "home")   return W.AM_REGIONS || [];
     return (W.amRegionsOf ? W.amRegionsOf("travel") : (W.AM_REGIONS || []));
   }
+  /* ⚠️⚠️⚠️ **못 찾은 키를 그대로 찍고 있었습니다** — `return String(k)`
+     라 목적지 키가 손님 화면에 날것(`japan`)으로 나갔습니다(지시 6번 ·
+     2026-11-12 에 찍어 보고 알았습니다). `check-safe` ⑪ 은 `MAP[a.b] ||
+     a.b` 꼴만 세므로 **이 꼴은 못 잡습니다** — 그 자리도 같이 늘렸습니다.
+     ⚠️ 중립 문구를 내고 매핑 누락은 `console.warn` 으로 운영자에게만
+     갑니다(절대 규칙 3) — `amKeyName()` 한 곳입니다. */
   function destName(k){
-    var L = dests("");
-    for(var i = 0; i < L.length; i++) if(L[i].key === k) return L[i].name;
-    return k ? String(k) : "";
+    return W.amKeyName ? W.amKeyName(dests(""), k, "목적지") : "";
   }
   /* 일정(일수) · 예산 — ⚠️ 경계는 **아래를 열고 위를 닫습니다**(gte · lt).
      둘 다 닫으면 3일이 두 칸에 다 걸립니다. */
@@ -233,8 +237,15 @@
         (price ? '<span class="tpc-p">' + esc(price) + '</span>' : "") +
         chips(r) +
         (r.price_note ? '<span class="tpc-n">' + esc(r.price_note) + '</span>' : "") +
-        '<span class="tpc-s">' + (W.icon ? W.icon("store", 14) : "") +
-          '판매사: ' + esc(r.provider_name || "") + '</span>' +
+        /* ⚠️⚠️ 상호가 비면 **줄째 뺍니다** — 「판매사: 」만 찍으면
+           자리표시자이고(절대 규칙 2) 손님은 빠진 값으로 읽습니다.
+           ⚠️ 지금 공개 보기(`v_trip_open`)는 승인된 업체와 **안쪽
+           조인**이라 빌 수가 없습니다 — 화면이 칸을 하나 빠뜨리는
+           날을 막는 줄입니다(`industries` 로 겪은 자리). */
+        (r.provider_name
+          ? '<span class="tpc-s">' + (W.icon ? W.icon("store", 14) : "") +
+            '판매사: ' + esc(r.provider_name) + '</span>'
+          : "") +
       '</span>' +
       '<span class="tpc-go">일정 · 포함사항 보기</span>' +
       '</a>' +
@@ -342,8 +353,10 @@
       '<div class="tpd-body">' + esc(r.body).replace(/\n/g, "<br>") + '</div>' +
       (inc.length ? '<p class="tpd-ie"><b>포함</b> ' + esc(inc.join(" · ")) + '</p>' : "") +
       (exc.length ? '<p class="tpd-ie"><b>별도</b> ' + esc(exc.join(" · ")) + '</p>' : "") +
-      '<p class="tpd-s">' + (W.icon ? W.icon("store", 15) : "") +
-        '판매사: ' + esc(r.provider_name || "") + '</p>' +
+      (r.provider_name
+        ? '<p class="tpd-s">' + (W.icon ? W.icon("store", 15) : "") +
+          '판매사: ' + esc(r.provider_name) + '</p>'
+        : "") +
       /* ⚠️⚠️ **우리가 파는 것이 아닙니다** — 제20조 제1항을 그 자리에서
          다시 말하고, 문의는 이미 도는 길(매칭 요청)로 보냅니다.
          ⚠️ 결제를 안 받으므로 「예약」 단추를 내지 않습니다. */

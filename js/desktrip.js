@@ -63,10 +63,9 @@
     return (window.amRegionsOf ? window.amRegionsOf("travel")
                                : (window.AM_REGIONS || []));
   }
+  /* ⚠️ 손님 화면(`js/trip.js`)과 **같은 말**을 씁니다 */
   function destName(k){
-    var L = dests("");
-    for(var i = 0; i < L.length; i++) if(L[i].key === k) return L[i].name;
-    return k ? String(k) : "";
+    return window.amKeyName ? window.amKeyName(dests(""), k, "목적지") : "";
   }
   function stName(k){
     var s = window.amTripSt ? window.amTripSt(k) : null;

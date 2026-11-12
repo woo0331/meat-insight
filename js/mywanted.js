@@ -23,7 +23,10 @@
   var esc = window.esc;
   var REG = {};
   (window.AM_REGIONS || []).forEach(function(r){ REG[r.key] = r.name; });
-  function rgName(k){ return REG[k] || String(k || ""); }
+  /* ⚠️⚠️ **못 찾은 키를 그대로 찍지 않습니다**(지시 6번 · 2026-11-12). */
+  function rgName(k){
+    return window.amKeyName ? window.amKeyName(REG, k, "지역") : "";
+  }
   /* 분류 · 하위 이름 — ⚠️ `catalog.js` 한 곳에서 끌어옵니다 */
   function catName(k){
     var c = window.amCat ? window.amCat(k) : null;

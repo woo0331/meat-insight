@@ -100,5 +100,9 @@
 
   /* 갈래 말 — ⚠️ 한 곳 */
   W.AM_COURSE_KIND = { golf:"골프장", range:"연습장" };
-  W.amCourseKind = function(k){ return W.AM_COURSE_KIND[k] || String(k || ""); };
+  /* ⚠️⚠️ **못 찾은 키를 그대로 찍지 않습니다**(지시 6번) — 전에는
+     `String(k)` 라 시설 종류 키가 손님 화면에 날것으로 나갔습니다. */
+  W.amCourseKind = function(k){
+    return W.amKeyName ? W.amKeyName(W.AM_COURSE_KIND, k, "시설 종류") : "";
+  };
 })();

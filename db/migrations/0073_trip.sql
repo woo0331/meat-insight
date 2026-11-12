@@ -152,6 +152,13 @@ alter table tripphoto enable row level security;
 --   셋을 읽을 때 다시 봅니다 (업체가 정지되면 그 순간 빠집니다).
 --   ⚠️⚠️ 수정본(draft)은 **한 글자도 안 나옵니다** — 여기 나가는 것은
 --     공개본뿐입니다. 판매 중지(closed)는 state 로 바로 빠집니다.
+-- ⚠️⚠️⚠️ **`create view` 만 적으면 두 번째 붙여넣기에서 멈춥니다**
+--   (`relation "v_trip_open" already exists`). 사장님이 붙여넣기 파일을
+--   실수로 한 번 더 돌리시면 거기서 멈추고, 그 뒤의 판이 하나도
+--   안 돕니다. `test-upgrade` ⑧ 이 잡았습니다(2026-11-12).
+--   ⚠️ `create or replace view` 도 안 됩니다 — 칸을 못 늘립니다(0044 의
+--   그 자리). **`drop view if exists` + `create view` + GRANT 다시** 입니다.
+drop view if exists v_trip_open;
 create view v_trip_open as
   select t.id, t.scope, t.dest, t.title, t.body, t.nights, t.days,
          t.price_from, t.price_note, t.incl, t.excl,
@@ -171,6 +178,7 @@ create view v_trip_open as
 grant select on v_trip_open to anon, authenticated;
 
 -- ⚠️ 공개로 나가는 사진은 **live 인 것만**입니다
+drop view if exists v_trip_photo_public;
 create view v_trip_photo_public as
   select ph.id, ph.trip_id, ph.path, ph.caption, ph.ord
     from tripphoto ph
@@ -182,6 +190,7 @@ create view v_trip_photo_public as
 grant select on v_trip_photo_public to anon, authenticated;
 
 -- 여행사가 제 작업실에서 보는 것 — 상태와 상관없이 **제 업체 것만**
+drop view if exists v_trip_mine;
 create view v_trip_mine as
   select t.*,
          (select count(*) from tripphoto ph
@@ -194,7 +203,28 @@ create view v_trip_mine as
    where t.provider_id = my_provider();
 grant select on v_trip_mine to authenticated;
 
+-- 여행사가 제 사진을 보는 자리
+-- ⚠️⚠️⚠️ **이 보기가 없으면 사진을 빼거나 차례를 바꿀 길이 없습니다.**
+--   `drop_trip_photo` · `order_trip_photo` 는 **사진 id** 를 받는데,
+--   공개 보기(`v_trip_photo_public`)는 **승인된 상품의 live 사진만**
+--   냅니다 — 심사 중인 상품이나 아직 승인 안 된 사진의 id 를 여행사가
+--   알 길이 없었습니다. 표에는 GRANT 도 정책도 **하나도 없습니다**
+--   (공개는 보기 하나 · 쓰기는 문뿐). 문만 서 있고 **읽는 자리가 없던**
+--   자리입니다 (0045 의 문의 답변 · 0013 의 연락처와 같은 꼴).
+-- ⚠️ `live` · `drop_pending` 을 **그대로** 냅니다 — 화면이 "지금 보이는
+--   사진" 과 "심사 중" 과 "빼는 중" 을 갈라서 말해야 합니다.
+drop view if exists v_trip_photo_mine;
+create view v_trip_photo_mine as
+  select ph.id, ph.trip_id, ph.path, ph.caption, ph.ord,
+         ph.live, ph.drop_pending, ph.created_at
+    from tripphoto ph
+    join trip t on t.id = ph.trip_id
+   where t.provider_id = my_provider()
+   order by ph.trip_id, ph.ord, ph.created_at, ph.id;
+grant select on v_trip_photo_mine to authenticated;
+
 -- 운영자가 심사하는 자리
+drop view if exists v_trip_review;
 create view v_trip_review as
   select t.*, pv.name as provider_name,
          (select count(*) from tripphoto ph

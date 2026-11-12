@@ -147,7 +147,11 @@ module.exports = async function handler(req, res){
         /* ⚠️ 0068 — 매물 사진. 값은 `pvPhoto` 와 같지만 **이름을
            따로** 둡니다 — 화면이 남의 기능 이름으로 제 칸을 가리면,
            버킷을 갈라 쓰는 날 엉뚱한 자리가 같이 꺼집니다. */
-        lstPhoto: !!(dbReady() && pvBucket()) });
+        lstPhoto: !!(dbReady() && pvBucket()),
+        /* ⚠️ 0073 — 여행 상품 사진. 값은 `pvPhoto` 와 같지만 **이름을
+           따로** 둡니다 — 화면이 남의 기능 이름으로 제 칸을 가리면,
+           버킷을 갈라 쓰는 날 엉뚱한 자리가 같이 꺼집니다. */
+        tripPhoto: !!(dbReady() && pvBucket()) });
 
     /* ── 게시판 글의 사진 주소 (0059) ────────────────────────────────
        ⚠️⚠️ **공개 보기로 읽습니다**(`v_cq_photo_public`) — 그 보기가
@@ -405,6 +409,66 @@ module.exports = async function handler(req, res){
       return res.status(502).json({ error:"지금 올리지 못했습니다. 잠시 뒤 다시 눌러 주세요" });
     }
     return res.status(200).json({ ok:true, url:sgl.url, id:gl.id });
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     0073 — 여행 상품 사진 올릴 자리를 청합니다
+
+     ⚠️⚠️⚠️ **이 가지가 없어서 사진을 올리는 길이 끊겨 있었습니다.**
+     `js/desktrip.js` 가 `claim_trip_photo` 를 **직접** 부르고 돌아온
+     `d.url` 로 PUT 하고 있었는데, 그 문은 `{id, path, ord, live}` 만
+     돌려줍니다 — **서명된 올릴 주소를 낼 수 있는 것은 service key 를
+     가진 이 서버뿐**입니다. 그래서 `fetch(undefined)` 가 되어 PUT 이
+     한 번도 안 갔고, 화면에는 「0 / 1장만 올라갔습니다」만 보였습니다
+     (2026-11-12 에 여행 화면 검사를 넣다가 드러났습니다 · 0068 이
+     매물 사진에서 세운 길을 베끼지 않은 자리).
+     ⚠️⚠️ **버킷은 DB 가 돌려준 경로로 고릅니다** — 문이 경로를
+     `trip/<상품>/photo/…` 로 짓고 `bucketForPath()` 가 `/photo/` 를
+     보고 공개 버킷을 고릅니다. 화면이 보낸 값으로 고르면 거기가
+     구멍입니다(0051 에서 세운 규칙).
+     ⚠️ 여행 상품 사진은 **공개 목록에 그려지므로 공개가 맞습니다**.
+     ══════════════════════════════════════════════════════════════ */
+  if(b0 && b0.tr === true){
+    if(!dbReady() || !authReady()){
+      console.warn("[upload] SUPABASE_* 가 없습니다");
+      return res.status(503).json({ error:"지금은 올릴 수 없습니다" });
+    }
+    if(!pvBucket()){
+      console.warn("[upload] PROVIDER_BUCKET 이 없습니다 (여행 상품 사진)");
+      return res.status(503).json({ error:"지금은 사진을 올릴 수 없습니다" });
+    }
+    if(!bearer(req)) return res.status(401).json({ error:"로그인이 필요합니다" });
+    const st = await session(req);
+    if(!st.ok){
+      if(st.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      return res.status(401).json({ error:"로그인이 필요합니다" });
+    }
+    const rt = await dbRpc(st.token, "claim_trip_photo", { p: {
+      trip: String(b0.trip || "").trim(),
+      mime: String(b0.mime || "").trim().toLowerCase(),
+      bytes: String(Number(b0.bytes) || 0), caption: String(b0.caption || "") } });
+    if(!rt.ok){
+      if(rt.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      console.warn("[upload] trip claim — " + dbWhy(rt.why));
+      /* ⚠️ DB 가 거절한 **그 말**을 그대로 보여 줍니다 */
+      const mt = String(rt.why || "").match(/"message"\s*:\s*"([^"]{1,200})"/);
+      return res.status(400).json({ error: mt ? mt[1] : "지금 올리지 못했습니다" });
+    }
+    const gt = rt.data && (Array.isArray(rt.data) ? rt.data[0] : rt.data);
+    const pt = gt && gt.path;
+    if(!pt){
+      console.warn("[upload] trip claim 이 경로를 안 돌려줬습니다");
+      return res.status(502).json({ error:"지금 올리지 못했습니다" });
+    }
+    const sgt = await signed("upload", pt, bucketForPath(pt));
+    if(!sgt.ok){
+      if(sgt.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      console.warn("[upload] " + sgt.why);
+      /* ⚠️ 자리는 이미 적혔습니다 — 올린 분이 제 화면에서 뺄 수 있습니다 */
+      return res.status(502).json({ error:"지금 올리지 못했습니다. 잠시 뒤 다시 눌러 주세요" });
+    }
+    return res.status(200).json({ ok:true, url:sgt.url, id:gt.id,
+                                  live: !!gt.live });
   }
 
   /* ══════════════════════════════════════════════════════════════

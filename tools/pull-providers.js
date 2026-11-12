@@ -55,7 +55,7 @@ const COLS = "id,name,intro,regions,gu,subs,since,consult_hours,verified,brands,
                   `/cat/range` 의 시설 거르개가 영원히 0건**이고 카드에
                   이용 시간이 안 나갑니다(빌드가 찍는 화면이라 이 도구가
                   가져온 것만 들어갑니다 — 0071 과 같은 자리). */
-               "range_opts,open_hours," +
+               "range_opts,open_hours,fit_ways," +
                "is_test";
 
 /* ⚠️⚠️ **검사용 업체를 두 겹으로 거릅니다** (0030 · 2차 지시서 §8).

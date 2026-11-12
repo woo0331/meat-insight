@@ -92,7 +92,11 @@ function stub(p, who, tables, rpcs, up){
                                                 adImg:true,
                                                 /* ⚠️ 0068 — 매물 사진. 없으면
                                                    사진 상자가 안 그려집니다 */
-                                                lstPhoto:true }) });
+                                                lstPhoto:true,
+                                                /* ⚠️ 0073 — 여행 상품 사진.
+                                                   `api/upload.js` 의 GET 과
+                                                   **같은 이름**이어야 합니다. */
+                                                tripPhoto:true }) });
     }),
     p.route("**/api/session", function(r){
       /* ⚠️⚠️ 0064 — `pubBucket` 은 **공개 버킷 이름**입니다 (`publicConf()`).

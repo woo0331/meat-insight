@@ -508,6 +508,16 @@ window.amSubUrl = function(catKey, subKey){
      아니라 기본을 바꾼 것**입니다. */
   if(c === "lesson")
     return "/cat/lesson" + (subKey ? "?sub=" + encodeURIComponent(subKey) : "");
+  /* ⚠️⚠️⚠️ **피팅 · 수리도 2026-11-12 부터 제 화면에서 좁힙니다**
+     (확정 시안 ⑦ — 서비스 종류 탭을 누르면 그 일을 하는 업체만
+     남고 거르개와 차례는 그대로 서 있습니다). 업체찾기로 보내면
+     누를 때마다 **화면이 통째로 바띀어** 레일과 차례가 사라집니다 —
+     레슨에서 같은 판단을 한 그 자리입니다.
+     ⚠️ `/search?cat=fitting&sub=` 로 직접 들어오셔도 그대로 돵니다
+     (`js/search.js` 가 `sub` 을 그대로 읽습니다) — 길을 **없앤 것이
+     아니라 기본을 바꿜 것**입니다. */
+  if(c === "fitting")
+    return "/cat/fitting" + (subKey ? "?sub=" + encodeURIComponent(subKey) : "");
   var qs = [];
   if(c)      qs.push("cat=" + encodeURIComponent(c));
   if(subKey) qs.push("sub=" + encodeURIComponent(subKey));

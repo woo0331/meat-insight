@@ -233,6 +233,175 @@
     }).join("") + '</div>';
   };
 
+
+  /* ── 연습장 카드 (확정 시안 ⑤) ──────────────────────────────────
+     ⚠️⚠️ **`amCard` · `amLessonCard` 와 또 모양이 다릅니다** — 시안 ⑤ 는
+     **가로 카드**이고 오른쪽 끝에 단추가 **둘**입니다(시설 정보 · 예약
+     문의). `amCard` 를 고치면 메인 · 업체찾기 · 다른 분류가 같이 바뀌므로
+     이름을 갈라 두되 **같은 파일 한 곳**에 둡니다 — 빌드와 브라우저가
+     둘 다 이것을 부릅니다.
+     ⚠️⚠️⚠️ **카드 전체를 `<a>` 로 감싸지 않습니다.** 안에 단추가 둘이라
+     감싸면 어느 쪽이 눌리는지 브라우저마다 다릅니다(0069 에서 찜 단추를
+     링크 바깥으로 뺀 그 자리). 이름만 링크이고 단추는 따로 섭니다.
+     ⚠️⚠️ **시안의 「예약 문의 가능」은 상태 딱지로 읽힙니다 — 우리에게
+     그 상태가 없습니다.** 예약을 받는지 안 받는지를 담는 칸이 없고,
+     있다고 적으면 지어낸 약속입니다(절대 규칙 5). 그래서 **단추**로
+     두고 글자도 「예약 문의」입니다 — 누르면 그 업체로 요청이 갑니다.
+     ⚠️ 가격 · 시설 칩 · 지역은 **업체가 적은 것만** 냅니다. 비면 그
+     줄이 줄째 빠집니다(「정보 없음」을 안 찍습니다 · 절대 규칙 2). */
+  window.amRangeCard = function(p){
+    var ok    = window.amProviderVerified(p);
+    /* ⚠️⚠️ **연습장 값만** 봅니다 — `amPriceLow()` 는 분류를 안 가려서,
+       레슨도 하시는 연습장 카드에 레슨 회차권 값이 「1회 60분」인 것처럼
+       찍힙니다(2026-11-10 에 레슨 화면에서 겪은 그 자리). */
+    var low   = window.amRangeLow ? window.amRangeLow(p) : null;
+    /* ⚠️⚠️ **센 값입니다** — 후기 줄에서 `amRating()` 이 셉니다.
+       0건이면 null 이고 그때는 **이 줄째 빠집니다**(절대 규칙 1 · 2) —
+       「후기 0건」을 찍으면 새로 입점한 곳이 전부 나쁜 곳으로 보입니다. */
+    var rate  = window.amRating ? window.amRating(p.id) : null;
+    var url   = window.amProviderUrl(p);
+    var shots = window.amProviderPhotos ? window.amProviderPhotos(p) : [];
+    var regs  = window.amProviderRegions(p);
+    var gu    = (p && Array.isArray(p.gu)) ? p.gu.filter(Boolean) : [];
+    var where = regs.concat(gu.slice(0, 1)).join(" ");
+    var opts  = window.amRangeOptsOf ? window.amRangeOptsOf(p) : [];
+
+    return '<li class="rng-c">' +
+      '<a class="rng-ph' + (shots.length ? " rng-ph-on" : "") + '" href="' +
+        esc(url) + '" tabindex="-1" aria-hidden="true">' +
+        (shots.length
+          ? '<img src="' + esc(shots[0].url) + '" alt="" ' +
+            'loading="lazy" decoding="async">'
+          : ico("flag", 26)) +
+      '</a>' +
+      '<div class="rng-b">' +
+        '<h3 class="rng-n"><a href="' + esc(url) + '">' + esc(p.name) + '</a>' +
+          (ok.length ? '<i class="rng-ok">' + ico("check", 14) +
+            '<span class="sr">확인된 자격이 있습니다</span></i>' : "") +
+        '</h3>' +
+        (where ? '<p class="rng-loc">' + ico("pin", 14) + esc(where) + '</p>' : "") +
+        (rate
+          ? '<p class="rng-r">' +
+              '<span class="stars" aria-hidden="true">' +
+                window.amStarGlyphs(rate.round) + '</span>' +
+              '<b>' + esc(rate.avg.toFixed(1)) + '</b>' +
+              '<span>후기 ' + esc(String(rate.n)) + '건</span>' +
+              '<span class="sr">' + esc(window.amStarLabel(rate.round)) + '</span>' +
+            '</p>'
+          : "") +
+        /* ⚠️ 「1회 60분」 은 시안의 글자인데 **시간을 담는 칸이 없습니다** —
+           업체가 등록한 값의 이름(`label`)을 그대로 냅니다(지어내지
+           않습니다). 값이 0건이면 **등록 전이라는 사실**을 적습니다. */
+        (low
+          ? '<p class="rng-p">' + ico("coin", 14) +
+            (low.label ? '<span class="rng-pl">' + esc(low.label) + '</span>' : "") +
+            '<b>' + esc(window.amPriceText(low)) + '</b>' +
+            (low.n > 1 ? '<i>부터</i>' : "") + '</p>'
+          : '<p class="rng-p rng-p0">등록된 이용 가격이 아직 없습니다</p>') +
+        (opts.length
+          ? '<p class="rng-s">' + opts.map(function(n){
+              return '<i>' + esc(n) + '</i>';
+            }).join("") + '</p>'
+          : "") +
+      '</div>' +
+      '<p class="rng-act">' +
+        '<a class="btn btn-line btn-sm" href="' + esc(url) + '">시설 정보</a>' +
+        '<a class="btn btn-pri btn-sm" href="/match?cat=range&amp;pv=' +
+          esc(encodeURIComponent(p.id)) + '">예약 문의</a>' +
+      '</p>' +
+    '</li>';
+  };
+
+  window.amRangeGrid = function(list){
+    return '<ul class="rng-g">' + (list || []).map(function(p){
+      return window.amRangeCard(p);
+    }).join("") + '</ul>';
+  };
+
+  /* ════════════════════════════════════════════════════════════════
+     피팅 · 수리 카드 (확정 시안 ⑦)
+     ⚠️ 가격 · 하위 칩 · 지역 · 이용 방식은 **업체가 적은 것만** 냅니다.
+       비면 그 줄이 줄째 빠집니다 (절대 규칙 2 — 자리표시자를 안 찍습니다).
+     ⚠️⚠️ 시안의 「부품비 별도 · 최종 견적 상담」을 **안 적습니다** —
+       우리가 모르는 거래 조건이고 업체마다 다릅니다(0076 머리말).
+       대신 **등록된 값이라는 사실**만 적습니다.
+     ════════════════════════════════════════════════════════════════ */
+  window.amFitCard = function(p){
+    var ok    = window.amProviderVerified(p);
+    var low   = window.amFitLow ? window.amFitLow(p) : null;
+    /* ⚠️⚠️ **센 값입니다** — 0건이면 null 이고 이 줄이 줄째 빠집니다.
+       ⚠️ 시안에는 별이 없지만 **차례에 「후기 평점순」이 있습니다** —
+       골라도 무엇으로 줄 세웠는지 카드에 안 보이면 손님은 그 칸이
+       일을 하는지 알 길이 없습니다. */
+    var rate  = window.amRating ? window.amRating(p.id) : null;
+    var url   = window.amProviderUrl(p);
+    var shots = window.amProviderPhotos ? window.amProviderPhotos(p) : [];
+    var regs  = window.amProviderRegions(p);
+    var gu    = (p && Array.isArray(p.gu)) ? p.gu.filter(Boolean) : [];
+    var where = regs.concat(gu.slice(0, 1)).join(" ");
+    var ways  = window.amFitWaysOf ? window.amFitWaysOf(p) : [];
+    /* 그 업체가 하는 **피팅 하위**만 — 다른 분류의 하위를 섞으면
+       「골프 조인」이 피팅 칩으로 찍힙니다 */
+    var cat   = window.amCat ? window.amCat("fitting") : null;
+    var items = (cat && window.amCatItems) ? window.amCatItems(cat) : [];
+    var subs  = (p && Array.isArray(p.subs)) ? p.subs : [];
+    var mine  = items.filter(function(i){ return subs.indexOf(i.key) >= 0; });
+
+    return '<li class="fit-c">' +
+      '<a class="fit-ph' + (shots.length ? " fit-ph-on" : "") + '" href="' +
+        esc(url) + '" tabindex="-1" aria-hidden="true">' +
+        (shots.length
+          ? '<img src="' + esc(shots[0].url) + '" alt="" ' +
+            'loading="lazy" decoding="async">'
+          : ico("clubs", 26)) +
+      '</a>' +
+      '<div class="fit-b">' +
+        '<h3 class="fit-n"><a href="' + esc(url) + '">' + esc(p.name) + '</a>' +
+          (ok.length ? '<i class="fit-ok">' + ico("check", 14) +
+            '<span class="sr">확인된 자격이 있습니다</span></i>' : "") +
+        '</h3>' +
+        (where ? '<p class="fit-loc">' + ico("pin", 14) + esc(where) + '</p>' : "") +
+        (rate
+          ? '<p class="fit-r">' +
+              '<span class="stars" aria-hidden="true">' +
+                window.amStarGlyphs(rate.round) + '</span>' +
+              '<b>' + esc(rate.avg.toFixed(1)) + '</b>' +
+              '<span>후기 ' + esc(String(rate.n)) + '건</span>' +
+              '<span class="sr">' + esc(window.amStarLabel(rate.round)) + '</span>' +
+            '</p>'
+          : "") +
+        (mine.length
+          ? '<p class="fit-s">' + mine.map(function(i){
+              return '<i>' + esc(i.name) + '</i>';
+            }).join("") + '</p>'
+          : "") +
+        (low
+          ? '<p class="fit-p">' + ico("coin", 14) +
+            (low.label ? '<span class="fit-pl">' + esc(low.label) + '</span>' : "") +
+            '<b>' + esc(window.amPriceText(low)) + '</b>' +
+            (low.n > 1 ? '<i>부터</i>' : "") + '</p>' +
+            '<p class="fit-pn">업체가 등록한 가격입니다 · 최종 금액은 상담에서 정해집니다</p>'
+          : '<p class="fit-p fit-p0">등록된 공임이 아직 없습니다</p>') +
+        (ways.length
+          ? '<p class="fit-w">' + ways.map(function(n){
+              return '<i>' + esc(n) + '</i>';
+            }).join("") + '</p>'
+          : "") +
+      '</div>' +
+      '<p class="fit-act">' +
+        '<a class="btn btn-line btn-sm" href="' + esc(url) + '">업체 상세</a>' +
+        '<a class="btn btn-pri btn-sm" href="/match?cat=fitting&amp;pv=' +
+          esc(encodeURIComponent(p.id)) + '">상담 요청</a>' +
+      '</p>' +
+    '</li>';
+  };
+
+  window.amFitGrid = function(list){
+    return '<ul class="fit-g">' + (list || []).map(function(p){
+      return window.amFitCard(p);
+    }).join("") + '</ul>';
+  };
+
   window.amCardGrid = function(list, opt){
     return '<div class="pvs">' + (list || []).map(function(p){
       return window.amCard(p, opt);

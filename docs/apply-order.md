@@ -25,32 +25,34 @@ robots 가 전부 막습니다. 아래를 다 하셔도 **검색에는 안 올�
 
 ## 운영 DB 에 들어갈 마이그레이션 — **전체**
 
-붙여넣기 파일 하나(`db/apply-from-0008.sql`)에 **0008 ~ 0075 · 68개**가
-번호 차례로 들어 있습니다. 그 가운데 **이번 차수에 새로 생긴 넷**이
+붙여넣기 파일 하나(`db/apply-from-0008.sql`)에 **0008 ~ 0076 · 69개**가
+번호 차례로 들어 있습니다. 그 가운데 **이번 차수에 새로 생긴 다섯**이
 아래입니다. 나머지 예순넷은 전에 이미 들어 있던 것이고, 다시 붙여 넣어도
 괜찮게 만들어 두었습니다(`test-upgrade` 가 두 번 붙여 넣어 봅니다).
 
 | 판 | 무엇 | 화면이 다 붙었나 | 없으면 어떻게 되나 |
 |---|---|---|---|
 | **0072** | 구인 · 구직 직무 · 고용형태 · 급여 · 갈래 「시설 · 장비 거래」 | **예** (`/cat/career` 양식 · 목록) | 그 칸을 부르는 질의가 **통째로 거절**되어 목록이 빕니다 |
-| **0073** | 여행 상품(`trip` · `tripphoto`) · 수정본 따로 심사 | **아니요 — 문 아홉만 섰습니다** | — (지금은 올리지 마세요) |
+| **0073** | 여행 상품(`trip` · `tripphoto`) · 수정본 따로 심사 | **예** (2026-11-12 저녁 — 손님 `/cat/travel` · 여행사 `/desk` · 운영자 `/admin`) | 여행사가 상품을 올릴 길이 없습니다 |
 | **0074** | 연습장 시설 속성 · 이용 시간 | **예** (`/desk` 입력 · `/pro`·카드 표시) | `/desk` 에서 저장할 때 그 칸이 **지워집니다** |
 | **0075** | 게시판 글 **썸네일**(`v_cq_public.thumb`) | **예** (`/cat/community`) | 커뮤니티 목록이 **통째로** 「불러오지 못했습니다」가 됩니다 |
+| **0076** | 피팅 · 수리 **이용 방식**(`provider.fit_ways`) | **예** (`/desk` 입력 · `/cat/fitting` 거르개) | `/desk` 에서 저장할 때 그 칸이 **지워지고**, 피팅 거르개가 아무것도 못 모읍니다 |
 
-⚠️⚠️⚠️ **0073 은 아직 올리지 마세요.** 확정 시안 ⑧ 의 상품 등록 · 수정 ·
-심사 화면이 다음 차수라, 지금 올리면 **아무도 못 쓰는 문 아홉**이 운영에
-섭니다. 그 사실을 `tools/check-doors.js` 의 목록에 까닭과 함께 적어
-두었고, 화면을 만드는 날 그 줄을 빼지 않으면 검사가 멈춥니다.
-⚠️ 0073 만 빼고 올리시려면 **그 블록을 지우지 마시고** 통째로 올리셔도
-됩니다 — 표와 문이 생길 뿐 손님 화면은 **하나도 안 바뀝니다**(부르는
-화면이 없으니까요). 다만 「만들어 놓고 안 쓰는 문」이 운영에 서는 것이
-싫으시면, 여행 화면이 선 다음 차수에 **한 번에** 올리시는 쪽을 권합니다.
+⚠️⚠️ **0073 은 2026-11-12 저녁에 화면이 섰습니다** — 이제 통째로
+올리셔도 됩니다. `tools/check-doors.js` 의 「화면이 아직 없는 문」 목록에서
+그 아홉 줄을 **같이 뺐습니다**(안 빼면 검사가 「목록이 썩었다」로 멈춥니다).
+⚠️⚠️ 그러면서 0073 에 **보기 하나를 더했습니다** — `v_trip_photo_mine`.
+`drop_trip_photo` · `order_trip_photo` 는 **사진 id** 를 받는데 공개
+보기는 승인된 상품의 live 사진만 내서, 여행사가 **심사 중인 사진의 id 를
+알 길이 없었습니다**(문만 서 있고 읽는 자리가 없던 자리). 0073 은 아직
+어디에도 안 돌렸으므로 **새 번호를 만들지 않고 그 파일을 고쳤습니다**
+(「번호를 다시 쓰지 않는다」 는 **이미 돌린** 파일의 규칙입니다).
 
 ### 돌린 뒤 확인
 
 ```sql
 -- ① 판
-select max(n) from schema_version;                    -- 75
+select max(n) from schema_version;                    -- 76
 -- ② 새 칸이 실제로 있나
 select column_name from information_schema.columns
  where table_name='v_cq_public' and column_name='thumb';
@@ -58,6 +60,9 @@ select column_name from information_schema.columns
  where table_name='provider' and column_name in ('range_opts','open_hours');
 select column_name from information_schema.columns
  where table_name='jobpost' and column_name in ('role','emp_type','pay_type','pay_min');
+select column_name from information_schema.columns
+ where table_name='provider' and column_name='fit_ways';
+select table_name from information_schema.views where table_name='v_trip_photo_mine';
 select table_name from information_schema.tables where table_name='trip';
 ```
 
@@ -67,10 +72,10 @@ select table_name from information_schema.tables where table_name='trip';
 
 ⚠️⚠️ **마이그레이션은 되돌리는 SQL 을 안 씁니다** — 돌린 판을 고치지
 않고 **다음 번호**에 적는 것이 이 저장소의 규칙입니다.
-⚠️ 넷 다 **더하기만** 합니다(칸 추가 · 표 추가 · 보기 다시 만들기).
+⚠️ 다섯 다 **더하기만** 합니다(칸 추가 · 표 추가 · 보기 다시 만들기).
 지우는 것이 없으므로 **기존 자료는 그대로**입니다.
 ⚠️ 보기(`v_cq_public` · `v_provider_card` · `v_job_open`)는
-`drop view` + `create view` + **GRANT 다시**입니다 — 중간에 멈추면
+`drop view` + `create view` + **GRANT 다시**입니다 (0076 이 `v_provider_card` 를 한 번 더 다시 만듭니다) — 중간에 멈추면
 그 보기만 권한이 빈 채로 남으니, 멈추면 **그 파일만 다시** 돌리세요.
 
 ---
@@ -83,7 +88,7 @@ Supabase → SQL Editor 에서 한 줄입니다.
 select max(n) as 판, count(*) as 줄 from schema_version;
 ```
 
-- **75 가 나오면** 아래 1번은 건너뛰십니다.
+- **76 이 나오면** 아래 1번은 건너뛰십니다.
 - 그보다 작으면 1번을 하셔야 합니다.
 - ⚠️ `schema_version` 표 자체가 없다고 나오면 아주 옛 DB 입니다 —
   그때는 `db/README.md` 의 처음부터입니다.
@@ -95,7 +100,7 @@ select max(n) as 판, count(*) as 줄 from schema_version;
 
 ## 1. 마이그레이션 — 붙여넣기 한 번
 
-**무엇을** `db/apply-from-0008.sql` (0008 ~ **0075** · 68개)
+**무엇을** `db/apply-from-0008.sql` (0008 ~ **0076** · 69개)
 **어디에** Supabase → SQL Editor → New query → 통째로 붙여넣기 → Run
 **얼마나** 한 번에 끝납니다. 여러 번 붙여 넣어도 괜찮습니다.
 
@@ -106,7 +111,7 @@ select max(n) as 판, count(*) as 줄 from schema_version;
 | 버킷 | 공개 | 환경변수 | 쓰는 자리 |
 |---|---|---|---|
 | 비공개 | **아니요** | `INTAKE_BUCKET` | 손님 사진 · 업체 **증빙서류** |
-| 공개 | **예** | `PROVIDER_BUCKET` | 업체 시설 사진 · 매물 사진 · **게시판 글 사진** · 광고 소재 |
+| 공개 | **예** | `PROVIDER_BUCKET` | 업체 시설 사진 · 매물 사진 · **게시판 글 사진** · 광고 소재 · **여행 상품 사진** |
 
 Supabase → Storage → New bucket → 이름을 정하시고
 Vercel → Settings → Environment Variables 에 **그 이름**을 넣습니다.

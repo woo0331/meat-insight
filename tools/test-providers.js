@@ -68,6 +68,12 @@ const SEED = [
   { id:"green-pt", name:"성남 그린골프연습장",
     intro:"실내 타석 열두 개와 스크린 네 대를 둡니다.",
     regions:["gyeonggi"], subs:["rg-in","rg-sim","ls-solo"],
+    /* ⚠️⚠️ 0074 의 연습장 시설(`range_opts`) — **실외는 일부러 비워
+       둡니다.** 다 채우면 「안 고르신 연습장은 그 조건으로 좁히면
+       빠진다」 갈래를 아무도 안 보게 됩니다(피팅에서 값을 채웠다가
+       멀쩡한 검사 둘을 떨어뜨린 그 자리의 거꾸로). */
+    range_opts:["indoor","screen","parking"],
+    open_hours:"평일 06:00~23:00 · 주말 07:00~21:00",
     since:2019, consult_hours:"평일 09:00~22:00",
     verified:{ brn:true, tel:true }, scale:"mid", brands:["타이틀리스트","캘러웨이"],
     /* ⚠️ 가격은 **업체가 등록한 것**입니다 (0042). 싼 순서로 가져옵니다
@@ -97,7 +103,18 @@ const SEED = [
      그 갈래를 아무도 안 보게 됩니다. */
   { id:"xss-test", name:"<img src=x onerror=alert(1)>",
     intro:"<script>alert(2)</script> 소개글",
-    regions:["seoul"], subs:["ft-mend","ft-grip"], scale:"small" }
+    regions:["seoul"], subs:["ft-mend","ft-grip"], scale:"small",
+    /* ⚠️ 0076 — 피팅 이용 방식. **업체 수를 안 늘립니다** —
+       알맞은 씨앗을 하나 더 넣으면 「업체 N곳」을 재는 검사 여럿이
+       같이 떨어집니다(갯수를 박은 자리가 아니라 **씨앗이 바뀐** 꼴).
+       ⚠️⚠️ **방문만** 고릅니다 — 택배로 좁히면 빠져야 거르개가
+       일을 하는 것입니다(둘 다 고르면 무엇을 걸러도 같은 줄이 남아
+       **엉뚱한 까닭으로 통과**합니다).
+       ⚠️⚠️⚠️ **값은 한 줄도 안 넣습니다** — 이 업체는 「가격을 **안
+       올린** 업체」 자리를 맡고 있습니다(그 줄이 **줄째 빠지는지**를
+       재는 검사가 둘 있습니다). 한 번 넣어 봤다가 그 둘이 바로
+       떨어졌습니다 — **검사가 맞고 씨앗이 틀렸습니다**. */
+    fit_ways:["visit"] }
 ];
 
 /* 후기 씨앗 — ⚠️ 자료 파일을 잠깐 바꿉니다. 되돌리기는 **사본**으로
@@ -337,10 +354,17 @@ function nowServe(){ return serve(0); }
     /* 분류 화면 — 업체가 뜨는가 */
     await p.goto("http://127.0.0.1:" + h.port + "/cat/range", { waitUntil:"networkidle" });
     let t = (await p.textContent("main")) || "";
-    ok("연습장 분류에 업체가 뜬다", (await p.locator(".pv").count()) === 1,
-       await p.locator(".pv").count());
+    /* ⚠️⚠️ 연습장(시안 ⑤) · 피팅(시안 ⑦) · 레슨은 카드 이름이
+       다릅니다(`.rng-c` · `.fit-c` · `.lsn-c`). **재려는 뜻은 「그
+       분류에 그 업체가 뜨는가」** 하나이므로 둘 다 셉니다 — 클래스를
+       하나만 박으면 모양을 바꾸는 날 **멀쩡한 화면을 실패로** 잡습니다. */
+    const PVC = ".pv, .rng-c, .fit-c, .lsn-c";
+    ok("연습장 분류에 업체가 뜬다", (await p.locator(PVC).count()) === 1,
+       await p.locator(PVC).count());
     ok("0곳 안내가 사라진다", t.indexOf("아직 등록된 업체가 없습니다") < 0);
-    ok("몇 곳인지 말한다", /업체 1곳/.test(t), t.slice(0, 60));
+    /* ⚠️ 시안 ⑤ 는 「연습장 N곳」이라고 적습니다 — 글자를 박지 말고
+       **세어 말하는가**를 봅니다(분류마다 부르는 말이 다릅니다). */
+    ok("몇 곳인지 말한다", /(업체|연습장) 1곳/.test(t), t.slice(0, 60));
     ok("중개자임을 그 자리에서 다시 말한다", /통신판매중개자/.test(t));
 
     /* 한 업체가 여러 분류에 걸치면 그 분류마다 떠야 합니다
@@ -354,7 +378,8 @@ function nowServe(){ return serve(0); }
        (await p.locator(".pv, .lsn-c").count()) === 1,
        await p.locator(".pv, .lsn-c").count());
     await p.goto("http://127.0.0.1:" + h.port + "/cat/fitting", { waitUntil:"networkidle" });
-    ok("피팅 분류에는 다른 업체가 뜬다", (await p.locator(".pv").count()) === 1);
+    ok("피팅 분류에는 다른 업체가 뜬다", (await p.locator(PVC).count()) === 1,
+       await p.locator(PVC).count());
     await p.goto("http://127.0.0.1:" + h.port + "/cat/travel", { waitUntil:"networkidle" });
     ok("업체가 없는 분류는 그대로 0곳이라고 말한다",
        /아직 등록된 업체가 없습니다/.test((await p.textContent("main")) || ""));
@@ -859,6 +884,269 @@ function nowServe(){ return serve(0); }
        ⚠️ 재려는 뜻은 처음부터 하나입니다: **갈 자리가 있으면 링크 ·
        없으면 글.** 갈래를 정하는 자리는 `amSubGoes()` 한 곳이고,
        여기서는 그 결과를 주소 꼴로 확인합니다. 갯수는 안 박습니다. */
+
+    /* ══════════════════════════════════════════════════════════════
+       피팅 · 수리 (확정 시안 ⑦ · 2026-11-12)
+       ⚠️⚠️ 흉내가 아니라 **빌드가 찍은 화면**을 누릅니다 — 거르개가
+         주소만 바꾸고 안 걸러 주면 줄 수로는 안 드러납니다.
+       ══════════════════════════════════════════════════════════════ */
+    /* ══════════════════════════════════════════════════════════════
+       연습장 (확정 시안 ⑤ · 2026-11-12)
+       ⚠️⚠️⚠️ **2026-11-12 까지 이 묶음이 0건이었습니다.** `js/range.js`
+         의 거르개 여섯(지역 · 실내외 · 스크린 · 주차 · 가격 · 찾는 말)을
+         아무도 눌러 본 적이 없었습니다 — 피팅은 19건인데 연습장은
+         위에서 **카드 수만** 세고 있었습니다. 거르개가 주소만 바꾸고
+         안 걸러 주면 **어떤 검사도 안 잡는** 자리였습니다
+         (0071 이 낸 단추 셋에 화면 검사가 0건이던 그 자리).
+       ⚠️ 흉내가 아니라 **빌드가 찍은 화면**을 누릅니다 — 연습장은
+         `AM_PROVIDERS`(빌드가 실어 준 것)로 거르므로 설정이 없어도
+         그대로 돕니다.
+       ══════════════════════════════════════════════════════════════ */
+    console.log("\n── 연습장 (시안 ⑤)");
+    await p.goto("http://127.0.0.1:" + h.port + "/cat/range", { waitUntil:"networkidle" });
+    await p.waitForTimeout(200);
+    ok("⚠️ 잴 것이 0개면 실패입니다 (연습장이 씨앗에 있는가)",
+       (await p.locator(".rng-c").count()) === 1,
+       await p.locator(".rng-c").count());
+    /* ⚠️⚠️ **단추가 아니라 양식(form)입니다** — 자바스크립트가 꺼진
+       분에게도 GET 으로 그대로 돕니다(절대 규칙 5). */
+    ok("⚠️⚠️ 거르개가 **양식**이고 GET 으로 돈다 (자바스크립트가 꺼져도)",
+       ((await p.getAttribute("#rngform", "method")) || "").toLowerCase() === "get" &&
+       ((await p.getAttribute("#rngform", "action")) || "").indexOf("/cat/range") === 0,
+       (await p.getAttribute("#rngform", "method")) + " " +
+       (await p.getAttribute("#rngform", "action")));
+    ok("  고르개 다섯 (지역 · 실내외 · 스크린 · 주차 · 가격)",
+       (await p.locator("#rngform select").count()) === 5,
+       await p.locator("#rngform select").count());
+    ok("  찾는 칸이 있다 (시안의 「지역, 연습장 이름으로 검색」)",
+       (await p.locator("#rng-q").count()) === 1);
+    /* 카드 — ⚠️⚠️ **연습장 값만** 찍혀야 합니다. `amPriceLow()` 를
+       그대로 썼으면 같은 업체의 레슨 8회권(400,000원)이 타석 값인 것처럼
+       찍힙니다(2026-11-10 에 레슨 화면에서 실제로 겪은 자리). */
+    const rngCard = (await p.textContent(".rng-c")) || "";
+    ok("⚠️⚠️⚠️ 카드에 **연습장 값**이 찍힌다 (레슨 회차권이 안 샙니다)",
+       rngCard.indexOf("12,000") >= 0 && rngCard.indexOf("400,000") < 0,
+       rngCard.replace(/\s+/g, " ").trim().slice(0, 160));
+    ok("  카드가 /pro/<id> 로 간다",
+       ((await p.getAttribute(".rng-n a", "href")) || "") === "/pro/green-pt",
+       await p.getAttribute(".rng-n a", "href"));
+    ok("  업체가 고른 시설만 칩으로 나온다 (실외는 안 골랐습니다)",
+       rngCard.indexOf("실내") >= 0 && rngCard.indexOf("스크린") >= 0 &&
+       rngCard.indexOf("실외") < 0,
+       rngCard.replace(/\s+/g, " ").trim().slice(0, 160));
+
+    /* ── 거르개를 **실제로** 눌러 봅니다 ──────────────────────────
+       ⚠️ 주소만 맞고 안 걸리면 아무 뜻이 없습니다 — 카드 수를 셉니다. */
+    async function rngGo(q){
+      await p.goto("http://127.0.0.1:" + h.port + "/cat/range" + q,
+                   { waitUntil:"networkidle" });
+      await p.waitForTimeout(300);
+      return await p.locator(".rng-c").count();
+    }
+    ok("지역 — 맞는 지역이면 남는다", (await rngGo("?rg=gyeonggi")) === 1);
+    ok("  다른 지역이면 빠진다", (await rngGo("?rg=seoul")) === 0);
+    ok("실내 · 실외 — 고른 시설이면 남는다", (await rngGo("?io=indoor")) === 1);
+    /* ⚠️⚠️ **안 고른 시설로 좁히면 빠집니다** — 모르는 것을 아무 칸에나
+       넣으면 그게 지어낸 값입니다(절대 규칙 1). 화면이 그 사실을 0건
+       안내에서 말하는지도 아래에서 같이 봅니다. */
+    ok("⚠️⚠️ 안 고른 시설로 좁히면 **빠진다** (지어내지 않습니다)",
+       (await rngGo("?io=outdoor")) === 0);
+    ok("스크린 — 있는 곳만 남는다", (await rngGo("?sc=1")) === 1);
+    ok("주차 — 있는 곳만 남는다", (await rngGo("?pk=1")) === 1);
+    /* 가격대 — ⚠️ 경계는 **아래를 열고 위를 닫습니다**(gte · lt).
+       씨앗의 타석 값이 **12,000원**이므로 r2(1만~2만)에만 걸립니다. */
+    ok("가격대 — 1만 ~ 2만원에 걸린다 (타석 12,000원)",
+       (await rngGo("?p=r2")) === 1);
+    ok("  1만원 미만에는 안 걸린다 (경계 gte 10000)",
+       (await rngGo("?p=r1")) === 0);
+    ok("  2만원 이상에도 안 걸린다 (경계 lt 20000)",
+       (await rngGo("?p=r3")) === 0);
+    /* 찾는 말 — ⚠️ 시안이 「지역, 연습장 이름으로 검색」이라고 적었으므로
+       **사람이 읽는 이름**으로 찾습니다(손님은 `gyeonggi` 를 치지 않습니다). */
+    ok("찾는 말 — 연습장 이름으로 걸린다",
+       (await rngGo("?q=" + encodeURIComponent("그린골프"))) === 1);
+    ok("  **지역 이름**으로도 걸린다 (키가 아니라 사람 말입니다)",
+       (await rngGo("?q=" + encodeURIComponent("경기"))) === 1);
+    ok("  시설 이름으로도 걸린다",
+       (await rngGo("?q=" + encodeURIComponent("스크린"))) === 1);
+    ok("  없는 말이면 0건", (await rngGo("?q=" + encodeURIComponent("없는말"))) === 0);
+
+    /* ── 0건 안내가 **두 가지로 갈리는가** ───────────────────────
+       ⚠️⚠️ 아직 아무도 안 들어온 것과 조건에 맞는 곳이 없는 것은
+       다릅니다(절대 규칙 2). 씨앗에 한 곳이 있으므로 여기서는 「조건」
+       갈래를 봅니다 — 「아예 0곳」 갈래는 씨앗 없는 빌드에서 위에서
+       이미 재집니다(`/cat/travel` 줄). */
+    await rngGo("?io=outdoor");
+    const rngNone = (await p.textContent("#rnglist")) || "";
+    ok("⚠️⚠️ 0건을 **조건 때문**이라고 말한다 (「등록된 연습장이 없습니다」가 아닙니다)",
+       rngNone.indexOf("고르신 조건에 맞는") >= 0 &&
+       rngNone.indexOf("등록된 연습장이 없습니다") < 0,
+       rngNone.replace(/\s+/g, " ").trim().slice(0, 160));
+    ok("  **안 올리신 곳은 빠진다**는 사실을 그 자리에서 말한다",
+       /안 올리신/.test(rngNone), rngNone.replace(/\s+/g, " ").trim().slice(0, 200));
+    ok("  막다른 길이 아니다 (조건 지우기 · 요청하기)",
+       (await p.locator('#rnglist a[href="/cat/range"]').count()) === 1 &&
+       (await p.locator('#rnglist a[href="/match?cat=range"]').count()) === 1);
+    /* 「조건 모두 지우기」를 눌러 봅니다 — ⚠️ 주소가 **깨끗해져야** 합니다 */
+    await p.click('#rnglist a[href="/cat/range"]');
+    await p.waitForTimeout(300);
+    ok("⚠️⚠️ 조건 지우기를 누르면 **주소까지** 깨끗해진다",
+       (await p.evaluate(function(){ return location.search; })) === "" &&
+       (await p.locator(".rng-c").count()) === 1,
+       await p.evaluate(function(){ return location.search; }));
+
+    /* ── 고르개를 바꾸면 **새로고침 없이** 좁혀지는가 ────────────── */
+    await p.selectOption("#rng-io", "outdoor");
+    await p.waitForTimeout(350);
+    ok("고르개를 바꾸면 새로고침 없이 좁혀지고 주소도 바뀐다",
+       (await p.locator(".rng-c").count()) === 0 &&
+       (await p.evaluate(function(){ return location.search; }))
+         .indexOf("io=outdoor") >= 0,
+       await p.evaluate(function(){ return location.search; }));
+    /* ⚠️⚠️ 고르개가 **지금 조건에 맞춰져** 있어야 합니다 — 안 맞추면
+       주소로 들어오신 분께 「전체」라고 적힌 칸 아래 좁혀진 목록이
+       나옵니다. */
+    ok("  고르개가 지금 조건을 보여 준다",
+       (await p.inputValue("#rng-io")) === "outdoor");
+    /* ⚠️⚠️ 뒤로 가기를 받습니다 — `pushState` 로 주소만 바꾸므로 이
+       줄이 없으면 주소만 바뀌고 **목록이 그대로** 있습니다. */
+    await p.goBack();
+    await p.waitForTimeout(350);
+    ok("⚠️⚠️ 뒤로 가기를 받는다 (주소만 바뀌고 목록이 그대로 있지 않다)",
+       (await p.locator(".rng-c").count()) === 1,
+       await p.locator(".rng-c").count());
+    /* 찾는 칸은 **글자를 칠 때마다 다시 그리지 않습니다** — 그러면
+       커서가 튕겨 나갑니다(0068 의 그 자리). 보내는 것은 양식 제출뿐. */
+    await p.fill("#rng-q", "없는말");
+    await p.waitForTimeout(350);
+    ok("⚠️ 찾는 칸은 글자를 칠 때 다시 안 그린다 (커서가 튕기지 않습니다)",
+       (await p.locator(".rng-c").count()) === 1,
+       await p.locator(".rng-c").count());
+    await p.press("#rng-q", "Enter");
+    await p.waitForTimeout(350);
+    ok("  Enter 로 보내면 좁혀진다",
+       (await p.locator(".rng-c").count()) === 0 &&
+       (await p.evaluate(function(){ return location.search; }))
+         .indexOf("q=") >= 0,
+       await p.evaluate(function(){ return location.search; }));
+    ok("연습장 화면에서 에러 · CSP 거절이 0건이다", hits.length === 0, hits.join(" | "));
+
+    console.log("\n── 피팅 · 수리 (시안 ⑦)");
+    await p.goto("http://127.0.0.1:" + h.port + "/cat/fitting", { waitUntil:"networkidle" });
+    await p.waitForTimeout(200);
+    ok("⚠️ 잴 것이 0개면 실패입니다 (피팅 업체가 씨앗에 있는가)",
+       (await p.locator(".fit-c").count()) === 1,
+       await p.locator(".fit-c").count());
+    ok("  서비스 종류 탭이 선다 (전체 + 하위)",
+       (await p.locator(".fit-tab-a").count()) ===
+         (await p.locator(".chips-sub li").count()) + 1,
+       await p.locator(".fit-tab-a").count());
+    ok("  왼쪽 레일에 고르개 셋 (지역 · 서비스 방식 · 가격)",
+       (await p.locator(".fit-rail select").count()) === 3,
+       await p.locator(".fit-rail select").count());
+    /* ⚠️⚠️⚠️ 시안의 「추천순」은 **안 냅니다** — 무엇이 추천인지 세어 본
+       적이 없습니다(절대 규칙 1). 생기는 날 이 줄이 먼저 빨개집니다. */
+    const fitSrt = (await p.textContent("#fit-o")) || "";
+    ok("⚠️⚠️ 차례에 「추천순」이 **없다** (세어 본 적이 없습니다)",
+       fitSrt.indexOf("추천") < 0, fitSrt.replace(/\s+/g, " ").trim());
+    /* ⚠️⚠️ 시안의 「부품비 별도」를 **안 적습니다** — 우리가 모르는
+       거래 조건입니다(0076 머리말 · 절대 규칙 5). */
+    const fitCard = (await p.textContent(".fit-c")) || "";
+    ok("⚠️⚠️ 카드가 「부품비 별도」를 **안 적는다** (모르는 거래 조건)",
+       fitCard.indexOf("부품비") < 0, fitCard.replace(/\s+/g, " ").slice(0, 160));
+    /* ⚠️⚠️ 값을 **안 올리신** 업체는 그 줄이 아예 없어야 합니다 —
+       "상담 후 견적" 같은 말을 우리가 지어 넣지 않습니다(절대 규칙 5). */
+    ok("⚠️ 공임을 안 올린 업체는 **등록 전이라는 사실**만 적는다",
+       fitCard.indexOf("등록된 공임이 아직 없습니다") >= 0 &&
+       fitCard.indexOf("상담 후") < 0 && fitCard.indexOf("협의") < 0,
+       fitCard.replace(/\s+/g, " ").slice(0, 200));
+    /* ⚠️ 업체가 적은 글은 esc() 를 지나야 합니다 (절대 규칙 4) */
+    ok("⚠️ 업체 이름의 태그가 날것으로 안 나간다",
+       (await p.locator(".fit-c img[src='x']").count()) === 0);
+
+    /* 탭 — ⚠️ **새로고침 없이** 좁혀지는지 눌러 봅니다 */
+    await p.click('.fit-tab-a[data-sub="ft-grip"]');
+    await p.waitForTimeout(250);
+    ok("탭을 누르면 그 일을 하는 업체만 남는다",
+       (await p.locator(".fit-c").count()) === 1 &&
+       (await p.evaluate(function(){ return location.search; }))
+         .indexOf("sub=ft-grip") >= 0,
+       await p.evaluate(function(){ return location.search; }));
+    await p.click('.fit-tab-a[data-sub="ft-driver"]');
+    await p.waitForTimeout(250);
+    ok("  안 하는 하위를 누르면 0건이고 **다른 말**을 한다",
+       (await p.locator(".fit-c").count()) === 0 &&
+       ((await p.textContent("#fitlist")) || "")
+         .indexOf("고르신 조건에 맞는 업체가 없습니다") >= 0,
+       ((await p.textContent("#fitlist")) || "").replace(/\s+/g, " ").slice(0, 120));
+    ok("  ⚠️ 「등록된 피팅 · 수리 업체가 없습니다」 라고 **말하지 않는다**",
+       ((await p.textContent("#fitlist")) || "").indexOf("등록된 피팅") < 0);
+
+    /* 서비스 방식 — ⚠️⚠️ **안 고르신 업체는 빠집니다**(지어내지 않습니다) */
+    await p.goto("http://127.0.0.1:" + h.port + "/cat/fitting?w=visit",
+                 { waitUntil:"networkidle" });
+    await p.waitForTimeout(250);
+    ok("서비스 방식 — 방문으로 좁히면 남는다",
+       (await p.locator(".fit-c").count()) === 1);
+    await p.goto("http://127.0.0.1:" + h.port + "/cat/fitting?w=ship",
+                 { waitUntil:"networkidle" });
+    await p.waitForTimeout(250);
+    ok("  ⚠️⚠️ 택배를 **안 고르신 업체는 빠진다** (모르는 것을 넣지 않습니다)",
+       (await p.locator(".fit-c").count()) === 0);
+
+    /* 가격대 — ⚠️⚠️ **값을 안 올리신 업체는 빠집니다**(모르는 것을 아무
+       칸에나 넣으면 지어낸 값입니다 · 절대 규칙 1). 화면이 그 사실을
+       0건 안내에서 말합니다. */
+    await p.goto("http://127.0.0.1:" + h.port + "/cat/fitting?p=f2",
+                 { waitUntil:"networkidle" });
+    await p.waitForTimeout(250);
+    ok("가격대로 좁히면 **값을 안 올린 업체는 빠진다**",
+       (await p.locator(".fit-c").count()) === 0);
+    ok("  그 사실을 그 자리에서 말한다 (손님이 「없다」로 읽지 않게)",
+       ((await p.textContent("#fitlist")) || "").indexOf("공임을 아직 안 올리신") >= 0,
+       ((await p.textContent("#fitlist")) || "").replace(/\s+/g, " ").slice(0, 200));
+    /* ⚠️⚠️ 경계는 **아래를 열고 위를 닫습니다**(gte · lt) — 둘 다 닫으면
+       10,000원이 두 칸에 다 걸립니다. 자료로 재세요(화면에는 그 업체가
+       없어서 못 잽니다 · 다른 자물쇠입니다). */
+    const band = await p.evaluate(function(){
+      var L = (window.AM_FIT_PRICE || []).map(function(x){
+        return { k:x.key, gte:x.gte, lt:x.lt }; });
+      return L;
+    });
+    ok("⚠️⚠️ 가격대가 **겹치지도 비지도 않는다** (아래를 열고 위를 닫습니다)",
+       band.length >= 2 && band.every(function(x, i){
+         return i === 0 ? x.gte === null : x.gte === band[i - 1].lt;
+       }) && band[band.length - 1].lt === null,
+       JSON.stringify(band));
+    /* 찾는 말 — ⚠️ 키가 아니라 **사람이 읽는 이름**으로 찾습니다 */
+    await p.goto("http://127.0.0.1:" + h.port + "/cat/fitting?q=" +
+                 encodeURIComponent("그립 교체"), { waitUntil:"networkidle" });
+    await p.waitForTimeout(250);
+    ok("찾는 말 — 하는 일 이름으로 찾힌다 (ft-grip 이 아니라 「그립 교체」)",
+       (await p.locator(".fit-c").count()) === 1);
+
+    /* 뒤로 가기 — ⚠️ pushState 로 주소를 바꾸므로 받는 줄이 없으면
+       주소만 바뀌고 목록이 그대로 있습니다 */
+    await p.goto("http://127.0.0.1:" + h.port + "/cat/fitting", { waitUntil:"networkidle" });
+    await p.waitForTimeout(200);
+    await p.click('.fit-tab-a[data-sub="ft-driver"]');
+    await p.waitForTimeout(250);
+    await p.goBack();
+    await p.waitForTimeout(300);
+    ok("⚠️⚠️ 뒤로 가기를 받는다 (주소만 바뀌고 목록이 그대로 있지 않다)",
+       (await p.locator(".fit-c").count()) === 1,
+       await p.locator(".fit-c").count());
+
+    /* ⚠️⚠️⚠️ 머리의 단추 — `INTAKE_BUCKET` 이 꺼져 있으면 `/match` 에
+       사진 칸이 **아예 안 그려지므로**(js/photo.js) 「클럽 사진으로」
+       라고 적으면 없는 것을 있다고 말하는 꼴입니다(절대 규칙 5). */
+    const fitCta = (await p.textContent("#fit-cta")) || "";
+    ok("⚠️⚠️ 버킷이 꺼져 있으면 단추가 「사진」을 약속하지 않는다",
+       fitCta.indexOf("사진") < 0, fitCta.replace(/\s+/g, " ").trim());
+    ok("  그래도 상담 요청으로 가는 길은 있다 (막다른 길이 아닙니다)",
+       ((await p.getAttribute("#fit-cta", "href")) || "").indexOf("/match?cat=fitting") === 0,
+       await p.getAttribute("#fit-cta", "href"));
+
     console.log("\n── 하위 칩 — 갈 자리가 있는 것만 링크인가");
     async function subChips(route){
       await p.goto("http://127.0.0.1:" + h.port + route, { waitUntil:"networkidle" });

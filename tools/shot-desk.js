@@ -606,6 +606,117 @@ const T_CQ = {
   account: [{ nick:"버디사냥꾼" }]
 };
 
+/* ── 여행 상품 (0073 · 확정 시안 ⑧) ───────────────────────────────
+   ⚠️⚠️⚠️ **이 셋은 설정이 있어야 열립니다** — `check-screens` ·
+   `tools/shot.js` 에는 **빈 상자**로만 보입니다. 새 화면을 만드는 날
+   이 줄을 같이 늘리지 않으면 그 안은 영원히 아무도 안 보는 자리가
+   됩니다(0051 의 사진 상자가 그랬습니다).
+   ⚠️ 찍는 쪽 가짜 자료는 **사람이 볼 만한 값**입니다 — 경계값은
+   `test-desk` 쪽에 둡니다(섞으면 둘 다 어색해집니다). */
+const TRIP_1 = "dddddddd-0073-4000-8000-000000000001";
+const TRIP_2 = "dddddddd-0073-4000-8000-000000000002";
+const T_TRIP = {
+  v_trip_open: [
+    { id:TRIP_1, scope:"home", dest:"jeju", title:"제주 2박3일 36홀 패키지",
+      body:"라운드 2회와 숙박 2박을 묶었습니다.\n카트비는 따로입니다.",
+      nights:2, days:3, price_from:690000, price_note:"2인 1실 기준",
+      incl:["그린피","숙박"], excl:["카트비","식사"],
+      created_at:"2026-11-10T01:00:00Z", updated_at:"2026-11-10T01:00:00Z",
+      provider_id:"t-trip", provider_name:"남도골프투어",
+      /* ⚠️⚠️ 공개 버킷 주소는 그물 밖이라 깨진 네모로 찍힙니다 —
+         아래 `PUB` 가로채기가 저장소의 그림으로 바꿔 줍니다. */
+      photo_n:2, thumb:"trip/" + TRIP_1 + "/photo/a.jpg" },
+    /* ⚠️ 한 줄은 **사진 0장**으로 둡니다 — 둘 다 있으면 "0장이면 아이콘
+       타일" 을 눈으로 볼 수가 없습니다. */
+    { id:TRIP_2, scope:"abroad", dest:"jp", title:"일본 규슈 3박4일 라운드",
+      body:"후쿠오카 출발 라운드 3회입니다.",
+      nights:3, days:4, price_from:1290000, price_note:null,
+      incl:[], excl:[],
+      created_at:"2026-11-09T01:00:00Z", updated_at:"2026-11-09T01:00:00Z",
+      provider_id:"t-trip", provider_name:"남도골프투어",
+      photo_n:0, thumb:null }
+  ],
+  v_trip_photo_public: [
+    { id:"ee000001-0073-4000-8000-000000000001", trip_id:TRIP_1,
+      path:"trip/" + TRIP_1 + "/photo/a.jpg", caption:"숙소", ord:0 },
+    { id:"ee000002-0073-4000-8000-000000000002", trip_id:TRIP_1,
+      path:"trip/" + TRIP_1 + "/photo/b.jpg", caption:"골프장", ord:1 }
+  ],
+  v_wanted_open: []
+};
+/* 여행사 작업실 — ⚠️ 상태를 섞어 둡니다(판매 중 · 반려 · 수정본 심사) */
+const T_TRIPPRO = {
+  v_trip_mine: [
+    { id:TRIP_1, provider_id:"t-trip", scope:"home", dest:"jeju",
+      title:"제주 2박3일 36홀 패키지", body:"라운드 2회와 숙박 2박입니다.",
+      nights:2, days:3, price_from:690000, price_note:"2인 1실 기준",
+      incl:["그린피","숙박"], excl:["카트비"],
+      state:"approved", hidden_from:null, state_why:null,
+      draft:{ title:"제주 2박3일 36홀 패키지 (12월 일정)" },
+      draft_state:"pending", draft_why:null,
+      created_at:"2026-11-10T01:00:00Z", updated_at:"2026-11-10T01:00:00Z",
+      photo_n:2, photo_draft_n:1, photo_drop_n:0 },
+    { id:TRIP_2, provider_id:"t-trip", scope:"abroad", dest:"jp",
+      title:"일본 규슈 3박4일 라운드", body:"후쿠오카 출발 라운드 3회입니다.",
+      nights:3, days:4, price_from:1290000, price_note:null,
+      incl:[], excl:[],
+      state:"rejected", hidden_from:null,
+      state_why:"날짜별 일정을 더 적어 주세요.",
+      draft:null, draft_state:"none", draft_why:null,
+      created_at:"2026-11-09T01:00:00Z", updated_at:"2026-11-09T01:00:00Z",
+      photo_n:0, photo_draft_n:0, photo_drop_n:0 }
+  ],
+  v_trip_photo_mine: [
+    { id:"ee000001-0073-4000-8000-000000000001", trip_id:TRIP_1,
+      path:"trip/" + TRIP_1 + "/photo/a.jpg", caption:"숙소", ord:0,
+      live:true, drop_pending:false, created_at:"2026-11-10T01:00:00Z" },
+    { id:"ee000002-0073-4000-8000-000000000002", trip_id:TRIP_1,
+      path:"trip/" + TRIP_1 + "/photo/b.jpg", caption:"골프장", ord:1,
+      live:true, drop_pending:false, created_at:"2026-11-10T02:00:00Z" },
+    { id:"ee000003-0073-4000-8000-000000000003", trip_id:TRIP_1,
+      path:"trip/" + TRIP_1 + "/photo/c.jpg", caption:null, ord:2,
+      live:false, drop_pending:false, created_at:"2026-11-10T03:00:00Z" }
+  ]
+};
+const TRIPPRO = { role:"provider", name:"여행담당", provider:"t-trip" };
+/* 운영자 심사 — ⚠️ 가린 줄에 `hidden_from` 을 둡니다(되돌릴 자리가
+   어디인지 화면이 말해야 합니다 · 0070) */
+const T_TRIPADM = {
+  v_trip_review: [
+    Object.assign({}, T_TRIPPRO.v_trip_mine[0],
+      { provider_name:"남도골프투어",
+        draft:{ title:"제주 2박3일 36홀 패키지 (12월 일정)",
+                body:"라운드 2회와 숙박 2박입니다.", scope:"home", dest:"jeju",
+                nights:2, days:3, price_from:720000, price_note:"2인 1실 기준",
+                incl:["그린피","숙박"], excl:["카트비"] } }),
+    { id:"dddddddd-0073-4000-8000-000000000003", provider_id:"t-trip",
+      provider_name:"남도골프투어", scope:"home", dest:"gangwon",
+      title:"강원 1박2일 라운드", body:"평일 특가 일정입니다.",
+      nights:1, days:2, price_from:390000, price_note:null,
+      incl:["그린피"], excl:["숙박"],
+      state:"hidden", hidden_from:"closed", state_why:"신고가 들어왔습니다.",
+      draft:null, draft_state:"none", draft_why:null,
+      created_at:"2026-11-08T01:00:00Z", updated_at:"2026-11-08T01:00:00Z",
+      photo_n:0, photo_draft_n:0, photo_drop_n:0 }
+  ]
+};
+/* ── 인력 · 비즈니스 (0048 · 0072 · 확정 시안 ⑨) ────────────────── */
+const T_JOB = {
+  v_job_open: [
+    { id:"j1", kind:"hire", sub:"cr-caddy", region:"seoul",
+      title:"주말 캐디 구합니다", body:"주말 오전 라운딩 캐디를 구합니다.",
+      pay:"일 12만원", terms:"주 2일 · 오전", close_at:"2026-12-20",
+      role:"jr-caddy", emp_type:"je-part", pay_type:"daily", pay_min:120000,
+      created_at:"2026-11-10T01:00:00Z", who:"김**", pro_name:null, apply_n:2 },
+    { id:"j2", kind:"seek", sub:"cr-coach", region:"gyeonggi",
+      title:"레슨 자리를 찾습니다", body:"주 3일 레슨 가능한 자리를 찾습니다.",
+      pay:null, terms:null, close_at:null,
+      role:null, emp_type:null, pay_type:null, pay_min:null,
+      created_at:"2026-11-09T01:00:00Z", who:"이**",
+      pro_name:"참골프아카데미", apply_n:0 }
+  ]
+};
+
 const SCENES = [
   ["desk",            "/desk",  PRO, T_DESK,  {}],
   ["desk-price-open", "/desk",  PRO, T_DESK,  {}, "#pricebox [data-pf='open']"],
@@ -682,6 +793,24 @@ const SCENES = [
   /* ⚠️ 일부만 켠 때 — 켜진 것과 「준비 중」 이 한 화면에 섭니다 */
   ["login-some",      "/login", { role:"customer", name:"", signedIn:false,
                                   sso:["google"] }, {}, {}],
+  /* ⚠️⚠️ 여행 상품 (0073) — 손님 · 여행사 · 운영자 셋 다 **설정이
+     있어야** 열립니다. `tools/shot.js` 에는 빈 상자로만 보입니다. */
+  ["trip",            "/cat/travel", CUS, T_TRIP, {}],
+  ["trip-one",        "/cat/travel?v=" + TRIP_1, CUS, T_TRIP, {}],
+  ["trip-abroad",     "/cat/travel?sc=abroad", CUS, T_TRIP, {}],
+  ["trip-pro",        "/desk", TRIPPRO,
+                      Object.assign({ assignment:[], request:[], quote:[],
+                                      request_item:[] }, T_TRIPPRO), {}],
+  ["trip-pro-new",    "/desk", TRIPPRO,
+                      Object.assign({ assignment:[], request:[], quote:[],
+                                      request_item:[] }, T_TRIPPRO), {},
+                      "#triprobox .tpr-add"],
+  ["trip-adm",        "/admin", ADM, Object.assign({}, T_ADMIN, T_TRIPADM),
+                      { biz_metrics: MET }],
+  /* ⚠️ 인력 · 비즈니스 (시안 ⑨) — 탭 · 왼쪽 레일 · 공고 상세 */
+  ["job",             "/cat/career", CUS, T_JOB, {}],
+  ["job-hire",        "/cat/career?k=hire", CUS, T_JOB, {}],
+  ["job-one",         "/cat/career?v=j1", CUS, T_JOB, {}],
   ["desk-notmine",    "/desk",  CUS, T_DESK,  {}],
   ["admin-notmine",   "/admin", CUS, T_ADMIN, { biz_metrics: MET }]
 ];
@@ -703,6 +832,8 @@ const BOXES = {
      HTML 만 보는 tools/shot.js 에는 **빈 상자**로만 보입니다. */
   "/login": [["box", "#loginbox"]],
   "/desk": [["notice", "#noticebox"], ["start", "#dstbox"], ["assign", "#deskbox"],
+            /* ⚠️ 0073 의 여행사 작업실 (js/desktrip.js) */
+            ["trip", "#triprobox"],
             ["me", "#mebox"], ["contact", "#pvctbox"], ["staff", "#pvstbox"],
             ["photo", "#pvphbox"], ["price", "#pricebox"],
             ["fee", "#feebox"]],
@@ -717,7 +848,10 @@ const BOXES = {
              /* ⚠️ 0056 · 0070 의 중고 매물 관리 (js/adminlst.js) —
                 **새 상자를 만드는 날 이 줄을 같이 늘립니다.** 안 늘리면
                 그 안은 영원히 아무도 안 보는 자리가 됩니다. */
-             ["listing", "#lsadm"]],
+             ["listing", "#lsadm"],
+             /* ⚠️ 0073 의 여행 상품 심사 (js/admintrip.js) — **새 상자를
+                만드는 날 이 줄을 같이 늘립니다.** */
+             ["trip", "#tripadm"]],
   /* ⚠️ 처음에 `#myreqbox` · `#myjoinbox` 처럼 **지어낸 id** 를 적어
      두어서 `/my` 상자가 한 장도 안 찍혔습니다 — 찍히는 갯수를 보고
      알았습니다. `pages/my.js` 에서 세어 고쳤습니다. */
@@ -744,7 +878,11 @@ const BOXES = {
   "/cat/lesson": [["wanted", "#wtlist"]],
   /* ⚠️ 레일은 목록 **밖**(`#wtwrap`)이라 `#wtlist` 만 집으면 안 찍힙니다 */
   "/cat/market": [["wanted", "#wtwrap"]],
-  "/cat/travel": [["wanted", "#wtwrap"]],
+  /* ⚠️⚠️ 여행은 상자가 **둘**입니다 — 여행 상품(0073)과 구합니다 글 */
+  "/cat/travel": [["trip", "#tripbox"], ["one", ".tpd"],
+                  ["wanted", "#wtwrap"]],
+  "/cat/career": [["job", "#jobbox"], ["tab", ".jbtab"], ["rail", "#jbrail"],
+                  ["find", "#jbfind"], ["list", "#joblist"], ["one", ".jbd"]],
   /* ⚠️⚠️ 중고 매물 (0068) — 거르개 묶음(`#lswrap`)과 목록을 따로 찍습니다 */
   "/cat/used": [["wrap", "#lswrap"], ["bar", "#lsbar"], ["list", "#lslist"],
                 ["rail", "#lsrail"], ["form", "#lsbox"],

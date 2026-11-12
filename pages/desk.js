@@ -88,6 +88,14 @@ exports.build = function(){
   body += '<section class="sec"><div class="wrap">' +
     '<div id="teebox" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️ 여행 상품 (0073 · js/desktrip.js) — 티타임과 같은 결입니다:
+     **공급이 들어오는 유일한 자리**이고, 여기가 비면 `/cat/travel` 의
+     상품 목록이 영원히 0건입니다.
+     ⚠️ 여행사가 아닌 업체에게도 상자는 서지만 문이 거절하므로,
+     화면이 그 까닭을 먼저 적습니다(눌러도 거절되는 칸을 안 그립니다). */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="triprobox" class="none" hidden></div></div></section>';
+
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="feebox" class="none" hidden></div></div></section>';
 
@@ -111,6 +119,11 @@ exports.build = function(){
             서야 합니다 (위치정보를 떼는 한 곳 · 증빙서류는 안 지나갑니다). */
          "/js/deskfee.js", "/js/imgprep.js", "/js/deskphoto.js", "/js/deskstaff.js",
          "/js/deskcontact.js", "/js/deskstart.js", "/js/deskteetime.js",
+         /* ⚠️⚠️ 여행 상품은 **말을 읽는 파일까지 실어야** 됩니다 —
+            `data/trip.js`(상태 말 · 일정 · 값) 와 `data/regions.js`(해외
+            목적지). 둘 중 하나라도 빠지면 고르개가 **조용히 빈 칸**이
+            됩니다(`/help` 가 `site.js` 를 안 실어 양식이 안 열린 그 자리). */
+         "/js/data/trip.js", "/js/desktrip.js",
          "/js/notice.js"]
   };
 };

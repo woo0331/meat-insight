@@ -3714,3 +3714,475 @@ picture{ display: contents; }
            margin-top:14px; }
 .cqz-fail{ color: var(--bad-text); display:flex; flex-wrap:wrap; gap:8px;
            align-items:center; }
+
+/* ════════════════════════════════════════════════════════════════
+   골프 연습장 — 확정 시안 ⑤
+   ⚠️ 이름을 `.rng*` 로 갈라 둡니다 — `.lsn*`(레슨) · `.lsc*`(중고)와
+   모양이 다릅니다. 짧은 이름을 두 곳에 쓰면 한쪽을 고치는 날 둘이
+   같이 바뀝니다(`.lg` 가 로고이면서 약관이었던 그 자리).
+   ════════════════════════════════════════════════════════════════ */
+.rng-hd{ padding-block:26px 18px; }
+.rng-t{ display:flex; align-items:center; gap:10px; margin:0 0 4px; }
+.rng-t .ic{ color: var(--grn); flex:none; }
+.rng-sub{ margin:0 0 16px; color: var(--ink2); }
+
+.rngf{ display:grid; gap:10px; }
+.rngf-q{ position:relative; display:flex; gap:10px; }
+.rngf-q > input{ flex:1 1 auto; min-width:0; min-height:48px;
+  border:1.5px solid var(--line); border-radius: var(--r-sm);
+  padding:10px 14px 10px 44px; font-size:16px; background:#fff;
+  color: var(--ink); font-family: inherit; }
+.rngf-q > input:focus{ outline:2px solid var(--grn); outline-offset:1px; }
+.rngf-q > .btn{ flex:none; }
+/* ⚠️ 돋보기는 칸 **안쪽 왼쪽**이고 글자가 그 위에 겹치지 않게
+   `padding-left` 를 줍니다 (레슨 찾는 칸에서 겪은 특정도 자리 —
+   `.rngf .rngf-q input` 으로 적어 뒤 규칙이 이기게 합니다). */
+.rngf .rngf-i{ position:absolute; left:14px; top:50%; transform:translateY(-50%);
+  color: var(--ink3); pointer-events:none; display:flex; }
+
+.rngf-row{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.rngf-row select{ min-height:42px; border:1.5px solid var(--line);
+  border-radius:999px; padding:6px 14px; font-size:14.5px; background:#fff;
+  color: var(--ink); font-family: inherit; max-width:100%; }
+.rngf-row select:focus{ outline:2px solid var(--grn); outline-offset:1px; }
+.rngf-x{ display:inline-flex; align-items:center; gap:4px; min-height:42px;
+  padding:6px 12px; font-size:14px; font-weight:700; color: var(--ink2);
+  text-decoration:none; }
+.rngf-x:hover{ color: var(--grn-text); text-decoration:underline; }
+
+.rng-cnt{ display:flex; flex-wrap:wrap; align-items:baseline; gap:10px;
+  margin:0 0 14px; font-size:16px; font-weight:700; color: var(--ink); }
+.rng-cnt .rng-note{ font-size:13px; font-weight:400; color: var(--ink2); }
+
+.rng-g{ list-style:none; margin:0; padding:0; display:grid; gap:12px; }
+.rng-c{ display:grid; grid-template-columns: 136px minmax(0,1fr) auto;
+  gap:14px; align-items:center; background: var(--surface);
+  border:1.5px solid var(--line); border-radius:14px; padding:12px; }
+.rng-c > *{ min-width:0; }
+.rng-ph{ display:flex; align-items:center; justify-content:center;
+  width:136px; height:96px; border-radius: var(--r-sm); overflow:hidden;
+  background: var(--grn-soft); color: var(--grn); flex:none; }
+.rng-ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+.rng-b{ display:flex; flex-direction:column; gap:5px; }
+.rng-n{ margin:0; font-size:17px; display:flex; align-items:center; gap:6px; }
+.rng-n a{ color: var(--ink); text-decoration:none; }
+.rng-n a:hover{ color: var(--grn-text); text-decoration:underline; }
+.rng-ok{ display:inline-flex; color: var(--grn); }
+.rng-loc, .rng-p{ display:flex; align-items:center; gap:5px; margin:0;
+  font-size:14px; color: var(--ink2); }
+.rng-p b{ color: var(--ink); }
+.rng-pl{ color: var(--ink2); }
+.rng-p i{ font-style:normal; color: var(--ink2); }
+/* ⚠️ 값이 0건일 때는 **등록 전이라는 사실**만 적습니다 — 「가격 문의」를
+   지어 적지 않습니다(절대 규칙 5). */
+.rng-p0{ color: var(--ink3); font-size:13.5px; }
+.rng-s{ display:flex; flex-wrap:wrap; gap:6px; margin:2px 0 0; }
+.rng-s i{ font-style:normal; font-size:12.5px; font-weight:700;
+  color: var(--grn-text); background: var(--grn-soft);
+  border-radius:999px; padding:3px 9px; }
+.rng-act{ display:flex; flex-direction:column; gap:8px; margin:0; flex:none; }
+.rng-none-i{ margin:0 0 8px; color: var(--grn); display:flex;
+  justify-content:center; }
+
+@media (max-width: 760px){
+  /* ⚠️ 폰에서는 사진이 **위로** 올라가고 단추가 가로로 섭니다 (시안 ⑤) */
+  .rng-c{ grid-template-columns: 1fr; gap:10px; }
+  .rng-ph{ width:100%; height:150px; }
+  .rng-act{ flex-direction:row; }
+  .rng-act .btn{ flex:1 1 0; }
+  .rngf-q{ flex-wrap:wrap; }
+  .rngf-q > input{ flex:1 1 100%; }
+  .rngf-q > .btn{ flex:1 1 100%; }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   피팅 · 수리 (확정 시안 ⑦ · 2026-11-12)
+   ⚠️ 이름을 `.fit*` 로 갈라 둡니다 — `.rng*`(연습장) · `.lsn*`(레슨)과
+     모양이 다릅니다. 빌려 쓰면 한쪽을 고치는 날 둘이 같이 바뀝니다.
+   ⚠️⚠️ 격자 칸 안에 또 격자를 두므로 `min-width:0` 을 줍니다 — 안 주면
+     칸이 제 내용만큼 벌어져 **화면 전체가 가로로 밀립니다**.
+   ════════════════════════════════════════════════════════════════════ */
+.fit-hd{ padding-block:26px 18px; }
+.fit-hd-r{ display:flex; gap:18px; align-items:flex-end;
+  justify-content:space-between; flex-wrap:wrap; }
+.fit-hd-r > *{ min-width:0; }
+.fit-t{ display:flex; align-items:center; gap:10px; margin:6px 0 4px; }
+.fit-sub{ color:var(--ink2); margin:0; }
+.fit-cta{ display:inline-flex; align-items:center; gap:8px; }
+
+/* 서비스 종류 탭 — ⚠️ 「전체」는 `.chips-sub` **바깥**입니다 */
+.fit-tab{ display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  margin:0 0 16px; }
+.fit-tab .chips{ margin:0; }
+.fit-tab-a{ display:inline-flex; align-items:center; gap:6px;
+  min-height:40px; padding:0 14px; border-radius:var(--r-pill);
+  border:1.4px solid var(--line); background:#fff; color:var(--ink);
+  font-weight:600; text-decoration:none; }
+.fit-tab-a:hover{ border-color:var(--pt); }
+.fit-tab-a.on{ background:var(--grn-soft); border-color:var(--grn-text);
+  color:var(--grn-text); }
+
+/* 왼쪽 레일 + 오른쪽 목록 — ⚠️ 한 양식이라 자바스크립트가 꺼져도
+   「검색」 한 번으로 GET 이 돕니다 */
+.fitw{ display:grid; grid-template-columns:232px minmax(0, 1fr); gap:20px;
+  align-items:start; }
+.fitw > *{ min-width:0; }
+.fit-rail{ border:1.4px solid var(--line); border-radius:14px;
+  background:#fff; padding:14px; align-content:start; }
+.fit-rail-h{ display:flex; align-items:center; gap:6px; margin:12px 0 6px;
+  font-weight:700; font-size:14px; color:var(--ink); }
+.fit-rail-h:first-child{ margin-top:0; }
+/* ⚠️ 고르개는 연습장(`.rngf-row select`)과 **같은 모양**입니다 —
+   비워 두면 브라우저 기본꺼리가 나와 한 화면에 두 가지 칸이 서게
+   됩니다(찍어 보고 알았습니다). */
+.fit-rail select, .fit-cnt select{ min-height:42px; width:100%;
+  border:1.5px solid var(--line); border-radius:var(--r-pill);
+  padding:6px 14px; font-size:14.5px; background:#fff; color:var(--ink);
+  font-family:inherit; max-width:100%; }
+.fit-cnt select{ width:auto; }
+.fit-rail select:focus, .fit-cnt select:focus{ outline:2px solid var(--grn);
+  outline-offset:1px; }
+.fit-rail-x{ display:inline-flex; align-items:center; gap:5px;
+  min-height:40px; margin-top:12px; color:var(--ink2); font-size:14px; }
+
+.fit-main{ display:block; }
+.fitf-q{ display:flex; gap:8px; align-items:center; position:relative;
+  margin:0 0 14px; }
+/* ⚠️⚠️ **높이를 안 주면 21px 입니다** — `.btn` 과 달리 입력 칸에는
+   `min-height` 가 저절로 안 붙습니다. 손님이 40~60대라 누르는 것은
+   40px 이상이어야 합니다(check-screens 가 다섯 폭에서 잡았습니다). */
+.fitf-q input[type="search"]{ flex:1 1 auto; min-width:0; min-height:44px;
+  padding:6px 12px 6px 38px; border:1.5px solid var(--line);
+  border-radius:var(--r-pill); font-size:15px; font-family:inherit;
+  background:#fff; color:var(--ink); }
+.fitf-q input[type="search"]:focus{ outline:2px solid var(--grn);
+  outline-offset:1px; }
+.fitf-i{ position:absolute; left:12px; top:50%; transform:translateY(-50%);
+  color:var(--ink2); pointer-events:none; display:flex; }
+.fit-cnt{ display:flex; gap:12px; align-items:center;
+  justify-content:space-between; flex-wrap:wrap; margin:0 0 14px; }
+.fit-cnt > *{ min-width:0; }
+.fit-cnt p{ margin:0; }
+.fit-cnt b{ color:var(--grn-text); }
+.fit-note{ display:block; color:var(--ink2); font-size:13px; }
+
+/* 카드 — 시안은 PC 3열입니다 (`auto-fill` 을 안 씁니다 — 칸 수가 폭마다
+   달라지면 사진이 들쭉날쭉합니다) */
+.fit-g{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:16px; list-style:none; margin:0; padding:0; }
+.fit-c{ display:flex; flex-direction:column; border:1.4px solid var(--line);
+  border-radius:14px; background:#fff; overflow:hidden; }
+.fit-ph{ display:flex; align-items:center; justify-content:center;
+  aspect-ratio:16 / 10; background:var(--grn-soft); color:var(--grn-text); }
+.fit-ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+.fit-b{ padding:12px 14px; flex:1 1 auto; }
+.fit-n{ display:flex; align-items:center; gap:6px; margin:0 0 6px;
+  font-size:17px; }
+.fit-n a{ color:var(--ink); text-decoration:none; }
+.fit-ok{ display:inline-flex; color:var(--pt); }
+.fit-loc{ display:flex; align-items:center; gap:5px; margin:0 0 8px;
+  color:var(--ink2); font-size:14px; }
+.fit-s, .fit-w{ display:flex; flex-wrap:wrap; gap:6px; margin:0 0 8px;
+  padding:0; }
+.fit-s i, .fit-w i{ font-style:normal; font-size:13px; padding:3px 9px;
+  border-radius:var(--r-pill); background:var(--grn-soft); color:var(--grn-text); }
+.fit-w i{ background:var(--bg-2); color:var(--ink2); }
+.fit-p{ display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+  margin:0 0 2px; }
+.fit-pl{ color:var(--ink2); font-size:14px; }
+.fit-p b{ color:var(--grn-text); font-size:17px; }
+.fit-p i{ font-style:normal; color:var(--ink2); font-size:14px; }
+.fit-pn{ margin:0 0 6px; color:var(--ink2); font-size:12.5px; }
+.fit-p0{ color:var(--ink2); font-size:14px; }
+.fit-act{ display:flex; gap:8px; margin:0; padding:0 14px 14px; }
+.fit-act > *{ flex:1 1 0; min-width:0; justify-content:center; }
+.fit-none-i{ display:flex; justify-content:center; color:var(--pt);
+  margin:0 0 6px; }
+
+@media (max-width:1000px){
+  .fitw{ grid-template-columns:1fr; }
+  .fit-rail{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:10px 14px; align-items:end; }
+  .fit-rail > *{ min-width:0; }
+  .fit-rail-h{ margin:0; grid-column:auto; }
+  /* ⚠️ 좁은 폭에서는 이름표와 고르개가 한 줄씩 짝을 이루게 둡니다 */
+  .fit-rail-x{ grid-column:1 / -1; margin-top:0; }
+  .fit-g{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width:760px){
+  .fit-hd-r{ align-items:stretch; }
+  .fit-cta{ justify-content:center; }
+  .fit-rail{ grid-template-columns:1fr; }
+  .fit-g{ grid-template-columns:1fr; }
+  .fit-act{ flex-direction:column; }
+}
+/* 후기 평점 줄 — ⚠️ 0건이면 **줄째 없습니다**(카드가 안 그립니다) */
+.rng-r, .fit-r{ display:flex; align-items:center; gap:5px; margin:0 0 8px;
+  font-size:14px; color:var(--ink2); }
+.rng-r b, .fit-r b{ color:var(--ink); }
+.rng-r .stars, .fit-r .stars{ color:var(--gold-text); letter-spacing:1px; }
+
+/* ════════════════════════════════════════════════════════════════════
+   골프 여행 (확정 시안 ⑧ · 0073 · 2026-11-12)
+   ⚠️ 이름을 `.tp*` 로 갈라 둡니다 — `.rng*` · `.fit*` · `.lsn*` 과
+     모양이 다릅니다(여기는 사진이 넓은 가로 카드입니다).
+   ════════════════════════════════════════════════════════════════════ */
+.tp-hd{ padding-block:26px 18px; }
+.tp-hd-r{ display:flex; gap:18px; align-items:flex-end;
+  justify-content:space-between; flex-wrap:wrap; }
+.tp-hd-r > *{ min-width:0; }
+.tp-t{ display:flex; align-items:center; gap:10px; margin:6px 0 4px; }
+.tp-sub{ color:var(--ink2); margin:0; }
+.tp-cta{ display:inline-flex; align-items:center; gap:8px; }
+
+/* 골드 테두리 단추 — ⚠️⚠️⚠️ **`.btn-gold` 는 어두운 면 전용**입니다
+   (흰 바탕 2.30 · 작업 기억). 시안 ⑧ 의 「맞춤 여행 견적」은 흰 바탕에
+   금색 테두리 + 짙은 글자라, 면을 칠하는 `.btn-gold` 를 쓰면 글자가
+   안 읽힙니다 — check-screens 가 다섯 폭에서 2.30 으로 잡았습니다.
+   ⚠️ 글자는 `--gold-text`(흰 바탕용)이고 테두리만 `--gold-line` 입니다. */
+.btn-goldline{ background:#fff; border-color:var(--gold-line);
+  color:var(--gold-text); }
+.btn-goldline:hover{ background:var(--gold-soft); }
+
+/* 국내 · 해외 탭 — ⚠️ **링크**입니다(자바스크립트가 꺼져도 돕니다) */
+.tpf-tab{ display:flex; gap:0; margin:0 0 14px;
+  border:1.5px solid var(--line); border-radius:var(--r-pill);
+  overflow:hidden; width:max-content; max-width:100%; }
+.tpf-t{ display:inline-flex; align-items:center; justify-content:center;
+  min-height:44px; padding:0 30px; color:var(--ink); font-weight:700;
+  text-decoration:none; background:#fff; }
+.tpf-t.on{ background:var(--grn-deep, var(--grn-text)); color:#fff; }
+
+.tpf{ border:1.5px solid var(--line); border-radius:14px; background:#fff;
+  padding:14px; margin:0 0 18px; }
+.tpf-row{ display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)) auto;
+  gap:10px 14px; align-items:end; }
+.tpf-row > *{ min-width:0; }
+.tpf-c{ margin:0; display:flex; flex-direction:column; gap:5px; min-width:0; }
+.tpf-c label{ font-size:13.5px; font-weight:700; color:var(--ink); }
+.tpf-c select, .tpf-c input{ min-height:44px; width:100%; max-width:100%;
+  border:1.5px solid var(--line); border-radius:var(--r-sm);
+  padding:6px 12px; font-size:15px; font-family:inherit;
+  background:#fff; color:var(--ink); }
+.tpf-c select:focus, .tpf-c input:focus{ outline:2px solid var(--grn);
+  outline-offset:1px; }
+.tpf-go{ margin:0; }
+.tpf-go .btn{ min-height:44px; display:inline-flex; align-items:center;
+  gap:7px; }
+.tpf-n{ margin:10px 0 0; color:var(--ink2); font-size:13px; }
+.tp-cnt{ margin:0 0 12px; font-weight:700; color:var(--ink); }
+.tp-wait{ color:var(--ink2); margin:0; }
+
+/* 상품 카드 — 시안은 PC 3열입니다 */
+.tpg{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:16px; list-style:none; margin:0; padding:0; }
+.tpc{ display:flex; flex-direction:column; border:1.4px solid var(--line);
+  border-radius:14px; background:#fff; overflow:hidden; }
+/* ⚠️ 카드 **전체**가 링크입니다 (0069 의 `.lsc-a` 와 같은 꼴) — 폰에서
+   제목만 링크로 두면 누르는 자리가 20px 밖에 안 됩니다. */
+.tpc-a{ display:grid; grid-template-rows:auto 1fr auto; text-decoration:none;
+  color:inherit; height:100%; }
+.tpc-a > *{ min-width:0; }
+.tpc-a:hover .tpc-t{ text-decoration:underline; }
+.tpc-ph{ display:flex; align-items:center; justify-content:center;
+  aspect-ratio:16 / 9; background:var(--grn-soft); color:var(--grn-text); }
+.tpc-ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+.tpc-b{ display:block; padding:12px 14px; }
+.tpc-t{ display:block; margin:0 0 5px; font-size:17px; font-weight:700;
+  color:var(--ink); line-height:1.4; }
+.tpc-m{ display:block; margin:0 0 6px; color:var(--ink2); font-size:14px; }
+.tpc-p{ display:block; margin:0 0 8px; font-size:19px; font-weight:800;
+  color:var(--grn-text); }
+.tpc-ie{ display:flex; flex-wrap:wrap; gap:6px; margin:0 0 8px; padding:0; }
+.tpc-ie i{ font-style:normal; font-size:12.5px; font-weight:700;
+  padding:3px 9px; border-radius:var(--r-pill); }
+.tpc-in{ background:var(--gold-soft); color:var(--gold-text); }
+.tpc-ex{ background:var(--bg-2); color:var(--ink2); }
+.tpc-n{ display:block; margin:0 0 6px; color:var(--ink2); font-size:13px; }
+.tpc-s{ display:flex; align-items:center; gap:5px; margin:0;
+  color:var(--ink2); font-size:13.5px; }
+/* ⚠️ 카드 안쪽이라 **단추가 아닙니다** — 링크는 카드 전체이고 이 줄은
+   어디로 가는지 말해 주는 글입니다(단추를 또 두면 링크 안의 링크입니다). */
+.tpc-go{ display:flex; align-items:center; justify-content:center;
+  min-height:44px; margin:0; padding:0 14px 14px;
+  color:var(--grn-text); font-weight:700; font-size:14.5px; }
+.tp-none-i{ display:flex; justify-content:center; color:var(--grn);
+  margin:0 0 6px; }
+.tp-fail-b{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap;
+  margin:14px 0 0; }
+
+/* 상세 */
+.tpd-back{ margin:0 0 12px; }
+.tpd-t{ margin:0 0 4px; }
+.tpd-m{ margin:0 0 14px; color:var(--ink2); }
+.tpd-ph{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:10px; list-style:none; margin:0 0 16px; padding:0; }
+.tpd-ph > li{ min-width:0; }
+.tpd-ph img{ width:100%; height:auto; display:block; border-radius:12px; }
+.tpd-p{ margin:0 0 4px; font-size:22px; font-weight:800;
+  color:var(--grn-text); }
+.tpd-n{ margin:0 0 14px; color:var(--ink2); font-size:14px; }
+.tpd-body{ margin:0 0 16px; line-height:1.75; }
+.tpd-ie{ margin:0 0 6px; }
+.tpd-s{ display:flex; align-items:center; gap:6px; margin:14px 0 0;
+  color:var(--ink2); }
+.tpd-note{ margin:10px 0 0; color:var(--ink2); font-size:13.5px; }
+.tpd-go{ margin:16px 0 0; }
+
+@media (max-width:1000px){
+  .tpf-row{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  .tpf-go{ grid-column:1 / -1; }
+  .tpf-go .btn{ width:100%; justify-content:center; }
+  .tpg{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width:760px){
+  .tpf-row{ grid-template-columns:1fr; }
+  .tpf-t{ padding:0 20px; flex:1 1 0; }
+  .tpf-tab{ width:100%; }
+  .tpg{ grid-template-columns:1fr; }
+  .tpd-ph{ grid-template-columns:1fr; }
+}
+
+/* 여행 상품 — 여행사 작업실(/desk) · 운영자 심사(/admin) · 0073 */
+.tpr-l, .tpa-l{ list-style:none; margin:0 0 16px; padding:0;
+  display:grid; gap:12px; }
+.tpr-r, .tpa-r{ border:1.4px solid var(--line); border-radius:14px;
+  background:#fff; padding:14px; min-width:0; }
+.tpr-t, .tpa-t{ display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  margin:0 0 6px; }
+.tpr-st, .tpa-st{ font-size:12.5px; font-weight:700; padding:3px 9px;
+  border-radius:var(--r-pill); background:var(--bg-2); color:var(--ink2); }
+.tpr-st-approved{ background:var(--ok-soft); color:var(--ok-text); }
+.tpr-st-rejected, .tpr-st-hidden{ background:var(--bad-soft);
+  color:var(--bad-text); }
+.tpa-st-d{ background:var(--warn-soft); color:var(--warn-text); }
+.tpr-m, .tpa-m{ margin:0 0 6px; color:var(--ink2); font-size:14px; }
+.tpr-lead{ margin:0 0 6px; color:var(--ink2); font-size:13.5px; }
+.tpr-why, .tpr-draft{ margin:0 0 6px; font-size:13.5px;
+  color:var(--warn-text); }
+.tpr-act, .tpa-act{ display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 0; }
+.tpr-slot:empty{ display:none; }
+.tpr-msg, .tpa-msg{ margin:8px 0 0; color:var(--ink2); font-size:14px; }
+.tpr-msg-bad, .tpa-msg-bad{ color:var(--bad-text); }
+.tpr-new{ border:1.4px dashed var(--line); border-radius:14px; padding:12px; }
+.tpr-new-b{ margin:0; }
+/* 비면 줄째 없앱니다 — 점선 액자 안에 빈 칸을 안 남깁니다 */
+.tpr-new-s:empty{ display:none; }
+.tpr-new-s{ margin:12px 0 0; }
+.tpa-back-n{ margin:0 0 8px; color:var(--ink2); font-size:14px; }
+.tpr-ph{ margin:8px 0 0; }
+.tpr-ph-h{ display:flex; align-items:center; gap:6px; margin:0 0 6px;
+  font-size:14px; font-weight:700; }
+.tpr-ph-h i{ font-style:normal; font-weight:500; color:var(--ink2); }
+.tpr-ph-b{ margin:0; }
+.tpr-ph-b > label{ display:inline-flex; align-items:center; gap:6px; }
+.tpr-ph-m{ margin:6px 0 0; color:var(--ink2); font-size:13.5px; }
+.tpa-d{ margin:0 0 8px; padding:0 0 0 18px; font-size:14px; }
+.tpa-d li{ margin:0 0 3px; }
+.tpa-old{ color:var(--ink2); text-decoration:line-through; }
+.tpa-new{ color:var(--grn-text); font-weight:700; }
+.tpa-w{ margin:8px 0 0; }
+.tpa-why{ width:100%; max-width:100%; min-height:44px;
+  border:1.5px solid var(--line); border-radius:var(--r-sm);
+  padding:6px 12px; font-size:15px; font-family:inherit; }
+
+/* ════════════════════════════════════════════════════════════════════
+   골프 인력 · 비즈니스 (확정 시안 ⑨ · 2026-11-12)
+   ⚠️ 이름을 `.jb*` 로 갈라 둡니다 — 양식의 `.jrow` · `.jform` 과
+     섞이지 않게(짧은 이름을 두 곳에 쓰면 한쪽을 고치는 날 둘이 같이
+     바뀝니다 · `.lg` 가 로고이면서 약관이었던 그 자리).
+   ════════════════════════════════════════════════════════════════════ */
+.jb-hd{ padding-block:26px 18px; }
+.jb-hd-r{ display:flex; gap:18px; align-items:flex-end;
+  justify-content:space-between; flex-wrap:wrap; }
+.jb-hd-r > *{ min-width:0; }
+.jb-t{ display:flex; align-items:center; gap:10px; margin:6px 0 4px; }
+.jb-sub{ color:var(--ink2); margin:0; }
+.jb-cta{ display:flex; gap:8px; flex-wrap:wrap; margin:0; }
+.jb-cta .btn{ display:inline-flex; align-items:center; gap:7px; }
+
+/* 탭 넷 — ⚠️ **링크**입니다(자바스크립트가 꺼져도 돕니다) */
+.jbtab{ display:flex; gap:8px; flex-wrap:wrap; margin:0 0 14px; }
+.jbtab-a{ display:inline-flex; align-items:center; min-height:44px;
+  padding:0 18px; border-radius:var(--r-pill); border:1.4px solid var(--line);
+  background:#fff; color:var(--ink); font-weight:700; text-decoration:none; }
+.jbtab-a:hover{ border-color:var(--pt); }
+.jbtab-a.on{ background:var(--grn-text); border-color:var(--grn-text);
+  color:#fff; }
+
+.jbfind{ display:flex; gap:8px; margin:0 0 16px; }
+.jbfind > input{ flex:1 1 auto; min-width:0; min-height:46px;
+  border:1.5px solid var(--line); border-radius:var(--r-pill);
+  padding:6px 16px; font-size:15px; font-family:inherit;
+  background:#fff; color:var(--ink); }
+.jbfind > input:focus{ outline:2px solid var(--grn); outline-offset:1px; }
+.jbfind > .btn{ min-height:46px; }
+
+/* 왼쪽 상세 필터 + 오른쪽 목록 */
+.jbw{ display:grid; grid-template-columns:238px minmax(0, 1fr); gap:20px;
+  align-items:start; }
+.jbw > *{ min-width:0; }
+.jbrail{ border:1.4px solid var(--line); border-radius:14px; background:#fff;
+  padding:14px; }
+.jbrail-h{ display:flex; align-items:center; gap:6px; margin:0 0 10px;
+  font-weight:700; }
+.jbrail-c{ margin:0 0 10px; display:flex; flex-direction:column; gap:5px; }
+.jbrail-c label{ font-size:13.5px; font-weight:700; color:var(--ink); }
+.jbrail-c select{ min-height:44px; width:100%; max-width:100%;
+  border:1.5px solid var(--line); border-radius:var(--r-sm);
+  padding:6px 12px; font-size:14.5px; font-family:inherit;
+  background:#fff; color:var(--ink); }
+.jbrail-c select:focus{ outline:2px solid var(--grn); outline-offset:1px; }
+.jbrail-b{ display:flex; flex-direction:column; gap:8px; margin:12px 0 0; }
+.jbrail-b .btn{ width:100%; justify-content:center; min-height:44px; }
+.jbrail-x{ display:inline-flex; align-items:center; justify-content:center;
+  min-height:40px; color:var(--ink2); font-size:14px; }
+.jbcnt{ margin:0 0 12px; font-weight:700; }
+.jbcnt b{ color:var(--grn-text); }
+
+/* 묶음 머리 — 시안의 「채용 공고 (구인)」 줄 */
+.jbg{ list-style:none; margin:14px 0 8px; padding:10px 14px;
+  border-radius:12px; background:var(--grn-soft); color:var(--grn-text);
+  font-weight:800; }
+.jbg:first-child{ margin-top:0; }
+.jbg i{ font-style:normal; font-weight:500; color:var(--ink2);
+  font-size:13.5px; }
+
+/* 공고 상세 */
+.jbd{ border:1.4px solid var(--line); border-radius:14px; background:#fff;
+  padding:18px; }
+.jbd-back{ margin:0 0 12px; }
+.jbd-t{ margin:0 0 6px; }
+.jbd-k{ display:inline-flex; margin:0 0 8px; font-size:12.5px;
+  font-weight:700; padding:3px 10px; border-radius:var(--r-pill);
+  background:var(--grn-soft); color:var(--grn-text); }
+.jbd-m, .jbd-w{ margin:0 0 6px; color:var(--ink2); font-size:14px; }
+.jbd-p{ margin:0 0 4px; font-weight:700; }
+.jbd-c, .jbd-d{ margin:0 0 6px; color:var(--ink2); font-size:14px; }
+.jbd-b{ margin:12px 0; line-height:1.75; white-space:pre-wrap; }
+.jbd-ok, .jbd-no{ display:flex; align-items:center; gap:6px; margin:10px 0;
+  font-size:13.5px; }
+.jbd-ok{ color:var(--ok-text); }
+.jbd-no{ color:var(--warn-text); }
+.jbd-act{ display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  margin:14px 0 0; }
+
+@media (max-width:1000px){
+  .jbw{ grid-template-columns:1fr; }
+  .jbrail{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:10px 14px; }
+  .jbrail > *{ min-width:0; }
+  .jbrail-h, .jbrail-b{ grid-column:1 / -1; }
+  .jbrail-b{ flex-direction:row; }
+}
+@media (max-width:760px){
+  .jbrail{ grid-template-columns:1fr; }
+  .jb-cta .btn{ flex:1 1 0; justify-content:center; }
+}
+/* 공고 줄 (시안 ⑨) — ⚠️ 본문은 상세에서 냅니다 */
+.jbc-w2{ margin:0 0 6px; color:var(--ink2); font-size:13.5px; }
+.jbc-ok, .jbc-no{ display:inline-flex; align-items:center; gap:4px;
+  margin:0 0 8px; font-size:12.5px; font-weight:700; padding:3px 9px;
+  border-radius:var(--r-pill); }
+.jbc-ok{ background:var(--ok-soft); color:var(--ok-text); }
+.jbc-no{ background:var(--bg-2); color:var(--ink2); }

@@ -674,10 +674,14 @@ window.amLstPriceBand = function(k){
    **두 곳이 될 차례**였고, 그래서 여기 한 곳으로 꺼냈습니다.
    ⚠️ 값은 0048 의 `jobpost.kind` check 와 한 글자도 같아야 합니다 —
    `check-deal` 이 빌드마다 맞춰 봅니다. */
+/* ⚠️ 이름은 **확정 시안 ⑨ 의 탭 글자**로 맞췄습니다 (2026-11-12) —
+   키(`hire` · `seek` · `biz` · `facility`)는 **그대로**입니다. DB 와
+   맞춰 보는 것은 키이고 이름은 화면의 말이라, 바꿔도 이미 올라온
+   공고가 갈 자리를 잃지 않습니다. */
 window.AM_JOB_KIND = [
-  { key:"hire", name:"구인",      lead:"사람을 구합니다"   },
+  { key:"hire", name:"채용",      lead:"사람을 구합니다"   },
   { key:"seek", name:"구직",      lead:"일자리를 구합니다" },
-  { key:"biz",  name:"제휴 · 거래", lead:"업체끼리 제안합니다" },
+  { key:"biz",  name:"업체 제휴",  lead:"업체끼리 제안합니다" },
   /* ⚠️ 0072 가 더한 넷째입니다 — 시안 ⑨ 의 탭 네 번째.
      ⚠️⚠️ `check-deal` 이 0072 의 jobpost_kind_ck 와 **글자까지** 맞춰
      봅니다. 한쪽만 고치면 화면은 보내는데 DB 가 거절합니다. */

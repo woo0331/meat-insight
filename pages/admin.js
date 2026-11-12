@@ -76,6 +76,14 @@ exports.build = function(){
   body += '<section class="sec"><div class="wrap">' +
     '<div id="lsadm" class="none" hidden></div></div></section>';
 
+  /* 여행 상품 심사 (0073 · js/admintrip.js) — ⚠️⚠️⚠️ 여행 상품은
+     **승인된 것만** 손님 목록에 서므로, 이 자리가 없으면 여행사가
+     올린 상품이 **영원히 심사 중**으로 남습니다(문은 있는데 누르는
+     자리가 없던 자리). ⚠️ 수정본 심사도 같은 자리입니다 — 그것이
+     안 돌면 여행사가 고친 내용이 영영 갈아 끼워지지 않습니다. */
+  body += '<section class="sec sec-alt"><div class="wrap">' +
+    '<div id="tripadm" class="none" hidden></div></div></section>';
+
   /* 고객센터 문의 (0045 · 4차 지시서 §11) — ⚠️⚠️ 지시서가 "관리자가
      확인할 수 없는 문의 접수 기능은 완료로 처리하지 않는다" 고 적은
      바로 그 자리입니다. 문(open_inquiry)만 열고 이 자리를 안 만들면
@@ -123,6 +131,10 @@ exports.build = function(){
             `amAgo` 는 `data/deal.js` 에, 물건 종류 이름은
             `data/catalog.js`(빌드가 저절로 싣습니다)에 있습니다. */
          "/js/adminlst.js",
+         /* ⚠️ 여행 상품의 상태 말 · 일정 · 값은 `data/trip.js` 에,
+            해외 목적지는 `data/regions.js` 에 있습니다 — 안 실으면 그
+            상자가 영문 키를 찍거나 조용히 빈 칸이 됩니다. */
+         "/js/data/trip.js", "/js/admintrip.js",
          /* ⚠️ 골프장 자료 · 갈래 말을 읽습니다 — 안 실으면 그 상자가
             조용히 안 그려집니다 (값을 읽는 파일을 싣는 것까지가 기능) */
          "/js/data/courses.generated.js", "/js/data/courses.js",

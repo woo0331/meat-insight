@@ -65,6 +65,8 @@
                /* ⚠️⚠️ 0074 — 연습장 시설 속성 · 이용 시간.
                   **읽지 않으면 저장할 때마다 비워집니다**(`industries` 자리) */
                "range_opts,open_hours," +
+               /* ⚠️⚠️ 0076 — 피팅 이용 방식. **읽지 않으면 저장할 때마다 비워집니다** */
+               "fit_ways," +
                "brands,scale,contact_ways,verified,listed,assignable,state,state_why" +
                "&id=eq." + encodeURIComponent(PV) + "&limit=1");
   }
@@ -104,6 +106,15 @@
     }
     return false;
   }
+  /* ⚠️ 0076 — 피팅을 하시는 업체에만 그립니다(연습장과 같은 규칙) */
+  function doesFit(p){
+    var S = (p && Array.isArray(p.subs)) ? p.subs : [];
+    for(var i = 0; i < S.length; i++){
+      var s = window.amSub ? window.amSub(S[i]) : null;
+      if(s && s.cat && s.cat.key === "fitting") return true;
+    }
+    return false;
+  }
   /* ⚠️⚠️ 그려지지 않은 업체는 **읽은 값을 그대로** 돌려보냅니다 —
      빈 값을 보내면 그 칸이 지워집니다(`placeVal` · `goalVal` 과 같은 꼴). */
   function optsVal(f){
@@ -111,6 +122,13 @@
               .map(function(x){ return x.value; });
     if(!f.querySelector('input[name="ropt"]'))
       return (ME && Array.isArray(ME.range_opts)) ? ME.range_opts : [];
+    return b;
+  }
+  function fitWayVal(f){
+    var b = Array.prototype.slice.call(f.querySelectorAll('input[name="fway"]:checked'))
+              .map(function(x){ return x.value; });
+    if(!f.querySelector('input[name="fway"]'))
+      return (ME && Array.isArray(ME.fit_ways)) ? ME.fit_ways : [];
     return b;
   }
   function hoursVal(f){
@@ -197,6 +215,22 @@
               'placeholder="06:00 ~ 23:00" ' +
               'value="' + esc(p.open_hours || "") + '">' +
               '<span class="jhint">여는 시간과 닫는 시간입니다. 비워 두셔도 됩니다.</span>' +
+            '</div>'
+          : "") +
+        /* ⚠️⚠️ 0076 — 피팅을 하시는 업체에만. 여기서 고르신 것으로
+           손님이 좁혀 찾습니다(`/cat/fitting` 거르개). 안 고르신 업체는 그
+           거르개에서 **빠집니다** — 모르는 것을 아무 칸에나 넣으면
+           지어낸 값입니다(절대 규칙 1). */
+        (doesFit(p)
+          ? '<div class="jrow jrow-full">' +
+              '<label>서비스 방식 <span class="jhint">(고르신 것으로 손님이 좁혀 찾습니다)</span></label>' +
+              '<div class="svcs"><fieldset class="svc">' +
+              '<legend>클럽을 어떻게 받으시나요</legend>' +
+                (window.AM_FIT_WAY || []).map(function(o){
+                  return cb("fway", o.key, o.name + (o.lead ? " (" + o.lead + ")" : ""),
+                            (p.fit_ways || []).indexOf(o.key) >= 0);
+                }).join("") +
+              '</fieldset></div>' +
             '</div>'
           : "") +
       '<div class="jrow">' +
@@ -356,6 +390,7 @@
       lessonGoals: goalVal(f),
       /* ⚠️⚠️ 0074 — 칸 둘을 더했으니 **읽고 또 보내야** 합니다 */
       rangeOpts: optsVal(f),
+      fitWays: fitWayVal(f),
       openHours: hoursVal(f)
     };
     bt.disabled = true;

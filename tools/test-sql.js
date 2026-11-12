@@ -172,6 +172,13 @@ try{
      세 겹을 그대로 베꼈으니 그 셋을 **따로** 눌러 봅니다. */
   require("./sql/wanted.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/course.js")({ ok, psql, psqlFile, denied, allowed });
+  /* ⚠️⚠️⚠️ 0073 은 **표 둘 · 문 아홉 · 보기 다섯**을 세우고
+     2026-11-12 저녁까지 SQL 검사가 **한 건도 없었습니다.** 그리고
+     그 사이에 「공개본과 수정본」이라는, 이 저장소에 한 번도 없던
+     짜임새가 들어왔습니다 — 거기가 어긋나면 **심사도 안 거친 글이
+     손님에게 나가거나**, 반대로 오타 하나를 고친 상품이 목록에서
+     사라집니다. */
+  require("./sql/trip.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/notice.js")({ ok, psql, psqlFile, denied, allowed });
   /* 0057 — 업체 사업자 신원정보 (제20조 제2항). ⚠️ 공개 보기의 칸 ·
      칸 GRANT · 트리거 · 운영자 문을 **따로** 눌러 봅니다. */

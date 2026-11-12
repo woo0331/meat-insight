@@ -94,6 +94,60 @@
   function rgName(k){
     return window.amRegionLabel ? window.amRegionLabel(k) : "";
   }
+  /* ⚠️⚠️⚠️ **0072 가 칸 넷을 더해 놓고 받는 쪽이 없었습니다**
+     (`role` · `emp_type` · `pay_type` · `pay_min`). 칸은 DB 에 있는데
+     화면이 그 칸으로 좁히지 않으면 시안 ⑨ 의 왼쪽 「상세 필터」는
+     **골라도 아무것도 안 걸러 주는 칸**이 됩니다 (절대 규칙 5).
+     ⚠️ 모르는 키는 **버립니다** — 주소를 손으로 고쳐 오시면 아무것도
+     안 걸리는 화면이 되는데, 그러면 "글이 없다" 로 읽힙니다. */
+  function oneOf(L, k){
+    for(var i = 0; i < L.length; i++) if(L[i].key === k) return k;
+    return "";
+  }
+  function nowRole(){
+    var m = /[?&]ro=([a-z0-9-]+)/.exec(window.location.search || "");
+    return oneOf(window.AM_JOB_ROLE || [], m ? m[1] : "");
+  }
+  function nowEmp(){
+    var m = /[?&]em=([a-z0-9-]+)/.exec(window.location.search || "");
+    return oneOf(window.AM_JOB_EMP || [], m ? m[1] : "");
+  }
+  function nowPay(){
+    var m = /[?&]py=([a-z_]+)/.exec(window.location.search || "");
+    return oneOf(window.AM_JOB_PAY || [], m ? m[1] : "");
+  }
+  function nowQ(){
+    var m = /[?&]q=([^&]*)/.exec(window.location.search || "");
+    if(!m) return "";
+    try{ return decodeURIComponent(m[1].replace(/\+/g, " ")).trim(); }
+    catch(e){ return ""; }
+  }
+  /* 공고 상세 — ⚠️⚠️ 시안 ⑨ 의 「공고 상세 >」가 갈 자리입니다.
+     ⚠️ 보기를 새로 안 만들었습니다 — `v_job_open` 에 `?id=eq.` 로 한
+     줄만 받습니다 (공개로 나가는 길이 둘이 되면 한쪽만 고치는 날
+     한쪽만 샙니다 · 0069 에서 세운 규칙). */
+  function nowView(){
+    var m = /[?&]v=([0-9a-f-]{36})/.exec(window.location.search || "");
+    return m ? m[1] : "";
+  }
+  /* 주소를 짓는 자리 **한 곳** — 열쇠가 늘 때 여기만 고칩니다
+     (두 곳에 적으면 조건 하나가 조용히 풀립니다) */
+  function urlOf(f){
+    var q = [];
+    if(f.k)  q.push("k="  + encodeURIComponent(f.k));
+    if(f.sub)q.push("s="  + encodeURIComponent(f.sub));
+    if(f.rg) q.push("rg=" + encodeURIComponent(f.rg));
+    if(f.ro) q.push("ro=" + encodeURIComponent(f.ro));
+    if(f.em) q.push("em=" + encodeURIComponent(f.em));
+    if(f.py) q.push("py=" + encodeURIComponent(f.py));
+    if(f.q)  q.push("q="  + encodeURIComponent(f.q));
+    if(f.v)  q.push("v="  + encodeURIComponent(f.v));
+    return "/cat/career" + (q.length ? "?" + q.join("&") : "");
+  }
+  function nowAll(){
+    return { k:nowKind(), sub:nowSub(), rg:nowRg(), ro:nowRole(),
+             em:nowEmp(), py:nowPay(), q:nowQ(), v:nowView() };
+  }
   function nowRg(){
     var m = /[?&]rg=([a-z0-9-]+)/.exec(window.location.search || "");
     var k = m ? m[1] : "";
@@ -127,25 +181,36 @@
        (`pro_name`). 없으면 가린 이름(`김**`)입니다 — 글은 공개지만
        글쓴이는 공개가 아닙니다. */
     var who = j.pro_name ? j.pro_name : j.who;
+    /* ⚠️ 시안 ⑨ 의 줄 — 제목 아래에 **지역 · 고용 형태 · 급여** 한 줄,
+       그리고 오른쪽에 「공고 상세 >」. 본문은 **상세에서** 냅니다
+       (목록에 본문을 다 펴 놓으면 한 화면에 서너 건밖에 안 들어갑니다). */
+    var meta = [REG[j.region] || j.region,
+                nameOf(window.AM_JOB_EMP, j.emp_type),
+                (window.amJobPay ? window.amJobPay(j) : null)]
+      .filter(Boolean).join(" · ");
     return '<li class="jbc" data-id="' + esc(j.id) + '">' +
       '<div class="jbc-h">' +
         '<h3>' + esc(j.title) + '</h3>' +
         '<span class="jbc-k">' + esc(kname(j.kind) || j.kind) + '</span>' +
       '</div>' +
-      '<p class="jbc-m">' + esc(SUBNAME[j.sub] || j.sub) + ' · ' +
-        esc(REG[j.region] || j.region) + ' · ' + esc(who) +
-        ' · ' + esc(when(j.created_at)) + '</p>' +
-      /* ⚠️ 급여 · 조건은 비면 **줄째 빠집니다** (절대 규칙 2 — "협의"
-         를 우리가 지어 적지 않습니다) */
-      (j.pay   ? '<p class="jbc-p">급여 · 조건 ' + esc(j.pay) + '</p>' : '') +
-      (j.terms ? '<p class="jbc-w">' + esc(j.terms) + '</p>' : '') +
+      /* ⚠️ 값이 없는 칸은 **줄에서 빠집니다** — "협의" 를 우리가 지어
+         적지 않습니다(절대 규칙 1 · 2). */
+      (meta ? '<p class="jbc-m">' + esc(meta) + '</p>' : '') +
+      '<p class="jbc-w2">' + esc(SUBNAME[j.sub] || j.sub) + ' · ' +
+        esc(who) + ' · ' + esc(when(j.created_at)) + '</p>' +
       (j.close_at ? '<p class="jbc-d">마감 ' + esc(dayText(j.close_at)) + '</p>' : '') +
-      '<p class="jbc-b">' + esc(j.body) + '</p>' +
-      '<div class="jbc-act">' +
-        '<button type="button" class="btn btn-pt jbc-go">' +
-          (j.kind === "biz" ? "제안 보내기" : "지원하기") + '</button>' +
+      /* ⚠️⚠️ **등록자 확인 여부**를 그 자리에서 말합니다 — 개인과
+         사업자가 섞여 있으면 구분해 표시해야 합니다(제20조의4 ③).
+         ⚠️ 「확인됨」 쪽은 **입점 심사를 거친 업체**일 때만입니다. */
+      (j.pro_name
+        ? '<p class="jbc-ok">' + (window.icon ? window.icon("check", 13) : "") +
+          '입점 업체</p>'
+        : '<p class="jbc-no">등록자 확인 필요</p>') +
+      '<p class="jbc-act">' +
+        '<a class="btn btn-line btn-sm" href="' +
+          esc(urlOf(Object.assign({}, nowAll(), { v:j.id }))) + '">공고 상세</a>' +
         '<span class="jbc-n">받은 것 ' + esc(String(j.apply_n)) + '</span>' +
-      '</div>' +
+      '</p>' +
     '</li>';
   }
 
@@ -235,6 +300,52 @@
         '<input id="b-title" name="title" required minlength="2" maxlength="60" ' +
         'placeholder="보기: 주말 캐디 구합니다 (경기 남부)">' +
       '</div>' +
+      /* ⚠️⚠️⚠️ **0072 가 칸 넷을 더해 놓고 올리는 양식이 그 칸을 한
+         번도 안 보냈습니다** — 그러면 왼쪽 상세 필터로 좁히는 순간
+         **모든 공고가 빠집니다**(그 칸이 전부 null 이니까요). 칸을
+         만드는 것과 그 칸을 채울 길을 내는 것은 다른 일입니다. */
+      '<div class="jrow">' +
+        '<label for="b-role">직무 · 역할</label>' +
+        '<select id="b-role" name="role">' +
+          '<option value="">안 고름</option>' +
+          (window.AM_JOB_ROLE || []).map(function(x){
+            return '<option value="' + esc(x.key) + '">' + esc(x.name) +
+              '</option>'; }).join("") +
+        '</select>' +
+        '<span class="jhint">고르시면 손님이 그 직무로 좁혀 찾습니다.</span>' +
+      '</div>' +
+      '<div class="jrow">' +
+        '<label for="b-emp">고용 형태</label>' +
+        '<select id="b-emp" name="emp_type">' +
+          '<option value="">안 고름</option>' +
+          (window.AM_JOB_EMP || []).map(function(x){
+            return '<option value="' + esc(x.key) + '">' + esc(x.name) +
+              '</option>'; }).join("") +
+        '</select>' +
+      '</div>' +
+      /* ⚠️⚠️ 금액 갈래는 **갈래마다 고를 수 있는 것이 다릅니다**
+         (`amJobPayFor`) — 시설 · 장비 거래에는 급여가 없고 「거래
+         희망가」입니다. 못 고르는 것을 그리면 눌러도 거절되는 칸입니다.
+         ⚠️ 처음에는 **전부** 그리고, 갈래를 고르시면 그때 좁힙니다. */
+      '<div class="jrow">' +
+        '<label for="b-ptype">금액 갈래</label>' +
+        '<select id="b-ptype" name="pay_type">' +
+          '<option value="">안 고름</option>' +
+          (window.AM_JOB_PAY || []).map(function(x){
+            return '<option value="' + esc(x.key) + '" data-k="' +
+              esc((x.kinds || []).join(" ")) + '">' + esc(x.name) +
+              '</option>'; }).join("") +
+        '</select>' +
+      '</div>' +
+      '<div class="jrow">' +
+        '<label for="b-pmin">금액 (원)</label>' +
+        '<input id="b-pmin" name="pay_min" inputmode="numeric" ' +
+          'maxlength="12" placeholder="보기: 3000000">' +
+        /* ⚠️ 0 원도 값입니다 — 거저 넘기시는 시설 · 장비 자리입니다
+           (`||` 를 쓰면 그 줄이 사라집니다 · 0056 에서 세운 규칙). */
+        '<span class="jhint">숫자만 적어 주세요. 0 원도 받습니다 ' +
+          '(거저 드리는 시설 · 장비).</span>' +
+      '</div>' +
       '<div class="jrow">' +
         '<label for="b-pay">급여 · 조건</label>' +
         '<input id="b-pay" name="pay" maxlength="60" placeholder="보기: 일 12만원">' +
@@ -295,94 +406,232 @@
      적으면 한쪽만 고치는 날 둘이 달라집니다.
      ⚠️ 눌림 표시는 `.chip-on` 과 `aria-current` 둘 다 답니다 (색만
      바꾸면 화면 읽는 기계에는 아무 말도 안 한 것입니다). */
-  function filters(k, sub, rg){
-    /* ⚠️⚠️ 갈래를 눌러도 **하위 · 지역 조건을 지킵니다** — 풀리면 손님이
-       좁혀 온 길이 조용히 사라집니다 (업체찾기에서 겪은 자리).
-       ⚠️ 조건을 더하는 날 이 줄도 같이 보세요 — 안 보면 새 조건만
-       조용히 풀립니다. */
-    var keep = (sub ? "&s=" + encodeURIComponent(sub) : "") +
-               (rg  ? "&rg=" + encodeURIComponent(rg) : "");
-    var rest = keep.replace(/^&/, "?");
+  /* 탭 넷 — ⚠️⚠️ **단추가 아니라 링크**입니다. 주소를 복사해 보내도
+     같은 화면이고 뒤로 가기도 됩니다 (`/search` 에서 배운 자리). */
+  function tabs(f){
     var one = function(key, name){
-      var on = (k === key);
-      var qs = key ? ("?k=" + encodeURIComponent(key) + keep) : rest;
-      return '<a class="chip' + (on ? ' chip-on' : '') + '"' +
+      var on = (f.k === key);
+      var g = Object.assign({}, f); g.k = key; g.v = "";
+      return '<a class="jbtab-a' + (on ? ' on' : '') + '"' +
         (on ? ' aria-current="true"' : '') +
-        ' href="/cat/career' + esc(qs) +
-        '" data-k="' + esc(key) + '">' + esc(name) + '</a>';
+        ' href="' + esc(urlOf(g)) + '" data-k="' + esc(key) + '">' +
+        esc(name) + '</a>';
     };
-    /* ⚠️⚠️ **지역은 칸(chip)으로 안 냅니다** — 열일곱이라 거르개 줄에
-       놓으면 폰에서 "밀면 보이는 것" 이 됩니다 (머리말 메뉴 넷째가
-       폰에서 없는 메뉴였던 그 자리). 고르개 하나로 냅니다. */
-    var rgOpt = '<optgroup label="지역 묶음">' +
+    return '<nav class="jbtab" aria-label="공고 유형">' + one("", "전체") +
+      kinds().map(function(x){ return one(x.key, x.name); }).join("") +
+    '</nav>';
+  }
+
+  /* 왼쪽 상세 필터 — ⚠️⚠️ **양식(form)** 입니다. 자바스크립트가 꺼져도
+     GET 으로 그대로 돌고, 켜져 있으면 가로채서 주소만 바꿉니다.
+     ⚠️⚠️ **지역은 칸(chip)으로 안 냅니다** — 열일곱이라 거르개 줄에
+     놓으면 폰에서 "밀면 보이는 것" 이 됩니다 (머리말 메뉴 넷째가 폰에서
+     없는 메뉴였던 그 자리). 고르개 하나로 냅니다. */
+  function rail(f){
+    var opt = function(L, cur, all){
+      return '<option value="">' + esc(all) + '</option>' +
+        L.map(function(x){
+          return '<option value="' + esc(x.key) + '"' +
+            (cur === x.key ? ' selected' : '') + '>' + esc(x.name) +
+            '</option>';
+        }).join("");
+    };
+    var rgOpt = '<option value="">전체 지역</option>' +
+      '<optgroup label="지역 묶음">' +
       (window.AM_REGION_ZONES || []).map(function(z){
         return '<option value="' + esc(z.key) + '"' +
-          (rg === z.key ? ' selected' : '') + '>' +
+          (f.rg === z.key ? ' selected' : '') + '>' +
           esc(window.amZoneLong ? window.amZoneLong(z.key) : z.name) + '</option>';
       }).join("") + '</optgroup><optgroup label="시 · 도">' +
       (window.AM_REGIONS || []).map(function(r){
         return '<option value="' + esc(r.key) + '"' +
-          (rg === r.key ? ' selected' : '') + '>' + esc(r.name) + '</option>';
+          (f.rg === r.key ? ' selected' : '') + '>' + esc(r.name) + '</option>';
       }).join("") + '</optgroup>';
-    return '<div class="sf-c jbf-c">' + one("", "전체") +
-      kinds().map(function(x){ return one(x.key, x.name); }).join("") + '</div>' +
-      '<div class="jbf-rg"><label for="jbf-rg">지역</label>' +
-      '<select id="jbf-rg"><option value="">전국</option>' + rgOpt +
-      '</select></div>';
+    return '<form class="jbrail" id="jbrail" method="get" action="/cat/career">' +
+      '<p class="jbrail-h">' + (window.icon ? window.icon("search", 15) : "") +
+        '상세 필터</p>' +
+      '<p class="jbrail-c"><label for="jb-rg">지역</label>' +
+        '<select id="jb-rg" name="rg">' + rgOpt + '</select></p>' +
+      '<p class="jbrail-c"><label for="jb-ro">직무 · 역할</label>' +
+        '<select id="jb-ro" name="ro">' +
+          opt(window.AM_JOB_ROLE || [], f.ro, "전체") + '</select></p>' +
+      '<p class="jbrail-c"><label for="jb-em">고용 형태</label>' +
+        '<select id="jb-em" name="em">' +
+          opt(window.AM_JOB_EMP || [], f.em, "전체") + '</select></p>' +
+      /* ⚠️ 급여는 **갈래**로 좁힙니다 — 0048 의 `pay` 는 자유 글자라
+         숫자로 못 견줍니다(0072 가 `pay_type` 을 따로 둔 그 까닭). */
+      '<p class="jbrail-c"><label for="jb-py">급여 조건</label>' +
+        '<select id="jb-py" name="py">' +
+          opt(window.AM_JOB_PAY || [], f.py, "전체") + '</select></p>' +
+      (f.k ? '<input type="hidden" name="k" value="' + esc(f.k) + '">' : '') +
+      (f.sub ? '<input type="hidden" name="s" value="' + esc(f.sub) + '">' : '') +
+      '<p class="jbrail-b">' +
+        '<button type="submit" class="btn btn-pri btn-sm">필터 적용</button>' +
+        '<a class="jbrail-x" href="/cat/career">조건 모두 지우기</a>' +
+      '</p>' +
+    '</form>';
   }
 
-  function paint(a, rows, k, sub, rg){
-    var html = filters(k, sub, rg) + subLine(sub, rg);
+  /* 찾는 칸 — ⚠️ 시안 ⑨ 의 「직무, 지역, 업체명 등으로 검색해 보세요」.
+     ⚠️⚠️ **찾기도 서버가 합니다**(`title=ilike`) — 쉰 줄만 받아 화면에서
+     찾으면 그 쉰 줄 밖의 공고가 영영 안 나옵니다. */
+  function findBox(f){
+    return '<form class="jbfind" id="jbfind" method="get" action="/cat/career">' +
+      '<label for="jb-q" class="sr-only">공고 찾기</label>' +
+      '<input id="jb-q" name="q" type="search" maxlength="40" ' +
+        'value="' + esc(f.q) + '" ' +
+        'placeholder="직무, 지역, 업체명 등으로 검색해 보세요">' +
+      (f.k ? '<input type="hidden" name="k" value="' + esc(f.k) + '">' : '') +
+      '<button type="submit" class="btn btn-pri">검색</button>' +
+    '</form>';
+  }
+
+  /* 묶음 머리 — ⚠️ 시안 ⑨ 는 갈래를 **묶어서** 보여 줍니다
+     (「채용 공고 (구인)」 · 「업체 제휴 공고 (파트너 모집)」).
+     ⚠️⚠️ 갈래를 고르신 뒤에는 **안 냅니다** — 한 갈래만 남았는데 그
+     머리를 또 내면 같은 말을 두 번 하는 것입니다. */
+  /* ⚠️ 모르는 키는 **그 글자를 그대로** 냅니다 — 이름을 지어내지
+     않습니다(0072 가 키 묶음을 DB 에 안 박은 그 까닭). */
+  function nameOf(L, k){
+    if(!k) return "";
+    var A = L || [];
+    for(var i = 0; i < A.length; i++) if(A[i].key === k) return A[i].name;
+    return String(k);
+  }
+  function groupHead(key){
+    var x = (kinds().filter(function(y){ return y.key === key; })[0]) || null;
+    if(!x) return "";
+    return '<li class="jbg">' + esc(x.name) + ' 공고' +
+      (x.lead ? ' <i>' + esc(x.lead) + '</i>' : "") + '</li>';
+  }
+
+  function listHtml(rows, f){
+    if(f.k) return '<ul class="jbl">' + rows.map(card).join("") + '</ul>';
+    /* 갈래 차례는 `AM_JOB_KIND` 한 곳에서 옵니다 — 화면이 따로 적으면
+       갈래가 느는 날 새 갈래가 **어느 묶음에도 안 들어갑니다**. */
+    var out = "";
+    kinds().forEach(function(x){
+      var mine = rows.filter(function(r){ return r.kind === x.key; });
+      if(!mine.length) return;
+      out += groupHead(x.key) + mine.map(card).join("");
+    });
+    /* ⚠️ 모르는 갈래가 섞여 있으면 **버리지 않고** 맨 뒤에 냅니다 —
+       키를 늘린 날 그 공고가 조용히 사라지지 않게. */
+    var known = kinds().map(function(x){ return x.key; });
+    var rest = rows.filter(function(r){ return known.indexOf(r.kind) < 0; });
+    if(rest.length) out += rest.map(card).join("");
+    return '<ul class="jbl">' + out + '</ul>';
+  }
+
+  function noneHtml(f){
+    /* ⚠️ 0건이어도 **막다른 길로 두지 않습니다** (절대 규칙 2).
+       ⚠️⚠️ **조건이 걸렸을 때와 아무것도 없을 때는 다른 말**입니다 —
+       섞으면 손님이 "공고가 없다" 로 읽습니다. */
+    var narrow = (f.k || f.sub || f.rg || f.ro || f.em || f.py || f.q);
+    if(narrow)
+      return '<div class="none"><h3>고르신 조건에 맞는 공고가 없습니다.</h3>' +
+        '<p>조건을 조금 넓혀 보세요. 직무 · 고용 형태 · 급여 조건을 ' +
+        '안 적으신 공고는 그 조건으로 좁히면 빠집니다.</p>' +
+        '<div class="none-b">' +
+        '<a class="btn btn-line" href="/cat/career">조건 모두 지우기</a>' +
+        '</div></div>';
+    return '<div class="none"><h3>아직 등록된 공고가 없습니다.</h3>' +
+      '<p>채용 공고나 제휴 제안을 등록해 인재와 파트너를 만나보세요.</p>' +
+      '</div>';
+  }
+
+  /* 공고 상세 — ⚠️⚠️ 시안 ⑨ 의 「공고 상세 >」가 갈 자리입니다.
+     ⚠️ 지원 양식을 **여기**서 엽니다(목록 카드가 아니라) — 목록에서
+     열면 한 화면에 양식이 여럿 서고, 어느 공고에 쓰는지 흐려집니다. */
+  function detail(j){
+    var who = j.pro_name ? j.pro_name : j.who;
+    var meta = [SUBNAME[j.sub] || j.sub, REG[j.region] || j.region,
+                nameOf(window.AM_JOB_ROLE, j.role),
+                nameOf(window.AM_JOB_EMP, j.emp_type)]
+      .filter(Boolean).join(" · ");
+    return '<div class="jbd" data-id="' + esc(j.id) + '">' +
+      '<p class="jbd-back"><a class="btn btn-line btn-sm" href="' +
+        esc(urlOf(Object.assign({}, nowAll(), { v:"" }))) + '">목록으로</a></p>' +
+      '<h2 class="jbd-t">' + esc(j.title) + '</h2>' +
+      '<p class="jbd-k">' + esc(kname(j.kind) || j.kind) + '</p>' +
+      '<p class="jbd-m">' + esc(meta) + '</p>' +
+      '<p class="jbd-w">' + esc(who) + ' · ' + esc(when(j.created_at)) + '</p>' +
+      /* ⚠️⚠️ 금액을 적는 자리는 `amJobPay()` **한 곳**입니다 — 적힌
+         것이 하나도 없으면 null 이고 그 줄이 **줄째 빠집니다**
+         ("협의" 를 우리가 지어 적지 않습니다 · 절대 규칙 1).
+         ⚠️⚠️⚠️ **같은 말을 두 번 적고 있었습니다** — 바로 위에
+         `j.pay`(올리신 분이 적은 자유 글자)를 따로 내고 있었는데,
+         `amJobPay()` 가 **그 글자까지 이어 붙여** 줍니다. 그래서 상세에
+         「급여 · 조건 일 12만원」과 「월 3,000,000원부터 · 일 12만원」이
+         **나란히** 찍혔습니다. 2026-11-12 에 여행 · 인력 화면 검사를
+         넣다가 찍어 보고 알았습니다(바로 위 주석이 "한 곳" 이라고 적어
+         두고 코드는 두 곳이던 자리). */
+      (function(t){ return t ? '<p class="jbd-p">급여 · 조건 ' + esc(t) +
+        '</p>' : ''; })(window.amJobPay ? window.amJobPay(j) : null) +
+      (j.terms ? '<p class="jbd-c">' + esc(j.terms) + '</p>' : '') +
+      (j.close_at ? '<p class="jbd-d">마감 ' + esc(dayText(j.close_at)) + '</p>' : '') +
+      '<div class="jbd-b">' + esc(j.body) + '</div>' +
+      /* ⚠️⚠️ **등록자 확인 여부를 그 자리에서** 말합니다 — 개인과
+         사업자가 섞여 있으면 구분해 표시해야 합니다(제20조의4 ③).
+         업체 이름으로 올린 글만 우리가 승인한 업체입니다. */
+      (j.pro_name
+        ? '<p class="jbd-ok">' + (window.icon ? window.icon("check", 15) : "") +
+          '입점 심사를 거친 업체가 올린 공고입니다.</p>'
+        : '<p class="jbd-no">' + (window.icon ? window.icon("info", 15) : "") +
+          '회원이 올린 공고입니다 — 등록자 확인이 필요합니다. ' +
+          '골프올인원은 거래 당사자가 아닙니다.</p>') +
+      '<div class="jbd-act">' +
+        '<button type="button" class="btn btn-pt jbc-go">' +
+          (j.kind === "hire" || j.kind === "seek" ? "지원하기" : "제안 보내기") +
+        '</button>' +
+        '<span class="jbc-n">받은 것 ' + esc(String(j.apply_n)) + '</span>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function paint(a, rows, f, one){
+    var html = tabs(f) + findBox(f) + subLine(f.sub, f.rg);
     /* ⚠️⚠️ 0058 — "조건을 저장하고 알림 받기". 글과 주소는
        js/data/deal.js 의 amWatchLink() 한 곳입니다 (분류 화면 셋이
        같은 말을 해야 합니다).
        ⚠️ 로그인한 분에게만 냅니다 — 로그인 전에 그리면 눌러서 로그인
        화면으로 갔다가 돌아와도 저장된 것이 없는 꼴입니다 (절대 규칙 5). */
     if(a && a.signedIn && window.amWatchLink) html += window.amWatchLink("job");
-    if(!rows.length){
-      /* ⚠️ 0건이어도 **막다른 길로 두지 않습니다** (절대 규칙 2) */
-      html += '<div class="none">' +
-        '<h3>' + (sub ? esc(SUBNAME[sub]) + ' 글이 아직 없습니다.'
-                : k ? esc(kname(k)) + ' 글이 아직 없습니다.'
-                    : '아직 올라온 글이 없습니다.') + '</h3>' +
-        '<p>첫 글을 올려 보세요. 분류와 지역만 정하시면 됩니다.</p></div>';
+    if(f.v){
+      /* ⚠️ 상세에서는 거르개를 **안 냅니다** — 무엇을 거르는 칸인지
+         알 수 없게 됩니다(0069 에서 세운 규칙). */
+      html += one ? detail(one)
+        : '<div class="none"><h3>지금은 볼 수 없는 공고입니다.</h3>' +
+          '<p>마감되었거나 내려간 공고일 수 있습니다.</p>' +
+          '<div class="none-b"><a class="btn btn-line" href="' +
+          esc(urlOf(Object.assign({}, f, { v:"" }))) + '">목록으로</a></div></div>';
     }else{
-      html += '<ul class="jbl">' + rows.map(card).join("") + '</ul>';
+      html += '<div class="jbw">' + rail(f) +
+        '<div class="jbmain">' +
+          '<p class="jbcnt">전체 공고 <b>' +
+            (window.won ? window.won(rows.length) : String(rows.length)) + '건</b>' +
+            (rows.length >= 50 ? ' 이상' : '') + '</p>' +
+          (rows.length ? listHtml(rows, f) : noneHtml(f)) +
+        '</div>' +
+      '</div>';
     }
     list.innerHTML = html;
 
-    /* ⚠️ 거르개는 **가로채서** 주소만 바꿉니다 (뒤로 가기도 됩니다) */
-    Array.prototype.forEach.call(list.querySelectorAll(".jbf-c .chip"), function(ln){
-      ln.addEventListener("click", function(e){
-        e.preventDefault();
-        var want = ln.getAttribute("data-k");
-        try{ window.history.pushState({}, "", ln.getAttribute("href")); }catch(_){}
-        load(a, want, sub, rg);
-      });
-    });
-    /* ⚠️ 고르개도 **주소를 같이 바꿉니다** — 복사해 보내도 같은 화면이고
-       뒤로 가기도 됩니다 (칸을 링크로 만든 그 까닭과 같습니다). */
-    var rgSel = list.querySelector("#jbf-rg");
-    if(rgSel) rgSel.addEventListener("change", function(){
-      var want = rgSel.value;
-      var q = [];
-      if(k)    q.push("k=" + encodeURIComponent(k));
-      if(sub)  q.push("s=" + encodeURIComponent(sub));
-      if(want) q.push("rg=" + encodeURIComponent(want));
-      try{ window.history.pushState({}, "",
-        "/cat/career" + (q.length ? "?" + q.join("&") : "")); }catch(_){}
-      load(a, k, sub, want);
-    });
+    /* ⚠️ 탭 · 상세 · 목록으로 — 전부 **링크**이고 여기서 가로채기만
+       합니다(자바스크립트가 꺼져 있으면 그대로 이동).
+       ⚠️⚠️ 눌림은 **감싼 자리 한 곳**에서 받습니다 — 그릴 때마다 달면
+       같은 손놀림에 호출이 여러 번 돕니다(0069 의 그 자리). */
+    bindNav(a);
 
     Array.prototype.forEach.call(list.querySelectorAll(".jbc-go"), function(b){
       b.addEventListener("click", function(){
         if(!a.signedIn){ window.location.href = window.amLoginUrl
           ? window.amLoginUrl(window.location.pathname) : "/login"; return; }
-        var li = b.closest(".jbc");
+        var li = b.closest(".jbd");
         var old = li.querySelector(".jbaf");
         if(old){ old.remove(); return; }
-        var src = rows.filter(function(x){
-          return x.id === li.getAttribute("data-id"); })[0];
+        /* ⚠️ 상세에서 엽니다 — 목록의 `rows` 가 아니라 **그 한 줄**입니다 */
+        var src = one && one.id === li.getAttribute("data-id") ? one : null;
         if(!src) return;
         li.insertAdjacentHTML("beforeend", applyForm(src.kind));
         var f = li.querySelector(".jbaf");
@@ -417,23 +666,94 @@
     });
   }
 
-  function load(a, k, sub, rg){
+  var NAVON = false;
+  function bindNav(a){
+    if(NAVON) return;
+    list.addEventListener("click", function(e){
+      var t = e.target;
+      var ln = t.closest ? t.closest("a[href^='/cat/career']") : null;
+      if(!ln || !list.contains(ln)) return;
+      if(e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+      e.preventDefault();
+      try{ window.history.pushState({}, "", ln.getAttribute("href")); }catch(_){}
+      load(a);
+      /* ⚠️ 목록 머리로 올립니다 — 안 올리면 누른 자리에 그대로 있어
+         "아무 일도 안 일어났다" 로 보입니다. */
+      try{ list.scrollIntoView({ block:"start" }); }catch(_){}
+    });
+    NAVON = true;
+    /* 레일 · 찾는 칸은 **양식**입니다 — 가로채서 주소만 바꿉니다 */
+    bindForm(a);
+  }
+  /* ⚠️⚠️⚠️ **양식도 감싼 자리 한 곳에서 받습니다.** 처음에
+     `bindForm(a, id)` 로 그 양식 **자체**에 달고 `FORMON` 으로 두 번
+     달기를 막았는데, `paint()` 가 `list.innerHTML` 을 통째로 갈아
+     끼우므로 **그 양식 요소가 없어집니다** — 두 번째 그림부터는 새
+     요소에 아무 귀도 안 달리고 `FORMON` 이 참이라 다시 달지도
+     않았습니다. 그러면 「필터 적용」이 **통째로 새로고침**으로 돌아
+     거르개를 누를 때마다 화면이 깜빡이고 보고 있던 자리를 잃습니다
+     (에러는 0줄입니다 · 0069 가 `bindBar()` 로 세운 그 규칙).
+     ⚠️ `list` 는 빌드가 찍은 그릇이라 **안 바뀝니다** — 거기 한 번만
+     답니다. */
+  var FORMON = false;
+  function bindForm(a){
+    if(FORMON) return;
+    list.addEventListener("submit", function(e){
+      var f = e.target.closest ? e.target.closest("form") : null;
+      if(!f || !list.contains(f)) return;
+      /* ⚠️ 레일 · 찾는 칸 **둘만** 받습니다 — 지원 양식(`.jbaf`) ·
+         올리는 양식은 각자 제 자리에서 처리합니다. */
+      if(f.id !== "jbrail" && f.id !== "jbfind") return;
+      e.preventDefault();
+      var g = Object.assign({}, nowAll(), { v:"" });
+      ["rg", "ro", "em", "py", "q"].forEach(function(k){
+        var el = f.elements[k];
+        if(el) g[k] = (el.value || "").trim();
+      });
+      try{ window.history.pushState({}, "", urlOf(g)); }catch(_){}
+      load(a);
+    });
+    FORMON = true;
+  }
+
+  function load(a){
+    var f = nowAll();
+    /* 상세 — ⚠️ 보기를 새로 안 만들고 같은 공개 보기에서 한 줄만 받습니다 */
+    if(f.v){
+      return get(a, "v_job_open?select=*&id=eq." + encodeURIComponent(f.v) +
+                    "&limit=1").then(function(rows){
+        /* ⚠️ 불러오는 사이에 뒤로 가셨으면 **안 그립니다** — 안 보면
+           늦게 온 답이 목록을 덮어씁니다 (0069 의 그 자리). */
+        if(nowView() !== f.v) return;
+        paint(a, [], f, (rows || [])[0] || null);
+      });
+    }
     var q = "v_job_open?select=id,kind,sub,region,title,body,pay,terms," +
+            "role,emp_type,pay_type,pay_min," +
             "close_at,created_at,who,pro_name,apply_n" +
             "&order=created_at.desc&limit=50";
-    if(k)   q += "&kind=eq." + encodeURIComponent(k);
+    if(f.k)   q += "&kind=eq." + encodeURIComponent(f.k);
     /* ⚠️ 열쇠 이름이 DB 의 칸과 **글자까지** 같아야 합니다 — 다르면
        아무것도 안 걸렀는데 화면은 멀쩡해 보입니다. */
-    if(sub) q += "&sub=eq." + encodeURIComponent(sub);
+    if(f.sub) q += "&sub=eq." + encodeURIComponent(f.sub);
+    /* ⚠️⚠️ 0072 의 칸 셋 — **안 적으신 공고는 빠집니다**(모르는 것을
+       아무 칸에나 넣으면 지어낸 값입니다 · 절대 규칙 1). 화면이 그
+       사실을 0건 안내에서 말합니다. */
+    if(f.ro) q += "&role=eq." + encodeURIComponent(f.ro);
+    if(f.em) q += "&emp_type=eq." + encodeURIComponent(f.em);
+    if(f.py) q += "&pay_type=eq." + encodeURIComponent(f.py);
+    /* ⚠️ `*` 와 `%` 는 ilike 의 글자라 빼고 보냅니다 (그대로 보내면
+       손님이 친 말과 다른 것을 찾습니다). */
+    if(f.q)  q += "&title=ilike.*" +
+      encodeURIComponent(f.q.replace(/[*%]/g, "")) + "*";
     /* ⚠️⚠️ **거르는 것은 서버입니다** — 쉰 줄만 받아 화면에서 거르면
        서울 글이 쉰 줄 밖에 있을 때 **0건으로 보입니다**.
        ⚠️⚠️⚠️ **묶음(수도권)과 시 · 도(서울)를 한 열쇠로 받습니다** —
        현황표의 칸은 묶음을 보내고 고르개는 시 · 도를 보냅니다. 푸는
        규칙은 `amRegionsFor()` 한 곳입니다. */
-    var rs = window.amRegionsFor ? window.amRegionsFor(rg) : [];
+    var rs = window.amRegionsFor ? window.amRegionsFor(f.rg) : [];
     if(rs.length) q += "&region=in.(" + rs.map(encodeURIComponent).join(",") + ")";
-    return get(a, q).then(function(rows){
-      paint(a, rows || [], k || "", sub || "", rg || ""); });
+    return get(a, q).then(function(rows){ paint(a, rows || [], f, null); });
   }
 
   window.amAuthAsk().then(function(a){
@@ -453,10 +773,10 @@
       return;
     }
 
-    load(a, nowKind(), nowSub(), nowRg());
+    load(a);
     /* 뒤로 가기 — 주소가 바뀌면 다시 그립니다 */
     window.addEventListener("popstate", function(){
-      load(a, nowKind(), nowSub(), nowRg()); });
+      load(a); });
 
     var box = document.getElementById("jobbox");
     if(!box) return;
@@ -472,6 +792,23 @@
         '">로그인하기</a></div>';
     if(!a.signedIn) return;
 
+    /* ⚠️⚠️ 갈래를 고르시면 **금액 갈래를 그 갈래 것으로** 좁힙니다 —
+       시설 · 장비 거래에 「월급」이 남아 있으면 골라도 DB 가 거절합니다
+       (0072 가 `pay_type` 을 갈래마다 가른 그 까닭 · 절대 규칙 5). */
+    var kindSel = document.getElementById("b-kind");
+    var ptSel   = document.getElementById("b-ptype");
+    if(kindSel && ptSel) kindSel.addEventListener("change", function(){
+      var k = kindSel.value;
+      var L = (k && window.amJobPayFor) ? window.amJobPayFor(k)
+                                        : (window.AM_JOB_PAY || []);
+      var cur = ptSel.value;
+      ptSel.innerHTML = '<option value="">안 고름</option>' +
+        L.map(function(x){
+          return '<option value="' + esc(x.key) + '"' +
+            (cur === x.key ? ' selected' : '') + '>' + esc(x.name) +
+            '</option>'; }).join("");
+    });
+
     /* 오늘보다 이전은 못 고르게 — 문도 막지만 화면이 먼저 말해 줍니다 */
     var cd = document.getElementById("b-close");
     if(cd) cd.min = new Date().toISOString().slice(0, 10);
@@ -486,6 +823,10 @@
       call(a, "open_jobpost", {
         kind: f.kind.value, sub: f.sub.value, region: f.region.value,
         title: f.title.value, body: f.body.value, pay: f.pay.value,
+        /* ⚠️⚠️ 0072 의 칸 넷 — **안 보내면 거르개가 그 공고를 영원히
+           못 찾습니다**(문은 받는데 화면이 안 보내던 자리). */
+        role: f.role.value, emp_type: f.emp_type.value,
+        pay_type: f.pay_type.value, pay_min: f.pay_min.value,
         terms: f.terms.value, close_at: f.close_at.value,
         contact: f.contact.value, as_pro: !!(pro && pro.checked),
         agree_at: new Date().toISOString()
@@ -495,7 +836,7 @@
           '<p>목록에 바로 보입니다. 지원이 들어오면 내 정보에서 ' +
           '수락하실 수 있습니다.</p>' +
           '<a class="btn btn-pt" href="/my">내 정보에서 보기</a>';
-        load(a, nowKind(), nowSub(), nowRg());
+        load(a);
       }).catch(function(err){
         btn.disabled = false;
         msg.textContent = String((err && err.message) || "올리지 못했습니다.");

@@ -222,3 +222,126 @@ window.amRangeOptsOf = function(p){
   var a = (p && p.range_opts) || [];
   return a.map(function(k){ var r = window.amRangeOpt(k); return r ? r.name : k; });
 };
+
+/* ── 연습장 1회 가격대 (확정 시안 ⑤ 의 고르개 다섯 가운데 하나) ────
+   ⚠️⚠️ 값은 **업체가 `provider_price`(0042) 에 올린 것**으로 가릅니다.
+   등록이 0건인 연습장은 **어느 가격대에도 안 걸립니다** — 값을 모르는
+   것을 아무 칸에나 넣으면 그게 지어낸 값입니다(절대 규칙 1). 그 사실을
+   화면이 그 자리에서 말합니다.
+   ⚠️ 경계는 **아래를 열고 위를 닫습니다**(gte · lt) — 둘 다 닫으면
+   1만원짜리가 두 칸에 걸립니다.
+   ⚠️ 구간 셋은 **저희가 고른 값**입니다(시안은 칸만 그려 두고 값을
+   안 적었습니다) — 시안의 예시가 12,000 ~ 18,000원이라 그 둘레로
+   잡았습니다. */
+window.AM_RANGE_PRICE = [
+  { key:"r1", name:"1만원 미만",      gte:null,  lt:10000 },
+  { key:"r2", name:"1만 ~ 2만원",     gte:10000, lt:20000 },
+  { key:"r3", name:"2만원 이상",      gte:20000, lt:null }
+];
+window.amRangePrice = function(key){
+  var L = window.AM_RANGE_PRICE || [];
+  for(var i = 0; i < L.length; i++) if(L[i].key === key) return L[i];
+  return null;
+};
+/* ⚠️⚠️⚠️ `amPriceLow()` 를 그대로 쓰면 **분류를 안 가립니다** — 레슨도
+   하시는 연습장의 카드에 레슨 8회권 값이 「1회 60분」인 것처럼 찍힙니다
+   (2026-11-10 에 레슨 화면에서 겪은 그 자리). 연습장 화면은 **연습장
+   하위에 달린 값만** 봅니다.
+   ⚠️ 세는 자리는 여전히 `amPriceLow()` 한 곳입니다 — 여기서는 **무엇을
+   세느냐**만 좁힙니다(셈을 두 벌로 적지 않습니다).
+   ⚠️ 값이 0건이면 **null** 입니다 — 0 이 아닙니다. */
+window.amRangeLow = function(p){
+  var L = (p && Array.isArray(p.prices)) ? p.prices : [];
+  var only = L.filter(function(x){
+    var s = (x && x.sub && window.amSub) ? window.amSub(x.sub) : null;
+    return s && s.cat && s.cat.key === "range";
+  });
+  if(!only.length) return null;
+  return window.amPriceLow ? window.amPriceLow({ prices: only }) : null;
+};
+/* 시설 칩 — ⚠️ 업체가 고른 것만. 안 고른 연습장은 **빈 배열**이고
+   화면이 그 줄을 통째로 뺍니다(「정보 없음」을 안 찍습니다). */
+window.amRangeHas = function(p, key){
+  var a = (p && Array.isArray(p.range_opts)) ? p.range_opts : [];
+  return a.indexOf(key) >= 0;
+};
+
+/* ════════════════════════════════════════════════════════════════════
+   피팅 · 수리 (확정 시안 ⑦ · 2026-11-12)
+   ════════════════════════════════════════════════════════════════════
+   ⚠️⚠️ 목록은 **여기 한 곳**입니다 — 거르개(js/fitting.js) · 업체
+     작업실(js/deskme.js) · 카드(js/card.js)가 같은 줄을 읽습니다.
+     두 곳에 적으면 한쪽만 고치는 날 「택배」를 고를 수는 있는데 아무도
+     안 걸리는 칸이 됩니다.
+   ⚠️ DB(0076)는 **키 묶음을 모릅니다** — 갯수와 길이만 막습니다.
+     그래서 늘리실 때 마이그레이션이 필요 없고, **빼지 말고 더하기만**
+     하세요(이미 고르신 업체가 그 글자를 들고 있습니다). */
+
+/* 이용 방식 — 시안의 「서비스 방식」입니다.
+   ⚠️⚠️ `contact_ways`(0044 · 상담 방식 넷)와 **다른 칸**입니다 — 저쪽은
+     "어떻게 이야기하나", 이쪽은 "클럽을 어떻게 맡기나" 입니다. */
+window.AM_FIT_WAY = [
+  { key:"visit", name:"방문 이용", lead:"매장 방문" },
+  { key:"ship",  name:"택배 이용", lead:"클럽 발송" }
+];
+
+/* ⚠️ 업체가 고른 것을 **이름으로** 돌려줍니다. 모르는 키가 들어오면
+   그 글자를 그대로 냅니다 — 이름을 지어내지 않습니다. */
+window.amFitWaysOf = function(p){
+  var L = (p && Array.isArray(p.fit_ways)) ? p.fit_ways : [];
+  return L.filter(Boolean).map(function(k){
+    var f = window.AM_FIT_WAY.filter(function(x){ return x.key === k; })[0];
+    return f ? f.name : String(k);
+  });
+};
+
+window.amFitHasWay = function(p, key){
+  var L = (p && Array.isArray(p.fit_ways)) ? p.fit_ways : [];
+  return L.indexOf(key) >= 0;
+};
+
+/* 가격대 — 시안의 세 칸 그대로입니다.
+   ⚠️ 경계는 **아래를 열고 위를 닫습니다**(gte · lt) — 둘 다 닫으면
+     10,000원이 두 칸에 다 걸립니다(AM_TEE_BAND 와 같은 규칙).
+   ⚠️ 그래서 이름도 「10,000원 **미만**」입니다 — 이름과 경계를 따로
+     적으면 그 칸이 거짓말을 합니다. */
+window.AM_FIT_PRICE = [
+  { key:"f1", name:"10,000원 미만",        gte:null,   lt:10000 },
+  { key:"f2", name:"10,000 ~ 30,000원",    gte:10000,  lt:30000 },
+  { key:"f3", name:"30,000원 이상",        gte:30000,  lt:null  }
+];
+
+window.amFitPrice = function(key){
+  return window.AM_FIT_PRICE.filter(function(x){ return x.key === key; })[0] || null;
+};
+
+/* ⚠️⚠️ **피팅 값만** 봅니다 — `amPriceLow()` 는 분류를 안 가려서,
+   레슨도 하시는 피팅 업체 카드에 레슨 회차권 값이 「그립 교체 공임」인
+   것처럼 찍힙니다(2026-11-10 에 레슨에서 · 2026-11-12 에 연습장에서
+   겪은 그 자리). 세는 셈은 여전히 `amPriceLow()` 한 곳입니다 —
+   **무엇을 세느냐만** 좁힙니다. */
+window.amFitLow = function(p){
+  if(!p || !window.amPriceLow) return null;
+  var c = window.amCat ? window.amCat("fitting") : null;
+  var keys = (c && window.amCatItems)
+    ? window.amCatItems(c).map(function(i){ return i.key; }) : [];
+  var rows = (Array.isArray(p.prices) ? p.prices : []).filter(function(r){
+    return keys.indexOf(r && r.sub) >= 0;
+  });
+  return window.amPriceLow({ prices: rows });
+};
+
+/* 업체 목록의 차례 — 레슨(2026-11-10)과 피팅 · 수리(2026-11-12)가
+   **같은 줄**을 읽습니다.
+   ⚠️ 키는 주소에 실립니다(`?o=`). 이름을 바꾸셔도 키는 그대로
+     두세요 — 복사해 보내신 주소가 깨집니다.
+   ⚠️⚠️⚠️ **「추천순」은 여기 없습니다** — 무엇이 추천인지 세어 본
+     적이 없고 세는 자료도 없습니다(조회도 · 거래 건수도 안 셉니다).
+     시안에 그 칸이 있어도 지어낸 차례를 「추천」이라고 적으면
+     절대 규칙 1 입니다. **셀 수 있는 넷**만 냅니다. */
+window.AM_PV_SORT = [
+  { key:"name", name:"가나다순" },
+  { key:"low",  name:"가격 낮은 순" },
+  { key:"high", name:"가격 높은 순" },
+  { key:"rate", name:"후기 평점순" }
+];

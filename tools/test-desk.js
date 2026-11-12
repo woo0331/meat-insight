@@ -7663,17 +7663,32 @@ function boardsOf(){
   }
 
   console.log("\n── 골프 인력 · 비즈니스 (0048)");
+  /* ⚠️⚠️⚠️ **`jobpost.id` 는 uuid 입니다**(0048). `?v=j1` 로 열면
+     `nowView()` 가 **꼴을 보고 버려서** 상세가 아니라 **목록**이
+     그려집니다 — 화면이 맞고 **자료가 틀린** 자리입니다(0069 가
+     `listing.id` 로 똑같이 겪었습니다). 목록만 재는 묶음은 짧은 id 로
+     두고, **상세를 여는 묶음만** uuid 꼴로 갈아 끼웁니다. */
+  const JOB_U1 = "bbbbbbbb-0048-4000-8000-000000000001";
+  const JOB_U2 = "bbbbbbbb-0048-4000-8000-000000000002";
   const JOBS = [
+    /* ⚠️ 0072 의 칸 넷(role · emp_type · pay_type · pay_min)을 **한 줄에만**
+       담습니다 — 둘 다 담으면 그 칸으로 좁혀도 같은 줄이 남아
+       **엉뚱한 까닭으로 통과**합니다(거르개가 일을 하는지 알 수 없습니다). */
     { id:"j1", kind:"hire", sub:"cr-caddy", region:"seoul",
       title:"주말 캐디 구합니다", body:"주말 오전 라운딩 캐디를 구합니다.",
       pay:"일 12만원", terms:"주 2일 · 오전", close_at:"2099-06-30",
+      role:"jr-manage", emp_type:"je-part", pay_type:"monthly", pay_min:3000000,
       created_at:"2026-11-01T00:00:00Z", who:"김**", pro_name:null, apply_n:2 },
     { id:"j2", kind:"seek", sub:"cr-coach", region:"gyeonggi",
       title:"레슨 자리를 찾습니다", body:"주 3일 레슨 가능한 자리를 찾습니다.",
       pay:null, terms:null, close_at:null,
+      role:null, emp_type:null, pay_type:null, pay_min:null,
       created_at:"2026-11-02T00:00:00Z", who:"이**",
       pro_name:"참골프아카데미", apply_n:0 }
   ];
+  /* 같은 자료 · id 만 uuid 꼴 */
+  const JOBS_U = JOBS.map(function(j){
+    return Object.assign({}, j, { id: j.id === "j1" ? JOB_U1 : JOB_U2 }); });
 
   /* ① 설정 전에는 **아무것도 안 엽니다** (절대 규칙 5) */
   {
@@ -7715,9 +7730,17 @@ function boardsOf(){
                body: document.body.innerText,
                login: !!(box && box.querySelector('a[href^="/login"]')),
                form: !!document.getElementById("jbf"),
-               chips: document.querySelectorAll(".jbf-c .chip").length,
-               pay1: !!document.querySelector('.jbc[data-id="j1"] .jbc-p'),
-               pay2: !!document.querySelector('.jbc[data-id="j2"] .jbc-p') };
+               /* ⚠️⚠️ 2026-11-12 — 시안 ⑨ 로 바꾸면서 거르개가
+                  칩 줄(`.jbf-c .chip`)에서 **탭**(`.jbtab-a`)이 되었고,
+                  급여는 제 줄(`.jbc-p`)에서 **제목 아래 한 줄**
+                  (`.jbc-m` — 지역 · 고용 형태 · 급여)로 들어갔습니다.
+                  옛 이름을 그대로 둔 검사는 **멀쩡한 코드를 실패로**
+                  잡습니다 — 재려는 뜻만 옮깁니다. */
+               chips: document.querySelectorAll(".jbtab .jbtab-a").length,
+               pay1: ((document.querySelector('.jbc[data-id="j1"] .jbc-m')
+                        || {}).textContent || ""),
+               pay2: ((document.querySelector('.jbc[data-id="j2"] .jbc-m')
+                        || {}).textContent || "") };
     });
     ok("로그인 전에도 올라온 글이 보인다", r.n === 2, "카드 " + r.n + "장");
     ok("  갈래를 한글로 적는다 (영문 키를 안 찍습니다)",
@@ -7733,9 +7756,13 @@ function boardsOf(){
        r.body.indexOf("채용을 대신 진행하지 않으며") >= 0, "");
     /* ⚠️ 급여가 비면 **줄째 빠집니다** (절대 규칙 2 — "협의" 를 지어
        적지 않습니다) */
-    ok("⚠️ 급여가 있으면 그 줄이 나온다", r.pay1, "");
-    ok("⚠️⚠️ 급여가 비면 그 줄이 **아예 없다** (자리표시자를 안 찍습니다)",
-       !r.pay2, "");
+    ok("⚠️ 급여가 있으면 그 줄에 들어간다", r.pay1.indexOf("3,000,000") >= 0,
+       r.pay1.replace(/\s+/g, " ").trim());
+    /* ⚠️⚠️ 급여가 비면 **그 자리가 빕니다** — "협의" 를 우리가 지어
+       적지 않습니다(절대 규칙 1 · 2). 줄 자체는 지역이 있어 남습니다. */
+    ok("⚠️⚠️ 급여가 비면 **아무 말도 안 적는다** (자리표시자를 안 찍습니다)",
+       r.pay2.indexOf("원") < 0 && r.pay2.indexOf("협의") < 0,
+       r.pay2.replace(/\s+/g, " ").trim());
     /* ⚠️ 업체 이름은 **고르셨을 때만** 옵니다 */
     ok("⚠️ 업체 이름을 고른 글에는 **상호**가 나온다",
        r.body.indexOf("참골프아카데미") >= 0, "");
@@ -7755,7 +7782,7 @@ function boardsOf(){
     ok("⚠️ 거르개가 **링크**로 나온다 (전체 + 갈래 전부)", r.chips === JK + 1,
        "칸 " + r.chips + "개 · 갈래 " + JK + "개");
     const tag = await g.p.evaluate(function(){
-      const a = document.querySelector(".jbf-c .chip");
+      const a = document.querySelector(".jbtab .jbtab-a");
       return { tag: a ? a.tagName : "", href: a ? a.getAttribute("href") : "",
                cur: a ? a.getAttribute("aria-current") : "" };
     });
@@ -7766,7 +7793,7 @@ function boardsOf(){
 
     /* 거르개를 눌러 봅니다 — ⚠️ 보내는 열쇠가 DB 와 같은지까지 */
     g.sent.length = 0;
-    await g.p.click('.jbf-c .chip[data-k="hire"]');
+    await g.p.click('.jbtab .jbtab-a[data-k="hire"]');
     await g.p.waitForTimeout(400);
     const q = g.sent.filter(function(x){
       return x.name === "GET" && x.body.indexOf("v_job_open") >= 0; })[0];
@@ -7802,7 +7829,7 @@ function boardsOf(){
 
     /* ⚠️ 갈래를 눌러도 **하위 조건을 지켜야** 합니다 — 풀리면 손님이
        좁혀 온 길이 조용히 사라집니다. */
-    const href = await g.p.getAttribute('.jbf-c .chip[data-k="hire"]', "href");
+    const href = await g.p.getAttribute('.jbtab .jbtab-a[data-k="hire"]', "href");
     ok("⚠️⚠️ 갈래 칸의 주소가 **하위를 지킨다**",
        (href || "").indexOf("k=hire") >= 0 && (href || "").indexOf("s=cr-caddy") >= 0,
        String(href));
@@ -7917,23 +7944,32 @@ function boardsOf(){
   /* ⑤ 지원 — ⚠️ 연락처가 바로 가지 않는다고 그 자리에서 말합니다 */
   {
     const g = await open("/cat/career", { role:"customer", name:"손님", signedIn:true },
-                         { v_job_open: JOBS }, {}, true);
-    await g.p.click('.jbc[data-id="j1"] .jbc-go');
+                         { v_job_open: JOBS_U }, {}, true);
+    /* ⚠️⚠️ 2026-11-12 부터 지원 양식은 **공고 상세**에서 엽니다
+       (확정 시안 ⑨ 의 「공고 상세 >」). 목록에서 열면 한 화면에 양식이
+       여럿 서고 어느 공고에 쓰는지 흐려집니다. */
+    await g.p.click('.jbc[data-id="' + JOB_U1 + '"] a[href*="v=' + JOB_U1 + '"]');
+    await g.p.waitForTimeout(300);
+    ok("⚠️ 「공고 상세」를 누르면 **새로고침 없이** 상세가 열린다",
+       (await g.p.locator('.jbd[data-id="' + JOB_U1 + '"]').count()) === 1 &&
+       (await g.p.evaluate(function(){ return location.search; })).indexOf("v=" + JOB_U1) >= 0,
+       await g.p.evaluate(function(){ return location.search; }));
+    await g.p.click('.jbd[data-id="' + JOB_U1 + '"] .jbc-go');
     await g.p.waitForTimeout(250);
-    const r = await g.p.evaluate(function(){
-      const f = document.querySelector('.jbc[data-id="j1"] .jbaf');
+    const r = await g.p.evaluate(function(id){
+      const f = document.querySelector('.jbd[data-id="' + id + '"] .jbaf');
       return { form: !!f, text: f ? f.innerText : "" };
-    });
+    }, JOB_U1);
     ok("지원 단추를 누르면 그 자리에 양식이 열린다", r.form, "");
     ok("  ⚠️ 연락처가 **바로 가지 않는다**고 그 자리에서 말한다",
        r.text.indexOf("바로 가지 않습니다") >= 0, r.text.slice(0, 160));
     ok("  ⚠️ 동의 상자도 같이 있다 (제15조 제2항)",
        r.text.indexOf("보유 기간") >= 0, "");
-    await g.p.fill('.jbc[data-id="j1"] .jbaf textarea[name="msg"]',
+    await g.p.fill('.jbd[data-id="' + JOB_U1 + '"] .jbaf textarea[name="msg"]',
                    "캐디 경력 3년입니다.");
-    await g.p.fill('.jbc[data-id="j1"] .jbaf input[name="contact"]', "010-3333-4444");
-    await g.p.check('.jbc[data-id="j1"] .jbaf .jconsent input[type="checkbox"]');
-    await g.p.click('.jbc[data-id="j1"] .jbaf button[type="submit"]');
+    await g.p.fill('.jbd[data-id="' + JOB_U1 + '"] .jbaf input[name="contact"]', "010-3333-4444");
+    await g.p.check('.jbd[data-id="' + JOB_U1 + '"] .jbaf .jconsent input[type="checkbox"]');
+    await g.p.click('.jbd[data-id="' + JOB_U1 + '"] .jbaf button[type="submit"]');
     await g.p.waitForTimeout(400);
     const ap = g.sent.filter(function(x){ return x.name === "apply_jobpost"; })[0];
     ok("⚠️ 보내기가 **apply_jobpost 를 실제로 부른다**", !!ap,
@@ -7941,12 +7977,188 @@ function boardsOf(){
     if(ap){
       const sp = JSON.parse(ap.body).p;
       ok("  그 글을 가리키고 동의 시각을 같이 보낸다",
-         sp.post_id === "j1" && !!sp.agree_at, JSON.stringify(sp).slice(0, 160));
+         sp.post_id === JOB_U1 && !!sp.agree_at, JSON.stringify(sp).slice(0, 160));
     }
-    const after = await g.p.evaluate(function(){
-      return document.querySelector('.jbc[data-id="j1"]').innerText; });
+    const after = await g.p.evaluate(function(id){
+      return document.querySelector('.jbd[data-id="' + id + '"]').innerText; },
+      JOB_U1);
     ok("  ⚠️ 보낸 뒤 **지킬 수 없는 약속을 하지 않는다**",
        after.indexOf("언제까지라고 약속드리지는 않습니다") >= 0, after.slice(0, 160));
+    await g.p.close();
+  }
+
+  /* ⑤-2 확정 시안 ⑨ — 탭 넷 · 왼쪽 상세 필터 · 공고 상세 (2026-11-12)
+     ⚠️⚠️⚠️ **0072 가 칸 넷을 더해 놓고 받는 쪽이 없었습니다** — 칸은
+     DB 에 있는데 화면이 그 칸으로 안 좁히면 「상세 필터」는 골라도
+     아무것도 안 걸러 주는 칸입니다(절대 규칙 5).
+     ⚠️⚠️ 흉내 서버는 **걸러 주지 않습니다** — 줄 수로 재면 거르개를
+     통째로 떼어도 영원히 초록입니다. **보내는 질의를 뜯어** 봅니다. */
+  {
+    /* ⚠️ 아래에서 상자를 갈아 끼우며 다시 엽니다 — `let` 입니다 */
+    let g = await open("/cat/career", { role:"customer", name:"손님", signedIn:true },
+                       { v_job_open: JOBS_U }, {}, true);
+    const r = await g.p.evaluate(function(){
+      return { tabs: document.querySelectorAll(".jbtab-a").length,
+               rail: document.querySelectorAll(".jbrail select").length,
+               find: !!document.getElementById("jb-q"),
+               cnt:  (document.querySelector(".jbcnt") || {}).textContent || "",
+               groups: Array.prototype.map.call(
+                 document.querySelectorAll(".jbg"),
+                 function(e){ return e.textContent.trim().slice(0, 12); }) };
+    });
+    /* ⚠️ 갯수를 박지 않습니다 — 갈래가 느는 날 썩습니다.
+       「전체」 하나 + 갈래 수만큼입니다. */
+    const kn = await g.p.evaluate(function(){
+      return (window.AM_JOB_KIND || []).length; });
+    ok("⚠️ 잴 것이 0개면 실패입니다 (갈래 목록을 읽기는 했는가)", kn > 0, kn);
+    ok("탭이 **전체 + 갈래 수**만큼 선다", r.tabs === kn + 1, r.tabs + " / " + kn);
+    ok("왼쪽 상세 필터에 고르개 넷 (지역 · 직무 · 고용 형태 · 급여 조건)",
+       r.rail === 4, r.rail);
+    ok("찾는 칸이 있다", r.find, "");
+    /* ⚠️⚠️ **받아 온 줄이 한도에 닿으면 「N건 이상」** 입니다 — 그 수를
+       전체인 것처럼 적으면 세어 본 값이 아닙니다(절대 규칙 1). */
+    ok("센 수를 적는다 (지어낸 전체 수가 아닙니다)",
+       /전체 공고 2건/.test(r.cnt) && r.cnt.indexOf("이상") < 0, r.cnt);
+    /* ⚠️ 갈래를 안 고르셨을 때는 **묶음 머리**로 나눕니다 (시안 ⑨) */
+    ok("갈래를 안 고르면 **묶음 머리**로 나눈다", r.groups.length === 2,
+       JSON.stringify(r.groups));
+
+    /* 탭 — ⚠️ **새로고침 없이** 좁혀지고 주소도 같이 바뀌는가 */
+    g.sent.length = 0;
+    await g.p.click('.jbtab-a[data-k="hire"]');
+    await g.p.waitForTimeout(300);
+    /* ⚠️⚠️ 흉내 장치는 읽기를 `{name:"GET", body:주소}` 로 적습니다 —
+       **주소는 `body`** 입니다. `name` 으로 찾으면 아무것도 안 걸러져
+       0건이 되고 "안 읽었습니다" 로 떨어집니다(검사가 틀린 자리). */
+    const q1 = g.sent.filter(function(x){
+      return x.name === "GET" && x.body.indexOf("v_job_open") >= 0; });
+    ok("탭을 누르면 **그 갈래로 다시 묻는다**",
+       q1.length > 0 && /kind=eq\.hire/.test(q1[q1.length - 1].body),
+       q1.map(function(x){ return x.body; }).join(" | ").slice(0, 200));
+    ok("  주소도 같이 바뀐다 (복사해 보내도 같은 화면입니다)",
+       (await g.p.evaluate(function(){ return location.search; }))
+         .indexOf("k=hire") >= 0,
+       await g.p.evaluate(function(){ return location.search; }));
+    ok("  한 갈래만 보고 있을 때는 **묶음 머리를 안 낸다** (같은 말 두 번)",
+       (await g.p.locator(".jbg").count()) === 0,
+       await g.p.locator(".jbg").count());
+
+    /* 상세 필터 — ⚠️⚠️ **보내는 질의를 뜯어** 봅니다 */
+    g.sent.length = 0;
+    await g.p.selectOption("#jb-ro", "jr-manage");
+    await g.p.selectOption("#jb-em", "je-part");
+    await g.p.selectOption("#jb-py", "monthly");
+    await g.p.click('#jbrail button[type="submit"]');
+    await g.p.waitForTimeout(300);
+    const q2 = g.sent.filter(function(x){
+      return x.name === "GET" && x.body.indexOf("v_job_open") >= 0; });
+    const last = q2.length ? q2[q2.length - 1].body : "";
+    ok("⚠️⚠️ 직무 · 고용 형태 · 급여 조건이 **질의에 실린다** (0072 의 칸 셋)",
+       /role=eq\.jr-manage/.test(last) && /emp_type=eq\.je-part/.test(last) &&
+       /pay_type=eq\.monthly/.test(last), last.slice(0, 240));
+    ok("  고른 조건이 **주소에 남는다** (복사해 보내도 같은 화면입니다)",
+       (function(q){ return q.indexOf("ro=jr-manage") >= 0 &&
+         q.indexOf("em=je-part") >= 0 && q.indexOf("py=monthly") >= 0; })(
+         await g.p.evaluate(function(){ return location.search; })),
+       await g.p.evaluate(function(){ return location.search; }));
+
+    /* 찾는 말 — ⚠️ 서버가 찾습니다(쉰 줄만 받아 화면에서 찾으면 그
+       쉰 줄 밖의 공고가 영영 안 나옵니다) */
+    g.sent.length = 0;
+    await g.p.goto(await g.p.evaluate(function(){
+      return location.origin + "/cat/career"; }), { waitUntil:"networkidle" });
+    await g.p.waitForTimeout(250);
+    await g.p.fill("#jb-q", "캐디");
+    await g.p.click('#jbfind button[type="submit"]');
+    await g.p.waitForTimeout(300);
+    const q3 = g.sent.filter(function(x){
+      return x.name === "GET" && x.body.indexOf("v_job_open") >= 0; });
+    ok("⚠️ 찾는 말도 **서버가** 찾는다 (title=ilike)",
+       q3.length > 0 && /title=ilike/.test(q3[q3.length - 1].body),
+       q3.map(function(x){ return x.body; }).join(" | ").slice(0, 200));
+
+    /* 상세 — ⚠️ 보기를 새로 안 만들고 같은 공개 보기에서 한 줄만 받습니다.
+       ⚠️⚠️⚠️ **흉내 장치는 `id=eq.` 를 걸러 주지 않습니다** — 돌려주는
+       배열의 **첫 줄**이 그려집니다. 그래서 「업체가 올린 공고」를 재려면
+       그 줄 **하나만** 담아 둔 상자로 다시 엽니다(0069 의 `used-one` 이
+       쓴 방식). 두 줄을 담아 두면 늘 j1 이 그려져 **엉뚱한 까닭으로**
+       떨어집니다. */
+    await g.p.close();
+    g = await open("/cat/career?v=" + JOB_U2,
+                   { role:"customer", name:"손님", signedIn:true },
+                   { v_job_open: [JOBS_U[1]] }, {}, true);
+    await g.p.waitForTimeout(250);
+    const d = await g.p.evaluate(function(){
+      const e = document.querySelector(".jbd");
+      return { on: !!e, text: e ? e.innerText : "",
+               rail: document.querySelectorAll(".jbrail").length };
+    });
+    ok("주소로 바로 들어와도 상세가 열린다", d.on, d.text.slice(0, 80));
+    /* ⚠️ 상세에서는 거르개를 **안 냅니다** — 무엇을 거르는 칸인지 알 수
+       없게 됩니다(0069 에서 세운 규칙). */
+    ok("  ⚠️ 상세에서는 거르개를 안 낸다", d.rail === 0, d.rail);
+    /* ⚠️⚠️ 제20조의4 ③ — 개인과 사업자가 섞이면 **구분해 표시**합니다 */
+    ok("⚠️⚠️ 업체가 올린 공고는 **입점 업체**라고 말한다",
+       d.text.indexOf("입점 심사를 거친 업체") >= 0, d.text.slice(0, 240));
+    await g.p.close();
+    g = await open("/cat/career?v=" + JOB_U1,
+                   { role:"customer", name:"손님", signedIn:true },
+                   { v_job_open: [JOBS_U[0]] }, {}, true);
+    await g.p.waitForTimeout(250);
+    const d2 = await g.p.evaluate(function(){
+      return (document.querySelector(".jbd") || {}).innerText || ""; });
+    ok("  회원이 올린 공고는 **등록자 확인이 필요하다**고 말한다",
+       d2.indexOf("등록자 확인이 필요합니다") >= 0, d2.slice(0, 240));
+    /* ⚠️ 뒤로 가기 — pushState 로 주소를 바꾸므로 받는 줄이 없으면
+       주소만 바뀌고 화면이 그대로 있습니다 */
+    await g.p.close();
+    g = await open("/cat/career", { role:"customer", name:"손님", signedIn:true },
+                   { v_job_open: JOBS_U }, {}, true);
+    await g.p.click('.jbc[data-id="' + JOB_U1 + '"] a[href*="v=' + JOB_U1 + '"]');
+    await g.p.waitForTimeout(300);
+    await g.p.goBack();
+    await g.p.waitForTimeout(350);
+    ok("⚠️⚠️ 뒤로 가기를 받는다 (주소만 바뀌고 상세가 남아 있지 않다)",
+       (await g.p.locator(".jbd").count()) === 0 &&
+       (await g.p.locator(".jbc").count()) > 0,
+       await g.p.locator(".jbd").count());
+    await g.p.close();
+  }
+
+  /* ⑤-3 올리는 양식이 0072 의 칸 넷을 **보내는가** */
+  {
+    const g = await open("/cat/career", { role:"customer", name:"손님", signedIn:true },
+                         { v_job_open: JOBS }, {}, true);
+    const has = await g.p.evaluate(function(){
+      const f = document.getElementById("jbf");
+      return { role: !!f.querySelector('[name="role"]'),
+               emp:  !!f.querySelector('[name="emp_type"]'),
+               pt:   !!f.querySelector('[name="pay_type"]'),
+               pmin: !!f.querySelector('[name="pay_min"]') };
+    });
+    ok("⚠️⚠️ 올리는 양식에 0072 의 칸 넷이 있다",
+       has.role && has.emp && has.pt && has.pmin, JSON.stringify(has));
+    await g.p.selectOption("#b-kind", "hire");
+    await g.p.selectOption("#b-sub", { index: 1 });
+    await g.p.selectOption("#b-rg", { index: 1 });
+    await g.p.fill("#b-title", "검사용 구인 공고");
+    await g.p.fill("#b-body", "검사용 내용입니다.");
+    await g.p.fill("#b-contact", "010-1111-2222");
+    await g.p.selectOption("#b-role", "jr-manage");
+    await g.p.selectOption("#b-emp", "je-full");
+    await g.p.selectOption("#b-ptype", "monthly");
+    await g.p.fill("#b-pmin", "3000000");
+    await g.p.check('#jbf .jconsent input[type="checkbox"]');
+    await g.p.click('#jbf button[type="submit"]');
+    await g.p.waitForTimeout(400);
+    const op = g.sent.filter(function(x){ return x.name === "open_jobpost"; })[0];
+    ok("⚠️⚠️⚠️ 보내는 꾸러미에 그 넷이 **실제로 실린다**",
+       !!op && (function(sp){
+         return sp.role === "jr-manage" && sp.emp_type === "je-full" &&
+                sp.pay_type === "monthly" && String(sp.pay_min) === "3000000";
+       })(JSON.parse(op.body).p),
+       op ? JSON.stringify(JSON.parse(op.body).p).slice(0, 220) :
+            g.sent.map(function(x){ return x.name; }).join(","));
     await g.p.close();
   }
 
@@ -8090,7 +8302,8 @@ function boardsOf(){
     const r = await p2.evaluate(function(){
       const small = [], low = [];
       Array.prototype.forEach.call(
-        document.querySelectorAll(".jbc, .jbox, .jbl, .jbf-c, .none"),
+        document.querySelectorAll(".jbc, .jbox, .jbl, .jbtab, .jbrail, " +
+                                  ".jbfind, .jbd, .none"),
         function(box){
           Array.prototype.forEach.call(box.querySelectorAll("*"), function(e){
             if(e.firstChild && e.firstChild.nodeType === 3 && (e.textContent||"").trim()){
@@ -9490,6 +9703,730 @@ function boardsOf(){
   ok("⚠️⚠️ 문이 거절하면 **그 말을 그대로** 보여 준다",
      /못 읽었습니다/.test((await s.p.textContent("#pvstadm")) || ""),
      (await s.p.textContent("#pvstadm")) || "");
+
+  /* ══════════════════════════════════════════════════════════════════
+     여행 상품 — 손님 · 여행사 · 운영자 (0073 · 확정 시안 ⑧)
+
+     ⚠️⚠️⚠️ **2026-11-12 까지 이 셋에 화면 검사가 0건이었습니다.**
+       `tools/sql/trip.js` 가 DB 를 46건 눌러 보지만, 그 문을 부르는
+       화면(`js/trip.js` · `js/desktrip.js` · `js/admintrip.js`)은
+       아무도 눌러 본 적이 없었습니다 — 문이 멀쩡해도 단추가 그 문을
+       안 부르면 **눌러도 아무 일이 안 나는 칸**입니다(절대 규칙 5).
+       0071 이 낸 단추 셋에 화면 검사가 0건이던 그 자리입니다.
+     ⚠️⚠️ **거르개는 보내는 질의를 뜯어** 봅니다 — 흉내 장치는 걸러
+       주지 않으므로 줄 수로 재면 거르개를 통째로 떼어도 영원히
+       초록입니다.
+     ══════════════════════════════════════════════════════════════════ */
+  console.log("\n── 여행 상품 (0073 · 시안 ⑧)");
+  {
+    /* ⚠️ 이 파일에는 공용 `CUS` 가 없습니다 — 묶음마다 그 자리에서
+       적습니다(로그인 여부 · 역할이 묶음마다 달라야 하기 때문입니다). */
+    const TCUS = { role:"customer", name:"", signedIn:false };
+    /* ⚠️ 가짜 자료도 **DB 가 받는 값**이어야 합니다 — 아니면 멀쩡한
+       화면이 고장으로 보입니다(조인의 `ok` · 문의의 `kind:"service"` ·
+       게시판의 `cm-review` 에 이어 다섯 번 밟은 자리).
+       ⚠️⚠️ 한 줄은 **국내 · 사진 있음**, 한 줄은 **해외 · 사진 0장**으로
+       둡니다 — 둘 다 사진이 있으면 "0장이면 아이콘 타일" 을 잴 수가
+       없습니다. */
+    const TR1 = "dddddddd-0073-4000-8000-000000000001";
+    const TR2 = "dddddddd-0073-4000-8000-000000000002";
+    const TROPEN = [
+      { id:TR1, scope:"home", dest:"jeju", title:"제주 2박3일 골프 패키지",
+        body:"라운드 2회와 숙박을 묶었습니다.\n카트비는 따로입니다.",
+        nights:2, days:3, price_from:690000, price_note:"2인 1실 기준",
+        incl:["그린피","숙박"], excl:["카트비","식사"],
+        created_at:"2026-11-10T01:00:00Z", updated_at:"2026-11-10T01:00:00Z",
+        provider_id:"t-trip", provider_name:"검사용 여행사",
+        photo_n:2, thumb:"trip/" + TR1 + "/photo/a.jpg" },
+      { id:TR2, scope:"abroad", dest:"jp", title:"일본 규슈 3박4일",
+        body:"후쿠오카 출발 라운드 3회입니다.",
+        nights:3, days:4, price_from:1290000, price_note:null,
+        incl:[], excl:[],
+        created_at:"2026-11-09T01:00:00Z", updated_at:"2026-11-09T01:00:00Z",
+        provider_id:"t-trip", provider_name:"검사용 여행사",
+        photo_n:0, thumb:null }
+    ];
+    const TRPUB = [
+      { id:"ee000001-0073-4000-8000-000000000001", trip_id:TR1,
+        path:"trip/" + TR1 + "/photo/a.jpg", caption:"숙소", ord:0 },
+      { id:"ee000002-0073-4000-8000-000000000002", trip_id:TR1,
+        path:"trip/" + TR1 + "/photo/b.jpg", caption:null, ord:1 }
+    ];
+    const TRT = { v_trip_open: TROPEN, v_trip_photo_public: TRPUB,
+                  v_wanted_open: [] };
+
+    /* ① 설정 전에는 **아무것도 안 엽니다** (절대 규칙 5) */
+    {
+      const p0 = await b.newPage({ viewport: view });
+      await p0.route("**/api/session", function(r){
+        return r.fulfill({ status:200, contentType:"application/json",
+          body: JSON.stringify({ auth:false, signedIn:false, conf:null }) });
+      });
+      await p0.goto(base + "/cat/travel", { waitUntil:"networkidle" });
+      await p0.waitForTimeout(400);
+      /* ⚠️⚠️⚠️ **빈 글자를 요구하면 안 됩니다** — 그 자리를 비워 두는
+         것이 바로 고장이고(머리말에서 `#lsbox` 로 보내는 날 눌러도
+         아무 데도 안 가는 칸이 됩니다), 그런 검사는 **고장을 지킵니다**.
+         재려는 뜻은 「**양식이 안 열린다**」 하나입니다. */
+      const off = await p0.evaluate(function(){
+        const b2 = document.getElementById("tripbox");
+        const li = document.getElementById("triplist");
+        return { /* ⚠️⚠️⚠️ **찾는 칸은 설정과 상관없이 섭니다** — 그 칸은
+                    주소만 짓고 DB 를 안 읽습니다. 0060 에서 그것을 통째로
+                    치워 버려 「핵심 메인 기능」이 손님에게 **없는 것**이
+                    됐던 자리라, 여기서는 **서는지**를 잽니다. */
+                 find: b2 ? b2.querySelectorAll("#tripform select").length : -1,
+                 /* 재려는 뜻은 「**상품 목록 자리**가 비어 있지 않고 그
+                    자리에서 말하는가」입니다 — 거기에 적는 칸이 0개입니다. */
+                 fields: li ? li.querySelectorAll(
+                   "input, select, textarea, button").length : -1,
+                 text: (li ? li.innerText : "").trim(),
+                 help: li ? li.querySelectorAll('a[href="/help"]').length : -1 };
+      });
+      ok("⚠️⚠️ 설정 전에도 **찾는 칸은 선다** (주소만 짓는 칸입니다)",
+         off.find === 3, String(off.find));
+      ok("⚠️ 설정 전에는 상품 목록 자리에 **적는 칸이 없다**",
+         off.fields === 0, JSON.stringify(off).slice(0, 200));
+      ok("  그래도 **그 자리에서 말합니다** (빈 자리로 두지 않습니다)",
+         off.text.length > 0 && /여행 상품/.test(off.text),
+         off.text.slice(0, 120));
+      ok("  막다른 길이 아니다 (고객센터로 가는 길이 하나)",
+         off.help === 1, String(off.help));
+      /* ⚠️ 무엇을 설정해야 하는지는 **손님 화면에 안 적습니다**(절대 규칙 3) */
+      ok("⚠️⚠️ 설정 이름을 손님 화면에 안 적는다",
+         !/SUPABASE|환경변수|버킷/.test(off.text), off.text.slice(0, 160));
+      await p0.close();
+    }
+
+    /* ② 손님 화면 — 찾는 칸 · 탭 · 카드 */
+    let t = await open("/cat/travel", TCUS, TRT, {}, true);
+    ok("⚠️ 잴 것이 0개면 실패입니다 (상품 카드를 찾기는 했는가)",
+       (await t.p.locator(".tpc").count()) === 2,
+       await t.p.locator(".tpc").count());
+    /* ⚠️⚠️ **설정이 있으면 찾는 칸이 섭니다** — 그 칸은 주소만 짓고
+       DB 를 안 읽으므로 0건이어도 서야 합니다(0060 에서 메인의 찾는
+       칸을 통째로 치워 버린 그 자리). */
+    ok("  찾는 칸이 선다 (목적지 · 일정 · 예산 · 찾는 말)",
+       (await t.p.locator("#tripform select").count()) === 3 &&
+       (await t.p.locator("#tp-q").count()) === 1,
+       await t.p.locator("#tripform select").count());
+    /* ⚠️⚠️ 시안은 「국내」가 켜진 채로 그려 있지만 **「전체」를 먼저**
+       냅니다 — 기본을 국내로 두면 해외 상품이 지금 안 보이는 것이 되고,
+       고르지 않은 손님은 제가 좁혀진 목록을 보고 계신 줄 모릅니다. */
+    ok("⚠️⚠️ 탭이 셋이고 **「전체」가 먼저** 켜져 있다",
+       (await t.p.locator(".tpf-t").count()) === 3 &&
+       ((await t.p.textContent(".tpf-t.on")) || "").trim() === "전체",
+       (await t.p.textContent(".tpf-t.on")) || "");
+    /* ⚠️⚠️⚠️ **출발 월 칸을 안 냅니다** — 0073 은 상품마다 출발일을
+       안 받습니다. 고르게 해 놓고 안 걸러 주면 눌러도 아무 일이 안
+       나는 칸입니다(절대 규칙 5). 그 사실을 그 자리에서 말합니다. */
+    ok("⚠️⚠️⚠️ **출발 월** 고르개를 안 낸다 (담는 칸이 없습니다)",
+       (await t.p.locator('#tripform [name="mo"]').count()) === 0);
+    ok("  왜 없는지를 그 자리에서 말한다",
+       /출발일은 상품마다/.test((await t.p.textContent(".tpf-n")) || ""),
+       (await t.p.textContent(".tpf-n")) || "");
+    const tpcTxt = (await t.p.textContent(".tpc")) || "";
+    /* ⚠️⚠️ 값은 **「부터」** 입니다 — 빼면 우리가 값을 확정해 말하는 것이
+       됩니다(`amTripPrice()` 한 곳). */
+    ok("⚠️⚠️ 값을 **「부터」**로 적는다 (우리가 확정하지 않습니다)",
+       /부터/.test(tpcTxt) && tpcTxt.indexOf("690,000") >= 0,
+       tpcTxt.replace(/\s+/g, " ").trim().slice(0, 160));
+    ok("  포함 · 별도를 **적어 준 것만** 적는다",
+       tpcTxt.indexOf("그린피") >= 0 && tpcTxt.indexOf("카트비") >= 0,
+       tpcTxt.replace(/\s+/g, " ").trim().slice(0, 160));
+    ok("  판매사 상호를 적는다 (우리가 파는 것이 아닙니다)",
+       tpcTxt.indexOf("검사용 여행사") >= 0);
+    /* ⚠️⚠️ **사진 0장이면 아이콘 타일**입니다 — 남의 사진이나 분류
+       사진을 깔면 그 상품인 것처럼 보입니다(절대 규칙 1). */
+    ok("⚠️⚠️ 사진이 있는 카드만 그림을 낸다 (0장은 아이콘 타일)",
+       (await t.p.locator(".tpc-ph-on").count()) === 1 &&
+       (await t.p.locator(".tpc img").count()) === 1,
+       await t.p.locator(".tpc img").count());
+    /* 센 수 — ⚠️ 한도에 닿으면 「N건 이상」 */
+    ok("  몇 건인지 **세어** 말한다",
+       /여행 상품 2건/.test((await t.p.textContent("#tripcnt")) || ""),
+       (await t.p.textContent("#tripcnt")) || "");
+
+    /* ③ 거르개 — **보내는 질의**를 뜯어 봅니다 */
+    function trq(s){
+      return s.sent.filter(function(x){
+        return x.name === "GET" && x.body.indexOf("v_trip_open") >= 0; });
+    }
+    t = await open("/cat/travel?sc=abroad", TCUS, TRT, {}, true);
+    ok("갈래(국내 · 해외)를 **서버가** 거른다",
+       trq(t).some(function(x){ return /scope=eq\.abroad/.test(x.body); }),
+       trq(t).map(function(x){ return x.body; }).join(" | ").slice(0, 200));
+    /* ⚠️⚠️ 목적지는 **갈래마다 다릅니다** — 국내는 시·도, 해외는
+       AM_TRIP_REGIONS. 섞어 내면 「일본에서 국내 여행」 칸이 생깁니다. */
+    const dsHtml = (await t.p.innerHTML("#tp-ds")) || "";
+    ok("⚠️⚠️ 해외를 고르면 목적지가 **해외 지역**으로 갈아 끼워진다",
+       dsHtml.indexOf('value="jp"') >= 0 && dsHtml.indexOf('value="seoul"') < 0,
+       dsHtml.replace(/\s+/g, " ").slice(0, 200));
+    t = await open("/cat/travel?sc=home", TCUS, TRT, {}, true);
+    ok("  국내를 고르면 **시 · 도**로 갈아 끼워진다",
+       ((await t.p.innerHTML("#tp-ds")) || "").indexOf('value="seoul"') >= 0 &&
+       ((await t.p.innerHTML("#tp-ds")) || "").indexOf('value="jp"') < 0);
+    t = await open("/cat/travel?ds=jeju", TCUS, TRT, {}, true);
+    ok("목적지를 서버가 거른다",
+       trq(t).some(function(x){ return /dest=eq\.jeju/.test(x.body); }),
+       trq(t).map(function(x){ return x.body; }).join(" | ").slice(0, 200));
+    /* ⚠️⚠️ 경계는 **아래를 열고 위를 닫습니다**(gte · lt) — 둘 다 닫으면
+       3일이 두 칸에 다 걸립니다. `lt` 를 빠뜨리면 조용히 안 걸립니다. */
+    t = await open("/cat/travel?sp=s2", TCUS, TRT, {}, true);
+    ok("⚠️⚠️ 일정(일수) — gte 와 **lt 둘 다** 보낸다 (경계가 두 칸에 안 걸립니다)",
+       trq(t).some(function(x){
+         return /days=gte\.3/.test(x.body) && /days=lt\.5/.test(x.body); }),
+       trq(t).map(function(x){ return x.body; }).join(" | ").slice(0, 240));
+    t = await open("/cat/travel?sp=s3", TCUS, TRT, {}, true);
+    ok("  맨 위 칸은 **아래만** 보낸다 (5일 이상)",
+       trq(t).some(function(x){
+         return /days=gte\.5/.test(x.body) && !/days=lt\./.test(x.body); }),
+       trq(t).map(function(x){ return x.body; }).join(" | ").slice(0, 240));
+    t = await open("/cat/travel?bd=b2", TCUS, TRT, {}, true);
+    ok("예산 — **1인 기준 최저가**로 거르고 경계가 gte · lt 다",
+       trq(t).some(function(x){
+         return /price_from=gte\.500000/.test(x.body) &&
+                /price_from=lt\.1000000/.test(x.body); }),
+       trq(t).map(function(x){ return x.body; }).join(" | ").slice(0, 240));
+    /* ⚠️ 찾기도 **서버가** 합니다 — 스물넷만 받아 화면에서 찾으면 그
+       스물넷 밖의 상품이 영영 안 나옵니다. */
+    t = await open("/cat/travel?q=" + encodeURIComponent("제주"), TCUS, TRT, {}, true);
+    ok("⚠️ 찾는 말도 **서버가** 본다 (title=ilike)",
+       trq(t).some(function(x){ return /title=ilike/.test(x.body); }),
+       trq(t).map(function(x){ return x.body; }).join(" | ").slice(0, 200));
+
+    /* ④ 상세 — ⚠️⚠️ 보기를 **새로 안 만들었습니다**(`v_trip_open?id=eq.`) */
+    t = await open("/cat/travel?v=" + TR1, TCUS, TRT, {}, true);
+    ok("상세가 그려진다", (await t.p.locator(".tpd").count()) === 1);
+    ok("  한 줄만 받는다 (공개로 나가는 길이 둘이 되지 않게)",
+       trq(t).some(function(x){ return x.body.indexOf("id=eq." + TR1) >= 0; }),
+       trq(t).map(function(x){ return x.body; }).join(" | ").slice(0, 200));
+    const tpd = (await t.p.textContent(".tpd")) || "";
+    ok("  사진을 차례대로 낸다 (ord)",
+       (await t.p.locator(".tpd-ph li img").count()) === 2,
+       await t.p.locator(".tpd-ph li img").count());
+    /* ⚠️⚠️ **우리가 파는 것이 아닙니다** — 제20조 제1항을 그 자리에서
+       다시 말하고, 결제를 안 받으므로 「예약」 단추를 내지 않습니다. */
+    ok("⚠️⚠️ 중개자임을 그 자리에서 다시 말한다 (제20조 제1항)",
+       /통신판매중개자/.test(tpd) && /거래 당사자가 아/.test(tpd),
+       tpd.replace(/\s+/g, " ").trim().slice(0, 200));
+    ok("⚠️⚠️⚠️ 「예약」 단추를 **안 낸다** (결제를 아예 안 받습니다)",
+       (await t.p.evaluate(function(){
+         return Array.prototype.filter.call(
+           document.querySelectorAll(".tpd a, .tpd button"),
+           function(e){ return /예약|결제|안전/.test(e.textContent || ""); }).length;
+       })) === 0);
+    ok("  문의는 **이미 도는 길**로 보낸다 (매칭 요청)",
+       (await t.p.locator('.tpd a[href="/match?cat=travel"]').count()) === 1);
+    ok("  목록으로 돌아가는 길이 있다",
+       (await t.p.locator('.tpd a[href="/cat/travel"]').count()) === 1);
+    /* ⚠️⚠️ 뒤로 가기를 받습니다 — `pushState` 로 주소를 바꾸므로 이
+       줄이 없으면 주소만 바뀌고 **화면이 그대로** 있습니다. */
+    t = await open("/cat/travel", TCUS, TRT, {}, true);
+    /* ⚠️⚠️ **카드 전체가 링크**입니다(`.tpc-a`) — 처음에 사진과 제목을
+       각자 링크로 두었는데 폰에서 제목이 **20px** 밖에 안 되어 손가락에
+       안 닿았습니다(폰 묶음이 세 폭에서 2칸씩 잡았습니다).
+       ⚠️ 카드마다 하나씩이라 **둘**이므로 `first()` 로 집습니다. */
+    ok("⚠️⚠️ 카드 **전체**가 상세로 가는 링크다 (제목만 링크가 아닙니다)",
+       (await t.p.locator(".tpc .tpc-a").count()) === 2 &&
+       (await t.p.locator(".tpc-t a").count()) === 0,
+       await t.p.locator(".tpc .tpc-a").count());
+    await t.p.locator(".tpc-a").first().click();
+    await t.p.waitForTimeout(450);
+    ok("카드를 누르면 **새로고침 없이** 상세가 열리고 주소도 바뀐다",
+       (await t.p.locator(".tpd").count()) === 1 &&
+       (await t.p.evaluate(function(){ return location.search; }))
+         .indexOf("v=") >= 0,
+       await t.p.evaluate(function(){ return location.search; }));
+    await t.p.goBack();
+    await t.p.waitForTimeout(450);
+    ok("⚠️⚠️ 뒤로 가기를 받는다 (주소만 바뀌고 상세가 남지 않습니다)",
+       (await t.p.locator(".tpd").count()) === 0 &&
+       (await t.p.locator(".tpc").count()) === 2,
+       await t.p.locator(".tpd").count() + " / " +
+       await t.p.locator(".tpc").count());
+    /* ⚠️⚠️ **0줄을 「없는 상품」으로 단정하지 않습니다** — 공개 보기가
+       심사 중 · 중지 · 가려진 상품을 안 냅니다. */
+    t = await open("/cat/travel?q=" + encodeURIComponent("없는말"), TCUS,
+                   Object.assign({}, TRT, { v_trip_open: [] }), {}, true);
+    const tnone = (await t.p.textContent("#triplist")) || "";
+    ok("⚠️⚠️ 0건을 **조건 때문**이라고 말한다 (「상품이 없다」가 아닙니다)",
+       /조건/.test(tnone), tnone.replace(/\s+/g, " ").trim().slice(0, 160));
+
+    /* ⑤ 여행사 작업실 (`js/desktrip.js`) ───────────────────────── */
+    console.log("\n── 여행 상품 — 여행사 작업실");
+    const TRMINE = [
+      { id:TR1, provider_id:"t-trip", scope:"home", dest:"jeju",
+        title:"제주 2박3일 골프 패키지", body:"라운드 2회와 숙박을 묶었습니다.",
+        nights:2, days:3, price_from:690000, price_note:"2인 1실 기준",
+        incl:["그린피","숙박"], excl:["카트비"],
+        state:"approved", hidden_from:null, state_why:null,
+        draft:null, draft_state:"none", draft_why:null,
+        created_at:"2026-11-10T01:00:00Z", updated_at:"2026-11-10T01:00:00Z",
+        photo_n:2, photo_draft_n:1, photo_drop_n:0 },
+      { id:TR2, provider_id:"t-trip", scope:"abroad", dest:"jp",
+        title:"일본 규슈 3박4일", body:"후쿠오카 출발 라운드 3회입니다.",
+        nights:3, days:4, price_from:1290000, price_note:null,
+        incl:[], excl:[],
+        state:"rejected", hidden_from:null,
+        state_why:"일정표를 더 적어 주세요",
+        draft:null, draft_state:"none", draft_why:null,
+        created_at:"2026-11-09T01:00:00Z", updated_at:"2026-11-09T01:00:00Z",
+        photo_n:0, photo_draft_n:0, photo_drop_n:0 }
+    ];
+    /* ⚠️⚠️ **심사 중인 사진의 id 를 여행사가 알 길이 없었습니다** —
+       공개 보기는 승인된 상품의 live 사진만 냅니다. 0073 에
+       `v_trip_photo_mine` 을 더해 그 구멍을 메웠고, 여기서 그 보기를
+       **실제로 읽는지** 봅니다. */
+    const TRMPH = [
+      { id:"ee000001-0073-4000-8000-000000000001", trip_id:TR1,
+        path:"trip/" + TR1 + "/photo/a.jpg", caption:"숙소", ord:0,
+        live:true, drop_pending:false, created_at:"2026-11-10T01:00:00Z" },
+      { id:"ee000002-0073-4000-8000-000000000002", trip_id:TR1,
+        path:"trip/" + TR1 + "/photo/b.jpg", caption:null, ord:1,
+        live:true, drop_pending:false, created_at:"2026-11-10T02:00:00Z" },
+      { id:"ee000003-0073-4000-8000-000000000003", trip_id:TR1,
+        path:"trip/" + TR1 + "/photo/c.jpg", caption:null, ord:2,
+        live:false, drop_pending:false, created_at:"2026-11-10T03:00:00Z" }
+    ];
+    const TRPRO = { role:"provider", name:"여행담당", provider:"t-trip" };
+    const DT = { v_trip_mine: TRMINE, v_trip_photo_mine: TRMPH };
+    let s = await open("/desk", TRPRO, Object.assign({
+      assignment:[], request:[], quote:[], request_item:[] }, DT), {}, true);
+    ok("⚠️ 잴 것이 0개면 실패입니다 (여행사 상자에 줄이 서는가)",
+       (await s.p.locator("#triprobox .tpr-r").count()) === 2,
+       await s.p.locator("#triprobox .tpr-r").count());
+    const dtTxt = (await s.p.textContent("#triprobox")) || "";
+    /* ⚠️ 상태 말은 `js/data/trip.js` 한 곳입니다 — 영문 키가 찍히면
+       조인에서 `closed` 가 손님 화면에 찍힌 그 자리입니다. */
+    ok("  상태를 **사람 말**로 적는다 (영문 키가 아닙니다)",
+       dtTxt.indexOf("판매 중") >= 0 && dtTxt.indexOf("반려") >= 0 &&
+       dtTxt.indexOf("approved") < 0 && dtTxt.indexOf("rejected") < 0,
+       dtTxt.replace(/\s+/g, " ").trim().slice(0, 200));
+    /* ⚠️ 반려 까닭을 **글쓴이에게 보여 줍니다** — 까닭 없이 못 반려하게
+       해 두고 그 까닭을 숨기면 무엇이 문제였는지 알 수 없습니다. */
+    ok("⚠️ 반려 까닭을 그 자리에서 보여 준다",
+       dtTxt.indexOf("일정표를 더 적어 주세요") >= 0);
+    ok("  심사 중인 사진 수를 **갈라서** 적는다 (live 와 아닌 것)",
+       /심사/.test(dtTxt), dtTxt.replace(/\s+/g, " ").trim().slice(0, 240));
+    /* ⚠️⚠️ **제 사진 보기를 실제로 읽는가** — 안 읽으면 사진을 빼거나
+       차례를 바꿀 길이 없습니다(0073 이 메운 그 구멍). */
+    ok("⚠️⚠️⚠️ `v_trip_photo_mine` 을 **실제로 읽는다** (심사 중 사진의 id)",
+       s.sent.some(function(x){
+         return x.name === "GET" && x.body.indexOf("v_trip_photo_mine") >= 0; }),
+       s.sent.filter(function(x){ return x.name === "GET"; })
+         .map(function(x){ return x.body; }).join(" | ").slice(0, 240));
+    ok("  사진 세 장이 다 서고 **심사 중인 것도** 보인다",
+       (await s.p.locator('#triprobox .tpr-ph[data-trip="' + TR1 + '"] .tpr-s')
+         .count()) === 3,
+       await s.p.locator('#triprobox .tpr-ph[data-trip="' + TR1 + '"] .tpr-s')
+         .count());
+    /* 올리는 양식 — ⚠️ 갈래를 바꾸면 **목적지 목록 자체가** 바뀝니다 */
+    const newF = "#triprobox .tpr-new-s form.tpr-f";
+    /* ⚠️⚠️ **`<details>` 로 접지 않습니다** — 접힌 글은 누름 40px ·
+       12px · 대비 검사에서 빠져 그 양식만 아무도 안 재는 자리가 됩니다.
+       저장소의 다른 /desk 상자와 같은 꼴로 **단추가** 엽니다. */
+    ok("⚠️⚠️ 양식을 여는 것이 **단추**다 (접힌 <details> 가 아닙니다)",
+       (await s.p.locator("#triprobox .tpr-add").count()) === 1 &&
+       (await s.p.locator("#triprobox details").count()) === 0,
+       await s.p.locator("#triprobox details").count());
+    ok("  누르기 전에는 양식이 **없다** (빈 칸을 안 남깁니다)",
+       (await s.p.locator(newF).count()) === 0);
+    await s.p.click("#triprobox .tpr-add");
+    await s.p.waitForTimeout(300);
+    ok("새로 올리는 양식이 열린다", (await s.p.locator(newF).count()) === 1,
+       await s.p.locator(newF).count());
+    /* ⚠️⚠️⚠️ **같은 id 를 두 양식에 찍지 않습니다** — 새 양식이 서 있고
+       줄마다 고치기 양식이 열리므로, id 를 글자로 박으면 같은 id 가
+       둘 · 셋이 됩니다(0046 의 동의 상자에서 겪은 자리). */
+    await s.p.locator('#triprobox .tpr-r[data-id="' + TR1 + '"] .tpr-ed')
+      .first().click();
+    await s.p.waitForTimeout(300);
+    ok("⚠️⚠️⚠️ 양식이 둘 열려도 **겹치는 id 가 없다**",
+       (await s.p.evaluate(function(){
+         const seen = {}, dup = [];
+         Array.prototype.forEach.call(
+           document.querySelectorAll("#triprobox [id]"), function(e){
+             if(seen[e.id]) dup.push(e.id); else seen[e.id] = 1; });
+         return dup;
+       })).length === 0,
+       JSON.stringify(await s.p.evaluate(function(){
+         const seen = {}, dup = [];
+         Array.prototype.forEach.call(
+           document.querySelectorAll("#triprobox [id]"), function(e){
+             if(seen[e.id]) dup.push(e.id); else seen[e.id] = 1; });
+         return dup;
+       })));
+    await s.p.locator('#triprobox .tpr-r[data-id="' + TR1 + '"] .tpr-x')
+      .first().click();
+    await s.p.waitForTimeout(250);
+    await s.p.selectOption(newF + ' [name="scope"]', "abroad");
+    await s.p.waitForTimeout(250);
+    ok("⚠️ 갈래를 바꾸면 목적지 목록이 **갈아 끼워진다**",
+       ((await s.p.innerHTML(newF + ' [name="dest"]')) || "")
+         .indexOf('value="jp"') >= 0,
+       ((await s.p.innerHTML(newF + ' [name="dest"]')) || "").slice(0, 160));
+    /* 올려 봅니다 — ⚠️ 보내는 꾸러미를 **뜯어** 봅니다 */
+    await s.p.selectOption(newF + ' [name="dest"]', "jp");
+    await s.p.fill(newF + ' [name="title"]', "일본 오키나와 4박5일");
+    await s.p.fill(newF + ' [name="body"]', "라운드 네 번과 숙박입니다.");
+    await s.p.fill(newF + ' [name="nights"]', "4");
+    await s.p.fill(newF + ' [name="days"]', "5");
+    await s.p.fill(newF + ' [name="price_from"]', "1590000");
+    await s.p.click(newF + ' button[type="submit"]');
+    await s.p.waitForTimeout(450);
+    const op = s.sent.filter(function(x){ return x.name === "open_trip"; });
+    ok("⚠️⚠️ 올리면 `open_trip` 을 **실제로** 부른다", op.length === 1,
+       JSON.stringify(s.sent.map(function(x){ return x.name; })).slice(0, 200));
+    if(op.length){
+      const ob = JSON.parse(op[0].body || "{}");
+      /* ⚠️⚠️ 숫자 칸은 **글자로** 가는 것이 맞습니다 — 문이
+         `(p->>'nights')::int` 로 캐스팅합니다(0073). "숫자로 보내라" 고
+         요구하면 **멀쩡한 코드를 실패로** 잡습니다. 재려는 뜻은 「적은
+         값이 그대로 가는가」 하나입니다. */
+      ok("  보내는 꾸러미에 칸이 다 실린다",
+         ob.p && ob.p.scope === "abroad" && ob.p.dest === "jp" &&
+         String(ob.p.nights) === "4" && String(ob.p.days) === "5" &&
+         String(ob.p.price_from) === "1590000",
+         op[0].body.slice(0, 240));
+    }
+    /* ⚠️⚠️ **고치면 수정본입니다** — 승인된 상품은 공개본이 한 글자도
+       안 바뀌고 운영자가 수정본을 승인할 때까지 그대로 팔립니다. */
+    s = await open("/desk", TRPRO, Object.assign({
+      assignment:[], request:[], quote:[], request_item:[] }, DT), {}, true);
+    await s.p.locator('#triprobox .tpr-r[data-id="' + TR1 + '"] .tpr-ed')
+      .first().click();
+    await s.p.waitForTimeout(300);
+    const edF = '#triprobox .tpr-r[data-id="' + TR1 + '"] form';
+    ok("고치는 양식이 열린다", (await s.p.locator(edF).count()) === 1);
+    /* ⚠️ 고치는 양식이 **읽을 칸을 다 미리 채웁니다** — 안 채우면
+       저장할 때마다 지워집니다(`save_provider_self` 에서 겪은 자리). */
+    ok("⚠️⚠️ 지금 값을 **미리 채운다** (안 채우면 저장할 때 지워집니다)",
+       (await s.p.inputValue(edF + ' [name="title"]')) ===
+         "제주 2박3일 골프 패키지" &&
+       (await s.p.inputValue(edF + ' [name="price_from"]')) === "690000",
+       (await s.p.inputValue(edF + ' [name="title"]')));
+    await s.p.fill(edF + ' [name="title"]', "제주 2박3일 골프 패키지 (가격 조정)");
+    await s.p.click(edF + ' button[type="submit"]');
+    await s.p.waitForTimeout(450);
+    const ed = s.sent.filter(function(x){ return x.name === "edit_trip"; });
+    ok("⚠️⚠️ 고치면 `edit_trip` 을 부르고 **그 상품 id** 를 싣는다",
+       ed.length === 1 && (JSON.parse(ed[0].body || "{}").p || {}).id === TR1,
+       ed.length ? ed[0].body.slice(0, 200) : "0건");
+    /* ⚠️⚠️ 보낸 뒤의 「수정본을 보냈습니다」는 `load()` 가 상자를 다시
+       그리며 **사라집니다** — 그 글자를 찾으면 타이밍을 재는 꼴입니다.
+       재려는 뜻은 「**고치면 공개본이 그대로 팔린다는 것을 그 자리에서
+       말하는가**」이고, 그 말은 상자 머리에 늘 서 있습니다. */
+    ok("⚠️⚠️ 고치면 **공개본은 그대로 팔린다**고 그 자리에서 말한다",
+       /확인을 거쳐 갈아 끼웁니다/.test(
+         (await s.p.textContent("#triprobox")) || ""),
+       ((await s.p.textContent("#triprobox")) || "")
+         .replace(/\s+/g, " ").trim().slice(0, 200));
+    /* 판매 중지 · 되돌리기 — ⚠️⚠️ **되돌리는 길을 꼭 냅니다** */
+    s = await open("/desk", TRPRO, Object.assign({
+      assignment:[], request:[], quote:[], request_item:[] }, DT), {}, true);
+    await s.p.locator('#triprobox .tpr-r[data-id="' + TR1 + '"] .tpr-cl')
+      .first().click();
+    await s.p.waitForTimeout(400);
+    ok("판매 중지를 누르면 `close_trip` 을 부른다",
+       s.sent.filter(function(x){ return x.name === "close_trip"; }).length === 1,
+       JSON.stringify(s.sent.map(function(x){ return x.name; })).slice(0, 200));
+    {
+      const CL = TRMINE.map(function(r){
+        return r.id === TR1 ? Object.assign({}, r, { state:"closed" }) : r; });
+      const s2 = await open("/desk", TRPRO, Object.assign({
+        assignment:[], request:[], quote:[], request_item:[] },
+        { v_trip_mine: CL, v_trip_photo_mine: TRMPH }), {}, true);
+      ok("⚠️⚠️ 중지한 상품을 **되돌리는 길**이 있다 (막다른 길이 아닙니다)",
+         (await s2.p.locator('#triprobox .tpr-r[data-id="' + TR1 + '"] .tpr-re')
+           .count()) === 1);
+      await s2.p.locator('#triprobox .tpr-r[data-id="' + TR1 + '"] .tpr-re')
+        .first().click();
+      await s2.p.waitForTimeout(400);
+      ok("  누르면 `reopen_trip` 을 부른다",
+         s2.sent.filter(function(x){ return x.name === "reopen_trip"; })
+           .length === 1,
+         JSON.stringify(s2.sent.map(function(x){ return x.name; })).slice(0, 200));
+      await s2.p.close();
+    }
+    /* 사진 — ⚠️⚠️ **다시 그린 것만 보냅니다**(EXIF) */
+    s = await open("/desk", TRPRO, Object.assign({
+      assignment:[], request:[], quote:[], request_item:[] }, DT), {}, true);
+    /* ⚠️⚠️ **가짜 사진이 진짜여야 합니다** — 적어 보낸 종류만 보던 때는
+       `"x".repeat(2048)` 이 통과했습니다. 참 PNG 를 넣고 **보내는 종류가
+       `image/jpeg` 로 바뀌는지**를 봅니다(= canvas 를 지났다 = EXIF 가
+       사라졌다). */
+    const PNG1 = Buffer.from(
+      "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489" +
+      "0000000a49444154789c6300010000050001" +
+      "0d0a2db40000000049454e44ae426082", "hex");
+    await s.p.setInputFiles(
+      '#triprobox .tpr-ph[data-trip="' + TR1 + '"] .tpr-ph-i',
+      { name:"photo.png", mimeType:"image/png", buffer: PNG1 });
+    await s.p.waitForTimeout(1200);
+    /* ⚠️⚠️⚠️ **문을 직접 부르지 않습니다.** `claim_trip_photo` 는
+       `{id, path, ord, live}` 만 돌려주고 **서명된 올릴 주소**를 낼 수
+       있는 것은 service key 를 가진 `api/upload.js` 뿐입니다. 처음에
+       화면이 문을 직접 부르고 `d.url` 로 PUT 했는데 그 값이 늘
+       undefined 라 **PUT 이 한 번도 안 갔습니다** — 이 검사를 넣다가
+       드러났습니다(0068 이 매물 사진에서 세운 길을 베끼지 않은 자리). */
+    const cl = s.sent.filter(function(x){
+      return x.name === "upload" && /^POST/.test(x.body); });
+    ok("⚠️⚠️ 사진을 고르면 `/api/upload` 에 **올릴 자리를 청한다**",
+       cl.length === 1,
+       JSON.stringify(s.sent.map(function(x){ return x.name; })).slice(0, 240));
+    if(cl.length){
+      const cb = JSON.parse((cl[0].body.split(" ").slice(2).join(" ") || "{}"));
+      ok("  여행 쪽 길임을 말하고 그 상품을 가리킨다",
+         cb.tr === true && cb.trip === TR1, cl[0].body.slice(-200));
+      ok("⚠️⚠️⚠️ 보내는 종류가 **image/jpeg** 다 (canvas 를 지났다 = EXIF 가 사라졌다)",
+         cb.mime === "image/jpeg", cl[0].body.slice(-200));
+      /* ⚠️ 경로는 **문이 짓고 버킷은 서버가 고릅니다** — 화면이
+         고르게 두면 거기가 구멍입니다(0051 에서 세운 규칙). */
+      ok("  화면이 **경로도 버킷도 안 보낸다**",
+         !cb.path && !cb.bucket, cl[0].body.slice(-200));
+    }
+    ok("  파일을 **실제로** 올린다 (PUT)",
+       s.sent.filter(function(x){
+         return x.name === "storage" && /^PUT/.test(x.body); }).length === 1,
+       s.sent.filter(function(x){ return x.name === "storage"; })
+         .map(function(x){ return x.body.slice(0, 30); }).join(" | "));
+    /* ⚠️⚠️ **사진이 아닌 파일은 고르는 자리에서 거절합니다** — `file.type`
+       은 확장자만 보고 쓰는 값이라 이름만 `.jpg` 인 파일이 통과합니다. */
+    s = await open("/desk", TRPRO, Object.assign({
+      assignment:[], request:[], quote:[], request_item:[] }, DT), {}, true);
+    await s.p.setInputFiles(
+      '#triprobox .tpr-ph[data-trip="' + TR1 + '"] .tpr-ph-i',
+      { name:"fake.jpg", mimeType:"image/jpeg",
+        buffer: Buffer.from("이것은 사진이 아닙니다", "utf8") });
+    await s.p.waitForTimeout(900);
+    ok("⚠️⚠️ 이름만 `.jpg` 인 파일은 **올리지 않는다** (첫 바이트로 봅니다)",
+       s.sent.filter(function(x){
+         return x.name === "upload" && /^POST/.test(x.body); }).length === 0 &&
+       s.sent.filter(function(x){
+         return x.name === "storage" && /^PUT/.test(x.body); }).length === 0,
+       JSON.stringify(s.sent.map(function(x){ return x.name; })).slice(0, 200));
+    /* 차례 바꾸기 — ⚠️⚠️ 늘어놓은 배열을 **통째로** 보냅니다 */
+    s = await open("/desk", TRPRO, Object.assign({
+      assignment:[], request:[], quote:[], request_item:[] }, DT), {}, true);
+    const upBtn = s.p.locator('#triprobox .tpr-ph[data-trip="' + TR1 +
+                              '"] .tpr-s-up');
+    if(await upBtn.count()){
+      await upBtn.first().click();
+      await s.p.waitForTimeout(400);
+      const or = s.sent.filter(function(x){ return x.name === "order_trip_photo"; });
+      ok("⚠️⚠️ 차례를 바꾸면 늘어놓은 배열을 **빠짐없이** 보낸다",
+         or.length === 1 &&
+         ((JSON.parse(or[0].body || "{}").p || {}).ids || []).length ===
+           TRMPH.length,
+         or.length ? or[0].body.slice(0, 240) : "0건");
+    }else{
+      ok("⚠️ 잴 것이 0개면 실패입니다 (차례 바꾸는 단추를 찾기는 했는가)",
+         false, "0개");
+    }
+    /* ⚠️ 맨 앞 사진에는 「맨 앞으로」를 **안 냅니다**(눌러도 아무 일이
+       안 나는 칸입니다 · 절대 규칙 5) */
+    ok("⚠️ 맨 앞 사진에는 올리는 단추를 **안 낸다**",
+       (await s.p.locator('#triprobox .tpr-ph[data-trip="' + TR1 +
+                          '"] .tpr-s').first().locator(".tpr-s-up")
+         .count()) === 0);
+    /* 버킷이 꺼져 있으면 사진 칸을 **아예 안 냅니다** */
+    {
+      const s3 = await open("/desk", TRPRO, Object.assign({
+        assignment:[], request:[], quote:[], request_item:[] }, DT), {}, false);
+      ok("⚠️⚠️ 버킷이 꺼져 있으면 사진 칸을 **아예 안 낸다** (빈 칸을 안 남깁니다)",
+         (await s3.p.locator("#triprobox .tpr-ph").count()) === 0 &&
+         (await s3.p.locator("#triprobox .tpr-r").count()) === 2,
+         await s3.p.locator("#triprobox .tpr-ph").count());
+      await s3.p.close();
+    }
+    /* ⚠️ 여행사가 아니면 **한 줄도 안 그립니다** */
+    {
+      const s4 = await open("/desk", TCUS, DT, {}, true);
+      ok("⚠️ 업체가 아니면 여행 상자를 **안 그린다**",
+         (await s4.p.locator("#triprobox .tpr-r").count()) === 0);
+      await s4.p.close();
+    }
+
+    /* ⑥ 운영자 심사 (`js/admintrip.js`) ───────────────────────── */
+    console.log("\n── 여행 상품 — 운영자 심사");
+    const TRREV = [
+      { id:TR1, provider_id:"t-trip", provider_name:"검사용 여행사",
+        scope:"home", dest:"jeju", title:"제주 2박3일 골프 패키지",
+        body:"라운드 2회와 숙박을 묶었습니다.", nights:2, days:3,
+        price_from:690000, price_note:null, incl:["그린피"], excl:["카트비"],
+        state:"approved", hidden_from:null, state_why:null,
+        /* ⚠️⚠️ **수정본** — 운영자는 바뀐 칸만 보아야 합니다 */
+        draft:{ title:"제주 2박3일 골프 패키지 (가격 조정)",
+                body:"라운드 2회와 숙박을 묶었습니다.",
+                scope:"home", dest:"jeju", nights:2, days:3,
+                price_from:720000, price_note:null,
+                incl:["그린피"], excl:["카트비"] },
+        draft_state:"pending", draft_why:null,
+        created_at:"2026-11-10T01:00:00Z", updated_at:"2026-11-10T01:00:00Z",
+        photo_n:2, photo_draft_n:1, photo_drop_n:0 },
+      { id:TR2, provider_id:"t-trip", provider_name:"검사용 여행사",
+        scope:"abroad", dest:"jp", title:"일본 규슈 3박4일",
+        body:"후쿠오카 출발 라운드 3회입니다.", nights:3, days:4,
+        price_from:1290000, price_note:null, incl:[], excl:[],
+        state:"pending", hidden_from:null, state_why:null,
+        draft:null, draft_state:"none", draft_why:null,
+        created_at:"2026-11-09T01:00:00Z", updated_at:"2026-11-09T01:00:00Z",
+        photo_n:0, photo_draft_n:2, photo_drop_n:0 }
+    ];
+    const AT = { v_trip_review: TRREV };
+    let a = await open("/admin", { role:"admin", name:"관리자" },
+                       Object.assign({}, ADMT, BIZ, AT),
+                       { biz_metrics: MET }, true);
+    ok("⚠️ 잴 것이 0개면 실패입니다 (심사 줄이 서는가)",
+       (await a.p.locator("#tripadm .tpa-r").count()) === 2,
+       await a.p.locator("#tripadm .tpa-r").count());
+    const atTxt = (await a.p.textContent("#tripadm")) || "";
+    ok("  판매사 상호를 적는다", atTxt.indexOf("검사용 여행사") >= 0);
+    /* ⚠️⚠️ **바뀐 칸만** 보여 줍니다 — 전부 늘어놓으면 운영자가 무엇이
+       달라졌는지 못 찾습니다. */
+    ok("⚠️⚠️ 수정본의 **바뀐 칸만** 보여 준다",
+       atTxt.indexOf("720,000") >= 0 &&
+       atTxt.indexOf("가격 조정") >= 0,
+       atTxt.replace(/\s+/g, " ").trim().slice(0, 240));
+    /* 승인 · 반려 — ⚠️ 반려는 **까닭이 반드시** 있습니다 */
+    await a.p.locator('#tripadm .tpa-r[data-id="' + TR2 + '"] .tpa-ok')
+      .first().click();
+    await a.p.waitForTimeout(400);
+    const mv = a.sent.filter(function(x){ return x.name === "move_trip"; });
+    ok("승인을 누르면 `move_trip` 으로 approved 로 보낸다",
+       mv.length === 1 && (JSON.parse(mv[0].body || "{}").p || {}).to === "approved",
+       mv.length ? mv[0].body.slice(0, 200) : "0건");
+    a = await open("/admin", { role:"admin", name:"관리자" },
+                   Object.assign({}, ADMT, BIZ, AT),
+                   { biz_metrics: MET }, true);
+    await a.p.fill('#tripadm .tpa-r[data-id="' + TR2 + '"] .tpa-why',
+                   "일정표를 더 적어 주세요");
+    await a.p.locator('#tripadm .tpa-r[data-id="' + TR2 + '"] .tpa-no')
+      .first().click();
+    await a.p.waitForTimeout(400);
+    const mv2 = a.sent.filter(function(x){ return x.name === "move_trip"; });
+    ok("⚠️ 반려는 **까닭을 같이** 보낸다",
+       mv2.length === 1 &&
+       (JSON.parse(mv2[0].body || "{}").p || {}).why === "일정표를 더 적어 주세요",
+       mv2.length ? mv2[0].body.slice(0, 220) : "0건");
+    /* 수정본 심사 — ⚠️⚠️ **공개본과 다른 문**입니다 */
+    a = await open("/admin", { role:"admin", name:"관리자" },
+                   Object.assign({}, ADMT, BIZ, AT),
+                   { biz_metrics: MET }, true);
+    await a.p.locator('#tripadm .tpa-r[data-id="' + TR1 + '"] .tpa-dok')
+      .first().click();
+    await a.p.waitForTimeout(400);
+    ok("⚠️⚠️ 수정본은 **다른 문**으로 심사한다 (`review_trip_draft`)",
+       a.sent.filter(function(x){
+         return x.name === "review_trip_draft"; }).length === 1 &&
+       a.sent.filter(function(x){ return x.name === "move_trip"; }).length === 0,
+       JSON.stringify(a.sent.map(function(x){ return x.name; })).slice(0, 220));
+    /* ⚠️ 가리기 · 되돌리기 */
+    a = await open("/admin", { role:"admin", name:"관리자" },
+                   Object.assign({}, ADMT, BIZ, AT),
+                   { biz_metrics: MET }, true);
+    await a.p.fill('#tripadm .tpa-r[data-id="' + TR1 + '"] .tpa-why', "신고가 왔습니다");
+    await a.p.locator('#tripadm .tpa-r[data-id="' + TR1 + '"] .tpa-hide')
+      .first().click();
+    await a.p.waitForTimeout(400);
+    const mv3 = a.sent.filter(function(x){ return x.name === "move_trip"; });
+    ok("가리기도 **까닭을 같이** 보낸다",
+       mv3.length === 1 &&
+       (JSON.parse(mv3[0].body || "{}").p || {}).to === "hidden" &&
+       (JSON.parse(mv3[0].body || "{}").p || {}).why === "신고가 왔습니다",
+       mv3.length ? mv3[0].body.slice(0, 220) : "0건");
+    {
+      /* ⚠️⚠️⚠️ **되돌리기 전 상태를 `reserved` 같은 중간값으로** 둡니다 —
+         가리기 전이 `approved` 면 "가리기 전 상태로 돌아갔는가" 와
+         "그냥 approved 로 돌아갔는가" 가 **답이 같아** 아무것도 안
+         잡습니다(0070 에서 적어 둔 그 자리). 여기서는 `closed` 입니다. */
+      const HID = TRREV.map(function(r){
+        return r.id === TR1
+          ? Object.assign({}, r, { state:"hidden", hidden_from:"closed",
+                                   state_why:"신고가 왔습니다" })
+          : r; });
+      const a2 = await open("/admin", { role:"admin", name:"관리자" },
+                            Object.assign({}, ADMT, BIZ,
+                                          { v_trip_review: HID }),
+                            { biz_metrics: MET }, true);
+      ok("⚠️⚠️ 가린 상품을 **되돌리는 길**이 있다 (0070 의 그 자리)",
+         (await a2.p.locator('#tripadm .tpa-r[data-id="' + TR1 + '"] .tpa-back')
+           .count()) === 1);
+      /* ⚠️ 되돌리면 **가리기 전 상태**로 갑니다 — 그 사실을 그 자리에서
+         말해야 운영자가 「판매 중」으로 되는 줄 오해하지 않습니다. */
+      ok("  되돌리면 **어느 상태로** 가는지 그 자리에서 말한다",
+         /판매 중지/.test((await a2.p.textContent(
+           '#tripadm .tpa-r[data-id="' + TR1 + '"]')) || ""),
+         (await a2.p.textContent(
+           '#tripadm .tpa-r[data-id="' + TR1 + '"]')) || "");
+      await a2.p.locator('#tripadm .tpa-r[data-id="' + TR1 + '"] .tpa-back')
+        .first().click();
+      await a2.p.waitForTimeout(400);
+      const mv4 = a2.sent.filter(function(x){ return x.name === "move_trip"; });
+      ok("  누르면 `restore` 로 보낸다 (approved 로 밀지 않습니다)",
+         mv4.length === 1 &&
+         (JSON.parse(mv4[0].body || "{}").p || {}).to === "restore",
+         mv4.length ? mv4[0].body.slice(0, 200) : "0건");
+      await a2.p.close();
+    }
+    /* ⚠️ 운영자가 아니면 **한 글자도 안 그립니다** */
+    {
+      const a3 = await open("/admin", TCUS, Object.assign({}, ADMT, BIZ, AT),
+                            { biz_metrics: MET }, true);
+      ok("⚠️ 운영자가 아니면 심사 상자를 **안 그린다**",
+         (await a3.p.locator("#tripadm .tpa-r").count()) === 0 &&
+         !a3.sent.some(function(x){
+           return x.name === "GET" && x.body.indexOf("v_trip_review") >= 0; }),
+         await a3.p.locator("#tripadm .tpa-r").count());
+      await a3.p.close();
+    }
+
+    /* ⑦ 폰 폭 셋 — ⚠️⚠️ **새 화면을 만드는 날 재는 범위에 그 상자를
+       같이 넣으세요.** 안 넣으면 그 안은 아무도 안 재는 자리가 됩니다. */
+    for(const w of PHONES){
+      for(const [nm, path, who, tables, rpcs, sel] of [
+        ["/cat/travel 여행 상품", "/cat/travel", TCUS, TRT, {}, "#tripbox"],
+        ["/desk 여행사 작업실", "/desk", TRPRO, Object.assign({
+          assignment:[], request:[], quote:[], request_item:[] }, DT), {},
+          "#triprobox"],
+        ["/admin 여행 심사", "/admin", { role:"admin", name:"관리자" },
+         Object.assign({}, ADMT, BIZ, AT), { biz_metrics: MET }, "#tripadm"]
+      ]){
+        const p2 = await b.newPage({ viewport:{ width:w, height:900 } });
+        await stub(p2, who, tables, rpcs, true);
+        await p2.goto(base + path, { waitUntil:"networkidle" });
+        await p2.waitForTimeout(500);
+        const m = await p2.evaluate(function(s){
+          const box = document.querySelector(s);
+          const small = [];
+          if(box){
+            Array.prototype.forEach.call(box.querySelectorAll("*"),
+              function(e){
+                if(!e.children.length && (e.textContent || "").trim()){
+                  const f = parseFloat(getComputedStyle(e).fontSize);
+                  if(f && f < 11.5) small.push((e.textContent || "").trim().slice(0, 12));
+                }
+              });
+          }
+          return { doc: document.documentElement.scrollWidth,
+                   win: window.innerWidth,
+                   drawn: !!box && box.children.length > 0,
+                   small: small.slice(0, 4) };
+        }, sel);
+        if(w === PHONES[0])
+          ok(nm + " — 폰에서 그려지기는 한다 (0개면 아무것도 안 잰 것입니다)",
+             m.drawn, JSON.stringify(m));
+        ok(nm + " " + w + "px — **가로로 안 밀린다**", m.doc <= m.win + 1,
+           "문서 " + m.doc + "px · 화면 " + m.win + "px");
+        ok(nm + " " + w + "px — 12px 미만 글자가 없다", m.small.length === 0,
+           m.small.join(" · "));
+        ok(nm + " " + w + "px — 누르는 것이 40px 이상이다",
+           (await tapsOk(p2, sel)) === 0, String(await tapsOk(p2, sel)));
+        await p2.close();
+      }
+    }
+  }
 
   /* ── 폰 폭 셋 ─────────────────────────────────────────────────
      ⚠️⚠️ **새 화면을 만들 때마다 재는 범위에 그 상자를 같이 넣으세요.**

@@ -392,7 +392,7 @@ function lessonCats(c){
    두 벌로 적으면 거르개를 누르는 순간 카드가 조용히 달라지고 그려진
    화면만 보는 검사는 영원히 통과합니다. */
 function lessonSec(c, list){
-  var S = W.AM_LESSON_SORT || [];
+  var S = W.AM_PV_SORT || [];
   var grid = list.length
     ? W.amLessonGrid(list)
     : '<div class="none"><h3>현재 등록된 레슨 프로가 없습니다.</h3>' +
@@ -564,7 +564,302 @@ function nowOpen(cat){
         icon(x.icon, 18) + esc(x.label) + '</a>';
     }).join("") + '</div>';
 }
-function pvBlock(c, k, list, pvItems){
+/* ── 연습장 전용 머리 · 찾는 칸 · 거르개 (확정 시안 ⑤) ──────────────
+   ⚠️⚠️⚠️ **지도를 안 그립니다.** 시안 ⑤ 는 오른쪽 40% 가 지도인데,
+   `course` 의 좌표는 0066 이 **확인 전에는 비워 둡니다**(공공 인허가
+   자료에 EPSG:5174 · 2097 이 섞여 있어, 틀린 좌표로 찍으면 손님을
+   엉뚱한 곳으로 보냅니다). `provider` 에는 좌표 칸이 아예 없습니다.
+   없는 좌표로 지도를 그리면 **지어낸 위치**이고(절대 규칙 1), 빈 지도
+   액자를 두면 **눌러도 아무 일이 안 나는 칸**입니다(절대 규칙 5).
+   그래서 목록이 폭을 다 씁니다 — 좌표가 들어오는 날 오른쪽을 엽니다.
+   ⚠️⚠️ 거르개는 **양식(form)** 입니다 — 자바스크립트가 꺼져도 GET 으로
+   그대로 돕니다. 켜져 있으면 `js/range.js` 가 가로채 주소만 바꿉니다.
+   ⚠️ 고르개의 값은 전부 `js/data/*.js` **한 곳**에서 읽습니다 — 화면에
+   박으면 시설 종류가 느는 날 두 곳이 어긋납니다. */
+function rangeHead(c){
+  var opt = function(L, cur, all){
+    return '<option value="">' + esc(all) + '</option>' +
+      L.map(function(x){
+        return '<option value="' + esc(x.key) + '">' + esc(x.name) + '</option>';
+      }).join("");
+  };
+  var REG = W.AM_REGIONS || [];
+  var PRC = W.AM_RANGE_PRICE || [];
+  return '<section class="sec rng-hd"><div class="wrap">' +
+    crumbs(c) +
+    '<h1 class="rng-t">' + icon("flag", 30) + esc(c.name) + '</h1>' +
+    '<p class="rng-sub">내 주변 연습 공간을 한눈에 비교하세요</p>' +
+    '<form class="rngf" id="rngform" method="get" action="' +
+      esc(W.amCatUrl(c)) + '">' +
+      '<div class="rngf-q">' +
+        '<label for="rng-q" class="sr-only">지역이나 연습장 이름으로 찾기</label>' +
+        '<span class="rngf-i" aria-hidden="true">' + icon("search", 18) + '</span>' +
+        '<input id="rng-q" name="q" type="search" maxlength="40" ' +
+          'placeholder="지역, 연습장 이름으로 검색">' +
+        '<button type="submit" class="btn btn-pri">검색</button>' +
+      '</div>' +
+      '<div class="rngf-row">' +
+        '<label class="sr-only" for="rng-rg">지역</label>' +
+        '<select id="rng-rg" name="rg">' + opt(REG, "", "지역 전체") + '</select>' +
+        '<label class="sr-only" for="rng-io">실내 · 실외</label>' +
+        '<select id="rng-io" name="io">' +
+          '<option value="">실내 · 실외 전체</option>' +
+          '<option value="indoor">실내</option>' +
+          '<option value="outdoor">실외</option>' +
+        '</select>' +
+        '<label class="sr-only" for="rng-sc">스크린</label>' +
+        '<select id="rng-sc" name="sc">' +
+          '<option value="">스크린 전체</option>' +
+          '<option value="1">스크린 있는 곳</option>' +
+        '</select>' +
+        '<label class="sr-only" for="rng-pk">주차</label>' +
+        '<select id="rng-pk" name="pk">' +
+          '<option value="">주차 전체</option>' +
+          '<option value="1">주차 되는 곳</option>' +
+        '</select>' +
+        '<label class="sr-only" for="rng-p">가격</label>' +
+        '<select id="rng-p" name="p">' + opt(PRC, "", "가격 전체") + '</select>' +
+        /* ⚠️ 「초기화」는 **링크**입니다 — 자바스크립트가 꺼져도 돕니다 */
+        '<a class="rngf-x" href="' + esc(W.amCatUrl(c)) + '">' +
+          icon("arrow", 15) + '초기화</a>' +
+      '</div>' +
+    '</form>' +
+  '</div></section>';
+}
+
+/* ⚠️⚠️ 목록은 빌드가 **한 번** 찍고, 거르개를 누르면 `js/range.js` 가
+   **같은 함수**(`amRangeGrid`)로 다시 그립니다 — 두 벌로 적으면 거르개를
+   누르는 순간 카드가 조용히 달라집니다. */
+function rangeSec(c, list){
+  return '<section class="sec sec-alt rng-sec"><div class="wrap">' +
+    /* ⚠️ 시안에 구간 제목이 없지만 **제목 단계를 건너뛰면 안 됩니다** —
+       0곳 안내가 h3 라 h1 바로 뒤에 오면 화면 읽는 기계가 한 단계를
+       잃습니다. 보이지 않는 h2 로 그 자리를 메웁니다(check-a11y). */
+    '<h2 class="sr-only">연습장 목록</h2>' +
+    '<p class="rng-cnt">연습장 <b id="rngcnt">' + W.won(list.length) + '곳</b>' +
+      '<span class="rng-note">골프올인원은 통신판매중개자이며 거래 ' +
+      '당사자가 아닙니다.</span></p>' +
+    '<div id="rnglist">' +
+      (list.length ? W.amRangeGrid(list) : rangeNone()) +
+    '</div>' +
+  '</div></section>';
+}
+/* ⚠️⚠️ 0곳은 고장이 아닙니다 — 시안 ⑤ 의 「등록 전 화면」 문구를 그대로
+   쓰고 **막다른 길로 두지 않습니다**(절대 규칙 2). */
+function rangeNone(){
+  return '<div class="none rng-none">' +
+    '<p class="rng-none-i">' + icon("flag", 34) + '</p>' +
+    '<h3>등록된 연습장이 없습니다</h3>' +
+    '<p>아직 등록된 골프 연습장이 없습니다. ' +
+    '내 연습장을 등록하고 골퍼들에게 소개해 보세요.</p>' +
+    '<div class="none-b">' +
+      '<a class="btn btn-pri" href="/join">' + icon("store", 18) + '시설 등록</a>' +
+      '<a class="btn btn-line" href="/cat/range">다른 지역 보기</a>' +
+    '</div>' +
+  '</div>';
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   피팅 · 수리 (확정 시안 ⑦)
+   ⚠️⚠️⚠️ **서비스 종류 탭이 곧 하위 칩입니다** — 두 번 내면
+     `test-providers` 가 세는 수가 두 배가 되고, 안 내면 피팅 하위 여섯이
+     **놓을 자리가 없어 조용히 사라집니다**(2026-11-08 에 칩을 둘로 가르며
+     적어 둔 그 함정 · 레슨의 카테고리 카드와 같은 자리).
+   ⚠️ 그래서 `pvBlock` 은 `noChips` 로 부릅니다.
+   ⚠️⚠️ 「전체」는 `<ul class="chips-sub">` **바깥**입니다 — 그 안에 넣으면
+     칩 수가 하위 수보다 하나 많아져 멀쩡한 화면이 실패로 잡힙니다.
+   ════════════════════════════════════════════════════════════════════ */
+function fitTabs(c, items){
+  var cur = '<a class="fit-tab-a on" data-sub="" href="' + esc(W.amCatUrl(c)) +
+    '" aria-current="true">전체</a>';
+  return '<nav class="fit-tab" aria-label="서비스 종류">' + cur +
+    '<ul class="chips chips-sub">' + items.map(function(i){
+      return '<li><a class="fit-tab-a" data-sub="' + esc(i.key) + '" href="' +
+        esc(W.amSubUrl(c, i.key)) + '">' + esc(i.name) + '</a></li>';
+    }).join("") + '</ul>' +
+  '</nav>';
+}
+
+function fitHead(c){
+  var opt = function(L, all){
+    return '<option value="">' + esc(all) + '</option>' +
+      L.map(function(x){
+        return '<option value="' + esc(x.key) + '">' + esc(x.name) + '</option>';
+      }).join("");
+  };
+  var REG = W.AM_REGIONS || [];
+  var WAY = W.AM_FIT_WAY || [];
+  var PRC = W.AM_FIT_PRICE || [];
+  var SRT = W.AM_PV_SORT || [];
+  return '<section class="sec fit-hd"><div class="wrap">' +
+    crumbs(c) +
+    '<div class="fit-hd-r">' +
+      '<div>' +
+        '<h1 class="fit-t">' + icon("clubs", 30) + esc(c.name) + '</h1>' +
+        '<p class="fit-sub">클럽의 고민, 전문 업체와 상담하세요</p>' +
+      '</div>' +
+      /* ⚠️⚠️⚠️ 시안의 이름은 「클럽 **사진**으로 상담 요청」인데,
+         `INTAKE_BUCKET` 이 없으면 `/match` 에 **사진 칸이 아예 안
+         그려집니다**(js/photo.js). 그때 그 이름을 내면 없는 것을 있다고
+         말하는 꼴입니다(절대 규칙 5). 빌드는 켜졌는지 알 수 없으므로
+         (서버만 압니다) 여기서는 「상담 요청」으로 찍고, `js/fitting.js`
+         가 서버에 물어본 뒤 켜져 있을 때만 시안의 이름으로 올립니다. */
+      '<a class="btn btn-deep fit-cta" id="fit-cta" href="/match?cat=' +
+        esc(c.key) + '">' + icon("camera", 19) +
+        '<span class="fit-cta-t">클럽 상태 적고 상담 요청</span>' +
+        icon("arrow", 16) + '</a>' +
+    '</div>' +
+  '</div></section>';
+}
+
+/* ⚠️⚠️ 목록은 빌드가 **한 번** 찍고, 거르개를 누르면 `js/fitting.js` 가
+   **같은 함수**(`amFitGrid`)로 다시 그립니다 — 두 벌로 적으면 거르개를
+   누르는 순간 카드가 조용히 달라집니다.
+   ⚠️ 왼쪽 레일(거르개)과 오른쪽(찾는 칸 + 목록)이 한 양식입니다 —
+   자바스크립트가 꺼져 있어도 **「검색」 한 번으로 GET** 이 돕니다. */
+function fitSec(c, list, items){
+  var opt = function(L, all){
+    return '<option value="">' + esc(all) + '</option>' +
+      L.map(function(x){
+        return '<option value="' + esc(x.key) + '">' + esc(x.name) + '</option>';
+      }).join("");
+  };
+  var REG = W.AM_REGIONS || [];
+  var WAY = W.AM_FIT_WAY || [];
+  var PRC = W.AM_FIT_PRICE || [];
+  var SRT = W.AM_PV_SORT || [];
+  return '<section class="sec sec-alt fit-sec"><div class="wrap">' +
+    '<h2 class="sr-only">피팅 · 수리 업체 목록</h2>' +
+    fitTabs(c, items) +
+    '<form class="fitw" id="fitform" method="get" action="' +
+      esc(W.amCatUrl(c)) + '">' +
+      '<aside class="fit-rail" aria-label="상세 조건">' +
+        '<p class="fit-rail-h">' + icon("pin", 15) + '지역</p>' +
+        '<label class="sr-only" for="fit-rg">지역</label>' +
+        '<select id="fit-rg" name="rg">' + opt(REG, "지역 전체") + '</select>' +
+        '<p class="fit-rail-h">' + icon("store", 15) + '서비스 방식</p>' +
+        '<label class="sr-only" for="fit-w">서비스 방식</label>' +
+        '<select id="fit-w" name="w">' +
+          '<option value="">방식 전체</option>' +
+          WAY.map(function(x){
+            return '<option value="' + esc(x.key) + '">' + esc(x.name) +
+              (x.lead ? " (" + esc(x.lead) + ")" : "") + '</option>';
+          }).join("") +
+        '</select>' +
+        '<p class="fit-rail-h">' + icon("coin", 15) + '가격</p>' +
+        '<label class="sr-only" for="fit-p">가격</label>' +
+        '<select id="fit-p" name="p">' + opt(PRC, "가격 전체") + '</select>' +
+        /* ⚠️ 「조건 모두 지우기」는 **링크**입니다 — 자바스크립트가
+           꺼져도 돕니다. 탭(`sub`)까지 같이 지웁니다. */
+        '<a class="fit-rail-x" href="' + esc(W.amCatUrl(c)) + '">' +
+          icon("arrow", 15) + '조건 모두 지우기</a>' +
+      '</aside>' +
+      '<div class="fit-main">' +
+        '<div class="fitf-q">' +
+          '<label for="fit-q" class="sr-only">업체명이나 서비스로 찾기</label>' +
+          '<span class="fitf-i" aria-hidden="true">' + icon("search", 18) + '</span>' +
+          '<input id="fit-q" name="q" type="search" maxlength="40" ' +
+            'placeholder="업체명 또는 서비스(예: 그립 교체)로 검색">' +
+          '<button type="submit" class="btn btn-pri">검색</button>' +
+        '</div>' +
+        '<div class="fit-cnt">' +
+          '<p>피팅 · 수리 업체 <b id="fitcnt">' + W.won(list.length) + '곳</b>' +
+            '<span class="fit-note">골프올인원은 통신판매중개자이며 거래 ' +
+            '당사자가 아닙니다.</span></p>' +
+          /* ⚠️⚠️ 시안의 「추천순」은 **안 냅니다** — 무엇이 추천인지
+             세어 본 적이 없습니다(절대 규칙 1). 셀 수 있는 넷만 냅니다. */
+          '<label class="sr-only" for="fit-o">차례</label>' +
+          '<select id="fit-o" name="o">' + opt(SRT, "가나다순") + '</select>' +
+        '</div>' +
+        '<div id="fitlist">' +
+          (list.length ? W.amFitGrid(list) : fitNone()) +
+        '</div>' +
+      '</div>' +
+    '</form>' +
+  '</div></section>';
+}
+/* ⚠️⚠️ 0곳은 고장이 아닙니다 — 시안 ⑦ 의 「등록 전 화면」 문구를 그대로
+   쓰고 **막다른 길로 두지 않습니다**(절대 규칙 2). */
+function fitNone(){
+  return '<div class="none fit-none">' +
+    '<p class="fit-none-i">' + icon("clubs", 34) + '</p>' +
+    '<h3>등록된 피팅 · 수리 업체가 없습니다</h3>' +
+    '<p>내 업체를 등록하거나, 원하는 상담 조건을 남겨보세요.</p>' +
+    '<div class="none-b">' +
+      '<a class="btn btn-pri" href="/join">' + icon("store", 18) + '업체 등록 신청</a>' +
+      '<a class="btn btn-line" href="/match?cat=fitting">상담 조건 남기기</a>' +
+    '</div>' +
+  '</div>';
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   골프 여행 (확정 시안 ⑧ · 0073)
+   ⚠️⚠️⚠️ **빌드는 상품을 한 장도 안 찍습니다** — 여행 상품은 `trip`
+     표에서 오고 그 표는 **빌드가 안 읽습니다**(업체 · 후기와 달리
+     `tools/pull-*` 이 없습니다). 그래서 이 자리는 **그릇만** 두고
+     `js/trip.js` 가 채웁니다.
+   ⚠️⚠️ 그러면 자바스크립트가 꺼진 분 · 크롤러에게는 빈 자리가 되므로,
+     그릇 안에 **무엇이 여기 오는지**를 적어 둡니다(빈 `<div>` 를 두고
+     「판매글 등록」 단추가 아무 데도 안 데려가던 그 자리 · 2026-11-10).
+   ════════════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════════════
+   골프 인력 · 비즈니스 (확정 시안 ⑨)
+   ⚠️ 두 단추는 **같은 자리**(`#jobbox` · 글 올리는 양식)로 갑니다 —
+     「제휴 제안」은 `?k=biz` 로 갈래를 미리 골라 둡니다.
+   ⚠️⚠️ 그 자리는 **빌드가 글 한 줄을 미리 찍어 둡니다** — 설정이 없어
+     화면이 못 그리는 날 단추가 **아무 데도 안 데려가지 않게**(`#lsbox`
+     에서 겪은 그 자리 · 절대 규칙 5).
+   ════════════════════════════════════════════════════════════════════ */
+function careerHead(c){
+  return '<section class="sec jb-hd"><div class="wrap">' +
+    crumbs(c) +
+    '<div class="jb-hd-r">' +
+      '<div>' +
+        '<h1 class="jb-t">' + icon("case", 30) + esc(c.name) + '</h1>' +
+        '<p class="jb-sub">골프 업계의 일자리와 파트너를 연결합니다</p>' +
+      '</div>' +
+      '<p class="jb-cta">' +
+        '<a class="btn btn-deep" href="#jobbox">' + icon("plus", 18) +
+          '공고 등록</a>' +
+        '<a class="btn btn-goldline" href="/cat/career?k=biz#jobbox">' +
+          icon("people", 18) + '제휴 제안</a>' +
+      '</p>' +
+    '</div>' +
+  '</div></section>';
+}
+
+function tripHead(c){
+  return '<section class="sec tp-hd"><div class="wrap">' +
+    crumbs(c) +
+    '<div class="tp-hd-r">' +
+      '<div>' +
+        '<h1 class="tp-t">' + icon("plane", 30) + esc(c.name) + '</h1>' +
+        '<p class="tp-sub">일정과 포함 조건까지 비교하는 골프여행</p>' +
+      '</div>' +
+      /* ⚠️ 「맞춤 여행 견적」은 **이미 도는 길**(매칭 요청)로 갑니다 —
+         새 양식을 만들면 받는 자리가 둘이 되고 한쪽만 고치는 날
+         어긋납니다. */
+      '<a class="btn btn-goldline tp-cta" href="/match?cat=' + esc(c.key) + '">' +
+        icon("chat", 19) + '맞춤 여행 견적</a>' +
+    '</div>' +
+  '</div></section>';
+}
+
+/* ⚠️ `#tripbox` 는 **빌드가 찍는 빈 그릇**입니다 — 머리말이나 다른
+   화면에서 `#tripbox` 로 보내는 날, 못 채우는 갈래마다 거기에 글을
+   남기는지 보세요(`js/trip.js` 의 shutBox · failBox). */
+function tripSec(){
+  return '<section class="sec sec-alt tp-sec"><div class="wrap">' +
+    '<h2 class="sr-only">여행 상품 찾기</h2>' +
+    '<div id="tripbox">' +
+      '<noscript><p class="jnote">골프 여행 상품은 브라우저에서 ' +
+        '불러옵니다. 자바스크립트를 켜시면 이 자리에 상품 목록과 ' +
+        '찾는 칸이 나옵니다.</p></noscript>' +
+    '</div>' +
+  '</div></section>';
+}
+
+function pvBlock(c, k, list, pvItems, opt){
   /* 업체를 받지 않는 분류(조인 · 커뮤니티)는 이 덩이가 **통째로** 빠집니다 */
   if(!c.provider) return "";
   var ask = asksBlock(c);
@@ -573,6 +868,19 @@ function pvBlock(c, k, list, pvItems){
      업체가 0곳인 동안은 "아직 등록된 업체가 없습니다" 한 줄만 남습니다.
      그 한 줄은 손님이 할 수 있는 일이 없는 자리입니다 (절대 규칙 2). */
   if(!list.length && !pvItems.length && !ask) return "";
+  /* ⚠️⚠️ `quiet` — 목록과 0곳 안내를 **다른 구간이 이미 냈을 때**
+     씁니다(연습장). 하위 칩과 매칭 요청은 그대로 남깁니다 — 그
+     둘은 **업체찾기로 가는 길**이라 지우면 갈 자리가 없어집니다. */
+  if(opt && opt.quiet){
+    /* ⚠️⚠️ `noChips` — 하위 칩도 **다른 구간이 이미 냈을 때** 씁니다
+       (피팅의 서비스 종류 탭). 두 번 내면 같은 여섯이 한 화면에
+       두 줄 서고, 칩을 세는 검사가 두 배를 셎니다. */
+    var cz = (opt.noChips ? "" : chips(c, pvItems, k.pvOn || k.subs));
+    if(!cz && !ask) return "";
+    return '<section class="sec sec-alt"><div class="wrap">' +
+      cz + ask +
+    '</div></section>';
+  }
   /* ⚠️ 칩 위의 길잡이 한 줄은 **업체가 있을 때와 0곳일 때가 다릅니다** */
   var note = k.pvNote !== undefined ? k.pvNote
            : (list.length ? (k.pvOn || k.subs) : k.subs);
@@ -610,6 +918,16 @@ exports.build = function(c){
   var head = (c.key === "used") ? usedHead(c)
     /* ⚠️ 레슨도 **머리가 다릅니다** (2026-11-10 · 레슨 지시서 §3) */
     : (c.key === "lesson") ? lessonHead(c)
+    /* ⚠️ 연습장도 **머리가 다릅니다** (확정 시안 ⑤) — 깃발 제목 ·
+       찾는 칸 · 고르개 다섯이 한 덩이입니다 */
+    : (c.key === "range") ? rangeHead(c)
+    /* ⚠️ 피팅 · 수리도 **머리가 다릅니다** (확정 시안 ⑦) — 제목 옆에
+       「클럽 상태 적고 상담 요청」 단추가 붙습니다 */
+    : (c.key === "fitting") ? fitHead(c)
+    /* ⚠️ 여행도 **머리가 다릅니다** (확정 시안 ⑧) */
+    : (c.key === "travel") ? tripHead(c)
+    /* ⚠️ 인력 · 비즈니스도 **머리가 다릅니다** (확정 시안 ⑨) */
+    : (c.key === "career") ? careerHead(c)
     : '<section class="pghd"><div class="wrap">' +
     crumbs(c) +
     '<h1>' + esc(c.name) + '</h1>' +
@@ -985,6 +1303,25 @@ exports.build = function(c){
      하나라도 빠지면 `test-providers` · `test-match` 가 잡습니다. */
   var pvSec = (c.key === "lesson")
     ? lessonSec(c, list)
+    /* ⚠️⚠️ 연습장은 **가로 카드 목록**입니다(확정 시안 ⑤) —
+       `pvBlock` 의 격자 카드와 모양이 다릅니다. 하위 칩 · 매칭
+       요청은 그대로 두고(길을 안 지우려고) 목록만 갈아 끼욵니다. */
+    /* ⚠️⚠️⚠️ 연습장은 `rangeSec` 이 목록과 0곳 안내를 둘 다 냅니다 —
+       그렇다고 `pvBlock` 을 그대로 부르면 **「업체가 없습니다」가 한
+       화면에 두 번** 나옵니다(찍어 보고 알았습니다). 그래서 `quiet` 로
+       하위 칩과 매칭 요청만 남깁니다 — **길은 하나도 안 지우고** 같은
+       말을 두 번 하지만 않습니다. */
+    : (c.key === "range")
+    ? rangeSec(c, list) + pvBlock(c, k, list, pvItems, { quiet:true })
+    /* ⚠️⚠️⚠️ 피팅은 **탭이 곧 하위 칩**이라 `noChips` 입니다 —
+       그냥 `quiet` 로 두면 같은 여섯이 **한 화면에 두 줄** 서고,
+       `test-providers` 가 세는 칩 수가 두 배가 됩니다. */
+    : (c.key === "fitting")
+    ? fitSec(c, list, items) + pvBlock(c, k, list, pvItems, { quiet:true, noChips:true })
+    /* ⚠️⚠️ 여행은 **상품이 먼저**입니다 — 시안의 알맹이고,
+       여행사 목록은 그 아래입니다(하위 칩과 매칭 요청은 그대로 남깁니다). */
+    : (c.key === "travel")
+    ? tripSec() + pvBlock(c, k, list, pvItems)
     : pvBlock(c, k, list, pvItems);
   /* ⚠️⚠️ **찾는 칸과 카테고리 카드는 늘 맨 위**입니다 — 시안이 그렇고,
      아래 차례(회원 것 ↔ 업체 것)가 뒤집혀도 흔들리면 안 되는 자리라
@@ -1116,6 +1453,27 @@ exports.build = function(c){
     .concat(c.key === "lesson"
       ? ["/js/data/reviews.generated.js", "/js/data/review.js",
          "/js/data/lesson.js", "/js/card.js", "/js/lesson.js"]
+      : [])
+    /* ⚠️⚠️ 연습장도 **카드를 브라우저가 다시 그립니다** — `js/card.js`
+       를 안 실으면 `amRangeCard` 가 없어 거르개를 누르는 순간 목록이
+       조용히 비어 버립니다(에러 0줄). `data/review.js` 는 평점을 셎니다. */
+    .concat(c.key === "range"
+      ? ["/js/data/reviews.generated.js", "/js/data/review.js",
+         "/js/card.js", "/js/range.js"]
+      : [])
+    /* ⚠️ 피팅은 **차례**에 후기 평점이 들어가고(`amRating`),
+       머리의 단추 이름을 올리려고 `js/photo.js` 를 읽습니다 —
+       ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다**
+       (`/help` 가 `site.js` 를 안 실어 문의 양식이 조용히 안 열린 그 자리). */
+    .concat(c.key === "fitting"
+      ? ["/js/data/reviews.generated.js", "/js/data/review.js",
+         "/js/photo.js", "/js/card.js", "/js/fitting.js"]
+      : [])
+    /* ⚠️⚠️ 여행도 **말을 읽는 파일을 싣는 것까지가 기능**입니다 —
+       `data/trip.js`(값 · 일정 말)가 안 실리면 값이 **조용히 빈 글자**가
+       됩니다. 지역 목록(`data/regions.js`)은 위에서 이미 실습니다. */
+    .concat(c.key === "travel"
+      ? ["/js/data/trip.js", "/js/trip.js"]
       : []),
     /* ⚠️⚠️ **차례 한 줄이 이 화면의 뜻입니다** — 찾는 칸이 맨 위,
        그 다음이 **지금 실제로 되는 것**(회원 것), 그 다음이 업체 것.
@@ -1127,7 +1485,12 @@ exports.build = function(c){
              맨 앞입니다 — 그 자리가 §13 의 「등록된 프로가 없습니다」와
              입점 신청을 냅니다. 뒤로 미루면 시안에서 가장 중요한 구간이
              「이런 걸 찾고 있어요」 아래로 내려갑니다(찍어 보고 알았습니다). */
-          ((list.length || c.key === "lesson")
+          /* ⚠️⚠️ 레슨 · **연습장**은 그 목록이 화면의 알맹이라 업체가
+             0곳이어도 **맨 앞**입니다 — 그 자리가 시안의 「등록된 …이
+             없습니다」와 등록 길을 냅니다. 뒤로 미루면 시안에서 가장
+             중요한 구간이 「이런 걸 찾고 있어요」 아래로 내려갑니다. */
+          ((list.length || c.key === "lesson" || c.key === "range" ||
+            c.key === "fitting" || c.key === "travel")
                        ? (pvSec + teeSec + ownSec)
                        : (ownSec + teeSec + pvSec)) +
           (c.key === "used" ? safeGuide() : "") +

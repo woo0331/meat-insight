@@ -1,9 +1,9 @@
 /* ==================================================================
-   0008 ~ 0071 를 한 번에 —
+   0008 ~ 0074 를 한 번에 —
    Supabase SQL 편집기에 **이 파일을 통째로** 붙여 넣고 Run 하세요.
    ==================================================================
    WARN 빌드가 만드는 파일입니다 — 손으로 고치지 마세요.
-   db/migrations 의 64개를 번호 차례로 이어 붙인 것이고
+   db/migrations 의 67개를 번호 차례로 이어 붙인 것이고
    한 글자도 바꾸지 않았습니다. (node tools/make-apply.js)
 
    이미 0007 까지 돌려 두신 DB 에 쓰는 것입니다.
@@ -18088,4 +18088,1297 @@ create view v_provider_card as
 grant select on v_provider_card to anon, authenticated;
 
 insert into schema_version (n, name) values (71, '0071_pro_self')
+  on conflict (n) do nothing;
+
+/* ---------------------------- 0072_job_fields.sql ---------------------------- */
+-- ════════════════════════════════════════════════════════════════════
+-- 0072 — 골프 인력 · 비즈니스: 시설 · 장비 거래 갈래와 거르개 칸 넷
+--        (2026-11-12 · 확정 시안 ⑨)
+--
+-- 시안이 탭 **넷**(채용 · 구직 · 업체 제휴 · 시설 · 장비 거래)과 좌측
+-- 상세 필터(직무 · 역할 / 고용 형태 / 급여 조건)를 요구합니다. 0048 은
+-- 갈래가 **셋**이고 급여가 **자유 글자**(pay)뿐이라 숫자로 못 거릅니다.
+--
+-- ⚠️⚠️ **전부 더하기만 합니다.** 새 칸은 모두 null 을 받아들이므로
+--   이미 올라온 글은 한 줄도 안 깨집니다. pay(자유 글자)도 **그대로
+--   둡니다** — 지우면 이미 "월 300만원 협의" 를 적어 둔 글이 그 말을
+--   잃습니다.
+--
+-- ⚠️⚠️⚠️ **jobpost 는 칸 단위 GRANT 입니다** (0048 ④ — 연락처 ·
+--   동의 시각을 빼려고). 칸 단위 GRANT 는 **나중에 생긴 칸을 저절로
+--   덮지 않습니다.** 안 주면 0줄이 아니라 **질의가 통째로 거절**되어
+--   /my 의 내 공고 상자가 빈 채로 남습니다 — 0069 가 model 을 더해
+--   놓고 GRANT 를 안 줘서 0070 이 고친 바로 그 자리입니다.
+--
+-- ⚠️ 되돌아갔는지 보는 법:
+--     select kind, count(*) from jobpost group by kind;          -- facility 가 들어가나
+--     select column_name from information_schema.column_privileges
+--      where table_name = 'jobpost' and grantee = 'authenticated';
+-- ════════════════════════════════════════════════════════════════════
+
+-- ════════════════════════════════════════════════════════════════════
+-- ① kind 에 facility 를 더합니다
+--   ⚠️⚠️⚠️ **제약 이름을 글자로 박지 않습니다.** 0048 은 칸 안에 그냥
+--     check (kind in (...)) 로 적어 이름을 Postgres 가 지어 줍니다.
+--     이름을 찍어 drop 하면 **다른 날 옛 제약이 그대로 남고** add 는
+--     성공합니다 — 그러면 새 갈래를 옛 제약이 거절하는데 에러는 문
+--     안에서 조용히 나고 화면에는 "올릴 수 없습니다" 만 보입니다
+--     (0053 의 notice.kind · 0069 의 listing.state 와 같은 자리).
+-- ════════════════════════════════════════════════════════════════════
+do $$
+declare r record;
+begin
+  for r in
+    select con.conname
+      from pg_constraint con
+      join pg_class     c on c.oid = con.conrelid
+      join pg_attribute a on a.attrelid = c.oid
+                         and a.attnum = any(con.conkey)
+     where c.relname = 'jobpost'
+       and con.contype = 'c'
+       and a.attname = 'kind'
+  loop
+    execute format('alter table jobpost drop constraint %I', r.conname);
+  end loop;
+end $$;
+
+alter table jobpost
+  add constraint jobpost_kind_ck
+  check (kind in ('hire','seek','biz','facility'));
+
+-- ════════════════════════════════════════════════════════════════════
+-- ② 거르개가 읽을 칸 넷 — 전부 선택입니다
+--
+--   role      직무 · 역할   (레슨 프로 · 운영 매니저 · 피팅 장비 …)
+--   emp_type  고용 형태     (정규직 · 계약직 · 프리랜서 …)
+--   pay_type  금액의 갈래   (아래 여섯)
+--   pay_min   그 갈래의 하한 (원) — 거르개가 **숫자로** 견줍니다
+--
+--   ⚠️⚠️ **role · emp_type 의 키 묶음을 DB 가 모릅니다** — 목록은
+--     js/data/deal.js 한 곳이고 여기서는 빈 글자만 막습니다. 박아 두면
+--     늘어나는 날 두 곳이 어긋나고, 그때 화면은 보내는데 DB 가
+--     거절합니다 (0056 이 listing.sub 를 일부러 안 박은 그 까닭).
+--
+--   ⚠️⚠️ **pay_type 은 반대로 박습니다** — 이것은 목록이 아니라 **뜻**
+--     입니다. 오타가 들어오면 거르개가 조용히 엉뚱한 글을 모읍니다
+--     (에러가 안 납니다). 갈래를 늘리려면 마이그레이션이 필요한 것이
+--     맞습니다.
+--
+--   ⚠️ 시설 · 장비 거래에는 급여가 없습니다 — 그 갈래는 pay_type 을
+--     'price'(거래 희망가)로 씁니다. 칸을 따로 만들면 같은 뜻의 숫자가
+--     두 칸이 되고, 거르개가 어느 칸을 봐야 할지 갈립니다.
+-- ════════════════════════════════════════════════════════════════════
+alter table jobpost add column if not exists role     text;
+alter table jobpost add column if not exists emp_type text;
+alter table jobpost add column if not exists pay_type text;
+alter table jobpost add column if not exists pay_min  bigint;
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'jobpost_role_ck') then
+    alter table jobpost add constraint jobpost_role_ck
+      check (role is null or (btrim(role) <> '' and char_length(role) <= 40));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'jobpost_emp_ck') then
+    alter table jobpost add constraint jobpost_emp_ck
+      check (emp_type is null or (btrim(emp_type) <> '' and char_length(emp_type) <= 40));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'jobpost_paytype_ck') then
+    alter table jobpost add constraint jobpost_paytype_ck
+      check (pay_type is null or pay_type in
+             ('negotiate','monthly','annual','hourly','per_round','price'));
+  end if;
+  -- ⚠️⚠️ 경계값 — **0 원도 값입니다**(무료로 드리는 시설 · 장비).
+  --   위는 100억에서 막습니다: 그 위는 사람이 자릿수를 잘못 적은
+  --   것입니다 (99.99% 에서 85조원이 화면에 나간 그 자리 · 작업 기억).
+  if not exists (select 1 from pg_constraint where conname = 'jobpost_paymin_ck') then
+    alter table jobpost add constraint jobpost_paymin_ck
+      check (pay_min is null or (pay_min >= 0 and pay_min <= 10000000000));
+  end if;
+  -- ⚠️⚠️ 숫자를 적었으면 **무엇의 숫자인지**를 같이 적어야 합니다.
+  --   'negotiate'(협의)는 숫자를 들 수 없습니다 — 협의인데 금액이 있으면
+  --   화면이 어느 쪽을 적어야 할지 알 수 없습니다.
+  if not exists (select 1 from pg_constraint where conname = 'jobpost_pay_pair_ck') then
+    alter table jobpost add constraint jobpost_pay_pair_ck
+      check (pay_min is null
+             or (pay_type is not null and pay_type <> 'negotiate'));
+  end if;
+end $$;
+
+-- 거르개가 숫자로 견주는 자리 — 글이 늘면 그때 효과가 납니다
+create index if not exists jobpost_filter_ix
+  on jobpost (kind, region, state);
+
+-- ════════════════════════════════════════════════════════════════════
+-- ③ 칸 GRANT — ⚠️⚠️⚠️ 이 줄을 빠뜨리면 /my 의 내 공고 상자가 빈 채로
+--    남습니다 (0070 의 model 자리). 안 준 칸을 부르면 **질의가 통째로
+--    거절**되고 화면에는 에러도 안 납니다.
+--    ⚠️ 연락처(contact) · 동의 시각(agree_at)은 **여전히 안 줍니다.**
+-- ════════════════════════════════════════════════════════════════════
+grant select (role, emp_type, pay_type, pay_min) on jobpost to authenticated;
+
+-- ════════════════════════════════════════════════════════════════════
+-- ④ 공개 보기에 새 칸 넷을 냅니다
+--   ⚠️⚠️ **create or replace view 는 칸을 못 늘립니다** — 0044 가
+--     v_provider_card 에서 밟아 사장님이 붙여넣기 파일을 두 번째로
+--     붙여 넣을 때 "cannot drop columns from view" 로 멈췄습니다.
+--     drop + create 로 갑니다. ⚠️ 지우면 GRANT 도 같이 날아가므로
+--     **바로 다시 줍니다**(안 주면 그날부터 목록이 통째로 안 보입니다).
+--   ⚠️ 체인: v_job_open 0048 → 0067 → **0072**
+-- ════════════════════════════════════════════════════════════════════
+drop view if exists v_job_open;
+create view v_job_open as
+  select j.id, j.kind, j.sub, j.region, j.title, j.body, j.pay, j.terms,
+         j.role, j.emp_type, j.pay_type, j.pay_min,
+         j.close_at, j.created_at, j.updated_at,
+         case
+           when btrim(coalesce(ac.name, '')) = '' then '회원'
+           else left(btrim(ac.name), 1) ||
+                repeat('*', greatest(char_length(btrim(ac.name)) - 1, 1))
+         end as who,
+         case when pv.id is not null and pv.state = 'approved'
+                   and pv.is_test = false
+              then pv.name end as pro_name,
+         (select count(*) from jobapply a
+           where a.post_id = j.id and a.state in ('applied','accepted')) as apply_n
+    from jobpost j
+    left join account  ac on ac.id = j.by_user
+    left join provider pv on pv.id = j.provider_id
+   where j.state = 'open'
+     and (j.close_at is null or j.close_at >= kst_today());
+
+grant select on v_job_open to anon, authenticated;
+
+-- ════════════════════════════════════════════════════════════════════
+-- ⑤ 문 — 올리기 (0048 → **0072**)
+--   ⚠️ 바뀐 것: 갈래 넷 · 칸 넷을 받습니다. 나머지는 0048 그대로입니다.
+--   ⚠️⚠️ **자물쇠가 둘이고 말이 다릅니다** — 문은 사람 말로, 표의
+--     check 는 제약 이름으로 거절합니다. 화면에서만 막으면 꾸러미를
+--     고쳐 지나갑니다.
+-- ════════════════════════════════════════════════════════════════════
+create or replace function open_jobpost(p jsonb)
+returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  v_uid     uuid := auth.uid();
+  v_kind    text := nullif(btrim(coalesce(p->>'kind','')), '');
+  v_sub     text := nullif(btrim(coalesce(p->>'sub','')), '');
+  v_region  text := nullif(btrim(coalesce(p->>'region','')), '');
+  v_title   text := nullif(btrim(coalesce(p->>'title','')), '');
+  v_body    text := nullif(btrim(coalesce(p->>'body','')), '');
+  v_pay     text := nullif(btrim(coalesce(p->>'pay','')), '');
+  v_terms   text := nullif(btrim(coalesce(p->>'terms','')), '');
+  v_contact text := nullif(btrim(coalesce(p->>'contact','')), '');
+  v_role    text := nullif(btrim(coalesce(p->>'role','')), '');
+  v_emp     text := nullif(btrim(coalesce(p->>'emp_type','')), '');
+  v_ptype   text := nullif(btrim(coalesce(p->>'pay_type','')), '');
+  v_pmin    bigint;
+  v_aspro   boolean := coalesce((p->>'as_pro')::boolean, false);
+  v_close   date;
+  v_pv      text;
+  v_id      uuid;
+begin
+  if v_uid is null then
+    raise exception '로그인이 필요합니다';
+  end if;
+  if v_kind is null or v_kind not in ('hire','seek','biz','facility') then
+    raise exception '구인 · 구직 · 제휴 · 시설 · 장비 거래 가운데 하나를 골라 주세요';
+  end if;
+  if v_sub is null then
+    raise exception '어떤 일인지 골라 주세요';
+  end if;
+  if char_length(v_sub) > 40 then
+    raise exception '분류 값이 올바르지 않습니다';
+  end if;
+  if v_region is null then
+    raise exception '지역을 골라 주세요';
+  end if;
+  if v_title is null or char_length(v_title) < 2 then
+    raise exception '제목을 두 글자 이상 적어 주세요';
+  end if;
+  if char_length(v_title) > 60 then
+    raise exception '제목이 너무 깁니다 (60자)';
+  end if;
+  if v_body is null or char_length(v_body) < 5 then
+    raise exception '내용을 다섯 글자 이상 적어 주세요';
+  end if;
+  if char_length(v_body) > 2000 then
+    raise exception '내용이 너무 깁니다 (2000자)';
+  end if;
+  if v_pay is not null and char_length(v_pay) > 60 then
+    raise exception '급여 칸이 너무 깁니다 (60자)';
+  end if;
+  if v_terms is not null and char_length(v_terms) > 200 then
+    raise exception '근무 조건이 너무 깁니다 (200자)';
+  end if;
+  if v_contact is null then
+    raise exception '연락처를 적어 주세요';
+  end if;
+  if char_length(v_contact) > 100 then
+    raise exception '연락처가 너무 깁니다';
+  end if;
+
+  -- ── 새 칸 넷 ────────────────────────────────────────────────────
+  if v_role is not null and char_length(v_role) > 40 then
+    raise exception '직무 값이 올바르지 않습니다';
+  end if;
+  if v_emp is not null and char_length(v_emp) > 40 then
+    raise exception '고용 형태 값이 올바르지 않습니다';
+  end if;
+  -- ⚠️ 고용 형태는 사람을 뽑고 찾는 자리에만 있습니다. 제휴 · 시설
+  --   거래에 붙으면 거르개가 그 글을 엉뚱한 칸에 모읍니다.
+  if v_emp is not null and v_kind not in ('hire','seek') then
+    raise exception '고용 형태는 채용 · 구직 공고에만 적을 수 있습니다';
+  end if;
+  if v_role is not null and v_kind = 'facility' then
+    raise exception '시설 · 장비 거래에는 직무를 적지 않습니다';
+  end if;
+  if v_ptype is not null and v_ptype not in
+     ('negotiate','monthly','annual','hourly','per_round','price') then
+    raise exception '금액 갈래가 올바르지 않습니다';
+  end if;
+  -- ⚠️⚠️ **거래 희망가와 급여를 섞지 않습니다** — 같은 칸에 담기지만
+  --   뜻이 다릅니다. 섞이면 "월 300만원 이상" 거르개가 중고 타석기
+  --   300만원을 같이 끌어옵니다.
+  if v_kind = 'facility' and v_ptype is not null
+     and v_ptype not in ('negotiate','price') then
+    raise exception '시설 · 장비 거래는 급여가 아니라 거래 희망가를 적습니다';
+  end if;
+  if v_kind <> 'facility' and v_ptype = 'price' then
+    raise exception '거래 희망가는 시설 · 장비 거래에만 적을 수 있습니다';
+  end if;
+  if nullif(btrim(coalesce(p->>'pay_min','')), '') is not null then
+    begin
+      v_pmin := (p->>'pay_min')::bigint;
+    exception when others then
+      raise exception '금액은 숫자로 적어 주세요';
+    end;
+    if v_pmin < 0 then
+      raise exception '금액은 0 이상이어야 합니다';
+    end if;
+    if v_pmin > 10000000000 then
+      raise exception '금액이 너무 큽니다 (자릿수를 확인해 주세요)';
+    end if;
+    if v_ptype is null or v_ptype = 'negotiate' then
+      raise exception '금액을 적으시려면 무엇의 금액인지도 골라 주세요';
+    end if;
+  end if;
+
+  if p->>'agree_at' is null then
+    raise exception '개인정보 수집 · 이용 동의가 필요합니다';
+  end if;
+  if (p->>'agree_at')::timestamptz > now() + interval '5 minutes'
+     or (p->>'agree_at')::timestamptz < now() - interval '1 day' then
+    raise exception '동의 시각이 올바르지 않습니다';
+  end if;
+
+  if nullif(btrim(coalesce(p->>'close_at','')), '') is not null then
+    begin
+      v_close := (p->>'close_at')::date;
+    exception when others then
+      raise exception '마감일이 올바르지 않습니다';
+    end;
+    if v_close < current_date then
+      raise exception '지난 날짜로는 마감일을 잡을 수 없습니다';
+    end if;
+    if v_close > current_date + interval '365 days' then
+      raise exception '마감일이 너무 멉니다 (1년 안으로)';
+    end if;
+  end if;
+
+  if v_aspro then
+    v_pv := my_provider();
+    if v_pv is null then
+      raise exception '업체 이름으로 올리려면 업체 담당자로 로그인하셔야 합니다';
+    end if;
+    if not coalesce((select pv.state = 'approved' and pv.is_test = false
+                       from provider pv where pv.id = v_pv), false) then
+      raise exception '승인된 업체만 업체 이름으로 올릴 수 있습니다';
+    end if;
+  end if;
+
+  if (select count(*) from jobpost
+       where by_user = v_uid and state = 'open') >= 10 then
+    raise exception '올려 두신 글이 열입니다. 먼저 마감해 주세요';
+  end if;
+  if (select count(*) from jobpost
+       where by_user = v_uid and created_at > now() - interval '1 day') >= 20 then
+    raise exception '오늘은 더 올릴 수 없습니다 (하루 스무 개)';
+  end if;
+
+  insert into jobpost (by_user, provider_id, kind, sub, region, title, body,
+                       pay, terms, close_at, contact, agree_at,
+                       role, emp_type, pay_type, pay_min)
+  values (v_uid, v_pv, v_kind, v_sub, v_region, v_title, v_body,
+          v_pay, v_terms, v_close, v_contact, (p->>'agree_at')::timestamptz,
+          v_role, v_emp, v_ptype, v_pmin)
+  returning id into v_id;
+  return v_id;
+end $$;
+grant execute on function open_jobpost(jsonb) to authenticated;
+
+-- ════════════════════════════════════════════════════════════════════
+-- ⑥ 문 — 고치기 (0048 → **0072**)
+--   ⚠️⚠️⚠️ **새 칸 넷은 「보냈을 때만」 바뀝니다** (p ? 'role' …).
+--     0048 은 제목 · 내용 · 급여 · 연락처를 **보낸 것으로 통째로**
+--     덮는데, 그 방식을 새 칸에 그대로 쓰면 **이 문을 부르는 옛 화면이
+--     그 칸을 조용히 지웁니다**(js/deskme.js 가 industries 를 안 보내
+--     저장할 때마다 비우던 그 자리). 지시서가 "기존 데이터가 깨지지
+--     않는 추가 방식" 을 요구했으므로 보냈을 때만 바꿉니다.
+--     ⚠️ 그래도 **비우는 것은 보낼 수 있습니다** — null 을 실어 보내면
+--     지워집니다(0069 가 model 에서 세운 규칙과 같습니다).
+--   ⚠️ 갈래(kind)는 여기서 **못 바꿉니다** — 바꾸면 이미 지원하신 분이
+--     다른 성격의 글에 묶입니다 (0048 이 세운 규칙 그대로).
+-- ════════════════════════════════════════════════════════════════════
+create or replace function edit_jobpost(p jsonb)
+returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  v_uid     uuid := auth.uid();
+  v_id      uuid := nullif(btrim(coalesce(p->>'id','')), '')::uuid;
+  v_title   text := nullif(btrim(coalesce(p->>'title','')), '');
+  v_body    text := nullif(btrim(coalesce(p->>'body','')), '');
+  v_pay     text := nullif(btrim(coalesce(p->>'pay','')), '');
+  v_terms   text := nullif(btrim(coalesce(p->>'terms','')), '');
+  v_contact text := nullif(btrim(coalesce(p->>'contact','')), '');
+  v_close   date;
+  v_by      uuid;
+  v_st      text;
+  v_kind    text;
+  v_role    text;
+  v_emp     text;
+  v_ptype   text;
+  v_pmin    bigint;
+begin
+  if v_uid is null then raise exception '로그인이 필요합니다'; end if;
+  if v_id is null then raise exception '어느 글인지 알 수 없습니다'; end if;
+  select by_user, state, kind, role, emp_type, pay_type, pay_min
+    into v_by, v_st, v_kind, v_role, v_emp, v_ptype, v_pmin
+    from jobpost where id = v_id for update;
+  if v_by is null then raise exception '그런 글이 없습니다'; end if;
+  if not coalesce(v_by = v_uid, false) then
+    raise exception '올리신 분만 고치실 수 있습니다';
+  end if;
+  if v_st = 'hidden' then
+    raise exception '운영자가 가린 글은 고치실 수 없습니다';
+  end if;
+  if v_st = 'dropped' then
+    raise exception '내리신 글은 고치실 수 없습니다';
+  end if;
+
+  if v_title is null or char_length(v_title) < 2 then
+    raise exception '제목을 두 글자 이상 적어 주세요';
+  end if;
+  if char_length(v_title) > 60 then
+    raise exception '제목이 너무 깁니다 (60자)';
+  end if;
+  if v_body is null or char_length(v_body) < 5 then
+    raise exception '내용을 다섯 글자 이상 적어 주세요';
+  end if;
+  if char_length(v_body) > 2000 then
+    raise exception '내용이 너무 깁니다 (2000자)';
+  end if;
+  if v_pay is not null and char_length(v_pay) > 60 then
+    raise exception '급여 칸이 너무 깁니다 (60자)';
+  end if;
+  if v_terms is not null and char_length(v_terms) > 200 then
+    raise exception '근무 조건이 너무 깁니다 (200자)';
+  end if;
+  if v_contact is null then
+    raise exception '연락처를 적어 주세요';
+  end if;
+  if char_length(v_contact) > 100 then
+    raise exception '연락처가 너무 깁니다';
+  end if;
+
+  -- ── 보냈을 때만 바꿉니다 ────────────────────────────────────────
+  if p ? 'role' then
+    v_role := nullif(btrim(coalesce(p->>'role','')), '');
+  end if;
+  if p ? 'emp_type' then
+    v_emp := nullif(btrim(coalesce(p->>'emp_type','')), '');
+  end if;
+  if p ? 'pay_type' then
+    v_ptype := nullif(btrim(coalesce(p->>'pay_type','')), '');
+  end if;
+  if p ? 'pay_min' then
+    if nullif(btrim(coalesce(p->>'pay_min','')), '') is null then
+      v_pmin := null;
+    else
+      begin
+        v_pmin := (p->>'pay_min')::bigint;
+      exception when others then
+        raise exception '금액은 숫자로 적어 주세요';
+      end;
+    end if;
+  end if;
+
+  -- ⚠️ 올릴 때와 **같은 말로** 거절합니다 (두 문이 다른 말을 하면
+  --   손님은 무엇이 틀렸는지 알 수 없습니다).
+  if v_role is not null and char_length(v_role) > 40 then
+    raise exception '직무 값이 올바르지 않습니다';
+  end if;
+  if v_emp is not null and char_length(v_emp) > 40 then
+    raise exception '고용 형태 값이 올바르지 않습니다';
+  end if;
+  if v_emp is not null and v_kind not in ('hire','seek') then
+    raise exception '고용 형태는 채용 · 구직 공고에만 적을 수 있습니다';
+  end if;
+  if v_role is not null and v_kind = 'facility' then
+    raise exception '시설 · 장비 거래에는 직무를 적지 않습니다';
+  end if;
+  if v_ptype is not null and v_ptype not in
+     ('negotiate','monthly','annual','hourly','per_round','price') then
+    raise exception '금액 갈래가 올바르지 않습니다';
+  end if;
+  if v_kind = 'facility' and v_ptype is not null
+     and v_ptype not in ('negotiate','price') then
+    raise exception '시설 · 장비 거래는 급여가 아니라 거래 희망가를 적습니다';
+  end if;
+  if v_kind <> 'facility' and v_ptype = 'price' then
+    raise exception '거래 희망가는 시설 · 장비 거래에만 적을 수 있습니다';
+  end if;
+  if v_pmin is not null then
+    if v_pmin < 0 then
+      raise exception '금액은 0 이상이어야 합니다';
+    end if;
+    if v_pmin > 10000000000 then
+      raise exception '금액이 너무 큽니다 (자릿수를 확인해 주세요)';
+    end if;
+    if v_ptype is null or v_ptype = 'negotiate' then
+      raise exception '금액을 적으시려면 무엇의 금액인지도 골라 주세요';
+    end if;
+  end if;
+
+  if nullif(btrim(coalesce(p->>'close_at','')), '') is not null then
+    begin
+      v_close := (p->>'close_at')::date;
+    exception when others then
+      raise exception '마감일이 올바르지 않습니다';
+    end;
+    if v_close < current_date then
+      raise exception '지난 날짜로는 마감일을 잡을 수 없습니다';
+    end if;
+    if v_close > current_date + interval '365 days' then
+      raise exception '마감일이 너무 멉니다 (1년 안으로)';
+    end if;
+  end if;
+
+  update jobpost
+     set title = v_title, body = v_body, pay = v_pay, terms = v_terms,
+         close_at = v_close, contact = v_contact,
+         role = v_role, emp_type = v_emp,
+         pay_type = v_ptype, pay_min = v_pmin,
+         updated_at = now()
+   where id = v_id;
+  return v_id;
+end $$;
+grant execute on function edit_jobpost(jsonb) to authenticated;
+
+insert into schema_version (n, name) values (72, '0072_job_fields')
+  on conflict (n) do nothing;
+
+/* ---------------------------- 0073_trip.sql ---------------------------- */
+-- ════════════════════════════════════════════════════════════════════
+-- 0073 — 골프 여행 상품 (2026-11-12 · 확정 시안 ⑧)
+--
+-- 시안이 상품 카드(사진 · 일정 · 1인 가격 · 포함/별도 · 판매사)와
+-- 「맞춤 여행 견적」을 요구합니다. 저장소에는 **여행 상품을 담는 표가
+-- 한 줄도 없었습니다** — provider_price(0042)는 값 한 줄짜리라 일정 ·
+-- 포함/불포함 · 사진을 못 담습니다.
+--
+-- ⚠️⚠️ **새 표만 만듭니다 — 있는 것을 베끼지 않습니다.**
+--   여행사 = 분류가 travel 인 **업체**(provider)입니다. 심사 · 승인 ·
+--   정지 · 사업자 신원정보 · 공개 카드가 거기서 이미 돕니다. 여행사
+--   표를 따로 만들면 그 여섯을 한 벌 더 만들게 됩니다 (0071 이 프로를
+--   새 표로 안 만든 그 까닭).
+--
+-- ⚠️⚠️⚠️ **승인된 상품만 손님에게 갑니다.** 공개로 나가는 길은
+--   v_trip_open **하나**이고 거기 where 절이 자물쇠 그 자체입니다
+--   (보기는 RLS 를 지나지 않습니다 — 0026 의 v_ad_live 자리).
+--
+-- ⚠️ 되돌아갔는지 보는 법:
+--     select state, count(*) from trip group by state;
+--     select count(*) from v_trip_open;   -- approved 만 세어야 합니다
+-- ════════════════════════════════════════════════════════════════════
+
+-- ════════════════════════════════════════════════════════════════════
+-- ① 상품
+-- ════════════════════════════════════════════════════════════════════
+create table if not exists trip (
+  id          uuid primary key default gen_random_uuid(),
+  -- ⚠️ 임자는 **업체**입니다. by_user 는 누가 적었나(기록)일 뿐이고
+  --   고치는 권한은 provider_id 로 가릅니다 — 담당자가 바뀌어도
+  --   상품이 주인을 잃지 않습니다.
+  provider_id text not null references provider(id) on delete cascade,
+  by_user     uuid not null references auth.users(id) on delete cascade,
+  -- 국내 · 해외
+  scope       text not null check (scope in ('home','abroad')),
+  -- ⚠️⚠️ **목적지 키 묶음을 DB 가 모릅니다** — 국내는 regions.js 의
+  --   AM_REGIONS, 해외는 AM_TRIP_REGIONS 이고 둘 다 늘어납니다.
+  --   박아 두면 느는 날 두 곳이 어긋나고 화면은 보내는데 DB 가
+  --   거절합니다 (0056 이 listing.sub 를 안 박은 그 까닭).
+  dest        text not null check (btrim(dest) <> '' and char_length(dest) <= 40),
+  title       text not null check (char_length(btrim(title)) between 2 and 80),
+  body        text not null check (char_length(btrim(body)) between 5 and 4000),
+  -- 일정 — 1박 2일이면 nights 1 · days 2
+  nights      int not null check (nights >= 0 and nights <= 60),
+  days        int not null check (days   >= 1 and days   <= 61),
+  constraint trip_span_ck check (days > nights),
+  -- ⚠️⚠️ **1인 기준 최저가를 반드시 받습니다.** 비우면 화면이
+  --   "가격 문의" 를 **지어 적게** 됩니다 (0056 이 매물 값을 반드시
+  --   받는 그 까닭). 0 원은 여행 상품에 뜻이 없어 막습니다.
+  price_from  bigint not null check (price_from > 0 and price_from <= 100000000),
+  -- "일정에 따라 금액 변동" 같은 **사실**만 적는 칸입니다
+  price_note  text check (price_note is null or char_length(price_note) <= 120),
+  -- 포함 · 불포함 — 글자 배열 (숙박 · 36홀 / 항공 · 카트)
+  incl        text[] not null default '{}',
+  excl        text[] not null default '{}',
+  constraint trip_incl_ck check (array_length(incl,1) is null or array_length(incl,1) <= 12),
+  constraint trip_excl_ck check (array_length(excl,1) is null or array_length(excl,1) <= 12),
+  -- pending   올렸습니다 · 운영자 확인을 기다립니다
+  -- approved  승인 — **이때만** 손님 목록에 섭니다
+  -- rejected  반려 ⚠️ 까닭이 반드시 있습니다
+  -- closed    여행사가 내렸습니다 (판매 종료)
+  -- hidden    운영자가 가렸습니다 ⚠️ 까닭이 반드시 있습니다
+  state       text not null default 'pending'
+              check (state in ('pending','approved','rejected','closed','hidden')),
+  -- ⚠️⚠️ 0070 의 그 자리 — 가리기 전 상태를 적어 둡니다. 안 적으면
+  --   되돌릴 때 **판매 종료된 상품이 다시 파는 것처럼** 섭니다.
+  hidden_from text,
+  state_why   text,
+  state_by    uuid references auth.users(id) on delete set null,
+  state_at    timestamptz,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  constraint trip_why_ck check (
+    state not in ('rejected','hidden') or btrim(coalesce(state_why,'')) <> '')
+);
+create index if not exists trip_open_ix on trip (state, scope, dest);
+create index if not exists trip_pv_ix   on trip (provider_id, state);
+
+-- ② 사진 — 0068 의 listingphoto 를 그대로 베낍니다 (짜임새가 같습니다)
+create table if not exists tripphoto (
+  id         uuid primary key default gen_random_uuid(),
+  trip_id    uuid not null references trip(id) on delete cascade,
+  by_user    uuid not null references auth.users(id) on delete cascade,
+  path       text not null unique,
+  mime       text not null,
+  bytes      int  not null,
+  caption    text,
+  -- ⚠️⚠️ 대표 사진은 **ord 가 가장 앞선 것**입니다 (boolean 으로 두면
+  --   둘 다 참인 줄이 생기고 화면이 멋대로 고릅니다 · 0069).
+  ord        int  not null default 0,
+  created_at timestamptz not null default now(),
+  constraint tripphoto_mime_ok  check (mime in ('image/jpeg','image/png','image/webp')),
+  constraint tripphoto_bytes_ok check (bytes > 0 and bytes <= 8388608),
+  constraint tripphoto_cap_ok   check (caption is null or char_length(caption) <= 60),
+  constraint tripphoto_ord_ok   check (ord >= 0 and ord <= 99),
+  -- ⚠️⚠️ **경로 꼴을 표가 다시 봅니다** — 문이 지은 것만 들어갑니다.
+  --   '/photo/' 가 글자로 들어가고 **서버가 그것으로 버킷을 고릅니다**
+  --   (0051 이 세운 규칙 — 화면이 버킷을 고르게 두면 거기가 구멍입니다).
+  constraint tripphoto_path_ok check (
+    path <> '' and length(path) <= 300
+    and path = 'trip/' || trip_id::text || '/photo/' || split_part(path, '/', 4))
+);
+create index if not exists tripphoto_ord_ix on tripphoto (trip_id, ord, created_at);
+
+-- ③ 자물쇠 — 표에는 정책도 GRANT 도 **하나도 없습니다**.
+--    읽는 길은 보기 넷, 쓰는 길은 문 일곱뿐입니다.
+alter table trip      enable row level security;
+alter table tripphoto enable row level security;
+
+-- ════════════════════════════════════════════════════════════════════
+-- ④ 보기 넷
+-- ════════════════════════════════════════════════════════════════════
+-- 손님이 보는 목록 — ⚠️ **approved 이고 · 승인된 · 검사용이 아닌 업체**
+--   셋을 읽을 때 다시 봅니다 (업체가 정지되면 그 순간 빠집니다 —
+--   v_provider_card 와 같은 조건).
+create view v_trip_open as
+  select t.id, t.scope, t.dest, t.title, t.body, t.nights, t.days,
+         t.price_from, t.price_note, t.incl, t.excl,
+         t.created_at, t.updated_at,
+         pv.id   as provider_id,
+         pv.name as provider_name,
+         (select count(*) from tripphoto ph where ph.trip_id = t.id) as photo_n,
+         (select ph.path from tripphoto ph where ph.trip_id = t.id
+           order by ph.ord, ph.created_at, ph.id limit 1) as thumb
+    from trip t
+    join provider pv on pv.id = t.provider_id
+   where t.state = 'approved'
+     and pv.state = 'approved'
+     and pv.is_test = false;
+grant select on v_trip_open to anon, authenticated;
+
+create view v_trip_photo_public as
+  select ph.id, ph.trip_id, ph.path, ph.caption, ph.ord
+    from tripphoto ph
+    join trip t      on t.id = ph.trip_id
+    join provider pv on pv.id = t.provider_id
+   where t.state = 'approved' and pv.state = 'approved' and pv.is_test = false
+   order by ph.trip_id, ph.ord, ph.created_at, ph.id;
+grant select on v_trip_photo_public to anon, authenticated;
+
+-- 여행사가 제 작업실에서 보는 것 — 상태와 상관없이 **제 업체 것만**
+create view v_trip_mine as
+  select t.*,
+         (select count(*) from tripphoto ph where ph.trip_id = t.id) as photo_n
+    from trip t
+   where t.provider_id = my_provider();
+grant select on v_trip_mine to authenticated;
+
+-- 운영자가 심사하는 자리
+create view v_trip_review as
+  select t.*, pv.name as provider_name,
+         (select count(*) from tripphoto ph where ph.trip_id = t.id) as photo_n
+    from trip t
+    join provider pv on pv.id = t.provider_id
+   where coalesce(my_role()::text, '') in ('admin','staff');
+grant select on v_trip_review to authenticated;
+
+
+-- ════════════════════════════════════════════════════════════════════
+-- ⑤ 문 — 여행사가 제 상품을 올리고 고치고 내립니다
+--   ⚠️⚠️ **임자는 업체입니다.** 담당자 계정이 바뀌어도 상품이 주인을
+--     잃지 않게 provider_id 로 가릅니다 (by_user 는 기록입니다).
+--   ⚠️ 어느 업체가 여행사인지는 **DB 가 모릅니다** — 분류 키를 박으면
+--     하위가 느는 날 어긋납니다. 아무 승인 업체나 올릴 수는 있고,
+--     **손님에게 가는 문은 운영자 승인**입니다 (그것이 진짜 자물쇠).
+-- ════════════════════════════════════════════════════════════════════
+create or replace function open_trip(p jsonb)
+returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  v_me    uuid := auth.uid();
+  v_pv    text := my_provider();
+  v_scope text := nullif(btrim(coalesce(p->>'scope','')), '');
+  v_dest  text := nullif(btrim(coalesce(p->>'dest','')), '');
+  v_title text := nullif(btrim(coalesce(p->>'title','')), '');
+  v_body  text := nullif(btrim(coalesce(p->>'body','')), '');
+  v_note  text := nullif(btrim(coalesce(p->>'price_note','')), '');
+  v_n     int;
+  v_d     int;
+  v_price bigint;
+  v_incl  text[] := coalesce((select array_agg(btrim(x)) from
+             jsonb_array_elements_text(coalesce(p->'incl','[]'::jsonb)) x
+             where btrim(x) <> ''), '{}');
+  v_excl  text[] := coalesce((select array_agg(btrim(x)) from
+             jsonb_array_elements_text(coalesce(p->'excl','[]'::jsonb)) x
+             where btrim(x) <> ''), '{}');
+  v_id    uuid;
+begin
+  if v_me is null then raise exception '로그인이 필요합니다'; end if;
+  if v_pv is null then
+    raise exception '여행 상품은 입점하신 업체만 올릴 수 있습니다';
+  end if;
+  if not coalesce((select pv.state = 'approved' and pv.is_test = false
+                     from provider pv where pv.id = v_pv), false) then
+    raise exception '승인된 업체만 상품을 올릴 수 있습니다';
+  end if;
+  if v_scope is null or v_scope not in ('home','abroad') then
+    raise exception '국내 · 해외 가운데 하나를 골라 주세요';
+  end if;
+  if v_dest is null or char_length(v_dest) > 40 then
+    raise exception '목적지를 골라 주세요';
+  end if;
+  if v_title is null or char_length(v_title) < 2 then
+    raise exception '상품 이름을 두 글자 이상 적어 주세요';
+  end if;
+  if char_length(v_title) > 80 then
+    raise exception '상품 이름이 너무 깁니다 (80자)';
+  end if;
+  if v_body is null or char_length(v_body) < 5 then
+    raise exception '상품 설명을 다섯 글자 이상 적어 주세요';
+  end if;
+  if char_length(v_body) > 4000 then
+    raise exception '상품 설명이 너무 깁니다 (4000자)';
+  end if;
+  begin
+    v_n := coalesce((nullif(btrim(coalesce(p->>'nights','')), ''))::int, -1);
+    v_d := coalesce((nullif(btrim(coalesce(p->>'days','')),   ''))::int, -1);
+  exception when others then
+    raise exception '일정은 숫자로 적어 주세요';
+  end;
+  if v_n < 0 or v_n > 60 or v_d < 1 or v_d > 61 then
+    raise exception '일정이 올바르지 않습니다';
+  end if;
+  if v_d <= v_n then
+    raise exception '일수는 박수보다 하루 많아야 합니다';
+  end if;
+  begin
+    v_price := (nullif(btrim(coalesce(p->>'price_from','')), ''))::bigint;
+  exception when others then
+    raise exception '가격은 숫자로 적어 주세요';
+  end;
+  -- ⚠️⚠️ 비우면 화면이 "가격 문의" 를 **지어 적게** 됩니다 (절대 규칙 1)
+  if v_price is null then
+    raise exception '1인 기준 최저 가격을 적어 주세요';
+  end if;
+  if v_price <= 0 then
+    raise exception '가격은 0원보다 커야 합니다';
+  end if;
+  if v_price > 100000000 then
+    raise exception '가격이 너무 큽니다 (자릿수를 확인해 주세요)';
+  end if;
+  if v_note is not null and char_length(v_note) > 120 then
+    raise exception '가격 안내가 너무 깁니다 (120자)';
+  end if;
+  if coalesce(array_length(v_incl,1),0) > 12
+     or coalesce(array_length(v_excl,1),0) > 12 then
+    raise exception '포함 · 불포함 항목은 각각 열둘까지입니다';
+  end if;
+  -- ⚠️ 쏟아붓기 막기 — 심사 대기가 쌓이면 운영자가 못 봅니다
+  if (select count(*) from trip
+       where provider_id = v_pv and state in ('pending','approved')) >= 50 then
+    raise exception '올려 두신 상품이 쉰입니다. 먼저 정리해 주세요';
+  end if;
+  if (select count(*) from trip
+       where provider_id = v_pv and created_at > now() - interval '1 day') >= 20 then
+    raise exception '오늘은 더 올릴 수 없습니다 (하루 스무 개)';
+  end if;
+
+  insert into trip (provider_id, by_user, scope, dest, title, body,
+                    nights, days, price_from, price_note, incl, excl)
+  values (v_pv, v_me, v_scope, v_dest, v_title, v_body,
+          v_n, v_d, v_price, v_note, v_incl, v_excl)
+  returning id into v_id;
+
+  insert into audit_log (by_user, by_role, obj, obj_id, to_state, data)
+  values (v_me, my_role(), 'trip', v_id::text, 'pending',
+          jsonb_build_object('provider', v_pv, 'scope', v_scope));
+  return v_id;
+end $$;
+revoke all on function open_trip(jsonb) from public;
+grant execute on function open_trip(jsonb) to authenticated;
+
+-- ════════════════════════════════════════════════════════════════════
+-- 고치기 — ⚠️⚠️⚠️ **고치면 다시 심사로 갑니다.**
+--   "승인된 상품만 손님 목록에 보인다" 를 지키려면 승인 뒤에 값을
+--   바꾼 것이 그대로 나가면 안 됩니다 (값을 올려 적어도 아무도
+--   못 봅니다). 그 사실을 화면이 그 자리에서 말합니다.
+--   ⚠️ 내려간 · 가려진 상품은 못 고칩니다.
+-- ════════════════════════════════════════════════════════════════════
+create or replace function edit_trip(p jsonb)
+returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  v_me    uuid := auth.uid();
+  v_pv    text := my_provider();
+  v_id    uuid := nullif(btrim(coalesce(p->>'id','')), '')::uuid;
+  v_owner text;
+  v_st    text;
+  v_scope text := nullif(btrim(coalesce(p->>'scope','')), '');
+  v_dest  text := nullif(btrim(coalesce(p->>'dest','')), '');
+  v_title text := nullif(btrim(coalesce(p->>'title','')), '');
+  v_body  text := nullif(btrim(coalesce(p->>'body','')), '');
+  v_note  text := nullif(btrim(coalesce(p->>'price_note','')), '');
+  v_n int; v_d int; v_price bigint;
+  v_incl  text[] := coalesce((select array_agg(btrim(x)) from
+             jsonb_array_elements_text(coalesce(p->'incl','[]'::jsonb)) x
+             where btrim(x) <> ''), '{}');
+  v_excl  text[] := coalesce((select array_agg(btrim(x)) from
+             jsonb_array_elements_text(coalesce(p->'excl','[]'::jsonb)) x
+             where btrim(x) <> ''), '{}');
+begin
+  if v_me is null then raise exception '로그인이 필요합니다'; end if;
+  if v_id is null then raise exception '어느 상품인지 알 수 없습니다'; end if;
+  select provider_id, state into v_owner, v_st from trip where id = v_id for update;
+  if v_owner is null then raise exception '그런 상품이 없습니다'; end if;
+  if v_pv is null or v_owner <> v_pv then
+    raise exception '올리신 업체만 고치실 수 있습니다';
+  end if;
+  if v_st = 'hidden' then
+    raise exception '운영자가 가린 상품은 고치실 수 없습니다';
+  end if;
+  if v_st = 'closed' then
+    raise exception '내리신 상품은 고치실 수 없습니다';
+  end if;
+
+  if v_scope is null or v_scope not in ('home','abroad') then
+    raise exception '국내 · 해외 가운데 하나를 골라 주세요';
+  end if;
+  if v_dest is null or char_length(v_dest) > 40 then
+    raise exception '목적지를 골라 주세요';
+  end if;
+  if v_title is null or char_length(v_title) < 2 then
+    raise exception '상품 이름을 두 글자 이상 적어 주세요';
+  end if;
+  if char_length(v_title) > 80 then
+    raise exception '상품 이름이 너무 깁니다 (80자)';
+  end if;
+  if v_body is null or char_length(v_body) < 5 then
+    raise exception '상품 설명을 다섯 글자 이상 적어 주세요';
+  end if;
+  if char_length(v_body) > 4000 then
+    raise exception '상품 설명이 너무 깁니다 (4000자)';
+  end if;
+  begin
+    v_n := coalesce((nullif(btrim(coalesce(p->>'nights','')), ''))::int, -1);
+    v_d := coalesce((nullif(btrim(coalesce(p->>'days','')),   ''))::int, -1);
+  exception when others then
+    raise exception '일정은 숫자로 적어 주세요';
+  end;
+  if v_n < 0 or v_n > 60 or v_d < 1 or v_d > 61 then
+    raise exception '일정이 올바르지 않습니다';
+  end if;
+  if v_d <= v_n then
+    raise exception '일수는 박수보다 하루 많아야 합니다';
+  end if;
+  begin
+    v_price := (nullif(btrim(coalesce(p->>'price_from','')), ''))::bigint;
+  exception when others then
+    raise exception '가격은 숫자로 적어 주세요';
+  end;
+  if v_price is null then
+    raise exception '1인 기준 최저 가격을 적어 주세요';
+  end if;
+  if v_price <= 0 then
+    raise exception '가격은 0원보다 커야 합니다';
+  end if;
+  if v_price > 100000000 then
+    raise exception '가격이 너무 큽니다 (자릿수를 확인해 주세요)';
+  end if;
+  if v_note is not null and char_length(v_note) > 120 then
+    raise exception '가격 안내가 너무 깁니다 (120자)';
+  end if;
+  if coalesce(array_length(v_incl,1),0) > 12
+     or coalesce(array_length(v_excl,1),0) > 12 then
+    raise exception '포함 · 불포함 항목은 각각 열둘까지입니다';
+  end if;
+
+  update trip
+     set scope = v_scope, dest = v_dest, title = v_title, body = v_body,
+         nights = v_n, days = v_d, price_from = v_price, price_note = v_note,
+         incl = v_incl, excl = v_excl,
+         state = 'pending', state_why = null, state_by = null, state_at = null,
+         updated_at = now()
+   where id = v_id;
+
+  insert into audit_log (by_user, by_role, obj, obj_id, to_state, data)
+  values (v_me, my_role(), 'trip', v_id::text, 'pending',
+          jsonb_build_object('edited', true, 'was', v_st));
+  return v_id;
+end $$;
+revoke all on function edit_trip(jsonb) from public;
+grant execute on function edit_trip(jsonb) to authenticated;
+
+-- 내리기 — 여행사가 판매를 끝냅니다 (지우지 않습니다)
+create or replace function close_trip(p jsonb)
+returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  v_me uuid := auth.uid();
+  v_pv text := my_provider();
+  v_id uuid := nullif(btrim(coalesce(p->>'id','')), '')::uuid;
+  v_owner text; v_st text;
+begin
+  if v_me is null then raise exception '로그인이 필요합니다'; end if;
+  if v_id is null then raise exception '어느 상품인지 알 수 없습니다'; end if;
+  select provider_id, state into v_owner, v_st from trip where id = v_id for update;
+  if v_owner is null then raise exception '그런 상품이 없습니다'; end if;
+  if v_pv is null or v_owner <> v_pv then
+    raise exception '올리신 업체만 내리실 수 있습니다';
+  end if;
+  if v_st = 'hidden' then
+    raise exception '운영자가 가린 상품입니다';
+  end if;
+  -- ⚠️ 같은 상태로 옮기는 것은 거절합니다 — 조용히 성공하면 화면이
+  --   "내렸습니다" 를 적는데 아무 일도 안 일어났습니다 (0069 의 자리).
+  if v_st = 'closed' then
+    raise exception '이미 내리신 상품입니다';
+  end if;
+  update trip set state = 'closed', updated_at = now() where id = v_id;
+  insert into audit_log (by_user, by_role, obj, obj_id, to_state, data)
+  values (v_me, my_role(), 'trip', v_id::text, 'closed',
+          jsonb_build_object('was', v_st));
+  return v_id;
+end $$;
+revoke all on function close_trip(jsonb) from public;
+grant execute on function close_trip(jsonb) to authenticated;
+
+-- ════════════════════════════════════════════════════════════════════
+-- 운영자 — 승인 · 반려 · 가리기 · 되돌리기
+--   ⚠️⚠️ 반려 · 가리기는 **까닭이 반드시** 있습니다 (표의 check 가
+--     다시 봅니다 — 자물쇠 둘이고 말이 다릅니다).
+--   ⚠️⚠️⚠️ 되돌릴 때는 **가리기 전 상태로** 갑니다 — approved 로만
+--     되돌리면 판매 종료된 상품이 **다시 파는 것처럼** 섭니다 (0070).
+-- ════════════════════════════════════════════════════════════════════
+create or replace function move_trip(p jsonb)
+returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  v_me uuid := auth.uid();
+  v_id uuid := nullif(btrim(coalesce(p->>'id','')), '')::uuid;
+  v_to text := nullif(btrim(coalesce(p->>'to','')), '');
+  v_why text := nullif(btrim(coalesce(p->>'why','')), '');
+  v_st text; v_from text;
+begin
+  if coalesce(my_role()::text, '') not in ('admin','staff') then
+    raise exception '운영자만 할 수 있습니다';
+  end if;
+  if v_id is null then raise exception '어느 상품인지 알 수 없습니다'; end if;
+  select state, hidden_from into v_st, v_from from trip where id = v_id for update;
+  if v_st is null then raise exception '그런 상품이 없습니다'; end if;
+  if v_to is null or v_to not in ('approved','rejected','hidden','restore') then
+    raise exception '승인 · 반려 · 가리기 · 되돌리기 가운데 하나를 골라 주세요';
+  end if;
+  if v_to <> 'restore' and v_to = v_st then
+    raise exception '이미 그 상태입니다';
+  end if;
+  if v_to in ('rejected','hidden') and v_why is null then
+    raise exception '까닭을 적어 주세요';
+  end if;
+  if v_why is not null and char_length(v_why) > 200 then
+    raise exception '까닭이 너무 깁니다 (200자)';
+  end if;
+
+  if v_to = 'restore' then
+    if v_st <> 'hidden' then
+      raise exception '가려진 상품만 되돌릴 수 있습니다';
+    end if;
+    if v_from is null then
+      raise exception '가리기 전 상태를 알 수 없습니다';
+    end if;
+    update trip set state = v_from, hidden_from = null,
+                    state_why = null, state_by = v_me, state_at = now(),
+                    updated_at = now()
+     where id = v_id;
+    insert into audit_log (by_user, by_role, obj, obj_id, to_state, data)
+    values (v_me, my_role(), 'trip', v_id::text, v_from,
+            jsonb_build_object('restored', true));
+    return v_id;
+  end if;
+
+  update trip
+     set state = v_to,
+         hidden_from = case when v_to = 'hidden' then v_st else null end,
+         state_why = v_why, state_by = v_me, state_at = now(),
+         updated_at = now()
+   where id = v_id;
+  insert into audit_log (by_user, by_role, obj, obj_id, to_state, data)
+  values (v_me, my_role(), 'trip', v_id::text, v_to,
+          jsonb_build_object('was', v_st, 'has_why', v_why is not null));
+  return v_id;
+end $$;
+revoke all on function move_trip(jsonb) from public;
+grant execute on function move_trip(jsonb) to authenticated;
+
+-- ════════════════════════════════════════════════════════════════════
+-- ⑥ 사진 — 0068 · 0069 의 매물 사진을 그대로 베낍니다
+--   ⚠️⚠️⚠️ **경로는 문이 짓고 버킷은 서버가 고릅니다** (0051 의 규칙).
+--     화면이 경로를 지으면 남의 상품 칸에 쓸 수 있고, 화면이 버킷을
+--     고르면 비공개 자료를 공개 버킷에 올릴 수 있습니다.
+--   ⚠️ 열 장 · 한 장에 8MB — 그 수는 여기와 화면 **두 곳**이고,
+--     화면이 먼저 막아도 **DB 가 다시 봅니다**.
+-- ════════════════════════════════════════════════════════════════════
+create or replace function claim_trip_photo(p jsonb default '{}'::jsonb)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_me uuid := auth.uid();
+  v_pv text := my_provider();
+  v_t  uuid := nullif(btrim(coalesce(p->>'trip','')), '')::uuid;
+  v_mime text := lower(btrim(coalesce(p->>'mime','')));
+  v_bytes int := coalesce((nullif(btrim(coalesce(p->>'bytes','')), ''))::int, 0);
+  v_cap text := nullif(btrim(coalesce(p->>'caption','')), '');
+  v_ext text; v_path text; v_id uuid; v_ord int;
+begin
+  if v_me is null then raise exception '로그인하셔야 사진을 올릴 수 있습니다'; end if;
+  if v_t is null then raise exception '어느 상품인지 알 수 없습니다'; end if;
+  if v_pv is null or not exists (select 1 from trip
+       where id = v_t and provider_id = v_pv
+         and state in ('pending','approved','rejected')) then
+    raise exception '그 상품에는 사진을 붙일 수 없습니다';
+  end if;
+  if v_mime not in ('image/jpeg','image/png','image/webp') then
+    raise exception '사진은 JPG · PNG · WEBP 만 올리실 수 있습니다';
+  end if;
+  if v_bytes <= 0 or v_bytes > 8388608 then
+    raise exception '한 장에 8MB 까지 올리실 수 있습니다';
+  end if;
+  if v_cap is not null and char_length(v_cap) > 60 then
+    raise exception '사진 설명이 너무 깁니다 (60자)';
+  end if;
+  if (select count(*) from tripphoto where trip_id = v_t) >= 10 then
+    raise exception '사진은 열 장까지입니다. 먼저 빼 주세요';
+  end if;
+
+  select coalesce(max(ord), -1) + 1 into v_ord from tripphoto where trip_id = v_t;
+  if v_ord > 99 then v_ord := 99; end if;
+  v_ext := case v_mime when 'image/jpeg' then 'jpg'
+                       when 'image/png'  then 'png' else 'webp' end;
+  v_path := 'trip/' || v_t::text || '/photo/' || gen_random_uuid()::text || '.' || v_ext;
+
+  insert into tripphoto (trip_id, by_user, path, mime, bytes, caption, ord)
+  values (v_t, v_me, v_path, v_mime, v_bytes, v_cap, v_ord)
+  returning id into v_id;
+  insert into audit_log (by_user, by_role, obj, obj_id, to_state, data)
+  values (v_me, my_role(), 'tripphoto', v_id::text, 'claimed',
+          jsonb_build_object('mime', v_mime, 'bytes', v_bytes));
+  return jsonb_build_object('id', v_id, 'path', v_path, 'ord', v_ord);
+end $$;
+revoke all on function claim_trip_photo(jsonb) from public;
+grant execute on function claim_trip_photo(jsonb) to authenticated;
+
+-- 빼기 — ⚠️ 없는 사진을 빼면 **거절**합니다 (조용히 0줄로 끝내면
+--   기록에 "뺐다" 가 남는데 아무 일도 안 일어난 것입니다 · 0054)
+create or replace function drop_trip_photo(p jsonb)
+returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  v_me uuid := auth.uid();
+  v_pv text := my_provider();
+  v_id uuid := nullif(btrim(coalesce(p->>'id','')), '')::uuid;
+  v_t  uuid; v_n int;
+begin
+  if v_me is null then raise exception '로그인이 필요합니다'; end if;
+  if v_id is null then raise exception '어느 사진인지 알 수 없습니다'; end if;
+  select ph.trip_id into v_t from tripphoto ph
+    join trip t on t.id = ph.trip_id
+   where ph.id = v_id and v_pv is not null and t.provider_id = v_pv;
+  if v_t is null then raise exception '그 사진은 뺄 수 없습니다'; end if;
+  delete from tripphoto where id = v_id;
+  get diagnostics v_n = row_count;
+  if v_n = 0 then raise exception '그 사진은 뺄 수 없습니다'; end if;
+  insert into audit_log (by_user, by_role, obj, obj_id, to_state, data)
+  values (v_me, my_role(), 'tripphoto', v_id::text, 'dropped', '{}'::jsonb);
+  return v_id;
+end $$;
+revoke all on function drop_trip_photo(jsonb) from public;
+grant execute on function drop_trip_photo(jsonb) to authenticated;
+
+-- 차례 바꾸기 — ⚠️⚠️ **늘어놓은 배열을 통째로** 받고 **빠짐없이** 와야
+--   합니다. 일부만 보내면 안 보낸 것이 조용히 0 이 되어 그것이
+--   대표 사진이 됩니다 (0069 의 그 자리).
+create or replace function order_trip_photo(p jsonb)
+returns int
+language plpgsql security definer set search_path = public as $$
+declare
+  v_me uuid := auth.uid();
+  v_pv text := my_provider();
+  v_t  uuid := nullif(btrim(coalesce(p->>'trip','')), '')::uuid;
+  v_ids uuid[];
+  v_have int; v_i int;
+begin
+  if v_me is null then raise exception '로그인이 필요합니다'; end if;
+  if v_t is null then raise exception '어느 상품인지 알 수 없습니다'; end if;
+  if v_pv is null or not exists (select 1 from trip
+       where id = v_t and provider_id = v_pv) then
+    raise exception '그 상품은 고치실 수 없습니다';
+  end if;
+  select coalesce(array_agg(x::uuid), '{}') into v_ids
+    from jsonb_array_elements_text(coalesce(p->'ids','[]'::jsonb)) x;
+  select count(*) into v_have from tripphoto where trip_id = v_t;
+  if coalesce(array_length(v_ids,1),0) <> v_have then
+    raise exception '사진 차례는 빠짐없이 보내 주셔야 합니다';
+  end if;
+  if (select count(distinct u) from unnest(v_ids) u) <> v_have then
+    raise exception '같은 사진이 두 번 들어 있습니다';
+  end if;
+  if exists (select 1 from unnest(v_ids) u
+              where u not in (select id from tripphoto where trip_id = v_t)) then
+    raise exception '그 상품의 사진이 아닌 것이 섞여 있습니다';
+  end if;
+  v_i := 0;
+  while v_i < v_have loop
+    update tripphoto set ord = v_i where id = v_ids[v_i + 1];
+    v_i := v_i + 1;
+  end loop;
+  return v_have;
+end $$;
+revoke all on function order_trip_photo(jsonb) from public;
+grant execute on function order_trip_photo(jsonb) to authenticated;
+
+insert into schema_version (n, name) values (73, '0073_trip')
+  on conflict (n) do nothing;
+
+/* ---------------------------- 0074_range_facility.sql ---------------------------- */
+-- ════════════════════════════════════════════════════════════════════
+-- 0074 — 골프 연습장 시설 정보 (2026-11-12 · 확정 시안 ⑤)
+--
+-- 시안이 고르개 다섯(지역 · 실내/실외 · 스크린 · 주차 · 가격)과
+-- 카드의 「1회 60분 · 15,000원 / 주차 가능 / 레슨 운영」을 요구합니다.
+--
+-- ⚠️⚠️⚠️ **새 표를 만들지 않습니다.** 연습장 = 분류가 range 인
+--   **업체**(provider)입니다. 심사 · 승인 · 정지 · 사진 · 사업자
+--   신원정보가 거기서 이미 돕니다 (0071 이 프로를 새 표로 안 만든
+--   그 까닭). 칸 둘만 더합니다.
+--
+-- ⚠️⚠️⚠️ **가격은 칸을 안 만듭니다** — provider_price(0042)가 이미
+--   "1회 60분 · 15,000원" 을 label · unit · amount 로 담고 있고,
+--   화면의 `amPriceLow()` 가 그 줄에서 최저가를 셉니다. 칸을 또 만들면
+--   같은 값이 두 곳이 되고 한쪽만 고치는 날 카드와 상세가 다른 값을
+--   말합니다.
+--
+-- ⚠️⚠️ **지도는 아무것도 안 만듭니다** — 0066 이 "공공 인허가 자료는
+--   좌표계가 섞여 있어 확인 전에는 비웁니다" 로 둔 자리입니다. 좌표가
+--   없는데 지도를 그리면 손님을 엉뚱한 곳으로 보냅니다. 화면은 지도
+--   단추를 **활성으로 내지 않습니다**(절대 규칙 5).
+--
+-- ⚠️ 되돌아갔는지 보는 법:
+--     select column_name from information_schema.columns
+--      where table_name='provider' and column_name in ('range_opts','open_hours');
+--     select count(*) from information_schema.columns
+--      where table_name='v_provider_card' and column_name in ('range_opts','open_hours');
+-- ════════════════════════════════════════════════════════════════════
+
+-- ════════════════════════════════════════════════════════════════════
+-- ① 칸 둘 — 전부 선택이고 기본값이 있어 **기존 업체는 한 줄도 안 깨집니다**
+--
+--   range_opts  시설 속성 — 실내 · 실외 · 스크린 · 주차 · 레슨 운영
+--   open_hours  이용 시간 — "06:00 ~ 23:00" 같은 **사실**만 적습니다
+--
+--   ⚠️⚠️ **키 묶음을 DB 가 모릅니다** — 목록은 js/data/providers.js
+--     한 곳(AM_RANGE_OPT)이고 여기서는 **갯수와 길이만** 막습니다.
+--     박아 두면 늘어나는 날 두 곳이 어긋나고, 그때 화면은 보내는데
+--     DB 가 거절합니다 (0056 이 listing.sub 를 안 박은 그 까닭).
+-- ════════════════════════════════════════════════════════════════════
+alter table provider add column if not exists range_opts text[] not null default '{}';
+alter table provider add column if not exists open_hours text;
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'provider_range_opts_ck') then
+    alter table provider add constraint provider_range_opts_ck
+      check (array_length(range_opts, 1) is null or array_length(range_opts, 1) <= 12);
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'provider_open_hours_ck') then
+    alter table provider add constraint provider_open_hours_ck
+      check (open_hours is null or char_length(btrim(open_hours)) between 1 and 60);
+  end if;
+end $$;
+
+-- ════════════════════════════════════════════════════════════════════
+-- ② 공개 카드에 칸 둘을 냅니다
+--   ⚠️⚠️ **create or replace view 는 칸을 못 늘립니다** — drop + create
+--     이고 GRANT 를 **바로 다시** 줍니다 (지우면 같이 날아갑니다).
+--   ⚠️ 체인: v_provider_card 0032 → 0038 → 0044 → 0057 → 0071 → **0074**
+-- ════════════════════════════════════════════════════════════════════
+drop view if exists v_provider_card;
+create view v_provider_card as
+  select p.id, p.name, p.intro, p.regions, p.gu, p.subs, p.since,
+         p.consult_hours, p.verified, p.brands, p.scale, p.contact_ways,
+         p.ceo, p.addr, p.tel, p.email, p.brn,
+         p.kind, p.place_name, p.lesson_goals,
+         -- ⚠️ 0074 가 더한 둘 — 연습장 거르개가 읽습니다
+         p.range_opts, p.open_hours,
+         p.is_test
+    from provider p
+   where p.listed = true
+     and p.is_test = false
+     and p.state = 'approved';
+grant select on v_provider_card to anon, authenticated;
+
+-- ====================================================================
+-- ③ 문 — 업체가 제 정보를 고칩니다 (0014 → 0023 → 0044 → 0057 → 0071 → **0074**)
+--   ⚠️⚠️⚠️ **보낸 것으로 통째로 덮습니다.** 그래서 js/deskme.js 가
+--     새 칸 둘을 **읽고 또 보내야** 합니다 — 안 하면 업체가 저장할
+--     때마다 그 둘이 지워집니다 (industries 로 겪은 그 자리).
+--     그려지지 않는 칸은 **읽은 값을 그대로 돌려보냅니다.**
+-- ====================================================================
+create or replace function save_provider_self(
+  p_data jsonb default '{}'::jsonb,
+  p_why  text  default null
+) returns text
+  language plpgsql security definer set search_path = public as $$
+declare
+  v_me   uuid     := auth.uid();
+  v_role app_role := my_role();
+  v_pv   text     := my_provider();
+  v_scale text    := nullif(btrim(coalesce(p_data->>'scale','')), '');
+  v_email text    := nullif(btrim(coalesce(p_data->>'email','')), '');
+  v_place text    := nullif(btrim(coalesce(p_data->>'placeName','')), '');
+  -- ⚠️ 0074 — 연습장 시설 정보 둘
+  v_hours text    := nullif(btrim(coalesce(p_data->>'openHours','')), '');
+  v_opts  text[]  := coalesce((select array_agg(btrim(x))
+    from jsonb_array_elements_text(
+      case when jsonb_typeof(p_data->'rangeOpts') = 'array'
+           then p_data->'rangeOpts' else '[]'::jsonb end) x
+    where btrim(x) <> ''), '{}');
+begin
+  if v_me is null then raise exception '변경자를 알 수 없습니다'; end if;
+  if v_role <> 'provider' or v_pv is null then
+    raise exception '업체 계정으로 로그인하셔야 합니다';
+  end if;
+  if not exists (select 1 from provider where id = v_pv) then
+    raise exception '연결된 업체를 찾을 수 없습니다';
+  end if;
+  if v_scale is not null and v_scale not in ('small','mid','large') then
+    raise exception '거래 규모는 small · mid · large 중 하나입니다 — %', v_scale;
+  end if;
+  -- ⚠️ 0074 — 이용 시간과 시설 속성. **키 묶음은 화면이 들고 있고**
+  --   여기서는 갯수와 길이만 봅니다 (박아 두면 느는 날 어긋납니다).
+  if v_hours is not null and char_length(v_hours) > 60 then
+    raise exception '이용 시간이 너무 깁니다 (60자)';
+  end if;
+  if coalesce(array_length(v_opts, 1), 0) > 12 then
+    raise exception '시설 항목은 열둘까지입니다';
+  end if;
+  if exists (select 1 from unnest(v_opts) u where char_length(u) > 40) then
+    raise exception '시설 항목 값이 올바르지 않습니다';
+  end if;
+  if exists (
+    select 1 from jsonb_array_elements_text(
+      case when jsonb_typeof(p_data->'contactWays') = 'array'
+           then p_data->'contactWays' else '[]'::jsonb end) as t(x)
+     where btrim(x) not in ('phone','visit','online','shop'))
+  then
+    raise exception '상담 방식은 전화 · 방문 · 온라인 · 매장 중에서 고르셔야 합니다';
+  end if;
+  -- ⚠️ 적으셨으면 꼴을 봅니다 (비우는 것은 됩니다 — 지어내지 않습니다).
+  --   ⚠️⚠️ **다른 말로 거절합니다** — check 와 같은 말로 거절하면 어느
+  --   자물쇠가 막았는지 알 수 없습니다 (검사가 둘을 갈라 셉니다).
+  if v_email is not null and v_email not like '%@%.%' then
+    raise exception '이메일 꼴이 아닙니다 — %', v_email;
+  end if;
+  -- ⚠️ 0071 — 레슨 장소. 표의 check 와 **다른 말**로 거절합니다.
+  if v_place is not null and length(v_place) > 80 then
+    raise exception '레슨 장소 이름이 너무 깁니다 (여든 자까지)';
+  end if;
+  -- ⚠️⚠️ 레슨 목적은 **키를 안 봅니다**(DB 가 키 묶음을 모릅니다) — 갯수와
+  --   길이만 막습니다. 모르는 키가 들어오면 화면이 **그 글자를 그대로**
+  --   보여 줍니다(이름을 지어내지 않습니다).
+  if (select count(*) from jsonb_array_elements_text(
+        case when jsonb_typeof(p_data->'lessonGoals') = 'array'
+             then p_data->'lessonGoals' else '[]'::jsonb end)) > 12 then
+    raise exception '레슨 목적은 열두 개까지 고르실 수 있습니다';
+  end if;
+
+  update provider set
+    intro = nullif(btrim(coalesce(p_data->>'intro','')), ''),
+    regions = coalesce((select array_agg(x) from jsonb_array_elements_text(coalesce(p_data->'regions','[]'::jsonb)) x), '{}'),
+    gu = coalesce((select array_agg(x) from jsonb_array_elements_text(coalesce(p_data->'gu','[]'::jsonb)) x), '{}'),
+    industries = coalesce((select array_agg(x) from jsonb_array_elements_text(coalesce(p_data->'industries','[]'::jsonb)) x), '{}'),
+    since = nullif(p_data->>'since','')::int,
+    consult_hours = nullif(btrim(coalesce(p_data->>'consultHours','')), ''),
+    brands = coalesce((select array_agg(x) from jsonb_array_elements_text(coalesce(p_data->'brands','[]'::jsonb)) x), '{}'),
+    scale = v_scale,
+    ceo = nullif(btrim(coalesce(p_data->>'ceo','')), ''),
+    addr = nullif(btrim(coalesce(p_data->>'addr','')), ''),
+    tel = nullif(btrim(coalesce(p_data->>'tel','')), ''),
+    email = v_email,
+    contact_ways = coalesce((select array_agg(btrim(x))
+      from jsonb_array_elements_text(
+        case when jsonb_typeof(p_data->'contactWays') = 'array'
+             then p_data->'contactWays' else '[]'::jsonb end) x), '{}'),
+    range_opts = v_opts,
+    open_hours = v_hours,
+    place_name = v_place,
+    lesson_goals = coalesce((select array_agg(btrim(x))
+      from jsonb_array_elements_text(
+        case when jsonb_typeof(p_data->'lessonGoals') = 'array'
+             then p_data->'lessonGoals' else '[]'::jsonb end) x
+      where btrim(x) <> ''), '{}')
+  where id = v_pv;
+
+  insert into audit_log (by_user, by_role, obj, obj_id, to_state, why, data)
+  values (v_me, v_role, 'provider', v_pv, 'self-updated', p_why, p_data);
+
+  return v_pv;
+end $$;
+
+revoke all on function save_provider_self(jsonb, text) from public;
+grant execute on function save_provider_self(jsonb, text) to authenticated;
+
+insert into schema_version (n, name) values (74, '0074_range_facility')
   on conflict (n) do nothing;

@@ -119,7 +119,7 @@ site.js    naverVerify · googleVerify   검색엔진 등록 확인
 Vercel     SUPABASE_URL · SUPABASE_ANON_KEY   로그인 · 입점 신청 · 매칭 요청 · **고객센터 문의**가 그때 켜집니다
 Supabase   **비공개** 버킷 + INTAKE_BUCKET   손님 사진 · 업체 증빙서류 (⚠️ 공개로 만들면 사업자등록증이 주소만 알면 열립니다)
 Supabase   **공개** 버킷 + PROVIDER_BUCKET   업체 시설 사진 · **매물 사진** · 게시판 글 사진 · 광고 소재 (⚠️ 공개가 맞습니다 — 크롤러가 보는 정적 HTML 에 박힙니다)
-Supabase   db/apply-from-0008.sql 를 붙여 넣기 (0008~**0071** · 64개)
+Supabase   db/apply-from-0008.sql 를 붙여 넣기 (0008~**0074** · 67개)
 ```
 
 ⚠️⚠️ **위 둘째 · 셋째 줄은 이제 빌드가 막습니다** (2026-11-03). `SITE_LIVE`
@@ -859,27 +859,29 @@ git show 4563539:CLAUDE.md          앞 서비스의 작업 기억 (6,215줄)
   `edit_listing`(0056→0068→**0069**) ·
   `claim_listing_photo`(0068→**0069**) ·
   `close_listing`(0056→**0069**) ·
+  `edit_jobpost`(0048→**0072**) ·
   `is_my_item`(0009→**0039**) ·
   `make_apply`(0027→0045→**0071**) ·
   `make_request`(0029→0035→**0041**) ·
   `move_cq`(0047→**0063**) ·
   `move_listing`(0056→**0070**) ·
   `move_state`(0004→**0007**) ·
+  `open_jobpost`(0048→**0072**) ·
   `open_listing`(0056→0068→**0069**) ·
   `open_report`(0040→0046→0047→0048→0056→0060→**0061**) ·
   `provider_guard`(0001→0021→0024→**0030**) ·
   `save_ad`(0036→**0064**) ·
   `save_provider`(0007→**0023**) ·
   `save_provider_contact`(0013→**0014**) ·
-  `save_provider_self`(0014→0023→0044→0057→**0071**) ·
+  `save_provider_self`(0014→0023→0044→0057→0071→**0074**) ·
   `v_ad_live` 보기(0026→0032→0055→**0064**) ·
-  `v_provider_card` 보기(0032→0038→0044→0057→**0071**) ·
+  `v_provider_card` 보기(0032→0038→0044→0057→0071→**0074**) ·
   `v_cq_public` 보기(0047→0059→**0063**) ·
   `v_ca_public` 보기(0047→**0059**) ·
   `v_join_open` 보기(0046→**0060**) ·
   `v_listing_open` 보기(0056→0068→**0069**) ·
   `v_listing_photo_public` 보기(0068→**0069**) ·
-  `v_job_open` 보기(0048→**0067**) ·
+  `v_job_open` 보기(0048→0067→**0072**) ·
   `v_teetime_open` 보기(0060→**0066**) ·
   `v_teetime_count` 보기(0060→**0066**) ·
   `ad_public` 정책(0026→**0064**) ·

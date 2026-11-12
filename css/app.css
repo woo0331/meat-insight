@@ -3610,7 +3610,7 @@ picture{ display: contents; }
 .cqw > *{ min-width:0; }
 .cqw-main{ display:flex; flex-direction:column; gap:14px; }
 @media (max-width: 1100px){
-  /* ⚠️ 좀아지면 게시판 메뉴를 **위로 올리고 가로 알약 줄로** 되돌립니다
+  /* ⚠️ 좁아지면 게시판 메뉴를 **위로 올리고 가로 알약 줄로** 되돌립니다
      — 세로 기둥을 좁은 화면에 두면 글이 들어갈 자리가 없습니다. */
   .cqw{ grid-template-columns: 1fr; }
   .cqw-bd{ order:1; }

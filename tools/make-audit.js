@@ -52,34 +52,40 @@ if(files.length === 0){
   process.exit(1);
 }
 
+/* ⚠️⚠️⚠️ **차례대로 한 번에 훑고 「마지막 것이 이깁니다」.**
+   처음에는 만드는 것과 지우는 것을 **두 번에 나눠** 훑었고, 보기는
+   지우는 것을 아예 안 봤습니다. 그래서 —
+     · 0067 이 만들고 **0068 이 지운** 보기 넷(`v_listing_count` 등)
+     · 0024 가 지운 앞 서비스의 보기 하나 · 문 다섯
+   이 전부 「빠졌다」로 나와서 **멀쩡한 운영 DB 를 ❌ 로** 읽었습니다.
+   `drop view … ; create view …` 는 흔한 꼴이라 차례대로 봐야만
+   "지웠다가 다시 만든 것" 과 "지우고 만 것" 이 갈립니다. */
 const tables = new Set(), views = new Set(), doors = new Set();
 let last = 0;
-files.forEach(function(f){
+/* 한 덩이로 이어 붙여 **파일 차례 그대로** 훑습니다 */
+const ONE = files.map(function(f){
   last = Math.max(last, Number(f.slice(0, 4)));
-  const sql = strip(fs.readFileSync(path.join(DIR, f), "utf8"));
-  let m;
-  const reT = /create\s+table\s+(?:if\s+not\s+exists\s+)?([a-z_][a-z0-9_]*)/gi;
-  while((m = reT.exec(sql))) tables.add(m[1]);
-  const reV = /create\s+(?:or\s+replace\s+)?view\s+([a-z_][a-z0-9_]*)/gi;
-  while((m = reV.exec(sql))) views.add(m[1]);
-  /* 문 = anon · authenticated 에게 EXECUTE 를 준 함수 */
-  const reD = /grant\s+execute\s+on\s+function\s+([a-z_][a-z0-9_]*)\s*\(/gi;
-  while((m = reD.exec(sql))) doors.add(m[1]);
-  /* 지운 것은 빼 둡니다 — 없는 것을 「빠졌다」고 하면 안 됩니다 */
-  const reDV = /drop\s+view\s+(?:if\s+exists\s+)?([a-z_][a-z0-9_]*)\s*;/gi;
-  void reDV;
-});
+  return strip(fs.readFileSync(path.join(DIR, f), "utf8"));
+}).join("\n;\n");
 
-/* ⚠️ `drop table` 로 지운 표 · 보기는 빼 둡니다 (0024 가 앞 서비스 것을
-   지웠습니다) — 안 빼면 멀쩡한 DB 를 ❌ 로 읽습니다. */
-files.forEach(function(f){
-  const sql = strip(fs.readFileSync(path.join(DIR, f), "utf8"));
-  let m;
-  const reX = /drop\s+table\s+(?:if\s+exists\s+)?([a-z_][a-z0-9_]*)/gi;
-  while((m = reX.exec(sql))) tables.delete(m[1]);
-});
-/* 보기는 `drop view … ; create view …` 가 흔한 꼴이라 지운 것으로 안 셉니다 —
-   마지막에 `create view` 가 있으면 있는 것입니다. */
+const RE = new RegExp(
+  "create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?([a-z_][a-z0-9_]*)" +
+  "|drop\\s+table\\s+(?:if\\s+exists\\s+)?([a-z_][a-z0-9_]*)" +
+  "|create\\s+(?:or\\s+replace\\s+)?view\\s+([a-z_][a-z0-9_]*)" +
+  "|drop\\s+view\\s+(?:if\\s+exists\\s+)?([a-z_][a-z0-9_]*)" +
+  /* 문 = anon · authenticated 에게 EXECUTE 를 준 함수 */
+  "|grant\\s+execute\\s+on\\s+function\\s+([a-z_][a-z0-9_]*)\\s*\\(" +
+  "|drop\\s+function\\s+(?:if\\s+exists\\s+)?([a-z_][a-z0-9_]*)",
+  "gi");
+let m;
+while((m = RE.exec(ONE))){
+  if(m[1]) tables.add(m[1]);
+  else if(m[2]) tables.delete(m[2]);
+  else if(m[3]) views.add(m[3]);
+  else if(m[4]) views.delete(m[4]);
+  else if(m[5]) doors.add(m[5]);
+  else if(m[6]) doors.delete(m[6]);
+}
 
 const lit = a => Array.from(a).sort().map(x => "('" + x + "')").join(",\n    ");
 
@@ -164,11 +170,17 @@ select '④ 문을 부를 권한' as 항목,
 -- ⚠️⚠️⚠️ RLS 는 **줄은 막아도 칸은 못 막습니다.** 공개로 읽는 길은
 --   보기뿐이어야 합니다 (0064 에서 광고 단가 · 운영자 메모가 표째
 --   읽히던 자리).
+-- ⚠️ 「membership_plan」(요금제)은 **일부러 공개**입니다 — 값을 숨길
+--   까닭이 없는 표이고 db/verify.sql 도 같은 자리에서 뺍니다.
+--   ⚠️⚠️ 이 글은 **템플릿 문자열 안**이라 백틱을 한 글자도 못 씁니다
+--   (작업 기억 — "주석에 백틱을 아예 쓰지 마세요").
+--   두 곳이 어긋나면 한쪽이 멀쩡한 DB 를 ❌ 로 읽습니다.
 select '⑤ anon 에게 열린 표' as 항목,
        coalesce(string_agg(c.relname, ', ' order by c.relname), '(없음)') as 값,
        case when count(*) = 0 then '✅' else '❌ 보기로만 내보내세요' end as 결과
   from pg_class c join pg_namespace n on n.oid = c.relnamespace
  where n.nspname = 'public' and c.relkind = 'r'
+   and c.relname <> 'membership_plan'
    and has_table_privilege('anon', c.oid, 'SELECT');
 `;
 

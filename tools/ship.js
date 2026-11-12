@@ -32,6 +32,11 @@ const quick = process.argv.indexOf("--quick") >= 0;
 const STEPS = [
   ["화면을 찍습니다",            ["build.js"],                    false],
   ["붙여넣기 파일을 다시 만듭니다", ["tools/make-apply.js"],         false],
+  /* ⚠️⚠️⚠️ **운영 DB 대조 SQL 도 빌드가 만듭니다** — 표 · 보기 · 문
+     이름을 손으로 적어 두면 반드시 썩습니다(`db/README.md` 가 0023 판
+     목록을 들고 마흔일곱 판을 모르고 있던 그 자리). 마이그레이션에서
+     **읽어서** 만들고, 뒤 번호가 `drop` 한 것은 **차례대로** 빼 둡니다. */
+  ["운영 DB 대조 SQL 을 다시 만듭니다", ["tools/make-audit.js"],     false],
   ["주석이 코드를 삼키나",        ["tools/check-comments.js", "--prove"], false],
   ["window. 없이 쓴 맨이름",      ["tools/check-globals.js", "--prove"], false],
   ["상태 말이 DB 와 같나",        ["tools/check-deal.js", "--prove"], false],

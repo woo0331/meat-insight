@@ -8226,6 +8226,104 @@ function boardsOf(){
          await g.p.evaluate(function(){ return location.search; })),
        await g.p.evaluate(function(){ return location.search; }));
 
+    /* ══════════════════════════════════════════════════════════
+       금액 거르개 (0072 의 `pay_min`) — 2026-11-12
+
+       ⚠️⚠️⚠️ **월급 · 연봉 · 시급을 한 칸으로 견주면 안 됩니다** —
+       「300만원 이상」이 시급 300만원과 연봉 300만원을 같은 줄에
+       세웁니다. 그래서 금액 칸은 **급여 갈래를 고르셨을 때만** 서고,
+       질의에도 그때만 실립니다.
+       ⚠️⚠️ 「협의」 · 안 적으신 공고는 `pay_min` 이 null 이라 빠집니다 —
+       그것이 맞습니다(모르는 금액을 0 으로 치면 가장 싼 공고가 되고
+       그건 지어낸 값입니다 · 절대 규칙 1).
+       ══════════════════════════════════════════════════════════ */
+    g = await open("/cat/career", { role:"customer", name:"손님", signedIn:true },
+                   { v_job_open: JOBS_U }, {}, true);
+    ok("⚠️⚠️⚠️ 급여 갈래를 안 고르면 금액 칸을 **안 낸다**",
+       (await g.p.locator("#jb-pm").count()) === 0 &&
+       (await g.p.locator(".jbrail-n0").count()) === 1,
+       await g.p.locator("#jb-pm").count());
+    ok("  왜 없는지를 **그 자리에서** 말한다 (빈 칸을 안 남깁니다)",
+       /한 칸으로 견줄 수 없/.test(
+         (await g.p.textContent(".jbrail-n0")) || ""),
+       (await g.p.textContent(".jbrail-n0")) || "");
+    g = await open("/cat/career?py=monthly",
+                   { role:"customer", name:"손님", signedIn:true },
+                   { v_job_open: JOBS_U }, {}, true);
+    ok("⚠️ 갈래를 고르면 **그 갈래 이름이 붙은** 금액 칸이 선다",
+       (await g.p.locator("#jb-pm").count()) === 1 &&
+       /월급/.test((await g.p.textContent('label[for="jb-pm"]')) || ""),
+       (await g.p.textContent('label[for="jb-pm"]')) || "");
+    g.sent.length = 0;
+    await g.p.fill("#jb-pm", "3000000");
+    await g.p.click('#jbrail button[type="submit"]');
+    await g.p.waitForTimeout(300);
+    const payQ = g.sent.filter(function(x){
+      return x.name === "GET" && x.body.indexOf("v_job_open") >= 0; });
+    const payLast = payQ.length ? payQ[payQ.length - 1].body : "";
+    ok("⚠️⚠️ 금액이 **갈래와 짝으로** 질의에 실린다 (pay_min=gte)",
+       /pay_type=eq\.monthly/.test(payLast) && /pay_min=gte\.3000000/.test(payLast),
+       payLast.slice(0, 240));
+    /* ⚠️⚠️⚠️ **갈래 없이 금액만 들고 와도 안 겁니다** — 주소를 손으로
+       고쳐 오시면 단위를 모르는 숫자로 견주게 됩니다. */
+    g = await open("/cat/career?pm=3000000",
+                   { role:"customer", name:"손님", signedIn:true },
+                   { v_job_open: JOBS_U }, {}, true);
+    const payQ2 = g.sent.filter(function(x){
+      return x.name === "GET" && x.body.indexOf("v_job_open") >= 0; });
+    ok("⚠️⚠️⚠️ 갈래 없이 금액만 오면 **안 건다** (단위를 모르는 숫자입니다)",
+       payQ2.length > 0 && payQ2.every(function(x){ return !/pay_min=/.test(x.body); }),
+       payQ2.map(function(x){ return x.body; }).join(" | ").slice(0, 240));
+
+    /* ══════════════════════════════════════════════════════════
+       공고 북마크 (0078) — 2026-11-12
+
+       ⚠️⚠️ **저장 수를 어디에도 안 적습니다** — 세어 낼 수야 있지만
+       「인기」로 읽히고 검증할 길이 없습니다(0069 가 중고 찜에서 세운
+       규칙). `v_job_open` 에 `fav_n` 칸이 아예 없습니다.
+       ══════════════════════════════════════════════════════════ */
+    g = await open("/cat/career",
+                   { role:"customer", name:"손님", signedIn:false },
+                   { v_job_open: JOBS_U, v_job_fav: [] }, {}, true);
+    ok("⚠️ 로그인 전에는 저장 단추를 **안 낸다** (눌러도 거절되는 칸입니다)",
+       (await g.p.locator("[data-fav]").count()) === 0,
+       await g.p.locator("[data-fav]").count());
+    g = await open("/cat/career",
+                   { role:"customer", name:"손님", signedIn:true },
+                   { v_job_open: JOBS_U, v_job_fav: [{ id: JOBS_U[0].id }] },
+                   {}, true);
+    ok("⚠️⚠️ `v_job_fav` 를 **실제로 읽는다** (저장해 두신 것이 켜져야 합니다)",
+       g.sent.some(function(x){ return x.name === "GET" &&
+         x.body.indexOf("v_job_fav") >= 0; }),
+       g.sent.filter(function(x){ return x.name === "GET"; })
+         .map(function(x){ return x.body; }).join(" | ").slice(0, 240));
+    ok("  저장해 두신 줄만 **켜진 채**로 선다",
+       (await g.p.locator("[data-fav].on").count()) === 1 &&
+       (await g.p.locator("[data-fav]").count()) === JOBS_U.length,
+       await g.p.locator("[data-fav].on").count() + " / " +
+       await g.p.locator("[data-fav]").count());
+    ok("  켜진 단추는 **「저장 해제」** 라고 적는다",
+       /저장 해제/.test((await g.p.textContent("[data-fav].on")) || ""),
+       (await g.p.textContent("[data-fav].on")) || "");
+    /* ⚠️⚠️⚠️ **꾸러미를 뜯어** 봅니다 — 0078 의 문은 켜고 끄는 값을
+       받습니다(토글이 아닙니다). 열쇠는 `id` · `on` 이고, `post` 로
+       보내면 "어느 공고인지 알 수 없습니다" 로 거절합니다. */
+    g.sent.length = 0;
+    await g.p.locator("[data-fav]:not(.on)").first().click();
+    await g.p.waitForTimeout(350);
+    const favSent = g.sent.filter(function(x){ return x.name === "fav_jobpost"; });
+    ok("⚠️⚠️⚠️ 누르면 `fav_jobpost` 로 **실제로 간다**", favSent.length === 1,
+       favSent.length + "건");
+    const favBody = favSent.length ? JSON.parse(favSent[0].body || "{}") : {};
+    ok("  열쇠가 **`id` · `on`** 이고 켜는 값을 보낸다",
+       favBody.p && favBody.p.id === JOBS_U[1].id && favBody.p.on === true,
+       JSON.stringify(favBody.p || {}));
+    /* ⚠️⚠️ **저장 수를 어디에도 안 적습니다** */
+    ok("⚠️⚠️ 화면 어디에도 **저장 수**를 안 적는다",
+       !/저장\s*\d+|\d+\s*명 저장/.test(
+         (await g.p.textContent("#joblist")) || ""),
+       ((await g.p.textContent("#joblist")) || "").slice(0, 160));
+
     /* 찾는 말 — ⚠️ 서버가 찾습니다(쉰 줄만 받아 화면에서 찾으면 그
        쉰 줄 밖의 공고가 영영 안 나옵니다) */
     g.sent.length = 0;
@@ -9962,8 +10060,11 @@ function boardsOf(){
                  text: (li ? li.innerText : "").trim(),
                  help: li ? li.querySelectorAll('a[href="/help"]').length : -1 };
       });
+      /* ⚠️⚠️ **갯수를 박지 않습니다** — 0077 이 출발 월 칸을 더하자
+         `=== 3` 이 **멀쩡한 화면을 실패로** 잡았습니다. 재려는 뜻은
+         "설정이 없어도 찾는 칸이 서는가" 이지 몇 칸인가가 아닙니다. */
       ok("⚠️⚠️ 설정 전에도 **찾는 칸은 선다** (주소만 짓는 칸입니다)",
-         off.find === 3, String(off.find));
+         off.find > 0, String(off.find));
       ok("⚠️ 설정 전에는 상품 목록 자리에 **적는 칸이 없다**",
          off.fields === 0, JSON.stringify(off).slice(0, 200));
       ok("  그래도 **그 자리에서 말합니다** (빈 자리로 두지 않습니다)",
@@ -9985,8 +10086,12 @@ function boardsOf(){
     /* ⚠️⚠️ **설정이 있으면 찾는 칸이 섭니다** — 그 칸은 주소만 짓고
        DB 를 안 읽으므로 0건이어도 서야 합니다(0060 에서 메인의 찾는
        칸을 통째로 치워 버린 그 자리). */
-    ok("  찾는 칸이 선다 (목적지 · 일정 · 예산 · 찾는 말)",
-       (await t.p.locator("#tripform select").count()) === 3 &&
+    /* ⚠️ 갯수를 안 박습니다 — 칸이 늘어도 **집어서** 확인합니다 */
+    ok("  찾는 칸이 선다 (목적지 · 출발 월 · 일정 · 예산 · 찾는 말)",
+       (await t.p.locator("#tp-ds").count()) === 1 &&
+       (await t.p.locator("#tp-mo").count()) === 1 &&
+       (await t.p.locator("#tp-sp").count()) === 1 &&
+       (await t.p.locator("#tp-bd").count()) === 1 &&
        (await t.p.locator("#tp-q").count()) === 1,
        await t.p.locator("#tripform select").count());
     /* ⚠️⚠️ 시안은 「국내」가 켜진 채로 그려 있지만 **「전체」를 먼저**
@@ -9996,13 +10101,16 @@ function boardsOf(){
        (await t.p.locator(".tpf-t").count()) === 3 &&
        ((await t.p.textContent(".tpf-t.on")) || "").trim() === "전체",
        (await t.p.textContent(".tpf-t.on")) || "");
-    /* ⚠️⚠️⚠️ **출발 월 칸을 안 냅니다** — 0073 은 상품마다 출발일을
-       안 받습니다. 고르게 해 놓고 안 걸러 주면 눌러도 아무 일이 안
-       나는 칸입니다(절대 규칙 5). 그 사실을 그 자리에서 말합니다. */
-    ok("⚠️⚠️⚠️ **출발 월** 고르개를 안 낸다 (담는 칸이 없습니다)",
-       (await t.p.locator('#tripform [name="mo"]').count()) === 0);
-    ok("  왜 없는지를 그 자리에서 말한다",
-       /출발일은 상품마다/.test((await t.p.textContent(".tpf-n")) || ""),
+    /* ⚠️⚠️⚠️ **뒤집는 날 그 검사도 같이 뒤집습니다.** 2026-11-12 까지
+       이 자리는 "출발 월 고르개를 **안 낸다** (담는 칸이 없습니다)" 를
+       요구했습니다 — 0077 이 담는 칸을 낸 순간 그 검사는 **고장을
+       지키는** 줄이 됩니다(같은 날 `#lsbox` 에서 `boxHtml === ""` 를
+       요구하던 그 자리). 지금은 **낸다**를 요구합니다. */
+    ok("⚠️⚠️⚠️ **출발 월** 고르개를 낸다 (0077 로 담는 칸이 생겼습니다)",
+       (await t.p.locator('#tripform [name="mo"]').count()) === 1,
+       await t.p.locator('#tripform [name="mo"]').count());
+    ok("  안 올리신 상품이 빠진다는 것을 그 자리에서 말한다",
+       /빠집니다/.test((await t.p.textContent(".tpf-n")) || ""),
        (await t.p.textContent(".tpf-n")) || "");
     const tpcTxt = (await t.p.textContent(".tpc")) || "";
     /* ⚠️⚠️ 값은 **「부터」** 입니다 — 빼면 우리가 값을 확정해 말하는 것이
@@ -10157,7 +10265,13 @@ function boardsOf(){
        (await t.p.textContent(".tpd-dl")) || "");
     /* ⚠️⚠️⚠️ **안 올리신 상품은 다른 말이고 그 까닭을 적습니다** —
        「일정이 없는 상품」으로 읽히면 거짓입니다(절대 규칙 1 · 2). */
-    t = await open("/cat/travel?v=" + TR2, TCUS, TRT, {}, true);
+    /* ⚠️⚠️⚠️ **흉내 장치는 `trip_id` 를 안 걸러 줍니다** — 정해진
+       JSON 을 그대로 돌려줍니다. 그래서 TR2(출발일을 안 올린 상품)로
+       열면 TR1 의 날짜 셋이 그대로 따라와 **멀쩡한 화면이 고장으로**
+       보였습니다. 보고 싶은 줄만 담은 상자로 다시 엽니다
+       (0069 의 `used-one` 이 쓴 그 방법). */
+    t = await open("/cat/travel?v=" + TR2, TCUS,
+                   Object.assign({}, TRT, { v_trip_date_public: [] }), {}, true);
     const tpd2 = (await t.p.textContent(".tpd-dp")) || "";
     ok("⚠️⚠️⚠️ 출발일을 안 올리신 상품은 **그 사실을 말한다**",
        (await t.p.locator(".tpd-dp-none").count()) === 1 &&

@@ -40,8 +40,21 @@
      분께 「전체」라고 적힌 칸 아래 좁혀진 목록이 나옵니다. */
   function fill(f){
     var set = function(id, v){ var e = d.getElementById(id); if(e) e.value = v; };
-    set("fit-rg", f.rg); set("fit-w", f.w); set("fit-p", f.p);
-    set("fit-o", f.o);   set("fit-q", f.q);
+    set("fit-o", f.o); set("fit-q", f.q);
+    /* ⚠️⚠️ 레일 셋은 **네모 칸(radio)** 입니다(시안 ⑦ · 지시 5번) —
+       `value` 로 맞출 수가 없으므로 **이름으로 묶어** 그 값의 칸을
+       켭니다. 모르는 값이 실려 오면(주소를 손으로 고치신 경우) 「전체」가
+       켜집니다 — 빈 채로 두면 **아무 칸도 안 켜져** 손님이 지금 무엇으로
+       보고 계신지 알 길이 없습니다. */
+    ["rg", "w", "p"].forEach(function(k){
+      var L = d.querySelectorAll('#fitform input[name="' + k + '"]');
+      var hit = false;
+      Array.prototype.forEach.call(L, function(e){
+        e.checked = (e.value === (f[k] || ""));
+        if(e.checked) hit = true;
+      });
+      if(!hit && L.length) L[0].checked = true;
+    });
     /* ⚠️⚠️ **묶음 탭은 「담고 있으면」 켭니다** — 아래 하위 칩에서
        「드라이버 피팅」을 고르시면 그것은 시안의 「클럽 피팅」 안에
        있습니다. 똑같을 때만 켜면 그때 **아무 묶음도 안 켜져**, 손님이
@@ -207,8 +220,13 @@
   }
   function fromForm(){
     var v = function(id){ var e = d.getElementById(id); return e ? e.value : ""; };
+    /* ⚠️ 레일 셋은 네모 칸이라 **켜진 것**을 읽습니다 */
+    var r = function(k){
+      var e = d.querySelector('#fitform input[name="' + k + '"]:checked');
+      return e ? e.value : "";
+    };
     var f = now();
-    return { sub:f.sub, rg:v("fit-rg"), w:v("fit-w"), p:v("fit-p"),
+    return { sub:f.sub, rg:r("rg"), w:r("w"), p:r("p"),
              o:v("fit-o"), q:(v("fit-q") || "").trim() };
   }
 
@@ -218,9 +236,14 @@
   });
   /* 고르개는 바꾸는 즉시 — ⚠️ 찾는 칸(`input`)은 **안 받습니다**(글자를
      칠 때마다 다시 그리면 커서가 튕겨 나갑니다 · 0068 의 그 자리). */
-  ["fit-rg", "fit-w", "fit-p", "fit-o"].forEach(function(id){
-    var e = d.getElementById(id);
-    if(e) e.addEventListener("change", function(){ go(fromForm(), true); });
+  /* ⚠️⚠️ 네모 칸은 **양식 한 곳**에서 받습니다 — 칸마다 달면 레일을
+     다시 그리는 날 빠뜨리는 자리가 생깁니다(0069 의 `bindBar()` 규칙).
+     `change` 는 거품처럼 올라옵니다. */
+  form.addEventListener("change", function(e){
+    var t = e.target;
+    if(!t || !t.name) return;
+    if(t.name === "q") return;            /* 찾는 칸은 안 받습니다 */
+    go(fromForm(), true);
   });
 
   /* 탭 · 「초기화」 · 「조건 모두 지우기」 — ⚠️ 전부 **링크**이고 여기서

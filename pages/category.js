@@ -727,6 +727,36 @@ function fitHead(c){
   '</div></section>';
 }
 
+/* 레일의 한 묶음 — 시안 ⑦ 의 네모 칸 목록입니다.
+   ⚠️⚠️ **`fieldset` + `legend`** 입니다 — 제목을 그냥 `<p>` 로 두면
+   화면 읽는 기계가 「전체」가 무엇의 전체인지 못 읽습니다.
+   ⚠️ 칸마다 **id 가 하나씩** 필요합니다(`<label for>`). 이름에 분류를
+   안 섞어도 되는 까닭은 이 화면에 레일이 하나뿐이기 때문입니다 —
+   둘이 되는 날 같은 id 가 여럿이 됩니다(0046 의 동의 상자 자리). */
+function fitPick(name, title, ic, items, allName){
+  var rows = [{ key:"", name:allName }].concat(items || []);
+  return '<fieldset class="fit-rail-g fit-rail-g-' + esc(name) + '">' +
+    '<legend class="fit-rail-h">' + icon(ic, 15) + esc(title) + '</legend>' +
+    rows.map(function(x){
+      var id = "fit-" + name + "-" + (x.key || "all");
+      /* ⚠️⚠️⚠️ **네모 칸을 우리가 그립니다**(`.fit-ck-b`) — 브라우저가
+         그리는 동그라미는 18px 라 `check-screens` 의 「누름 40px」에서
+         폭마다 떨어집니다(실제로 다섯 폭에서 25건씩 잡혔습니다). 손님이
+         40~60대라 그 값을 낮추지 않습니다. 그래서 진짜 칸은 **줄 전체에
+         투명하게 깔고**(0068 의 `.lspk` 파일 칸과 같은 수) 보이는 네모는
+         우리가 그립니다 — 그러면 줄 아무 데나 눌러도 켜집니다.
+         ⚠️ 숨기지 않고 **깔아** 둡니다(`opacity:0`) — `display:none` 으로
+         숨기고 단추로 흉내 내면 자바스크립트가 꺼진 분에게 눌러도 아무
+         일이 안 나는 칸이 됩니다(절대 규칙 5). */
+      return '<label class="fit-ck" for="' + esc(id) + '">' +
+        '<input type="radio" id="' + esc(id) + '" name="' + esc(name) +
+          '" value="' + esc(x.key) + '"' + (x.key ? "" : " checked") + '>' +
+        '<i class="fit-ck-b" aria-hidden="true"></i>' +
+        '<span>' + esc(x.name) + '</span></label>';
+    }).join("") +
+  '</fieldset>';
+}
+
 /* ⚠️⚠️ 목록은 빌드가 **한 번** 찍고, 거르개를 누르면 `js/fitting.js` 가
    **같은 함수**(`amFitGrid`)로 다시 그립니다 — 두 벌로 적으면 거르개를
    누르는 순간 카드가 조용히 달라집니다.
@@ -748,22 +778,24 @@ function fitSec(c, list, items){
     fitTabs(c, items) +
     '<form class="fitw" id="fitform" method="get" action="' +
       esc(W.amCatUrl(c)) + '">' +
+      /* ⚠️⚠️⚠️ **시안 ⑦ 의 레일은 고르개(`<select>`)가 아니라 네모
+         칸입니다** — 지시 5번이 「단일 선택이어도 시안 형태 선택 UI 를
+         적용한다」고 못 박았습니다. 한 묶음에서 하나만 고르는 것이므로
+         `radio` 입니다(`checkbox` 로 그리면 둘을 고를 수 있을 것처럼
+         보이는데 거르개는 하나만 받습니다 · 절대 규칙 5).
+         ⚠️ 「전체」는 값이 **빈 글자**입니다 — 목록을 적어 두면 값이
+         느는 날 새 값이 「전체」에서 빠집니다(0069 의 `AM_LST_GROUP`
+         에서 세운 규칙).
+         ⚠️ 자바스크립트가 꺼져 있어도 이 양식은 **GET 으로 그대로**
+         돕니다(「검색」 한 번). */
       '<aside class="fit-rail" aria-label="상세 조건">' +
-        '<p class="fit-rail-h">' + icon("pin", 15) + '지역</p>' +
-        '<label class="sr-only" for="fit-rg">지역</label>' +
-        '<select id="fit-rg" name="rg">' + opt(REG, "지역 전체") + '</select>' +
-        '<p class="fit-rail-h">' + icon("store", 15) + '서비스 방식</p>' +
-        '<label class="sr-only" for="fit-w">서비스 방식</label>' +
-        '<select id="fit-w" name="w">' +
-          '<option value="">방식 전체</option>' +
-          WAY.map(function(x){
-            return '<option value="' + esc(x.key) + '">' + esc(x.name) +
-              (x.lead ? " (" + esc(x.lead) + ")" : "") + '</option>';
-          }).join("") +
-        '</select>' +
-        '<p class="fit-rail-h">' + icon("coin", 15) + '가격</p>' +
-        '<label class="sr-only" for="fit-p">가격</label>' +
-        '<select id="fit-p" name="p">' + opt(PRC, "가격 전체") + '</select>' +
+        fitPick("rg", "지역", "pin", REG, "전체") +
+        fitPick("w", "서비스 방식", "store",
+                WAY.map(function(x){
+                  return { key:x.key,
+                           name:x.name + (x.lead ? " (" + x.lead + ")" : "") };
+                }), "전체") +
+        fitPick("p", "가격", "coin", PRC, "전체") +
         /* ⚠️ 「조건 모두 지우기」는 **링크**입니다 — 자바스크립트가
            꺼져도 돕니다. 탭(`sub`)까지 같이 지웁니다. */
         '<a class="fit-rail-x" href="' + esc(W.amCatUrl(c)) + '">' +

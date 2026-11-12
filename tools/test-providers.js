@@ -1061,9 +1061,45 @@ function nowServe(){ return serve(0); }
            document.querySelectorAll(".fitsv-i"),
            function(e){ return !e.querySelector("svg"); }).length;
        })) === 0);
-    ok("  왼쪽 레일에 고르개 셋 (지역 · 서비스 방식 · 가격)",
-       (await p.locator(".fit-rail select").count()) === 3,
+    /* ⚠️⚠️⚠️ **시안 ⑦ 의 레일은 고르개가 아니라 네모 칸입니다**
+       (지시 5번 — 「단일 선택이어도 시안 형태 선택 UI」). 전에는
+       `<select>` 셋이었고 그때 이 줄도 셋을 세고 있었습니다 — 바꾸는
+       날 **그 검사도 같이** 뒤집지 않으면 멀쩡한 코드가 실패로 잡히고,
+       안 뒤집으면 **옛 모양을 지키는 검사**가 됩니다.
+       ⚠️ 갯수를 박지 않습니다 — 지역 수는 `AM_REGIONS` 에서 읽습니다. */
+    const fitRg = await p.evaluate(function(){
+      return (window.AM_REGIONS || []).length; });
+    ok("⚠️ 잴 것이 0개면 실패입니다 (지역 목록을 읽기는 했는가)", fitRg > 0, fitRg);
+    ok("  왼쪽 레일이 **묶음 셋**이다 (지역 · 서비스 방식 · 가격)",
+       (await p.locator(".fit-rail .fit-rail-g").count()) === 3,
+       await p.locator(".fit-rail .fit-rail-g").count());
+    ok("  ⚠️ 고르개(`select`)가 레일에 **한 개도 없다** (시안 형태로 바꿨습니다)",
+       (await p.locator(".fit-rail select").count()) === 0,
        await p.locator(".fit-rail select").count());
+    ok("  ⚠️⚠️ 지역 칸이 **열일곱 + 전체** 다 있다 (묶어서 줄이지 않습니다)",
+       (await p.locator('.fit-rail input[name="rg"]').count()) === fitRg + 1,
+       await p.locator('.fit-rail input[name="rg"]').count() + " / " + (fitRg + 1));
+    ok("  ⚠️ 묶음마다 **하나만** 켜져 있고 처음엔 「전체」다",
+       (await p.evaluate(function(){
+         return ["rg", "w", "p"].map(function(k){
+           var L = document.querySelectorAll('#fitform input[name="' + k + '"]:checked');
+           return L.length === 1 && L[0].value === "" ? 1 : 0;
+         }).join("");
+       })) === "111");
+    /* ⚠️⚠️ **눌러서** 좁혀지는지 봅니다 — 그려졌는지만 보면 「골라도
+       아무 일이 안 나는 칸」을 못 잡습니다(절대 규칙 5). */
+    await p.click("#fit-w-ship");
+    await p.waitForTimeout(250);
+    ok("  ⚠️⚠️ 네모 칸을 누르면 **새로고침 없이** 좁혀지고 주소에 남는다",
+       (await p.locator(".fit-c").count()) === 0 &&
+       (await p.evaluate(function(){ return location.search; })).indexOf("w=ship") >= 0,
+       await p.evaluate(function(){ return location.search; }));
+    await p.click("#fit-w-all");
+    await p.waitForTimeout(250);
+    ok("  「전체」로 되돌리면 다시 다 보인다 (막다른 길로 두지 않습니다)",
+       (await p.locator(".fit-c").count()) > 0 &&
+       (await p.evaluate(function(){ return location.search; })).indexOf("w=") < 0,
+       await p.evaluate(function(){ return location.search; }));
     /* ⚠️⚠️⚠️ 시안의 「추천순」은 **안 냅니다** — 무엇이 추천인지 세어 본
        적이 없습니다(절대 규칙 1). 생기는 날 이 줄이 먼저 빨개집니다. */
     const fitSrt = (await p.textContent("#fit-o")) || "";
@@ -1134,12 +1170,32 @@ function nowServe(){ return serve(0); }
        손님 화면에 나갑니다(절대 규칙 1 · 5).
        ⚠️ 카드와 **같은 값**을 내야 합니다 — 두 곳이 다른 말을 하면
        카드를 보고 들어온 분이 상세에서 다른 조건을 읽습니다. */
-    await p.goto("http://127.0.0.1:" + h.port + "/pro/t-fit",
+    /* ⚠️⚠️⚠️ **`/pro/t-fit` 을 열고 있었습니다 — 그 화면은 빌드에
+       없습니다.** `t-fit` 은 `db/seed/test-providers.sql`(DB 씨앗)의
+       id 이고, 이 검사가 심는 씨앗(`SEED`)은 `green-pt` · `xss-test`
+       둘뿐입니다. 그래서 404 가 떠 `main` 을 30초 기다리다 **검사가
+       통째로 터졌고**, 그 뒤 줄이 하나도 안 돌았습니다(2026-11-12 에
+       이 줄을 쓰면서 한 번도 안 돌려 본 자리입니다).
+       ⚠️ 피팅을 하는 씨앗은 `xss-test` 입니다(subs 에 ft-mend · ft-grip). */
+    await p.goto("http://127.0.0.1:" + h.port + "/pro/xss-test",
                  { waitUntil:"domcontentloaded" });
     const proTxt = (await p.textContent("main")) || "";
+    /* ⚠️⚠️⚠️ **화면 전체에서 「거래 조건」을 찾으면 안 됩니다** — `/pro`
+       의 중개 고지가 「거래 조건과 이행에 관한 책임은 이 업체에
+       있습니다」라고 적습니다. 처음에 `main` 전체를 뒤져 **멀쩡한
+       화면을 실패로** 잡았습니다(0052 에서 `#pvstadm` 전체를 뒤져
+       엉뚱한 칸을 집은 그 자리). 재려는 뜻은 「**업체 정보 표에 그
+       줄이 섰는가**」이므로 그 표의 줄머리만 봅니다. */
+    const proRows = await p.evaluate(function(){
+      return Array.prototype.map.call(
+        document.querySelectorAll("main .doc-t th"),
+        function(e){ return (e.textContent || "").trim(); });
+    });
+    ok("⚠️ 잴 것이 0개면 실패입니다 (업체 정보 표를 읽기는 했는가)",
+       proRows.length > 0, proRows.length);
     ok("⚠️⚠️ `/pro` 가 안 적으신 거래 조건을 **지어 적지 않는다**",
-       proTxt.indexOf("거래 조건") < 0 && proTxt.indexOf("부품비") < 0,
-       proTxt.replace(/\s+/g, " ").slice(0, 160));
+       proRows.indexOf("거래 조건") < 0 && proTxt.indexOf("부품비") < 0,
+       proRows.join(" · "));
     ok("  ⚠️ 그래도 업체 정보 표는 선다 (빈 자리로 두지 않습니다)",
        proTxt.indexOf("하는 일") >= 0 && proTxt.indexOf("영업 지역") >= 0,
        proTxt.replace(/\s+/g, " ").slice(0, 200));

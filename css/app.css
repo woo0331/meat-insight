@@ -3820,6 +3820,16 @@ picture{ display: contents; }
   .rngf-q{ flex-wrap:wrap; }
   .rngf-q > input{ flex:1 1 100%; }
   .rngf-q > .btn{ flex:1 1 100%; }
+  /* ⚠️⚠️⚠️ **돋보기가 입력 칸 밖으로 떨어져 있었습니다.** 위에서
+     `flex-wrap` 을 주는 순간 `.rngf-q` 가 두 줄(입력 칸 + 검색 단추)이
+     되는데, 돋보기는 `position:absolute; top:50%` 라 **감싼 상자의
+     한가운데** 에 앉습니다 — 재 보니 입력 칸이 0~48px 인데 돋보기
+     한가운데가 **53px**, 즉 입력 칸과 단추 **사이 빈 자리**였습니다
+     (폰 세 폭 전부). 가로로 밀리지도 · 글자가 작지도 · 대비가 낮지도
+     않아 **어떤 검사도 안 잡습니다** — 찍어 보고 알았고 재서 고쳤습니다.
+     ⚠️ 입력 칸의 `min-height` 가 48px 이므로 그 절반인 24px 가 첫 줄의
+     한가운데입니다 — 그 값을 바꾸는 날 여기도 같이 보세요. */
+  .rngf .rngf-i{ top:24px; }
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -3859,19 +3869,51 @@ picture{ display: contents; }
 .fitw > *{ min-width:0; }
 .fit-rail{ border:1.4px solid var(--line); border-radius:14px;
   background:#fff; padding:14px; align-content:start; }
-.fit-rail-h{ display:flex; align-items:center; gap:6px; margin:12px 0 6px;
-  font-weight:700; font-size:14px; color:var(--ink); }
-.fit-rail-h:first-child{ margin-top:0; }
-/* ⚠️ 고르개는 연습장(`.rngf-row select`)과 **같은 모양**입니다 —
-   비워 두면 브라우저 기본꺼리가 나와 한 화면에 두 가지 칸이 서게
-   됩니다(찍어 보고 알았습니다). */
-.fit-rail select, .fit-cnt select{ min-height:42px; width:100%;
+.fit-rail-h{ display:flex; align-items:center; gap:6px; margin:0 0 6px;
+  padding:0; font-weight:700; font-size:14px; color:var(--ink); }
+/* ⚠️⚠️⚠️ **시안 ⑦ 의 레일은 네모 칸 목록입니다** (고르개가 아닙니다 ·
+   지시 5번). `fieldset` 은 브라우저가 테두리 · 여백을 저절로 넣으므로
+   전부 지웁니다 — 안 지우면 묶음마다 액자가 하나씩 더 생깁니다.
+   ⚠️ `min-width:0` 을 꼭 주세요 — `fieldset` 은 기본이 `min-width:
+   min-content` 라 **제 내용만큼 벌어져** 좁은 폭에서 레일이 가로로
+   밀립니다(격자 칸이 벌어진 그 자리의 사촌). */
+.fit-rail-g{ border:0; padding:0; margin:0 0 14px; min-width:0; }
+.fit-rail-g:last-of-type{ margin-bottom:0; }
+.fit-ck{ position:relative; display:flex; align-items:center; gap:9px;
+  min-height:40px; cursor:pointer; color:var(--ink); font-size:14.5px; }
+/* ⚠️ 진짜 칸은 **줄 전체**를 덮습니다 — 그래야 손가락에 닿는 자리가
+   40px 이 되고(check-screens 가 잽니다) 줄 아무 데나 눌러도 켜집니다. */
+.fit-ck input{ position:absolute; inset:0; width:100%; height:100%;
+  margin:0; opacity:0; cursor:pointer; }
+.fit-ck-b{ flex:none; width:18px; height:18px; border:1.6px solid var(--line);
+  border-radius:5px; background:#fff; display:flex; align-items:center;
+  justify-content:center; }
+.fit-ck input:checked + .fit-ck-b{ background:var(--grn); border-color:var(--grn); }
+.fit-ck input:checked + .fit-ck-b::after{ content:""; width:9px; height:5px;
+  border-left:2px solid #fff; border-bottom:2px solid #fff;
+  transform:rotate(-45deg) translate(1px, -2px); }
+/* ⚠️ 투명한 칸이라 초점 테두리가 안 보입니다 — **네모에** 그립니다 */
+.fit-ck input:focus-visible + .fit-ck-b{ outline:2px solid var(--grn);
+  outline-offset:2px; }
+.fit-ck input:checked ~ span{ color:var(--grn-text); font-weight:700; }
+.fit-ck span{ min-width:0; }
+/* ⚠️⚠️ **지역이 열일곱입니다** — 시안 ⑦ 은 다섯 줄(전체 · 경기 · 서울 ·
+   인천 · 기타 지역)로 그렸지만, 「기타 지역」으로 묶으면 그 안의 업체를
+   지역으로 좁힐 길이 없어집니다(골라도 못 걸러 주는 칸 · 절대 규칙 5).
+   그래서 **열일곱을 다 내고** 그 묶음만 안에서 굴립니다 — 거르개 줄
+   (`.sf-c`)이 가로로 굴러가는 자리와 같은 결입니다(「밀면 보이는 것은
+   보이는 것이 아니다」는 **메뉴처럼 전부 보여야 하는 것**의 규칙입니다).
+   ⚠️ `overscroll-behavior:contain` 이 없으면 끝까지 굴린 바퀴가 **뒤
+   화면으로 넘어갑니다**(머리말 펼침 칸에서 겪은 자리). */
+.fit-rail-g-rg{ max-height:302px; overflow-y:auto;
+  overscroll-behavior:contain; padding-right:4px; }
+/* ⚠️ 차례 고르개(`.fit-cnt select`)는 그대로 고르개입니다 — 시안도
+   오른쪽 위에 펼침 칸으로 그렸습니다. */
+.fit-cnt select{ min-height:42px; width:auto; max-width:100%;
   border:1.5px solid var(--line); border-radius:var(--r-pill);
   padding:6px 14px; font-size:14.5px; background:#fff; color:var(--ink);
-  font-family:inherit; max-width:100%; }
-.fit-cnt select{ width:auto; }
-.fit-rail select:focus, .fit-cnt select:focus{ outline:2px solid var(--grn);
-  outline-offset:1px; }
+  font-family:inherit; }
+.fit-cnt select:focus{ outline:2px solid var(--grn); outline-offset:1px; }
 .fit-rail-x{ display:inline-flex; align-items:center; gap:5px;
   min-height:40px; margin-top:12px; color:var(--ink2); font-size:14px; }
 
@@ -3931,11 +3973,12 @@ picture{ display: contents; }
 
 @media (max-width:1000px){
   .fitw{ grid-template-columns:1fr; }
+  /* ⚠️ 좁은 폭에서는 묶음 셋이 **가로로** 섭니다 — 세로로 두면 레일만
+     읽다가 목록에 닿기까지 한 화면을 밀어야 합니다. */
   .fit-rail{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr));
-    gap:10px 14px; align-items:end; }
+    gap:10px 14px; align-items:start; }
   .fit-rail > *{ min-width:0; }
-  .fit-rail-h{ margin:0; grid-column:auto; }
-  /* ⚠️ 좁은 폭에서는 이름표와 고르개가 한 줄씩 짝을 이루게 둡니다 */
+  .fit-rail-g{ margin:0; }
   .fit-rail-x{ grid-column:1 / -1; margin-top:0; }
   .fit-g{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
 }

@@ -147,7 +147,43 @@ var PROBE = function(cfg){
     });
   })();
 
+  /* ⚠️⚠️⚠️ **입력 칸에 겹쳐 그린 장식이 그 칸 밖에 앉은 자리**
+     (2026-11-12). 연습장 찾는 칸의 돋보기가 폰 세 폭에서 **입력 칸과
+     검색 단추 사이 빈 자리**에 떠 있었습니다 — 감싼 상자에
+     `flex-wrap` 을 주는 순간 그 상자가 두 줄이 되는데, 돋보기는
+     `position:absolute; top:50%` 라 **상자의** 한가운데로 갑니다
+     (입력 칸은 0~48px 인데 돋보기 한가운데가 53px 였습니다).
+     ⚠️ 가로로 밀리지도 · 글자가 작지도 · 대비가 낮지도 않아 **어떤
+     검사도 안 잡았습니다** — 찍어 보고 알았습니다.
+     ⚠️⚠️ **이름을 나열하지 않습니다** — 돋보기 · 통화 기호 · 달력처럼
+     앞으로 생길 장식도 같이 잡으려면 "입력 칸 하나를 감싼 자리에
+     절대 위치로 떠 있는 **제 글이 없는** 칸" 이라는 뜻으로 세야 합니다.
+     ⚠️ 안 그려진 칸은 건너뜁니다 (`getClientRects().length`) — 그건
+     다른 자물쇠입니다. */
+  var deco = [];
+  [].slice.call(document.querySelectorAll("input, textarea")).forEach(function(inp){
+    if(!inp.getClientRects().length) return;
+    var host = inp.parentElement;
+    while(host && getComputedStyle(host).position === "static") host = host.parentElement;
+    if(!host || host === document.body || host === document.documentElement) return;
+    var I = inp.getBoundingClientRect();
+    [].slice.call(host.querySelectorAll("*")).forEach(function(el){
+      if(el === inp) return;
+      if(getComputedStyle(el).position !== "absolute") return;
+      if(!el.getClientRects().length) return;
+      if((el.textContent || "").trim()) return;          /* 제 글이 있으면 장식이 아닙니다 */
+      if(el.closest("a, button")) return;                /* 누르는 것은 다른 자물쇠 */
+      if(el.querySelector("input, textarea, select")) return;
+      var C = el.getBoundingClientRect();
+      if(C.top >= I.top - 1 && C.bottom <= I.bottom + 1) return;
+      deco.push((el.tagName.toLowerCase()) + " 한가운데 " +
+                Math.round(C.top + C.height / 2 - I.top) + "px · 입력 칸 0~" +
+                Math.round(I.height) + "px");
+    });
+  });
+
   return { small: small, taps: taps, cut: cut, text: text, nobg: nobg, hid: hid,
+           deco: deco,
            wide: document.documentElement.scrollWidth > window.innerWidth + 1,
            sw: document.documentElement.scrollWidth, vw: window.innerWidth };
 };
@@ -201,6 +237,9 @@ function hex(a){ return "#" + a.map(function(n){ return ("0"+Math.round(n).toStr
                                     r.cut.slice(0,6).join("\n       "));
       if(low.length)     probs.push("대비 미달 " + low.length + "건: " + low[0].tag + " " +
                                     low[0].r.toFixed(2) + " (" + low[0].t + ")");
+      /* ⚠️ 입력 칸에 겹쳐 그린 돋보기 · 기호가 그 칸 밖에 앉은 자리 */
+      if(r.deco && r.deco.length)
+        probs.push("입력 칸 밖에 앉은 장식 " + r.deco.length + "건: " + r.deco[0]);
       if(probs.length){ bad += probs.length; console.error("❌ " + head + "\n     " + probs.join("\n     ")); }
       else console.log("✅ " + head + "  글자 " + r.text.length + "칸 잼" +
                        (r.nobg.length ? "  (그라디언트라 못 잰 칸 " + r.nobg.length + ")" : ""));

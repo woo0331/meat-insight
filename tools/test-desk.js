@@ -10265,13 +10265,15 @@ function boardsOf(){
        (await t.p.textContent(".tpd-dl")) || "");
     /* ⚠️⚠️⚠️ **안 올리신 상품은 다른 말이고 그 까닭을 적습니다** —
        「일정이 없는 상품」으로 읽히면 거짓입니다(절대 규칙 1 · 2). */
-    /* ⚠️⚠️⚠️ **흉내 장치는 `trip_id` 를 안 걸러 줍니다** — 정해진
-       JSON 을 그대로 돌려줍니다. 그래서 TR2(출발일을 안 올린 상품)로
-       열면 TR1 의 날짜 셋이 그대로 따라와 **멀쩡한 화면이 고장으로**
-       보였습니다. 보고 싶은 줄만 담은 상자로 다시 엽니다
-       (0069 의 `used-one` 이 쓴 그 방법). */
+    /* ⚠️⚠️⚠️ **흉내 장치는 `id=eq.` 도 `trip_id=eq.` 도 안 걸러 줍니다**
+       — 정해진 JSON 을 그대로 돌려줍니다. 그래서 TR2(출발일을 안 올린
+       상품)로 열면 **TR1 의 줄과 날짜 셋이 그대로 따라와** 멀쩡한
+       화면이 고장으로 보였습니다(두 번 밟았습니다 — 처음에는 날짜만
+       갈아 끼웠는데 줄도 TR1 이었습니다). 보고 싶은 줄만 담은 상자로
+       다시 엽니다 (0069 의 `used-one` 이 쓴 그 방법). */
     t = await open("/cat/travel?v=" + TR2, TCUS,
-                   Object.assign({}, TRT, { v_trip_date_public: [] }), {}, true);
+                   Object.assign({}, TRT, { v_trip_open: [TROPEN[1]],
+                                            v_trip_date_public: [] }), {}, true);
     const tpd2 = (await t.p.textContent(".tpd-dp")) || "";
     ok("⚠️⚠️⚠️ 출발일을 안 올리신 상품은 **그 사실을 말한다**",
        (await t.p.locator(".tpd-dp-none").count()) === 1 &&

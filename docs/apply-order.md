@@ -13,13 +13,46 @@ robots 가 전부 막습니다. 아래를 다 하셔도 **검색에는 안 올�
 ## 검사한 최종 커밋
 
 ```
-커밋   __COMMIT__
+커밋   dcab822
 가지   claude/git-branch-workflow-j74dol
 검사   node tools/ship.js  (전수)
-결과   __RESULT__
+결과   ✅ 전부 초록 (902.2초)
 ```
 
-⚠️ `main` 은 **안 움직였습니다** — 이 커밋은 작업 가지에만 있습니다.
+묶음별로는 이렇습니다 — 이 가지를 그대로 돌린 값입니다.
+
+| 묶음 | 결과 |
+|---|---|
+| `check-nofake` (지어낸 자료) | 18 / 18 |
+| `check-authenv` (빈 환경변수 이름) | 8 / 8 |
+| `check-safe` (키 · 헤더 · CSP · esc) | 24 / 24 |
+| `check-a11y` (접근성) | 30 / 30 |
+| `test-join` (입점 신청) | 26 / 26 |
+| `test-match` (매칭 요청) | 115 / 115 |
+| `test-help` (고객센터 문의) | 29 / 29 |
+| `test-admin` (관리자 화면) | 26 / 26 |
+| `test-journey` (손님이 한 바퀴) | 222 / 222 |
+| **`test-desk`** (로그인해야 나오는 자리 전부) | **1580 / 1580** |
+| **`test-providers`** (업체가 있을 때) | **274 / 274** |
+| `test-course` (골프장이 있을 때) | 18 / 18 |
+| `test-photos` (사진) | 19 / 19 |
+| **`test-sql`** (임시 Postgres 로 DB 를 눌러 봄) | **2008 / 2008** |
+| `test-upgrade` (올렸을 때 기존 자료) | 41 / 41 |
+| 빌드 결과가 커밋과 같은가 | ✅ |
+
+⚠️ 나머지 묶음(`build.js` · `check-comments` · `check-globals` ·
+`check-deal` · `check-doors` · `check-chains` · `check-keys` ·
+`check-docs` · `check-routes` · `check-links` · `check-photos` ·
+`check-screens`)은 **건수를 안 찍고** 막으면 멈춥니다 — 멈추지
+않았으므로 통과입니다.
+
+⚠️⚠️ **「검사가 초록」과 「운영에 올려도 된다」는 다릅니다.** 위는
+**이 작업 가지의 코드**가 스스로 세운 규칙을 다 지킨다는 뜻이지,
+운영 DB·환경변수·버킷이 준비되었다는 뜻이 아닙니다. 그 준비는
+아래 1~5번이고, **아직 아무것도 안 했습니다.**
+
+⚠️ `main` 은 **안 움직였습니다** — 이 커밋은 작업 가지에만 있습니다
+(`origin/claude/git-branch-workflow-j74dol` 에 올라가 있습니다).
 
 ---
 

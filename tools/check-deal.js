@@ -144,10 +144,22 @@ function checkKeys(sql, col, table){
      ⚠️ **마지막 것이 이깁니다** — 파일을 번호 차례로 이어 읽으므로
      뒤에 적힌 것이 나중에 돈 것입니다. 번호를 박지 않습니다. */
   let i = 0;
-  const head = "alter table " + table + " add constraint ";
+  /* ⚠️⚠️⚠️ **그날의 꼴을 박지 않습니다** (2026-11-12). 전에는
+     "alter table <표> add constraint " 라는 **한 줄짜리 글자**로 찾았는데,
+     0072 가 그 문장을 세 줄로 적자 이 검사가 **DB 에 있는 값을 없다고**
+     했습니다 — 화면이 맞고 검사가 틀린 자리입니다(작업 기억의 그 줄).
+     지금은 사이의 공백 · 줄바꿈을 다 받습니다.
+     ⚠️ 문자열 안의 정규식이라 백슬래시가 **두 겹**입니다 (한 겹이면
+     템플릿이 먹어서 아무것도 안 잡는 검사가 됩니다). */
+  const re = table
+    ? new RegExp("alter\\s+table\\s+" + table + "\\s+add\\s+constraint\\s", "g")
+    : null;
   for(;;){
-    const a2 = table ? sql.indexOf(head, i) : -1;
-    if(a2 < 0) break;
+    if(!re) break;
+    re.lastIndex = i;
+    const m = re.exec(sql);
+    if(!m) break;
+    const a2 = m.index;
     /* ⚠️ 그 `add constraint` 한 덩이 안에서만 봅니다 — 세미콜론까지.
        덩이를 안 자르면 **다음 제약의 check** 를 이 칸 것으로 읽습니다. */
     const semi = sql.indexOf(";", a2);
@@ -157,7 +169,7 @@ function checkKeys(sql, col, table){
       const got = grab(a2 + c2);
       if(got && got.length) out = got;
     }
-    i = a2 + head.length;
+    i = a2 + m[0].length;
   }
   return out;
 }

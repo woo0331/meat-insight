@@ -677,8 +677,75 @@ window.amLstPriceBand = function(k){
 window.AM_JOB_KIND = [
   { key:"hire", name:"구인",      lead:"사람을 구합니다"   },
   { key:"seek", name:"구직",      lead:"일자리를 구합니다" },
-  { key:"biz",  name:"제휴 · 거래", lead:"업체끼리 제안합니다" }
+  { key:"biz",  name:"제휴 · 거래", lead:"업체끼리 제안합니다" },
+  /* ⚠️ 0072 가 더한 넷째입니다 — 시안 ⑨ 의 탭 네 번째.
+     ⚠️⚠️ `check-deal` 이 0072 의 jobpost_kind_ck 와 **글자까지** 맞춰
+     봅니다. 한쪽만 고치면 화면은 보내는데 DB 가 거절합니다. */
+  { key:"facility", name:"시설 · 장비 거래", lead:"연습장 · 장비를 넘기거나 찾습니다" }
 ];
+
+/* ── 직무 · 고용형태 · 금액 (0072) ───────────────────────────────
+   ⚠️⚠️ **키 묶음은 여기 한 곳**입니다 — DB 는 빈 글자와 길이만 봅니다
+   (0056 이 listing.sub 를 안 박은 그 까닭). 늘리실 때는 **더하기만**
+   하세요: 이미 올라온 공고가 그 글자를 들고 있습니다. */
+window.AM_JOB_ROLE = [
+  { key:"jr-coach",  name:"레슨 프로 (코치)" },
+  { key:"jr-manage", name:"운영 · 매니저" },
+  { key:"jr-fit",    name:"피팅 · 장비" },
+  { key:"jr-sales",  name:"마케팅 · 영업" },
+  { key:"jr-etc",    name:"기타" }
+];
+window.AM_JOB_EMP = [
+  { key:"je-full",  name:"정규직" },
+  { key:"je-part",  name:"계약직" },
+  { key:"je-free",  name:"프리랜서 (위촉)" },
+  { key:"je-etc",   name:"기타" }
+];
+/* ⚠️⚠️ **pay_type 만 DB 가 박고 있습니다** — 목록이 아니라 뜻이라
+   오타가 들어오면 거르개가 조용히 엉뚱한 글을 모읍니다. 늘리시려면
+   마이그레이션이 필요한 것이 맞습니다 (0072 머리말).
+   ⚠️ `price` 는 **시설 · 장비 거래 전용**입니다 — 급여와 섞이면
+   "월 300만원 이상" 거르개가 중고 타석기 300만원을 끌어옵니다. */
+window.AM_JOB_PAY = [
+  { key:"negotiate", name:"협의",       unit:"",       kinds:["hire","seek","biz","facility"] },
+  { key:"monthly",   name:"월급",       unit:"월",     kinds:["hire","seek"] },
+  { key:"annual",    name:"연봉",       unit:"연",     kinds:["hire","seek"] },
+  { key:"hourly",    name:"시급",       unit:"시간당", kinds:["hire","seek"] },
+  { key:"per_round", name:"라운드당",   unit:"1회",    kinds:["hire","seek"] },
+  { key:"price",     name:"거래 희망가", unit:"",      kinds:["facility"] }
+];
+/* 그 갈래에서 고를 수 있는 금액 종류 — 화면이 이것만 그립니다
+   (못 고르는 것을 그리면 눌러도 거절되는 칸입니다 · 절대 규칙 5) */
+window.amJobPayFor = function(kind){
+  return (window.AM_JOB_PAY || []).filter(function(r){
+    return (r.kinds || []).indexOf(kind) >= 0; });
+};
+/* ⚠️⚠️⚠️ **금액을 적는 자리는 한 곳**입니다 — 목록 카드 · 상세 ·
+   /my 가 다 이것을 부릅니다. 세 곳에 따로 적으면 한쪽만 고치는 날
+   같은 공고가 화면마다 다른 급여를 말합니다.
+   ⚠️ 0 원도 값입니다(무료로 드리는 시설) — `||` 를 쓰면 사라집니다.
+   ⚠️ 적힌 것이 하나도 없으면 **null** 입니다 (화면이 줄째 뺍니다 —
+   "협의" 를 우리가 지어 적지 않습니다 · 절대 규칙 1). */
+window.amJobPay = function(r){
+  if(!r) return null;
+  var t = r.pay_type, n = r.pay_min, L = window.AM_JOB_PAY || [], row = null;
+  for(var i = 0; i < L.length; i++) if(L[i].key === t) row = L[i];
+  var free = (r.pay && String(r.pay).trim()) ? String(r.pay).trim() : "";
+  if(!row) return free || null;
+  if(t === "negotiate") return free ? (row.name + " · " + free) : row.name;
+  if(n === null || n === undefined || n === "") return free || row.name;
+  var won = Number(n);
+  if(!isFinite(won)) return free || row.name;
+  /* ⚠️⚠️ **0 원은 무료입니다** — 0056 이 매물에서 세운 그 규칙입니다
+     (연습장 타석기를 거저 넘기시는 자리). `||` 를 쓰면 사라집니다. */
+  if(t === "price" && won === 0) return "무료로 드립니다" + (free ? (" · " + free) : "");
+  var money = won.toLocaleString("ko-KR") + "원";
+  var head = row.unit ? (row.unit + " " + money) : money;
+  /* ⚠️ 급여는 **하한**이라 "부터" 입니다 — 그 값이 곧 급여가 아닙니다.
+     ⚠️ 거래 희망가는 하한이 아니라 **부르는 값**이라 "부터" 를 안 붙입니다
+     (붙이면 안 적힌 범위를 우리가 지어내는 것입니다). */
+  return head + (t === "price" ? "" : "부터") + (free ? (" · " + free) : "");
+};
 window.amJobKind = function(k){
   var L = window.AM_JOB_KIND || [];
   for(var i = 0; i < L.length; i++) if(L[i].key === k) return L[i];

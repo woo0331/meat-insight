@@ -197,3 +197,28 @@ window.amPvKind = function(p){
 window.amProviderHasIdent = function(p){
   return window.amProviderIdent(p).length > 0;
 };
+
+/* ── 연습장 시설 정보 (0074) ─────────────────────────────────────
+   ⚠️⚠️ **키 묶음은 여기 한 곳**입니다 — DB 는 갯수와 길이만 봅니다
+   (0056 이 listing.sub 를 안 박은 그 까닭). 늘리실 때는 **더하기만**
+   하세요: 이미 등록한 연습장이 그 글자를 들고 있습니다.
+   ⚠️ 시안 ⑤ 의 고르개 다섯 가운데 넷이 여기이고, 지역은
+   `AM_REGIONS`, 가격은 **provider_price(0042)** 가 이미 담습니다. */
+window.AM_RANGE_OPT = [
+  { key:"indoor",  name:"실내" },
+  { key:"outdoor", name:"실외" },
+  { key:"screen",  name:"스크린" },
+  { key:"parking", name:"주차 가능" },
+  { key:"lesson",  name:"레슨 운영" }
+];
+window.amRangeOpt = function(k){
+  var L = window.AM_RANGE_OPT || [];
+  for(var i = 0; i < L.length; i++) if(L[i].key === k) return L[i];
+  return null;
+};
+/* 업체가 고른 것을 사람 말로 — ⚠️ 모르는 키는 **그대로** 냅니다
+   (이름을 지어내지 않습니다 · 절대 규칙 1) */
+window.amRangeOptsOf = function(p){
+  var a = (p && p.range_opts) || [];
+  return a.map(function(k){ var r = window.amRangeOpt(k); return r ? r.name : k; });
+};

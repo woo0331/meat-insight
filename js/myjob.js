@@ -101,10 +101,10 @@
         var live = j.state === "open";
         return '<li class="mj-i" data-id="' + esc(j.id) + '">' +
           '<p class="mj-t"><b>' + esc(j.title) + '</b> · ' +
-            esc(KNAME[j.kind] || j.kind) + ' · ' +
-            esc(SUBNAME[j.sub] || j.sub) + ' · ' +
-            esc(REG[j.region] || j.region) +
-            ' · <span class="mq-s">' + esc(PST[j.state] || j.state) + '</span>' +
+            esc(window.amKeyName(KNAME, j.kind, "갈래")) + ' · ' +
+            esc(window.amKeyName(SUBNAME, j.sub, "하위분류")) + ' · ' +
+            esc(window.amKeyName(REG, j.region, "지역")) +
+            ' · <span class="mq-s">' + esc(window.amKeyName(PST, j.state, "상태")) + '</span>' +
             (j.close_at ? ' · 마감 ' + esc(dayText(j.close_at)) : '') + '</p>' +
           /* ⚠️ 가린 까닭을 보여 드립니다 — 까닭 없이 가릴 수 없게 해
              두었고, 그 까닭을 숨기면 글쓴이는 무엇이 문제였는지 알 수
@@ -116,7 +116,7 @@
                 var c = cm[ap.id];
                 return '<li>' +
                   '<p class="mj-m">' + (ap.msg ? esc(ap.msg) : '(적어 주신 말 없음)') +
-                    ' — <b>' + esc(AST[ap.state] || ap.state) + '</b></p>' +
+                    ' — <b>' + esc(window.amKeyName(AST, ap.state, "상태")) + '</b></p>' +
                   (ap.state === "applied"
                     ? '<button type="button" class="btn btn-pt mb-ok" data-id="' +
                         esc(ap.id) + '">수락</button>' +
@@ -153,7 +153,7 @@
       html += '<ul class="mj-l">' + sent.map(function(ap){
         var c = cm[ap.id];
         return '<li class="mj-i">' +
-          '<p class="mj-t"><b>' + esc(AST[ap.state] || ap.state) + '</b>' +
+          '<p class="mj-t"><b>' + esc(window.amKeyName(AST, ap.state, "상태")) + '</b>' +
             (ap.msg ? ' · ' + esc(ap.msg) : '') + '</p>' +
           (ap.state === "applied"
             ? '<button type="button" class="btn btn-line mb-cancel" data-id="' + esc(ap.id) +

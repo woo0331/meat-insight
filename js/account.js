@@ -135,7 +135,7 @@
       }
       return say(box,
         "<h2>이미 로그인하셨습니다.</h2>" +
-        "<p>" + esc(a.name || "회원") + "님 — " + esc(ROLE_NAME[a.role] || a.role) + "</p>" +
+        "<p>" + esc(a.name || "회원") + "님 — " + esc(window.amKeyName(ROLE_NAME, a.role, "권한")) + "</p>" +
         '<a class="btn btn-pri" href="/my">내 정보로 가기</a>');
     }
     say(box,
@@ -227,7 +227,7 @@
     box.className = "mybox";
     box.innerHTML =
       '<div class="mycard"><h2>' + esc(a.name || "회원") + '님</h2>' +
-      '<p class="myrole">권한 — ' + esc(ROLE_NAME[a.role] || a.role) + '</p>' +
+      '<p class="myrole">권한 — ' + esc(window.amKeyName(ROLE_NAME, a.role, "권한")) + '</p>' +
       '<p class="myhint">권한은 플랫폼이 정합니다. 아래 <b>하는 일</b>은 직접 켜고 끄실 수 있습니다.</p>' +
       /* ⚠️⚠️ **업체 회원에게만** 작업실 길을 냅니다. 모두에게 내면
          누르는 사람 대부분이 "업체만 볼 수 있습니다" 를 보게 됩니다 —

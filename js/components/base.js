@@ -139,3 +139,38 @@ window.icon = function(name, size){
 
 /* 이름이 있는지만 — 빌드 가드가 부릅니다 */
 window.hasIcon = function(name){ return !!(window.AM_ICONS || {})[name]; };
+
+/* ── 모르는 내부 키를 손님 화면에 안 찍습니다 ─────────────────────
+   ⚠️⚠️⚠️ **2026-11-12 에 실제로 찍혔습니다** — 공고 상세의 직무 자리에
+   `jr-caddy` 가 영문 키 그대로 나왔습니다. 그때는 화면이 「모르는 값을
+   그대로 내는 것이 맞다」(이름을 지어내지 않는다)로 짜여 있었는데,
+   손님에게 내부 키는 **아무 뜻도 없는 글자**입니다. 지어내지 않으면서
+   키도 안 보이는 길은 **중립 문구 + 운영 로그**입니다.
+
+   `kind` 를 주시면 「직무 미확인」처럼 무엇이 비었는지까지 말합니다.
+   ⚠️ **빈 값은 빈 글자 그대로 돌려줍니다** — 안 고르신 칸은 줄째 빠지는
+   것이 맞고(절대 규칙 2), 「미확인」을 찍으면 **안 고른 것**과
+   **모르는 값**이 섞입니다. 둘은 다른 자리입니다.
+   ⚠️ 적는 자리는 `console.warn` 입니다 — 무엇이 빠졌는지는 운영자에게
+   할 말이고 손님 화면에 적지 않습니다(절대 규칙 3).
+   ⚠️ 목록(배열 · `{key,name}`)과 표(객체 · `{키:이름}`) 둘 다 받습니다 —
+   이 저장소에 두 꼴이 다 있어서, 받는 꼴을 하나로 좁히면 부르는 자리가
+   꼴을 바꿔 적게 되고 거기서 또 어긋납니다. */
+window.amKeyName = function(src, key, kind){
+  var k = (key === 0 || key) ? String(key) : "";
+  if(!k) return "";
+  var got = "";
+  if(Object.prototype.toString.call(src) === "[object Array]"){
+    for(var i = 0; i < src.length; i++){
+      if(src[i] && String(src[i].key) === k){ got = src[i].name; break; }
+    }
+  }else if(src && typeof src === "object"){
+    /* ⚠️ `src[k]` 를 그냥 쓰면 `constructor` 같은 이름이 걸립니다 */
+    if(Object.prototype.hasOwnProperty.call(src, k)) got = src[k];
+  }
+  if(got) return String(got);
+  try{
+    console.warn("[amKeyName] 매핑 없는 값 — " + (kind || "값") + " = " + k);
+  }catch(_){}
+  return (kind ? kind + " " : "") + "미확인";
+};

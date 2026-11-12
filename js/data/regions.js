@@ -70,8 +70,15 @@ window.amRegion = function(key){
   var t = (window.AM_TRIP_REGIONS || []).filter(function(x){ return x.key === key; });
   return t.length ? { key:t[0].key, name:t[0].name, full:t[0].full, gu:[], abroad:true } : null;
 };
+/* ⚠️⚠️ **빈 칸과 모르는 키를 가릅니다** — 안 고르신 지역은 빈 글자라
+   그 줄이 줄째 빠지는 것이 맞고(절대 규칙 2), **모르는 키**는 다릅니다.
+   전에는 둘 다 빈 글자였고 그래서 지역이 **조용히 사라졌습니다** —
+   누가 무엇을 빠뜨렸는지 아무 기록도 안 남았습니다. 지금은 중립 문구를
+   내고 운영 기록으로 보냅니다(`amKeyName()` 과 같은 규칙). */
 window.amRegionName = function(key, gu){
-  var r = window.amRegion(key); if(!r) return "";
+  var r = window.amRegion(key);
+  if(!r) return window.amKeyName ? window.amKeyName([], key, "지역")
+                                 : (key ? "지역 미확인" : "");
   return gu ? (r.name + " " + gu) : r.name;
 };
 

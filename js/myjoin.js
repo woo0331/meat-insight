@@ -93,8 +93,8 @@
         var mine = (applies[r.id] || []);
         return '<li class="mj-i">' +
           '<p class="mj-t"><b>' + esc(r.title) + '</b> · ' +
-            esc(dayText(r.play_at)) + ' · ' + esc(REG[r.region] || r.region) +
-            ' · ' + esc(RST[r.state] || r.state) + '</p>' +
+            esc(dayText(r.play_at)) + ' · ' + esc(window.amKeyName(REG, r.region, "지역")) +
+            ' · ' + esc(window.amKeyName(RST, r.state, "상태")) + '</p>' +
           /* ⚠️ 가린 까닭을 연 사람에게 보여 줍니다 (0049) — 까닭 없이
              가릴 수 없게 해 두고 그 까닭을 숨기면, 무엇이 문제였는지
              모르니 다시 열 때도 같은 일을 합니다. */
@@ -105,7 +105,7 @@
                 var c = cm[ap.id];
                 return '<li>' +
                   '<p class="mj-m">' + (ap.msg ? esc(ap.msg) : '(남기신 말 없음)') +
-                    ' — <b>' + esc(ST[ap.state] || ap.state) + '</b></p>' +
+                    ' — <b>' + esc(window.amKeyName(ST, ap.state, "상태")) + '</b></p>' +
                   (ap.state === "applied"
                     ? '<button type="button" class="btn btn-pt mj-ok" data-id="' +
                         esc(ap.id) + '">수락</button>' +
@@ -137,7 +137,7 @@
       html += '<ul class="mj-l">' + sent.map(function(ap){
         var c = cm[ap.id];
         return '<li class="mj-i">' +
-          '<p class="mj-t"><b>' + esc(ST[ap.state] || ap.state) + '</b>' +
+          '<p class="mj-t"><b>' + esc(window.amKeyName(ST, ap.state, "상태")) + '</b>' +
             (ap.msg ? ' · ' + esc(ap.msg) : '') + '</p>' +
           (ap.state === "applied"
             ? '<button type="button" class="btn btn-line mj-cancel" data-id="' + esc(ap.id) +

@@ -20,7 +20,9 @@
   /* ⚠️⚠️⚠️ **`cq.cat` 은 게시판 키입니다 — 분류 키가 아닙니다.**
      2026-11-06 까지 이 줄이 `AM_CATS`(분류 열)에서 이름을 찾고 있어서,
      `cm-open`(자유게시판) 같은 게시판 키는 하나도 못 찾고 **키 그대로**
-     찍혔습니다(`esc(CATS[o.cat] || o.cat)` 의 뒷가지). 글쓰기 양식이
+     찍혔습니다(그때는 못 찾으면 키를 그대로 내는 뒷가지가 있었습니다).
+     ⚠️ 2026-11-12 에 그 뒷가지를 **`amKeyName()`** 으로 바꿨습니다 —
+     못 찾으면 중립 문구를 내고 매핑 누락은 운영 기록으로 갑니다. 글쓰기 양식이
      분류 키를 넣고 있던 그 고장의 거울상이고, 양식을 고친 날 이 줄을
      같이 고치지 않으면 여기만 조용히 영문 키를 냅니다.
      ⚠️ 끌어오는 자리는 `js/community.js` 의 `boards()` 와 같습니다 —
@@ -65,10 +67,10 @@
     var live = o.state === "live";
     return '<li class="mq-i" data-kind="' + kind + '" data-id="' + esc(o.id) + '">' +
       '<p class="mq-t">' +
-        (kind === "q" ? '<b>' + esc(o.title) + '</b> · ' + esc(CATS[o.cat] || o.cat)
+        (kind === "q" ? '<b>' + esc(o.title) + '</b> · ' + esc(window.amKeyName(CATS, o.cat, "게시판"))
                       : '<b>답변</b>') +
         ' · ' + esc(when(o.created_at)) +
-        ' · <span class="mq-s">' + esc(ST[o.state] || o.state) + '</span>' +
+        ' · <span class="mq-s">' + esc(window.amKeyName(ST, o.state, "상태")) + '</span>' +
       '</p>' +
       '<p class="mq-b">' + esc(o.body) + '</p>' +
       /* ⚠️ 가린 까닭을 보여 드립니다 — 까닭 없이 가릴 수 없게 해 두었고,

@@ -184,19 +184,19 @@
     /* ⚠️ 시안 ⑨ 의 줄 — 제목 아래에 **지역 · 고용 형태 · 급여** 한 줄,
        그리고 오른쪽에 「공고 상세 >」. 본문은 **상세에서** 냅니다
        (목록에 본문을 다 펴 놓으면 한 화면에 서너 건밖에 안 들어갑니다). */
-    var meta = [REG[j.region] || j.region,
-                nameOf(window.AM_JOB_EMP, j.emp_type),
+    var meta = [window.amKeyName(REG, j.region, "지역"),
+                nameOf(window.AM_JOB_EMP, j.emp_type, "고용 형태"),
                 (window.amJobPay ? window.amJobPay(j) : null)]
       .filter(Boolean).join(" · ");
     return '<li class="jbc" data-id="' + esc(j.id) + '">' +
       '<div class="jbc-h">' +
         '<h3>' + esc(j.title) + '</h3>' +
-        '<span class="jbc-k">' + esc(kname(j.kind) || j.kind) + '</span>' +
+        '<span class="jbc-k">' + esc(window.amKeyName(kinds(), j.kind, "갈래")) + '</span>' +
       '</div>' +
       /* ⚠️ 값이 없는 칸은 **줄에서 빠집니다** — "협의" 를 우리가 지어
          적지 않습니다(절대 규칙 1 · 2). */
       (meta ? '<p class="jbc-m">' + esc(meta) + '</p>' : '') +
-      '<p class="jbc-w2">' + esc(SUBNAME[j.sub] || j.sub) + ' · ' +
+      '<p class="jbc-w2">' + esc(window.amKeyName(SUBNAME, j.sub, "하위분류")) + ' · ' +
         esc(who) + ' · ' + esc(when(j.created_at)) + '</p>' +
       (j.close_at ? '<p class="jbc-d">마감 ' + esc(dayText(j.close_at)) + '</p>' : '') +
       /* ⚠️⚠️ **등록자 확인 여부**를 그 자리에서 말합니다 — 개인과
@@ -490,14 +490,12 @@
      (「채용 공고 (구인)」 · 「업체 제휴 공고 (파트너 모집)」).
      ⚠️⚠️ 갈래를 고르신 뒤에는 **안 냅니다** — 한 갈래만 남았는데 그
      머리를 또 내면 같은 말을 두 번 하는 것입니다. */
-  /* ⚠️ 모르는 키는 **그 글자를 그대로** 냅니다 — 이름을 지어내지
-     않습니다(0072 가 키 묶음을 DB 에 안 박은 그 까닭). */
-  function nameOf(L, k){
-    if(!k) return "";
-    var A = L || [];
-    for(var i = 0; i < A.length; i++) if(A[i].key === k) return A[i].name;
-    return String(k);
-  }
+  /* ⚠️⚠️⚠️ **모르는 키를 그 글자 그대로 내지 않습니다** — 2026-11-12
+     까지 그랬고, 공고 상세의 직무 자리에 `jr-caddy` 가 손님 화면에
+     그대로 찍혔습니다. 이름을 지어내지 않는 것과 **내부 키를 보여 주는
+     것**은 다릅니다. 중립 문구를 내고 매핑 누락은 운영 기록으로
+     보냅니다 — `amKeyName()` 한 곳입니다. */
+  function nameOf(L, k, kind){ return window.amKeyName(L, k, kind); }
   function groupHead(key){
     var x = (kinds().filter(function(y){ return y.key === key; })[0]) || null;
     if(!x) return "";
@@ -545,15 +543,16 @@
      열면 한 화면에 양식이 여럿 서고, 어느 공고에 쓰는지 흐려집니다. */
   function detail(j){
     var who = j.pro_name ? j.pro_name : j.who;
-    var meta = [SUBNAME[j.sub] || j.sub, REG[j.region] || j.region,
-                nameOf(window.AM_JOB_ROLE, j.role),
-                nameOf(window.AM_JOB_EMP, j.emp_type)]
+    var meta = [window.amKeyName(SUBNAME, j.sub, "하위분류"),
+                window.amKeyName(REG, j.region, "지역"),
+                nameOf(window.AM_JOB_ROLE, j.role, "직무"),
+                nameOf(window.AM_JOB_EMP, j.emp_type, "고용 형태")]
       .filter(Boolean).join(" · ");
     return '<div class="jbd" data-id="' + esc(j.id) + '">' +
       '<p class="jbd-back"><a class="btn btn-line btn-sm" href="' +
         esc(urlOf(Object.assign({}, nowAll(), { v:"" }))) + '">목록으로</a></p>' +
       '<h2 class="jbd-t">' + esc(j.title) + '</h2>' +
-      '<p class="jbd-k">' + esc(kname(j.kind) || j.kind) + '</p>' +
+      '<p class="jbd-k">' + esc(window.amKeyName(kinds(), j.kind, "갈래")) + '</p>' +
       '<p class="jbd-m">' + esc(meta) + '</p>' +
       '<p class="jbd-w">' + esc(who) + ' · ' + esc(when(j.created_at)) + '</p>' +
       /* ⚠️⚠️ 금액을 적는 자리는 `amJobPay()` **한 곳**입니다 — 적힌

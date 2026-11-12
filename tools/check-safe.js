@@ -17,6 +17,7 @@
      ⑦ 1년 캐시를 거는 자산에 내용 값(?v=)이 붙어 있는가
      ⑧ **없는 CSS 변수**를 쓴 자리 (조용히 기본값으로 떨어집니다)
      ⑨ **없는 아이콘 이름** (그 자리가 조용히 빈 칸이 됩니다)
+     ⑪ **내부 키를 손님 화면에 그대로 내는 꼴** (`ST[r.state] || r.state`)
 
    돌리기   node tools/check-safe.js
             node tools/check-safe.js --prove
@@ -575,6 +576,110 @@ if(process.argv.indexOf("--prove") >= 0){
    ["제대로 된 단추는 안 잡는다", 'x.innerHTML = \'<button class="btn btn-line zz">고치기</button>\';', false]
   ].forEach(function(pr){
     const got = scanBtn([["probe.js", pr[1]]]).length > 0;
+    const good = got === pr[2];
+    if(!good) bad++;
+    console.log("  " + (good ? "O" : "❌ 못 잡습니다") + " " + pr[0]);
+  });
+}
+
+
+/* ── ⑪ **내부 키를 손님 화면에 그대로 내는 꼴** ───────────────────
+   ⚠️⚠️⚠️ **2026-11-12 에 실제로 손님 화면에 찍혔습니다** — 공고 상세의
+   직무 자리에 `jr-caddy` 가 영문 키 그대로 나왔습니다. 꼴은 늘 같습니다:
+   표에서 이름을 찾고 **못 찾으면 키를 그대로** 내는 뒷가지
+   (`ST[r.state] || r.state`). 손님에게 내부 키는 아무 뜻도 없는 글자이고,
+   더 나쁘게는 「이 사이트가 덜 만들어졌다」로 읽힙니다.
+   고치는 자리는 `window.amKeyName()` 한 곳입니다 — 중립 문구를 내고
+   매핑 누락은 `console.warn` 으로 운영자에게만 갑니다(절대 규칙 3).
+
+   ⚠️ **운영자 화면(`js/admin*.js`)은 빼 둡니다** — 거기서는 키가 보이는
+   것이 오히려 단서입니다(무엇을 못 찾았는지 운영자가 바로 압니다).
+   지시도 「**고객** 화면에 그대로 출력하지 않는다」입니다.
+   ⚠️ 잴 것이 0개면 **실패**입니다 — 꼴이 바뀌어 아무것도 안 읽는 날
+   조용히 초록이 되지 않게. */
+/* ⚠️⚠️⚠️ **주석 속 글자를 잡지 않게 주석을 따라가며 뗍니다.** 이
+   저장소가 같은 자리를 **세 번** 밟았습니다 — `check-deal` 이 0026 의
+   주석 속 닫는 괄호를 enum 의 끝으로 읽은 자리 · `check-doors` 가 거절
+   문구 안의 함수 이름을 「부르는 자리」로 센 자리 · `test-desk` 가 0057
+   머리말의 `update provider set` 를 먼저 집은 자리. 여기서도 바로
+   밟았습니다 — `js/myjoin.js` 55줄의 **지난 일을 적은 주석**이 걸렸고,
+   줄머리만 보는 가드로는 **여러 줄 주석의 가운데 줄**을 못 거릅니다.
+   ⚠️ 글자(따옴표 · 백틱) 안의 `/*` 는 주석이 아니므로 같이 따라갑니다.
+   ⚠️ 자리는 그대로 두려고 **빈칸으로 바꿉니다**(지우지 않습니다). */
+function stripJsComments(txt){
+  var out = "", i = 0, n = txt.length, st = "code", q = "";
+  while(i < n){
+    var c = txt[i], d = txt[i + 1];
+    if(st === "code"){
+      if(c === "/" && d === "/"){ st = "line"; out += "  "; i += 2; continue; }
+      if(c === "/" && d === "*"){ st = "block"; out += "  "; i += 2; continue; }
+      if(c === '"' || c === "'" || c === "`"){ st = "str"; q = c; out += c; i++; continue; }
+      out += c; i++; continue;
+    }
+    if(st === "line"){
+      if(c === "\n"){ st = "code"; out += c; i++; continue; }
+      out += " "; i++; continue;
+    }
+    if(st === "block"){
+      if(c === "*" && d === "/"){ st = "code"; out += "  "; i += 2; continue; }
+      out += (c === "\n" ? c : " "); i++; continue;
+    }
+    /* 글자 안 */
+    if(c === "\\"){ out += "  "; i += 2; continue; }
+    if(c === q){ st = "code"; q = ""; }
+    out += c; i++;
+  }
+  return out;
+}
+function scanRawKey(srcs){
+  const out = [];
+  /* `XXX[a.b] || a.b` — 앞뒤의 알맹이가 **같은 자리**일 때만 잡습니다.
+     ⚠️ `byAd[b.ad_id] = byAd[b.ad_id] || []` 같은 모으는 자리는 뒤가
+     배열이라 안 걸립니다. */
+  const re = /\[\s*([A-Za-z_$][\w$]*)\.([\w$]+)\s*\]\s*\|\|\s*\1\.\2\b/g;
+  srcs.forEach(function(f){
+    const name = f[0], txt = stripJsComments(f[1]);
+    if(name.indexOf("js" + path.sep + "admin") === 0) return;
+    let m;
+    re.lastIndex = 0;
+    while((m = re.exec(txt))){
+      out.push(name + " — " + m[1] + "[" + m[0].slice(m[0].indexOf(".") + 1));
+    }
+  });
+  return out;
+}
+{
+  /* ⚠️ `FILES` 는 **상대 경로 글자**입니다 — ⑩ 과 같은 길로 읽습니다 */
+  const srcs = FILES.filter(function(f){
+    return /\.js$/.test(f) && f.indexOf("js" + path.sep) === 0;
+  }).map(function(f){
+    return [f, fs.readFileSync(path.join(ROOT, f), "utf8")];
+  });
+  ran++;
+  if(srcs.length === 0){ bad++; console.log("❌ 잴 것이 0개입니다 (js/ 를 못 읽었습니다)"); }
+  else {
+    const raw = scanRawKey(srcs);
+    ok("⚠️⚠️⚠️ **내부 키를 손님 화면에 그대로 내는 자리가 없다** (amKeyName 을 쓰세요)",
+       raw.length === 0, raw.slice(0, 6).join(" · "));
+  }
+}
+
+if(process.argv.indexOf("--prove") >= 0){
+  console.log("\n── 되돌려 보기 ⑪ — 키를 그대로 내는 뒷가지를 넣어 봅니다");
+  [["상태 말의 뒷가지", 'x.innerHTML = esc(ST[r.state] || r.state);', true],
+   ["하위분류의 뒷가지", 'var m = [SUBNAME[j.sub] || j.sub].join(" · ");', true],
+   /* ⚠️ 모으는 자리는 잡으면 안 됩니다 — 뒤가 같은 자리가 아닙니다 */
+   ["모으는 자리는 안 잡는다", 'var L = (by[x.id] = by[x.id] || []);', false],
+   ["amKeyName 을 쓰면 안 잡는다", 'x.innerHTML = esc(window.amKeyName(ST, r.state, "상태"));', false],
+   /* ⚠️⚠️ **주석 속 글자는 안 잡아야 합니다** — 처음 넣었을 때 바로
+      여기서 걸렸습니다(`js/myjoin.js` 55줄이 지난 일을 적어 둔 자리).
+      줄머리만 보는 가드로는 **여러 줄 주석의 가운데 줄**을 못 거릅니다. */
+   ["여러 줄 주석 속 글자는 안 잡는다",
+    '/* 전에는\n   `ST[r.state] || r.state` 였습니다\n   그 자리입니다 */\nvar z = 1;', false],
+   ["글자(따옴표) 안의 /* 는 주석이 아니다",
+    'var s = "/*"; x.innerHTML = esc(ST[r.state] || r.state);', true]
+  ].forEach(function(pr){
+    const got = scanRawKey([["js" + path.sep + "probe.js", pr[1]]]).length > 0;
     const good = got === pr[2];
     if(!good) bad++;
     console.log("  " + (good ? "O" : "❌ 못 잡습니다") + " " + pr[0]);

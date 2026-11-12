@@ -706,7 +706,7 @@ const T_JOB = {
     { id:"j1", kind:"hire", sub:"cr-caddy", region:"seoul",
       title:"주말 캐디 구합니다", body:"주말 오전 라운딩 캐디를 구합니다.",
       pay:"일 12만원", terms:"주 2일 · 오전", close_at:"2026-12-20",
-      role:"jr-caddy", emp_type:"je-part", pay_type:"daily", pay_min:120000,
+      role:"jr-etc", emp_type:"je-part", pay_type:"daily", pay_min:120000,
       created_at:"2026-11-10T01:00:00Z", who:"김**", pro_name:null, apply_n:2 },
     { id:"j2", kind:"seek", sub:"cr-coach", region:"gyeonggi",
       title:"레슨 자리를 찾습니다", body:"주 3일 레슨 가능한 자리를 찾습니다.",
@@ -714,6 +714,25 @@ const T_JOB = {
       role:null, emp_type:null, pay_type:null, pay_min:null,
       created_at:"2026-11-09T01:00:00Z", who:"이**",
       pro_name:"참골프아카데미", apply_n:0 }
+  ]
+};
+
+/* ⚠️⚠️⚠️ **상세를 여는 장면만 uuid 로 엽니다.** `jobpost.id` 는 uuid 이고
+   `js/career.js` 의 `nowView()` 가 **꼴을 보고 버립니다** — 그래서
+   `?v=j1` 로 열면 상세가 아니라 **목록**이 그려지고, 찍힌 그림은
+   `job-pc` 와 **한 픽셀도 다르지 않습니다**(높이가 같아서 알았습니다).
+   즉 공고 상세 화면은 **한 번도 눈으로 본 적이 없는 자리**였습니다.
+   ⚠️ 그리고 **줄 하나만** 담습니다 — 흉내 장치는 `id=eq.` 를 걸러
+   주지 않고 화면은 `rows[0]` 을 그리므로, 여러 줄을 담으면 **엉뚱한
+   공고**가 상세로 섭니다 (0069 의 `used-one` 이 쓴 방식). */
+const T_JOB_ONE = {
+  v_job_open: [
+    { id:"bbbbbbbb-0048-4000-8000-000000000001",
+      kind:"hire", sub:"cr-caddy", region:"seoul",
+      title:"주말 캐디 구합니다", body:"주말 오전 라운딩 캐디를 구합니다.\n경력 1년 이상이면 좋습니다.",
+      pay:"일 12만원", terms:"주 2일 · 오전", close_at:"2026-12-20",
+      role:"jr-etc", emp_type:"je-part", pay_type:"daily", pay_min:120000,
+      created_at:"2026-11-10T01:00:00Z", who:"김**", pro_name:null, apply_n:2 }
   ]
 };
 
@@ -810,7 +829,8 @@ const SCENES = [
   /* ⚠️ 인력 · 비즈니스 (시안 ⑨) — 탭 · 왼쪽 레일 · 공고 상세 */
   ["job",             "/cat/career", CUS, T_JOB, {}],
   ["job-hire",        "/cat/career?k=hire", CUS, T_JOB, {}],
-  ["job-one",         "/cat/career?v=j1", CUS, T_JOB, {}],
+  ["job-one",         "/cat/career?v=bbbbbbbb-0048-4000-8000-000000000001",
+                      CUS, T_JOB_ONE, {}],
   ["desk-notmine",    "/desk",  CUS, T_DESK,  {}],
   ["admin-notmine",   "/admin", CUS, T_ADMIN, { biz_metrics: MET }]
 ];

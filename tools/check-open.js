@@ -157,6 +157,19 @@ console.log("   □ Supabase → Authentication 에서 사장님 UID 로 관리�
 console.log("   □ Vercel → SUPABASE_URL · SUPABASE_ANON_KEY 넣고 **다시 배포**");
 console.log("     · 넣는 순간 로그인 · 입점 신청 · 매칭 요청 · **고객센터 문의**가 켜집니다");
 console.log("     · ⚠️ Vercel 은 떠 있는 함수에 값을 밀어 넣지 않습니다 — 다시 배포해야 켜집니다");
+/* ⚠️⚠️⚠️ **사진을 올리는 길은 이 키가 있어야 섭니다 — 2026-11-12 에
+   이 줄이 빠져 있던 것을 찾았습니다.** `api/upload.js` 는 서명된 올릴
+   주소를 Supabase 에 청하는데, 그 청은 **service key 로만** 됩니다
+   (`api/_db.js` 의 `dbReady()` 가 `SUPABASE_URL` + `SUPABASE_SERVICE_KEY`
+   둘을 봅니다). 버킷 둘을 다 만드셔도 이 키가 없으면 `/api/upload` 가
+   **전부 거짓**을 돌려주고, 화면은 사진 칸을 **아예 안 그립니다** —
+   에러도 한 줄 안 납니다. 그래서 「버킷을 만들었는데 사진 칸이 안
+   나온다」로만 보입니다.
+   ⚠️⚠️ **이 키는 RLS 를 통째로 지나갑니다** — 서버(`api/`)에서만 씁니다.
+   Vercel 환경변수에만 넣으시고 채팅 · 코드 · 저장소에 적지 마세요. */
+console.log("   □ Vercel → SUPABASE_SERVICE_KEY 넣고 **다시 배포** (사진을 올리려면 반드시)");
+console.log("     · ⚠️⚠️ 이 키가 없으면 **버킷을 만드셔도** 사진 칸이 한 곳도 안 나옵니다");
+console.log("     · ⚠️ 서버에서만 씁니다 — 손님 화면에는 한 글자도 안 내려갑니다");
 console.log("   □ (손님 사진 · 업체 증빙서류) Supabase Storage 에 **비공개** 버킷 + INTAKE_BUCKET");
 console.log("     · ⚠️ 안 넣으시면 사진 칸이 **아예 안 나옵니다** (그게 맞습니다)");
 /* ⚠️⚠️⚠️ **업체 시설 사진은 공개 버킷입니다.** 그 사진은 손님 화면에
@@ -164,7 +177,7 @@ console.log("     · ⚠️ 안 넣으시면 사진 칸이 **아예 안 나옵�
    읽습니다) 10분짜리 서명 주소를 쓸 수가 없습니다 — 공개라야 합니다.
    ⚠️ **증빙서류는 여기 안 들어갑니다** — 서버가 DB 가 돌려준 경로로
    버킷을 고릅니다 (api/upload.js 의 bucketForPath). */
-console.log("   □ (업체 **시설 사진** · **매물 사진**(0068) · 게시판 글 사진 ·\n      광고 소재) Storage 에 **공개** 버킷 + PROVIDER_BUCKET");
+console.log("   □ (업체 **시설 사진** · **매물 사진**(0068) · 게시판 글 사진 ·\n      **여행 상품 사진**(0073) · 광고 소재) Storage 에 **공개** 버킷 + PROVIDER_BUCKET");
 console.log("     · ⚠️⚠️ 이 버킷은 **공개입니다** — 주소를 아는 사람은 누구나 봅니다.");
 console.log("       손님 화면(업체 카드 · 업체 화면)에 그대로 찍히므로 공개라야 합니다.");
 console.log("       ⚠️ **증빙서류는 여기 안 들어갑니다** (서버가 갈래로 버킷을 고릅니다).");

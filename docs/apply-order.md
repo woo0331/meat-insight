@@ -146,6 +146,17 @@ select max(n) as 판, count(*) as 줄 from schema_version;
 | 비공개 | **아니요** | `INTAKE_BUCKET` | 손님 사진 · 업체 **증빙서류** |
 | 공개 | **예** | `PROVIDER_BUCKET` | 업체 시설 사진 · 매물 사진 · **게시판 글 사진** · 광고 소재 · **여행 상품 사진** |
 
+⚠️⚠️⚠️ **버킷보다 먼저 — `SUPABASE_SERVICE_KEY` 가 있어야 합니다**
+(2026-11-12 에 이 줄이 빠져 있던 것을 찾았습니다). 서명된 올릴 주소를
+Supabase 에 청하는 것은 `api/upload.js` 이고, 그 청은 **service key 로만**
+됩니다(`api/_db.js` 의 `dbReady()`). 이 키가 없으면 **버킷 둘을 다
+만드셔도** `/api/upload` 가 전부 거짓을 돌려주고 화면이 사진 칸을
+**아예 안 그립니다** — 에러도 한 줄 안 납니다. 「버킷을 만들었는데 사진
+칸이 안 나온다」로만 보입니다.
+⚠️⚠️ 이 키는 **RLS 를 통째로 지나갑니다** — Vercel 환경변수에만 넣고
+(Production 체크) 채팅 · 코드 · 저장소에는 적지 않습니다. 손님 화면에는
+한 글자도 안 내려갑니다.
+
 Supabase → Storage → New bucket → 이름을 정하시고
 Vercel → Settings → Environment Variables 에 **그 이름**을 넣습니다.
 
@@ -164,7 +175,8 @@ Vercel → Settings → Environment Variables 에 **그 이름**을 넣습니다
 ① schema_version 을 세어 봅니다            (위 0번)
 ② db/apply-from-0008.sql 붙여넣기           ← 운영 DB 변경 · 대표 승인
 ③ db/verify.sql 로 열세 줄 확인
-④ (하실 거면) Storage 버킷 둘 + 환경변수 둘  ← Vercel 재배포가 필요합니다
+④ (사진을 쓰시려면) SUPABASE_SERVICE_KEY + Storage 버킷 둘
+   + 환경변수 둘                              ← Vercel 재배포가 필요합니다
 ⑤ GitHub → Actions → 「검사 (배포는 단추로)」
    → Run workflow → deploy ✓                ← 배포 · 대표 승인
 ⑥ 손님 화면에서 눌러 보기

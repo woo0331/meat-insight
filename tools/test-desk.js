@@ -3749,10 +3749,20 @@ function boardsOf(){
     const off = await p0.evaluate(function(){
       const b2 = document.getElementById("joinbox");
       return { form: !!document.getElementById("jnf"),
-               boxHtml: (b2 ? b2.innerHTML : "").trim().length };
+               fields: b2 ? b2.querySelectorAll(
+                 "input, select, textarea, button, [type=submit]").length : -1,
+               text: (b2 ? b2.innerText : "").trim().length };
     });
+      /* ⚠️⚠️⚠️ **빈 글자를 요구하면 안 됩니다.** 전에는
+         `boxHtml === 0` 으로 재고 있었는데, 이제 폰 바닥 탭의
+         「등록」이 바로 이 자리로 옵니다 — 비어 있으면 **눌러도
+         아무 일이 안 나는 칸**입니다(절대 규칙 5). 즉 그 검사는
+         고장을 **요구**하게 됩니다 — 2026-11-10 에 `#lsbox` 에서
+         겪은 그 자리입니다.
+         재려는 뜻은 둘입니다: **양식은 안 열리고**(적는 칸도 ·
+         보내는 단추도 0개) **빈 칸도 아니다**(무언가 적혀 있다). */
     ok("⚠️ 설정 전에는 조인 양식을 **안 엽니다** (다 적고 누른 뒤 실패하지 않게)",
-       !off.form && off.boxHtml === 0, JSON.stringify(off));
+       !off.form && off.fields === 0 && off.text > 0, JSON.stringify(off));
     await p0.close();
   }
 
@@ -5214,10 +5224,20 @@ function boardsOf(){
     const off = await p0.evaluate(function(){
       const b2 = document.getElementById("cqbox");
       return { form: !!document.getElementById("cqf"),
-               boxHtml: (b2 ? b2.innerHTML : "").trim().length };
+               fields: b2 ? b2.querySelectorAll(
+                 "input, select, textarea, button, [type=submit]").length : -1,
+               text: (b2 ? b2.innerText : "").trim().length };
     });
+      /* ⚠️⚠️⚠️ **빈 글자를 요구하면 안 됩니다.** 전에는
+         `boxHtml === 0` 으로 재고 있었는데, 이제 폰 바닥 탭의
+         「등록」이 바로 이 자리로 옵니다 — 비어 있으면 **눌러도
+         아무 일이 안 나는 칸**입니다(절대 규칙 5). 즉 그 검사는
+         고장을 **요구**하게 됩니다 — 2026-11-10 에 `#lsbox` 에서
+         겪은 그 자리입니다.
+         재려는 뜻은 둘입니다: **양식은 안 열리고**(적는 칸도 ·
+         보내는 단추도 0개) **빈 칸도 아니다**(무언가 적혀 있다). */
     ok("⚠️ 설정 전에는 게시판 양식을 **안 엽니다**",
-       !off.form && off.boxHtml === 0, JSON.stringify(off));
+       !off.form && off.fields === 0 && off.text > 0, JSON.stringify(off));
     await p0.close();
   }
 
@@ -7147,12 +7167,23 @@ function boardsOf(){
       await p0.goto(base + "/cat/lesson", { waitUntil:"networkidle" });
       await p0.waitForTimeout(400);
       const off = await p0.evaluate(function(){
+        const bw = document.getElementById("wtbox");
         return { form: !!document.getElementById("wtf"),
                  bar:  !!document.getElementById("wtfil"),
-                 boxHtml: (document.getElementById("wtbox") || {}).innerHTML || "" };
+                 fields: bw ? bw.querySelectorAll(
+                   "input, select, textarea, button, [type=submit]").length : -1,
+                 text: (bw ? bw.innerText : "").trim().length };
       });
+      /* ⚠️⚠️⚠️ **빈 글자를 요구하면 안 됩니다.** 전에는
+           `boxHtml === 0` 으로 재고 있었는데, 이제 폰 바닥 탭의
+           「등록」이 바로 이 자리로 옵니다 — 비어 있으면 **눌러도
+           아무 일이 안 나는 칸**입니다(절대 규칙 5). 즉 그 검사는
+           고장을 **요구**하게 됩니다 — 2026-11-10 에 `#lsbox` 에서
+           겪은 그 자리입니다.
+           재려는 뜻은 둘입니다: **양식은 안 열리고**(적는 칸도 ·
+           보내는 단추도 0개) **빈 칸도 아니다**(무언가 적혀 있다). */
       ok("⚠️ 설정 전에는 구합니다 양식을 **안 엽니다** (다 적고 누른 뒤 실패하지 않게)",
-         !off.form && !off.bar && off.boxHtml === "", JSON.stringify(off));
+         !off.form && !off.bar && off.fields === 0 && off.text > 0, JSON.stringify(off));
       await p0.close();
     }
 
@@ -7535,10 +7566,20 @@ function boardsOf(){
     const off = await p0.evaluate(function(){
       const b2 = document.getElementById("jobbox");
       return { form: !!document.getElementById("jbf"),
-               boxHtml: (b2 ? b2.innerHTML : "").trim().length };
+               fields: b2 ? b2.querySelectorAll(
+                 "input, select, textarea, button, [type=submit]").length : -1,
+               text: (b2 ? b2.innerText : "").trim().length };
     });
+      /* ⚠️⚠️⚠️ **빈 글자를 요구하면 안 됩니다.** 전에는
+         `boxHtml === 0` 으로 재고 있었는데, 이제 폰 바닥 탭의
+         「등록」이 바로 이 자리로 옵니다 — 비어 있으면 **눌러도
+         아무 일이 안 나는 칸**입니다(절대 규칙 5). 즉 그 검사는
+         고장을 **요구**하게 됩니다 — 2026-11-10 에 `#lsbox` 에서
+         겪은 그 자리입니다.
+         재려는 뜻은 둘입니다: **양식은 안 열리고**(적는 칸도 ·
+         보내는 단추도 0개) **빈 칸도 아니다**(무언가 적혀 있다). */
     ok("⚠️ 설정 전에는 구인 · 구직 양식을 **안 엽니다**",
-       !off.form && off.boxHtml === 0, JSON.stringify(off));
+       !off.form && off.fields === 0 && off.text > 0, JSON.stringify(off));
     await p0.close();
   }
 

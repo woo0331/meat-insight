@@ -651,3 +651,68 @@ window.amZoneCats = function(z){
   return (z.cats || []).map(function(k){ return window.amCat(k); })
                        .filter(Boolean);
 };
+
+/* ── 커뮤니티 대표 탭 (확정 시안 ⑩) ────────────────────────────────
+   ⚠️⚠️⚠️ **게시판 열둘을 지우지 않습니다.** 시안의 탭은 여섯이고 저희
+   게시판은 열둘인데, 줄이면 **그 키로 이미 올라온 글이 갈 자리가
+   없어집니다**(게시판 키는 더하기만 합니다 · 0059). 그래서 탭은
+   **묶어 보여 주는 길**일 뿐이고, 열둘은 「전체 게시판」에 그대로
+   있으며 `?s=<키>` 주소도 하나도 안 없어졌습니다.
+
+   ⚠️⚠️ **묶은 자리는 화면이 그 자리에서 말합니다** — 「라운드 후기」를
+   누르면 어느 게시판을 모아 보는지 적습니다. 안 적으면 손님은 제가
+   무엇을 보고 있는지 모르고, 글을 올릴 때 **어느 게시판에 올라가는지도**
+   모릅니다.
+
+   ⚠️ 묶는 기준은 **글을 쓰는 사람의 자리**입니다 —
+   · 라운드 후기 = 골프장 후기 + 스크린골프 (둘 다 「치고 와서 쓰는 후기」)
+   · 연습 · 스윙 = 스윙 · 연습 + 레슨 후기 + 초보 입문 (둘 다 「늘리는 이야기」)
+   ⚠️⚠️ **어느 탭에도 안 든 넷**(골프 정보 · 대회 · 이벤트 · 동호회 ·
+   여성 골퍼)은 시안의 탭에 없는 자리입니다. 억지로 끼워 넣으면 그 탭의
+   이름이 거짓이 되므로 **「전체 게시판」에서** 들어갑니다 — 지시가
+   그 길을 허락했습니다.
+   ⚠️ `boards` 가 빈 배열이면 **좁히지 않습니다**(전체글). 열둘을 적어
+   두면 게시판이 느는 날 새 게시판이 전체글에서 빠집니다. */
+window.AM_CQ_TABS = [
+  { key:"all",   name:"전체글",     boards:[] },
+  { key:"open",  name:"자유게시판", boards:["cm-open"] },
+  { key:"ask",   name:"질문 · 답변", boards:["cm-ask"] },
+  { key:"gear",  name:"장비 이야기", boards:["cm-gear"] },
+  { key:"round", name:"라운드 후기", boards:["cm-course", "cm-screen"] },
+  { key:"swing", name:"연습 · 스윙", boards:["cm-swing", "cm-lesson", "cm-begin"] }
+];
+/* 「질문」 칩이 좁히는 게시판 — ⚠️ 한 곳입니다(화면이 따로 적으면
+   칩은 켜지는데 목록은 안 걸러 주는 날이 옵니다). */
+window.AM_CQ_ASK = "cm-ask";
+
+window.amCqTabs = function(){ return window.AM_CQ_TABS || []; };
+
+/* 지금 고른 게시판 묶음이 어느 탭인가 — 없으면 null.
+   ⚠️ **차례가 달라도 같은 묶음**입니다(집합으로 봅니다). */
+window.amCqTabOf = function(keys){
+  var want = (keys || []).slice().sort().join(",");
+  var L = window.amCqTabs();
+  for(var i = 0; i < L.length; i++){
+    if((L[i].boards || []).slice().sort().join(",") === want) return L[i];
+  }
+  return null;
+};
+
+/* 그 탭이 모아 보는 게시판 이름들 — 묶음을 **그 자리에서** 적으려고 */
+window.amCqTabBoardNames = function(tab){
+  var items = window.amCatItems("community");
+  return (tab && tab.boards || []).map(function(k){
+    for(var i = 0; i < items.length; i++) if(items[i].key === k) return items[i].name;
+    return "";
+  }).filter(Boolean);
+};
+
+/* 어느 대표 탭에도 안 든 게시판 — 「전체 게시판」이 책임집니다.
+   ⚠️ 세어서 냅니다 — 글자로 박으면 탭을 고치는 날 둘이 어긋납니다. */
+window.amCqLooseBoards = function(){
+  var inTab = {};
+  window.amCqTabs().forEach(function(t){
+    (t.boards || []).forEach(function(k){ inTab[k] = 1; });
+  });
+  return window.amCatItems("community").filter(function(b){ return !inTab[b.key]; });
+};

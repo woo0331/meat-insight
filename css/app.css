@@ -3598,29 +3598,39 @@ picture{ display: contents; }
    들어가고, 가운데가 글 폭을 그대로 씭니다.
    ⚠️ 칸 수를 박은 것이 아니라 **왼쪽 200 · 오른쪽 280** 고정에
    가운데가 나머지를 가집니다 — 게시판이 늘어도 안 바뀝니다. */
-.cqw{ display:grid; grid-template-columns: 200px minmax(0,1fr) 280px; gap:22px;
+/* ⚠️⚠️⚠️ **시안 ⑩ 은 탭이 맨 위 한 줄입니다** — 왼쪽 세로 기둥이
+   아닙니다. 그래서 `.cqw` 를 **두 칸**(목록 + 안내 레일)으로 두고
+   탭 줄(`#cqbd`)을 **맨 위 한 줄 전부**에 걸칩니다.
+   ⚠️ 게시판 열둘은 탭 아래의 「모든 게시판 바로가기」와 「전체 게시판」
+   탭에 그대로 있습니다 — 하나도 안 없어졌습니다. */
+.cqw{ display:grid; grid-template-columns: minmax(0,1fr) 280px; gap:22px;
       align-items:start; }
-/* ⚠️⚠️ 왼쪽 기둥은 **세로**입니다 — `.sf-c` 는 기본이 가로줄이라
-   여기서만 방향을 바꿉니다(폰에서는 아래 규칙이 되돌립니다). */
-.cqw-bd .sf-c{ flex-direction:column; align-items:stretch; gap:6px;
-               margin-bottom:0; }
-.cqw-bd .chip{ justify-content:flex-start; width:100%; }
+.cqw-bd{ grid-column: 1 / -1; }
+.cqw-bd .sf-c{ flex-direction:row; flex-wrap:wrap; align-items:center;
+               gap:8px; margin-bottom:0; }
+.cqw-bd .chip{ width:auto; justify-content:center; }
+/* ⚠️ 누르는 칸은 40px 이상입니다 (손님이 40~60대입니다) */
+.cqtab{ font-size:15px; min-height:44px; padding-inline:16px; }
 /* ⚠️ 격자 칸은 제 내용만큼 벌어집니다 — `min-width:0` 이 없으면 긴
    제목 하나가 화면을 가로로 밉니다 (2026-11-03 의 그 자리) */
 .cqw > *{ min-width:0; }
 .cqw-main{ display:flex; flex-direction:column; gap:14px; }
+/* 시안 ⑩ 의 「최신글 / 질문」 줄 — ⚠️ `.sf-c` 는 760px 아래에서
+   `nowrap` 이 되므로 **특정도로** 이겨서 접습니다(밀어서 보는 자리로
+   두면 「질문」이 폰에서 없는 칸이 됩니다 · 2026-11-04 의 그 자리). */
+.sf-c.cqsort{ flex-wrap:wrap; align-items:center; gap:8px; overflow:visible; }
+.cqsort-n{ font-size:13px; color: var(--ink2); }
+.cqh-m{ margin:2px 0 0; font-size:14px; color: var(--ink2); }
+.cqall{ margin-top:18px; }
+.cqall-h{ margin:0 0 8px; font-size:15px; color: var(--ink2); }
 @media (max-width: 1100px){
-  /* ⚠️ 좁아지면 게시판 메뉴를 **위로 올리고 가로 알약 줄로** 되돌립니다
-     — 세로 기둥을 좁은 화면에 두면 글이 들어갈 자리가 없습니다. */
+  /* ⚠️ 좁아지면 한 칸으로 — 탭이 위 · 목록 · 안내 레일 차례입니다 */
   .cqw{ grid-template-columns: 1fr; }
   .cqw-bd{ order:1; }
   .cqw-main{ order:2; }
   /* ⚠️ 레일은 목록 **아래**로 내려갑니다 — 폰에서 위에 두면 글을 보러
      오신 분이 안내문부터 밀어 내려야 합니다 */
   .cqw-side{ order:3; }
-  .cqw-bd .sf-c{ flex-direction:row; flex-wrap:wrap; align-items:center;
-                 gap:8px; }
-  .cqw-bd .chip{ width:auto; }
 }
 
 /* 도구줄 — 찾는 칸이 넓게 깔리고 오른쪽 끝에 글쓰기 */

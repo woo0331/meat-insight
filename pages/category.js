@@ -1057,7 +1057,6 @@ exports.build = function(c){
       /* ⚠️ 지어낸 약속을 하지 않습니다 — 우리가 답해 드리는 곳이 아닙니다 */
       '골프올인원이 답변을 드리지는 않으며, 글과 댓글의 내용은 ' +
       '적으신 회원의 것입니다.</p></div>' +
-      ownChips +
       /* ⚠️⚠️ 오른쪽 안내 레일(확정 시안 ⑩)은 **빌드가 찍습니다** —
          글자뿐이라 설정이 없어도 · 자바스크립트가 꺼져도 · 크롤러에게도
          그대로 보입니다. 화면(`js/community.js`)이 그리면 그 셋에서
@@ -1077,12 +1076,14 @@ exports.build = function(c){
          ⚠️ 폰에서는 CSS 한 곳이 **가로 알약 줄**로 되돌립니다. */
       '<nav class="cqw-bd" id="cqbd" aria-label="게시판">' +
         '<div class="sf-c cqb-c">' +
-          '<a class="chip chip-on" href="' + W.esc(W.amCatUrl(c)) + '">게시판 모아보기</a>' +
-          '<a class="chip" href="' + W.esc(W.amCatUrl(c)) + '?s=all">전체 글</a>' +
-          W.amCatItems(c).map(function(b){
-            return '<a class="chip" href="' + W.esc(W.amCatUrl(c)) +
-              '?s=' + W.esc(encodeURIComponent(b.key)) + '">' + W.esc(b.name) + '</a>';
+          (W.amCqTabs ? W.amCqTabs() : []).map(function(t){
+            var to = (t.boards || []).join(",");
+            return '<a class="chip cqtab' + (t.key === "all" ? " chip-on" : "") +
+              '" href="' + W.esc(W.amCatUrl(c) + (to ? "?s=" + encodeURIComponent(to) : "")) +
+              '" data-bd="' + W.esc(to) + '">' + W.esc(t.name) + '</a>';
           }).join("") +
+          '<a class="chip cqtab" href="' + W.esc(W.amCatUrl(c)) + '?s=boards" ' +
+            'data-bd="boards">전체 게시판</a>' +
         '</div>' +
       '</nav>' +
       '<div class="cqw-main" id="cqlist">' +
@@ -1100,6 +1101,14 @@ exports.build = function(c){
         '</section>' +
       '</aside>' +
       '</div>' +
+      /* ⚠️⚠️⚠️ **게시판 열둘로 바로 가는 길은 여기 그대로 둡니다.**
+         위의 탭은 시안 ⑩ 의 **대표 여섯**이고, 어느 탭에도 안 든 게시판이
+         넷 있습니다(골프 정보 · 대회 · 이벤트 · 동호회 · 여성 골퍼).
+         이 줄이 없으면 그 넷은 **빌드가 찍은 HTML 에서 사라지고**
+         크롤러 · 자바스크립트가 꺼진 분에게는 없는 게시판이 됩니다.
+         ⚠️ 자리를 탭 **아래**로 내렸습니다 — 시안은 맨 위가 탭입니다. */
+      '<div class="cqall"><h3 class="cqall-h">모든 게시판 바로가기</h3>' +
+      ownChips + '</div>' +
       /* ⚠️⚠️ **빈 칸으로 두지 않습니다** — 폰 바닥 메뉴의 「등록」이
          이 자리로 오는데, 설정이 없으면 화면이 아무것도 안 그려
          **눌러도 아무 일이 안 나는 칸**이 됩니다(`#lsbox` 에서

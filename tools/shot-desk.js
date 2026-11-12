@@ -753,6 +753,11 @@ const SCENES = [
   /* ⚠️ 자유게시판 (0059) — 모아보기 · 게시판 하나 · 글 하나 */
   ["board",           "/cat/community",         CUS, T_CQ, {}],
   ["board-one",       "/cat/community?s=cm-open", CUS, T_CQ, {}],
+  /* ⚠️ 「전체 게시판」(모아보기) — 확정 시안 ⑩ 의 대표 탭이 덮지
+     못하는 게시판 넷으로 들어가는 자리라 **따로 찍습니다**. */
+  ["board-all",       "/cat/community?s=boards", CUS, T_CQ, {}],
+  /* ⚠️ 묶음 탭 — 게시판 둘을 모아 보는 자리가 그 사실을 적는지 */
+  ["board-round",     "/cat/community?s=cm-course,cm-screen", CUS, T_CQ, {}],
   ["board-post",      "/cat/community?q=11111111-1111-1111-1111-111111111111",
                       CUS, T_CQ, {}],
   /* ⚠️ 로그인 안 한 자리도 한 장 — "한 줄도 안 보이는가" 는 눈으로도

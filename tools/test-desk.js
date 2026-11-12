@@ -157,6 +157,25 @@ function zonesOf(){
   finally{ if(had) global.window = old; else delete global.window; }
 }
 
+/* 확정 시안 ⑩ 의 대표 탭 — ⚠️ **글자로 박지 않습니다.** 탭을 고치는
+   날 이 검사가 멀쩡한 화면을 실패로 잡지 않게, 화면이 읽는 그 파일을
+   그대로 읽습니다. */
+function cqTabsOf(){
+  const had = Object.prototype.hasOwnProperty.call(global, "window");
+  const old = global.window;
+  global.window = {};
+  try{
+    ["../js/components/base.js", "../js/data/korean.js", "../js/data/brand.js",
+     "../js/data/catalog.js"].forEach(function(f){
+      delete require.cache[require.resolve(f)];
+      require(f);
+    });
+    const W = global.window;
+    return { tabs: W.amCqTabs() || [], loose: W.amCqLooseBoards() || [],
+             ask: W.AM_CQ_ASK || "" };
+  }catch(e){ return { tabs:[], loose:[], ask:"" }; }
+  finally{ if(had) global.window = old; else delete global.window; }
+}
 function boardsOf(){
   const had = Object.prototype.hasOwnProperty.call(global, "window");
   const old = global.window;
@@ -5240,6 +5259,7 @@ function boardsOf(){
      ⚠️ `window` 를 빌려 쓰고 **그대로 돌려놓습니다** (check-deal 이
      `global.window` 를 덮어써 빌드를 통째로 깨뜨린 자리입니다). */
   const BDS = boardsOf();
+  const CQT = cqTabsOf();
   ok("게시판 목록을 catalog.js 에서 실제로 읽었다 (" + BDS.length + "곳)",
      BDS.length >= 5, BDS.map(function(x){ return x.key; }).join(","));
 
@@ -5272,27 +5292,75 @@ function boardsOf(){
     await p0.close();
   }
 
-  /* ② 모아보기 — 게시판마다 상자가 서고 0건도 빠지지 않습니다 */
+  /* ⚠️⚠️⚠️ **확정 시안 ⑩ — 대표 탭과 「전체 게시판」.** 게시판 열둘은
+     하나도 안 없어졌습니다. 첫 화면은 이제 **단일 목록**(전체글)이고,
+     모아보기는 「전체 게시판」입니다 — 지시가 「목록은 시안처럼 읽기
+     쉬운 단일 목록을 기본으로 한다」로 적었습니다.
+     ⚠️ 이 검사는 **그날 바뀐 뜻으로 같이 뒤집었습니다** — 옛 뜻을 그대로
+     둔 검사는 고장을 지킵니다(`#lsbox` 에서 겪은 자리). */
   {
-    const g = await open("/cat/community", { role:"customer", name:"손님", signedIn:true },
+    const g = await open("/cat/community?s=boards",
+                         { role:"customer", name:"손님", signedIn:true },
                          { v_cq_public: CQ, v_ca_public: CA }, {}, true);
     const r = await g.p.evaluate(function(){
       const bx = document.querySelectorAll(".cqg-b");
       return { n: bx.length, body: document.body.innerText,
                more: document.querySelectorAll(".cqg-more").length,
-               chips: document.querySelectorAll(".cqb-c .chip").length };
+               chips: document.querySelectorAll(".cqb-c .chip").length,
+               names: Array.prototype.map.call(
+                 document.querySelectorAll(".cqb-c .chip"),
+                 function(a){ return (a.textContent || "").trim(); }),
+               all: document.querySelectorAll('.cqall a[href*="/cat/community"]').length };
     });
-    /* ⚠️ 갯수를 박지 않습니다 — **게시판 수와 같은가**를 봅니다
-       (게시판을 더하는 날 이 줄을 안 고쳐도 됩니다). */
-    ok("모아보기에 게시판 상자가 **게시판 수만큼** 선다 (" + BDS.length + "곳)",
+    /* ⚠️ 갯수를 박지 않습니다 — **게시판 수와 같은가**를 봅니다 */
+    ok("「전체 게시판」에 게시판 상자가 **게시판 수만큼** 선다 (" + BDS.length + "곳)",
        r.n === BDS.length, "상자 " + r.n + " · 게시판 " + BDS.length);
     ok("  ⚠️⚠️ 0건인 게시판도 **안 숨깁니다** (첫 글을 남길 길이 사라집니다)",
        r.more === BDS.length, "더 보기 " + r.more);
     ok("  게시판 이름을 글자로 박지 않고 끌어옵니다",
        BDS.every(function(x){ return r.body.indexOf(x.name) >= 0; }), "");
-    /* ⚠️ 거르개는 모아보기 · 전체 글 + 게시판들입니다 */
-    ok("  거르개에 모아보기 · 전체 글이 같이 있다",
-       r.chips === BDS.length + 2, "칩 " + r.chips);
+    /* ⚠️ 탭은 **대표 + 전체 게시판**입니다 — 수를 박지 않고 데이터와 맞춥니다 */
+    ok("  탭이 **대표 탭 + 전체 게시판**이다 (" + CQT.tabs.length + " + 1)",
+       r.chips === CQT.tabs.length + 1, "칩 " + r.chips);
+    ok("  탭 이름을 `AM_CQ_TABS` 에서 끌어온다",
+       CQT.tabs.every(function(t){ return r.names.indexOf(t.name) >= 0; }),
+       r.names.join(" · "));
+    /* ⚠️⚠️⚠️ **열둘로 가는 길이 하나도 안 없어졌는지** — 대표 탭이
+       덮는 것 + 어느 탭에도 안 든 것 = 게시판 전부여야 합니다. 그리고
+       빌드가 찍은 「모든 게시판 바로가기」에 열둘이 다 있어야 합니다
+       (크롤러 · 자바스크립트가 꺼진 분 몫). */
+    const covered = {};
+    CQT.tabs.forEach(function(t){ (t.boards || []).forEach(function(k){ covered[k] = 1; }); });
+    CQT.loose.forEach(function(b){ covered[b.key] = 1; });
+    ok("  ⚠️⚠️ 게시판 **열둘이 하나도 안 빠진다** (대표 탭 + 전체 게시판)",
+       BDS.every(function(b){ return covered[b.key]; }),
+       Object.keys(covered).join(","));
+    ok("  ⚠️ 「모든 게시판 바로가기」에 열둘이 링크로 있다",
+       r.all >= BDS.length, "링크 " + r.all);
+    await g.p.close();
+  }
+
+  /* ⚠️⚠️ **묶은 탭은 어느 게시판을 모아 보는지 그 자리에서 말합니다** —
+     안 적으면 손님은 제가 무엇을 보고 있는지 모르고, 글을 올릴 때 어느
+     게시판에 올라가는지도 모릅니다(지시 — 「분류 매핑을 명시한다」). */
+  {
+    const grp = CQT.tabs.filter(function(t){ return (t.boards || []).length > 1; })[0];
+    const keys = grp ? grp.boards.join(",") : "";
+    const g = await open("/cat/community?s=" + encodeURIComponent(keys),
+                         { role:"customer", name:"손님", signedIn:true },
+                         { v_cq_public: CQ, v_ca_public: CA }, {}, true);
+    const r = await g.p.evaluate(function(){
+      const m = document.querySelector(".cqh-m");
+      return { t: (document.querySelector(".cqh-t") || {}).textContent || "",
+               m: m ? (m.textContent || "").trim() : "" };
+    });
+    ok("묶은 탭의 **이름**이 제목에 선다 (" + (grp ? grp.name : "?") + ")",
+       !!grp && r.t.indexOf(grp.name) >= 0, r.t);
+    const want = grp ? grp.boards.map(function(k){
+      const b = BDS.filter(function(x){ return x.key === k; })[0];
+      return b ? b.name : k; }) : [];
+    ok("  ⚠️⚠️ **어느 게시판을 모아 보는지** 그 자리에서 적는다",
+       want.length > 1 && want.every(function(n){ return r.m.indexOf(n) >= 0; }), r.m);
     await g.p.close();
   }
 
@@ -5313,15 +5381,72 @@ function boardsOf(){
        url1.indexOf("s=cm-ask") >= 0, url1);
     /* ⚠️ "전체 글" 은 **안 좁혀야** 합니다 */
     const b2 = g.sent.length;
-    await g.p.click('.cqb-c .chip[data-bd="all"]');
+    /* ⚠️ 「전체글」 탭은 **빈 키**입니다 — 좁히지 않는다는 뜻입니다
+       (옛 `all` 은 모아보기와 전체 글을 가르던 때의 값입니다). */
+    await g.p.click('.cqb-c .chip[data-bd=""]');
     await g.p.waitForTimeout(450);
     const qs2 = g.sent.slice(b2).filter(function(x){ return x.name === "GET"; })
       .map(function(x){ return x.body; });
-    ok("  전체 글은 **게시판으로 안 좁힌다**",
+    ok("  전체글은 **게시판으로 안 좁힌다**",
        qs2.length > 0 && qs2.every(function(u){ return u.indexOf("cat=eq.") < 0; }),
        qs2.slice(0, 2).join(" | ").slice(0, 160));
     await g.p.close();
   }
+  /* ⚠️⚠️ **「최신글 / 질문」은 다른 축입니다** (지시 — 「최신글은 날짜
+     정렬, 질문은 질문 게시판 필터로 구분한다」). 목록은 늘 최신순이라
+     「최신글」이 곧 기본이고, 「질문」은 **질문 게시판으로 좁히는** 칸입니다.
+     ⚠️ 흉내 장치는 안 걸러 주므로 **보내는 질의를 뜯어** 봅니다. */
+  {
+    const g = await open("/cat/community",
+                         { role:"customer", name:"손님", signedIn:true },
+                         { v_cq_public: CQ, v_ca_public: CA }, {}, true);
+    const row = await g.p.evaluate(function(){
+      const el = document.querySelector(".cqsort");
+      return { on: !!el, txt: el ? (el.textContent || "").trim() : "",
+               n: el ? el.querySelectorAll("a").length : 0 };
+    });
+    ok("「최신글 / 질문」 줄이 목록 위에 선다", row.on && row.n === 2,
+       row.n + "칸 · " + row.txt.slice(0, 60));
+    ok("  ⚠️ 기본은 **날짜 최신순**이라고 그 자리에서 적는다",
+       row.txt.indexOf("최신순") >= 0, row.txt.slice(0, 80));
+    const b0 = g.sent.length;
+    await g.p.click('.cqsort a[data-bd="' + CQT.ask + '"]');
+    await g.p.waitForTimeout(450);
+    const qs = g.sent.slice(b0).filter(function(x){ return x.name === "GET"; })
+      .map(function(x){ return x.body; });
+    ok("  ⚠️⚠️ 「질문」을 누르면 **질문 게시판으로 좁혀 묻는다**",
+       qs.some(function(u){ return u.indexOf("cat=eq." + CQT.ask) >= 0; }),
+       qs.slice(0, 2).join(" | ").slice(0, 160));
+    const t2 = await g.p.evaluate(function(){
+      const el = document.querySelector(".cqsort");
+      return el ? (el.textContent || "").trim() : ""; });
+    ok("  ⚠️ 좁히고 있다는 것을 **그 자리에서** 말한다",
+       t2.indexOf("질문 게시판") >= 0, t2.slice(0, 80));
+    await g.p.close();
+  }
+
+  /* ⚠️⚠️⚠️ **기존 게시판 주소를 하나도 안 없앴습니다** (지시 — 「기존
+     12개 게시판과 URL은 삭제하지 않는다」). 대표 탭에 안 든 게시판도
+     `?s=<키>` 로 그대로 열려야 합니다 — 안 열리면 그 게시판에 올라온
+     글이 **갈 자리를 잃습니다.** */
+  {
+    const loose = (CQT.loose[0] || {}).key || "";
+    const g = await open("/cat/community?s=" + encodeURIComponent(loose),
+                         { role:"customer", name:"손님", signedIn:true },
+                         { v_cq_public: CQ, v_ca_public: CA }, {}, true);
+    const qs = g.sent.filter(function(x){ return x.name === "GET"; })
+      .map(function(x){ return x.body; })
+      .filter(function(u){ return u.indexOf("v_cq_public") >= 0; });
+    ok("대표 탭에 **안 든 게시판**도 옛 주소로 그대로 열린다 (" + loose + ")",
+       !!loose && qs.some(function(u){ return u.indexOf("cat=eq." + loose) >= 0; }),
+       qs.slice(0, 2).join(" | ").slice(0, 160));
+    const t = await g.p.evaluate(function(){
+      return (document.querySelector(".cqh-t") || {}).textContent || ""; });
+    const nm = (CQT.loose[0] || {}).name || "";
+    ok("  그 게시판 **이름**이 제목에 선다", !!nm && t.indexOf(nm) >= 0, t);
+    await g.p.close();
+  }
+
   /* ④ 쉼표로 여럿 — ⚠️⚠️⚠️ 머리말의 「골프 정보 · 후기」가 게시판 **넷**을
      한 번에 보냅니다(2026-11-09). 하나만 좁히면 메뉴가 "후기" 를 말해 놓고
      후기를 안 냅니다. ⚠️ 흉내 장치는 걸러 주지 않으므로 **보내는 질의를

@@ -105,7 +105,8 @@
        겪었습니다. `test-desk` 가 질의를 뜯어 보고 잡았습니다.
        ⚠️ 모르는 키는 **버립니다** — 지어내지 않습니다. 전부 모르면
        모아보기입니다. */
-    if(s === "all"){ S.s = "all"; }
+    if(s === "boards"){ S.s = "boards"; }
+    else if(s === "all"){ S.s = "all"; }
     else {
       var known = s.split(",").map(function(x){ return x.trim(); })
         .filter(function(k){
@@ -195,7 +196,7 @@
      있는데 목록은 안 걸러 주는 날이 옵니다). "" 는 모아보기 · "all" 은
      전체 글이라 **좁히지 않습니다**. */
   function boardKeys(){
-    if(!S.s || S.s === "all") return [];
+    if(!S.s || S.s === "all" || S.s === "boards") return [];
     return String(S.s).split(",").map(function(x){ return x.trim(); })
       .filter(function(x){ return x; });
   }
@@ -208,21 +209,49 @@
      두었으면 **탭이 조용히 안 눌립니다**(에러 0줄). 지금은 `.cqw` 한 곳에서
      거품으로 올라오는 눌림을 **한 번만** 묶습니다(`bindNav()`) — 다시 그릴
      때마다 묶으면 한 번 눌렀는데 호출이 여러 번 돕니다. */
+  /* ⚠️⚠️⚠️ **시안 ⑩ 의 대표 탭입니다 — 게시판 열둘은 하나도 안
+     없어졌습니다.** 탭은 **묶어 보여 주는 길**이고, 열둘 전부와 그
+     `?s=<키>` 주소는 그대로 살아 있으며 「전체 게시판」이 그 입구입니다.
+     줄이면 그 키로 **이미 올라온 글이 갈 자리가 없어집니다**(0059).
+     ⚠️ 어느 탭에도 안 든 넷(골프 정보 · 대회 · 이벤트 · 동호회 · 여성
+     골퍼)은 시안의 탭에 없는 자리라 억지로 끼우지 않았습니다 — 끼우면
+     그 탭의 이름이 거짓이 됩니다. 「전체 게시판」에서 들어갑니다.
+     ⚠️ 묶음은 `js/data/catalog.js` 의 `AM_CQ_TABS` **한 곳**입니다. */
   function bar(){
     var picked = boardKeys();
-    var one = function(k, name){
-      var on = k ? (picked.indexOf(k) >= 0) : (S.s === k);
-      return '<a class="chip' + (on ? " chip-on" : "") + '" href="' +
-        esc(url({ s:k, q:"", p:0 })) + '" data-bd="' + esc(k) + '">' +
+    var now = (S.s !== "boards" && window.amCqTabOf) ? window.amCqTabOf(picked) : null;
+    var tab = function(name, to, on){
+      return '<a class="chip cqtab' + (on ? " chip-on" : "") + '" href="' +
+        esc(url({ s:to, q:"", p:0 })) + '" data-bd="' + esc(to) + '">' +
         esc(name) + '</a>';
     };
-    /* ⚠️⚠️ 게시판이 열둘이라 **모아보기**(첫 화면)와 **전체 글**을 갈라
-       둡니다 — 전에는 "전체" 하나였는데, 게시판이 늘자 어느 게시판에
-       무엇이 올라왔는지 알 길이 목록을 끝까지 미는 것뿐이었습니다. */
-    return '<div class="sf-c cqb-c">' + one("", "게시판 모아보기") +
-      '<a class="chip' + (S.s === "all" ? " chip-on" : "") + '" href="' +
-        esc(url({ s:"all", q:"", p:0 })) + '" data-bd="all">' + esc("전체 글") + '</a>' +
-      boards().map(function(b){ return one(b.key, b.name); }).join("") + '</div>';
+    var tabs = (window.amCqTabs ? window.amCqTabs() : []).map(function(t){
+      return tab(t.name, (t.boards || []).join(","), !!now && now.key === t.key);
+    }).join("");
+    return '<div class="sf-c cqb-c">' + tabs +
+      tab("전체 게시판", "boards", S.s === "boards") + '</div>';
+  }
+
+  /* 시안 ⑩ 의 「최신글 / 질문」 — ⚠️⚠️ **둘은 다른 축입니다.**
+     목록은 늘 **올린 날짜 최신순**이라 「최신글」이 곧 기본이고,
+     「질문」은 **질문 게시판으로 좁히는** 칸입니다(지시가 그렇게
+     갈라 적었습니다). 그래서 「질문」을 누르면 위의 대표 탭도
+     「질문 · 답변」으로 같이 켜집니다 — 같은 것을 가리키니까요.
+     ⚠️ 좁히는 게시판 키는 `AM_CQ_ASK` **한 곳**입니다. */
+  function askKey(){ return window.AM_CQ_ASK || "cm-ask"; }
+  function sortRow(){
+    var k = boardKeys();
+    var onQ = (k.length === 1 && k[0] === askKey());
+    var back = onQ ? "" : (S.s === "boards" ? "boards" : S.s);
+    return '<div class="sf-c cqsort">' +
+      '<a class="chip' + (onQ ? "" : " chip-on") + '" href="' +
+        esc(url({ s:back, q:"", p:0 })) + '" data-bd="' + esc(back) + '">최신글</a>' +
+      '<a class="chip' + (onQ ? " chip-on" : "") + '" href="' +
+        esc(url({ s:askKey(), q:"", p:0 })) + '" data-bd="' + esc(askKey()) +
+        '">질문</a>' +
+      '<span class="cqsort-n">' +
+        esc(onQ ? "질문 게시판 글만 봅니다." : "올린 날짜 최신순입니다.") +
+      '</span></div>';
   }
 
   /* 메뉴를 제 자리에 다시 그립니다 — 켜진 칸만 바뀝니다.
@@ -305,13 +334,24 @@
         : '') +
     '</div>';
   }
+  /* ⚠️⚠️ **묶은 자리는 그 자리에서 말합니다** — 「라운드 후기」가 어느
+     게시판을 모아 보는지 안 적으면 손님은 제가 무엇을 보고 있는지
+     모르고, 글을 올릴 때 **어느 게시판에 올라가는지도** 모릅니다. */
   function head(){
-    /* ⚠️ 글쓰기 단추는 **찾는 칸과 같은 줄**입니다 (확정 시안 ⑩).
-       폰에서는 줄이 바뀌어 찾는 칸 아래에 섭니다 — 밀어서 찾는 자리에
-       두지 않습니다. */
-    return '<h2 class="cqh-t">' +
-      esc(!S.s ? "커뮤니티 게시판" : (S.s === "all" ? "전체 글" : bname(S.s))) +
-    '</h2>';
+    var keys = boardKeys();
+    var tab  = (S.s !== "boards" && window.amCqTabOf) ? window.amCqTabOf(keys) : null;
+    var names = (tab && window.amCqTabBoardNames) ? window.amCqTabBoardNames(tab) : [];
+    var title = (S.s === "boards") ? "전체 게시판"
+              : (tab ? tab.name : (keys.length ? bname(S.s) : "전체글"));
+    var note = "";
+    if(S.s === "boards"){
+      note = '<p class="cqh-m">게시판 ' + esc(String(boards().length)) +
+             '곳을 모두 보여 드립니다. 게시판 이름을 누르면 그 글만 봅니다.</p>';
+    }else if(names.length > 1){
+      note = '<p class="cqh-m">' + esc(names.join(" · ")) +
+             ' 게시판을 모아 봅니다.</p>';
+    }
+    return '<h2 class="cqh-t">' + esc(title) + '</h2>' + note;
   }
   /* ⚠️⚠️⚠️ **조회 실패는 0건이 아닙니다.** 그물이 끊기거나 질의가
      거절되면 받은 줄은 0줄이지만, 그것을 「아직 작성된 글이 없습니다」로
@@ -379,7 +419,7 @@
   }
 
   function paintList(){
-    list.innerHTML = head() + searchBox() +
+    list.innerHTML = head() + sortRow() + searchBox() +
       '<p class="cqz">불러오는 중입니다…</p>';
     var qs = ["select=id,cat,title,who,named,created_at,answer_n,view_n," +
               /* ⚠️ 0075 가 더한 칸 — 첫 사진 한 장입니다. 안 받으면
@@ -403,7 +443,7 @@
     return get("v_cq_public?" + qs.join("&"), true).then(function(r){
       /* ⚠️⚠️ **못 읽은 것을 0건으로 읽지 않습니다** — 갈라서 적습니다. */
       if(r.failed){
-        list.innerHTML = head() + searchBox() + failBox("글목록");
+        list.innerHTML = head() + sortRow() + searchBox() + failBox("글목록");
         bind();
         return;
       }
@@ -416,7 +456,7 @@
           '<p><b>' + esc(qw) + '</b> 가 제목에 든 글이 0건입니다. ' +
           '다른 낱말로 찾아보시거나 조건을 지워 보세요.</p></div>'
         : zero();
-      list.innerHTML = head() + searchBox() +
+      list.innerHTML = head() + sortRow() + searchBox() +
         (rows.length ? '<ul class="cql">' + rows.map(row).join("") + '</ul>' : none) +
         (rows.length ? pager(r.total, rows.length) : "");
       bind();
@@ -1104,7 +1144,8 @@
   function draw(){
     paintBd();
     bindNav();
-    return (S.q ? paintOne() : (S.s ? paintList() : paintHome())).catch(function(){
+    return (S.q ? paintOne()
+            : (S.s === "boards" ? paintHome() : paintList())).catch(function(){
       /* ⚠️ 못 읽었으면 **0건이라고 말하지 않습니다** */
       list.innerHTML =
         '<p class="cqz">지금 불러오지 못했습니다. 잠시 뒤에 다시 열어 주세요.</p>';

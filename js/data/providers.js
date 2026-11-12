@@ -338,10 +338,28 @@ window.amFitLow = function(p){
    ⚠️⚠️⚠️ **「추천순」은 여기 없습니다** — 무엇이 추천인지 세어 본
      적이 없고 세는 자료도 없습니다(조회도 · 거래 건수도 안 셉니다).
      시안에 그 칸이 있어도 지어낸 차례를 「추천」이라고 적으면
-     절대 규칙 1 입니다. **셀 수 있는 넷**만 냅니다. */
+     절대 규칙 1 입니다. **세어서 줄 세울 수 있는 것**만 냅니다. */
+/* 등록된 날 — **「최신 등록순」이 읽는 자리 한 곳**입니다(레슨 · 피팅이
+   같이 씁니다). 0079 가 `v_provider_card` 에 `created_at` 을 내고
+   `tools/pull-providers.js` 가 그것을 가져옵니다.
+   ⚠️ 못 읽으면 **null** 입니다 — 0 으로 돌려주면 날짜를 모르는 업체가
+     「가장 오래된 곳」이 되고 그건 지어낸 차례입니다(절대 규칙 1). */
+window.amPvNewAt = function(p){
+  var v = (p && p.created_at) ? String(p.created_at) : "";
+  if(!v) return null;
+  var t = Date.parse(v);
+  return isNaN(t) ? null : t;
+};
+
 window.AM_PV_SORT = [
   { key:"name", name:"가나다순" },
   { key:"low",  name:"가격 낮은 순" },
   { key:"high", name:"가격 높은 순" },
-  { key:"rate", name:"후기 평점순" }
+  { key:"rate", name:"후기 평점순" },
+  /* ⚠️⚠️ 시안의 「추천순」 자리입니다 — 무엇이 추천인지는 못 세지만
+     **등록된 날짜는 셀 수 있습니다**(0079 가 `v_provider_card` 에
+     `created_at` 을 냅니다). 셀 수 없는 이름 대신 **세어서 줄 세우는
+     이름**을 적습니다. ⚠️ 날짜가 없는 업체는 맨 뒤로 갑니다 —
+     없는 날짜를 지어내지 않습니다. */
+  { key:"new",  name:"최신 등록순" }
 ];

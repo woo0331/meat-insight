@@ -250,6 +250,138 @@ module.exports = function(T){
   ok("  두 번 빼면 거절한다 (조용히 성공하면 기록이 거짓이 됩니다)",
      d2.no, d2.why);
 
+  /* ══════════════════════════════════════════════════════════════
+     0077 출발일 · 출발 가능 기간
+
+     ⚠️⚠️⚠️ **담는 꼴이 셋**입니다(확정 출발일 · 기간 · 아직 안 정함).
+     거르는 값은 `months`(text[])이고 **DB 가 세어서** 냅니다 — 화면이
+     세게 두면 화면마다 다른 달을 말하게 됩니다.
+
+     ⚠️⚠️ **아직 안 정한 상품은 `months` 가 빈 배열**이라 출발 월로
+     좁히면 빠집니다 — 그것이 맞습니다(그 달에 출발한다고 말할 근거가
+     없습니다). 빈 배열인지를 **세어서** 봅니다.
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── 0077 출발일 · 출발 가능 기간");
+  const D1 = psql("select to_char(kst_today() + 30, 'YYYY-MM-DD')");
+  const D2 = psql("select to_char(kst_today() + 60, 'YYYY-MM-DD')");
+  const M1 = D1.slice(0, 7);
+  const M2 = D2.slice(0, 7);
+
+  const sd = (u, o) => as(u) + "select set_trip_depart('" +
+    J(Object.assign({ trip:TRIP }, o)) + "'::jsonb)";
+
+  /* ① 자물쇠마다 다른 말로 거절하나 */
+  const dsay = {};
+  const e1 = denied(sd(PRO, { kind:"dates", dates:[] }));
+  dsay.empty = e1.why;
+  ok("⚠️ 확정 출발일인데 **빈 목록**이면 거절한다", e1.no, e1.why);
+  const e2 = denied(sd(PRO, { kind:"dates", dates:["2020-01-01"] }));
+  dsay.past = e2.why;
+  ok("  **지난 날짜**는 거절한다 (고를 수 없는 날을 목록에 세우지 않습니다)",
+     e2.no, e2.why);
+  const e3 = denied(sd(PRO, { kind:"range", from:D2, to:D1 }));
+  dsay.rev = e3.why;
+  ok("  **거꾸로 된 기간**은 거절한다", e3.no, e3.why);
+  const e4 = denied(sd(PR2, { kind:"dates", dates:[D1] }));
+  dsay.other = e4.why;
+  ok("⚠️⚠️ **남의 상품**에는 못 넣는다", e4.no, e4.why);
+  const e5 = denied(sd(CUS, { kind:"dates", dates:[D1] }));
+  dsay.cus = e5.why;
+  ok("  손님은 못 넣는다", e5.no, e5.why);
+  const e6 = denied(anon + "select set_trip_depart('" +
+                    J({ trip:TRIP, kind:"none" }) + "'::jsonb)");
+  dsay.anon = e6.why;
+  ok("  비로그인은 문을 아예 못 부른다", e6.no, e6.why);
+  /* ⚠️⚠️ **같은 자물쇠에 두 번 걸리는 입력을 둘로 세지 않습니다** —
+     세려는 뜻은 "**다른** 자물쇠가 다른 말을 하는가" 입니다. */
+  const dvals = Object.keys(dsay).map(k => dsay[k]);
+  ok("⚠️⚠️ 자물쇠마다 **다른 말**로 거절한다",
+     new Set(dvals).size === dvals.length,
+     JSON.stringify(dsay));
+
+  /* ② 확정 출발일 — 달을 **DB 가 세어서** 내나 */
+  allowed(sd(PRO, { kind:"dates", dates:[D1, D2] }));
+  const mg = psql(as(PRO) + "select coalesce(array_to_string(months, ','), '') " +
+                  "from v_trip_mine where id = '" + TRIP + "'");
+  ok("⚠️⚠️ 달을 **DB 가 세어서** 낸다 (화면이 세면 화면마다 달라집니다)",
+     mg.split(",").sort().join(",") === [M1, M2].sort().join(","),
+     mg + " ← " + D1 + " · " + D2);
+  ok("  가장 가까운 출발일을 같이 낸다",
+     psql(as(PRO) + "select coalesce(depart_next::text,'') from v_trip_mine " +
+          "where id = '" + TRIP + "'") === D1,
+     psql(as(PRO) + "select coalesce(depart_next::text,'') from v_trip_mine " +
+          "where id = '" + TRIP + "'"));
+  ok("  넣은 날짜 수를 센다",
+     psql(as(PRO) + "select date_n::text from v_trip_mine where id = '" +
+          TRIP + "'") === "2");
+
+  /* ③ **통째로 갈아 끼웁니다** — ⚠️ 더하기가 아닙니다. 빠뜨린 날짜가
+     조용히 남아 있으면 손님이 없는 날에 문의하십니다. */
+  allowed(sd(PRO, { kind:"dates", dates:[D2] }));
+  ok("⚠️⚠️⚠️ 보낸 배열로 **통째로 갈아 끼운다** (더하기가 아닙니다)",
+     psql(as(PRO) + "select date_n::text from v_trip_mine where id = '" +
+          TRIP + "'") === "1" &&
+     psql(as(PRO) + "select coalesce(depart_next::text,'') from v_trip_mine " +
+          "where id = '" + TRIP + "'") === D2,
+     psql(as(PRO) + "select date_n::text from v_trip_mine where id = '" + TRIP + "'"));
+
+  /* ④ 기간 */
+  allowed(sd(PRO, { kind:"range", from:D1, to:D2 }));
+  const mg2 = psql(as(PRO) + "select coalesce(array_to_string(months, ','), '') " +
+                   "from v_trip_mine where id = '" + TRIP + "'");
+  ok("⚠️ 기간으로 바꾸면 **그 사이의 달이 전부** 나온다",
+     mg2.indexOf(M1) >= 0 && mg2.indexOf(M2) >= 0, mg2);
+  ok("⚠️⚠️ 기간으로 바꾸면 **확정 출발일 줄이 사라진다** (두 꼴이 섞이지 않게)",
+     psql(as(PRO) + "select date_n::text from v_trip_mine where id = '" +
+          TRIP + "'") === "0",
+     psql(as(PRO) + "select date_n::text from v_trip_mine where id = '" + TRIP + "'"));
+
+  /* ⑤ 아직 안 정함 — ⚠️⚠️ `months` 가 **빈 배열**이어야 출발 월
+     거르개에서 빠집니다. null 이면 `cs` 가 어떻게 돌지 알 수 없습니다. */
+  allowed(sd(PRO, { kind:"none" }));
+  ok("⚠️⚠️⚠️ 아직 안 정하면 `months` 가 **빈 배열**이다 (출발 월로 좁히면 빠집니다)",
+     psql(as(PRO) + "select coalesce(array_length(months,1)::text, '0') " +
+          "from v_trip_mine where id = '" + TRIP + "'") === "0" &&
+     psql(as(PRO) + "select (months is not null)::text from v_trip_mine " +
+          "where id = '" + TRIP + "'") === "true",
+     psql(as(PRO) + "select coalesce(months::text,'(null)') from v_trip_mine " +
+          "where id = '" + TRIP + "'"));
+
+  /* ⑥ 공개 보기에도 **같은 값**이 나오나 — ⚠️ 안 나오면 손님 화면의
+     거르개가 영원히 0건입니다(에러 한 줄 없이). */
+  allowed(sd(PRO, { kind:"dates", dates:[D1] }));
+  const pubm = psql(anon + "select coalesce(array_to_string(months,','),'') " +
+                    "from v_trip_open where id = '" + TRIP + "'");
+  ok("⚠️⚠️ **공개 보기에도** 달과 가장 가까운 출발일이 나온다",
+     pubm === M1 &&
+     psql(anon + "select coalesce(depart_next::text,'') from v_trip_open " +
+          "where id = '" + TRIP + "'") === D1,
+     pubm);
+  ok("  `months=cs` 로 **실제로 걸린다** (화면이 보내는 그 물음)",
+     psql(anon + "select count(*) from v_trip_open where id = '" + TRIP +
+          "' and months @> array['" + M1 + "']") === "1");
+
+  /* ⑦ 공개 날짜 보기 — ⚠️ 지난 날짜는 **안 냅니다**(고를 수 없는 날) */
+  psql("insert into tripdate (trip_id, depart_on) values ('" + TRIP +
+       "', kst_today() - 5) on conflict do nothing");
+  ok("⚠️ 공개 날짜 보기는 **지난 날짜를 안 낸다**",
+     psql(anon + "select count(*) from v_trip_date_public where trip_id = '" +
+          TRIP + "'") === "1" &&
+     psql("select count(*) from tripdate where trip_id = '" + TRIP + "'") === "2",
+     psql(anon + "select count(*) from v_trip_date_public where trip_id = '" +
+          TRIP + "'"));
+  /* ⚠️⚠️ **제 것만** 보입니다 — 남의 상품 날짜를 읽으면 안 됩니다 */
+  ok("⚠️⚠️ `v_trip_date_mine` 은 **제 상품 것만** 낸다",
+     psql(as(PR2) + "select count(*) from v_trip_date_mine where trip_id = '" +
+          TRIP + "'") === "0",
+     psql(as(PR2) + "select count(*) from v_trip_date_mine where trip_id = '" +
+          TRIP + "'"));
+  /* ⑧ 표에 바로 못 씁니다 */
+  const dw = denied(as(PRO) + "insert into tripdate (trip_id, depart_on) " +
+                    "values ('" + TRIP + "', kst_today() + 90)");
+  ok("⚠️⚠️ `tripdate` 에도 **바로 못 넣는다** (문이 유일한 길입니다)",
+     dw.no, dw.why);
+
   console.log("\n── 0073 ⑨ 표에 바로 쓰는 길이 없나");
   const w1 = denied(as(PRO) + "insert into trip (provider_id, by_user, scope, " +
     "dest, title, body, nights, days, price_from) values ('tpx-a','" + PRO +

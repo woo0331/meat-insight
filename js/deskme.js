@@ -66,7 +66,8 @@
                   **읽지 않으면 저장할 때마다 비워집니다**(`industries` 자리) */
                "range_opts,open_hours," +
                /* ⚠️⚠️ 0076 — 피팅 이용 방식. **읽지 않으면 저장할 때마다 비워집니다** */
-               "fit_ways," +
+               /* ⚠️⚠️ 0079 — 피팅 거래 조건. **읽지 않으면 저장할 때마다 비워집니다** */
+               "fit_ways,fit_terms," +
                "brands,scale,contact_ways,verified,listed,assignable,state,state_why" +
                "&id=eq." + encodeURIComponent(PV) + "&limit=1");
   }
@@ -130,6 +131,13 @@
     if(!f.querySelector('input[name="fway"]'))
       return (ME && Array.isArray(ME.fit_ways)) ? ME.fit_ways : [];
     return b;
+  }
+  /* ⚠️⚠️ 0079 — 피팅 거래 조건(부품비 포함 여부 등). 피팅을 하시는
+     업체에만 그리므로, 안 그려졌으면 **읽은 값을 그대로** 돌려보냅니다. */
+  function fitTermsVal(f){
+    var el = f.querySelector("#me-fterms");
+    return el ? (el.value || "").trim()
+              : ((ME && ME.fit_terms) ? ME.fit_terms : "");
   }
   function hoursVal(f){
     var el = f.querySelector("#me-open");
@@ -231,6 +239,19 @@
                             (p.fit_ways || []).indexOf(o.key) >= 0);
                 }).join("") +
               '</fieldset></div>' +
+            '</div>' +
+            /* ⚠️ 제 줄로 뗍니다 — `.jrow` 는 격자라 한 칸에 몰아 넣으면
+               고르개 바로 밑에 붙어 같은 묶음으로 읽힙니다. */
+            '<div class="jrow jrow-full">' +
+              /* ⚠️⚠️⚠️ 0079 — 거래 조건은 **업체가 적는 값**입니다.
+                 「부품비 포함」 같은 말을 저희가 지어 적으면 그것이 곧
+                 지키지 못하는 약속입니다(절대 규칙 1 · 5). 비우시면
+                 손님 화면에서 **줄째 빠집니다**. */
+              '<label for="me-fterms">거래 조건 ' +
+              '<span class="jhint">(비우시면 손님 화면에서 그 줄이 빠집니다 · 120자까지)</span></label>' +
+              '<input id="me-fterms" name="fterms" maxlength="120" ' +
+              'placeholder="예: 공임만 받고 부품비는 따로 받습니다" ' +
+              'value="' + esc(p.fit_terms || "") + '">' +
             '</div>'
           : "") +
       '<div class="jrow">' +
@@ -391,6 +412,8 @@
       /* ⚠️⚠️ 0074 — 칸 둘을 더했으니 **읽고 또 보내야** 합니다 */
       rangeOpts: optsVal(f),
       fitWays: fitWayVal(f),
+      /* ⚠️⚠️ 0079 — 칸을 더했으니 **읽고 또 보내야** 합니다 */
+      fitTerms: fitTermsVal(f),
       openHours: hoursVal(f)
     };
     bt.disabled = true;

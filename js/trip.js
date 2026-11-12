@@ -104,6 +104,14 @@
       if(bd.gte !== null) qs.push("price_from=gte." + bd.gte);
       if(bd.lt  !== null) qs.push("price_from=lt." + bd.lt);
     }
+    /* ⚠️⚠️⚠️ **출발 월은 서버가 거릅니다** — 0077 이 `months`(text[])를
+       세어서 내므로 `cs`(contains)로 묻습니다. 쉰 줄만 받아 화면에서
+       고르면 그 쉰 줄 밖의 상품이 영영 안 나옵니다.
+       ⚠️⚠️ 출발일을 아직 안 올리신 상품은 `months` 가 **빈 배열**이라
+       이 조건에 **안 걸립니다** — 그것이 맞습니다(그 달에 출발한다고
+       말할 근거가 없습니다). 그 사실을 0건 상자가 그 자리에서 말합니다. */
+    if(f.mo && /^\d{4}-\d{2}$/.test(f.mo))
+      qs.push("months=cs.%7B" + encodeURIComponent(f.mo) + "%7D");
     if(f.q) qs.push("title=ilike.*" + encodeURIComponent(
       f.q.replace(/[*%]/g, "")) + "*");
     return "v_trip_open?" + qs.join("&");
@@ -117,10 +125,10 @@
           (cur === x.key ? " selected" : "") + '>' + esc(x.name) + '</option>';
       }).join("");
   }
-  /* 출발 월 — ⚠️ **담는 칸이 없습니다.** 0073 은 상품마다 출발일을
-     안 받습니다(여행사가 일정표를 따로 안내합니다). 고르게 해 놓고
-     안 걸러 주면 눌러도 아무 일이 안 나는 칸이라(절대 규칙 5) 이 칸은
-     **아예 안 냅니다** — 그 사실을 찾는 칸 아래에서 말합니다. */
+  /* 출발 월 — ⚠️⚠️ **0077 이 담는 칸을 냈습니다**(2026-11-12). 그 전에는
+     "담는 칸이 없어 이 고르개를 아예 안 냅니다" 라고 적어 두었습니다 —
+     되는 날 **그 글도 같이** 고칩니다(여기가 그 자리입니다).
+     ⚠️ 고르개에 낼 달은 `amTripMonths()` 한 곳이고 **이번 달부터**입니다. */
   function findBox(f){
     return '<form class="tpf" id="tripform" method="get" action="/cat/travel">' +
       /* ⚠️⚠️ 시안은 「국내」이 켜진 채로 그려 있지만 **「전체」를 먼저**
@@ -141,6 +149,10 @@
         '<p class="tpf-c"><label for="tp-ds">목적지</label>' +
           '<select id="tp-ds" name="ds">' +
             opt(dests(f.sc), f.ds, "전체") + '</select></p>' +
+        '<p class="tpf-c"><label for="tp-mo">출발 월</label>' +
+          '<select id="tp-mo" name="mo">' +
+            opt(W.amTripMonths ? W.amTripMonths(12) : [], f.mo, "전체") +
+          '</select></p>' +
         '<p class="tpf-c"><label for="tp-sp">일정(일수)</label>' +
           '<select id="tp-sp" name="sp">' +
             opt(SPANS, f.sp, "전체") + '</select></p>' +
@@ -153,8 +165,16 @@
         '<p class="tpf-go"><button type="submit" class="btn btn-deep">' +
           (W.icon ? W.icon("search", 18) : "") + '여행 검색</button></p>' +
       '</div>' +
-      '<p class="tpf-n">출발일은 상품마다 달라 여행사가 따로 안내합니다 — ' +
-        '그래서 출발 월로는 좁혀 드리지 못합니다.</p>' +
+      /* ⚠️⚠️ **출발일을 아직 안 올리신 상품이 빠진다**는 것을 그 자리에서
+         말합니다 — 안 적으면 손님이 0건을 "그 달에는 여행이 없다" 로
+         읽습니다(없는 것이 아니라 **아직 안 올리신** 것입니다). */
+      (f.mo
+        ? '<p class="tpf-n">' + esc((W.amTripMonthName ?
+            W.amTripMonthName(f.mo) : f.mo)) +
+          ' 에 출발하는 상품만 보고 계십니다 — 출발일을 아직 안 올리신 ' +
+          '상품은 이 목록에서 빠집니다.</p>'
+        : '<p class="tpf-n">출발 월을 고르시면 그 달에 출발하는 상품만 ' +
+          '보여 드립니다. 출발일을 아직 안 올리신 상품은 그때 빠집니다.</p>') +
     '</form>';
   }
 
@@ -201,6 +221,15 @@
           : "") +
         /* ⚠️⚠️ 값은 **"부터"** 입니다 — 빼면 우리가 값을 확정해 말하는
            것이 됩니다(amTripPrice 한 곳). 못 읽으면 그 줄이 빠집니다. */
+        /* ⚠️⚠️⚠️ **출발 정보는 셋을 다른 말로** 냅니다(0077) — 확정
+           출발일 · 출발 가능 기간 · **아직 안 올리심**. 셋을 같은 말로
+           내면 안 올리신 상품이 「일정이 없는 상품」으로 읽힙니다.
+           ⚠️ 글자를 짓는 자리는 `amTripDepart()` 한 곳입니다. */
+        (function(){
+          var dp = W.amTripDepart ? W.amTripDepart(r) : null;
+          return dp ? '<span class="tpc-d tpc-d-' + esc(dp.kind) + '">' +
+            (W.icon ? W.icon("cal", 13) : "") + esc(dp.text) + '</span>' : "";
+        })() +
         (price ? '<span class="tpc-p">' + esc(price) + '</span>' : "") +
         chips(r) +
         (r.price_note ? '<span class="tpc-n">' + esc(r.price_note) + '</span>' : "") +
@@ -261,7 +290,33 @@
      ⚠️ 보기를 새로 안 만들었습니다 — `v_trip_open` 에 `?id=eq.<uuid>`
        로 한 줄만 받습니다 (공개로 나가는 길이 둘이 되면 한쪽만 고치는
        날 한쪽만 샙니다 · 0069 에서 세운 규칙). */
-  function detail(r, shots){
+  /* 상세의 출발 구간 — ⚠️⚠️ **셋을 다른 말로** 냅니다(0077).
+     ⚠️ 확정 출발일은 **받은 줄만** 적습니다 — 한도(60)에 닿으면 그
+     사실을 적습니다(전체인 것처럼 적으면 세어 본 값이 아닙니다). */
+  function departBox(r, days){
+    var dp = W.amTripDepart ? W.amTripDepart(r) : null;
+    if(!dp) return "";
+    var L = (days || []).map(function(x){
+      return W.amTripDay ? W.amTripDay(x.depart_on) : "";
+    }).filter(Boolean);
+    return '<div class="tpd-dp tpd-dp-' + esc(dp.kind) + '">' +
+      '<p class="tpd-dp-h">' + (W.icon ? W.icon("cal", 16) : "") +
+        esc(dp.text) + '</p>' +
+      (L.length
+        ? '<ul class="tpd-dl">' + L.map(function(s){
+            return '<li>' + esc(s) + '</li>';
+          }).join("") + '</ul>' +
+          (L.length >= 60
+            ? '<p class="tpd-dp-n">이 화면에는 60일까지만 적습니다 — ' +
+              '나머지는 판매사에 문의해 주세요.</p>' : "")
+        : "") +
+      (dp.kind === "none"
+        ? '<p class="tpd-dp-n">판매사가 출발일을 아직 안 올리셨습니다 — ' +
+          '일정이 없다는 뜻이 아닙니다. 아래로 문의해 주세요.</p>' : "") +
+    '</div>';
+  }
+
+  function detail(r, shots, days){
     var price = W.amTripPrice ? W.amTripPrice(r) : "";
     var span  = W.amTripSpan ? W.amTripSpan(r) : "";
     var inc = (Array.isArray(r.incl) ? r.incl : []).filter(Boolean);
@@ -281,6 +336,7 @@
               esc(s.caption || "") + '" loading="lazy" decoding="async"></li>';
           }).join("") + '</ul>'
         : "") +
+      departBox(r, days) +
       (price ? '<p class="tpd-p">' + esc(price) + '</p>' : "") +
       (r.price_note ? '<p class="tpd-n">' + esc(r.price_note) + '</p>' : "") +
       '<div class="tpd-body">' + esc(r.body).replace(/\n/g, "<br>") + '</div>' +
@@ -331,7 +387,13 @@
       Promise.all([
         get("v_trip_open?id=eq." + encodeURIComponent(f.v) + "&limit=1"),
         get("v_trip_photo_public?trip_id=eq." + encodeURIComponent(f.v) +
-               "&order=ord.asc&limit=20")
+               "&order=ord.asc&limit=20"),
+        /* ⚠️⚠️ 확정 출발일은 **표에서 따로** 받습니다(0077 의
+           `v_trip_date_public`). `v_trip_open` 은 가장 가까운 하나만
+           내므로, 상세에서 날짜를 다 보여 드리려면 이 길이 필요합니다.
+           ⚠️ 못 읽어도 상세는 그립니다 — 날짜 줄만 빠집니다. */
+        get("v_trip_date_public?trip_id=eq." + encodeURIComponent(f.v) +
+               "&order=depart_on.asc&limit=60")
       ]).then(function(res){
         /* ⚠️ 불러오는 사이에 뒤로 가셨으면 **안 그립니다** — 안 보면
            늦게 온 답이 목록을 덮어씁니다 (0069 의 그 자리). */
@@ -345,7 +407,7 @@
             esc(urlOf({})) + '">목록으로</a></div></div>';
           return;
         }
-        LIST.innerHTML = detail(rows[0], res[1].rows || []);
+        LIST.innerHTML = detail(rows[0], res[1].rows || [], res[2].rows || []);
       });
       return;
     }
@@ -374,7 +436,7 @@
     /* 목적지는 갈래가 바뀌면 **목록 자체가 바뀝니다** — 다시 채웁니다 */
     var ds = d.getElementById("tp-ds");
     if(ds) ds.innerHTML = opt(dests(f.sc), f.ds, "전체");
-    set("tp-sp", f.sp); set("tp-bd", f.bd);
+    set("tp-mo", f.mo); set("tp-sp", f.sp); set("tp-bd", f.bd);
     Array.prototype.forEach.call(d.querySelectorAll(".tpf-t"), function(a){
       var on = (a.getAttribute("data-sc") || "") === f.sc;
       a.classList.toggle("on", on);
@@ -391,8 +453,12 @@
   function fromForm(){
     var v = function(id){ var e = d.getElementById(id); return e ? e.value : ""; };
     var f = now();
+    /* ⚠️⚠️ **보내는 열쇠와 읽는 칸을 맞춰야** 합니다 — `mo` 를 빈 글자로
+       두고 있었습니다(그때는 그 고르개가 없었습니다). 0077 로 칸이
+       생겼으니 여기서 읽습니다. 안 읽으면 고르개는 그려지는데 누르면
+       **조건이 사라집니다**(에러 0줄). */
     return { sc:f.sc, ds:v("tp-ds"), sp:v("tp-sp"), bd:v("tp-bd"),
-             mo:"", v:"", q:(v("tp-q") || "").trim() };
+             mo:v("tp-mo"), v:"", q:(v("tp-q") || "").trim() };
   }
 
   /* ⚠️⚠️ 눌림은 **감싼 자리 한 곳**에서 받습니다 — 다시 그릴 때마다

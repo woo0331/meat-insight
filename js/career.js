@@ -40,6 +40,9 @@
     if(c.key === "career") SUBS = c.items || [];
   });
   var SUBNAME = {};
+  /* 0078 — ⚠️ 로그인하신 분의 저장 목록. **서버가 돌려준 값**으로만
+     바꿉니다(화면이 먼저 뒤집으면 거절당한 날 켜진 채 남습니다). */
+  var ME = null, FAV = {};
   SUBS.forEach(function(i){ SUBNAME[i.key] = i.name; });
 
   /* 갈래 — ⚠️⚠️⚠️ **2026-11-08 에 `js/data/deal.js` 로 꺼냈습니다.**
@@ -140,13 +143,25 @@
     if(f.ro) q.push("ro=" + encodeURIComponent(f.ro));
     if(f.em) q.push("em=" + encodeURIComponent(f.em));
     if(f.py) q.push("py=" + encodeURIComponent(f.py));
+    /* ⚠️⚠️⚠️ **금액은 급여 갈래를 고르셨을 때만** 실립니다 — 월급 ·
+       연봉 · 시급을 한 칸으로 견주면 「300만원 이상」이 시급 300만원과
+       연봉 300만원을 같은 줄에 세웁니다. 거는 자리는 `payMin()` 한
+       곳이고 거기서 `py` 를 봅니다. */
+    if(f.py && f.pm) q.push("pm=" + encodeURIComponent(f.pm));
     if(f.q)  q.push("q="  + encodeURIComponent(f.q));
     if(f.v)  q.push("v="  + encodeURIComponent(f.v));
     return "/cat/career" + (q.length ? "?" + q.join("&") : "");
   }
   function nowAll(){
     return { k:nowKind(), sub:nowSub(), rg:nowRg(), ro:nowRole(),
-             em:nowEmp(), py:nowPay(), q:nowQ(), v:nowView() };
+             em:nowEmp(), py:nowPay(), pm:nowPayMin(), q:nowQ(), v:nowView() };
+  }
+  /* 최소 금액 — ⚠️⚠️ **급여 갈래가 없으면 0 입니다**(단위를 모르는
+     숫자로는 견줄 수가 없습니다). 숫자가 아니거나 0 이하면 안 겁니다. */
+  function nowPayMin(){
+    var m = /[?&]pm=(\d{1,12})/.exec(window.location.search || "");
+    var n = m ? Number(m[1]) : 0;
+    return (isFinite(n) && n > 0) ? String(n) : "";
   }
   function nowRg(){
     var m = /[?&]rg=([a-z0-9-]+)/.exec(window.location.search || "");
@@ -174,6 +189,26 @@
         try{ return JSON.parse(t); }catch(_){ return t; }
       });
     });
+  }
+
+  /* ── 북마크 (0078) ─────────────────────────────────────────────
+     ⚠️⚠️⚠️ **찜 수를 공개하지 않습니다** — 0069 가 중고 매물에서 세운
+     규칙 그대로입니다. 세어 낼 수야 있지만 「인기」로 읽히고 검증할
+     길이 없으며, 누가 무엇을 저장했는지는 **행동 기록**이라 올리신
+     분에게도 · 운영자에게도 안 냅니다. `v_job_open` 에 `fav_n` 칸이
+     **아예 없습니다**.
+     ⚠️⚠️ **로그인하지 않으셨으면 단추를 안 냅니다** — 그리면 눌러도
+     거절되는 칸입니다(절대 규칙 5). 대신 상세에서 로그인 길을 냅니다.
+     ⚠️ 글자를 짓는 자리는 `favLabel()` **한 곳**입니다. */
+  function favLabel(on){ return on ? "저장 해제" : "저장"; }
+  function favBtn(j){
+    if(!ME || !ME.signedIn) return "";
+    var on = FAV[j.id] === true;
+    return '<button type="button" class="btn btn-sm jbc-fav' +
+      (on ? " on" : "") + '" data-fav="' + esc(j.id) + '" ' +
+      'aria-pressed="' + (on ? "true" : "false") + '">' +
+      (window.icon ? window.icon("heart", 14) : "") +
+      esc(favLabel(on)) + '</button>';
   }
 
   function card(j){
@@ -209,6 +244,7 @@
       '<p class="jbc-act">' +
         '<a class="btn btn-line btn-sm" href="' +
           esc(urlOf(Object.assign({}, nowAll(), { v:j.id }))) + '">공고 상세</a>' +
+        favBtn(j) +
         '<span class="jbc-n">받은 것 ' + esc(String(j.apply_n)) + '</span>' +
       '</p>' +
     '</li>';
@@ -463,6 +499,22 @@
       '<p class="jbrail-c"><label for="jb-py">급여 조건</label>' +
         '<select id="jb-py" name="py">' +
           opt(window.AM_JOB_PAY || [], f.py, "전체") + '</select></p>' +
+      /* ⚠️⚠️⚠️ **금액 칸은 급여 갈래를 고르셨을 때만** 냅니다 — 월급 ·
+         연봉 · 시급을 한 칸으로 받으면 「300만원 이상」이 시급 300만원과
+         연봉 300만원을 같은 줄에 세웁니다. 갈래를 안 고르셨을 때는 칸
+         대신 **왜 없는지**를 적습니다(빈 칸을 두면 눌러도 아무 일이 안
+         나는 칸입니다 · 절대 규칙 5). */
+      (f.py
+        ? '<p class="jbrail-c"><label for="jb-pm">' +
+            esc(nameOf(window.AM_JOB_PAY, f.py, "급여 갈래")) +
+            ' 최소 금액</label>' +
+            '<input id="jb-pm" name="pm" inputmode="numeric" maxlength="12" ' +
+              'placeholder="예: 3000000" value="' + esc(f.pm || "") + '">' +
+            '<span class="jbrail-n">같은 갈래끼리만 견줍니다 · ' +
+              '「협의」 와 금액을 안 적으신 공고는 빠집니다</span></p>'
+        : '<p class="jbrail-n jbrail-n0">금액으로 좁히시려면 급여 조건을 ' +
+          '먼저 고르셔야 합니다 — 월급 · 연봉 · 시급을 한 칸으로 견줄 수 ' +
+          '없기 때문입니다.</p>') +
       (f.k ? '<input type="hidden" name="k" value="' + esc(f.k) + '">' : '') +
       (f.sub ? '<input type="hidden" name="s" value="' + esc(f.sub) + '">' : '') +
       '<p class="jbrail-b">' +
@@ -670,6 +722,34 @@
     if(NAVON) return;
     list.addEventListener("click", function(e){
       var t = e.target;
+      /* 0078 북마크 — ⚠️⚠️ **눌린 그 단추만** 바꿉니다(목록을 다시
+         그리면 보고 계신 자리가 맨 위로 튕깁니다). 그리고 **서버가
+         돌려준 값**으로 바꿉니다 — 화면이 먼저 뒤집으면 거절당한 날
+         켜진 채 남습니다(0069 가 중고 찜에서 세운 규칙). */
+      var fb = t.closest ? t.closest("[data-fav]") : null;
+      if(fb && list.contains(fb)){
+        e.preventDefault();
+        var fid = fb.getAttribute("data-fav");
+        fb.disabled = true;
+        /* ⚠️⚠️⚠️ 0078 의 문은 **켜고 끄는 값을 받습니다**(토글이
+           아닙니다) — 열쇠는 `id` · `on` 입니다. `post` 로 보내면
+           "어느 공고인지 알 수 없습니다" 로 거절합니다(화면은 보내는데
+           DB 가 거절하는 자리). */
+        call(a, "fav_jobpost", { id:fid, on: !(FAV[fid] === true) })
+          .then(function(on){
+          FAV[fid] = (on === true);
+          fb.classList.toggle("on", on === true);
+          fb.setAttribute("aria-pressed", on === true ? "true" : "false");
+          /* ⚠️ 아이콘을 다시 그려야 글자만 남지 않습니다 */
+          fb.innerHTML = (window.icon ? window.icon("heart", 14) : "") +
+            esc(favLabel(on === true));
+          fb.disabled = false;
+        }, function(err){
+          fb.disabled = false;
+          try{ alert(String(err.message || err)); }catch(_){}
+        });
+        return;
+      }
       var ln = t.closest ? t.closest("a[href^='/cat/career']") : null;
       if(!ln || !list.contains(ln)) return;
       if(e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
@@ -705,7 +785,7 @@
       if(f.id !== "jbrail" && f.id !== "jbfind") return;
       e.preventDefault();
       var g = Object.assign({}, nowAll(), { v:"" });
-      ["rg", "ro", "em", "py", "q"].forEach(function(k){
+      ["rg", "ro", "em", "py", "pm", "q"].forEach(function(k){
         var el = f.elements[k];
         if(el) g[k] = (el.value || "").trim();
       });
@@ -741,6 +821,14 @@
     if(f.ro) q += "&role=eq." + encodeURIComponent(f.ro);
     if(f.em) q += "&emp_type=eq." + encodeURIComponent(f.em);
     if(f.py) q += "&pay_type=eq." + encodeURIComponent(f.py);
+    /* ⚠️⚠️⚠️ **금액은 갈래와 짝으로만** 겁니다 — 월급 · 연봉 · 시급을
+       한 칸으로 견주면 「300만원 이상」이 시급 300만원과 연봉 300만원을
+       같은 줄에 세웁니다. 그래서 `f.py` 가 있을 때만 겁니다.
+       ⚠️⚠️ **「협의」 · 안 적으신 공고는 빠집니다** — `pay_min` 이 null
+       이면 `gte` 가 거짓입니다. 그것이 맞습니다(모르는 금액을 0 으로
+       치면 가장 싼 공고가 되고 그건 지어낸 값입니다 · 절대 규칙 1).
+       화면이 그 사실을 거르개 옆에서 말합니다. */
+    if(f.py && f.pm) q += "&pay_min=gte." + encodeURIComponent(f.pm);
     /* ⚠️ `*` 와 `%` 는 ilike 의 글자라 빼고 보냅니다 (그대로 보내면
        손님이 친 말과 다른 것을 찾습니다). */
     if(f.q)  q += "&title=ilike.*" +
@@ -772,7 +860,20 @@
       return;
     }
 
-    load(a);
+    /* 0078 — ⚠️⚠️ **저장 목록을 먼저 받고** 그립니다. 안 기다리면 첫
+       그림에서 단추가 전부 「저장」으로 서고, 이미 저장해 두신 분은
+       눌러서 **해제**가 됩니다(에러 0줄). */
+    ME = a;
+    var favReady = a.signedIn
+      /* ⚠️⚠️ 보기가 내는 칸 이름은 **`id`** 입니다(`f.post_id as id`) —
+         `post_id` 로 읽으면 전부 undefined 가 되어 **저장해 둔 것이
+         하나도 안 켜집니다**(에러 0줄). */
+      ? get(a, "v_job_fav?select=id&limit=500").then(function(rows){
+          FAV = {};
+          (rows || []).forEach(function(x){ FAV[x.id] = true; });
+        }, function(){ FAV = {}; })
+      : Promise.resolve();
+    favReady.then(function(){ load(a); });
     /* 뒤로 가기 — 주소가 바뀌면 다시 그립니다 */
     window.addEventListener("popstate", function(){
       load(a); });

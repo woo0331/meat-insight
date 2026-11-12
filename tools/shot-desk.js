@@ -625,6 +625,8 @@ const T_TRIP = {
       provider_id:"t-trip", provider_name:"남도골프투어",
       /* ⚠️⚠️ 공개 버킷 주소는 그물 밖이라 깨진 네모로 찍힙니다 —
          아래 `PUB` 가로채기가 저장소의 그림으로 바꿔 줍니다. */
+      depart_kind:"dates", depart_from:null, depart_to:null,
+      months:["2026-12","2027-01"], depart_next:"2026-12-05",
       photo_n:2, thumb:"trip/" + TRIP_1 + "/photo/a.jpg" },
     /* ⚠️ 한 줄은 **사진 0장**으로 둡니다 — 둘 다 있으면 "0장이면 아이콘
        타일" 을 눈으로 볼 수가 없습니다. */
@@ -634,7 +636,16 @@ const T_TRIP = {
       incl:[], excl:[],
       created_at:"2026-11-09T01:00:00Z", updated_at:"2026-11-09T01:00:00Z",
       provider_id:"t-trip", provider_name:"남도골프투어",
+      /* ⚠️ 한 줄은 **출발일을 안 올린 것**으로 둡니다 — 셋이 다른 말로
+         나오는지 눈으로 봐야 합니다(0077). */
+      depart_kind:"none", depart_from:null, depart_to:null,
+      months:[], depart_next:null,
       photo_n:0, thumb:null }
+  ],
+  v_trip_date_public: [
+    { trip_id:TRIP_1, depart_on:"2026-12-05" },
+    { trip_id:TRIP_1, depart_on:"2026-12-19" },
+    { trip_id:TRIP_1, depart_on:"2027-01-09" }
   ],
   v_trip_photo_public: [
     { id:"ee000001-0073-4000-8000-000000000001", trip_id:TRIP_1,
@@ -655,6 +666,8 @@ const T_TRIPPRO = {
       draft:{ title:"제주 2박3일 36홀 패키지 (12월 일정)" },
       draft_state:"pending", draft_why:null,
       created_at:"2026-11-10T01:00:00Z", updated_at:"2026-11-10T01:00:00Z",
+      depart_kind:"dates", depart_from:null, depart_to:null,
+      months:["2026-12","2027-01"], depart_next:"2026-12-05", date_n:3,
       photo_n:2, photo_draft_n:1, photo_drop_n:0 },
     { id:TRIP_2, provider_id:"t-trip", scope:"abroad", dest:"jp",
       title:"일본 규슈 3박4일 라운드", body:"후쿠오카 출발 라운드 3회입니다.",
@@ -664,7 +677,14 @@ const T_TRIPPRO = {
       state_why:"날짜별 일정을 더 적어 주세요.",
       draft:null, draft_state:"none", draft_why:null,
       created_at:"2026-11-09T01:00:00Z", updated_at:"2026-11-09T01:00:00Z",
+      depart_kind:"none", depart_from:null, depart_to:null,
+      months:[], depart_next:null, date_n:0,
       photo_n:0, photo_draft_n:0, photo_drop_n:0 }
+  ],
+  v_trip_date_mine: [
+    { trip_id:TRIP_1, depart_on:"2026-12-05" },
+    { trip_id:TRIP_1, depart_on:"2026-12-19" },
+    { trip_id:TRIP_1, depart_on:"2027-01-09" }
   ],
   v_trip_photo_mine: [
     { id:"ee000001-0073-4000-8000-000000000001", trip_id:TRIP_1,

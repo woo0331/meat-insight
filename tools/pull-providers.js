@@ -55,7 +55,15 @@ const COLS = "id,name,intro,regions,gu,subs,since,consult_hours,verified,brands,
                   `/cat/range` 의 시설 거르개가 영원히 0건**이고 카드에
                   이용 시간이 안 나갑니다(빌드가 찍는 화면이라 이 도구가
                   가져온 것만 들어갑니다 — 0071 과 같은 자리). */
-               "range_opts,open_hours,fit_ways," +
+               /* ⚠️⚠️ 0076 · 0079 — 피팅 이용 방식 · 거래 조건. **안 가져오면
+                  `/cat/fitting` 거르개가 0건**이고 카드 · 업체 화면에서
+                  거래 조건이 빠집니다(0074 와 같은 자리). */
+               "range_opts,open_hours,fit_ways,fit_terms," +
+               /* ⚠️⚠️ 0079 — 「최신 등록순」이 읽는 칸입니다. **안 가져오면
+                  그 차례가 조용히 아무것도 안 바꿉니다**(에러 0줄) —
+                  시안의 「추천순」을 대신하는 자리라 셀 수 있는 값이
+                  반드시 있어야 합니다. */
+               "created_at," +
                "is_test";
 
 /* ⚠️⚠️ **검사용 업체를 두 겹으로 거릅니다** (0030 · 2차 지시서 §8).

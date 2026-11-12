@@ -29,6 +29,10 @@
      live 사진만** 내므로 여기서는 `v_trip_photo_mine` 을 읽습니다
      (심사 중인 사진의 id 를 알 길이 그것뿐입니다). */
   var PH = {};
+  /* 확정 출발일 — ⚠️ `v_trip_mine` 은 **가장 가까운 하나**와 개수만
+     냅니다(0077). 고치는 양식은 **지금 들어 있는 날짜 전부**를 보여
+     줘야 하므로 `v_trip_date_mine` 을 따로 받습니다. */
+  var DP = {};
 
   function get(path){
     return fetch(A.conf.url + "/rest/v1/" + path, {
@@ -218,6 +222,89 @@
     '</div>';
   }
 
+  /* ── 출발일 · 출발 가능 기간 (0077) ─────────────────────────────
+     ⚠️⚠️⚠️ **셋을 다른 말로** 냅니다 — 확정 출발일 · 출발 가능 기간 ·
+     아직 안 정함. 셋을 한 칸에 글자로 담으면("12월 출발 가능") 손님
+     화면에서 **달로 거를 수가 없습니다**(0077 이 `months` 를 세어
+     냅니다).
+     ⚠️⚠️ **안 정하신 것도 상태입니다** — 「없음」이 아니라 「아직 안
+     정함」이고, 그러면 손님이 출발 월로 좁히실 때 이 상품이 빠집니다.
+     그 사실을 **그 자리에서** 말합니다(절대 규칙 2). */
+  function departBox(r){
+    var dp = window.amTripDepart ? window.amTripDepart(r) : null;
+    var L = DP[r.id] || [];
+    return '<div class="tpr-dp" data-trip="' + esc(r.id) + '">' +
+      '<p class="tpr-dp-h">' + icon("cal", 15) + '출발 일정' +
+        '<button type="button" class="btn btn-line btn-sm tpr-dp-ed">' +
+          '출발일 정하기</button></p>' +
+      '<p class="tpr-dp-now">' + esc(dp ? dp.text : "") +
+        (L.length ? ' · ' + esc(String(L.length)) + '일' : "") + '</p>' +
+      (!dp || dp.kind === "none"
+        ? '<p class="tpr-dp-w">출발일을 안 올리시면 손님이 <b>출발 월로 ' +
+          '좁히실 때 이 상품이 빠집니다.</b></p>'
+        : "") +
+      '<div class="tpr-dp-slot"></div>' +
+      '<p class="tpr-dp-m" role="status"></p>' +
+    '</div>';
+  }
+
+  /* ⚠️ 날짜 칩 — 지우는 단추가 **칩마다** 있어야 잘못 넣은 하루만
+     뺄 수 있습니다(통째로 지우고 다시 넣게 하면 막다른 길입니다). */
+  function dayChips(L){
+    if(!L.length) return '<p class="tpr-dp-n">아직 넣은 날짜가 없습니다.</p>';
+    return '<ul class="tpr-dc">' + L.map(function(s){
+      return '<li><span>' + esc(window.amTripDay ? window.amTripDay(s) : s) +
+        '</span><button type="button" class="tpr-dc-x" data-day="' + esc(s) +
+        '" aria-label="' + esc(s) + ' 빼기">' + icon("close", 14) +
+        '</button></li>';
+    }).join("") + '</ul>';
+  }
+
+  function departForm(r){
+    var dp = String(r.depart_kind || "none");
+    var L = (DP[r.id] || []).slice();
+    var pick = function(k, name, lead){
+      return '<label class="chk"><input type="radio" name="dpk" value="' +
+        esc(k) + '"' + (dp === k ? " checked" : "") + '> <b>' + esc(name) +
+        '</b> <span class="jhint">' + esc(lead) + '</span></label>';
+    };
+    return '<form class="tpr-dpf jform">' +
+      '<div class="jrow jrow-full">' +
+        '<label>어떻게 올리시겠습니까</label>' +
+        '<div class="svcs"><fieldset class="svc">' +
+        '<legend>출발 방식</legend>' +
+          pick("dates", "확정 출발일", "날짜를 하나씩 넣습니다 — 손님이 그 달로 찾습니다") +
+          pick("range", "출발 가능 기간", "그 기간 안이면 언제든 출발합니다") +
+          pick("none",  "아직 안 정함", "손님이 출발 월로 좁히면 이 상품은 빠집니다") +
+        '</fieldset></div>' +
+      '</div>' +
+      '<div class="jrow jrow-full tpr-dpf-dates"' +
+        (dp === "dates" ? "" : " hidden") + '>' +
+        '<label for="dpd-' + esc(r.id) + '">확정 출발일</label>' +
+        '<p class="tpr-dp-add">' +
+          '<input type="date" id="dpd-' + esc(r.id) + '" class="tpr-dp-i">' +
+          '<button type="button" class="btn btn-line btn-sm tpr-dp-plus">' +
+            '이 날짜 넣기</button></p>' +
+        '<div class="tpr-dp-list" data-days="' + esc(L.join(",")) + '">' +
+          dayChips(L) + '</div>' +
+      '</div>' +
+      '<div class="jrow tpr-dpf-range"' + (dp === "range" ? "" : " hidden") + '>' +
+        '<label for="dpa-' + esc(r.id) + '">시작일</label>' +
+        '<input type="date" id="dpa-' + esc(r.id) + '" class="tpr-dp-a" value="' +
+          esc(r.depart_from || "") + '">' +
+      '</div>' +
+      '<div class="jrow tpr-dpf-range"' + (dp === "range" ? "" : " hidden") + '>' +
+        '<label for="dpb-' + esc(r.id) + '">마지막 날</label>' +
+        '<input type="date" id="dpb-' + esc(r.id) + '" class="tpr-dp-b" value="' +
+          esc(r.depart_to || "") + '">' +
+      '</div>' +
+      '<p class="tpr-dp-b2">' +
+        '<button type="button" class="btn btn-pri btn-sm tpr-dp-save">저장</button>' +
+        '<button type="button" class="btn btn-bad btn-sm tpr-dp-x">닫기</button>' +
+      '</p>' +
+    '</form>';
+  }
+
   function row(r){
     var draft = r.draft_state && r.draft_state !== "none";
     var dl = window.amTripDraftSt ? window.amTripDraftSt(r.draft_state) : null;
@@ -245,6 +332,7 @@
             (dl.lead ? ' — ' + esc(dl.lead) : "") +
             (r.draft_why ? ' (' + esc(r.draft_why) + ')' : "") + '</p>'
         : "") +
+      departBox(r) +
       photoBox(r) +
       '<p class="tpr-act">' +
         '<button type="button" class="btn btn-line btn-sm tpr-ed">고치기</button>' +
@@ -345,12 +433,17 @@
   function load(){
     return Promise.all([
       get("v_trip_mine?select=*&order=created_at.desc&limit=100"),
-      UP ? get("v_trip_photo_mine?select=*&limit=500") : Promise.resolve([])
+      UP ? get("v_trip_photo_mine?select=*&limit=500") : Promise.resolve([]),
+      get("v_trip_date_mine?select=*&order=depart_on.asc&limit=1000")
     ]).then(function(res){
       ROWS = res[0];
       PH = {};
       (res[1] || []).forEach(function(x){
         (PH[x.trip_id] = PH[x.trip_id] || []).push(x);
+      });
+      DP = {};
+      (res[2] || []).forEach(function(x){
+        (DP[x.trip_id] = DP[x.trip_id] || []).push(x.depart_on);
       });
       draw();
     });
@@ -391,6 +484,19 @@
     }).join("");
   });
 
+  /* ⚠️ 출발 방식을 바꾸면 **적는 칸도 바뀝니다** — 안 갈아 끼우면
+     「기간」을 고르고 날짜 목록을 보내게 됩니다(문이 거절합니다). */
+  box.addEventListener("change", function(ev){
+    var t = ev.target;
+    if(!t || t.name !== "dpk") return;
+    var f = t.closest("form");
+    if(!f) return;
+    Array.prototype.forEach.call(f.querySelectorAll(".tpr-dpf-dates"),
+      function(x){ x.hidden = (t.value !== "dates"); });
+    Array.prototype.forEach.call(f.querySelectorAll(".tpr-dpf-range"),
+      function(x){ x.hidden = (t.value !== "range"); });
+  });
+
   box.addEventListener("click", function(ev){
     var t = ev.target;
     /* ⚠️ 새 양식을 여는 단추는 **줄 바깥**이라 아래 `li` 가드보다
@@ -414,6 +520,87 @@
     if(t.closest(".tpr-x")){
       var s2 = li.querySelector(".tpr-slot");
       if(s2) s2.innerHTML = "";
+      return;
+    }
+
+    /* ── 출발 일정 (0077) ──────────────────────────────────────── */
+    var dpw = t.closest ? t.closest(".tpr-dp") : null;
+    if(dpw){
+      var dnote = dpw.querySelector(".tpr-dp-m");
+      var dslot = dpw.querySelector(".tpr-dp-slot");
+      if(t.closest(".tpr-dp-ed")){
+        if(dslot) dslot.innerHTML = dslot.innerHTML ? "" : departForm(r);
+        return;
+      }
+      if(t.closest(".tpr-dp-x")){
+        if(dslot) dslot.innerHTML = "";
+        return;
+      }
+      /* 날짜 하나 넣기 — ⚠️ 담는 자리는 `data-days` **한 곳**입니다
+         (화면에서 칩을 다시 읽으면 사람 말로 적힌 글자를 되뜯어야
+         합니다). 같은 날짜는 **안 넣습니다**(문이 거절합니다). */
+      if(t.closest(".tpr-dp-plus")){
+        var inp = dpw.querySelector(".tpr-dp-i");
+        var lst = dpw.querySelector(".tpr-dp-list");
+        if(!inp || !lst) return;
+        var v = (inp.value || "").trim();
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(v)){
+          if(dnote) dnote.textContent = "날짜를 고르고 눌러 주세요.";
+          return;
+        }
+        var cur = (lst.getAttribute("data-days") || "").split(",").filter(Boolean);
+        if(cur.indexOf(v) >= 0){
+          if(dnote) dnote.textContent = "이미 넣은 날짜입니다.";
+          return;
+        }
+        cur.push(v); cur.sort();
+        lst.setAttribute("data-days", cur.join(","));
+        lst.innerHTML = dayChips(cur);
+        inp.value = "";
+        if(dnote) dnote.textContent = "";
+        return;
+      }
+      var rm = t.closest(".tpr-dc-x");
+      if(rm){
+        var lst2 = dpw.querySelector(".tpr-dp-list");
+        if(!lst2) return;
+        var day = rm.getAttribute("data-day");
+        var cur2 = (lst2.getAttribute("data-days") || "").split(",")
+          .filter(function(x){ return x && x !== day; });
+        lst2.setAttribute("data-days", cur2.join(","));
+        lst2.innerHTML = dayChips(cur2);
+        return;
+      }
+      if(t.closest(".tpr-dp-save")){
+        var kindEl = dpw.querySelector('input[name="dpk"]:checked');
+        var kind = kindEl ? kindEl.value : "none";
+        var p = { trip:id, kind:kind };
+        if(kind === "dates"){
+          var lst3 = dpw.querySelector(".tpr-dp-list");
+          /* ⚠️⚠️ 열쇠는 **`dates`** 입니다 — 0077 이 `p->'dates'` 를
+             읽습니다. `days` 로 보내면 **빈 배열**로 읽혀 문이
+             "출발일을 하나 이상 적어 주세요" 로 거절합니다(화면은
+             보내는데 DB 가 거절하는 자리). */
+          p.dates = (lst3 ? (lst3.getAttribute("data-days") || "") : "")
+            .split(",").filter(Boolean);
+        }
+        if(kind === "range"){
+          var a = dpw.querySelector(".tpr-dp-a");
+          var bb = dpw.querySelector(".tpr-dp-b");
+          p.from = a ? a.value : "";
+          p.to   = bb ? bb.value : "";
+        }
+        if(dnote) dnote.textContent = "보내는 중입니다…";
+        call("set_trip_depart", p).then(function(){
+          if(dnote) dnote.textContent = "저장했습니다.";
+          return load();
+        }, function(e){
+          /* ⚠️ 문이 거절한 **그 말을 그대로** 적습니다 — 우리가 지어
+             적으면 어느 자물쇠에 걸렸는지 알 수가 없습니다. */
+          if(dnote) dnote.textContent = String(e.message || e);
+        });
+        return;
+      }
       return;
     }
     if(t.closest(".tpr-cl")){

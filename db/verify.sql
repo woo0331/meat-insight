@@ -9,8 +9,10 @@
 --
 --  ⚠️⚠️ 기대값은 전부 **저장소에서 센 값**입니다 (눈대중이 아닙니다) —
 --     판 75 · 표 57 · 상태 13 · 역할 4 · 길 70 · 함수 43.
---     ⚠️⚠️ 2026-11-12 — 0076(피팅 이용 방식)이 판 하나를 더했습니다.
---       표 · 함수는 그대로이고 **판만 76** 입니다. 마이그레이션을
+--     ⚠️⚠️ 2026-11-12 — 0077(여행 출발일) · 0078(인력 북마크) ·
+--       0079(피팅 거래 조건)가 판 셋 · 표 둘(`tripdate` · `jobfav`)을
+--       더했습니다. 그래서 **판 79 · 표 59** 입니다(함수 목록은 그대로).
+--       ⚠️ 0076 때는 판만 76 이었습니다. 마이그레이션을
 --       더하는 날 아래 기대값도 같이 올리세요 — 안 올리면 **올바르게
 --       올린 DB 를 ❌ 로** 읽습니다(2026-11-09 에 네 줄이 그랬습니다).
 --     ⚠️ 2026-11-09 — 0070 이 판 하나를 더했습니다(표 · 함수는 그대로입니다:
@@ -207,8 +209,8 @@ v_cust as (
      and pg_get_functiondef(p.oid) like '%''customer''%'
 ),
 rows as (
-  select 1 i, '판 번호 (0001~0076)'            t, v_ver.n::text   got, '76' want from v_ver
-  union all select  2, '표 (public · 보기 뺀 것)',  v_tab.n::text,  '57' from v_tab
+  select 1 i, '판 번호 (0001~0079)'            t, v_ver.n::text   got, '79' want from v_ver
+  union all select  2, '표 (public · 보기 뺀 것)',  v_tab.n::text,  '59' from v_tab
   union all select  3, '⚠️ RLS 안 켜진 표: ' || v_rls.who, v_rls.n::text, '0' from v_rls
   union all select  4, '신청 상태 (hold 포함: ' ||
                        case when v_st.has_hold then 'O' else 'X' end || ')',

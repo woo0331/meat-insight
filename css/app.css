@@ -3706,13 +3706,30 @@ picture{ display: contents; }
           background:#fff; border-top:1px solid var(--line);
           padding-bottom: env(safe-area-inset-bottom, 0px); }
   .cqnav a{ display:flex; flex-direction:column; align-items:center;
-            justify-content:center; gap:3px; min-height:56px;
-            font-size:12px; color: var(--ink2); }
-  .cqnav a .ic{ color: var(--ink3); }
-  .cqnav .cqnav-on{ color: var(--grn-text); font-weight:700; }
-  .cqnav .cqnav-on .ic{ color: var(--grn); }
+            justify-content:center; gap:2px; min-height:58px;
+            font-size:12px; color: var(--ink2); text-decoration:none; }
+  .cqnav-i{ display:flex; align-items:center; justify-content:center;
+            width:34px; height:34px; color: var(--ink3); }
+  /* ⚠️⚠️ 시안의 가운데 「등록」 — **딥그린 면에 흰 아이콘**(15.25)입니다.
+     `--pt`(액션그린)를 쓰면 흰 아이콘이 3.14 라 안 읽힙니다 — 그 색은
+     **면 전용**이라고 토큰 파일이 적어 두었습니다. */
+  .cqnav .cqnav-put .cqnav-i{ background: var(--grn-btn); color:#fff;
+            border-radius:10px; }
+  .cqnav .cqnav-put{ color: var(--ink); font-weight:700; }
+  .cqnav a:focus-visible{ outline:2px solid var(--grn); outline-offset:-2px; }
   /* ⚠️ 띠 높이 + 안전영역만큼 바닥을 띄웁니다 */
-  body.has-botnav{ padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
+  body.has-botnav{ padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px)); }
+  /* ⚠️⚠️⚠️ **글자를 치는 동안에는 띠를 내립니다.** 폰에서 글판이 올라오면
+     이 띠가 글판 위에 얹혀(안드로이드) 보내는 단추와 겹치거나, 글판이
+     띠를 덮어(iOS) 눌러도 아무 일이 안 나는 칸이 됩니다. `:has()` 를
+     못 읽는 브라우저에서는 **전과 똑같이** 보일 뿐 깨지지 않습니다.
+     ⚠️ 체크칸 · 라디오 · 단추는 글판을 안 올리므로 뺍니다 — 안 빼면
+     고르개를 누를 때마다 띠가 깜빡입니다. */
+  body:has(textarea:focus) .cqnav,
+  body:has(select:focus) .cqnav,
+  body:has(input:focus:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="file"])) .cqnav{
+    display:none;
+  }
 }
 
 /* ⚠️⚠️⚠️ **조회 실패는 0건이 아닙니다** — 상자를 갈라 두는 까닭입니다.
@@ -4218,3 +4235,114 @@ picture{ display: contents; }
   border-radius:var(--r-pill); }
 .jbc-ok{ background:var(--ok-soft); color:var(--ok-text); }
 .jbc-no{ background:var(--bg-2); color:var(--ink2); }
+
+/* 피팅 카드의 거래 조건 — 0079. ⚠️ 업체가 적은 글자 그대로라 길이를
+   모릅니다(최대 120자). 그래서 줄을 접고 한글은 낱말 단위로 끊습니다.
+   ⚠️ `--ink2`(하이픈 없음)입니다 — 없는 변수는 조용히 기본값으로
+   떨어집니다(`check-safe` ⑧ 이 세는 자리). */
+.fit-t{
+  display:flex; gap:6px; align-items:flex-start;
+  margin:6px 0 0; font-size:13px; line-height:1.5;
+  color:var(--ink2);
+  word-break:keep-all; overflow-wrap:anywhere;
+}
+.fit-t svg{ flex:0 0 auto; margin-top:2px; opacity:.75 }
+
+/* ── 여행 출발일 (0077 · 2026-11-12) ────────────────────────────────
+   ⚠️⚠️ **셋이 다른 색**입니다 — 확정 출발일 · 출발 가능 기간은 초록 쪽,
+   「아직 안 올리심」은 조용한 회색입니다. 같은 색으로 내면 안 올리신
+   상품이 「출발 확정」처럼 읽힙니다(절대 규칙 1).
+   ⚠️ 카드 안쪽은 `<a>` 안이라 **`<span>`** 이고 `display:flex` 로
+   줄을 만듭니다(`<p>` 를 넣으면 브라우저가 링크를 닫습니다). */
+.tpc-d{ display:flex; align-items:center; gap:5px; margin-top:4px;
+        font-size:13px; font-weight:700; color: var(--grn-text); }
+.tpc-d svg{ flex:none; opacity:.9 }
+.tpc-d-none,
+.tpc-d-past{ color: var(--ink3); font-weight:600; }
+
+.tpd-dp{ margin:14px 0; padding:14px 16px; border:1.5px solid var(--grn-line);
+         border-radius: var(--r-sm); background: var(--grn-soft); }
+.tpd-dp-none{ border-color: var(--line); background: var(--bg-2); }
+.tpd-dp-past{ border-color: var(--line); background: var(--bg-2); }
+.tpd-dp-h{ display:flex; align-items:center; gap:7px; margin:0;
+           font-weight:700; color: var(--grn-text); }
+.tpd-dp-none .tpd-dp-h,
+.tpd-dp-past .tpd-dp-h{ color: var(--ink2); }
+.tpd-dl{ display:flex; flex-wrap:wrap; gap:7px; margin:10px 0 0; padding:0;
+         list-style:none; }
+.tpd-dl li{ padding:5px 11px; border:1px solid var(--grn-line);
+            border-radius:999px; background:#fff; font-size:13.5px;
+            color: var(--ink); white-space:nowrap; }
+.tpd-dp-n{ margin:9px 0 0; font-size:13px; color: var(--ink2);
+           word-break:keep-all; overflow-wrap:anywhere; }
+
+/* ── 여행사 작업실의 출발 일정 (0077) ──────────────────────────────
+   ⚠️ `.tpr-sl`(사진 줄)과 **이름을 갈라** 둡니다 — 모양이 다릅니다
+   (여기는 날짜 칩 묶음). 짧은 이름을 두 곳에 쓰면 한쪽을 고치는 날
+   둘이 같이 바뀝니다. */
+.tpr-dp{ margin:10px 0; padding:12px 14px; border:1px solid var(--line);
+         border-radius: var(--r-sm); background: var(--bg-2); }
+.tpr-dp-h{ display:flex; align-items:center; gap:7px; flex-wrap:wrap;
+           margin:0 0 6px; font-weight:700; font-size:14.5px; }
+.tpr-dp-h .btn{ margin-left:auto }
+.tpr-dp-now{ margin:0; font-size:14px; color: var(--ink2); }
+.tpr-dp-w{ margin:7px 0 0; font-size:13px; color: var(--warn-text);
+           word-break:keep-all; overflow-wrap:anywhere; }
+.tpr-dp-n{ margin:7px 0 0; font-size:13px; color: var(--ink3); }
+.tpr-dp-m{ margin:7px 0 0; font-size:13px; color: var(--ink2); }
+.tpr-dp-slot:empty{ display:none }
+.tpr-dpf{ margin-top:12px; padding-top:12px; border-top:1px solid var(--line); }
+/* ⚠️ `.jrow` 는 격자 칸이면서 제 안도 격자입니다 — `align-content:start`
+   를 안 주면 옆 칸이 길 때 이쪽 입력 칸까지 같이 늘어납니다
+   (2026-11-10 에 `/join` 양식에서 잰 자리). */
+.tpr-dpf .jrow{ align-content:start }
+.tpr-dp-add{ display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+             margin:0 0 8px; }
+.tpr-dp-add input[type="date"]{ min-height:44px; border:1.5px solid var(--line);
+  border-radius: var(--r-sm); padding:8px 12px; font-size:16px;
+  font-family: inherit; color: var(--ink); background:#fff; }
+.tpr-dp-b2{ display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 0; }
+.tpr-dc{ display:flex; flex-wrap:wrap; gap:7px; margin:0; padding:0;
+         list-style:none; }
+.tpr-dc li{ display:flex; align-items:center; gap:4px; padding:4px 6px 4px 11px;
+            border:1px solid var(--grn-line); border-radius:999px;
+            background:#fff; font-size:13.5px; white-space:nowrap; }
+.tpr-dc-x{ display:flex; align-items:center; justify-content:center;
+           width:24px; height:24px; border:0; border-radius:999px;
+           background:transparent; color: var(--ink3); cursor:pointer; }
+.tpr-dc-x:hover{ background: var(--bad-soft); color: var(--bad-text); }
+
+/* ── 인력 공고 북마크 · 금액 거르개 (0078 · 2026-11-12) ───────────
+   ⚠️ `.lsc-fav`(중고 찜)와 **이름을 갈라** 둡니다 — 거기는 사진 위에
+   겹치는 둥근 단추, 여기는 줄 안의 글자 단추입니다. */
+.jbc-fav{ border:1.6px solid var(--line); background:#fff; color: var(--ink2);
+          display:inline-flex; align-items:center; gap:5px; }
+.jbc-fav svg{ opacity:.7 }
+.jbc-fav.on{ border-color: var(--grn-line); background: var(--grn-soft);
+             color: var(--grn-text); font-weight:700; }
+.jbc-fav.on svg{ opacity:1 }
+.jbrail-n{ display:block; margin-top:5px; font-size:12.5px; color: var(--ink3);
+           word-break:keep-all; overflow-wrap:anywhere; }
+/* ⚠️ 갈래를 안 고르셨을 때의 안내 — 칸 자리에 들어가므로 제 여백을
+   가집니다(`<span>` 쪽은 칸 아래 붙는 설명입니다). */
+.jbrail-n0{ margin:2px 0 4px; padding:9px 11px; border:1px dashed var(--line);
+            border-radius: var(--r-sm); background: var(--bg-2); }
+
+/* ── /my 의 「저장한 공고」 (0078) ──────────────────────────────────
+   ⚠️ `.mfv*`(관심상품)와 **이름을 갈라** 둡니다 — 거기는 사진 격자,
+   여기는 글자 줄입니다. */
+.mjf-l{ display:grid; gap:10px; margin:12px 0 0; padding:0; list-style:none; }
+.mjf-i{ display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+        padding:12px 14px; border:1px solid var(--line);
+        border-radius: var(--r-sm); background:#fff; }
+.mjf-a{ flex:1 1 220px; min-width:0; display:grid; gap:3px;
+        text-decoration:none; color: inherit; }
+.mjf-t{ font-weight:700; color: var(--ink);
+        word-break:keep-all; overflow-wrap:anywhere; }
+.mjf-a:hover .mjf-t{ text-decoration:underline }
+.mjf-st{ display:inline-block; margin-left:7px; padding:1px 8px;
+         border-radius:999px; background: var(--bg-2); color: var(--ink3);
+         font-size:12px; font-weight:700; vertical-align:middle; }
+.mjf-m{ font-size:13.5px; color: var(--ink2);
+        word-break:keep-all; overflow-wrap:anywhere; }
+.mjf-off{ flex:none }

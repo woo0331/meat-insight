@@ -59,11 +59,10 @@
     var c = window.amCat ? window.amCat("community") : null;
     return (window.amCatItems ? window.amCatItems(c) : []);
   }
-  function bname(k){
-    var f = boards().filter(function(b){ return b.key === k; })[0];
-    /* ⚠️ 모르는 키는 **키 그대로** 냅니다 (지어내지 않습니다) */
-    return f ? f.name : String(k || "");
-  }
+  /* ⚠️⚠️ **모르는 키를 그 글자 그대로 내지 않습니다** — 손님에게
+     `cm-xxx` 는 아무 뜻도 없는 글자입니다. 중립 문구를 내고 매핑
+     누락은 운영 기록으로 갑니다(`amKeyName()` 한 곳 · 2026-11-12). */
+  function bname(k){ return window.amKeyName(boards(), k, "게시판"); }
 
   function when(iso){
     var d = new Date(iso);
@@ -341,14 +340,25 @@
     var keys = boardKeys();
     var tab  = (S.s !== "boards" && window.amCqTabOf) ? window.amCqTabOf(keys) : null;
     var names = (tab && window.amCqTabBoardNames) ? window.amCqTabBoardNames(tab) : [];
+    /* ⚠️⚠️⚠️ **대표 탭에 없는 묶음으로도 들어옵니다** — 머리말의
+       「골프 정보 · 후기」가 게시판 **넷**을 한 번에 보냅니다(2026-11-09).
+       그때 어느 탭도 안 켜지므로, 무엇으로 좁혔는지는 **제목과 이 줄이
+       말해야** 합니다. 안 적으면 손님은 걸린 조건을 알 길이 없습니다
+       (검사가 잡았습니다 — 탭으로 바꾸면서 생긴 자리입니다). */
+    var keyNames = keys.map(bname).filter(Boolean);
     var title = (S.s === "boards") ? "전체 게시판"
-              : (tab ? tab.name : (keys.length ? bname(S.s) : "전체글"));
+              : (tab ? tab.name
+                     : (keys.length > 1 ? "게시판 " + keys.length + "곳"
+                        : (keys.length ? keyNames[0] : "전체글")));
     var note = "";
     if(S.s === "boards"){
       note = '<p class="cqh-m">게시판 ' + esc(String(boards().length)) +
              '곳을 모두 보여 드립니다. 게시판 이름을 누르면 그 글만 봅니다.</p>';
     }else if(names.length > 1){
       note = '<p class="cqh-m">' + esc(names.join(" · ")) +
+             ' 게시판을 모아 봅니다.</p>';
+    }else if(!tab && keyNames.length > 1){
+      note = '<p class="cqh-m">' + esc(keyNames.join(" · ")) +
              ' 게시판을 모아 봅니다.</p>';
     }
     return '<h2 class="cqh-t">' + esc(title) + '</h2>' + note;

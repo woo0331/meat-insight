@@ -139,7 +139,10 @@
         return x === y ? nm(a, b) : (x < y ? -dir : dir);
       };
     };
+    /* ⚠️ 등록된 날을 모르는 업체는 **뒤로** 갑니다(값 · 평점과 같은 규칙) */
+    var newAt = function(p){ return W.amPvNewAt ? W.amPvNewAt(p) : null; };
     var C = { name: nm, low: num(low, 1), high: num(low, -1), rate: num(rate, -1) };
+    C["new"] = num(newAt, -1);
     return L.slice().sort(C[o] || nm);
   }
 

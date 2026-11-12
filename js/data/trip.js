@@ -69,3 +69,91 @@ window.amTripPrice = function(r){
   if(!isFinite(w) || w <= 0) return "";
   return "1인 " + w.toLocaleString("ko-KR") + "원부터";
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   출발일 · 출발 가능 기간   (0077 · 2026-11-12)
+
+   ⚠️⚠️⚠️ **담는 꼴이 셋입니다** — 확정 출발일 여럿(`dates`) · 기간
+   안이면 언제든(`range`) · 아직 안 정함(`none`). 셋을 한 칸에 글자로
+   담으면("12월 출발 가능") 달로 거를 수가 없습니다. 거르는 값은
+   0077 의 `months`(text[])이고 DB 가 **세어서** 냅니다.
+
+   ⚠️⚠️ **「아직 안 정함」을 「없음」으로 적지 않습니다** — 일정이 없는
+   상품이 아니라 **아직 안 올리신** 상품입니다. 그 둘을 섞으면 손님이
+   "이 여행사는 일정이 없구나" 로 읽습니다(절대 규칙 1 · 2).
+
+   ⚠️ 날짜는 **한국 날짜**입니다 — `getMonth()` · `getDate()` 는 보는
+   분 기계의 시간대로 돌려주므로 UTC 로 9시간 밀고 `getUTC*` 로
+   꺼냅니다(`js/booking.js` 가 하루 앞으로 찍히던 그 자리).
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_TRIP_DEPART = [
+  { key:"dates", name:"확정 출발일" },
+  { key:"range", name:"출발 가능 기간" },
+  { key:"none",  name:"출발일 미등록" }
+];
+
+window.amTripDepartName = function(k){
+  return window.amKeyName
+    ? window.amKeyName(window.AM_TRIP_DEPART, k, "출발 방식")
+    : String(k || "");
+};
+
+/* 한국 날짜 — {y, m, d} */
+window.amKstYmd = function(at){
+  var t = (at instanceof Date) ? at.getTime() : Date.now();
+  var k = new Date(t + 9 * 3600 * 1000);
+  return { y: k.getUTCFullYear(), m: k.getUTCMonth() + 1, d: k.getUTCDate() };
+};
+
+/* 고르개에 낼 달 — ⚠️ **이번 달부터** `n` 개입니다. 지난 달을 내면
+   고를 수는 있는데 맞는 상품이 영원히 0건입니다(절대 규칙 5). */
+window.amTripMonths = function(n){
+  var k = window.amKstYmd();
+  var out = [], y = k.y, m = k.m, i;
+  for(i = 0; i < (n || 12); i++){
+    out.push({ key: y + "-" + (m < 10 ? "0" : "") + m,
+               name: y + "년 " + m + "월" });
+    m++; if(m > 12){ m = 1; y++; }
+  }
+  return out;
+};
+
+window.amTripMonthName = function(k){
+  var s = String(k || "");
+  var m = /^(\d{4})-(\d{2})$/.exec(s);
+  return m ? (m[1] + "년 " + Number(m[2]) + "월") : "";
+};
+
+/* 날짜 한 개 — ⚠️ `Z` 로 읽고 `getUTC*` 로 꺼냅니다 */
+window.amTripDay = function(iso){
+  var s = String(iso || "");
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(s)) return "";
+  var d = new Date(s + "T00:00:00Z");
+  if(isNaN(d.getTime())) return "";
+  return d.getUTCFullYear() + "년 " + (d.getUTCMonth() + 1) + "월 " +
+         d.getUTCDate() + "일";
+};
+
+/* 카드 · 상세에 적는 한 줄.
+   ⚠️⚠️ **셋을 다른 말로** 냅니다 — 같은 말로 내면 「아직 안 정함」이
+   「오늘 출발」처럼 읽힙니다. 돌려주는 것은 {kind, text} 이고 화면이
+   `kind` 로 색을 가릅니다(글자를 다시 뜯지 않게). */
+window.amTripDepart = function(r){
+  if(!r) return { kind:"none", text:"출발일 미등록" };
+  var k = String(r.depart_kind || "none");
+  if(k === "dates"){
+    var nx = window.amTripDay(r.depart_next);
+    return nx
+      ? { kind:"dates", text:"가장 가까운 출발 " + nx }
+      /* ⚠️ 확정 출발일을 적어 두셨는데 **앞으로 남은 것이 없는** 자리 —
+         「미등록」이라고 적으면 거짓입니다(안 올린 것이 아닙니다). */
+      : { kind:"past", text:"올려 두신 출발일이 모두 지났습니다" };
+  }
+  if(k === "range"){
+    var a = window.amTripDay(r.depart_from), b = window.amTripDay(r.depart_to);
+    if(a && b) return { kind:"range", text:a + " ~ " + b + " 사이 출발" };
+    if(a) return { kind:"range", text:a + "부터 출발" };
+    return { kind:"none", text:"출발일 미등록" };
+  }
+  return { kind:"none", text:"출발일 미등록" };
+};

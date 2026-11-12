@@ -1,9 +1,9 @@
 /* ==================================================================
-   0008 ~ 0076 를 한 번에 —
+   0008 ~ 0079 를 한 번에 —
    Supabase SQL 편집기에 **이 파일을 통째로** 붙여 넣고 Run 하세요.
    ==================================================================
    WARN 빌드가 만드는 파일입니다 — 손으로 고치지 마세요.
-   db/migrations 의 69개를 번호 차례로 이어 붙인 것이고
+   db/migrations 의 72개를 번호 차례로 이어 붙인 것이고
    한 글자도 바꾸지 않았습니다. (node tools/make-apply.js)
 
    이미 0007 까지 돌려 두신 DB 에 쓰는 것입니다.
@@ -19855,3 +19855,610 @@ grant execute on function save_provider_self(jsonb, text) to authenticated;
 
 insert into schema_version (n, name) values (76, '0076_fitting')
   on conflict (n) do nothing;
+
+/* ---------------------------- 0077_trip_depart.sql ---------------------------- */
+-- ════════════════════════════════════════════════════════════════════
+-- 0077 — 여행 상품의 **출발일 · 출발 가능 기간** (확정 시안 ⑧)
+--
+-- ⚠️⚠️⚠️ **0073 은 출발일을 안 받았습니다.** 그래서 시안의 「출발 월」
+--   고르개를 **아예 안 냈습니다** — 고르게 해 놓고 안 걸러 주면 눌러도
+--   아무 일이 안 나는 칸이니까요(절대 규칙 5). 지시가 「담는 구조가
+--   없다는 것은 기능을 빼는 까닭이 아니다 · 출발 월 필터가 실제로
+--   동작하게 한다」이므로 **구조를 만듭니다.**
+--
+-- ⚠️⚠️ **방식이 둘입니다 — 여행 상품은 둘 다 팝니다.**
+--   · `dates`  확정 출발일 여러 개 (「12/5, 12/19, 1/9 출발」)
+--   · `range`  출발 가능 기간     (「12월~2월 사이 원하시는 날」)
+--   · `none`   아직 안 정했습니다 ⚠️ **이것을 지우지 않습니다** —
+--     0073 으로 이미 올라온 상품이 전부 이 자리이고, 억지로 날짜를
+--     채우면 **지어낸 일정**이 손님 화면에 나갑니다(절대 규칙 1).
+--     화면이 「출발일 미등록」으로 **갈라서** 적고, 출발 월로 좁히면
+--     그 상품은 빠집니다(그 사실도 그 자리에서 말합니다).
+--
+-- ⚠️⚠️⚠️ **출발일은 수정본(draft) 심사를 안 거칩니다.** 0073 은 승인된
+--   상품을 고치면 `draft` 로 들어가 운영자가 다시 봅니다 — 제목 · 값 ·
+--   포함 조건처럼 **광고 문구에 가까운 것**이 그 자리입니다. 날짜는
+--   다릅니다: 한 자리 마감되면 그날 빼야 하고, 새 일정이 잡히면 그날
+--   더해야 합니다. 그것을 심사에 걸면 **여행사가 못 파는 날이 생기고**,
+--   그러면 화면의 출발일이 참이 아니게 됩니다. 그래서 **따로 받습니다.**
+--   ⚠️ 대신 **지난 날짜는 공개 보기가 스스로 뺍니다**(아래 함수 둘) —
+--   여행사가 안 지워도 어제 날짜가 손님 화면에 남지 않습니다.
+--
+-- ⚠️⚠️ **보기 둘을 다시 만듭니다** — `create or replace view` 는 칸을
+--   못 늘립니다(0044 가 붙여넣기 두 번째에서 멈춘 그 자리). 그리고
+--   `v_trip_mine` 은 `select t.*` 이라 **다시 만들지 않으면 새 칸이
+--   영영 안 나옵니다**(에러 한 줄 없이). 지우면 GRANT 도 같이 날아가니
+--   **바로 다시 줍니다.**
+--
+-- 되돌아갔는지 보는 법:
+--   select depart_kind from trip limit 1;              -- 없으면 안 올라갔습니다
+--   select count(*) from pg_views where viewname = 'v_trip_date_public';
+-- ════════════════════════════════════════════════════════════════════
+begin;
+
+-- ① 상품에 출발 방식 ───────────────────────────────────────────────
+alter table trip add column if not exists depart_kind text not null default 'none';
+alter table trip add column if not exists depart_from date;
+alter table trip add column if not exists depart_to   date;
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'trip_depart_kind_ck') then
+    alter table trip add constraint trip_depart_kind_ck
+      check (depart_kind in ('dates','range','none'));
+  end if;
+  -- ⚠️ `range` 면 둘 다 있어야 하고, 아니면 둘 다 없어야 합니다 —
+  --   한쪽만 있으면 화면이 「12월~」처럼 **반쪽 기간**을 적게 됩니다.
+  if not exists (select 1 from pg_constraint where conname = 'trip_depart_span_ck') then
+    alter table trip add constraint trip_depart_span_ck
+      check ((depart_kind = 'range')
+             = (depart_from is not null and depart_to is not null));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'trip_depart_order_ck') then
+    alter table trip add constraint trip_depart_order_ck
+      check (depart_from is null or depart_to is null or depart_to >= depart_from);
+  end if;
+end $$;
+
+-- ② 확정 출발일 ───────────────────────────────────────────────────
+-- ⚠️ 표에는 정책도 GRANT 도 **하나도 없습니다** — 공개로 읽는 길은
+--   보기 하나이고, 쓰는 길은 문 하나입니다(0066 과 같은 규칙).
+create table if not exists tripdate (
+  trip_id   uuid not null references trip(id) on delete cascade,
+  depart_on date not null,
+  primary key (trip_id, depart_on)
+);
+alter table tripdate enable row level security;
+create index if not exists tripdate_ix on tripdate (trip_id, depart_on);
+
+-- ③ 달 목록과 가장 가까운 출발일 ──────────────────────────────────
+-- ⚠️⚠️ **달을 배열로 냅니다.** 손님 화면은 `months=cs.{2026-12}` 한 줄로
+--   좁힙니다 — 그래야 거르는 일을 **서버가** 합니다(쉰 줄만 받아 화면에서
+--   거르면 그 쉰 줄 밖의 상품이 영영 안 나옵니다).
+-- ⚠️ 지난 달은 **안 담습니다** — 오늘이 지난 출발일로 좁혀 봐야 0건이고,
+--   고르개에 지난 달이 서면 그게 눌러도 아무 일이 안 나는 칸입니다.
+-- ⚠️⚠️⚠️ **보기 안의 함수는 보기 임자가 아니라 「부르는 사람」 권한으로
+--   돕니다.** 처음에 이 함수가 `tripdate` 를 직접 읽게 쓰고
+--   `revoke all … from public` 을 걸었더니, 여행사가 `v_trip_mine` 을
+--   읽는 순간 **permission denied for function trip_months** 로 질의가
+--   통째로 거절됐습니다 — 보기는 표 접근만 임자 권한으로 바꿔 줍니다.
+--   ⚠️ 그래서 **자료를 인자로 받는 순수 함수**로 바꿨습니다(표를 한 줄도
+--   안 읽습니다). 그러면 아무에게 EXECUTE 를 줘도 **샐 것이 없습니다** —
+--   받은 날짜 배열을 달로 바꿔 줄 뿐입니다. 날짜를 모으는 일은 보기가
+--   **임자 권한으로** 합니다(거기가 자물쇠입니다).
+create or replace function trip_months(
+  p_kind text, p_from date, p_to date, p_days date[])
+returns text[] language sql immutable as $$
+  select case
+    when p_kind = 'range' and p_to >= kst_today() then (
+      select array_agg(distinct to_char(m, 'YYYY-MM') order by to_char(m, 'YYYY-MM'))
+        from generate_series(
+               date_trunc('month', greatest(p_from, kst_today()))::date,
+               date_trunc('month', p_to)::date,
+               interval '1 month') m)
+    when p_kind = 'dates' then (
+      select array_agg(distinct to_char(d, 'YYYY-MM') order by to_char(d, 'YYYY-MM'))
+        from unnest(coalesce(p_days, '{}'::date[])) d
+       where d >= kst_today())
+    else null end
+$$;
+-- ⚠️ 표를 안 읽는 순수 함수라 EXECUTE 를 줘도 샐 것이 없습니다.
+--   **보기가 부르므로 반드시 줘야 합니다**(안 주면 보기가 통째로 거절).
+grant execute on function trip_months(text, date, date, date[])
+  to anon, authenticated;
+
+-- ⚠️ 위와 같은 까닭으로 **자료를 인자로** 받습니다(표를 안 읽습니다).
+create or replace function trip_next_depart(
+  p_kind text, p_from date, p_to date, p_days date[])
+returns date language sql immutable as $$
+  select case
+    when p_kind = 'range' and p_to >= kst_today()
+      then greatest(p_from, kst_today())
+    when p_kind = 'dates' then (
+      select min(d) from unnest(coalesce(p_days, '{}'::date[])) d
+       where d >= kst_today())
+  end
+$$;
+grant execute on function trip_next_depart(text, date, date, date[])
+  to anon, authenticated;
+
+-- ④ 여행사가 출발일을 정하는 문 ───────────────────────────────────
+-- ⚠️⚠️ **늘어놓은 것을 통째로 받습니다**(0069 의 `order_listing_photo`
+--   와 같은 꼴) — 한 날짜씩 더하고 빼게 두면 두 창에서 같이 고칠 때
+--   번호가 어긋납니다. 보내신 것이 그 상품의 **전부**입니다.
+-- ⚠️ 운영자가 가린 상품(`hidden`)은 여행사가 못 건드립니다.
+create or replace function set_trip_depart(p jsonb)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare
+  v_pv   text := my_provider();
+  v_id   uuid := nullif(p->>'trip','')::uuid;
+  v_kind text := coalesce(nullif(btrim(p->>'kind'),''), 'none');
+  v_from date := nullif(p->>'from','')::date;
+  v_to   date := nullif(p->>'to',''  )::date;
+  v_arr  jsonb := coalesce(p->'dates', '[]'::jsonb);
+  v_st   text;
+  v_n    int;
+begin
+  if v_pv is null then raise exception '업체 담당자만 쓸 수 있습니다'; end if;
+  if v_id is null then raise exception '어느 상품인지 알 수 없습니다'; end if;
+
+  select state into v_st from trip
+   where id = v_id and provider_id = v_pv for update;
+  if v_st is null then raise exception '그 상품을 찾을 수 없습니다'; end if;
+  if v_st = 'hidden' then
+    raise exception '가려진 상품은 고칠 수 없습니다 — 고객센터로 문의해 주세요';
+  end if;
+
+  if v_kind not in ('dates','range','none') then
+    raise exception '출발 방식은 확정 출발일 · 출발 가능 기간 · 미정 셋 가운데 하나입니다';
+  end if;
+
+  if v_kind = 'range' then
+    if v_from is null or v_to is null then
+      raise exception '출발 가능 기간은 시작일과 마지막 날을 함께 적어 주세요';
+    end if;
+    if v_to < v_from then
+      raise exception '마지막 날이 시작일보다 앞설 수 없습니다';
+    end if;
+    if v_to < kst_today() then
+      raise exception '이미 지난 기간입니다 — 오늘 이후로 적어 주세요';
+    end if;
+    if v_to > kst_today() + 730 then
+      raise exception '출발 가능 기간은 2년 안으로 적어 주세요';
+    end if;
+  else
+    v_from := null; v_to := null;
+  end if;
+
+  -- ⚠️ 확정 출발일은 **그 상품의 전부**로 갈아 끼웁니다
+  delete from tripdate where trip_id = v_id;
+  if v_kind = 'dates' then
+    if jsonb_typeof(v_arr) <> 'array' then
+      raise exception '출발일은 목록으로 보내 주세요';
+    end if;
+    insert into tripdate (trip_id, depart_on)
+    select v_id, (x)::date
+      from jsonb_array_elements_text(v_arr) t(x)
+     where btrim(x) <> ''
+    on conflict do nothing;
+    select count(*) into v_n from tripdate where trip_id = v_id;
+    if v_n = 0 then
+      raise exception '출발일을 하나 이상 적어 주세요';
+    end if;
+    if v_n > 60 then
+      raise exception '출발일은 60개까지 적을 수 있습니다';
+    end if;
+    -- ⚠️⚠️ **지난 날짜는 아예 안 받습니다** — 받아 두면 여행사 화면에는
+    --   남고 손님 화면에서는 빠져 **둘이 다른 말**을 합니다.
+    if exists (select 1 from tripdate
+                where trip_id = v_id and depart_on < kst_today()) then
+      raise exception '지난 날짜는 출발일로 넣을 수 없습니다';
+    end if;
+    if exists (select 1 from tripdate
+                where trip_id = v_id and depart_on > kst_today() + 730) then
+      raise exception '출발일은 2년 안으로 적어 주세요';
+    end if;
+  end if;
+
+  update trip
+     set depart_kind = v_kind, depart_from = v_from, depart_to = v_to,
+         updated_at = now()
+   where id = v_id;
+
+  -- ⚠️ 기록에 **날짜를 안 담습니다** — 무엇을 바꿨는지는 상품을 보면
+  --   됩니다. 기록은 오래 남고 보는 사람이 넓습니다.
+  insert into audit_log (by_user, by_role, obj, obj_id, to_state, why)
+  values (auth.uid(), my_role(), 'trip', v_id::text,
+          'depart-' || v_kind, null);
+
+  return jsonb_build_object('ok', true, 'kind', v_kind,
+                            'n', coalesce(v_n, 0));
+end $$;
+revoke all on function set_trip_depart(jsonb) from public;
+grant execute on function set_trip_depart(jsonb) to authenticated;
+
+-- ⑤ 공개로 나가는 출발일 ──────────────────────────────────────────
+-- ⚠️ 승인된 상품의 **오늘 이후** 날짜만 냅니다 — 여행사가 안 지워도
+--   어제 날짜가 손님 화면에 남지 않습니다.
+drop view if exists v_trip_date_public;
+create view v_trip_date_public as
+  select d.trip_id, d.depart_on
+    from tripdate d
+    join trip t      on t.id = d.trip_id
+    join provider pv on pv.id = t.provider_id
+   where d.depart_on >= kst_today()
+     and t.state = 'approved' and pv.state = 'approved' and pv.is_test = false
+   order by d.trip_id, d.depart_on;
+grant select on v_trip_date_public to anon, authenticated;
+
+-- 여행사가 제 작업실에서 보는 것 (상태와 상관없이 · 지난 날짜도)
+drop view if exists v_trip_date_mine;
+create view v_trip_date_mine as
+  select d.trip_id, d.depart_on
+    from tripdate d
+    join trip t on t.id = d.trip_id
+   where t.provider_id = my_provider()
+   order by d.trip_id, d.depart_on;
+grant select on v_trip_date_mine to authenticated;
+
+-- ⑥ 보기 둘을 다시 만듭니다 ───────────────────────────────────────
+-- ⚠️⚠️⚠️ `create or replace view` 는 **칸을 못 늘립니다.** 그리고
+--   `v_trip_mine` 은 `select t.*` 이라 **다시 만들지 않으면 새 칸 셋이
+--   영영 안 나옵니다**(에러 한 줄 없이 — 여행사 화면이 출발일을 못
+--   읽습니다). 지우면 GRANT 도 같이 날아가므로 **바로 다시 줍니다.**
+drop view if exists v_trip_open;
+create view v_trip_open as
+  select t.id, t.scope, t.dest, t.title, t.body, t.nights, t.days,
+         t.price_from, t.price_note, t.incl, t.excl,
+         t.created_at, t.updated_at,
+         t.depart_kind, t.depart_from, t.depart_to,
+         -- ⚠️ 못 찾으면 **빈 배열**입니다 — null 로 두면 화면이
+         --   `months.length` 에서 터집니다.
+         -- ⚠️⚠️ 날짜를 모으는 일은 **보기가 임자 권한으로** 합니다 —
+         --   그래서 `tripdate` 를 읽을 권한이 없는 손님도 달을 봅니다.
+         coalesce(trip_months(t.depart_kind, t.depart_from, t.depart_to, dd.days),
+                  '{}'::text[]) as months,
+         trip_next_depart(t.depart_kind, t.depart_from, t.depart_to, dd.days)
+           as depart_next,
+         pv.id   as provider_id,
+         pv.name as provider_name,
+         (select count(*) from tripphoto ph
+           where ph.trip_id = t.id and ph.live) as photo_n,
+         (select ph.path from tripphoto ph
+           where ph.trip_id = t.id and ph.live
+           order by ph.ord, ph.created_at, ph.id limit 1) as thumb
+    from trip t
+    join provider pv on pv.id = t.provider_id
+    left join lateral (
+      select array_agg(d.depart_on order by d.depart_on) as days
+        from tripdate d where d.trip_id = t.id) dd on true
+   where t.state = 'approved'
+     and pv.state = 'approved'
+     and pv.is_test = false;
+grant select on v_trip_open to anon, authenticated;
+
+drop view if exists v_trip_mine;
+create view v_trip_mine as
+  select t.*,
+         coalesce(trip_months(t.depart_kind, t.depart_from, t.depart_to, dd.days),
+                  '{}'::text[]) as months,
+         trip_next_depart(t.depart_kind, t.depart_from, t.depart_to, dd.days)
+           as depart_next,
+         (select count(*) from tripdate d where d.trip_id = t.id) as date_n,
+         (select count(*) from tripphoto ph
+           where ph.trip_id = t.id and ph.live) as photo_n,
+         (select count(*) from tripphoto ph
+           where ph.trip_id = t.id and not ph.live) as photo_draft_n,
+         (select count(*) from tripphoto ph
+           where ph.trip_id = t.id and ph.drop_pending) as photo_drop_n
+    from trip t
+    left join lateral (
+      select array_agg(d.depart_on order by d.depart_on) as days
+        from tripdate d where d.trip_id = t.id) dd on true
+   where t.provider_id = my_provider();
+grant select on v_trip_mine to authenticated;
+
+insert into schema_version (n, name) values (77, '0077_trip_depart')
+on conflict (n) do nothing;
+
+commit;
+
+/* ---------------------------- 0078_job_fav.sql ---------------------------- */
+-- ════════════════════════════════════════════════════════════════════
+-- 0078 — 공고 **북마크**(저장) 와 내 저장 목록 (확정 시안 ⑨)
+--
+-- ⚠️⚠️⚠️ **0072 까지 담는 표가 없어서 북마크를 안 그렸습니다** — 그리면
+--   눌러도 아무 일이 안 나는 단추니까요(절대 규칙 5). 지시가 「담는
+--   구조가 없다는 것은 기능을 빼는 까닭이 아니다 · 북마크 저장 · 해제 ·
+--   내 저장 목록과 사용자별 권한을 구현한다」이므로 **표를 만듭니다.**
+--
+-- ⚠️⚠️ **0069 의 `listingfav` 를 그대로 베낍니다** — 짜임새가 같습니다
+--   (내가 담고 · 내가 빼고 · 내 것만 봅니다). 새로 설계하면 그 자리마다
+--   다시 틀립니다(0056 이 0046 을 베낀 그 까닭).
+--
+-- ⚠️⚠️⚠️ **저장 수를 공개하지 않습니다.** 셀 수야 있지만 「인기 공고」로
+--   읽히고 우리가 검증할 길이 없으며, 누가 무엇을 담았는지는 **행동
+--   기록**이라 올린 분에게도 · **운영자에게도** 안 냅니다 (0059 의
+--   `cqview` · 0069 의 찜과 같은 결). 그래서 `v_job_open` 에 `fav_n`
+--   칸이 **아예 없습니다.**
+--
+-- ⚠️⚠️ **마감된 공고도 저장 목록에 남습니다** — `v_job_open` 을 그대로
+--   썼으면 마감되는 순간 담아 둔 공고가 **조용히 사라집니다**
+--   ("마감되었습니다" 를 보여 드리는 것이 맞습니다 · 0069 의 그 자리).
+--   그래서 이 보기는 **표에서 직접** 셉니다.
+--
+-- 되돌아갔는지 보는 법:
+--   select count(*) from pg_tables where tablename = 'jobfav';
+--   select count(*) from pg_views  where viewname  = 'v_job_fav';
+-- ════════════════════════════════════════════════════════════════════
+begin;
+
+create table if not exists jobfav (
+  by_user    uuid not null references auth.users(id) on delete cascade,
+  post_id    uuid not null references jobpost(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (by_user, post_id)
+);
+create index if not exists jobfav_mine_idx on jobfav (by_user, created_at desc);
+
+alter table jobfav enable row level security;
+
+-- ⚠️⚠️ **운영자 정책도 두지 않습니다** — 누가 무엇을 담았는지는 행동
+--   기록이고 운영자가 그것을 읽을 까닭이 없습니다.
+drop policy if exists jobfav_mine on jobfav;
+create policy jobfav_mine on jobfav
+  for select using (by_user = auth.uid());
+
+-- ⚠️⚠️ **쓰기 GRANT 를 주지 않습니다** — 들어오는 길은 문 하나뿐입니다.
+grant select on jobfav to authenticated;
+
+-- ── 담고 빼는 문 ─────────────────────────────────────────────────
+-- ⚠️ 켜고 끄는 것을 **문 하나**로 둡니다 — 둘로 나누면 화면이 지금
+--   상태를 먼저 알아야 하고, 그 사이에 다른 창에서 바뀌면 어긋납니다.
+create or replace function fav_jobpost(p jsonb default '{}'::jsonb)
+  returns boolean
+  language plpgsql security definer set search_path = public as $$
+declare
+  v_me uuid := auth.uid();
+  v_j  uuid := nullif(btrim(coalesce(p->>'id','')), '')::uuid;
+  v_on boolean := coalesce((p->>'on')::boolean, true);
+  v_st text;
+begin
+  if v_me is null then raise exception '로그인이 필요합니다'; end if;
+  if v_j is null then raise exception '어느 공고인지 알 수 없습니다'; end if;
+
+  if v_on then
+    select state into v_st from jobpost where id = v_j;
+    if v_st is null then raise exception '그런 공고가 없습니다'; end if;
+    -- ⚠️ 내려간 · 가려진 공고는 담을 수 없습니다 — 담아 두면 저장
+    --   목록에 **열 수 없는 줄**이 쌓입니다.
+    if v_st not in ('open','closed') then
+      raise exception '지금은 저장할 수 없는 공고입니다';
+    end if;
+    if (select count(*) from jobfav where by_user = v_me) >= 200 then
+      raise exception '저장은 200개까지입니다. 먼저 정리해 주세요';
+    end if;
+    insert into jobfav (by_user, post_id) values (v_me, v_j)
+      on conflict (by_user, post_id) do nothing;
+    return true;
+  end if;
+
+  delete from jobfav where by_user = v_me and post_id = v_j;
+  return false;
+end $$;
+revoke all on function fav_jobpost(jsonb) from public;
+grant execute on function fav_jobpost(jsonb) to authenticated;
+
+-- ── 내 저장 목록 (`/my`) ─────────────────────────────────────────
+-- ⚠️⚠️ **`v_job_open` 을 그대로 쓸 수 없습니다** (위 머리말) — 마감된
+--   공고가 **조용히 사라집니다.** 표에서 직접 세고 `state` 를 그대로
+--   냅니다. ⚠️ `contact` · `by_user` 는 **안 담습니다**(0048 의 선).
+drop view if exists v_job_fav;
+create view v_job_fav as
+  select f.post_id as id, f.created_at as fav_at,
+         j.kind, j.sub, j.region, j.title,
+         j.pay, j.terms, j.close_at, j.state,
+         j.role, j.emp_type, j.pay_type, j.pay_min,
+         j.created_at,
+         -- ⚠️ `as_pro` 는 **칸이 아닙니다** — 문이 `provider_id` 를 채웁니다.
+         --   그리고 **읽을 때 다시** 상태를 봅니다(정지되면 그 순간 상호가
+         --   빠집니다 · 0048 에서 세운 규칙).
+         case when pv.id is not null and pv.state = 'approved'
+                   and pv.is_test = false
+              then pv.name end as pro_name
+    from jobfav f
+    join jobpost j on j.id = f.post_id
+    left join provider pv on pv.id = j.provider_id
+   where f.by_user = auth.uid()
+     and j.state in ('open','closed')
+   order by f.created_at desc;
+grant select on v_job_fav to authenticated;
+
+insert into schema_version (n, name) values (78, '0078_job_fav')
+on conflict (n) do nothing;
+
+commit;
+
+/* ---------------------------- 0079_fitting_terms.sql ---------------------------- */
+-- ════════════════════════════════════════════════════════════════════
+-- 0079 — 피팅 **거래 조건**(부품비 포함 여부 등)을 업체가 적습니다
+--        (확정 시안 ⑦ · save_provider_self 0076→0079 · v_provider_card 0076→0079)
+--
+-- ⚠️⚠️⚠️ **시안의 「부품비 별도 · 최종 견적 상담」을 우리가 적지
+--   않습니다.** 업체마다 다르고 우리가 확인할 길이 없습니다 — 우리가
+--   적으면 **우리가 한 약속**이 되고, 그 조건이 다른 업체에 가서 분쟁이
+--   납니다(절대 규칙 1 · 5). 지시가 「거래 조건은 업체 입력값으로
+--   표시한다」이므로 **업체가 적는 칸**을 만듭니다.
+-- ⚠️ 비우면 화면에서 **줄째 빠집니다**(절대 규칙 2) — 「협의」를 지어
+--   적지 않습니다.
+--
+-- ⚠️⚠️ **`created_at` 도 같이 내보냅니다.** 지시가 「근거 없는 추천순은
+--   최신 등록순 등으로 대체한다」인데, 공개 카드 보기에 **등록 시각이
+--   없어서** 최신순으로 세울 수가 없었습니다. 「추천순」은 여전히 안
+--   냅니다 — 무엇이 추천인지 세어 본 적이 없습니다.
+--
+-- ⚠️⚠️⚠️ **보기를 지우고 다시 만듭니다** — `create or replace view` 는
+--   칸을 못 늘립니다(0044 가 붙여넣기 두 번째에서 멈춘 그 자리).
+--   지우면 GRANT 도 같이 날아가니 **바로 다시 줍니다.**
+-- ⚠️⚠️ **`save_provider_self` 는 보낸 것으로 통째로 덮습니다** — 그래서
+--   `js/deskme.js` 가 새 칸을 **읽고 또 보내야** 합니다. 안 하면 업체가
+--   저장할 때마다 그 칸이 비워집니다(`industries` 로 겪은 자리).
+--
+-- 되돌아갔는지 보는 법:
+--   select column_name from information_schema.columns
+--    where table_name = 'v_provider_card' and column_name = 'fit_terms';
+-- ════════════════════════════════════════════════════════════════════
+begin;
+
+alter table provider add column if not exists fit_terms text;
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'provider_fit_terms_ck') then
+    alter table provider add constraint provider_fit_terms_ck
+      check (fit_terms is null or char_length(fit_terms) <= 120);
+  end if;
+end $$;
+
+drop view if exists v_provider_card;
+create view v_provider_card as
+  select p.id, p.name, p.intro, p.regions, p.gu, p.subs, p.since,
+         p.consult_hours, p.verified, p.brands, p.scale, p.contact_ways,
+         p.ceo, p.addr, p.tel, p.email, p.brn,
+         p.kind, p.place_name, p.lesson_goals,
+         p.range_opts, p.open_hours,
+         p.fit_ways,
+         -- ⚠️ 0079 — 업체가 적는 거래 조건 (비면 화면에서 줄째 빠집니다)
+         p.fit_terms,
+         -- ⚠️ 0079 — 「최신 등록순」으로 세우려면 이 값이 있어야 합니다
+         p.created_at,
+         p.is_test
+    from provider p
+   where p.listed = true
+     and p.is_test = false
+     and p.state = 'approved';
+grant select on v_provider_card to anon, authenticated;
+
+create or replace function save_provider_self(
+  p_data jsonb default '{}'::jsonb,
+  p_why  text  default null
+) returns text
+  language plpgsql security definer set search_path = public as $$
+declare
+  v_me   uuid     := auth.uid();
+  v_role app_role := my_role();
+  v_pv   text     := my_provider();
+  v_scale text    := nullif(btrim(coalesce(p_data->>'scale','')), '');
+  v_email text    := nullif(btrim(coalesce(p_data->>'email','')), '');
+  v_place text    := nullif(btrim(coalesce(p_data->>'placeName','')), '');
+  -- ⚠️ 0074 — 연습장 시설 정보 둘
+  v_hours text    := nullif(btrim(coalesce(p_data->>'openHours','')), '');
+  v_opts  text[]  := coalesce((select array_agg(btrim(x))
+    from jsonb_array_elements_text(
+      case when jsonb_typeof(p_data->'rangeOpts') = 'array'
+           then p_data->'rangeOpts' else '[]'::jsonb end) x
+    where btrim(x) <> ''), '{}');
+  -- ⚠️ 0076 — 피팅 이용 방식
+  v_fw    text[]  := coalesce((select array_agg(btrim(x))
+    from jsonb_array_elements_text(
+      case when jsonb_typeof(p_data->'fitWays') = 'array'
+           then p_data->'fitWays' else '[]'::jsonb end) x
+    where btrim(x) <> ''), '{}');
+  -- ⚠️ 0079 — 피팅 거래 조건 (부품비 포함 여부 등). **업체가 적는
+  --   값**이고 우리가 지어내지 않습니다 — 비면 화면에서 줄째 빠집니다.
+  v_fterms text := nullif(btrim(coalesce(p_data->>'fitTerms','')), '');
+begin
+  if v_me is null then raise exception '변경자를 알 수 없습니다'; end if;
+  if v_role <> 'provider' or v_pv is null then
+    raise exception '업체 계정으로 로그인하셔야 합니다';
+  end if;
+  if not exists (select 1 from provider where id = v_pv) then
+    raise exception '연결된 업체를 찾을 수 없습니다';
+  end if;
+  if v_scale is not null and v_scale not in ('small','mid','large') then
+    raise exception '거래 규모는 small · mid · large 중 하나입니다 — %', v_scale;
+  end if;
+  -- ⚠️ 0074 — 이용 시간과 시설 속성. **키 묶음은 화면이 들고 있고**
+  --   여기서는 갯수와 길이만 봅니다 (박아 두면 느는 날 어긋납니다).
+  if v_fterms is not null and char_length(v_fterms) > 120 then
+    raise exception '거래 조건은 120자까지 적을 수 있습니다';
+  end if;
+  if v_hours is not null and char_length(v_hours) > 60 then
+    raise exception '이용 시간이 너무 깁니다 (60자)';
+  end if;
+  if coalesce(array_length(v_opts, 1), 0) > 12 then
+    raise exception '시설 항목은 열둘까지입니다';
+  end if;
+  if exists (select 1 from unnest(v_opts) u where char_length(u) > 40) then
+    raise exception '시설 항목 값이 올바르지 않습니다';
+  end if;
+  -- ⚠️ 0076 — 이용 방식. 표의 check 와 **다른 말**로 거절합니다
+  --   (같은 말로 거절하면 어느 자물쇠가 막았는지 알 수 없습니다).
+  if coalesce(array_length(v_fw, 1), 0) > 6 then
+    raise exception '이용 방식은 여섯 가지까지입니다';
+  end if;
+  if exists (select 1 from unnest(v_fw) u where char_length(u) > 40) then
+    raise exception '이용 방식 값이 올바르지 않습니다';
+  end if;
+  if exists (
+    select 1 from jsonb_array_elements_text(
+      case when jsonb_typeof(p_data->'contactWays') = 'array'
+           then p_data->'contactWays' else '[]'::jsonb end) as t(x)
+     where btrim(x) not in ('phone','visit','online','shop'))
+  then
+    raise exception '상담 방식은 전화 · 방문 · 온라인 · 매장 중에서 고르셔야 합니다';
+  end if;
+  -- ⚠️ 적으셨으면 꼴을 봅니다 (비우는 것은 됩니다 — 지어내지 않습니다).
+  if v_email is not null and v_email not like '%@%.%' then
+    raise exception '이메일 꼴이 아닙니다 — %', v_email;
+  end if;
+  -- ⚠️ 0071 — 레슨 장소. 표의 check 와 **다른 말**로 거절합니다.
+  if v_place is not null and length(v_place) > 80 then
+    raise exception '레슨 장소 이름이 너무 깁니다 (여든 자까지)';
+  end if;
+  -- ⚠️⚠️ 레슨 목적은 **키를 안 봅니다**(DB 가 키 묶음을 모릅니다) — 갯수와
+  --   길이만 막습니다. 모르는 키가 들어오면 화면이 **그 글자를 그대로**
+  --   보여 줍니다(이름을 지어내지 않습니다).
+  if (select count(*) from jsonb_array_elements_text(
+        case when jsonb_typeof(p_data->'lessonGoals') = 'array'
+             then p_data->'lessonGoals' else '[]'::jsonb end)) > 12 then
+    raise exception '레슨 목적은 열두 개까지 고르실 수 있습니다';
+  end if;
+
+  update provider set
+    intro = nullif(btrim(coalesce(p_data->>'intro','')), ''),
+    regions = coalesce((select array_agg(x) from jsonb_array_elements_text(coalesce(p_data->'regions','[]'::jsonb)) x), '{}'),
+    gu = coalesce((select array_agg(x) from jsonb_array_elements_text(coalesce(p_data->'gu','[]'::jsonb)) x), '{}'),
+    industries = coalesce((select array_agg(x) from jsonb_array_elements_text(coalesce(p_data->'industries','[]'::jsonb)) x), '{}'),
+    since = nullif(p_data->>'since','')::int,
+    consult_hours = nullif(btrim(coalesce(p_data->>'consultHours','')), ''),
+    brands = coalesce((select array_agg(x) from jsonb_array_elements_text(coalesce(p_data->'brands','[]'::jsonb)) x), '{}'),
+    scale = v_scale,
+    ceo = nullif(btrim(coalesce(p_data->>'ceo','')), ''),
+    addr = nullif(btrim(coalesce(p_data->>'addr','')), ''),
+    tel = nullif(btrim(coalesce(p_data->>'tel','')), ''),
+    email = v_email,
+    contact_ways = coalesce((select array_agg(btrim(x))
+      from jsonb_array_elements_text(
+        case when jsonb_typeof(p_data->'contactWays') = 'array'
+             then p_data->'contactWays' else '[]'::jsonb end) x), '{}'),
+    range_opts = v_opts,
+    open_hours = v_hours,
+    fit_ways = v_fw,
+    fit_terms = v_fterms,
+    place_name = v_place,
+    lesson_goals = coalesce((select array_agg(btrim(x))
+      from jsonb_array_elements_text(
+        case when jsonb_typeof(p_data->'lessonGoals') = 'array'
+             then p_data->'lessonGoals' else '[]'::jsonb end) x
+      where btrim(x) <> ''), '{}')
+  where id = v_pv;
+
+  insert into audit_log (by_user, by_role, obj, obj_id, to_state, why, data)
+  values (v_me, v_role, 'provider', v_pv, 'self-updated', p_why, p_data);
+
+  return v_pv;
+end $$;
+insert into schema_version (n, name) values (79, '0079_fitting_terms')
+on conflict (n) do nothing;
+
+commit;

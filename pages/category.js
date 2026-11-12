@@ -1373,14 +1373,18 @@ exports.build = function(c){
     else if(c.key === "matchup"){ put = "#joinbox"; lab = "등록"; }
     else if(c.key === "used"){    put = "#lsbox";   lab = "등록"; }
     else if(W.amWantOn && W.amWantOn(c)){ put = "#wtbox"; lab = "등록"; }
-    var one = function(href, name, ic, on){
-      return '<a href="' + esc(href) + '"' + (on ? ' class="cqnav-on"' : '') + '>' +
-        W.icon(ic) + '<span>' + esc(name) + '</span></a>';
+    /* ⚠️ 시안은 가운데 칸만 **딥그린 네모**로 띄웁니다(홈 · 검색 · 내정보는
+       선 아이콘). 그 네모는 `.cqnav-i` 한 겹이고 `cls` 로만 갈립니다 —
+       칸마다 다른 markup 을 적으면 한쪽만 고치는 날 둘이 달라집니다. */
+    var one = function(href, name, ic, cls){
+      return '<a href="' + esc(href) + '"' + (cls ? ' class="' + cls + '"' : '') + '>' +
+        '<i class="cqnav-i">' + W.icon(ic) + '</i>' +
+        '<span>' + esc(name) + '</span></a>';
     };
     return '<nav class="cqnav" aria-label="빠른 이동">' +
       one("/", "홈", "home") +
       one("/search", "검색", "search") +
-      one(put, lab, "plus") +
+      one(put, lab, "plus", "cqnav-put") +
       one("/my", "내정보", "user") +
     '</nav>';
   }

@@ -424,6 +424,112 @@ const MY_BOXES = ["mybox", "reqbox", "joinmine", "lsmine", "mycq", "jobmine",
     await p.close();
   }
 
+
+  /* ══════════════════════════════════════════════════════════════
+     폰 바닥 메뉴 — 확정 시안 (2026-11-12)
+
+     ⚠️⚠️⚠️ **빈 자리로 보내면 눌러도 아무 일이 안 나는 칸입니다.**
+     가운데 칸은 분류마다 다른 자리로 갑니다(`#cqbox` · `#jobbox` ·
+     `#joinbox` · `#lsbox` · `#wtbox` · `/join`). 그 가운데 `#` 으로
+     가는 다섯은 **빌드가 빈 그릇만 찍고 화면이 채우는 자리**라,
+     설정이 없으면 그 자리가 빈 채로 남을 수 있습니다 — 2026-11-10 에
+     머리말 「판매글 등록」이 바로 그 꼴이었습니다. 그래서 여기서는
+     **그 자리가 있는가**가 아니라 **그 자리에 글이 있는가**를 봅니다.
+
+     ⚠️⚠️ **푸터를 덮으면 안 됩니다** — 띠는 `position:fixed` 라 제
+     높이만큼 `body` 에 여백을 줘야 바닥 글이 가려지지 않습니다.
+     그 두 값을 **재서** 견줍니다(숫자를 박지 않습니다).
+
+     ⚠️⚠️ **글판이 올라오면 내려가야 합니다** — 안 내려가면 보내는
+     단추와 겹치거나(안드로이드) 글판에 덮여 눌리지 않습니다(iOS).
+
+     ⚠️ **시안에 없는 「채팅」을 넣지 않습니다** — 채팅 기능이 없으므로
+     그 칸은 눌러도 아무 데도 못 갑니다(절대 규칙 5).
+     ══════════════════════════════════════════════════════════════ */
+  console.log("\n── 폰 바닥 메뉴 (시안 · 360px)");
+  {
+    const CATS = ["/cat/booking", "/cat/matchup", "/cat/used", "/cat/lesson",
+                  "/cat/range", "/cat/market", "/cat/fitting", "/cat/travel",
+                  "/cat/career", "/cat/community"];
+    let seen = 0, chat = 0;
+    const badAnchor = [], covered = [], lowTap = [], noAccent = [];
+    for(const route of CATS){
+      const p = await b.newPage({ viewport:{ width:360, height:740 } });
+      await p.goto(base + route, { waitUntil:"domcontentloaded" });
+      const r = await p.evaluate(function(){
+        var n = document.querySelector(".cqnav");
+        if(!n) return null;
+        var A = [].slice.call(n.querySelectorAll("a"));
+        var pad = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+        var put = n.querySelector(".cqnav-put");
+        var pi  = put ? put.querySelector(".cqnav-i") : null;
+        var cs  = pi ? getComputedStyle(pi) : null;
+        /* `#` 으로 가는 자리는 **그 자리에 글이 있는지**까지 봅니다 */
+        var h = put ? (put.getAttribute("href") || "") : "";
+        var tgt = (h.charAt(0) === "#") ? document.getElementById(h.slice(1)) : null;
+        return {
+          n: A.length,
+          hrefs: A.map(function(a){ return a.getAttribute("href") || ""; }),
+          names: A.map(function(a){ return (a.textContent || "").trim(); }),
+          taps: A.map(function(a){ return Math.round(a.getBoundingClientRect().height); }),
+          barH: Math.round(n.getBoundingClientRect().height),
+          pad: Math.round(pad),
+          accent: cs ? cs.backgroundColor : "",
+          accentFg: cs ? cs.color : "",
+          anchorOk: (h.charAt(0) !== "#") ? true
+                    : !!(tgt && (tgt.textContent || "").trim().length > 0)
+        };
+      });
+      if(!r){ await p.close(); continue; }
+      seen++;
+      if(r.names.some(function(x){ return x.indexOf("채팅") >= 0; })) chat++;
+      if(!r.anchorOk) badAnchor.push(route + " " + r.hrefs[2]);
+      if(r.pad < r.barH) covered.push(route + " 띠 " + r.barH + " · 여백 " + r.pad);
+      if(Math.min.apply(null, r.taps) < 40) lowTap.push(route + " " + r.taps.join("/"));
+      if(r.accent !== "rgb(8, 43, 32)" || r.accentFg !== "rgb(255, 255, 255)")
+        noAccent.push(route + " " + r.accent + " / " + r.accentFg);
+      if(route === "/cat/community"){
+        ok("  칸이 **넷**이고 홈 · 검색 · 등록 · 내정보다",
+           r.n === 4 && r.hrefs[0] === "/" && r.hrefs[1] === "/search" &&
+           r.hrefs[3] === "/my", JSON.stringify(r.names));
+      }
+      await p.close();
+    }
+    ok("분류 **열 장 전부**에 바닥 메뉴가 선다", seen === CATS.length,
+       seen + "/" + CATS.length);
+    ok("  ⚠️ 시안에 없는 「채팅」 칸이 없다", chat === 0, chat + "곳");
+    ok("  ⚠️⚠️⚠️ 가운데 칸이 **빈 자리로 보내지 않는다**",
+       badAnchor.length === 0, badAnchor.join(" · "));
+    ok("  ⚠️⚠️ 띠가 바닥 글을 **안 덮는다** (여백 ≥ 띠 높이)",
+       covered.length === 0, covered.join(" · "));
+    ok("  누르는 것이 40px 이상이다", lowTap.length === 0, lowTap.join(" · "));
+    ok("  ⚠️ 가운데 「등록」이 **딥그린 면에 흰 아이콘**이다 (15.25)",
+       noAccent.length === 0, noAccent.join(" · "));
+
+    /* ⚠️⚠️ 글판이 올라오는 자리 — 글 칸이 **있는** 화면에서 잽니다
+       (없는 화면에서 재면 잴 것이 없는데 초록이 됩니다). */
+    {
+      const p = await b.newPage({ viewport:{ width:360, height:740 } });
+      await p.goto(base + "/cat/travel", { waitUntil:"domcontentloaded" });
+      const before = await p.evaluate(function(){
+        var n = document.querySelector(".cqnav");
+        return n ? n.getClientRects().length > 0 : null;
+      });
+      const inp = await p.$('input[type="search"], input[type="text"], textarea');
+      let after = null;
+      if(inp){
+        await inp.focus();
+        after = await p.evaluate(function(){
+          var n = document.querySelector(".cqnav");
+          return n ? n.getClientRects().length > 0 : null;
+        });
+      }
+      ok("  글 칸에 초점을 주기 전에는 띠가 **보인다**", before === true, String(before));
+      ok("  ⚠️⚠️ 글 칸에 초점을 주면 띠가 **내려간다** (글판 겹침)",
+         after === false, inp ? String(after) : "잴 글 칸이 없습니다");
+      await p.close();
+    }
+  }
   /* ══════════════════════════════════════════════════════════════
      ⚠️⚠️⚠️ **드롭다운이 마우스를 내리면 사라지던 자리** (2026-11-10)
 

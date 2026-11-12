@@ -72,6 +72,14 @@ exports.build = function(){
   body += '<section class="sec"><div class="wrap">' +
     '<div id="favbox" class="none" hidden></div></div></section>';
 
+  /* ⚠️⚠️ 저장한 공고 — 담아 두신 구인 · 구직 · 제휴 글 (0078 ·
+     js/myjobfav.js). 관심상품과 **같은 규칙**입니다: 제 것만 보이고,
+     저장 수는 어디에도 안 적고, **마감된 공고도 남깁니다**(마감되는
+     순간 조용히 사라지면 저장해 두신 분이 무엇이 없어졌는지 알 수가
+     없습니다). */
+  body += '<section class="sec sec-alt"><div class="wrap">' +
+    '<div id="jobfavbox" class="none" hidden></div></div></section>';
+
   /* ⚠️⚠️ 내 구합니다 글과 받은 답 (0061 · js/mywanted.js).
      ⚠️⚠️⚠️ 여기도 **연락처를 주고받는 유일한 자리**입니다 (제17조
      제2항) — 목록 화면(분류 다섯)에는 연락처 칸이 **아예 없습니다**.
@@ -124,7 +132,7 @@ exports.build = function(){
             올리지 않습니다 — 그 한 장만 조용히 집 좌표를 달고
             공개 버킷에 들어갑니다). */
          "/js/myjob.js", "/js/imgprep.js", "/js/lstphoto.js", "/js/mylisting.js",
-         "/js/myfav.js",
+         "/js/myfav.js", "/js/myjobfav.js",
          "/js/myinq.js", "/js/mynick.js",
          /* ⚠️ 0061 — catalog.js 가 분류 · 하위 이름을, deal.js 가 상태
             말과 예산 셈을, regions.js 가 지역 이름을 줍니다 (빌드가

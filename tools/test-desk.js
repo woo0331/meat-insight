@@ -5471,15 +5471,25 @@ function boardsOf(){
     ok("  ⚠️ `cat=eq.` 로 **하나만** 묻지 않는다",
        qs.every(function(u){ return u.indexOf("cat=eq.") < 0; }),
        qs.slice(0, 2).join(" | ").slice(0, 200));
-    /* 칩은 **넷 다** 켜져야 합니다 — 켜진 칩과 거르는 조건이 어긋나면
-       손님은 무엇으로 좁혔는지 알 수가 없습니다. */
+    /* ⚠️⚠️⚠️ **무엇으로 좁혔는지가 보여야 합니다.** 2026-11-12 에 탭으로
+       바꾸면서 게시판 열둘짜리 칩 줄이 없어졌고, 그래서 **대표 탭에 없는
+       묶음**(머리말의 「골프 정보 · 후기」 = 게시판 넷)으로 들어오면
+       아무 칸도 안 켜집니다. 재려는 뜻은 처음부터 「걸린 조건이 손님에게
+       보이는가」이므로, 이제 **제목과 매핑 줄**에서 셉니다. */
     const on = await g.p.evaluate(function(){
-      return [].slice.call(document.querySelectorAll(".cqb-c .chip-on"))
-               .map(function(a){ return a.getAttribute("data-bd"); });
+      const h = document.querySelector(".cqh");
+      const t = (document.querySelector(".cqh-t") || {}).textContent || "";
+      const m = (document.querySelector(".cqh-m") || {}).textContent || "";
+      void h;
+      return { t: t, m: m };
     });
-    ok("  고른 게시판 넷이 **칩에 다 켜져 있다**",
-       on.length === 4 && on.indexOf("cm-tip") >= 0 && on.indexOf("cm-gear") >= 0,
+    ok("  고른 게시판 넷을 **화면이 이름으로 말한다** (걸린 조건이 보입니다)",
+       ["cm-tip","cm-course","cm-lesson","cm-gear"].every(function(k){
+         const b = BDS.filter(function(x){ return x.key === k; })[0];
+         return b && (on.t + " " + on.m).indexOf(b.name) >= 0; }),
        JSON.stringify(on));
+    ok("  ⚠️ 그 자리에 **내부 키가 안 찍힌다** (손님에게 cm-… 은 뜻이 없습니다)",
+       (on.t + " " + on.m).indexOf("cm-") < 0, JSON.stringify(on));
     await g.p.close();
   }
 
@@ -5670,8 +5680,13 @@ function boardsOf(){
     });
     ok("⚠️⚠️ 왼쪽 게시판 메뉴가 **목록 상자 밖에** 선다 (확정 시안 ⑩)",
        r0.있음 && r0.바깥, JSON.stringify(r0));
-    ok("  칸이 **게시판 수 + 모아보기 + 전체 글** 이다 (갯수를 안 박습니다)",
-       r0.칸 === BD + 2, "칸 " + r0.칸 + "개 · 게시판 " + BD + "곳");
+    /* ⚠️ 2026-11-12 — 확정 시안 ⑩ 으로 바꾸면서 이 줄의 뜻이 바뀌었습니다:
+       칸은 **대표 탭 + 전체 게시판**입니다(게시판 열둘은 「전체 게시판」과
+       「모든 게시판 바로가기」에 그대로 있습니다). 갯수는 여전히 안 박고
+       `AM_CQ_TABS` 에서 읽습니다. */
+    ok("  칸이 **대표 탭 + 전체 게시판** 이다 (갯수를 안 박습니다)",
+       r0.칸 === CQT.tabs.length + 1,
+       "칸 " + r0.칸 + "개 · 대표 탭 " + CQT.tabs.length + "개");
     ok("  ⚠️ 전부 **링크**다 (자바스크립트가 꺼져도 눌립니다)",
        r0.링크 === r0.칸, "링크 " + r0.링크 + " / 칸 " + r0.칸);
     ok("  보고 있던 게시판이 켜져 있다", r0.켜짐.indexOf("자유게시판") >= 0, r0.켜짐);
@@ -5689,9 +5704,14 @@ function boardsOf(){
     });
     ok("⚠️⚠️⚠️ 메뉴를 누르면 **새로고침 없이** 그 게시판으로 간다",
        r1.주소.indexOf("s=cm-ask") >= 0 && r1.같은문서, JSON.stringify(r1));
-    ok("  켜진 칸과 제목이 같이 바뀐다",
-       r1.켜짐.indexOf("골프 질문") >= 0 && r1.제목.indexOf("골프 질문") >= 0,
-       JSON.stringify(r1));
+    /* ⚠️ 켜진 칸은 이제 **대표 탭**이라 그 이름입니다(게시판 이름이
+       아닙니다). 글자를 박지 않고 `AM_CQ_TABS` 에서 찾습니다 — 탭
+       이름을 고치는 날 이 줄을 안 고쳐도 됩니다. */
+    const askTab = CQT.tabs.filter(function(t){
+      return (t.boards || []).length === 1 && t.boards[0] === CQT.ask; })[0];
+    ok("  켜진 칸과 제목이 같이 바뀐다 (" + (askTab ? askTab.name : "?") + ")",
+       !!askTab && r1.켜짐.indexOf(askTab.name) >= 0 &&
+       r1.제목.indexOf(askTab.name) >= 0, JSON.stringify(r1));
     await g.p.close();
   }
 
@@ -5896,7 +5916,12 @@ function boardsOf(){
           });
         });
       return { doc: document.documentElement.scrollWidth, win: window.innerWidth,
-               drawn: document.querySelectorAll(".cqg-b").length,
+               /* ⚠️ 2026-11-12 — 첫 화면이 **단일 목록**으로 바뀌었습니다.
+                  `.cqg-b`(모아보기 상자)만 세면 **0** 이 나오고, 그러면
+                  멀쩡한 화면을 「안 그려졌다」로 잡습니다. 재려는 뜻은
+                  「글이 폰에서 그려지기는 하는가」이므로 **둘 다** 셉니다. */
+               drawn: document.querySelectorAll(".cqg-b").length +
+                      document.querySelectorAll(".cql > li").length,
                small: small.slice(0,4), low: low.slice(0,4) };
     });
     if(w === PHONES[0])
@@ -9876,6 +9901,10 @@ function boardsOf(){
         incl:["그린피","숙박"], excl:["카트비","식사"],
         created_at:"2026-11-10T01:00:00Z", updated_at:"2026-11-10T01:00:00Z",
         provider_id:"t-trip", provider_name:"검사용 여행사",
+        /* ⚠️⚠️ 0077 — **확정 출발일**인 줄입니다. `months` 는 DB 가
+           세어서 내는 값이고 거르개가 `cs` 로 묻습니다. */
+        depart_kind:"dates", depart_from:null, depart_to:null,
+        months:["2026-12", "2027-01"], depart_next:"2026-12-05",
         photo_n:2, thumb:"trip/" + TR1 + "/photo/a.jpg" },
       { id:TR2, scope:"abroad", dest:"jp", title:"일본 규슈 3박4일",
         body:"후쿠오카 출발 라운드 3회입니다.",
@@ -9883,7 +9912,18 @@ function boardsOf(){
         incl:[], excl:[],
         created_at:"2026-11-09T01:00:00Z", updated_at:"2026-11-09T01:00:00Z",
         provider_id:"t-trip", provider_name:"검사용 여행사",
+        /* ⚠️⚠️⚠️ **출발일을 아직 안 올리신 줄**입니다 — `months` 가
+           빈 배열이라 출발 월로 좁히면 **빠집니다**. 그것을 「일정이
+           없는 상품」으로 적으면 거짓입니다(절대 규칙 1). */
+        depart_kind:"none", depart_from:null, depart_to:null,
+        months:[], depart_next:null,
         photo_n:0, thumb:null }
+    ];
+    /* 확정 출발일 — 상세에서 **표를 따로** 읽습니다(0077) */
+    const TRDAY = [
+      { trip_id:TR1, depart_on:"2026-12-05" },
+      { trip_id:TR1, depart_on:"2026-12-19" },
+      { trip_id:TR1, depart_on:"2027-01-09" }
     ];
     const TRPUB = [
       { id:"ee000001-0073-4000-8000-000000000001", trip_id:TR1,
@@ -9892,7 +9932,7 @@ function boardsOf(){
         path:"trip/" + TR1 + "/photo/b.jpg", caption:null, ord:1 }
     ];
     const TRT = { v_trip_open: TROPEN, v_trip_photo_public: TRPUB,
-                  v_wanted_open: [] };
+                  v_trip_date_public: TRDAY, v_wanted_open: [] };
 
     /* ① 설정 전에는 **아무것도 안 엽니다** (절대 규칙 5) */
     {
@@ -10034,6 +10074,49 @@ function boardsOf(){
        trq(t).some(function(x){ return /title=ilike/.test(x.body); }),
        trq(t).map(function(x){ return x.body; }).join(" | ").slice(0, 200));
 
+    /* ③-2 출발 월 (0077) — ⚠️⚠️⚠️ **고르개가 그려지는 것과 그것이
+       걸리는 것은 다릅니다.** 흉내 장치는 안 걸러 주므로 줄 수로 재면
+       거르개를 통째로 떼어도 영원히 초록입니다 — **보내는 질의**를
+       뜯어 봅니다. */
+    t = await open("/cat/travel", TCUS, TRT, {}, true);
+    const moHtml = (await t.p.innerHTML("#tp-mo")) || "";
+    const moN = (await t.p.locator("#tp-mo option").count());
+    ok("⚠️⚠️ 출발 월 고르개가 **그려진다** (0077 로 담는 칸이 생겼습니다)",
+       moN > 1, moN + "칸");
+    ok("  ⚠️ **이번 달부터** 냅니다 (지난 달을 내면 영원히 0건입니다)",
+       (function(){
+         const k = new Date(Date.now() + 9 * 3600 * 1000);
+         const key = k.getUTCFullYear() + "-" +
+           (k.getUTCMonth() < 9 ? "0" : "") + (k.getUTCMonth() + 1);
+         return moHtml.indexOf('value="' + key + '"') >= 0;
+       })(), moHtml.replace(/\s+/g, " ").slice(0, 160));
+    t = await open("/cat/travel?mo=2026-12", TCUS, TRT, {}, true);
+    ok("⚠️⚠️⚠️ 출발 월을 **서버가** 거른다 (months=cs)",
+       trq(t).some(function(x){ return /months=cs\./.test(x.body) &&
+         x.body.indexOf("2026-12") >= 0; }),
+       trq(t).map(function(x){ return x.body; }).join(" | ").slice(0, 240));
+    ok("  고른 달을 **그 자리에서** 말한다 (안 올리신 상품이 빠집니다)",
+       (function(n){ return n.indexOf("2026년 12월") >= 0 &&
+         n.indexOf("빠집니다") >= 0; })(
+         (await t.p.textContent(".tpf-n")) || ""),
+       (await t.p.textContent(".tpf-n")) || "");
+    ok("  ⚠️ 고른 값이 **고르개에 남는다** (주소를 복사해 보내도 같은 화면)",
+       (await t.p.inputValue("#tp-mo")) === "2026-12",
+       await t.p.inputValue("#tp-mo"));
+
+    /* ⚠️⚠️ **셋을 다른 말로** 냅니다 — 확정 출발일 · 기간 · 아직 안
+       올리심. 같은 말로 내면 안 올리신 상품이 「출발 확정」으로
+       읽힙니다(절대 규칙 1). */
+    t = await open("/cat/travel", TCUS, TRT, {}, true);
+    const dTxt = (await t.p.textContent(".tpg")) || "";
+    ok("⚠️⚠️ 카드가 **가장 가까운 출발일**을 적는다",
+       dTxt.indexOf("가장 가까운 출발 2026년 12월 5일") >= 0,
+       dTxt.replace(/\s+/g, " ").slice(0, 200));
+    ok("  ⚠️⚠️⚠️ 안 올리신 상품은 **다른 말**이다 (「없음」이 아닙니다)",
+       dTxt.indexOf("출발일 미등록") >= 0 &&
+       (await t.p.locator(".tpc-d-none").count()) === 1,
+       await t.p.locator(".tpc-d-none").count());
+
     /* ④ 상세 — ⚠️⚠️ 보기를 **새로 안 만들었습니다**(`v_trip_open?id=eq.`) */
     t = await open("/cat/travel?v=" + TR1, TCUS, TRT, {}, true);
     ok("상세가 그려진다", (await t.p.locator(".tpd").count()) === 1);
@@ -10057,6 +10140,33 @@ function boardsOf(){
        })) === 0);
     ok("  문의는 **이미 도는 길**로 보낸다 (매칭 요청)",
        (await t.p.locator('.tpd a[href="/match?cat=travel"]').count()) === 1);
+    /* 출발 일정 (0077) — ⚠️⚠️ 확정 출발일은 **표에서 따로** 받습니다.
+       `v_trip_open` 은 가장 가까운 하나만 내므로, 안 읽으면 상세가
+       날짜를 **하나만** 보여 줍니다(에러 0줄). */
+    ok("⚠️⚠️ 상세가 `v_trip_date_public` 을 **실제로 읽는다**",
+       t.sent.some(function(x){ return x.name === "GET" &&
+         x.body.indexOf("v_trip_date_public") >= 0 &&
+         x.body.indexOf("trip_id=eq." + TR1) >= 0; }),
+       t.sent.filter(function(x){ return x.name === "GET"; })
+         .map(function(x){ return x.body; }).join(" | ").slice(0, 240));
+    ok("  출발일 **셋을 다** 적는다 (가장 가까운 하나만이 아닙니다)",
+       (await t.p.locator(".tpd-dl li").count()) === 3,
+       await t.p.locator(".tpd-dl li").count());
+    ok("  날짜를 **한국 날짜**로 적는다 (UTC 로 하루 밀리지 않습니다)",
+       ((await t.p.textContent(".tpd-dl")) || "").indexOf("2026년 12월 5일") >= 0,
+       (await t.p.textContent(".tpd-dl")) || "");
+    /* ⚠️⚠️⚠️ **안 올리신 상품은 다른 말이고 그 까닭을 적습니다** —
+       「일정이 없는 상품」으로 읽히면 거짓입니다(절대 규칙 1 · 2). */
+    t = await open("/cat/travel?v=" + TR2, TCUS, TRT, {}, true);
+    const tpd2 = (await t.p.textContent(".tpd-dp")) || "";
+    ok("⚠️⚠️⚠️ 출발일을 안 올리신 상품은 **그 사실을 말한다**",
+       (await t.p.locator(".tpd-dp-none").count()) === 1 &&
+       tpd2.indexOf("일정이 없다는 뜻이 아닙니다") >= 0,
+       tpd2.replace(/\s+/g, " ").slice(0, 200));
+    ok("  그 상품에는 날짜 칩을 **한 개도 안 찍는다**",
+       (await t.p.locator(".tpd-dl li").count()) === 0,
+       await t.p.locator(".tpd-dl li").count());
+    t = await open("/cat/travel?v=" + TR1, TCUS, TRT, {}, true);
     ok("  목록으로 돌아가는 길이 있다",
        (await t.p.locator('.tpd a[href="/cat/travel"]').count()) === 1);
     /* ⚠️⚠️ 뒤로 가기를 받습니다 — `pushState` 로 주소를 바꾸므로 이
@@ -10102,6 +10212,9 @@ function boardsOf(){
         state:"approved", hidden_from:null, state_why:null,
         draft:null, draft_state:"none", draft_why:null,
         created_at:"2026-11-10T01:00:00Z", updated_at:"2026-11-10T01:00:00Z",
+        /* ⚠️ 0077 — `v_trip_mine` 은 `t.*` 라 칸이 저절로 따라옵니다 */
+        depart_kind:"dates", depart_from:null, depart_to:null,
+        months:["2026-12","2027-01"], depart_next:"2026-12-05", date_n:3,
         photo_n:2, photo_draft_n:1, photo_drop_n:0 },
       { id:TR2, provider_id:"t-trip", scope:"abroad", dest:"jp",
         title:"일본 규슈 3박4일", body:"후쿠오카 출발 라운드 3회입니다.",
@@ -10111,7 +10224,16 @@ function boardsOf(){
         state_why:"일정표를 더 적어 주세요",
         draft:null, draft_state:"none", draft_why:null,
         created_at:"2026-11-09T01:00:00Z", updated_at:"2026-11-09T01:00:00Z",
+        /* ⚠️⚠️ **아직 안 올리신 줄** — 그러면 손님이 출발 월로 좁히실 때
+           이 상품이 빠집니다. 그 사실을 작업실이 말해야 합니다. */
+        depart_kind:"none", depart_from:null, depart_to:null,
+        months:[], depart_next:null, date_n:0,
         photo_n:0, photo_draft_n:0, photo_drop_n:0 }
+    ];
+    const TRMDAY = [
+      { trip_id:TR1, depart_on:"2026-12-05" },
+      { trip_id:TR1, depart_on:"2026-12-19" },
+      { trip_id:TR1, depart_on:"2027-01-09" }
     ];
     /* ⚠️⚠️ **심사 중인 사진의 id 를 여행사가 알 길이 없었습니다** —
        공개 보기는 승인된 상품의 live 사진만 냅니다. 0073 에
@@ -10129,7 +10251,8 @@ function boardsOf(){
         live:false, drop_pending:false, created_at:"2026-11-10T03:00:00Z" }
     ];
     const TRPRO = { role:"provider", name:"여행담당", provider:"t-trip" };
-    const DT = { v_trip_mine: TRMINE, v_trip_photo_mine: TRMPH };
+    const DT = { v_trip_mine: TRMINE, v_trip_photo_mine: TRMPH,
+                 v_trip_date_mine: TRMDAY };
     let s = await open("/desk", TRPRO, Object.assign({
       assignment:[], request:[], quote:[], request_item:[] }, DT), {}, true);
     ok("⚠️ 잴 것이 0개면 실패입니다 (여행사 상자에 줄이 서는가)",
@@ -10160,6 +10283,94 @@ function boardsOf(){
          .count()) === 3,
        await s.p.locator('#triprobox .tpr-ph[data-trip="' + TR1 + '"] .tpr-s')
          .count());
+    /* 출발 일정 (0077) — ⚠️⚠️⚠️ **칸을 만드는 것과 그 칸을 채울 길을
+       내는 것은 다른 일입니다.** 0077 이 표와 문을 세웠어도 여행사가
+       적는 자리가 없으면 그 칸은 영원히 null 이고 손님의 출발 월
+       거르개는 **아무것도 못 모읍니다**. */
+    ok("⚠️⚠️ `v_trip_date_mine` 을 **실제로 읽는다** (고치는 양식이 쓸 날짜)",
+       s.sent.some(function(x){ return x.name === "GET" &&
+         x.body.indexOf("v_trip_date_mine") >= 0; }),
+       s.sent.filter(function(x){ return x.name === "GET"; })
+         .map(function(x){ return x.body; }).join(" | ").slice(0, 300));
+    ok("  줄마다 출발 일정 상자가 선다",
+       (await s.p.locator("#triprobox .tpr-dp").count()) === 2,
+       await s.p.locator("#triprobox .tpr-dp").count());
+    const dpTxt = (await s.p.textContent("#triprobox")) || "";
+    ok("  지금 상태를 **사람 말**로 적는다",
+       dpTxt.indexOf("가장 가까운 출발 2026년 12월 5일") >= 0 &&
+       dpTxt.indexOf("출발일 미등록") >= 0,
+       dpTxt.replace(/\s+/g, " ").slice(0, 240));
+    /* ⚠️⚠️ **안 올리시면 무엇이 일어나는지**를 그 자리에서 말합니다 —
+       안 적으면 여행사는 왜 손님에게 안 보이는지 알 길이 없습니다. */
+    ok("⚠️⚠️ 안 올리신 줄에만 **빠진다는 것**을 말한다",
+       (await s.p.locator("#triprobox .tpr-dp-w").count()) === 1 &&
+       dpTxt.indexOf("출발 월로 좁히실 때 이 상품이 빠집니다") >= 0,
+       await s.p.locator("#triprobox .tpr-dp-w").count());
+    /* 눌러 봅니다 — 양식 → 날짜 넣기 → 저장 */
+    await s.p.locator('#triprobox .tpr-r[data-id="' + TR1 + '"] .tpr-dp-ed')
+      .click();
+    await s.p.waitForTimeout(250);
+    ok("「출발일 정하기」를 누르면 **양식이 열린다**",
+       (await s.p.locator('.tpr-r[data-id="' + TR1 + '"] .tpr-dpf').count()) === 1,
+       await s.p.locator('.tpr-r[data-id="' + TR1 + '"] .tpr-dpf').count());
+    ok("  이미 들어 있는 날짜 **셋이 칩으로** 선다 (통째로 다시 넣지 않게)",
+       (await s.p.locator('.tpr-r[data-id="' + TR1 + '"] .tpr-dc li').count()) === 3,
+       await s.p.locator('.tpr-r[data-id="' + TR1 + '"] .tpr-dc li').count());
+    /* ⚠️ 날짜 하나를 빼고 하나를 더해 봅니다 — 둘 다 **보내는 꾸러미**로
+       확인합니다(화면의 칩만 보면 보내는 값과 어긋날 수 있습니다). */
+    await s.p.locator('.tpr-r[data-id="' + TR1 + '"] .tpr-dc-x').first().click();
+    await s.p.fill('#dpd-' + TR1, "2027-02-14");
+    await s.p.locator('.tpr-r[data-id="' + TR1 + '"] .tpr-dp-plus').click();
+    await s.p.waitForTimeout(200);
+    await s.p.locator('.tpr-r[data-id="' + TR1 + '"] .tpr-dp-save').click();
+    await s.p.waitForTimeout(400);
+    const dpSent = s.sent.filter(function(x){
+      return x.name === "set_trip_depart"; });
+    ok("⚠️⚠️⚠️ 저장하면 `set_trip_depart` 로 **실제로 간다**",
+       dpSent.length === 1, dpSent.length + "건");
+    /* ⚠️⚠️ **열쇠는 `dates` 입니다** — 0077 이 `p->'dates'` 를 읽습니다.
+       `days` 로 보내면 빈 배열로 읽혀 문이 거절합니다(화면은 보내는데
+       DB 가 거절하는 자리). 그래서 **꾸러미를 뜯어** 봅니다. */
+    const dpBody = dpSent.length ? JSON.parse(dpSent[0].body || "{}") : {};
+    ok("  ⚠️⚠️ 열쇠가 **`dates`** 이고 날짜가 그대로 실린다",
+       dpBody.p && Array.isArray(dpBody.p.dates) &&
+       dpBody.p.dates.indexOf("2027-02-14") >= 0 &&
+       dpBody.p.dates.indexOf("2026-12-05") < 0,
+       JSON.stringify(dpBody.p || {}));
+    ok("  갈래(`kind`)와 상품 id 를 같이 보낸다",
+       dpBody.p && dpBody.p.kind === "dates" && dpBody.p.trip === TR1,
+       JSON.stringify(dpBody.p || {}));
+    /* ⚠️ 갈래를 바꾸면 **적는 칸도 바뀝니다** — 안 갈아 끼우면
+       「기간」을 고르고 날짜 목록을 보내게 됩니다(문이 거절합니다). */
+    s = await open("/desk", TRPRO, Object.assign({
+      assignment:[], request:[], quote:[], request_item:[] }, DT), {}, true);
+    await s.p.locator('#triprobox .tpr-r[data-id="' + TR1 + '"] .tpr-dp-ed')
+      .click();
+    await s.p.waitForTimeout(250);
+    await s.p.locator('.tpr-r[data-id="' + TR1 + '"] input[name="dpk"][value="range"]')
+      .check();
+    await s.p.waitForTimeout(200);
+    ok("⚠️ 「기간」을 고르면 **날짜 목록 칸이 사라지고** 시작 · 마지막 칸이 뜬다",
+       (await s.p.locator('.tpr-r[data-id="' + TR1 + '"] .tpr-dpf-dates')
+          .first().isHidden()) === true &&
+       (await s.p.locator('.tpr-r[data-id="' + TR1 + '"] .tpr-dpf-range')
+          .first().isVisible()) === true,
+       "dates 숨김 / range 보임");
+    await s.p.fill('#dpa-' + TR1, "2027-03-01");
+    await s.p.fill('#dpb-' + TR1, "2027-05-31");
+    await s.p.locator('.tpr-r[data-id="' + TR1 + '"] .tpr-dp-save').click();
+    await s.p.waitForTimeout(400);
+    const rgSent = s.sent.filter(function(x){
+      return x.name === "set_trip_depart"; });
+    const rgBody = rgSent.length ? JSON.parse(rgSent[0].body || "{}") : {};
+    ok("  기간으로 저장하면 `from` · `to` 를 보내고 `dates` 는 **안 보낸다**",
+       rgBody.p && rgBody.p.kind === "range" &&
+       rgBody.p.from === "2027-03-01" && rgBody.p.to === "2027-05-31" &&
+       !rgBody.p.dates,
+       JSON.stringify(rgBody.p || {}));
+    s = await open("/desk", TRPRO, Object.assign({
+      assignment:[], request:[], quote:[], request_item:[] }, DT), {}, true);
+
     /* 올리는 양식 — ⚠️ 갈래를 바꾸면 **목적지 목록 자체가** 바뀝니다 */
     const newF = "#triprobox .tpr-new-s form.tpr-f";
     /* ⚠️⚠️ **`<details>` 로 접지 않습니다** — 접힌 글은 누름 40px ·

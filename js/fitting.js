@@ -103,7 +103,7 @@
   /* 차례 — ⚠️⚠️ 시안의 「추천순」은 **안 만듭니다.** 무엇이 추천인지
      세어 본 적이 없고, 세는 자료도 없습니다(조회도 · 거래 건수도 안
      셉니다). 지어낸 차례를 「추천」이라고 적으면 절대 규칙 1 입니다.
-     ⚠️ 대신 **셀 수 있는 넷**만 냅니다 — 값이 없는 분은 **뒤로** 밀고
+     ⚠️ 대신 **세어서 줄 세울 수 있는 것**만 냅니다 — 값이 없는 분은 **뒤로** 밀고
      그 안에서는 가나다순입니다(없는 값을 0 으로 치면 가장 싼 곳이
      됩니다). */
   function sortBy(L, o){
@@ -127,7 +127,10 @@
         return x === y ? nm(a, b) : (x < y ? -dir : dir);
       };
     };
+    /* ⚠️ 등록된 날을 모르는 업체는 **뒤로** 갑니다(값 · 평점과 같은 규칙) */
+    var newAt = function(p){ return W.amPvNewAt ? W.amPvNewAt(p) : null; };
     var C = { name:nm, low:num(low, 1), high:num(low, -1), rate:num(rate, -1) };
+    C["new"] = num(newAt, -1);
     return L.slice().sort(C[o] || nm);
   }
 

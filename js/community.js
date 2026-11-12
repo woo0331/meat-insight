@@ -38,6 +38,10 @@
    ════════════════════════════════════════════════════════════════════ */
 (function(){
   var list = document.getElementById("cqlist");
+  /* ⚠️ 사진 주소를 짓는 데 씁니다 — 버킷이 꺼져 있으면 `amPubUrl()` 이
+     **빈 글자**를 돌려주므로 썸네일이 줄째 빠집니다(주소를 지어내지
+     않습니다 · 0068 이 매물 카드에서 세운 규칙). */
+  var CONF = null;
   if(!list || !window.amAuthAsk) return;
 
   var esc = window.esc;
@@ -207,19 +211,41 @@
   }
 
   /* ── 목록 ──────────────────────────────────────────────────────── */
+  /* ⚠️⚠️ 시안 ⑩ 의 줄 — 왼쪽에 게시판 딱지 · 제목 · 글쓴이,
+     오른쪽에 **작은 사진**입니다.
+     ⚠️ 사진이 없거나 버킷이 꺼져 있으면 **그 자리를 아예 안 냅니다** —
+     빈 액자를 두면 "사진이 안 뜬다" 로 보이고, 남의 사진이나 분류
+     사진을 깔면 그 글의 사진인 것처럼 보입니다(절대 규칙 1 · 0068). */
+  function thumbOf(q){
+    if(!(Number(q.photo_n) > 0) || !q.thumb) return "";
+    var u = window.amPubUrl ? window.amPubUrl(CONF, q.thumb) : "";
+    if(!u) return "";
+    /* ⚠️ alt 는 **빈 글자**입니다 — 바로 옆에 제목이 있어 읽어 주면
+       같은 말을 두 번 듣습니다(꾸밈 그림). */
+    return '<a class="cqr-ph" href="' + esc(url({ q:q.id, p:S.p })) +
+      '" data-qid="' + esc(q.id) + '" tabindex="-1" aria-hidden="true">' +
+      '<img src="' + esc(u) + '" alt="" loading="lazy" decoding="async">' +
+    '</a>';
+  }
   function row(q){
     return '<li class="cqr">' +
-      '<a class="cqr-t" href="' + esc(url({ q:q.id, p:S.p })) +
-        '" data-qid="' + esc(q.id) + '">' + esc(q.title) + '</a>' +
-      '<p class="cqr-m">' +
-        '<span class="cqr-bd">' + esc(bname(q.cat)) + '</span>' +
-        '<span>' + esc(q.who) + '</span>' +
-        '<span>' + esc(when(q.created_at)) + '</span>' +
-        '<span>댓글 ' + esc(num(q.answer_n)) + '</span>' +
-        /* ⚠️ "조회" 가 아니라 **회원 조회** 입니다 (위 머리말) */
-        '<span>회원 조회 ' + esc(num(q.view_n)) + '</span>' +
-        (Number(q.photo_n) > 0 ? '<span>사진 ' + esc(num(q.photo_n)) + '</span>' : '') +
-      '</p>' +
+      '<div class="cqr-in">' +
+        '<p class="cqr-top">' +
+          '<span class="cqr-bd">' + esc(bname(q.cat)) + '</span>' +
+          (Number(q.photo_n) > 0
+            ? '<span class="cqr-pn">사진 ' + esc(num(q.photo_n)) + '</span>' : '') +
+        '</p>' +
+        '<a class="cqr-t" href="' + esc(url({ q:q.id, p:S.p })) +
+          '" data-qid="' + esc(q.id) + '">' + esc(q.title) + '</a>' +
+        '<p class="cqr-m">' +
+          '<span>' + esc(q.who) + '</span>' +
+          '<span>' + esc(when(q.created_at)) + '</span>' +
+          '<span>댓글 ' + esc(num(q.answer_n)) + '</span>' +
+          /* ⚠️ "조회" 가 아니라 **회원 조회** 입니다 (위 머리말) */
+          '<span>회원 조회 ' + esc(num(q.view_n)) + '</span>' +
+        '</p>' +
+      '</div>' +
+      thumbOf(q) +
     '</li>';
   }
   function pager(total, got){
@@ -244,23 +270,23 @@
     '</div>';
   }
   function head(){
-    /* ⚠️ 글쓰기 단추는 **게시판 제목 오른쪽**입니다 (지시서 §2). 폰에서는
-       줄이 바뀌어 제목 아래에 섭니다 — 밀어서 찾는 자리에 두지 않습니다. */
-    return '<div class="cqh">' +
-      '<h2 class="cqh-t">' +
-        esc(!S.s ? "커뮤니티 게시판" : (S.s === "all" ? "전체 글" : bname(S.s))) +
-      '</h2>' +
-      '<button type="button" class="btn btn-pt btn-sm cq-new">글쓰기</button>' +
-    '</div>';
+    /* ⚠️ 글쓰기 단추는 **찾는 칸과 같은 줄**입니다 (확정 시안 ⑩).
+       폰에서는 줄이 바뀌어 찾는 칸 아래에 섭니다 — 밀어서 찾는 자리에
+       두지 않습니다. */
+    return '<h2 class="cqh-t">' +
+      esc(!S.s ? "커뮤니티 게시판" : (S.s === "all" ? "전체 글" : bname(S.s))) +
+    '</h2>';
   }
   function zero(){
     /* ⚠️⚠️ 0건은 고장이 아닙니다 — 그리고 **막다른 길로 두지 않습니다**
        (절대 규칙 2). 지시서 §3 의 문구를 그대로 씁니다. */
-    return '<div class="none">' +
-      '<h3>아직 작성된 글이 없습니다. 첫 번째 이야기를 남겨보세요.</h3>' +
-      '<p>' + esc((S.s && S.s !== "all") ? bname(S.s) : "커뮤니티") + '에 올라온 글이 ' +
-      '<b>0건</b>입니다. 지어낸 글을 채우지 않습니다.</p>' +
-      '<button type="button" class="btn btn-pt cq-new">첫 글 작성하기</button>' +
+    return '<div class="none cqnone">' +
+      '<p class="cqnone-i">' + window.icon("chat") + '</p>' +
+      '<h3>아직 작성된 글이 없습니다</h3>' +
+      '<p>첫 번째로 골프 이야기를 남겨보세요. ' +
+      esc((S.s && S.s !== "all") ? bname(S.s) : "커뮤니티") + '에 올라온 글이 ' +
+      '<b>0건</b>이고, 지어낸 글을 채우지 않습니다.</p>' +
+      '<button type="button" class="btn btn-pt cq-new">첫 이야기 작성</button>' +
     '</div>';
   }
 
@@ -275,23 +301,34 @@
     return String(t || "").replace(/[*,()%]/g, " ").trim().slice(0, 40);
   }
   function searchBox(){
-    return '<form class="jform cqs" id="cqs">' +
-      '<div class="jrow cqs-r">' +
+    /* ⚠️⚠️ 시안 ⑩ 의 한 줄 — 찾는 칸이 넓게 깔리고 **오른쪽 끝에
+       글쓰기**입니다. 폰에서는 글쓰기가 아래로 내려갑니다(CSS).
+       ⚠️ 돋보기는 칸 **안쪽 왼쪽**이고 글자가 그 위에 겹치지 않게
+       `padding-left` 를 줍니다 (레슨 찾는 칸에서 겪은 특정도 자리). */
+    return '<div class="cqtb">' +
+      '<form class="cqs" id="cqs">' +
         '<label for="cq-q" class="sr-only">글 제목으로 찾기</label>' +
+        '<span class="cqs-i" aria-hidden="true">' + window.icon("search") + '</span>' +
         '<input id="cq-q" name="q" type="search" maxlength="40" ' +
-        'placeholder="글 제목으로 찾기" value="' + esc(S.q2 || "") + '">' +
+        'placeholder="커뮤니티 글 검색 (예: 아이언, 퍼팅, 라운드)" value="' +
+        esc(S.q2 || "") + '">' +
         '<button type="submit" class="btn btn-line btn-sm">찾기</button>' +
         (S.q2
           ? '<button type="button" class="btn btn-bad btn-sm cqs-x">조건 지우기</button>'
           : '') +
-      '</div>' +
-    '</form>';
+      '</form>' +
+      '<button type="button" class="btn btn-pt cq-new cqtb-new">' +
+        window.icon("chat") + '글쓰기</button>' +
+    '</div>';
   }
 
   function paintList(){
     list.innerHTML = bar() + head() + searchBox() +
       '<p class="cqz">불러오는 중입니다…</p>';
-    var qs = ["select=id,cat,title,who,named,created_at,answer_n,view_n,photo_n",
+    var qs = ["select=id,cat,title,who,named,created_at,answer_n,view_n," +
+              /* ⚠️ 0075 가 더한 칸 — 첫 사진 한 장입니다. 안 받으면
+                 글 스무 줄마다 사진을 따로 물어보게 됩니다(0068). */
+              "photo_n,thumb",
               "order=created_at.desc",
               "limit=" + String(PER), "offset=" + String(S.p * PER)];
     /* ⚠️⚠️ **쉼표로 여럿 받습니다** (2026-11-09 · 머리말 하위 메뉴).
@@ -359,7 +396,8 @@
     '</section>';
   }
   function paintHome(){
-    list.innerHTML = bar() + head() + '<p class="cqz">불러오는 중입니다…</p>';
+    list.innerHTML = bar() + head() +
+      '<p class="cqz">불러오는 중입니다…</p>';
     var bs = boards();
     return Promise.all(bs.map(function(b){
       return get("v_cq_public?select=id,cat,title,who,created_at" +
@@ -367,7 +405,7 @@
                  "&order=created_at.desc&limit=3", true)
         .then(function(r){ return { b:b, rows:r.rows, total:r.total }; });
     })).then(function(all){
-      list.innerHTML = bar() + head() +
+      list.innerHTML = bar() + head() + searchBox() +
         '<div class="cqg">' + all.map(bdBox).join("") + '</div>';
       bind();
     });
@@ -994,6 +1032,7 @@
       return;                       /* 빌드가 찍어 둔 글 그대로 */
     }
     A = a;
+    CONF = a.conf;
     readUrl();
     /* ⚠️⚠️ **버킷이 켜졌는지는 서버만 압니다** — 브라우저에 버킷 이름을
        내려보내지 않습니다. 못 물어봤으면 꺼진 것으로 두고(사진 칸을 안

@@ -3568,3 +3568,107 @@ picture{ display: contents; }
   border-radius:999px; background: var(--gold); color: var(--grn-deep);
   font-size:12.5px; font-weight:800; line-height:1;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   골프 커뮤니티 — 확정 시안 ⑩ (2026-11-12)
+
+   ⚠️⚠️ **게시판 탭은 접습니다**(`.cqb-c` 가 이미 `flex-wrap:wrap`).
+   시안은 탭이 여섯이라 한 줄에 들어가지만 저희는 **열둘 + 둘**이고,
+   가로로 미는 상자에 넣으면 "밀면 보이는 것은 보이는 것이 아닙니다"
+   (2026-11-04 에 머리말 메뉴로 겪은 자리). 그래서 줄이 바뀝니다.
+   ════════════════════════════════════════════════════════════════ */
+/* 두 칸 — 왼쪽 목록 · 오른쪽 안내 레일 */
+.cqw{ display:grid; grid-template-columns: minmax(0,1fr) 280px; gap:22px;
+      align-items:start; }
+/* ⚠️ 격자 칸은 제 내용만큼 벌어집니다 — `min-width:0` 이 없으면 긴
+   제목 하나가 화면을 가로로 밉니다 (2026-11-03 의 그 자리) */
+.cqw > *{ min-width:0; }
+.cqw-main{ display:flex; flex-direction:column; gap:14px; }
+@media (max-width: 1000px){
+  .cqw{ grid-template-columns: 1fr; }
+  /* ⚠️ 레일이 목록 **아래**로 내려갑니다 — 폰에서 위에 두면 글을 보러
+     오신 분이 안내문부터 밀어 내려야 합니다 */
+  .cqw-side{ order:2; }
+}
+
+/* 도구줄 — 찾는 칸이 넓게 깔리고 오른쪽 끝에 글쓰기 */
+.cqtb{ display:flex; gap:10px; align-items:stretch; flex-wrap:wrap; }
+.cqs{ position:relative; display:flex; gap:8px; flex:1 1 320px; min-width:0; }
+/* ⚠️⚠️ 돋보기는 칸 **안쪽**입니다 — `.cqs .cqs-i` 로 특정도를 올려
+   둡니다(레슨 찾는 칸에서 `.lsnf input[type="search"]` 가 이겨서 글자가
+   돋보기에 가렸던 그 자리). */
+.cqs .cqs-i{ position:absolute; left:13px; top:50%; transform:translateY(-50%);
+             color: var(--ink3); pointer-events:none; display:inline-flex; }
+.cqs input[type="search"]{ flex:1 1 auto; min-width:0; padding-left:40px; }
+.cqtb-new{ flex:0 0 auto; }
+@media (max-width: 560px){
+  /* 폰에서는 글쓰기가 한 줄을 통째로 — 손가락에 닿는 폭입니다 */
+  .cqtb-new{ flex:1 1 100%; justify-content:center; }
+}
+
+/* 글 한 줄 — 왼쪽 글 · 오른쪽 작은 사진 */
+.cql{ list-style:none; margin:0; padding:0; display:flex;
+      flex-direction:column; gap:10px; }
+.cqr{ display:flex; gap:14px; align-items:stretch;
+      background:#fff; border:1px solid var(--line);
+      border-radius: var(--r); padding:14px 16px; }
+.cqr-in{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:5px; }
+.cqr-top{ display:flex; gap:8px; align-items:center; margin:0; }
+.cqr-bd{ display:inline-flex; align-items:center; padding:3px 10px;
+         border-radius: var(--r-pill); background: var(--grn-soft);
+         color: var(--grn-text); font-size:12.5px; font-weight:700; }
+.cqr-pn{ font-size:12.5px; color: var(--ink3); }
+.cqr-t{ font-size:16.5px; font-weight:700; color: var(--ink);
+        line-height:1.4; word-break:keep-all; overflow-wrap:anywhere; }
+.cqr-m{ display:flex; flex-wrap:wrap; gap:4px 12px; margin:0;
+        font-size:13px; color: var(--ink3); }
+/* ⚠️ 사진이 **없으면 이 자리를 아예 안 냅니다**(빈 액자를 두지 않습니다) */
+.cqr-ph{ flex:0 0 auto; width:116px; height:84px; border-radius: var(--r-sm);
+         overflow:hidden; background: var(--bg-2); }
+.cqr-ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+@media (max-width: 460px){
+  .cqr{ padding:12px 13px; gap:11px; }
+  .cqr-ph{ width:86px; height:66px; }
+  .cqr-t{ font-size:15.5px; }
+}
+
+/* 오른쪽 안내 레일 */
+.cqa{ background:#fff; border:1px solid var(--line); border-radius: var(--r);
+      padding:16px 18px; }
+.cqa-h{ margin:0 0 12px; font-size:16.5px; }
+.cqa-card{ display:flex; gap:10px; align-items:center; margin:0 0 12px;
+           padding:16px 14px; border-radius: var(--r-sm);
+           background: var(--grn-soft); color: var(--grn-text);
+           font-size:15.5px; line-height:1.45; }
+.cqa-card .ic{ color: var(--grn); flex:0 0 auto; }
+.cqa-p{ margin:0; font-size:14px; color: var(--ink2); line-height:1.6; }
+
+/* 빈 상태 — 시안의 말풍선 */
+.cqnone-i{ margin:0 0 6px; color: var(--ink3); }
+.cqnone-i .ic{ width:40px; height:40px; }
+
+/* ════════════════════════════════════════════════════════════════
+   폰 바닥 메뉴 — 확정 시안 ⑤ ⑦ ⑧ ⑨ ⑩
+   ⚠️⚠️⚠️ **네 칸이 전부 실제 주소**입니다 — 「채팅」은 안 넣습니다
+   (그 기능이 없습니다 · 절대 규칙 5). 「등록」은 분류마다 다른 자리로
+   가고, 그 자리는 **설정이 없어도 비어 있지 않습니다**(`#lsbox` 에서
+   겪은 자리 — 빈 칸으로 보내면 눌러도 아무 일이 안 납니다).
+   ⚠️⚠️ 바닥에 띠를 깔면 **푸터 글이 가려집니다** — `body` 에 그만큼
+   아래 여백을 주고 아이폰의 안전영역도 더합니다.
+   ⚠️ PC 에서는 아예 안 그립니다(`display:none`).
+   ════════════════════════════════════════════════════════════════ */
+.cqnav{ display:none; }
+@media (max-width: 760px){
+  .cqnav{ display:grid; grid-template-columns: repeat(4, 1fr);
+          position:fixed; left:0; right:0; bottom:0; z-index:90;
+          background:#fff; border-top:1px solid var(--line);
+          padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .cqnav a{ display:flex; flex-direction:column; align-items:center;
+            justify-content:center; gap:3px; min-height:56px;
+            font-size:12px; color: var(--ink2); }
+  .cqnav a .ic{ color: var(--ink3); }
+  .cqnav .cqnav-on{ color: var(--grn-text); font-weight:700; }
+  .cqnav .cqnav-on .ic{ color: var(--grn); }
+  /* ⚠️ 띠 높이 + 안전영역만큼 바닥을 띄웁니다 */
+  body.has-botnav{ padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
+}

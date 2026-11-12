@@ -723,7 +723,7 @@ const BOXES = {
      알았습니다. `pages/my.js` 에서 세어 고쳤습니다. */
   /* ⚠️⚠️ 게시판(0059)도 **설정이 있어야 열립니다** — `check-screens` 는
      빈 상자만 봅니다. 모아보기 · 글 하나를 여기서 찍습니다. */
-  "/cat/community": [["board", "#cqlist"]],
+  "/cat/community": [["board", ".cqw"]],
   "/my": [["me", "#mybox"], ["notice", "#noticebox"], ["req", "#reqbox"],
           ["join", "#joinmine"], ["cq", "#mycq"], ["job", "#jobmine"],
           /* ⚠️ 0056 의 내 중고 매물 (js/mylisting.js) */

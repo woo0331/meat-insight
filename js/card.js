@@ -55,6 +55,15 @@
     var meta  = [];
     if(regs.length)  meta.push(regs.join(" · "));
     if(scale)        meta.push(scale);
+    /* ⚠️⚠️ 0074 — 연습장 시설 속성 · 이용 시간. **업체가 적은 것만** 냅니다.
+       안 적은 업체는 이 줄이 **아예 없습니다**(「정보 없음」을 안 찍습니다 ·
+       절대 규칙 2). 연습장이 아닌 업체는 그 칸이 비어 있으므로 저절로
+       빠집니다 — 분류로 가르지 않습니다.
+       ⚠️ 모르는 키는 `amRangeOptsOf()` 가 **그대로** 냅니다(이름을
+       지어내지 않습니다). */
+    var ropts = window.amRangeOptsOf ? window.amRangeOptsOf(p) : [];
+    if(ropts.length) meta.push(ropts.join(" · "));
+    if(p.open_hours) meta.push(String(p.open_hours));
     /* ⚠️⚠️ **센 값입니다** — 후기 줄에서 amRating() 이 셉니다. 0건이면
        null 이고, 그때는 **이 줄째 빠집니다** (절대 규칙 1 · 2).
        ⚠️ 카드에 "후기 0건" 을 찍으면 새로 입점한 업체가 전부 나쁜 업체로

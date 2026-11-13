@@ -4556,17 +4556,23 @@ picture{ display: contents; }
    ⚠️ `.lstab`(물건 묶음)과 **이름을 갈라 둡니다** — 한 화면에 둘이 같이
    서는데 모양이 다릅니다(이쪽은 밑줄 탭 · 저쪽은 알약). 같은 이름을 두
    자리에 쓰면 한쪽을 고치는 날 둘이 같이 바뀝니다. */
+/* ⚠️⚠️ **시안의 탭은 칸이 나뉘어진 단추 둘**입니다(밑줄이
+   아닙니다) — 켜진 칸은 딥그린 면에 흰 글자입니다. 묶음
+   탭(`.lstab-i`) · 인력 탭(`.jbtab-a`) · 피팅 탭(`.fit-tab-a`)과 **같은
+   결**이라 열 화면이 한 모양으로 서니다.
+   ⚠️ 이름은 갈라 둡니다 — 중고 화면에는 갈래 탭(`.lsmode`)과
+   묶음 탭(`.lstab`)이 **한 화면에 둘 다** 서서, 같은 이름을 쓰면
+   한쪽을 고치는 날 둘이 같이 바뀝니다. */
 .lsmode-sec{ padding-block:0; }
-.lsmode{ display:flex; gap:8px; border-bottom:1.6px solid var(--line);
-  margin-top:18px; }
+.lsmode{ display:flex; flex-wrap:wrap; gap:8px; margin:18px 0 0; }
 .lsmode-i{ display:inline-flex; align-items:center; justify-content:center;
-  min-height:48px; padding:0 20px; font-size:15.5px; font-weight:700;
-  color:var(--ink2); text-decoration:none;
-  border:1.6px solid transparent; border-bottom:0;
-  border-radius:10px 10px 0 0; margin-bottom:-1.6px; }
-.lsmode-i:hover{ color:var(--ink); }
-.lsmode-i.on{ color:var(--grn-text); background:#fff;
-  border-color:var(--line); }
+  min-height:46px; padding:0 20px; border-radius:var(--r-pill);
+  font-size:15.5px; font-weight:700; text-decoration:none;
+  color:var(--ink); background:#fff; border:1.5px solid var(--line); }
+.lsmode-i:hover{ border-color:var(--grn-deep); }
+/* ⚠️ 켜진 탭은 **면**입니다 — 딥그린에 흰 글자가 맞습니다 */
+.lsmode-i.on{ background:var(--grn-deep); border-color:var(--grn-deep);
+  color:#fff; }
 @media (max-width:560px){
   .lsmode-i{ flex:1 1 0; min-width:0; padding:0 10px; font-size:14.5px; }
 }
@@ -4592,7 +4598,11 @@ picture{ display: contents; }
 .tfc-m{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px;
   margin:2px 0 0; font-size:14px; color:var(--ink2); }
 .tfc-pv{ font-weight:700; color:var(--ink); }
-.tfc-tel{ color:var(--grn-text); font-weight:700; }
+/* ⚠️ 누르는 것은 **40px 이상**입니다(손님이 40~60대입니다) —
+   옆 `.tf-tel` 에는 있던 줄을 새 카드에 안 옮겨 `test-desk` 의 폰 폭 셋이
+   세 건을 잡았습니다. */
+.tfc-tel{ display:inline-flex; align-items:center; min-height:40px;
+  color:var(--grn-text); font-weight:700; }
 .tfc-note{ margin:4px 0 0; font-size:14px; color:var(--ink2); }
 .tfc-r{ display:grid; gap:6px; justify-items:end; align-content:start;
   text-align:right; }
@@ -4663,15 +4673,16 @@ picture{ display: contents; }
    ⚠️⚠️ 「내 조인」은 **이미 있는 자리**(`/my` 의 `#joinmine`)로 갑니다 —
    같은 목록을 두 곳에 그리면 한쪽만 고치는 날 둘이 다른 말을 합니다.
    ⚠️ 그래서 **링크**입니다(탭처럼 보이지만 가는 자리가 다릅니다). */
-.jntab{ display:flex; gap:8px; border-bottom:1.6px solid var(--line);
-  margin:0 0 16px; }
+/* ⚠️ 시안 ② 의 탭도 **칸이 나뉘어진 단추 둘**입니다 —
+   중고 ③ · 인력 ⑨ · 피팅 ⑦ 과 같은 결로 둡니다. */
+.jntab{ display:flex; flex-wrap:wrap; gap:8px; margin:0 0 16px; }
 .jntab-i{ display:inline-flex; align-items:center; justify-content:center;
-  min-height:46px; padding:0 18px; font-size:15px; font-weight:700;
-  color:var(--ink2); text-decoration:none;
-  border:1.6px solid transparent; border-bottom:0;
-  border-radius:10px 10px 0 0; margin-bottom:-1.6px; }
-.jntab-i:hover{ color:var(--ink); }
-.jntab-i.on{ color:var(--grn-text); background:#fff; border-color:var(--line); }
+  min-height:46px; padding:0 20px; border-radius:var(--r-pill);
+  font-size:15px; font-weight:700; text-decoration:none;
+  color:var(--ink); background:#fff; border:1.5px solid var(--line); }
+.jntab-i:hover{ border-color:var(--grn-deep); }
+.jntab-i.on{ background:var(--grn-deep); border-color:var(--grn-deep);
+  color:#fff; }
 @media (max-width:560px){
   .jntab-i{ flex:1 1 0; min-width:0; padding:0 8px; font-size:14.5px; }
 }

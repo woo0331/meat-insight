@@ -490,7 +490,12 @@
     if(!bx) return;
     if(bx.innerHTML.trim()){ bx.innerHTML = ""; return; }
     /* 그 줄의 자료로 양식을 엽니다 (상호를 보여 주어야 하므로) */
-    var name = li.querySelector(".tf-pv");
+    /* ⚠️⚠️⚠️ **카드를 바꾸면 그 카드를 집는 자리도 같이** —
+       확정 시안 ① 로 바꾸면서 상호 칸이 `.tf-pv` → `.tfc-pv` 가 됐는데
+       여기를 안 고쳐서 **동의 문구의 상호가 빈 글자**가 됐습니다 — 그러면
+       「　에 성함과 연락처를 넘기는 데 동의」가 되어 **누구에게 주는지가 안
+       적힐 동의**입니다(제17조 제2항). 검사가 잡았습니다. */
+    var name = li.querySelector(".tfc-pv");
     var left = /남은 자리 (\d+)/.exec(li.textContent || "");
     bx.innerHTML = bookForm({
       provider_name: name ? name.textContent : "",

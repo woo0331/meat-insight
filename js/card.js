@@ -409,6 +409,47 @@
     }).join("") + '</ul>';
   };
 
+
+  /* ── 골프용품 마켓 상품 카드 (확정 시안 ⑥ · 2026-11-13) ──────────
+     ⚠️⚠️⚠️ **빌드와 브라우저가 같은 함수를 부릅니다** — 두 벌로 적으면
+       거르개를 누르는 순간 카드가 조용히 달라지고, 그려진 화면만 보는
+       검사는 영원히 통과합니다(`amCard` 에서 세운 규칙).
+     ⚠️⚠️ **사진을 안 깝니다** — `provider_price` 에 사진 칸이 없습니다.
+       분류 사진이나 남의 사진을 깔면 그 상품인 것처럼 보입니다
+       (절대 규칙 1 · 업체 카드가 0장일 때 아이콘 타일로 돌아가는 그
+       규칙). 시안의 상품 사진 여덟 장은 예시 데이터입니다.
+     ⚠️ 「상품 상세」는 `/pro/<업체>` 입니다 — 상품마다 주소를 따로 내면
+       같은 내용이 두 주소로 나갑니다. */
+  window.amMkCard = function(it){
+    var e = window.esc, I = window.icon;
+    var sub = window.amSub ? window.amSub("market", it.sub) : null;
+    var subName = (sub && sub.item && sub.item.name) || "";
+    var url = window.amProviderUrl
+      ? window.amProviderUrl({ id: it.pid }) : ("/pro/" + it.pid);
+    return '<li class="mkc">' +
+      '<span class="mkc-ph" aria-hidden="true">' + I("bag", 30) + '</span>' +
+      '<div class="mkc-b">' +
+        (subName ? '<p class="mkc-s">' + e(subName) + '</p>' : "") +
+        '<h3 class="mkc-n">' + e(it.label) + '</h3>' +
+        '<p class="mkc-st">' + I("store", 14) + e(it.store) + '</p>' +
+        '<p class="mkc-p"><b>' + e(window.won(it.amount)) + '원</b>' +
+          (it.unit ? '<i>/ ' + e(it.unit) + '</i>' : "") + '</p>' +
+        /* ⚠️ 비고(「부품비 별도」 같은 줄)는 **업체가 적은 값**입니다 —
+           비면 줄째 빠집니다(우리가 지어 적지 않습니다). */
+        (it.note ? '<p class="mkc-note">' + e(it.note) + '</p>' : "") +
+      '</div>' +
+      '<p class="mkc-act">' +
+        '<a class="btn btn-line btn-sm" href="' + e(url) + '">상품 상세</a>' +
+      '</p>' +
+    '</li>';
+  };
+
+  window.amMkGrid = function(list){
+    return '<ul class="mkg">' + (list || []).map(function(it){
+      return window.amMkCard(it);
+    }).join("") + '</ul>';
+  };
+
   window.amCardGrid = function(list, opt){
     return '<div class="pvs">' + (list || []).map(function(p){
       return window.amCard(p, opt);

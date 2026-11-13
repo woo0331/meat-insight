@@ -38,6 +38,10 @@ global.window = {};
  /* 골프 레슨 (2026-11-10) — ⚠️⚠️ **card.js 보다 먼저** 싣습니다:
     거기서 가격대 · 차례 · 카테고리 카드를 읽습니다. 안 실으면
     그 고르개들이 **조용히 빈 칸**으로 찍힙니다(에러 0줄). */
+ /* 골프용품 마켓 (확정 시안 ⑥ · 2026-11-13) — ⚠️⚠️ **card.js 보다
+    먼저** 싣습니다: 거기서 상품 카드가 하위 이름을 읽습니다. 안 실으면
+    `amMkItems` 가 없어 **빌드가 그 자리에서 멈춥니다**. */
+ "js/data/market.js",
  "js/data/lesson.js","js/card.js",
  "js/data/legal-terms.js","js/data/legal-privacy.js"]
   .forEach(function(f){ require("./" + f); });

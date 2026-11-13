@@ -733,12 +733,15 @@ function fitHead(c){
    ⚠️ 칸마다 **id 가 하나씩** 필요합니다(`<label for>`). 이름에 분류를
    안 섞어도 되는 까닭은 이 화면에 레일이 하나뿐이기 때문입니다 —
    둘이 되는 날 같은 id 가 여럿이 됩니다(0046 의 동의 상자 자리). */
-function fitPick(name, title, ic, items, allName){
+function fitPick(name, title, ic, items, allName, pfx){
+  /* ⚠️ `pfx` 는 id 앞가지입니다 — 레일을 두 화면이 나눠 쓰므로
+     비워 두면 같은 id 가 둘이 됩니다(0046 의 동의 상자 자리). */
+  pfx = pfx || "fit";
   var rows = [{ key:"", name:allName }].concat(items || []);
   return '<fieldset class="fit-rail-g fit-rail-g-' + esc(name) + '">' +
     '<legend class="fit-rail-h">' + icon(ic, 15) + esc(title) + '</legend>' +
     rows.map(function(x){
-      var id = "fit-" + name + "-" + (x.key || "all");
+      var id = pfx + "-" + name + "-" + (x.key || "all");
       /* ⚠️⚠️⚠️ **네모 칸을 우리가 그립니다**(`.fit-ck-b`) — 브라우저가
          그리는 동그라미는 18px 라 `check-screens` 의 「누름 40px」에서
          폭마다 떨어집니다(실제로 다섯 폭에서 25건씩 잡혔습니다). 손님이
@@ -835,6 +838,128 @@ function fitNone(){
     '<div class="none-b">' +
       '<a class="btn btn-pri" href="/join">' + icon("store", 18) + '업체 등록 신청</a>' +
       '<a class="btn btn-line" href="/match?cat=fitting">상담 조건 남기기</a>' +
+    '</div>' +
+  '</div>';
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   골프용품 마켓 (확정 시안 ⑥ · 2026-11-13)
+   ⚠️⚠️⚠️ **상품은 `provider_price`(0042)에서 옵니다** — 왜 새 표를 안
+     만들었는지는 `js/data/market.js` 머리말에 있습니다.
+   ⚠️⚠️ 레일 · 검색 · 세는 줄은 **피팅(⑦)과 같은 위젯**이라 CSS 를
+     나눠 씁니다(`.fitw` · `.fit-rail` · `.fit-ck` …) — 0068 의 레일을
+     구합니다 글이 그대로 쓰고 **id 만 가른** 그 자리와 같습니다. 여기도
+     id 는 `mk-` 로 가릅니다. 상품 카드만 모양이 달라 `.mkc*` 입니다.
+   ⚠️ 시안의 「최신 등록순」은 안 냅니다 — 올린 날 칸이 공개 보기에
+     없습니다(골라도 안 바뀌는 칸 · 절대 규칙 5).
+   ════════════════════════════════════════════════════════════════════ */
+function marketHead(c){
+  return '<section class="sec mk-hd"><div class="wrap">' +
+    crumbs(c) +
+    '<div class="mk-hd-r">' +
+      '<div>' +
+        '<h1 class="mk-t">' + icon("bag", 30) + esc(c.name) + '</h1>' +
+        '<p class="mk-sub">클럽부터 필수 용품까지, 한곳에서</p>' +
+      '</div>' +
+      /* ⚠️ 「상품 · 스토어 등록」은 **입점 신청**으로 갑니다 — 상품을
+         올리는 자리는 입점한 업체의 `/desk` 안이라, 입점 전에 상품
+         양식으로 보내면 빈 곳으로 보내는 것입니다(절대 규칙 2). */
+      '<a class="btn btn-deep mk-cta" href="/join">' + icon("store", 19) +
+        '상품 · 스토어 등록</a>' +
+    '</div>' +
+  '</div></section>';
+}
+
+function mkTabs(c, tab){
+  var T = W.AM_MK_TAB || [];
+  return '<nav class="fit-tab mk-tab" aria-label="마켓 보기">' +
+    '<ul class="chips">' + T.map(function(t){
+      var on = (t.key === tab);
+      return '<li><a class="fit-tab-a' + (on ? " on" : "") +
+        '" data-mktab="' + esc(t.key) + '" href="' +
+        esc(W.amCatUrl(c) + (t.key === "item" ? "" : "?t=" + t.key)) + '"' +
+        (on ? ' aria-current="true"' : '') + '>' + esc(t.name) + '</a></li>';
+    }).join("") + '</ul></nav>';
+}
+
+/* ⚠️⚠️ 빌드는 **첫 화면(전체 상품 · 조건 없음)** 만 찍습니다 — 크롤러와
+   자바스크립트가 꺼진 분이 읽을 몫이고, 거른 뒤는 `js/market.js` 가
+   같은 함수(`amMkGrid`)로 다시 그립니다(두 벌로 적으면 거르개를 누르는
+   순간 카드가 조용히 달라집니다 · `js/card.js` 와 같은 규칙). */
+function marketSec(c, list){
+  var items  = W.amMkItems(list);
+  var subs   = ((c.items) || []).map(function(s){ return { key:s.key, name:s.name }; });
+  var brands = W.amMkBrands(list);
+  var SRT    = W.AM_MK_SORT || [];
+  return '<section class="sec sec-alt mk-sec"><div class="wrap">' +
+    '<h2 class="sr-only">골프용품 마켓 상품 찾기</h2>' +
+    mkTabs(c, "item") +
+    '<form class="fitw mkw" id="mkform" method="get" action="' +
+      esc(W.amCatUrl(c)) + '">' +
+      '<aside class="fit-rail" aria-label="상세 조건">' +
+        fitPick("s", "카테고리", "cart", subs, "전체", "mk") +
+        (brands.length
+          ? fitPick("b", "브랜드", "store",
+                    brands.map(function(b){ return { key:b, name:b }; }),
+                    "전체", "mk")
+          /* ⚠️ 브랜드를 올린 업체가 0곳이면 그 묶음을 **줄째 뺍니다** —
+             빈 고르개는 눌러도 아무 일이 안 나는 칸입니다. */
+          : "") +
+        '<fieldset class="fit-rail-g mk-rail-p">' +
+          '<legend class="fit-rail-h">' + icon("coin", 15) + '가격</legend>' +
+          '<div class="mk-pr">' +
+            '<label class="sr-only" for="mk-lo">최저가</label>' +
+            '<input id="mk-lo" name="lo" type="number" min="0" step="1000" ' +
+              'inputmode="numeric" placeholder="최저가">' +
+            '<span aria-hidden="true">~</span>' +
+            '<label class="sr-only" for="mk-hi">최고가</label>' +
+            '<input id="mk-hi" name="hi" type="number" min="0" step="1000" ' +
+              'inputmode="numeric" placeholder="최고가">' +
+          '</div>' +
+        '</fieldset>' +
+        '<a class="fit-rail-x" href="' + esc(W.amCatUrl(c)) + '">' +
+          icon("arrow", 15) + '조건 모두 지우기</a>' +
+      '</aside>' +
+      '<div class="fit-main">' +
+        '<div class="fitf-q">' +
+          '<label for="mk-q" class="sr-only">상품이나 스토어로 찾기</label>' +
+          '<span class="fitf-i" aria-hidden="true">' + icon("search", 18) + '</span>' +
+          '<input id="mk-q" name="q" type="search" maxlength="40" ' +
+            'placeholder="골프용품을 검색해 보세요 (예: 골프공, 골프화)">' +
+          '<button type="submit" class="btn btn-pri">검색</button>' +
+        '</div>' +
+        '<div class="fit-cnt">' +
+          '<p id="mkcnt">전체 상품 <b>' + W.won(items.length) + '건</b>' +
+            '<span class="fit-note">입점 업체가 직접 올린 값입니다. ' +
+            '골프올인원은 통신판매중개자이며 거래 당사자가 아닙니다.</span></p>' +
+          '<label class="sr-only" for="mk-o">차례</label>' +
+          '<select id="mk-o" name="o">' +
+            '<option value="">가나다순</option>' +
+            SRT.map(function(x){
+              return '<option value="' + esc(x.key) + '">' + esc(x.name) +
+                '</option>';
+            }).join("") +
+          '</select>' +
+        '</div>' +
+        '<div id="mklist">' +
+          (items.length ? W.amMkGrid(items) : mkNone()) +
+        '</div>' +
+      '</div>' +
+    '</form>' +
+  '</div></section>';
+}
+
+/* ⚠️⚠️ 0건은 고장이 아닙니다 — 시안 ⑥ 의 「등록 전 화면」 문구를 그대로
+   쓰고 막다른 길로 두지 않습니다(절대 규칙 2). */
+function mkNone(){
+  return '<div class="none fit-none">' +
+    '<p class="fit-none-i">' + icon("bag", 34) + '</p>' +
+    '<h3>아직 등록된 상품이 없습니다</h3>' +
+    '<p>지금 입점하고 골프용품을 판매해 보세요.</p>' +
+    '<div class="none-b">' +
+      '<a class="btn btn-pri" href="/join">' + icon("store", 18) +
+        '판매업체 입점 신청</a>' +
+      '<a class="btn btn-line" href="/match?cat=market">원하는 용품 요청하기</a>' +
     '</div>' +
   '</div>';
 }
@@ -975,6 +1100,8 @@ exports.build = function(c){
     : (c.key === "travel") ? tripHead(c)
     /* ⚠️ 인력 · 비즈니스도 **머리가 다릅니다** (확정 시안 ⑨) */
     : (c.key === "career") ? careerHead(c)
+    /* ⚠️ 골프용품 마켓 — 확정 시안 ⑥ */
+    : (c.key === "market") ? marketHead(c)
     : '<section class="pghd"><div class="wrap">' +
     crumbs(c) +
     '<h1>' + esc(c.name) + '</h1>' +
@@ -1376,6 +1503,13 @@ exports.build = function(c){
     ? fitSec(c, list, items) + pvBlock(c, k, list, pvItems, { quiet:true, noChips:true })
     /* ⚠️⚠️ 여행은 **상품이 먼저**입니다 — 시안의 알맹이고,
        여행사 목록은 그 아래입니다(하위 칩과 매칭 요청은 그대로 남깁니다). */
+    /* ⚠️⚠️ 마켓은 **상품이 먼저**입니다 (확정 시안 ⑥) — 업체 목록은
+       「입점 스토어」 탭 안에 있고, 하위 칩과 매칭 요청은 `pvBlock` 이
+       그대로 냅니다. ⚠️ `noChips` 가 아닙니다 — 레일의 「카테고리」는
+       **상품을 좁히는 칸**이고 하위 칩은 **업체찾기로 가는 길**이라
+       가는 자리가 다릅니다(둘을 하나로 보면 길이 하나 없어집니다). */
+    : (c.key === "market")
+    ? marketSec(c, list) + pvBlock(c, k, list, pvItems, { quiet:true })
     : (c.key === "travel")
     ? tripSec() + pvBlock(c, k, list, pvItems)
     : pvBlock(c, k, list, pvItems);
@@ -1532,6 +1666,13 @@ exports.build = function(c){
     /* ⚠️⚠️ 여행도 **말을 읽는 파일을 싣는 것까지가 기능**입니다 —
        `data/trip.js`(값 · 일정 말)가 안 실리면 값이 **조용히 빈 글자**가
        됩니다. 지역 목록(`data/regions.js`)은 위에서 이미 실습니다. */
+    /* ⚠️⚠️ 마켓도 **상품 카드를 브라우저가 다시 그립니다** — `js/card.js`
+       를 안 실으면 `amMkGrid` 가 없어 거르개를 누르는 순간 목록이 조용히
+       비어 버립니다(에러 0줄). `data/market.js` 는 탭 · 차례 · 상품을
+       펴 놓는 자리라 **그것까지 싣는 것이 기능**입니다. */
+    .concat(c.key === "market"
+      ? ["/js/data/market.js", "/js/card.js", "/js/market.js"]
+      : [])
     .concat(c.key === "travel"
       ? ["/js/data/trip.js", "/js/trip.js"]
       : []),
@@ -1550,7 +1691,7 @@ exports.build = function(c){
              없습니다」와 등록 길을 냅니다. 뒤로 미루면 시안에서 가장
              중요한 구간이 「이런 걸 찾고 있어요」 아래로 내려갑니다. */
           ((list.length || c.key === "lesson" || c.key === "range" ||
-            c.key === "fitting" || c.key === "travel")
+            c.key === "fitting" || c.key === "travel" || c.key === "market")
                        ? (pvSec + teeSec + ownSec)
                        : (ownSec + teeSec + pvSec)) +
           (c.key === "used" ? safeGuide() : "") +

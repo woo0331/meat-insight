@@ -4414,3 +4414,64 @@ picture{ display: contents; }
 /* ⚠️ 묶음 줄 아래의 하위 칩은 **한 단계 작게** 둡니다 — 같은 무게로
    두면 같은 것을 두 번 묻는 것으로 읽힙니다(0069 의 탭 · 거르개 자리). */
 .fit-tab .chips-sub{ margin:0 }
+
+/* ════════════════════════════════════════════════════════════════════
+   골프용품 마켓 (확정 시안 ⑥ · 2026-11-13)
+   ⚠️⚠️ 레일 · 검색 · 세는 줄은 **피팅(⑦)과 같은 위젯**이라 `.fitw` ·
+     `.fit-rail` · `.fit-ck` 를 그대로 씁니다(0068 의 레일을 구합니다
+     글이 그대로 쓴 그 자리) — 여기서는 **머리 · 탭 · 상품 카드**만
+     적습니다.
+   ⚠️ 새 클래스에는 **CSS 를 같이 적습니다** — 없는 이름은 조용히 아무
+     모양도 안 입고 `check-safe` 는 변수만 봅니다(`/membership` 에서
+     겪은 자리).
+   ════════════════════════════════════════════════════════════════════ */
+.mk-hd{ padding-block:26px 18px; }
+.mk-hd-r{ display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap;
+  justify-content:space-between; }
+.mk-hd-r > *{ min-width:0; }
+.mk-t{ display:flex; align-items:center; gap:9px; margin:0 0 4px;
+  color:var(--grn-text); }
+.mk-sub{ margin:0; color:var(--ink2); }
+.mk-cta{ flex:none; }
+.mk-tab{ margin:0 0 16px; }
+/* 가격 두 칸 — ⚠️ 입력 칸에는 `min-height` 가 저절로 안 붙습니다 */
+.mk-pr{ display:flex; align-items:center; gap:6px; }
+.mk-pr > span{ color:var(--ink2); flex:none; }
+.mk-pr input{ flex:1 1 0; min-width:0; min-height:40px; padding:6px 10px;
+  border:1.5px solid var(--line); border-radius:10px; font-size:14px;
+  font-family:inherit; background:#fff; color:var(--ink); }
+.mk-pr input:focus{ outline:2px solid var(--grn); outline-offset:1px; }
+
+/* 상품 카드 — 시안은 PC 4열입니다 (`auto-fill` 을 안 씁니다 — 칸 수가
+   폭마다 달라지면 카드가 들쭉날쭉합니다) */
+.mkg{ display:grid; grid-template-columns:repeat(4, minmax(0, 1fr));
+  gap:14px; list-style:none; margin:0; padding:0; }
+.mkc{ display:flex; flex-direction:column; border:1.4px solid var(--line);
+  border-radius:14px; background:#fff; overflow:hidden; }
+/* ⚠️⚠️ **사진이 아니라 아이콘 타일입니다** — `provider_price` 에 사진
+   칸이 없습니다. 분류 사진을 깔면 그 상품인 것처럼 보입니다
+   (절대 규칙 1 · 업체 카드가 0장일 때와 같은 규칙). */
+.mkc-ph{ display:flex; align-items:center; justify-content:center;
+  aspect-ratio:1 / 1; background:var(--grn-soft); color:var(--grn-text); }
+.mkc-b{ padding:11px 13px; flex:1 1 auto; }
+.mkc-s{ margin:0 0 4px; font-size:12.5px; color:var(--ink2); }
+.mkc-n{ margin:0 0 6px; font-size:15.5px; line-height:1.35; color:var(--ink); }
+.mkc-st{ display:flex; align-items:center; gap:4px; margin:0 0 7px;
+  color:var(--ink2); font-size:13px; }
+.mkc-p{ display:flex; align-items:baseline; gap:5px; flex-wrap:wrap;
+  margin:0 0 3px; }
+.mkc-p b{ color:var(--grn-text); font-size:17px; }
+.mkc-p i{ font-style:normal; color:var(--ink2); font-size:13px; }
+.mkc-note{ margin:0; color:var(--ink2); font-size:12.5px; }
+.mkc-act{ display:flex; margin:0; padding:0 13px 13px; }
+.mkc-act > *{ flex:1 1 0; min-width:0; justify-content:center; }
+
+@media (max-width:1000px){
+  .mkg{ grid-template-columns:repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width:700px){
+  /* ⚠️ 시안의 폰 화면은 **2열**입니다 */
+  .mkg{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:11px; }
+  .mk-hd-r{ align-items:stretch; }
+  .mk-cta{ width:100%; justify-content:center; }
+}

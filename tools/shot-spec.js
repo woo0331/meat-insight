@@ -38,17 +38,35 @@ const MARK = "AM_SHOT_SPEC_COPY";
 
 /* ── 아직 원본에 있으면, 사본을 떠서 거기서 다시 돕니다 ───────────── */
 if(!process.env[MARK]){
+  const REV = process.env.AM_SHOT_SPEC_REV || "";
   const dst = fs.mkdtempSync(path.join(os.tmpdir(), "shotspec-"));
-  console.log("저장소를 복사합니다 (원본은 건드리지 않습니다)");
-  console.log("  → " + dst);
-  /* ⚠️ `.git` 과 `node_modules` 는 뺍니다 — 떼어 와도 쓸 데가 없고
-     복사에 한참 걸립니다. */
-  const r = cp.spawnSync("sh", ["-c",
-    "cd " + JSON.stringify(ROOT) + " && tar -cf - " +
-    "--exclude=./.git --exclude=./node_modules . | " +
-    "( cd " + JSON.stringify(dst) + " && tar -xf - )"],
-    { stdio:"inherit" });
+  if(REV){
+    console.log("옛 커밋을 꺼냅니다 (작업 가지는 한 글자도 안 건드립니다)");
+    console.log("  " + REV + " → " + dst);
+  }else{
+    console.log("저장소를 복사합니다 (원본은 건드리지 않습니다)");
+    console.log("  → " + dst);
+  }
+  /* ⚠️⚠️⚠️ **옛 판을 찍을 때도 `git checkout` 을 쓰지 않습니다** —
+     작업 가지를 되돌리는 것이고, 검사가 돌고 있으면 그 중간 상태가
+     커밋에 박힙니다(2026-11-09 사고). `git archive` 는 **읽기만**
+     하므로 작업 폴더도 · HEAD 도 · 가지도 그대로입니다.
+     ⚠️⚠️ 찍는 도구 셋(`shot-spec` · `_serve` · `_stub`)만 **지금 판으로
+     덮습니다** — 비교하려는 것은 **화면 코드**이고, 찍는 자와 흉내
+     장치가 판마다 다르면 「같은 폭 · 같은 자료」가 깨집니다. */
+  const cmd = REV
+    ? "cd " + JSON.stringify(ROOT) + " && git archive " +
+      JSON.stringify(REV) + " | ( cd " + JSON.stringify(dst) + " && tar -xf - )"
+    : "cd " + JSON.stringify(ROOT) + " && tar -cf - " +
+      "--exclude=./.git --exclude=./node_modules . | " +
+      "( cd " + JSON.stringify(dst) + " && tar -xf - )";
+  const r = cp.spawnSync("sh", ["-c", cmd], { stdio:"inherit" });
   if(r.status !== 0){ console.error("❌ 복사하지 못했습니다"); process.exit(1); }
+  if(REV){
+    ["shot-spec.js", "_serve.js", "_stub.js"].forEach(function(f){
+      fs.copyFileSync(path.join(HERE, f), path.join(dst, "tools", f));
+    });
+  }
   const e = Object.assign({}, process.env);
   e[MARK] = "1";
   e.AM_SHOT_SPEC_OUT = process.env.AM_SHOT_SPEC_OUT ||
@@ -113,7 +131,51 @@ const PV = [
     prices:[{ sub:"ft-grip", label:"그립 교체", amount:12000, unit:"1개" }] },
   { id:"spec-ft-3", name:"(예시) 피팅샵 3",
     intro:"클럽 수리만 맡습니다. 택배로도 받습니다.",
-    regions:["busan"], subs:["ft-mend"], fit_ways:["ship"], scale:"small" }
+    regions:["busan"], subs:["ft-mend"], fit_ways:["ship"], scale:"small" },
+
+  /* ── 레슨 프로 (시안 ④) ─────────────────────────────────────────
+     ⚠️ 「프로」는 새 표가 아니라 **분류가 레슨인 업체**입니다(0071) —
+     그래서 씨앗도 `provider` 한 벌입니다. */
+  { id:"spec-ls-1", name:"(예시) 레슨 프로 1",
+    intro:"KPGA 투어 출신이고 초보 교정을 주로 합니다.",
+    regions:["seoul"], gu:["강남구"], subs:["ls-solo","ls-group","ls-field"],
+    kind:"biz", place_name:"(예시) 강남 골프아카데미",
+    lesson_goals:["beginner","swing","score"],
+    since:2014, consult_hours:"평일 10:00~21:00",
+    verified:{ brn:true, tel:true }, scale:"mid",
+    prices:[{ sub:"ls-solo", label:"1:1 레슨 8회권", amount:400000,
+              unit:"8회", note:"타석료 포함" },
+            { sub:"ls-group", label:"그룹 레슨 월 4회", amount:160000,
+              unit:"월" }] },
+  { id:"spec-ls-2", name:"(예시) 레슨 프로 2",
+    intro:"숏게임과 퍼팅만 가르칩니다.",
+    regions:["gyeonggi"], gu:["분당구"], subs:["ls-short","ls-point"],
+    kind:"person", lesson_goals:["short","score"],
+    since:2018, scale:"small",
+    prices:[{ sub:"ls-short", label:"숏게임 1회", amount:70000, unit:"1회" }] },
+  { id:"spec-ls-3", name:"(예시) 레슨 프로 3",
+    intro:"주니어 선수반을 맡습니다.",
+    regions:["incheon"], subs:["ls-junior"],
+    kind:"biz", lesson_goals:["junior"], scale:"small" },
+  /* ⚠️ 값을 **아직 안 올리신** 프로 — 가격대로 좁히면 빠지는 자리가
+     그림에 어떻게 보이는지 봐야 합니다. */
+  { id:"spec-ls-4", name:"(예시) 레슨 프로 4",
+    intro:"아직 레슨 가격을 안 올리신 프로입니다.",
+    regions:["busan"], subs:["ls-online"], scale:"small" },
+
+  /* ── 용품 마켓 (시안 ⑥) ────────────────────────────────────────── */
+  { id:"spec-mk-1", name:"(예시) 골프용품점 1",
+    intro:"클럽 · 볼 · 의류를 함께 팝니다.",
+    regions:["seoul"], gu:["송파구"], subs:["mk-club","mk-ball","mk-wear"],
+    since:2011, verified:{ brn:true }, scale:"big",
+    brands:["타이틀리스트","캘러웨이","핑"] },
+  { id:"spec-mk-2", name:"(예시) 골프용품점 2",
+    intro:"신발과 장갑 · 액세서리를 다룹니다.",
+    regions:["gyeonggi"], gu:["수원시"], subs:["mk-shoe","mk-acc"],
+    scale:"small" },
+  { id:"spec-mk-3", name:"(예시) 골프용품점 3",
+    intro:"연습용품과 대여를 합니다.",
+    regions:["busan"], subs:["mk-train","mk-rent"], scale:"small" }
 ];
 
 const RV = [
@@ -238,8 +300,124 @@ const TRIP = [
 ];
 const CUST = { id:"cc000000-0000-4000-8000-000000000001", role:"customer" };
 
+/* ── 부킹 (시안 ①) ────────────────────────────────────────────────
+   ⚠️ 칸 이름은 `v_teetime_open`(0060 · 0066)을 그대로 씁니다 —
+   `tools/test-desk.js` 의 TEE 와 **같은 꼴**입니다. */
+function KST(d){
+  const t = new Date(Date.now() + d * 86400000 + 9 * 3600000);
+  return t.toISOString().slice(0, 10);
+}
+const TEE = [
+  { id:"dddddddd-0060-4000-8000-000000000001", provider_id:"spec-rg-1",
+    provider_name:"(예시) 부킹 대행 1", kind:"booking", region:"gyeonggi",
+    course:"(예시) 그린밸리CC 신코스", play_at:KST(1), tee_at:"07:10:00",
+    holes:18, slots:4, green_fee:150000, tel:"031-000-0000",
+    note:"카트비 별도", left_n:2 },
+  { id:"dddddddd-0060-4000-8000-000000000002", provider_id:"spec-rg-2",
+    provider_name:"(예시) 부킹 대행 2", kind:"booking", region:"seoul",
+    course:"(예시) 한강CC", play_at:KST(2), tee_at:"13:40:00",
+    holes:18, slots:2, green_fee:120000, tel:null, note:null, left_n:1 },
+  /* ⚠️ 시각을 **아직 안 정한** 자리 — 시간대로 좁히면 빠집니다(0060).
+     그 사실을 화면이 그 자리에서 말하는지 그림으로 봐야 합니다. */
+  { id:"dddddddd-0060-4000-8000-000000000003", provider_id:"spec-rg-1",
+    provider_name:"(예시) 부킹 대행 1", kind:"booking", region:"jeju",
+    course:"(예시) 제주 오션CC", play_at:KST(3), tee_at:null,
+    holes:null, slots:3, green_fee:0, tel:null, note:null, left_n:3 }
+];
+const TCNT = [
+  { region:"gyeonggi", play_at:KST(1), n:3 },
+  { region:"seoul",    play_at:KST(2), n:2 },
+  { region:"jeju",     play_at:KST(3), n:1 }
+];
+const JCNT = [
+  { region:"seoul",    play_at:KST(1), n:2 },
+  { region:"gangwon",  play_at:KST(2), n:1 }
+];
+
+/* ── 조인 (시안 ②) ────────────────────────────────────────────────
+   ⚠️ `v_join_open` 에는 연락처 칸이 **아예 없습니다**(0046) — 그래서
+   씨앗에도 없습니다. */
+const JROOM = [
+  { id:"eeeeeeee-0046-4000-8000-000000000001",
+    title:"(예시) 주말 아침 같이 치실 분 구합니다",
+    body:"초보도 환영합니다. 편하게 치실 분이면 좋겠습니다.",
+    region:"seoul", play_at:KST(2), course:"(예시) 한강CC",
+    booked:true, tee:"아침", need:2, budget:150000, left_n:1 },
+  { id:"eeeeeeee-0046-4000-8000-000000000002",
+    title:"(예시) 평일 조인 한 자리",
+    body:"카트비는 나눠 냅니다.", region:"gangwon", play_at:KST(4),
+    course:"(예시) 설악CC", booked:false, tee:"오전", need:1,
+    budget:0, left_n:1 }
+];
+
+/* ── 중고장터 (시안 ③) ────────────────────────────────────────────
+   ⚠️⚠️ 키는 **DB 가 받는 값**이어야 합니다 — 물건 종류는 `us-*`
+   (`js/data/catalog.js` · 열다섯)이고 상태는 0069 의 넷입니다. */
+const LST = [
+  { id:"aaaaaaaa-0069-4000-8000-000000000001", sub:"us-driver",
+    region:"seoul", ship:false,
+    title:"(예시) 드라이버 10.5도 팝니다 (헤드커버 포함)",
+    body:"2년 쓴 드라이버입니다.", price:350000, cond:"good", ask_n:0,
+    brand:"타이틀리스트", model:"(예시) 스텔스2 10.5도", state:"open",
+    created_at:new Date(Date.now() - 3600000).toISOString(),
+    seller:"김**", photo_n:0, thumb:null },
+  /* ⚠️ **0 원은 무료로 나눔**입니다 — 빈 값과 뜻이 다릅니다(0056). */
+  { id:"aaaaaaaa-0069-4000-8000-000000000002", sub:"us-iron",
+    region:"gyeonggi", ship:true,
+    title:"(예시) 연습용 아이언 무료로 나눔합니다",
+    body:"연습용입니다.", price:0, cond:"fair", ask_n:2,
+    brand:null, model:null, state:"open",
+    created_at:new Date(Date.now() - 86400000).toISOString(),
+    seller:"이**", photo_n:0, thumb:null },
+  { id:"aaaaaaaa-0069-4000-8000-000000000003", sub:"us-wedge",
+    region:"busan", ship:true,
+    title:"(예시) 웨지 52도 · 56도 두 자루",
+    body:"거의 안 썼습니다.", price:120000, cond:"like", ask_n:1,
+    brand:"오디세이", model:null, state:"reserved",
+    created_at:new Date(Date.now() - 2 * 86400000).toISOString(),
+    seller:"박**", photo_n:0, thumb:null },
+  { id:"aaaaaaaa-0069-4000-8000-000000000004", sub:"us-bag",
+    region:"incheon", ship:false,
+    title:"(예시) 캐디백 · 보스턴백 세트",
+    body:"한 시즌 썼습니다.", price:90000, cond:"good", ask_n:0,
+    brand:"기타", model:null, state:"done",
+    created_at:new Date(Date.now() - 5 * 86400000).toISOString(),
+    seller:"최**", photo_n:0, thumb:null }
+];
+
+/* ── 용품 마켓 (시안 ⑥) — 「구합니다 글」 ──────────────────────────
+   ⚠️⚠️⚠️ **가짜 자료도 그 화면의 분류여야 합니다**(`cat:"market"`) —
+   다른 분류 글을 꽂으면 하위가 **영문 키 그대로** 찍히고, 그것을 보고
+   멀쩡한 화면을 고치려 들게 됩니다. */
+const WT_MK = [
+  { id:"bb111111-0061-4000-8000-000000000001", cat:"market", sub:"mk-club",
+    region:"seoul", title:"(예시) 드라이버 10.5도 중고로 구합니다",
+    body:"상태 좋은 것으로 찾습니다.", budget:400000,
+    when_txt:"이번 달 안으로", created_at:"2026-11-07T01:00:00Z",
+    reply_n:2 },
+  { id:"bb222222-0061-4000-8000-000000000002", cat:"market", sub:"mk-shoe",
+    region:"gyeonggi", title:"(예시) 여성용 골프화 240 구합니다",
+    body:"브랜드는 상관없습니다.", budget:null, when_txt:null,
+    created_at:"2026-11-06T01:00:00Z", reply_n:0 },
+  /* ⚠️ **예산 0 은 "무료로 해 주실 분"** 입니다(0061). */
+  { id:"bb333333-0061-4000-8000-000000000003", cat:"market", sub:"mk-train",
+    region:"seoul", title:"(예시) 연습용 드라이버 무료로 주실 분",
+    body:"스크린 연습용으로 쓰려고 합니다.", budget:0, when_txt:null,
+    created_at:"2026-11-05T01:00:00Z", reply_n:1 }
+];
+
 const SCENES = [
+  ["01-booking",   "/cat/booking",   CUST,
+    { v_teetime_open:TEE, v_teetime_count:TCNT, v_join_count:JCNT }, {}, null],
+  ["02-matchup",   "/cat/matchup",   CUST,
+    { v_join_open:JROOM, v_teetime_count:TCNT, v_join_count:JCNT }, {}, null],
+  ["03-used",      "/cat/used",      CUST,
+    { v_listing_open:LST, v_listing_photo_public:[], v_listing_fav:[] },
+    {}, null],
+  ["04-lesson",    "/cat/lesson",    null, null, null, null],
   ["05-range",     "/cat/range",     null, null, null, null],
+  ["06-market",    "/cat/market",    CUST,
+    { v_wanted_open:WT_MK }, {}, null],
   ["07-fitting",   "/cat/fitting",   null, null, null, null],
   ["08-travel",    "/cat/travel",    CUST,
     { v_trip_open:TRIP, v_trip_date_public:[], v_wanted_open:[] }, {}, null],

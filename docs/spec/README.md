@@ -16,21 +16,31 @@
 
 | 파일 | 시안 번호 | 대상 주소 | 그리는 곳 |
 |---|---|---|---|
+| `01-booking.webp` | ① 골프장 부킹 | `/cat/booking` | `pages/category.js` · `js/booking.js` · `js/teeboard.js` |
+| `02-matchup.webp` | ② 골프 조인 | `/cat/matchup` | `pages/category.js` · `js/join.js` · `js/booking.js` |
+| `03-used.webp` | ③ 중고 골프장터 | `/cat/used` | `pages/category.js` · `js/listing.js` · `js/lstphoto.js` |
+| `04-lesson.webp` | ④ 골프 레슨 | `/cat/lesson` | `pages/category.js` · `js/lesson.js` · `js/card.js` |
 | `05-range.webp` | ⑤ 골프 연습장 | `/cat/range` | `pages/category.js` · `js/range.js` |
+| `06-market.webp` | ⑥ 골프용품 마켓 | `/cat/market` | `pages/category.js` · `js/wanted.js` · `js/market.js` |
 | `07-fitting.webp` | ⑦ 피팅 · 수리 | `/cat/fitting` | `pages/category.js` · `js/fitting.js` |
 | `08-travel.webp` | ⑧ 골프 여행 | `/cat/travel` | `pages/category.js` · `js/trip.js` · `js/desktrip.js` · `js/admintrip.js` |
 | `09-career.webp` | ⑨ 골프 인력 · 비즈니스 | `/cat/career` | `pages/category.js` · `js/career.js` |
 | `10-community.webp` | ⑩ 골프 커뮤니티 | `/cat/community` | `pages/category.js` · `js/community.js` |
 
-## 아직 안 온 다섯 — 오면 여기에 같은 이름 규칙으로
+## 열 장이 다 왔습니다 (2026-11-13)
 
-| 받을 이름 | 시안 번호 | 대상 주소 |
-|---|---|---|
-| `01-booking.webp` | ① 골프장 부킹 | `/cat/booking` |
-| `02-matchup.webp` | ② 골프 조인 | `/cat/matchup` |
-| `03-used.webp` | ③ 중고 골프장터 | `/cat/used` |
-| `04-lesson.webp` | ④ 골프 레슨 | `/cat/lesson` |
-| `06-market.webp` | ⑥ 골프용품 마켓 | `/cat/market` |
+⚠️ 앞의 다섯(⑤ ⑦ ⑧ ⑨ ⑩)은 2026-11-12 에, 나머지 다섯(① ② ③ ④ ⑥)은
+**2026-11-13** 에 받았습니다. 받은 날이 다르므로 **구현도 두 번에
+걸쳐** 맞췄습니다 — 어느 줄이 어느 시안에서 왔는지는
+`docs/spec-compare.md` 에 분류마다 적어 두었습니다.
+
+⚠️⚠️ **다섯 장을 넣기 전에 확대해서 보았습니다** — 상표 · 실명 ·
+금액이 실제 값으로 보이는 자리는 없었습니다. 모두 머리에 「디자인
+시안 · 예시 데이터」 라벨이 붙어 있고 안의 업체 · 상품 · 프로 이름이
+전부 「예시 …」 이며, 클럽 사진에 읽히는 글자는 웨지의 로프트
+표기(`56°`)뿐입니다. ⚠️ 레슨 시안에는 **사람 사진**이 들어 있습니다 —
+시안 안의 예시 그림이고 **구현 화면에는 쓰지 않습니다**(분류 사진에서
+상표가 나온 2026-11-04 의 그 자리).
 
 ⚠️ **이름은 `AM_CATS` 의 키**(`js/data/catalog.js`)를 씁니다 — 번호만
 쓰면 분류 차례가 바뀌는 날 어느 화면인지 알 수 없게 됩니다.

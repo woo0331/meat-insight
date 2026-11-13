@@ -5374,6 +5374,41 @@ function boardsOf(){
     await g.p.close();
   }
 
+  /* ③-3b 주소에 **지난 날짜**를 들고 오시면 (2026-11-13)
+     ⚠️⚠️⚠️ 보기가 `play_at >= kst_today()` 라 **늘 0줄**입니다. 그때
+     「그 조건에 맞는 자리가 없습니다」라고 적으면 손님은 **그 날짜에
+     자리가 없는 줄** 아십니다 — 실제로는 **지난 날짜**입니다.
+     ⚠️ 날짜를 **말없이 오늘로 바꾸지 않습니다** — 그 자리에서 말하고
+     오늘로 가는 단추를 냅니다. */
+  {
+    const CUST = { role:"customer", name:"손님", signedIn:true };
+    const g = await open("/cat/booking?d=" + TKST(-30), CUST,
+                         { v_teetime_open: [] }, {}, true);
+    const t = await g.p.evaluate(function(){
+      const n = document.querySelector("#ttlist .none");
+      return { txt: n ? (n.innerText || "") : "",
+               go: document.querySelectorAll('#ttlist .none [data-tfd=""]').length };
+    });
+    ok("③-3b 지난 날짜 주소를 **지났다고** 말한다 (「자리가 없다」가 아닙니다)",
+       t.txt.indexOf("지났습니다") >= 0 && t.txt.indexOf("조건에 맞는") < 0,
+       t.txt.replace(/\s+/g, " ").slice(0, 120));
+    ok("  ⚠️ 오늘로 가는 단추를 낸다 (막다른 길로 두지 않습니다)",
+       t.go === 1, "단추 " + t.go + "개");
+    /* 오늘 · 미래는 **그 말을 안 합니다** — 넓게 잡으면 멀쩡한 0건까지 덮습니다 */
+    await g.p.close();
+    for(const d of [0, 2]){
+      const h = await open("/cat/booking?d=" + TKST(d), CUST,
+                           { v_teetime_open: [] }, {}, true);
+      const u = await h.p.evaluate(function(){
+        const n = document.querySelector("#ttlist .none");
+        return n ? (n.innerText || "") : ""; });
+      ok("  " + (d ? "미래" : "오늘") + " 날짜에는 **그 말을 안 한다**",
+         u.indexOf("지났습니다") < 0 && u.indexOf("조건에 맞는") >= 0,
+         u.replace(/\s+/g, " ").slice(0, 90));
+      await h.p.close();
+    }
+  }
+
   /* ③-4 한국 밖 시간대에서도 **같은 날짜**를 냅니다
      ⚠️⚠️⚠️ 전에는 `new Date(iso + "T00:00:00+09:00")` 로 지어 놓고
      `getMonth()` · `getDate()` 로 꺼냈는데, 그 둘은 **보는 분 기계의

@@ -54,9 +54,34 @@ function write(rows, at){
     console.log("   (골프장을 0곳으로 덮어쓰지 않습니다)");
     process.exit(0);
   }
-  const r = await fetch(url.replace(/\/+$/, "") +
-    "/rest/v1/" + VIEW + "?select=" + COLS + "&order=name.asc",
-    { headers: { apikey: key, authorization: "Bearer " + key } });
+  /* ⚠️⚠️⚠️ **0081 이 아직 안 올라간 DB 에서는 `photo` 가 없습니다** —
+     PostgREST 가 그 칸 하나 때문에 **400** 을 내고, 그러면 이 도구가
+     통째로 멈춰 골프장을 **한 곳도 못 가져옵니다**. 저장소의 화면들이
+     `amRowsSoft` 로 하는 것과 같게, **확인된 선택 칸만** 빼고 한 번
+     다시 묻습니다(사진은 아이콘 타일로 돌아갑니다).
+     ⚠️ 보기 부재(404) · 권한(403) 은 **덮지 않습니다** — 그건 0066 을
+     아직 안 올리신 것이고 사진과 상관이 없습니다. */
+  const BASE = url.replace(/\/+$/, "");
+  const HEAD = { apikey: key, authorization: "Bearer " + key };
+  const OPT  = ["photo"];
+  let r = await fetch(BASE + "/rest/v1/" + VIEW + "?select=" + COLS +
+                      "&order=name.asc", { headers: HEAD });
+  let dropped = [];
+  if(r.status === 400){
+    const why0 = await r.clone().text().catch(function(){ return ""; });
+    const gone = OPT.filter(function(c){ return why0.indexOf(c) >= 0; });
+    if(gone.length){
+      const cols2 = COLS.split(",").filter(function(c){
+        return gone.indexOf(c) < 0; }).join(",");
+      const r2 = await fetch(BASE + "/rest/v1/" + VIEW + "?select=" + cols2 +
+                             "&order=name.asc", { headers: HEAD });
+      if(r2.ok){
+        r = r2; dropped = gone;
+        console.warn("⚠️ 운영 DB 에 아직 없는 칸을 빼고 다시 물었습니다 — " +
+                     gone.join(" · ") + "\n   (0081 을 올리시면 사진이 같이 옵니다)");
+      }
+    }
+  }
   if(!r.ok){
     const why = await r.text().catch(function(){ return ""; });
     console.error("❌ 골프장을 못 읽었습니다 — HTTP " + r.status +
@@ -77,12 +102,13 @@ function write(rows, at){
      ⚠️⚠️ **버킷이 없으면 그 칸을 통째로 뺍니다**(빈 글자로 두면 화면이
      "사진을 안 올린 골프장" 과 "버킷이 꺼진 것" 을 구별 못 합니다).
      ⚠️ 주소를 짓는 자리는 여기 하나입니다 — 화면은 `photo_url` 만 봅니다. */
-  const bk = pubBucket();
+  const bk = dropped.length ? "" : pubBucket();
   let shot = 0;
   if(!bk){
     rows.forEach(function(c){ delete c.photo; });
-    console.warn("⚠️ PROVIDER_BUCKET 이 없어 **골프장 사진 없이** 가져왔습니다 — " +
-                 "카드는 아이콘 타일로 섭니다.");
+    if(!dropped.length)
+      console.warn("⚠️ PROVIDER_BUCKET 이 없어 **골프장 사진 없이** 가져왔습니다 — " +
+                   "카드는 아이콘 타일로 섭니다.");
   }else{
     const pub = url.replace(/\/+$/, "") + "/storage/v1/object/public/" + bk + "/";
     rows.forEach(function(c){

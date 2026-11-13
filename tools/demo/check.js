@@ -146,11 +146,22 @@ function run(){
     /* ⚠️⚠️ 티타임의 골프장이 마스터에 **있는지** — 코스 이름이 붙은 줄
        (「… 신코스」)은 앞부분이 맞으면 됩니다(0066 의 트리거도 이름이
        정확히 같을 때만 잇고, 못 찾으면 null 입니다). */
+    var csSlug = {};
+    CS.forEach(function(c){ csSlug[String(c.slug)] = 1; });
     rows.v_teetime_open.forEach(function(r){
       var nm = String(r.course || "");
       if(!nm) return;
       var hit = Object.keys(csName).some(function(k){ return nm.indexOf(k) === 0; });
       if(!hit) bad.push("tee " + r.id + " 골프장이 마스터에 없습니다 — " + nm);
+      /* ⚠️⚠️⚠️ **`course_slug` 가 있어야 상세 화면이 그 자리를 찾습니다** —
+         `js/coursetee.js` 는 `course_slug=eq.<slug>` 로 좁힙니다(이름이
+         아니라 **구조적인 이음**입니다 · 0066 의 트리거가 잇는 칸).
+         안 넣었더니 `/course/dm-cs-1` 이 「아직 올라온 자리가 없습니다」
+         였습니다 — 보시는 분은 **안 만든 것**으로 읽습니다. */
+      if(r.kind === "booking" && !r.course_slug)
+        bad.push("tee " + r.id + " course_slug 가 없습니다 (상세가 0건이 됩니다)");
+      if(r.course_slug && !csSlug[String(r.course_slug)])
+        bad.push("tee " + r.id + " course_slug 가 마스터에 없습니다 — " + r.course_slug);
     });
 
     /* ③ 조인 */

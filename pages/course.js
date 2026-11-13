@@ -42,6 +42,15 @@ exports.build = function(c){
     '<span aria-current="page">' + esc(c.name) + '</span></nav>' +
     '<h1>' + esc(c.name) + '</h1>' +
     '<p class="pghd-l">' + esc(where) + ' · ' + esc(kindName) + '</p>' +
+    /* ⚠️⚠️ **사진은 있을 때만** (0081) — 없으면 줄째 뺍니다. 남의 사진이나
+       분류 사진을 깔면 그 골프장인 것처럼 보입니다(표시 · 광고의 공정화에
+       관한 법률 제3조 · 목록 카드와 같은 규칙).
+       ⚠️ 주소를 짓는 자리는 `tools/pull-courses.js` 하나이고 화면은
+       `photo_url` 만 봅니다 — 버킷이 꺼져 있으면 그 칸이 아예 없습니다. */
+    (c.photo_url
+      ? '<p class="cs-ph"><img src="' + esc(c.photo_url) + '" alt="' +
+        esc(c.name + " 사진") + '" loading="lazy" decoding="async"></p>'
+      : '') +
     /* ⚠️⚠️ 폐업은 **맨 위에서** 말합니다 — 아래에 묻어 두면 손님이
        전화를 겁니다 */
     (c.state === "closed"
@@ -51,12 +60,19 @@ exports.build = function(c){
       : '') +
   '</div></section>';
 
-  if(facts.length){
+  /* ⚠️⚠️ **홈페이지 · 지도만 있어도 이 구간이 서야** 합니다 — 처음에
+     `facts.length` 로만 가렸더니, 홀 수 · 주소를 모르는데 홈페이지는 아는
+     골프장에서 **그 단추가 통째로 사라졌습니다**(0건이 아니라 안 그린
+     것입니다). */
+  var hasSite = /^https?:\/\//i.test(String(c.site_url || ""));
+  if(facts.length || hasSite || (c.lat && c.lng)){
     body += '<section class="sec"><div class="wrap">' +
       '<div class="sec-hd"><h2>시설 정보</h2></div>' +
-      '<dl class="cs-facts">' + facts.map(function(f){
-        return '<div><dt>' + esc(f[0]) + '</dt><dd>' + esc(f[1]) + '</dd></div>';
-      }).join("") + '</dl>' +
+      (facts.length
+        ? '<dl class="cs-facts">' + facts.map(function(f){
+            return '<div><dt>' + esc(f[0]) + '</dt><dd>' + esc(f[1]) + '</dd></div>';
+          }).join("") + '</dl>'
+        : '') +
       /* ⚠️⚠️ **출처를 그 자리에서** 적습니다 */
       '<p class="cs-src">' + icon("info", 16) +
         '공공 자료에서 가져온 정보입니다' +
@@ -64,6 +80,17 @@ exports.build = function(c){
         (c.as_of ? ' · 자료 기준일 ' + esc(c.as_of) : '') +
         '. <b>저희가 직접 확인한 값이 아닙니다.</b></p>' +
       /* 좌표가 있을 때만 — ⚠️ 없으면 줄째 뺍니다 */
+      /* ⚠️⚠️⚠️ **공식 홈페이지는 바깥 주소**입니다 — `https://` 로
+         시작하는 것만 내고(`javascript:` 가 섞이면 거기가 구멍입니다 ·
+         0064 의 클릭 주소와 같은 규칙), 새 창 + `rel` 넷으로 엽니다.
+         ⚠️ 목록 카드에는 2026-11-13 부터 있었는데 **이 상세 화면에만
+         빠져** 있었습니다 — 카드에서 들어오신 분이 그 자리에서 다시
+         찾을 수가 없었습니다(「만들어 놓고 안 쓰는 칸」의 작은 판). */
+      (hasSite
+        ? '<p class="cs-site"><a class="btn btn-line" target="_blank" ' +
+          'rel="nofollow noopener noreferrer" href="' + esc(c.site_url) + '">' +
+          icon("info", 18) + '공식 홈페이지</a></p>'
+        : '') +
       (c.lat && c.lng
         ? '<p class="cs-map"><a class="btn btn-line" target="_blank" ' +
           'rel="noopener noreferrer" href="https://map.kakao.com/link/map/' +

@@ -4778,3 +4778,12 @@ picture{ display: contents; }
 .csc-off .csc-ph{ filter:grayscale(1); opacity:.7; }
 .csc-dead{ align-self:flex-start; padding:3px 9px; border-radius:var(--r-pill);
   background:var(--bad); color:#fff; font-size:12.5px; font-weight:700; }
+
+/* 골프장 상세 — 사진 · 공식 홈페이지 (2026-11-13)
+   ⚠️ 사진은 **있을 때만** 그려지고, 없으면 이 규칙이 걸릴 칸이 없습니다
+   (아이콘 타일을 여기엔 안 둡니다 — 머리 글이 이미 무엇인지 말합니다). */
+.cs-ph{ margin:16px 0 0; border-radius:var(--r); overflow:hidden;
+  background:var(--line-soft); max-width:720px; }
+.cs-ph img{ display:block; width:100%; height:auto; aspect-ratio:16 / 9;
+  object-fit:cover; }
+.cs-site{ margin:14px 0 0; }

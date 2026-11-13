@@ -53,6 +53,22 @@ with
       ls db/migrations 입니다 (2026-11-12 — 0072~0074 가 세 줄 더했습니다).
       ⚠️ 마이그레이션을 더하는 날 이 수도 같이 올리세요 — 이 파일은
          SQL 편집기에서 도는 글이라 폴더를 셀 수가 없습니다. */
+v_other as (
+  /* ⚠️⚠️⚠️ **이 Supabase 프로젝트에는 다른 서비스가 같이 살고 있습니다**
+     (2026-11-13 · survey 93행으로 확인). `public` 에 정육 · 창업 상담
+     서비스의 표 16개가 **실데이터와 함께** 들어 있습니다 — 우리가 만든
+     것이 아니고 우리가 건드리지도 않습니다.
+     ⚠️ 그래서 아래 ② · ③ · ⑫ 는 그 열여섯을 **빼고** 셉니다. 안 빼면
+        제대로 올린 DB 가 "표 75/59 ❌ · RLS 안 켜진 표 8 ❌ · anon 이
+        읽는 표 112 ❌" 로 나와서, **멀쩡한 DB 를 고쳐야 한다고** 읽게
+        됩니다 (이 저장소가 여러 번 겪은 자리입니다).
+     ⚠️ 목록이 썩으면 드러나게 ⑬ 줄이 **몇 개를 찾았는지** 찍습니다. */
+  select unnest(array[
+    'business_members','businesses','closure_requests','community_comments',
+    'community_posts','consult_requests','jobs','listings','members','orders',
+    'partner_requests','products','purchase_requests','subsidy_requests',
+    'suppliers','supply_requests']) nm
+),
 v_ver as (
   select count(*)::int n from schema_version
 ),
@@ -71,6 +87,7 @@ v_tab as (
      이제 public 스키마의 **진짜 표**를 셉니다 — 보기(view)는 뺍니다. */
   select count(*)::int n from information_schema.tables
    where table_schema = 'public' and table_type = 'BASE TABLE'
+     and table_name not in (select nm from v_other)
 ),
 /* ③ ⚠️⚠️ RLS 가 안 켜진 표 — 0 이어야 합니다.
       안 켜진 표는 누구나 남의 신청과 계약금액을 읽습니다. */
@@ -79,6 +96,7 @@ v_rls as (
     from pg_tables t join pg_class c on c.relname = t.tablename
                                     and c.relnamespace = 'public'::regnamespace
    where t.schemaname = 'public' and c.relrowsecurity = false
+     and t.tablename not in (select nm from v_other)
 ),
 /* ④ 신청 상태 — 열셋 (보류 hold 포함) */
 v_st as (
@@ -208,6 +226,7 @@ v_anon as (
     join information_schema.tables t
       on t.table_schema = g.table_schema and t.table_name = g.table_name
    where g.grantee = 'anon' and g.table_schema = 'public'
+     and g.table_name not in (select nm from v_other)
 ),
 /* ⑬ ⚠️⚠️ 가입할 때 역할을 고를 수 없는가 — 트리거가 'customer' 를 박습니다. */
 v_cust as (
@@ -218,6 +237,10 @@ v_cust as (
 ),
 rows as (
   select 1 i, '판 번호 (0001~0081)'            t, v_ver.n::text   got, '81' want from v_ver
+  union all select  1, '다른 서비스의 표 (세는 데서 뺍니다)',
+       (select count(*)::text from information_schema.tables
+         where table_schema = 'public' and table_type = 'BASE TABLE'
+           and table_name in (select nm from v_other)), '16'
   union all select  2, '표 (public · 보기 뺀 것)',  v_tab.n::text,  '59' from v_tab
   union all select  3, '⚠️ RLS 안 켜진 표: ' || v_rls.who, v_rls.n::text, '0' from v_rls
   union all select  4, '신청 상태 (hold 포함: ' ||

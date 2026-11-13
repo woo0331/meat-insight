@@ -4110,6 +4110,85 @@ git show 4563539:CLAUDE.md          앞 서비스의 작업 기억 (6,215줄)
   화면을 고치려 들게 됩니다. 이 저장소가 **일곱 번째** 밟은 자리입니다 —
   **가짜 자료를 쓰기 전에 그 보기의 `select` 절을 여세요.**
 
+### 운영 Supabase 에 **다른 서비스가 같이 살고** 있었습니다 (2026-11-13 · survey 93행)
+
+- ⚠️⚠️⚠️ **`public` 의 표 열여섯이 전부 남의 것이었습니다.** `db/survey.sql`
+  을 운영에서 돌려 보니 `business_members · businesses · closure_requests ·
+  community_comments · community_posts · consult_requests · jobs · listings ·
+  members · orders · partner_requests · products · purchase_requests ·
+  subsidy_requests · suppliers · supply_requests` — **정육 · 창업 상담
+  서비스**의 표이고 **실데이터**가 들어 있습니다(글 90 · 댓글 99 · 상품 14 ·
+  상담 4). 우리 표 · 보기 · 함수는 **하나도 없고** `schema_version` 도 없으며
+  `auth.users` 는 0명입니다. ⚠️ 그래서 `db/README.md` 의 "운영 DB 는 0007
+  까지 돌아가 있습니다" 는 **앞 서비스 시절의 글**이었습니다 — 그 줄을 믿고
+  `apply-from-0008.sql` 을 붙여 넣으면 **0001~0007 이 빈 채로** 0008 이
+  터집니다. 지금은 `db/apply-all-1~5.sql`(0001~0081)이 그 자리입니다.
+- ⚠️⚠️ **이름 충돌은 0건입니다** — 표 59 · 보기 37 · 함수 231 · 타입 14 를
+  그 열여섯과 맞춰 보았고 겹치는 것이 없습니다(`listing` ↔ `listings` ·
+  `jobpost` ↔ `jobs` 처럼 **비슷하지만 다릅니다**). 그래서 **새 프로젝트를
+  만들 까닭이 없습니다.** 세는 자리는 `tools/make-apply.js` 와 같은 길로
+  마이그레이션에서 **읽습니다**(손으로 적으면 늘 때마다 썩습니다).
+- ⚠️⚠️⚠️ **Supabase 의 `public` 기본 권한이 우리 자물쇠를 통째로 무력화합니다.**
+  이 프로젝트는 `alter default privileges in schema public grant all on
+  tables / execute on functions to anon, authenticated` 가 걸려 있습니다
+  (Supabase 의 **기본값**입니다 — 이 프로젝트만의 문제가 아닙니다). 그런데
+  이 저장소의 보안은 "표에는 GRANT 를 안 주고 문으로만 들어간다" 입니다.
+  운영과 **같은 기본 권한**을 임시 Postgres 에 재현해 재 보니 —
+    · `revoke … on function … from public` **200곳**이 무력화되어 내부 함수
+      **31개**가 **31/31 전부** 열렸습니다(`from public` 은 anon 에게
+      **직접** 준 권한을 못 뗍니다 — 그 200곳 가운데 anon · authenticated 를
+      적은 곳은 **0곳**입니다). 그중 `notify_one` 은 0050 머리말이 "로그인한
+      누구나 아무에게 아무 제목으로 알림을 꽂을 수 있었습니다" 라고 적어 둔
+      **바로 그 함수**입니다.
+    · 칸 단위 GRANT 가 **11개 표**에서 풀렸습니다 — `jobapply · joinapply ·
+      listingask · wantedreply · listing · joinroom · wanted · jobpost` 의
+      **`contact`**(동의 전 연락처 · 제17조 제2항) · `teebook.tel` ·
+      `notice.to_user` · `provider_photo.by_user`. ⚠️ `inquiry.memo` 와
+      `cq.guest_pw` 는 **안 열립니다** — 0053 · 0063 이 `revoke select …
+      from authenticated` 를 따로 적어 두었습니다(표 단위 revoke 는 저장소
+      전체에 **열 곳**뿐입니다).
+    · 표 **20개**에 표 단위 권한이 붙습니다(RLS 가 줄은 막지만 세 겹 가운데
+      한 겹이 사라집니다).
+  ⚠️⚠️⚠️ **`tools/test-sql.js` 는 이것을 영원히 못 잡습니다** — 평범한
+  Postgres 는 기본 권한이 좁아서 전부 초록입니다. "GRANT 와 RLS 를 따로 눌러
+  보세요" 의 **셋째 자물쇠**가 `alter default privileges` 였습니다.
+- ⚠️⚠️ **고치는 길은 한 쌍입니다** — `db/pre-apply.sql` 이 올리기 전에 기본
+  권한을 좁혀 **우리 객체만 깨끗하게 태어나게** 하고, `db/post-apply.sql` 이
+  끝나면 **survey ⑪ 의 값 그대로 복원**합니다. default privileges 는 "앞으로
+  만들어지는 객체" 에만 걸리므로 **기존 16개 표의 권한 · 정책 · 데이터는 한
+  글자도 안 바뀝니다**(재서 확인 — 16개 표의 `relacl` · 정책 수 · 줄 수가
+  전후 동일). ⚠️ 그리고 `pre-apply` 를 거친 DB 의 우리 객체 권한은 **검사용
+  DB 와 객체 327개 전부 일치**합니다 — `test-sql` 이 재는 것이 그대로
+  유효하다는 뜻입니다. ⚠️⚠️⚠️ **마이그레이션을 더 올리는 날(0082…)에는
+  `pre-apply` 를 먼저 다시 돌리세요** — 복원해 두었으므로 안 돌리면 새 표 ·
+  새 함수만 anon 에게 열린 채 태어납니다.
+- ⚠️⚠️ **`db/verify.sql` 이 멀쩡한 DB 를 ❌ 로 읽고 있었습니다** — 그 열여섯을
+  같이 세어 "표 75/59 · RLS 안 켜진 표 8 · anon 이 읽는 표 112" 로 빨갰습니다.
+  지금은 `v_other` 로 **빼고** 세고, **몇 개를 찾았는지**(16)를 같이 찍어
+  목록이 썩으면 드러나게 했습니다.
+- ⚠️⚠️ **`rls_auto_enable` 은 이벤트 트리거 `ensure_rls` 에 걸려 있었습니다**
+  (2026-11-13 · `db/check-evt.sql` 로 확인). `ddl_command_end` · `CREATE TABLE ·
+  CREATE TABLE AS · SELECT INTO` 에서 돌고, `public` 스키마의 표에
+  `alter table if exists … enable row level security` 를 겁니다 —
+  **`exception when others` 로 감싸 로그만 남기고 넘어가므로 우리 마이그레이션을
+  멈출 수가 없습니다.** 우리도 59개 전부 RLS 를 켜므로 같은 일을 두 번 하는
+  것이고 부딪히지 않습니다. ⚠️ 그 함수는 anon · 회원에게 EXECUTE 가 열려
+  있지만 **`returns event_trigger` 라 Postgres 가 직접 호출을 거부합니다**
+  (열린 것이 해롭지 않은 드문 자리입니다 — 그래도 **재서** 판단했습니다).
+  ⚠️⚠️ **survey 3판이 이것을 못 봤습니다** — `pg_trigger`(표 트리거)만 읽고
+  **`pg_event_trigger` 를 안 읽었습니다.** DDL 트리거는 **다른 카탈로그**입니다.
+  ⚠️ 같이 확인한 것 셋 — `pgcrypto 1.3` 이 `extensions` 스키마에 **이미 있어**
+  0063 이 그대로 돌고(그 파일이 `search_path = public, extensions` 를 적어 둔
+  까닭), `supabase_realtime` 은 **고른 표만 · 0개**라 우리 표가 저절로 안
+  들어가고, 그쪽 16개 표의 정책은 대부분 **PUBLIC(anon 포함)** 입니다.
+- ⚠️⚠️⚠️ **그쪽 16개 표 가운데 여덟이 RLS 가 꺼진 채 anon 에게 열려 있습니다**
+  — `consult_requests`(이름 · 전화 · 이메일 · 결제 상태 4줄) ·
+  `closure_requests` · `partner_requests` · `supply_requests` · `members`
+  (kakao_id · 이메일) · `businesses` · `listings` · `subsidy_requests`.
+  같은 anon 키로 읽히므로 **골프 손님 쪽에서도 읽힙니다.** 우리가 올리기
+  **전부터** 그런 상태이고, 사장님 승인 없이는 **건드리지 않습니다** —
+  보고에만 적습니다.
+
 ## 지금 서 있는 검사 — `node tools/ship.js`
 
 | 묶음 | 재는 것 |

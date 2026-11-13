@@ -1383,6 +1383,12 @@
      칩에는 남아 있으므로 그것이 거짓말이 됩니다. 주소도 같이 맞춤니다. */
   function tookOut(gone){
     var ch = false;
+    /* 주의 — **부른 것만 아니라 묶음 전부를 가립니다.** 거절한 말은 한
+       칸만 말하고, 다시 물을 때 떼는 것도 그 질의에 실린 칸뿐입니다 —
+       그러면 안 고르시던 칸은 그대로 남아, 이번에 그것을 고르시면
+       다시 400 이 나고 한 번 더 돌아야 합니다. 플렉스 · 좌·우타는
+       0080 이 같이 더한 칸이라 하나가 없으면 나머지도 없습니다. */
+    if(gone.length) gone = OPTCOL.slice();
     for(var i = 0; i < gone.length; i++){
       if(MISS.indexOf(gone[i]) < 0) MISS.push(gone[i]);
       if(gone[i] === "flex" && F.fx){ F.fx = ""; ch = true; }

@@ -887,6 +887,10 @@
   var OPTCOL = ["role", "emp_type", "pay_type", "pay_min"];
   var MISS = [];
   function tookOut(gone, f){
+    /* 주의 — 0072 가 **같이** 더한 칸 넷이라 하나가 없으면 나머지도
+       없습니다. 부른 것만 가리면 안 고르시던 칸이 남아 그것을 고르실
+       때 다시 400 이 납니다 — 한 번에 가립니다. */
+    if(gone.length) gone = OPTCOL.slice();
     gone.forEach(function(c){ if(MISS.indexOf(c) < 0) MISS.push(c); });
     /* ⚠️ 고른 조건을 남기고 안 걸리면 **걸렸는데 안 걸린 것처럼**
        보여, 그것이 거짓말이 됩니다 — 같이 둉니다. */

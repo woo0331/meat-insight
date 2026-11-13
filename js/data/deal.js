@@ -997,3 +997,50 @@ window.amWatchLink = function(kind){
     (window.icon ? window.icon("search", 18) : "") +
     '조건을 저장하고 알림 받기</a></p>';
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   조인 「실력」 · 중고 「샤프트 플렉스 · 좌/우타」 (확정 시안 ② · ③ · 0080)
+
+   ⚠️⚠️ **키는 DB 의 check 와 같아야 합니다** — `tools/check-deal.js` 가
+     0080 의 `joinroom_level_ck` · `listing_flex_ck` · `listing_hand_ck`
+     와 빌드마다 맞춰 봅니다. 한쪽만 고치면 화면은 보내는데 DB 가
+     거절합니다(에러는 화면에만 보입니다).
+   ⚠️⚠️ **셋 다 비울 수 있습니다** — 안 고르신 글 · 매물은 그 조건으로
+     좁히면 **빠집니다**(모르는 값을 아무 칸에나 넣으면 지어낸 값입니다 ·
+     절대 규칙 1). 화면이 0건 안내에서 그 사실을 말합니다.
+   ⚠️ 키를 늘리시려면 **마이그레이션이 필요합니다**(`cond` 와 같은 결 —
+     `listing.sub` 는 반대로 일부러 check 를 안 박았습니다).
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_JOIN_LEVEL = [
+  { key:"any",      name:"누구나 환영" },
+  { key:"beginner", name:"초보 환영" },
+  { key:"mid",      name:"중급 이상" },
+  { key:"low",      name:"싱글 · 로우핸디" }
+];
+window.AM_LST_FLEX = [
+  { key:"r",  name:"R (레귤러)" },
+  { key:"sr", name:"SR" },
+  { key:"s",  name:"S (스티프)" },
+  { key:"x",  name:"X" }
+];
+window.AM_LST_HAND = [
+  { key:"right", name:"우타 (오른손)" },
+  { key:"left",  name:"좌타 (왼손)" }
+];
+
+/* ⚠️ 이름을 푸는 자리는 **한 곳**입니다 — 모르는 키는 `amKeyName()` 이
+   「… 미확인」으로 내고 운영 기록에 남깁니다(키를 손님 화면에 날것으로
+   찍지 않습니다 · 지시 6번). 빈 값이면 **빈 글자**라 그 줄이 통째로
+   빠집니다(자리표시자를 안 찍습니다 · 절대 규칙 2). */
+window.amJoinLevel = function(k){
+  return window.amKeyName
+    ? window.amKeyName(window.AM_JOIN_LEVEL, k, "실력") : "";
+};
+window.amLstFlex = function(k){
+  return window.amKeyName
+    ? window.amKeyName(window.AM_LST_FLEX, k, "샤프트 플렉스") : "";
+};
+window.amLstHand = function(k){
+  return window.amKeyName
+    ? window.amKeyName(window.AM_LST_HAND, k, "좌타 · 우타") : "";
+};

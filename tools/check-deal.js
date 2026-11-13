@@ -124,15 +124,46 @@ function checkKeys(sql, col, table){
     if(from < 0) from = sql.indexOf("create table " + table + " (");
     if(from < 0) return null;
   }
-  const grab = at => {
-    const open = sql.indexOf("(", at + 7);
-    const close = sql.indexOf(")", open);
-    if(open < 0 || close < 0) return null;
+  /* ⚠️⚠️⚠️ **꼴이 둘입니다** (2026-11-13). 비울 수 있는 칸은
+     `check (<칸> is null or <칸> in (…))` 로 적습니다 — 0080 의
+     `joinroom.level` · `listing.flex` · `listing.hand` 가 그 꼴입니다.
+     앞 꼴만 찾으면 **DB 쪽을 한 글자도 못 읽고** 그 묶음이 통째로
+     빠집니다(0건으로 조용히 초록이 되는 자리). 둘 다 받습니다.
+     ⚠️ 여는 괄호는 **길목의 마지막 글자**입니다 — 글자 수를 세어
+     집습니다(`at + len - 1`). 전에는 "check (" 의 7 을 박아 두어서
+     꼴이 늘어나는 날 엉뚱한 괄호를 집을 자리였습니다. */
+  const MARKS = [
+    "check (" + col + " in (",
+    "check (" + col + " is null or " + col + " in ("
+  ];
+  const findMark = (hay, from) => {
+    let best = null;
+    MARKS.forEach(m => {
+      const at = hay.indexOf(m, from);
+      if(at >= 0 && (!best || at < best.at)) best = { at: at, len: m.length };
+    });
+    return best;
+  };
+  const grab = hit => {
+    if(!hit) return null;
+    const open  = hit.at + hit.len - 1;
+    const close = sqlAt(open);
+    if(close < 0) return null;
     return quoted(sql.slice(open + 1, close));
   };
+  /* ⚠️ 닫는 괄호는 **짝을 세어서** 찾습니다 — `is null or` 꼴은 바깥
+     괄호가 하나 더 있어 첫 `)` 를 집으면 값이 잘립니다. */
+  const sqlAt = open => {
+    let d = 0;
+    for(let k = open; k < sql.length; k++){
+      if(sql[k] === "(") d++;
+      else if(sql[k] === ")"){ d--; if(d === 0) return k; }
+    }
+    return -1;
+  };
   let out = null;
-  const at = sql.indexOf("check (" + col + " in (", from);
-  if(at >= 0) out = grab(at);
+  const first = findMark(sql, from);
+  if(first) out = grab(first);
   /* ⚠️⚠️⚠️ **뒤 번호가 그 check 를 갈아 끼우면 그것이 DB 의 참입니다**
      (2026-11-08). 0069 가 `listing.state` 에 `reserved` 를 더하려고
      옛 check 를 떼고 `alter table listing add constraint … check (state
@@ -164,9 +195,9 @@ function checkKeys(sql, col, table){
        덩이를 안 자르면 **다음 제약의 check** 를 이 칸 것으로 읽습니다. */
     const semi = sql.indexOf(";", a2);
     const seg = sql.slice(a2, semi < 0 ? sql.length : semi);
-    const c2 = seg.indexOf("check (" + col + " in (");
-    if(c2 >= 0){
-      const got = grab(a2 + c2);
+    const hit2 = findMark(seg, 0);
+    if(hit2){
+      const got = grab({ at: a2 + hit2.at, len: hit2.len });
       if(got && got.length) out = got;
     }
     i = a2 + m[0].length;
@@ -269,6 +300,15 @@ function run(opt){
      checkKeys(sql, "state", "listingask"), W.AM_LSTASK_ST],
     ["물건 상태 (listing.cond)",
      checkKeys(sql, "cond", "listing"),     W.AM_LST_COND],
+    /* ⚠️⚠️ 0080 — 시안 ② · ③ 이 요구한 칸 셋입니다. **비울 수 있는
+       칸이라 check 가 `is null or … in (…)` 꼴**입니다 — `checkKeys()`
+       가 그 꼴에서도 키를 꺼내는지 되돌려 보기로 확인했습니다. */
+    ["조인 실력 (joinroom.level)",
+     checkKeys(sql, "level", "joinroom"),  W.AM_JOIN_LEVEL],
+    ["샤프트 플렉스 (listing.flex)",
+     checkKeys(sql, "flex", "listing"),    W.AM_LST_FLEX],
+    ["좌타 · 우타 (listing.hand)",
+     checkKeys(sql, "hand", "listing"),    W.AM_LST_HAND],
     /* ⚠️⚠️ 0061 의 구합니다 — 어긋나면 ① 화면이 **없는 상태**로 옮기려다
        거절당하거나 ② 손님 화면에 **영문 키**가 그대로 찍힙니다.
        ⚠️ 답 상태의 말은 **두 벌**(올린 분 · 답한 분)이지만 줄은 하나라

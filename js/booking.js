@@ -222,13 +222,33 @@
      ⚠️⚠️ **「카트 · 캐디 별도」라고 단정하지 않습니다** — 그린피에 무엇이
      포함되는지 우리는 **모릅니다**. 포함 여부를 업체에 확인하시라고
      적습니다(모르는 것을 적으면 지어낸 약속입니다 · 절대 규칙 5). */
+  /* 골프장 사진 (0081) — ⚠️⚠️⚠️ **없으면 아이콘 타일로
+     그대로 돌아갑니다.** 남의 사진이나 분류 사진을 깔면 그 골프장
+     인 것처럼 보입니다(표시 · 광고의 공정화에 관한 법률 제3조 ·
+     0068 의 매물 사진과 같은 규칙).
+     ⚠️⚠️ **업체 시설 사진을 여기 빌려 쓰지 않습니다** — 부킹센터의
+     사무실 사진을 골프장 이름 옆에 깔면 손님은 그것을 **그 골프장
+     사진**으로 읽습니다. 사진은 **골프장 마스터**(0066 의 `course`)에
+     달려 있고, 보기가 가려지지 않은 마스터의 것만 냅니다.
+     ⚠️ 버킷이 꺼져 있으면 `amPubUrl()` 이 **빈 글자**를 돌려주므로
+     역시 아이콘 타일입니다(주소를 지어내지 않습니다). */
+  function phHtml(t){
+    var a = window.amAuthNow ? window.amAuthNow() : null;
+    var u = (a && a.conf && window.amPubUrl) ? window.amPubUrl(a.conf, t.photo) : "";
+    if(!u) return '<span class="tfc-ph" aria-hidden="true">' +
+                  window.icon("flag", 26) + '</span>';
+    return '<span class="tfc-ph tfc-ph-img">' +
+           '<img src="' + esc(u) + '" alt="' + esc(t.course + ' 사진') +
+           '" loading="lazy" decoding="async"></span>';
+  }
+
   function row(t){
     var fee = window.amTeeFee(t.green_fee);
     var left = Number(t.left_n);
     /* ⚠️ `tf-i` 를 **그대로 둡니다** — 그 이름으로 세는 검사가
        넷 있습니다(이름을 갈면 그 자리가 조용히 0건이 됩니다). */
     return '<li class="tf-i tfc" data-tee="' + esc(t.id) + '">' +
-      '<span class="tfc-ph" aria-hidden="true">' + window.icon("flag", 26) + '</span>' +
+      phHtml(t) +
       '<div class="tfc-b">' +
         '<p class="tfc-n">' + esc(t.course) + '</p>' +
         '<p class="tfc-rg">' + window.icon("pin", 14) + esc(rgName(t.region)) + '</p>' +
@@ -374,7 +394,7 @@
     }
 
     var qs = ["select=id,provider_id,provider_name,kind,region,course,play_at," +
-              "tee_at,holes,slots,green_fee,tel,note,left_n",
+              "tee_at,holes,slots,green_fee,tel,note,left_n,photo",
               "kind=eq." + encodeURIComponent(KIND),
               "order=play_at.asc,tee_at.asc", "limit=100"];
     /* ⚠️⚠️ 묶음을 **지역 여럿**으로 풀어 서버에 보냅니다 (`in.(…)`).

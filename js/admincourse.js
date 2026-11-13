@@ -77,6 +77,7 @@
       '<div class="dk-b">' +
         '<button type="button" class="btn btn-sm btn-pri" data-do="slug">주소(slug) 고치기</button>' +
         '<button type="button" class="btn btn-sm btn-pri" data-do="alias">다른 이름 잇기</button>' +
+        '<button type="button" class="btn btn-sm btn-pri" data-do="photo">사진 경로</button>' +
         (c.state === "hidden"
           ? '<button type="button" class="btn btn-sm btn-line" data-do="open">다시 내기</button>'
           : '<button type="button" class="btn btn-sm btn-bad" data-do="hide">가리기</button>') +
@@ -88,6 +89,14 @@
         '<div class="jrow jrow-full cs-alias" hidden><label>이을 다른 이름 <b>*</b> ' +
           '(이 이름으로 올라온 티타임이 이 골프장에 이어집니다)</label>' +
           '<input name="alias" maxlength="80"></div>' +
+        /* 골프장 사진 (0081) — ⚠️⚠️ **올리는 자리는 아직
+           없습니다**(다음 번호). 지금은 공개 버킷에 이미 올라간
+           파일을 **가리키는 경로**를 적는 칸입니다. 비우고 보내면
+           지워집니다. ⚠️ 꼴은 DB 가 다시 봅니다(`course_photo_ck`). */
+        '<div class="jrow jrow-full cs-photo" hidden><label>사진 경로 ' +
+          '(비워서 보내시면 지워집니다 · ' +
+          'course/&lt;골프장 번호&gt;/파일이름.jpg)</label>' +
+          '<input name="photo" maxlength="140" value="' + esc(c.photo || "") + '"></div>' +
         '<div class="jrow jrow-full cs-why" hidden><label>가리는 까닭 <b>*</b> ' +
           '(기록에 남고 지울 수 없습니다)</label>' +
           '<input name="cwhy" maxlength="200"></div>' +
@@ -136,7 +145,7 @@
        한 줄도 없어서 읽으려 하면 질의가 통째로 거절됩니다 (그게 맞습니다).
        ⚠️ 가린 것은 보기에 안 나오므로, 가린 뒤에는 목록에서 빠집니다 —
        그 사실을 아래 안내가 말합니다. */
-    return get("v_course_public?select=id,slug,kind,name,region,gu,state,source_id" +
+    return get("v_course_public?select=id,slug,kind,name,region,gu,state,source_id,photo" +
                "&order=name.asc&limit=500")
       .then(function(rows){ D = Array.isArray(rows) ? rows : null; paint(); });
   }
@@ -160,6 +169,7 @@
     f.setAttribute("data-kind", kind);
     f.querySelector(".cs-slug").hidden  = (kind !== "slug");
     f.querySelector(".cs-alias").hidden = (kind !== "alias");
+    f.querySelector(".cs-photo").hidden = (kind !== "photo");
     f.querySelector(".cs-why").hidden   = (kind !== "hide");
     f.hidden = false;
   });
@@ -180,6 +190,11 @@
                                     name: li.querySelector("b").textContent } });
     }else if(kind === "alias"){
       p = rpc("link_course_alias", { p: { course_id:id, alias:(f.alias.value || "").trim() } });
+    }else if(kind === "photo"){
+      /* ⚠️⚠️ **빈 글자도 보내는 것입니다** — 문이 `p ? 'photo'` 로
+         보냈는지를 보므로, 비워 보내면 지워집니다(0069 의 모델명과
+         같은 결 — `coalesce` 로 받으면 지울 수가 없습니다). */
+      p = rpc("save_course_photo", { p: { id:id, photo:(f.photo.value || "").trim() } });
     }else if(kind === "hide"){
       p = rpc("move_course", { p: { id:id, to:"hidden", why:(f.cwhy.value || "").trim() } });
     }else{

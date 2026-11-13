@@ -3866,7 +3866,7 @@ function boardsOf(){
          빠지는지 봅니다 (한 줄에 묶어 두면 안 보입니다) */
       { id:"r2", title:"티타임 있습니다 한 자리", body:"한 분만 모십니다",
         region:"gyeonggi", play_at:"2099-05-06", course:null, booked:true,
-        tee:"오전", need:1, budget:null, left_n:1 }
+        tee:"오전", need:1, budget:null, left_n:1, level:"beginner" }
     ];
     const g = await open("/cat/matchup", { role:"customer", name:"손님", signedIn:true },
                          { v_join_open: JR2 }, {}, true);
@@ -4002,16 +4002,21 @@ function boardsOf(){
                  img: el.querySelectorAll("img").length,
                  ph: !!el.querySelector(".jnc-ph svg"),
                  lv: document.querySelectorAll(".jnc-lv").length,
+                 lvText: (document.querySelector(".jnc-lv") || {}).textContent || "",
                  n: document.querySelectorAll(".jnc").length };
       });
       ok("⚠️⚠️ 조인 카드가 **세 칸**으로 선다 (사진 자리 · 글 · 값과 단추)",
          c.card === 1 && c.cols === 3, JSON.stringify(c).slice(0, 160));
       ok("  ⚠️⚠️ 사진을 **깔지 않는다** (담는 칸이 없습니다 · 아이콘 타일)",
          c.img === 0 && c.ph === true, JSON.stringify({ img:c.img, ph:c.ph }));
-      /* ⚠️ 씨앗 둘 다 실력을 안 적었으므로 딱지가 **0개**여야 합니다 —
-         안 고르신 자리에 「무관」을 지어 붙이지 않습니다(절대 규칙 1). */
-      ok("  ⚠️ 실력을 **안 적은 자리에는 딱지를 안 붙인다**",
-         c.n > 0 && c.lv === 0, JSON.stringify({ n:c.n, lv:c.lv }));
+      /* ⚠️⚠️ **갈래 둘을 같이** 재야 합니다 — 적은 자리는 딱지가
+         붙고, 안 적은 자리는 「무관」을 지어 붙이지 않습니다(절대 규칙 1).
+         ⚠️⚠️⚠️ 안 적은 쪽만 재면 **`level` 을 받지도 않는 고장**이
+         영원히 초록입니다 — 2026-11-13 까지 그러했습니다. */
+      ok("  ⚠⚠ 실력을 적은 자리만 딱지가 붙는다 (안 적은 자리는 안 붙습니다)",
+         c.n >= 2 && c.lv === 1, JSON.stringify({ n:c.n, lv:c.lv }));
+      ok("  ⚠️ 딱지에 **사람 말**을 적는다 (영문 키가 아닙니다)",
+         c.lvText.indexOf("초보") >= 0, c.lvText);
     }
 
     await g.p.close();
@@ -4667,7 +4672,15 @@ function boardsOf(){
     { id:"22222222-2222-2222-2222-222222222222", provider_id:"t-range",
       provider_name:"성남 그린골프연습장", kind:"booking", region:"jeju",
       course:"무료 나눔 코스", play_at:TKST(2), tee_at:null, holes:null,
-      slots:2, green_fee:0, tel:null, note:null, left_n:2 }
+      slots:2, green_fee:0, tel:null, note:null, left_n:2 },
+    /* ⚠️⚠️ 0081 — **골프장 마스터에 사진이 달린 자리**.
+       위 두 줄은 `photo` 가 없으므로 **아이콘 타일**이고, 이 줄만
+       그림입니다 — 갈래 둘을 **갈라서** 재야 합니다. */
+    { id:"33333333-3333-3333-3333-333333333333", provider_id:"t-range",
+      provider_name:"성남 그린골프연습장", kind:"booking", region:"seoul",
+      course:"사진 있는 코스", play_at:TKST(1), tee_at:"08:00:00", holes:18,
+      slots:4, green_fee:120000, tel:null, note:null, left_n:3,
+      photo:"course/11111111-2222-3333-4444-555555555555/a.jpg" }
   ];
   const TCNT = [
     { region:"seoul", play_at:TKST(1), n:3 },
@@ -4699,7 +4712,10 @@ function boardsOf(){
                body: document.body.innerText,
                book: document.querySelectorAll(".tf-book").length };
     });
-    ok("티타임 목록이 그려진다", r.n === 2, "줄 " + r.n);
+    /* ⚠️⚠️ **갯수를 박지 않습니다** — 씨앗에 줄을 하나 더했다고
+       멀쒗한 화면이 떨어지면 그건 검사가 틀린 것입니다(저장소가
+       여러 번 밟은 자리). 재려는 뜻은 「씨앗만큼 그려지나」입니다. */
+    ok("티타임 목록이 그려진다 (씨앗만큼)", r.n === TEE.length, "줄 " + r.n);
     ok("  상호와 **공개 전화번호**가 나온다 (제20조 제2항 · 0057)",
        r.body.indexOf("성남 그린골프연습장") >= 0 &&
        r.body.indexOf("031-555-7777") >= 0, "");
@@ -4769,17 +4785,34 @@ function boardsOf(){
                cols: cs.gridTemplateColumns.split(" ").length,
                badge: (el.querySelector(".tfc-badge") || {}).textContent || "",
                fee: (el.querySelector(".tfc-fee") || {}).textContent || "",
-               /* ⚠️ 사진 칸을 **아이콘 타일**로 둡니다 — 골프장 사진을
-                  담는 칸이 없습니다(0066) */
+               /* ⚠️⚠️ 0081 — 사진이 **있을 때만** 깔고, 없으면
+                  아이콘 타일로 돌아갑니다. 두 갈래를 갈라서 셀니다. */
                img: el.querySelectorAll("img").length,
-               ph: !!el.querySelector(".tfc-ph svg") };
+               ph: !!el.querySelector(".tfc-ph svg"),
+               withPh: (function(){
+                 const L = document.querySelectorAll(".tf-i.tfc");
+                 let img = 0, ico = 0, alt = "";
+                 L.forEach(function(x){
+                   const im = x.querySelector(".tfc-ph-img img");
+                   if(im){ img++; alt = im.getAttribute("alt") || ""; }
+                   else if(x.querySelector(".tfc-ph svg")) ico++;
+                 });
+                 return { img:img, ico:ico, alt:alt, n:L.length };
+               })() };
     });
     ok("⚠️⚠️ 카드가 **세 칸**으로 선다 (사진 자리 · 글 · 값과 단추)",
        c.card === 1 && c.cols === 3, JSON.stringify(c).slice(0, 160));
     ok("  「업체 확인 후 확정」 딱지가 있다 ('예약 완료' 가 아닙니다)",
        c.badge.indexOf("업체 확인 후 확정") >= 0, c.badge);
-    ok("  ⚠️⚠️ 사진을 **깔지 않는다** (담는 칸이 없습니다 · 아이콘 타일)",
-       c.img === 0 && c.ph === true, JSON.stringify({ img:c.img, ph:c.ph }));
+    /* ⚠️⚠️⚠️ **2026-11-13 에 뒤집었습니다.** 그 전까지는 「사진을
+       깔지 않는다」를 **요구**했습니다 — 0081 이 `course.photo` 를 내면서
+       그 줄을 그대로 두면 **되게 만든 것을 고장으로** 잡습니다
+       (저장소가 여러 번 밟은 「옷 뜻을 그대로 둔 검사는 고장을 지킵니다」). */
+    ok("⚠⚠ 사진이 있는 자리만 그림 · 없는 자리는 **아이콘 타일** (0081)",
+       c.withPh.img === 1 && c.withPh.ico === c.withPh.n - 1 && c.withPh.n >= 3,
+       JSON.stringify(c.withPh));
+    ok("  ⚠️ alt 에 **그 골프장 이름**을 적는다 (「사진」만 적으면 어느 곣인지 모릅니다)",
+       c.withPh.alt.indexOf("사진 있는 코스") >= 0, c.withPh.alt);
     await g.p.close();
   }
 
@@ -4966,7 +4999,7 @@ function boardsOf(){
                          { v_teetime_open: TEE }, {}, true);
     const n = await g.p.evaluate(function(){
       return document.querySelectorAll(".tf-i").length; });
-    ok("⚠️ 가입 안 하셔도 **자리는 보인다**", n === 2, "줄 " + n);
+    ok("⚠️ 가입 안 하셔도 **자리는 보인다**", n === TEE.length, "줄 " + n);
     await g.p.click(".tf-book");
     await g.p.waitForTimeout(400);
     const r = await g.p.evaluate(function(){

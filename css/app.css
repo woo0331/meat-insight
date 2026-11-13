@@ -4588,6 +4588,10 @@ picture{ display: contents; }
 .tfc-ph{ display:flex; align-items:center; justify-content:center;
   width:92px; height:92px; flex:none; border-radius:12px;
   background:var(--grn-soft); color:var(--grn-deep); }
+/* 골프장 사진 (0081) — ⚠️ 사진이 있을 때만 입혀주고,
+   없으면 위의 아이콘 타일 그대로입니다. */
+.tfc-ph-img{ padding:0; overflow:hidden; background:var(--line-soft); }
+.tfc-ph-img img{ width:100%; height:100%; object-fit:cover; display:block; }
 .tfc-b{ display:grid; gap:5px; align-content:start; }
 .tfc-n{ margin:0; font-size:17.5px; font-weight:800; color:var(--ink); }
 .tfc-rg, .tfc-when{ display:flex; flex-wrap:wrap; align-items:center; gap:5px;

@@ -422,7 +422,12 @@
   }
 
   function load(a){
-    var qs = ["select=id,title,body,region,play_at,course,booked,tee,need,budget,left_n",
+    /* ⚠️⚠️⚠️ **`level` 을 받아야 딱지가 붙습니다** — 거르개만
+       더해 놓고 여기를 안 고쳐서, `card()` 가 그리려는 「초보 환영」
+       딱지가 **한 번도 안 찍혔습니다**(에러 0줄). 시연 자료를 넣고
+       찍어 보고서야 보였습니다 — 「칸을 더하는 날 받는 줄도 같이」. */
+    var qs = ["select=id,title,body,region,play_at,course,booked,tee,need,budget," +
+              "left_n,level",
               "order=play_at.asc", "limit=50"];
     if(F.rg) qs.push("region=eq." + encodeURIComponent(F.rg));
     if(F.bk) qs.push("booked=is.true");

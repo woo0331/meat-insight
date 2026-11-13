@@ -2,7 +2,7 @@
 -- db/audit.sql — **운영 DB 가 정말 올라갔는지** 대조합니다
 --
 -- ⚠️⚠️⚠️ **빌드가 만드는 파일입니다 — 손으로 고치지 마세요.**
---   (node tools/make-audit.js · 마이그레이션 80개에서 읽었습니다)
+--   (node tools/make-audit.js · 마이그레이션 81개에서 읽었습니다)
 --
 -- ⚠️⚠️ **`select max(n) from schema_version` 하나로 판정하지 않습니다.**
 --   그 표는 마이그레이션 파일이 **스스로 적는** 줄입니다 — 중간에서
@@ -16,13 +16,13 @@
 -- ① 판 번호와 **빠진 번호** ─────────────────────────────────────────
 select '① 판 번호' as 항목,
        coalesce(max(n), 0)::text as 값,
-       case when coalesce(max(n), 0) >= 80 then '✅' else '❌ 80 보다 낮습니다' end as 결과
+       case when coalesce(max(n), 0) >= 81 then '✅' else '❌ 81 보다 낮습니다' end as 결과
   from schema_version;
 
 select '① 빠진 번호' as 항목,
        coalesce(string_agg(g::text, ', ' order by g), '(없음)') as 값,
        case when count(*) = 0 then '✅' else '❌ 그 번호를 따로 돌리세요' end as 결과
-  from generate_series(1, 80) g
+  from generate_series(1, 81) g
  where not exists (select 1 from schema_version v where v.n = g);
 
 -- ② 표가 다 있나 ─────────────────────────────────────────────────
@@ -259,6 +259,7 @@ with want(f) as (values
     ('save_ad'),
     ('save_ad_bill'),
     ('save_course'),
+    ('save_course_photo'),
     ('save_fee_policy'),
     ('save_plan'),
     ('save_provider'),
@@ -417,6 +418,7 @@ select '④ 문을 부를 권한' as 항목,
     ('save_ad'),
     ('save_ad_bill'),
     ('save_course'),
+    ('save_course_photo'),
     ('save_fee_policy'),
     ('save_plan'),
     ('save_provider'),

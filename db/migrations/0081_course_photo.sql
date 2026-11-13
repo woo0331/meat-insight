@@ -139,3 +139,6 @@ create or replace view v_course_public as
     from course c
    where c.state <> 'hidden';
 grant select on v_course_public to anon, authenticated;
+
+insert into schema_version (n, name) values (81, '0081_course_photo')
+on conflict (n) do nothing;

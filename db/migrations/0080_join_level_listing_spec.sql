@@ -30,6 +30,13 @@
 --   필요합니다**(`listing.sub` 는 반대로 일부러 안 박았습니다 — 거기는
 --   종류가 계속 늡니다).
 --
+-- ⚠️⚠️ **앞 번호를 단독으로 다시 돌리시면** — 0069 는 `drop view if
+--   exists v_listing_open; create view …` 꼴이라 **에러 없이** 0069 의
+--   칸 목록으로 되돌아갑니다(= `flex` · `hand` 가 조용히 사라집니다).
+--   붙여넣기 파일(`db/apply-from-0008.sql`)은 **번호 차례로** 돌므로
+--   0080 이 뒤에 와서 다시 채웁니다. 한 파일만 따로 돌리실 일이 있으면
+--   **0080 도 같이** 돌리세요.
+--
 -- 되돌아갔는지 보는 법:
 --   select column_name from information_schema.columns
 --    where table_name = 'listing' and column_name in ('flex','hand');
@@ -250,31 +257,52 @@ revoke all on function edit_joinroom(jsonb) from public;
 grant execute on function edit_joinroom(jsonb) to authenticated;
 
 -- ── ④ 공개 보기에 칸을 더합니다 ──────────────────────────────────
--- ⚠️⚠️ **`create or replace view` 대신 `drop` + `create` 입니다** —
---   앞 번호를 다시 붙여 넣는 날 「cannot drop columns from view」로
---   멈추는 자리입니다(0044 가 그랬습니다). 지우면 **권한도 같이
---   날아가므로 바로 다시 줍니다.**
--- ⚠️ 기대는 보기가 없는지 확인했습니다 — `v_join_count`(0060)는
---   `joinroom` 표를 **직접** 셉니다.
-drop view if exists v_join_open;
-create view v_join_open as
+-- ⚠️⚠️⚠️ **`create or replace view` 로 칸을 더할 수 있습니다** — 제가
+--   앞서 「칸을 못 늘립니다」 라고 적은 것은 **틀렸습니다.** 임시
+--   Postgres 16 에서 재서 고쳤습니다(2026-11-13). 규칙은 이렇습니다:
+--     · 맨 **뒤에** 더하기        → 됩니다
+--     · 가운데에 끼우기 · 차례 바꾸기 → `cannot change name of view
+--       column "b" to "c"` 로 거절
+--     · 칸 빼기                   → `cannot drop columns from view` 로 거절
+--   0044 가 멈춘 자리는 「칸을 더해서」가 아니라, **앞 번호 파일이
+--   옛 칸 목록으로 다시 만들려 해서**(= 칸을 빼는 꼴) 였습니다.
+--
+-- ⚠️⚠️ **그래서 drop 보다 replace 가 낫습니다** — 재서 확인한 차이:
+--     | 무엇            | create or replace | drop + create |
+--     | 권한(GRANT)     | **그대로 남음**   | **사라짐** (다시 줘야 합니다) |
+--     | 기대는 객체     | **그대로 남음**   | `cannot drop view … because
+--     |                 |                   |  other objects depend on it` |
+--   지금은 기대는 보기가 없지만(확인함 — `v_join_count` 는 표를 직접
+--   셉니다), 뒤에 하나라도 생기면 drop 쪽이 그 자리에서 멈춥니다.
+--   ⚠️ `security_invoker` · `security_barrier` 같은 옵션이 replace 에서
+--   그대로 남는지는 **이번에 확인하지 못했습니다** — 지금 두 보기에는
+--   그 옵션이 걸려 있지 않습니다(0046 · 0056 · 0060 · 0069 에 없습니다).
+--   붙이시는 날 그 자리를 다시 재세요.
+--
+-- ⚠️⚠️⚠️ **그래서 새 칸은 반드시 맨 뒤입니다.** 보기 좋으라고 `brand`
+--   옆에 끼우면 그 순간 replace 가 거절합니다.
+create or replace view v_join_open as
   select r.id, r.region, r.play_at, r.title, r.body, r.course, r.booked,
-         r.tee, r.need, r.budget, r.note, r.level, r.created_at,
+         r.tee, r.need, r.budget, r.note, r.created_at,
          (select count(*) from joinapply a
            where a.room_id = r.id and a.state = 'accepted') as taken_n,
          r.need - (select count(*) from joinapply a
                     where a.room_id = r.id and a.state = 'accepted') as left_n,
          (select count(*) from joinapply a
-           where a.room_id = r.id and a.state = 'applied') as waiting_n
+           where a.room_id = r.id and a.state = 'applied') as waiting_n,
+         -- ⚠️ 새 칸은 **맨 뒤**입니다 (위 설명)
+         r.level
     from joinroom r
    where r.state = 'open'
      and r.play_at >= kst_today();
+-- ⚠️ replace 는 권한을 그대로 두지만, **한 번 더 주는 것은 해롭지
+--   않습니다** — 앞 번호를 단독으로 다시 돌려 drop 이 났을 때를 위해
+--   남겨 둡니다(두 번 줘도 아무 일도 안 일어납니다).
 grant select on v_join_open to anon, authenticated;
 
-drop view if exists v_listing_open;
-create view v_listing_open as
+create or replace view v_listing_open as
   select l.id, l.sub, l.region, l.ship, l.title, l.body, l.price, l.cond,
-         l.brand, l.model, l.flex, l.hand, l.state, l.created_at,
+         l.brand, l.model, l.state, l.created_at,
          left(coalesce(nullif(btrim(a.name), ''), '회원'), 1) ||
          repeat('*', greatest(
            char_length(coalesce(nullif(btrim(a.name), ''), '회원')) - 1, 0))
@@ -284,7 +312,9 @@ create view v_listing_open as
          (select count(*) from listingphoto f where f.listing_id = l.id) as photo_n,
          (select f.path from listingphoto f
            where f.listing_id = l.id
-           order by f.ord, f.created_at, f.id limit 1) as thumb
+           order by f.ord, f.created_at, f.id limit 1) as thumb,
+         -- ⚠️ 새 칸 둘도 **맨 뒤**입니다
+         l.flex, l.hand
     from listing l
     left join account a on a.id = l.by_user
    where l.state in ('open','reserved');

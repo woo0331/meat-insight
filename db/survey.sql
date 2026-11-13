@@ -89,6 +89,42 @@ select '⑤ 정책' as 구분, c.relname as 표이름, p.polname as 정책이름
  where n.nspname = 'public'
  order by c.relname, p.polname;
 
+-- ⑤-3 **기본 권한(pg_default_acl)** — 앞으로 만들 객체에 미리 걸린 권한 ──
+-- ⚠️⚠️⚠️ **「지금 표에 걸린 권한」과 「앞으로 만들 객체에 저절로 붙는
+--   권한」은 다릅니다.**
+--   · `grant select on all tables in schema public to anon` 은 **그때
+--     있던 표에만** 걸립니다 → ⑤ 에서 보입니다.
+--   · `alter default privileges in schema public grant select on tables
+--     to anon` 은 **앞으로 만드는 표에 저절로** 붙습니다 → 여기서만
+--     보입니다.
+--   뒤가 걸려 있으면 우리 표 59개가 만들어지는 **그 순간** anon 에게
+--   열립니다. 우리 SQL 은 표마다 `revoke all` 을 먼저 거는 자리가
+--   있지만 **모든 표가 그렇지는 않습니다** — 그래서 미리 봐야 합니다.
+-- ⚠️ `defaclobjtype` : r=표 · v=보기 · S=시퀀스 · f=함수 · T=타입
+select '⑤ 기본권한' as 구분,
+       coalesce(n.nspname, '(스키마 전체)') as 스키마,
+       pg_get_userbyid(d.defaclrole) as 누가만들때,
+       case d.defaclobjtype when 'r' then '표' when 'v' then '보기'
+            when 'S' then '시퀀스' when 'f' then '함수'
+            when 'T' then '타입' else d.defaclobjtype::text end as 무엇에,
+       d.defaclacl::text as 붙는권한
+  from pg_default_acl d
+  left join pg_namespace n on n.oid = d.defaclnamespace
+ order by 스키마, 누가만들때, 무엇에;
+
+-- ⑤-4 **스키마 자체의 권한** ────────────────────────────────────
+-- ⚠️ anon · 회원이 public 스키마에 CREATE 를 가지고 있으면 그 자체가
+--   구멍입니다(Postgres 15 부터는 기본이 꺼져 있습니다).
+select '⑤ 스키마 권한' as 구분, n.nspname as 스키마,
+       has_schema_privilege('anon', n.oid, 'USAGE')          as anon사용,
+       has_schema_privilege('anon', n.oid, 'CREATE')         as anon만들기,
+       has_schema_privilege('authenticated', n.oid, 'USAGE')  as 회원사용,
+       has_schema_privilege('authenticated', n.oid, 'CREATE') as 회원만들기,
+       n.nspacl::text as 권한원문
+  from pg_namespace n
+ where n.nspname in ('public', 'auth', 'storage')
+ order by n.nspname;
+
 -- ⑥ 보기(view) ──────────────────────────────────────────────────
 select '⑥ 보기' as 구분, viewname as 이름, viewowner as 임자
   from pg_views where schemaname = 'public' order by viewname;

@@ -461,6 +461,24 @@
     return b;
   }
 
+  /* 0건을 **두 가지로 갈라** 말합니다 — 아직 아무도 안 열은 것과
+     조건에 맞는 것이 없는 것은 다릅니다(같은 말로 적으면 손님이 조건을
+     지워 볼 생각을 못 합니다). ⚠️ 둘 다 **막다른 길로 두지 않습니다**. */
+  function noneNarrow(){
+    return '<div class="none">' +
+      '<h3>조건에 맞는 조인이 없습니다.</h3>' +
+      '<p>조건을 넓혀 보시거나, 원하시는 날짜로 직접 열어 보세요.</p>' +
+      '<div class="none-b">' +
+        '<button type="button" class="btn btn-line" id="jf-all">조건 지우기</button>' +
+      '</div></div>';
+  }
+  function noneEmpty(){
+    return '<div class="none">' +
+      '<h3>아직 열린 조인이 없습니다.</h3>' +
+      '<p>첫 조인을 열어 보세요. 날짜와 지역만 정하시면 됩니다.</p>' +
+    '</div>';
+  }
+
   function paint(a, rows){
     /* 센 수를 적습니다 — ⚠️ 갯수를 글자로 박지 않고 **세어서** 냅니다 */
     var nl = document.getElementById("jfnow");
@@ -475,17 +493,12 @@
          다른 말입니다.** 같은 말로 적으면 손님이 조건을 지워 볼 생각을
          못 합니다 (`/search` 의 0건 자리에서 적어 둔 그 줄입니다).
          ⚠️ 0건이어도 **막다른 길로 두지 않습니다** (절대 규칙 2). */
-      list.innerHTML = nowBits().length
-        ? '<div class="none">' +
-          '<h3>조건에 맞는 조인이 없습니다.</h3>' +
-          '<p>조건을 넓혀 보시거나, 원하시는 날짜로 직접 열어 보세요.</p>' +
-          '<div class="none-b">' +
-            '<button type="button" class="btn btn-line" id="jf-all">조건 지우기</button>' +
-          '</div></div>'
-        : '<div class="none">' +
-          '<h3>아직 열린 조인이 없습니다.</h3>' +
-          '<p>첫 조인을 열어 보세요. 날짜와 지역만 정하시면 됩니다.</p>' +
-        '</div>';
+      /* ⚠️⚠️ **고르는 것과 찍는 것을 갈라 둡니다** — 삼항으로 글 덩이
+         둘 중 하나를 골라 `innerHTML` 에 바로 넣으면 `check-safe` 가
+         「따라갈 함수 이름이 없는 줄」로 잡습니다. 그 검사가 맞습니다 —
+         찾는 말(`F.q`)이 `nowBits()` 에 들어오면서 **손님 글자가 그
+         줄을 지나게** 됐습니다(0061 · 0068 에서 세운 규칙). */
+      list.innerHTML = nowBits().length ? noneNarrow() : noneEmpty();
       var allb = document.getElementById("jf-all");
       if(allb) allb.addEventListener("click", function(){
         F.rg = ""; F.wh = ""; F.bk = false; F.lv = ""; F.pp = ""; F.q = "";

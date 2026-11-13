@@ -269,4 +269,79 @@ var REVIEWS = [
     body:"시타하고 살 수 있어 좋았습니다.", created_at:ago(24 * 18) }
 ];
 
-module.exports = { PROVIDERS: PROVIDERS, REVIEWS: REVIEWS, kst: kst, ago: ago, ph: ph };
+
+/* ════════════════════════════════════════════════════════════════════
+   ③ 전국 골프장 마스터 — 빌드가 읽습니다 (`js/data/courses.generated.js`)
+
+   ⚠️⚠️⚠️ **이름이 `rows.js` 의 티타임 `course` 와 맞아야** 합니다 —
+   「골프장 정보」 탭과 「예약 가능한 티타임」 탭이 **같은 골프장**을
+   말해야 하기 때문입니다. 둘이 다르면 시연을 보시는 분이 "이 골프장은
+   왜 자리가 없지" 로 읽습니다.
+   ⚠️ 티타임 쪽에는 「… 신코스」 · 「… 구코스」 처럼 코스 이름이 붙은
+   줄이 있습니다 — 마스터는 **골프장 하나**이고 그게 맞습니다(0066 의
+   트리거도 이름이 **정확히 같을 때만** 잇습니다).
+
+   ⚠️⚠️ **값을 다 채우지 않습니다** — 홀 수를 안 적은 곳 · 홈페이지가
+   없는 곳 · 폐업한 곳 자리가 화면에 어떻게 보이는지도 보셔야 합니다.
+   ⚠️⚠️ **좌표는 한 줄도 없습니다** — 0066 이 확인 전에는 비워 두는
+   자리입니다(틀린 좌표로 지도에 찍으면 손님을 엉뚱한 곳으로 보냅니다).
+   ⚠️ 사진은 **분류 사진을 자리를 달리해 잘라 만든 것**입니다 — 그
+   골프장의 실제 사진이 아니고, 시연 서버의 띠가 그 사실을 적습니다.
+   ════════════════════════════════════════════════════════════════════ */
+var COURSES = [
+  { id:"dm-cs-1", slug:"dm-cs-1", kind:"golf", name:"(예시) 그린밸리CC",
+    region:"gyeonggi", gu:"용인시", addr_road:"경기 용인시 처인구 (예시)로 11",
+    tel:"031-000-0011", holes:36, biz_kind:"대중제",
+    site_url:"https://example.com/demo/greenvalley", state:"open",
+    photo_url:ph("booking-1") },
+  { id:"dm-cs-2", slug:"dm-cs-2", kind:"golf", name:"(예시) 북한산뷰CC",
+    region:"gyeonggi", gu:"고양시", addr_road:"경기 고양시 덕양구 (예시)로 22",
+    holes:18, biz_kind:"회원제", state:"open", photo_url:ph("booking-2") },
+  { id:"dm-cs-3", slug:"dm-cs-3", kind:"golf", name:"(예시) 서해솔밭CC",
+    region:"incheon", gu:"중구", addr_road:"인천 중구 (예시)로 33",
+    tel:"032-000-0033", holes:27, biz_kind:"대중제",
+    site_url:"https://example.com/demo/seohae", state:"open",
+    photo_url:ph("booking-3") },
+  { id:"dm-cs-4", slug:"dm-cs-4", kind:"golf", name:"(예시) 한강뷰CC",
+    region:"seoul", gu:"강서구", addr_road:"서울 강서구 (예시)로 44",
+    holes:9, biz_kind:"퍼블릭", state:"open", photo_url:ph("booking-4") },
+  /* ⚠️ 홀 수 · 유형 · 홈페이지 · 사진을 **안 적은** 곳 — 그 줄이
+     카드에서 빠지고 아이콘 타일로 돌아가는지 보셔야 합니다 */
+  { id:"dm-cs-5", slug:"dm-cs-5", kind:"golf", name:"(예시) 설악하이랜드CC",
+    region:"gangwon", gu:"속초시", addr_road:"강원 속초시 (예시)로 55",
+    state:"open" },
+  { id:"dm-cs-6", slug:"dm-cs-6", kind:"golf", name:"(예시) 금강힐스CC",
+    region:"chungnam", gu:"천안시", addr_road:"충남 천안시 (예시)로 66",
+    holes:18, biz_kind:"대중제", state:"open", photo_url:ph("booking-5") },
+  { id:"dm-cs-7", slug:"dm-cs-7", kind:"golf", name:"(예시) 남강레이크CC",
+    region:"gyeongnam", gu:"진주시", addr_road:"경남 진주시 (예시)로 77",
+    holes:18, state:"open", photo_url:ph("booking-6") },
+  { id:"dm-cs-8", slug:"dm-cs-8", kind:"golf", name:"(예시) 해운대오션CC",
+    region:"busan", gu:"기장군", addr_road:"부산 기장군 (예시)로 88",
+    holes:18, biz_kind:"회원제",
+    site_url:"https://example.com/demo/haeundae", state:"open",
+    photo_url:ph("booking-7") },
+  { id:"dm-cs-9", slug:"dm-cs-9", kind:"golf", name:"(예시) 한라오름CC",
+    region:"jeju", gu:"서귀포시", addr_road:"제주 서귀포시 (예시)로 99",
+    holes:27, biz_kind:"대중제", state:"open", photo_url:ph("booking-8") },
+  { id:"dm-cs-10", slug:"dm-cs-10", kind:"golf", name:"(예시) 남도바다CC",
+    region:"jeonnam", gu:"여수시", addr_road:"전남 여수시 (예시)로 10",
+    holes:18, state:"open" },
+  { id:"dm-cs-11", slug:"dm-cs-11", kind:"golf", name:"(예시) 팔공산뷰CC",
+    region:"daegu", gu:"동구", addr_road:"대구 동구 (예시)로 11",
+    holes:18, biz_kind:"대중제", state:"open", photo_url:ph("booking-9") },
+  { id:"dm-cs-12", slug:"dm-cs-12", kind:"golf", name:"(예시) 울산바다CC",
+    region:"ulsan", gu:"울주군", addr_road:"울산 울주군 (예시)로 12",
+    holes:18, state:"open" },
+  /* 폐업 — ⚠️ 지우지 않고 **맨 뒤에서 그 자리에서 말합니다**(0066) */
+  { id:"dm-cs-13", slug:"dm-cs-13", kind:"golf", name:"(예시) 옛터CC",
+    region:"gyeonggi", gu:"이천시", addr_road:"경기 이천시 (예시)로 13",
+    holes:9, biz_kind:"대중제", state:"closed" },
+  /* 연습장 — ⚠️ 부킹 탭에는 **안 나와야** 합니다(kind 가 다릅니다) */
+  { id:"dm-cs-14", slug:"dm-cs-14", kind:"range", name:"(예시) 한강 골프연습장",
+    region:"seoul", gu:"영등포구", addr_road:"서울 영등포구 (예시)로 14",
+    state:"open", photo_url:ph("range-1") }
+];
+
+module.exports = { PROVIDERS: PROVIDERS, REVIEWS: REVIEWS, COURSES: COURSES,
+                   kst: kst, ago: ago, ph: ph };

@@ -131,7 +131,7 @@
   /* ── DB ─────────────────────────────────────────────────────────
      ⚠️ 몇 줄인지는 `content-range` 가 알려 줍니다 — 그 머리글이 없으면
      **쪽 수를 지어내지 않고** 다음 쪽이 있는지만 봅니다. */
-  /* ⚠️⚠️ 운영 DB 에 아지직 없을 수 있는 **신괜 선택 칸** — 0075 가
+  /* ⚠️⚠️ 운영 DB 에 아직 없을 수 있는 **새 선택 칸** — 0075 가
      더한 `thumb` 하나입니다. 여기 적은 이름만 다시 묻기의 대상이고,
      보기 부재(404) · 권한(403) · 인증은 덮지 않습니다. */
   var OPTCOL = ["thumb"];
@@ -156,7 +156,7 @@
       var p2 = dropSel(path, c);
       if(p2 === path) return r;
       if(MISS.indexOf(c) < 0) MISS.push(c);
-      try{ console.warn("[community] 운영 DB 에 아지직 없는 칸을 뻐고 다시 " +
+      try{ console.warn("[community] 운영 DB 에 아직 없는 칸을 빼고 다시 " +
         "물었습니다 — " + c); }catch(_){}
       return once(p2, count);
     });
@@ -185,7 +185,7 @@
            쪽이 **갈라서** 적습니다. */
         /* ⚠️ 까닭은 **부르는 자리가 가리는 대** 쓸 것이고, 여기서
            새는 것은 `status` · `why` 둘입니다 — 손님 화면에는 한 글자도
-           안 나가고(절대 주칙 3) 다시 묻는 한 곳에서만 봅니다. */
+           안 나가고(절대 규칙 3) 다시 묻는 한 곳에서만 봅니다. */
         if(!r.ok) return r.text().then(function(t){
           var o = {}; try{ o = JSON.parse(t) || {}; }catch(_){}
           return { rows:[], total:null, failed:true,

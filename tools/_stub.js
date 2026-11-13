@@ -169,7 +169,7 @@ function stub(p, who, tables, rpcs, up){
         return r.fulfill({ status:200, contentType:"application/json",
                            headers:{ "content-range":"0-0/0" }, body:"[]" });
       let v = tables[key];
-      /* ⚠️⚠️ **주소를 보고 달리 답할 수 있어야** 「없는 칸을 뻐고 다시
+      /* ⚠️⚠️ **주소를 보고 달리 답할 수 있어야** 「없는 칸을 빼고 다시
          묻는가」를 재어 봅니다 — 없는 칸이 들어 있으면 400 · 뻐으면
          줄을 내야 하므로, 정해진 JSON 하나로는 재도 거짓으로 통과합니다. */
       if(typeof v === "function") v = v(u);

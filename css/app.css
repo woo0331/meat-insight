@@ -4690,3 +4690,91 @@ picture{ display: contents; }
 @media (max-width:560px){
   .jntab-i{ flex:1 1 0; min-width:0; padding:0 8px; font-size:14.5px; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   골프장 정보 탭 — /cat/booking (2026-11-13)
+
+   ⚠️⚠️ **`.lsmode` 를 빌려 쓰지 않습니다**(`.cstab`) — 저쪽은 중고장터의
+   매물 갈래이고, 한쪽을 고치는 날 둘이 같이 바뀝니다 (`.lsc*` 를
+   구합니다 글이 빌려 쓰다 이름을 갈라야 했던 그 자리).
+   ⚠️ 모양은 `.lsmode` 와 같게 두었습니다 — 손님이 같은 것으로 읽습니다.
+   ════════════════════════════════════════════════════════════════════ */
+.cstab{ display:flex; flex-wrap:wrap; gap:8px; margin:0 0 20px; }
+.cstab-a{ display:inline-flex; align-items:center; justify-content:center;
+  min-height:46px; padding:0 20px; border-radius:var(--r-pill);
+  font-size:15.5px; font-weight:700; text-decoration:none;
+  color:var(--ink); background:#fff; border:1.5px solid var(--line); }
+.cstab-a:hover{ border-color:var(--grn-deep); }
+.cstab-a.on{ background:var(--grn-deep); border-color:var(--grn-deep);
+  color:#fff; }
+@media (max-width:560px){
+  .cstab-a{ flex:1 1 0; min-width:0; padding:0 10px; font-size:14.5px; }
+}
+/* ⚠️ flex 칸에 `hidden` 을 걸면 **속성은 붙는데 안 가려집니다** — 여기는
+   블록이지만 같은 함정을 막아 둡니다 (작업 기억의 그 자리). */
+.cspane[hidden], #teepane[hidden]{ display:none; }
+.cspane-l{ margin:0 0 16px; color:var(--ink2); }
+
+/* 찾는 칸 — ⚠️ 입력 칸에는 `min-height` 가 저절로 안 붙습니다
+   (손님이 40~60대라 누르는 것은 40px 이상입니다 · 시안 ⑤ 에서 겪은 자리) */
+.csf{ margin:0 0 14px; }
+.csf .csf-q input{ min-height:46px; }
+.csf-go{ display:flex; gap:10px; align-items:flex-end; }
+.csf-n{ margin:14px 0 10px; font-weight:700; color:var(--ink); }
+.chips-csrg{ margin:0 0 4px; }
+.chips-csrg .chip b{ font-weight:700; color:var(--ink2); }
+.chips-csrg .chip.on{ background:var(--grn-deep); border-color:var(--grn-deep);
+  color:#fff; }
+.chips-csrg .chip.on b{ color:#fff; }
+
+/* ── 골프장 카드 ────────────────────────────────────────────────────
+   ⚠️⚠️ **PC 3 · 태블릿 2 · 폰 1열**입니다 — `auto-fill` 을 안 씁니다
+   (칸 수가 폭마다 달라지면 사진이 들쭉날쭉합니다 · 0069 와 같은 규칙). */
+.csc-l{ list-style:none; margin:0; padding:0;
+  display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+@media (max-width:1000px){ .csc-l{ grid-template-columns:repeat(2, 1fr); } }
+@media (max-width:620px){  .csc-l{ grid-template-columns:1fr; } }
+/* ⚠️ 격자 칸은 기본이 `min-width:auto` 라 안에 긴 글이 있으면 칸이
+   벌어져 화면 전체가 가로로 밀립니다 (작업 기억의 그 자리). */
+.csc-l > *{ min-width:0; }
+
+.csc{ position:relative; display:flex; flex-direction:column;
+  background:#fff; border:1.5px solid var(--line); border-radius:var(--r);
+  overflow:hidden; height:100%; }
+.csc:hover{ border-color:var(--grn-deep); }
+/* 사진 — ⚠️ 없으면 아이콘 타일입니다 (남의 사진을 깔지 않습니다) */
+.csc-ph{ display:flex; align-items:center; justify-content:center;
+  aspect-ratio:16 / 9; background:var(--grn-soft);
+  color:var(--grn-deep); flex:0 0 auto; }
+.csc-ph-img{ padding:0; overflow:hidden; background:var(--line-soft); }
+.csc-ph-img img{ width:100%; height:100%; object-fit:cover; display:block; }
+/* ⚠️ 격자 칸 안의 격자는 `align-content:start` 가 없으면 옆 칸 높이에
+   맞춰 늘어납니다 — 여기는 flex 라 `margin-top:auto` 로 단추만 내립니다. */
+.csc-b{ display:flex; flex-direction:column; gap:6px; padding:14px 16px 16px;
+  flex:1 1 auto; }
+.csc-n{ margin:0; font-size:17px; font-weight:800; color:var(--ink);
+  word-break:keep-all; overflow-wrap:anywhere; }
+.csc-w{ margin:0; display:flex; align-items:center; gap:5px;
+  font-size:14px; color:var(--ink2); }
+.csc-w .ic{ color:var(--grn); flex:0 0 auto; }
+.csc-m{ margin:2px 0 0; display:flex; flex-wrap:wrap; gap:6px; }
+.csc-m span{ display:inline-flex; align-items:center; padding:3px 9px;
+  border-radius:var(--r-pill); background:var(--grn-soft);
+  color:var(--grn-text); font-size:13px; font-weight:700; }
+.csc-ad{ margin:4px 0 0; font-size:13.5px; color:var(--ink2);
+  word-break:keep-all; overflow-wrap:anywhere; }
+.csc-go{ margin:12px 0 0; display:flex; flex-wrap:wrap; gap:8px;
+  margin-top:auto; }
+/* ⚠️⚠️ **상세 단추의 `::after` 가 카드를 덮습니다** — 카드를 `<a>` 로
+   감싸면 공식 홈페이지 링크가 **링크 안의 링크**가 됩니다 (레슨 카드에서
+   세운 규칙). 공식 홈페이지 단추는 그 위에 떠 있어야 눌립니다. */
+.csc-go-a::after{ content:""; position:absolute; inset:0; z-index:1; }
+.csc-site{ position:relative; z-index:2; }
+/* 폐업 — ⚠️ 지우지 않고 **그 자리에서 말합니다** (0066)
+   ⚠️⚠️ 카드 바탕을 **분홍(`--bad-soft`)으로 두지 않습니다** — 찍어 보니
+   그 카드만 **오류가 난 것처럼** 보였습니다. 폐업은 사실이지 오류가
+   아닙니다. 바탕은 회색이고 **딱지만** 빨갛습니다. */
+.csc-off{ background:var(--line-soft); }
+.csc-off .csc-ph{ filter:grayscale(1); opacity:.7; }
+.csc-dead{ align-self:flex-start; padding:3px 9px; border-radius:var(--r-pill);
+  background:var(--bad); color:#fff; font-size:12.5px; font-weight:700; }

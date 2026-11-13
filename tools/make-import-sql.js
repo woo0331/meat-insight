@@ -77,8 +77,17 @@ function slugOf(r){
 }
 
 (function(){
+  /* ⚠️⚠️⚠️ **손으로 확인한 묶음도 같이 읽습니다** (2026-11-13) —
+     이 세션은 공공데이터 포털로 못 나가므로(`blocked_sources.csv`)
+     `fetch-courses` 가 받은 줄이 0건입니다. 실제 골프장을 올리는 길은
+     `tools/add-course.js` 가 만드는 `data/review/courses_review.csv`
+     하나이고, 그 줄도 **같은 아래 거름을 지납니다**(출처 · 이름 · 지역 ·
+     상태가 없으면 거절). 두 길을 따로 거르면 한쪽만 느슨해집니다. */
+  var REVIEW = (ARG.find(function(a){ return a.indexOf("--review=") === 0; }) || "").slice(9)
+               || path.join(ROOT, "data", "review", "courses_review.csv");
   var rows = readTable(path.join(STAGE, "courses_clean.csv"))
-    .concat(readTable(path.join(STAGE, "ranges_clean.csv")));
+    .concat(readTable(path.join(STAGE, "ranges_clean.csv")))
+    .concat(readTable(REVIEW));
 
   var refused = [];
   var good = rows.filter(function(r){
@@ -128,15 +137,24 @@ function slugOf(r){
     /* ⚠️ 출처 + 관리번호가 열쇠입니다 — 같은 줄을 두 번 넣어도 하나입니다.
        관리번호가 없으면 **이름 + 지역**으로 찾습니다(그것도 없으면 새 줄). */
     L.push("with up as (");
-    L.push("  insert into course (slug, kind, name, region, gu, addr, addr_road, tel, holes, biz_kind, lat, lng, state)");
+    /* ⚠️⚠️ **공식 홈페이지(`site_url`)도 같이 넣습니다** — `course` 에
+       그 칸이 0066 부터 있고 `v_course_public` 이 내는데, 들여오기가
+       그 칸을 안 보내서 **영원히 비어 있었습니다**("만들어 놓고 안 쓰는
+       칸" 의 또 한 판입니다). 자동 수집 쪽 CSV 에는 그 칸이 없으므로
+       빈 값이 가고, 손으로 확인한 묶음만 채워집니다. */
+    L.push("  insert into course (slug, kind, name, region, gu, addr, addr_road, tel, holes, biz_kind, site_url, lat, lng, state)");
     L.push("  values (" + [q(slug), q(r.kind), q(r.name), q(r.region), q(r.gu), q(r.addr),
                            q(r.addr_road), q(r.tel), num(r.holes), q(r.biz_kind),
-                           num(r.lat), num(r.lng), q(r.state)].join(", ") + ")");
+                           q(r.site_url), num(r.lat), num(r.lng), q(r.state)].join(", ") + ")");
     /* ⚠️ slug 는 **안 덮습니다** (운영자가 고쳐 둔 주소를 지키려고) */
     L.push("  on conflict (lower(slug)) do update set");
     L.push("    name = excluded.name, region = excluded.region, gu = excluded.gu,");
     L.push("    addr = excluded.addr, addr_road = excluded.addr_road, tel = excluded.tel,");
     L.push("    holes = excluded.holes, biz_kind = excluded.biz_kind,");
+    /* ⚠️ 홈페이지는 **빈 값으로 덮지 않습니다** — 자동 수집 쪽에는 그 칸이
+       없어서, 그냥 덮으면 손으로 확인해 넣어 둔 주소가 다음 수집에
+       **지워집니다**(`coalesce` 로 지킵니다). */
+    L.push("    site_url = coalesce(nullif(excluded.site_url, ''), course.site_url),");
     L.push("    lat = excluded.lat, lng = excluded.lng,");
     /* ⚠️⚠️ 운영자가 **가린 것(hidden)은 되살리지 않습니다** — 다시 넣을
        때마다 되살아나면 가리는 일이 아무 뜻이 없습니다. */

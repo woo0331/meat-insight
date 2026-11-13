@@ -85,6 +85,7 @@ const { stub } = require("./_stub.js");
 const OUT = process.env.AM_SHOT_SPEC_OUT || path.join(os.tmpdir(), "shots-spec");
 const GEN = path.join(ROOT, "js", "data", "providers.generated.js");
 const RGEN = path.join(ROOT, "js", "data", "reviews.generated.js");
+const CGEN = path.join(ROOT, "js", "data", "courses.generated.js");
 
 /* ── 씨앗 ─────────────────────────────────────────────────────────
    ⚠️⚠️ **값 · 시설을 다 채우지 않습니다** — 「값을 안 올리신 곳」 ·
@@ -190,6 +191,38 @@ const RV = [
     created_at:"2026-10-30T01:00:00Z" }
 ];
 
+/* ── 골프장 씨앗 (2026-11-13) ─────────────────────────────────────
+   ⚠️⚠️⚠️ **이름을 「(예시) …」 로 둡니다** — 그림에 찍히는 글자라,
+   실제 골프장 이름을 적으면 그 그림을 보신 분이 「제휴가 됐구나」 로
+   읽습니다 (절대 규칙 1 · 표시광고법 제3조).
+   ⚠️⚠️ **값을 다 채우지 않습니다** — 홀 수를 안 적은 곳 · 홈페이지가
+   없는 곳 · 폐업한 곳 자리가 화면에 어떻게 보이는지도 봐야 합니다.
+   ⚠️ 사진은 **한 장도 안 답니다**(`photo_url` 없음) — 지금 운영에
+   골프장 사진이 0장이라 **아이콘 타일이 참 모습**입니다. */
+const CS = [
+  { id:"spec-cs-1", slug:"spec-cs-1", kind:"golf", name:"(예시) 경기 골프장 1",
+    region:"gyeonggi", gu:"용인시", addr_road:"경기 용인시 (예시) 1로 1",
+    holes:18, biz_kind:"대중제", site_url:"https://example.com/1",
+    state:"open" },
+  { id:"spec-cs-2", slug:"spec-cs-2", kind:"golf", name:"(예시) 경기 골프장 2",
+    region:"gyeonggi", gu:"이천시", addr_road:"경기 이천시 (예시) 2로 2",
+    holes:27, biz_kind:"회원제", state:"open" },
+  { id:"spec-cs-3", slug:"spec-cs-3", kind:"golf", name:"(예시) 인천 골프장 1",
+    region:"incheon", gu:"중구", addr_road:"인천 중구 (예시) 3로 3",
+    holes:18, biz_kind:"대중제", site_url:"https://example.com/3",
+    state:"open" },
+  /* 홀 수 · 유형 · 홈페이지를 **안 적은** 곳 — 그 줄이 빠지는지 봅니다 */
+  { id:"spec-cs-4", slug:"spec-cs-4", kind:"golf", name:"(예시) 강원 골프장 1",
+    region:"gangwon", addr_road:"강원 (예시) 4로 4", state:"open" },
+  /* 폐업 — ⚠️ 지우지 않고 **맨 뒤에서 그 자리에서 말합니다**(0066) */
+  { id:"spec-cs-5", slug:"spec-cs-5", kind:"golf", name:"(예시) 충청 골프장 1",
+    region:"chungnam", gu:"천안시", holes:9, biz_kind:"대중제",
+    state:"closed" },
+  /* 연습장 — ⚠️ 부킹 탭에는 **안 나와야** 합니다(kind 가 다릅니다) */
+  { id:"spec-cs-6", slug:"spec-cs-6", kind:"range", name:"(예시) 연습장 A",
+    region:"seoul", gu:"강남구", state:"open" }
+];
+
 function plant(){
   fs.writeFileSync(GEN,
     "/* 캡처용 씨앗 — tools/shot-spec.js 가 **사본에만** 써 둔 것입니다. */\n" +
@@ -199,6 +232,10 @@ function plant(){
     "/* 캡처용 씨앗 — tools/shot-spec.js 가 **사본에만** 써 둔 것입니다. */\n" +
     "window.AM_REVIEWS_AT = \"캡처용 씨앗\";\n" +
     "window.AM_REVIEWS = " + JSON.stringify(RV, null, 2) + ";\n");
+  fs.writeFileSync(CGEN,
+    "/* 캡처용 씨앗 — tools/shot-spec.js 가 **사본에만** 써 둔 것입니다. */\n" +
+    "window.AM_COURSES_AT = \"캡처용 씨앗\";\n" +
+    "window.AM_COURSES = " + JSON.stringify(CS, null, 2) + ";\n");
 }
 function build(){
   const r = cp.spawnSync(process.execPath, [path.join(ROOT, "build.js")],
@@ -429,7 +466,14 @@ const SCENES = [
   ["09-career",    "/cat/career",    CUST,
     { v_job_open:JOB, v_job_fav:[] }, {}, null],
   ["10-community", "/cat/community", CUST,
-    { v_cq_public:CQ, v_ca_public:[] }, {}, null]
+    { v_cq_public:CQ, v_ca_public:[] }, {}, null],
+  /* ⚠️⚠️ 「골프장 정보」 탭은 **DB 를 한 번도 안 부릅니다** — 빌드가
+     찍어 둔 `AM_COURSES` 만 읽습니다. 그래도 `CUST` 로 열어 둡니다:
+     설정이 있을 때와 없을 때가 **같은 모양**이어야 하기 때문입니다. */
+  ["11-course",    "/cat/booking?tab=course", CUST,
+    { v_teetime_open:TEE, v_teetime_count:TCNT, v_join_count:JCNT }, {}, null],
+  /* 설정이 아예 없는 자리 — ⚠️ 탭이 그래도 돌아야 합니다 */
+  ["12-course-off","/cat/booking?tab=course", null, null, null, null]
 ];
 
 const WIDTHS = [[1280, "pc"], [360, "mo"]];

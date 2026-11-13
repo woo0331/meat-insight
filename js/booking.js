@@ -32,6 +32,9 @@
   /* ⚠️ 이 화면이 부킹인지 조인인지 — 빌드가 상자에 적어 줍니다 */
   var KIND = box.getAttribute("data-teekind") || "booking";
   var A = null, PICK = null;
+  /* ⚠️ 마지막으로 불러온 때 · 그때의 한국 날짜 — 자정 넘김과 화면 복귀를
+     가리는 데 씁니다 (`load()` 가 채웁니다). */
+  var LOADED = 0, TODAY = "";
   /* ⚠️ `course` 는 메인의 찾는 칸이 보내는 열쇠입니다 — 여기 없으면
      `val("course")` 가 읽을 칸이 없어 조용히 안 걸립니다. */
   var S = { rg:"", d:"", course:"", t:"", p:"" };
@@ -64,6 +67,15 @@
   function kstISO(plusDays){
     var t = Date.now() + 9 * 3600 * 1000 + (plusDays || 0) * 86400000;
     return new Date(t).toISOString().slice(0, 10);
+  }
+  /* ⚠️⚠️ **한국 시각의 지금 시 · 분**입니다 (`HH:MM`).
+     ⚠️ `getUTC*` 로 꺼냅니다 — `getHours()` 는 **보는 분 기계의 시간대**로
+     돌려주므로, 시간대가 UTC 인 기계에서는 아홉 시간 어긋납니다(날짜
+     글자가 하루 앞으로 찍히던 그 자리와 같은 결). */
+  function p2(n){ return (n < 10 ? "0" : "") + n; }
+  function kstNow(){
+    var t = new Date(Date.now() + 9 * 3600 * 1000);
+    return p2(t.getUTCHours()) + ":" + p2(t.getUTCMinutes());
   }
   function day(iso){
     /* ⚠️⚠️⚠️ **글자를 그대로 읽습니다** — 전에는 `"+09:00"` 으로 지어 놓고
@@ -369,7 +381,39 @@
         : zero());
   }
 
+  /* ── 오늘 **이미 지난 티오프는 뺍니다** (2026-11-13) ──────────────
+     ⚠️⚠️⚠️ 보기(`v_teetime_open`)는 `play_at >= kst_today()` 까지만
+     거릅니다 — **날짜**만 봅니다. 그래서 오늘 새벽 6시 자리가 오후
+     3시에도 「예약 가능」으로 섰습니다. 지나간 자리에 신청을 보내시면
+     업체가 거절할 수밖에 없고, 그건 우리가 못 지킬 것을 보여 준
+     것입니다(절대 규칙 5).
+     ⚠️⚠️ **거르는 것은 서버입니다** — 백 줄만 받아 화면에서 빼면 맞는
+     자리가 그 백 줄 밖에 있을 때 0건으로 보입니다.
+     ⚠️⚠️ **시각이 아직 안 정해진 자리(`tee_at` 이 빈 줄)는 남깁니다** —
+     모르는 것을 "지났다" 고 단정하지 않습니다.
+     ⚠️ 날짜를 **안 고르셨으면** 오늘만 시각으로 거르고 내일부터는 그대로
+     냅니다 (한 조건으로 묶으면 내일 아침 7시 자리가 같이 빠집니다).
+     ⚠️ **미래 날짜를 고르셨으면 아무것도 안 겁니다** — 그 날은 지난
+     시각이 없습니다. */
+  function pastCut(qs){
+    var today = kstISO(0), now = kstNow();
+    if(S.d && S.d > today) return;                 /* 미래 날짜 — 안 겁니다 */
+    if(S.d === today){
+      qs.push("or=(tee_at.gte." + encodeURIComponent(now) + ",tee_at.is.null)");
+      return;
+    }
+    if(S.d) return;                                /* 지난 날짜 — 보기가 이미 뺍니다 */
+    /* 전체 — 오늘만 시각으로 거릅니다 */
+    qs.push("or=(play_at.gt." + encodeURIComponent(today) +
+            ",and(play_at.eq." + encodeURIComponent(today) +
+            ",tee_at.gte." + encodeURIComponent(now) + ")" +
+            ",and(play_at.eq." + encodeURIComponent(today) +
+            ",tee_at.is.null))");
+  }
+
   function load(){
+    LOADED = Date.now();
+    TODAY  = kstISO(0);
     box.innerHTML = bar() + '<p class="myhint">불러오는 중입니다…</p>';
     /* ⚠️⚠️ **거르는 것은 서버입니다** (화면에서 거르면 조건에 맞는 자리가
        받아 온 줄 밖에 있을 때 0건으로 보입니다). */
@@ -414,7 +458,7 @@
        ⚠️ `*` 는 PostgREST 의 자리표이고 손님 글자는 그대로 갑니다. */
     if(S.course) qs.push("course=ilike." +
       encodeURIComponent("*" + S.course + "*"));
-    /* ⚠️⚠️ 가격(1인 그린피) — 아래를 닫고 위를 여달니다(gte · lt).
+    /* ⚠️⚠️ 가격(1인 그린피) — 아래를 닫고 위를 닫습니다(gte · lt).
        ⚠️ **값을 안 올린 자리는 빠집니다**(null 과 견주는 순간 빠집니다) —
        0건 안내가 그 사실을 적습니다. */
     var pb = window.amTeePriceBand ? window.amTeePriceBand(S.p) : null;
@@ -437,11 +481,12 @@
     }
     /* ⚠️ 달력으로 찾을 수 있는 끝 — 지시서 §5 (61~90일은 사전 상담만) */
     else if(SEARCH) qs.push("play_at=lte." + encodeURIComponent(kstISO(SEARCH)));
+    pastCut(qs);
     /* ⚠️⚠️⚠️ **정상 0건과 조회 실패를 가립니다** — 여기는 전부터
        갈려 있었고(`get` 이 null 을 돌린다), 이번에 더한 것은 **확인된
-       신괜 선택 칸만 분리해 다시 묻는 것**입니다 — 0081 이 더한
-       `photo` 가 운영 DB 에 아지직 없으면 PostgREST 가 400 을 내고
-       **티타임 목록이 통째로** 사라집니다. 그때만 그 칸을 뻐고 한 번
+       새 선택 칸만 분리해 다시 묻는 것**입니다 — 0081 이 더한
+       `photo` 가 운영 DB 에 아직 없으면 PostgREST 가 400 을 내고
+       **티타임 목록이 통째로** 사라집니다. 그때만 그 칸을 빼고 한 번
        다시 묻습니다(사진은 아이콘 타일로 돌아갑니다).
        ⚠️⚠️ 보기 부재(404) · 권한(403) · 인증은 **덮지 않습니다.** */
     return window.amRowsSoft(qs, OPTCOL, function(q){
@@ -452,7 +497,7 @@
       if(x.miss && x.miss.length) tookOut(x.miss);
       paint(x.rows, MISS);
     }).catch(function(e){
-      /* ⚠️ 까닭은 **개발 기록에만** 적습니다 (절대 주칙 3) */
+      /* ⚠️ 까닭은 **개발 기록에만** 적습니다 (절대 규칙 3) */
       window.amFailLog("booking/v_teetime_open", e);
       box.innerHTML = bar() + window.amFailHtml("티타임 목록");
       var t = box.querySelector("[data-amretry]");
@@ -460,7 +505,7 @@
     });
   }
 
-  /* ⚠️⚠️ 운영 DB 에 아지직 없을 수 있는 **신괜 선택 칸** — 0081 이
+  /* ⚠️⚠️ 운영 DB 에 아직 없을 수 있는 **새 선택 칸** — 0081 이
      더한 `photo` 하나입니다. ⚠️ 이것은 거르개가 아니라 **그림**이므로
      가릴 거르개가 없습니다 — 사진이 없으면 `phHtml` 이 아이콘 타일로
      돌아가므로 화면은 그대로 서고, 달리 안내할 것도 없습니다. */
@@ -468,6 +513,48 @@
   var MISS = [];
   function tookOut(gone){
     gone.forEach(function(c){ if(MISS.indexOf(c) < 0) MISS.push(c); });
+  }
+
+  /* ── 자정이 지나거나 화면에 다시 돌아오면 갱신합니다 (2026-11-13) ──
+     ⚠️⚠️⚠️ 이 화면은 **열어 둔 채 오래 둡니다**(날짜를 고르고 자리를
+     고르는 동안). 그 사이 자정이 지나면 날짜 띠의 「오늘」이 어제가
+     되고, 지난 시각 거르개도 어제 시각으로 걸려 **지나간 자리가
+     예약 가능으로** 남습니다. 그러면 손님이 **다른 날짜를 예약**하십니다.
+     ⚠️⚠️ **고르신 미래 날짜는 안 되돌립니다** — 자정이 지났다고 「오늘」로
+     튕기면, 모레를 보고 계시던 분이 까닭도 없이 오늘로 끌려옵니다.
+     지난 날짜가 되었을 때만 비웁니다(그 날은 보기가 이미 안 냅니다).
+     ⚠️ 돌아오실 때도 갱신합니다 — 티오프 시각은 **가만히 있어도**
+     지나갑니다. 다만 **탭을 스칠 때마다** 다시 묻지는 않습니다
+     (마지막으로 읽은 지 1분이 안 됐으면 그대로 둡니다).
+     ⚠️ `setInterval` 은 **날짜만** 봅니다 — 1분마다 목록을 다시 불러오면
+     보고 계신 자리가 1분마다 튑니다. */
+  var BACK_MS = 60 * 1000;
+  function freshen(force){
+    var now = kstISO(0);
+    var rolled = (TODAY && now !== TODAY);
+    if(rolled){
+      TODAY = now;
+      /* ⚠️ **지난 날짜만** 비웁니다 (미래는 그대로) */
+      if(S.d && S.d < now) S.d = "";
+    }
+    if(!A) return;
+    if(rolled || force || (Date.now() - LOADED) > BACK_MS) load();
+  }
+  function watchDay(){
+    try{
+      setInterval(function(){
+        /* 날짜가 바뀐 때만 다시 묻습니다 */
+        if(TODAY && kstISO(0) !== TODAY) freshen(true);
+      }, 30 * 1000);
+      document.addEventListener("visibilitychange", function(){
+        if(!document.hidden) freshen(false);
+      });
+      /* ⚠️ `pageshow` 는 **뒤로 가기로 되살아난 화면**(bfcache)을 잡습니다 —
+         그때는 `visibilitychange` 가 안 옵니다. */
+      window.addEventListener("pageshow", function(e){
+        if(e && e.persisted) freshen(true);
+      });
+    }catch(e){ }
   }
 
   box.addEventListener("submit", function(e){
@@ -577,6 +664,7 @@
       var pv = (u.get("p") || "").trim();
       if(pv && window.amTeePriceBand && window.amTeePriceBand(pv)) S.p = pv;
     }catch(e){ }
+    watchDay();
     return load();
   }).catch(function(){});
 })();

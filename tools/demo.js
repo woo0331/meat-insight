@@ -99,7 +99,13 @@ function keysNeeded(){
     if(Array.isArray(v)) return v.forEach(eat);
     if(v && typeof v === "object") Object.keys(v).forEach(function(k){ eat(v[k]); });
   }
-  eat(DATA.PROVIDERS); eat(ROWS);
+  /* ⚠️⚠️⚠️ **골프장 마스터도 훑습니다** (2026-11-13) — 안 훑었더니
+     `booking-1`~`booking-9` · `range-1` 이 **한 장도 안 만들어져** 골프장
+     카드 아홉 장이 **깨진 그림**으로 떴습니다(찍어 보고 알았습니다 ·
+     0081 의 `course/<uuid>` 경로를 빠뜨렸던 그 자리의 되풀이).
+     ⚠️ 자료 묶음을 더하는 날 **여기도 같이** — 빠지면 에러 없이
+     빈 네모만 보입니다. */
+  eat(DATA.PROVIDERS); eat(DATA.COURSES); eat(ROWS);
   return Object.keys(want);
 }
 
@@ -142,6 +148,13 @@ function plant(){
     "/* 시연용 예시 자료 — tools/demo.js 가 **사본에만** 써 둔 것입니다. */\n" +
     'window.AM_REVIEWS_AT = "시연용 예시 자료";\n' +
     "window.AM_REVIEWS = " + JSON.stringify(DATA.REVIEWS, null, 2) + ";\n");
+  /* ⚠️⚠️ 「골프장 정보」 탭(2026-11-13)은 **DB 를 안 부르고** 이 파일만
+     읽습니다 — 안 심으면 그 탭이 「아직 등록된 골프장이 없습니다」로
+     남고, 시연을 보시는 분은 **안 만든 것**으로 읽습니다. */
+  fs.writeFileSync(path.join(ROOT2, "js", "data", "courses.generated.js"),
+    "/* 시연용 예시 자료 — tools/demo.js 가 **사본에만** 써 둔 것입니다. */\n" +
+    'window.AM_COURSES_AT = "시연용 예시 자료";\n' +
+    "window.AM_COURSES = " + JSON.stringify(DATA.COURSES, null, 2) + ";\n");
 }
 
 (async function(){

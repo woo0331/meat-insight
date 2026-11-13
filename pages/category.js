@@ -164,6 +164,92 @@ KIND.trade.zeroD = KIND.provider.zeroD;
    끊기지 않습니다**(없는 것을 있다고 적지 않습니다).
    ⚠️ 켜진 탭은 **첫 탭(개인 매물)** 으로 찍습니다 — 기본 주소가 그쪽이고,
    `?mode=pro` 로 들어오시면 화면이 옮겨 답니다. */
+/* ════════════════════════════════════════════════════════════════════
+   골프장 정보 탭 — /cat/booking (2026-11-13)
+
+   ⚠️⚠️⚠️ **마이그레이션이 한 줄도 없습니다.** `course`(0066)에 홀 수
+   (`holes`) · 유형(`biz_kind`) · 공식 홈페이지(`site_url`) · 사진
+   (`photo` · 0081)이 **이미 전부** 있습니다. 「새 칸이 필요하다」고
+   적기 전에 그 표를 여세요 — 0069 · 여행 해외지역에서 두 번 겪은
+   자리입니다.
+
+   ⚠️⚠️ **빌드가 전부 찍습니다** (`AM_COURSES`) — 크롤러가 보는 HTML 에
+   골프장이 들어가고, 설정(Supabase)이 없어도 목록이 섭니다. 거르는 것은
+   `js/courselist.js` 가 **화면에서** 합니다 — 그래도 새는 줄이 없습니다
+   (목록 전체가 화면에 있고 LIMIT 이 없습니다. `/cat/used` 가 서버에서
+   거르는 까닭은 거기에 LIMIT 이 있기 때문입니다).
+
+   ⚠️⚠️⚠️ **날짜 · 시간 거르개는 이 탭에 한 글자도 안 걸립니다.** 골프장
+   정보는 "그 골프장이 어떤 곳인가" 이고 날짜로 달라지지 않습니다 —
+   날짜를 고르면 골프장 목록이 줄어드는 화면은 손님을 속이는 것입니다.
+
+   ⚠️ 0곳이면 **0곳이라고 말합니다**(절대 규칙 1). 지금 운영 DB 에
+   `course` 표가 없어 `AM_COURSES` 가 **0곳**입니다 — 채우지 않습니다.
+   ════════════════════════════════════════════════════════════════════ */
+function courseTabs(c){
+  var u = W.amCatUrl(c);
+  var T = [["tee", "예약 가능한 티타임"], ["course", "골프장 정보"]];
+  return '<nav class="cstab" aria-label="골프장 정보와 티타임 나눠 보기">' +
+    T.map(function(x){
+      var on = (x[0] === "tee");
+      return '<a class="cstab-a' + (on ? " on" : "") + '" data-cstab="' +
+        esc(x[0]) + '" href="' + esc(u + (on ? "" : "?tab=" + x[0])) + '"' +
+        (on ? ' aria-current="true"' : "") + '>' + esc(x[1]) + '</a>';
+    }).join("") + '</nav>';
+}
+
+function coursePane(c){
+  var kind = "golf";
+  var L = W.amCourseList ? W.amCourseList(kind) : [];
+  /* ⚠️⚠️ 센 수는 **지금 이 화면에 있는 수**입니다 — 전체인 것처럼
+     적지 않습니다(한도가 없으므로 여기서는 둘이 같습니다). */
+  return '<div id="cspane" class="cspane" hidden>' +
+    /* 찾는 칸 — ⚠️ **양식(form)** 입니다. 자바스크립트가 꺼져도 GET 으로
+       돌고, 켜져 있으면 `js/courselist.js` 가 가로채 주소만 바꿉니다. */
+    '<form class="jform csf" id="csf" method="get" action="' +
+      esc(W.amCatUrl(c)) + '">' +
+      '<input type="hidden" name="tab" value="course">' +
+      '<div class="jrow jrow-full csf-q"><label for="csf-q">골프장 이름</label>' +
+      '<input id="csf-q" name="q" type="search" maxlength="40" ' +
+        'placeholder="골프장 이름 · 지역으로 찾기"></div>' +
+      '<div class="jrow csf-go">' +
+      '<button type="submit" class="btn btn-pri">찾기</button>' +
+      '<button type="button" class="btn btn-line csf-all" hidden>조건 지우기</button>' +
+      '</div>' +
+    '</form>' +
+    /* ⚠️⚠️ 칩 줄은 `amCourseChipRow()` **한 함수**입니다 — 빌드와
+       브라우저가 같은 것을 부릅니다(두 벌로 적으면 거르개를 누르는 순간
+       칩이 조용히 달라집니다). */
+    W.amCourseChipRow(W.amCatUrl(c), kind, "") +
+    '<p class="csf-n" id="csf-n">' +
+      (L.length ? '골프장 ' + esc(String(L.length)) + '곳' : "") + '</p>' +
+    '<div id="cslist">' +
+      (L.length ? W.amCourseCards(L) : courseZero()) +
+    '</div>' +
+    /* ⚠️⚠️⚠️ **「예약 가능 · 공식 제휴」를 적지 않습니다** — 저희가 그
+       골프장과 맺은 것이 아무것도 없습니다(0066). 여기 있는 것은 공공
+       자료로 만든 **안내**이고, 실제로 예약을 신청할 수 있는 자리는
+       「예약 가능한 티타임」 탭의 업체가 올린 자리뿐입니다. */
+    '<p class="jnote">⚠️ 골프장 정보는 <b>공공 자료</b>로 만든 안내입니다 — ' +
+    '골프올인원이 그 골프장과 맺은 제휴가 아니며, 여기서 <b>바로 예약이 ' +
+    '되지 않습니다.</b> 예약 신청은 「예약 가능한 티타임」 탭의 ' +
+    '<b>업체가 올린 자리</b>에서만 됩니다. ' +
+    '값 · 잔여 자리 · 운영 시간은 <b>골프장에 확인해 주세요.</b></p>' +
+  '</div>';
+}
+
+/* 0곳 — ⚠️⚠️ **막다른 길로 두지 않습니다**(절대 규칙 2) */
+function courseZero(){
+  return '<div class="none"><h3>아직 등록된 골프장이 없습니다.</h3>' +
+    '<p>전국 골프장 정보는 <b>공식 · 공공 출처에서 확인한 것만</b> 싣습니다 — ' +
+    '지어낸 시설을 한 줄도 넣지 않기 때문에, 확인이 끝난 곳부터 차례로 ' +
+    '올라옵니다.</p>' +
+    '<p class="none-go">' +
+    '<a class="btn btn-pt" href="/match?cat=booking">부킹 상담 요청하기</a>' +
+    '<a class="btn btn-line" href="/join">골프장 · 부킹업체 입점 신청</a>' +
+    '</p></div>';
+}
+
 function usedTabs(){
   var T = [["", "개인 매물"], ["pro", "업체 매입 · 위탁"]];
   return '<section class="sec lsmode-sec"><div class="wrap">' +
@@ -1391,16 +1477,32 @@ exports.build = function(c){
       '</div></section>'
     : '';
 
+  /* ⚠️⚠️⚠️ **탭 둘은 부킹에만** 섭니다 — 조인(`/cat/matchup`)에는
+     골프장 마스터로 좁힐 자료가 없습니다(`joinroom` 은 골프장을 자유
+     글자로 받습니다). 거기에 탭을 내면 눌러도 아무 일이 안 나는 칸이
+     됩니다(절대 규칙 5).
+     ⚠️⚠️ **빌드는 구간 둘을 다 찍습니다**(주소를 모릅니다) —
+     자바스크립트가 꺼져 있으면 둘 다 보이고, 그래도 길은 안 끊깁니다
+     (중고장터 탭에서 세운 그 규칙). */
   var teeSec = (c.key === "booking" || c.kind === "match")
-    ? '<section class="sec"><div class="wrap">' +
+    ? '<section class="sec" id="tee"><div class="wrap">' +
       '<div class="sec-hd"><h2>' +
-        (c.key === "booking" ? '제휴 골프장이 올린 티타임' : '업체가 내놓은 조인 자리') +
+        (c.key === "booking" ? '골프장 정보와 예약 가능한 티타임'
+                             : '업체가 내놓은 조인 자리') +
       '</h2>' +
-      '<p>입점한 골프장 · 업체가 직접 올린 <b>남는 자리</b>입니다. ' +
+      (c.key === "booking"
+        ? '<p>전국 골프장 정보는 <b>공공 자료</b>로 만든 안내이고, ' +
+          '예약 신청은 <b>입점한 업체가 올린 자리</b>에서만 됩니다 — ' +
+          '탭으로 나눠 보여 드립니다.</p>'
+        : '') +
+      '</div>' +
+      (c.key === "booking" ? courseTabs(c) : '') +
+      '<div id="teepane">' +
+      '<p class="cspane-l">입점한 골프장 · 업체가 직접 올린 <b>남는 자리</b>입니다. ' +
       /* ⚠️⚠️⚠️ '예약 완료' 를 약속하지 않습니다 (지시서 §6) */
       '예약 신청을 보내시면 <b>업체가 확인하고 확정</b>합니다 — 신청만으로 ' +
       '자리가 잡히지 않습니다. 골프올인원은 거래 당사자가 아니며 ' +
-      '<b>결제를 받지 않습니다.</b></p></div>' +
+      '<b>결제를 받지 않습니다.</b></p>' +
       '<div id="ttlist" data-teekind="' +
         (c.key === "booking" ? "booking" : "join") + '">' +
         '<div class="none"><h3>자리를 보시려면 잠시만 기다려 주세요.</h3>' +
@@ -1410,6 +1512,8 @@ exports.build = function(c){
       '<p class="jnote">⚠️ 상호와 전화번호는 <b>업체가 공개한 값</b>입니다 ' +
       '(사업자 정보 또는 업체가 적은 예약 문의 번호). 예약을 신청하시면 ' +
       '성함과 연락처가 <b>그 업체에만</b> 넘어갑니다.</p>' +
+      '</div>' +
+      (c.key === "booking" ? coursePane(c) : '') +
       '</div></section>'
     : '';
 
@@ -1625,9 +1729,16 @@ exports.build = function(c){
          합니다: site.js(보유 기간 · 찾을 수 있는 날 수 — 비면 신청
          양식을 **안 엽니다**) · regions.js(지역 칸) · deal.js(상태 말).
          하나라도 빠지면 양식이 **조용히** 안 열립니다. */
+      /* ⚠️⚠️⚠️ `courses.generated.js` · `courses.js` · `courselist.js` 셋은
+         **「골프장 정보」 탭**입니다 (2026-11-13). 그 탭은 DB 를 한 번도
+         안 부르고 빌드가 찍어 둔 목록만 읽으므로 **설정이 없어도** 돕니다 —
+         하나라도 빠지면 탭을 눌러도 아무 일이 안 납니다(절대 규칙 5).
+         ⚠️ `courses.js` 는 `courses.generated.js` **뒤**라야 합니다
+         (앞은 목록 · 뒤는 그 목록을 읽는 함수입니다). */
       : (c.key === "booking"
           ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
-             "/js/teeboard.js", "/js/booking.js"]
+             "/js/data/courses.generated.js", "/js/data/courses.js",
+             "/js/teeboard.js", "/js/booking.js", "/js/courselist.js"]
       /* ⚠️ 게시판 글 사진도 **공개 버킷**으로 가므로 `imgprep.js` 가
          먼저 서야 합니다 (위치정보를 떼는 한 곳입니다). */
       : (c.key === "community" ? ["/js/imgprep.js", "/js/community.js"]

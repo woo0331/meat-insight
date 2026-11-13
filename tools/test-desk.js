@@ -207,8 +207,13 @@ function boardsOf(){
      "보유 기간이 비면 양식을 안 엽니다" 처럼 **설정이 없을 때**를 재려면
      그 값이 담기는 순간을 가로채야 합니다 (js/data/site.js 가 나중에
      덮으므로 그냥 넣어 두면 지워집니다). 안 주면 아무 일도 안 합니다. */
-  async function open(path, who, tables, rpcs, up, init){
-    const p = await b.newPage({ viewport: view });
+  /* ⚠️⚠️ `tz` — **보는 분 기계의 시간대**를 바꿔 엽니다 (2026-11-13).
+     날짜 글자를 `getMonth()` · `getDate()` 로 꺼내면 그 둘이 **기계의
+     시간대**로 돌려주어 한국 밖에서 하루 앞으로 찍혔습니다 — 그 자리를
+     다시 밟지 않으려면 **시간대를 바꿔 놓고** 재야 합니다. */
+  async function open(path, who, tables, rpcs, up, init, tz){
+    const p = await b.newPage(tz ? { viewport: view, timezoneId: tz }
+                                 : { viewport: view });
     const errs = watch(p);
     if(init) await p.addInitScript(init);
     const sent = await stub(p, who, tables, rpcs, up);
@@ -4495,7 +4500,8 @@ function boardsOf(){
         document.querySelectorAll(".jnc, .jbox, .jnl, .none"),
         function(box){
           Array.prototype.forEach.call(box.querySelectorAll("*"), function(e){
-            if(e.firstChild && e.firstChild.nodeType === 3 && (e.textContent||"").trim()){
+            if(e.firstChild && e.firstChild.nodeType === 3 &&
+               (e.textContent||"").trim() && e.getClientRects().length > 0){
               const fs = parseFloat(getComputedStyle(e).fontSize);
               if(fs < 12) small.push(e.tagName + " " + fs);
             }
@@ -4981,7 +4987,7 @@ function boardsOf(){
                book: document.querySelectorAll(".tf-book").length };
     });
     /* ⚠️⚠️ **갯수를 박지 않습니다** — 씨앗에 줄을 하나 더했다고
-       멀쒗한 화면이 떨어지면 그건 검사가 틀린 것입니다(저장소가
+       멀쩡한 화면이 떨어지면 그건 검사가 틀린 것입니다(저장소가
        여러 번 밟은 자리). 재려는 뜻은 「씨앗만큼 그려지나」입니다. */
     ok("티타임 목록이 그려진다 (씨앗만큼)", r.n === TEE.length, "줄 " + r.n);
     ok("  상호와 **공개 전화번호**가 나온다 (제20조 제2항 · 0057)",
@@ -5075,11 +5081,11 @@ function boardsOf(){
     /* ⚠️⚠️⚠️ **2026-11-13 에 뒤집었습니다.** 그 전까지는 「사진을
        깔지 않는다」를 **요구**했습니다 — 0081 이 `course.photo` 를 내면서
        그 줄을 그대로 두면 **되게 만든 것을 고장으로** 잡습니다
-       (저장소가 여러 번 밟은 「옷 뜻을 그대로 둔 검사는 고장을 지킵니다」). */
+       (저장소가 여러 번 밟은 「옛 뜻을 그대로 둔 검사는 고장을 지킵니다」). */
     ok("⚠⚠ 사진이 있는 자리만 그림 · 없는 자리는 **아이콘 타일** (0081)",
        c.withPh.img === 1 && c.withPh.ico === c.withPh.n - 1 && c.withPh.n >= 3,
        JSON.stringify(c.withPh));
-    ok("  ⚠️ alt 에 **그 골프장 이름**을 적는다 (「사진」만 적으면 어느 곣인지 모릅니다)",
+    ok("  ⚠️ alt 에 **그 골프장 이름**을 적는다 (「사진」만 적으면 어느 곳인지 모릅니다)",
        c.withPh.alt.indexOf("사진 있는 코스") >= 0, c.withPh.alt);
     await g.p.close();
   }
@@ -5106,6 +5112,294 @@ function boardsOf(){
        qs.some(function(u){ return u.indexOf("play_at=eq.") >= 0; }),
        qs.slice(0, 2).join(" | ").slice(0, 160));
     await g.p.close();
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     ③ 골프장 정보 탭 · 날짜 자동 갱신 (2026-11-13)
+
+     ⚠️⚠️⚠️ **「골프장 정보」 탭은 DB 를 한 번도 안 부릅니다** — 빌드가
+     찍어 둔 `AM_COURSES` 만 읽습니다. 그래서 설정이 없어도 돌아야 하고,
+     **날짜 · 시간 거르개가 그 목록을 한 글자도 안 바꿔야** 합니다
+     (골프장 정보는 날짜로 달라지지 않습니다).
+     ⚠️⚠️ 거르개는 **보내는 질의를 뜯어** 봅니다 — 흉내 장치는 걸러 주지
+     않으므로 줄 수로 재면 거르개를 통째로 떼어도 영원히 초록입니다.
+     ══════════════════════════════════════════════════════════════ */
+  {
+    const CUST = { role:"customer", name:"손님", signedIn:true };
+    const CS = [
+      { id:"tc-1", slug:"tc-1", kind:"golf", name:"(검사) 경기 코스 1",
+        region:"gyeonggi", gu:"용인시", addr_road:"경기 용인시 1로 1",
+        holes:18, biz_kind:"대중제", site_url:"https://example.com/1",
+        state:"open" },
+      { id:"tc-2", slug:"tc-2", kind:"golf", name:"(검사) 인천 코스 1",
+        region:"incheon", gu:"중구", holes:27, state:"open" },
+      /* ⚠️ 홈페이지 주소가 **꼴이 아닌** 자리 — 그 단추를 안 내는지 봅니다
+         (`javascript:` 가 섞여 들어오면 거기가 구멍입니다 · 0064) */
+      { id:"tc-3", slug:"tc-3", kind:"golf", name:"(검사) 서울 코스 1",
+        region:"seoul", site_url:"javascript:alert(9)", state:"open" },
+      /* 폐업 — ⚠️ 지우지 않고 **맨 뒤에서** 말합니다 */
+      { id:"tc-4", slug:"tc-4", kind:"golf", name:"(검사) 가 폐업 코스",
+        region:"gyeonggi", state:"closed" },
+      /* 연습장 — ⚠️ 부킹 탭에는 **안 나와야** 합니다 */
+      { id:"tc-5", slug:"tc-5", kind:"range", name:"(검사) 연습장 1",
+        region:"seoul", state:"open" }
+    ];
+    /* ⚠️⚠️⚠️ **그냥 `window.AM_COURSES = …` 로 심으면 덮어씁니다.**
+       `addInitScript` 는 화면 스크립트보다 **먼저** 돌고, 그 뒤에 실리는
+       `js/data/courses.generated.js` 가 `window.AM_COURSES = []` 로
+       **제 씨앗을 지웁니다** — 처음에 그렇게 적었다가 검사가 `{"keys":[],
+       "want":[]}` 로 잡았습니다(코드가 아니라 **씨앗이 틀린** 자리).
+       그래서 **다시 못 쓰게** 걸어 둡니다. */
+    const seed = "(function(){var V=" + JSON.stringify(CS) + ";" +
+      "Object.defineProperty(window,'AM_COURSES',{" +
+      "get:function(){return V;},set:function(){},configurable:true});})();";
+
+    const g = await open("/cat/booking", CUST, { v_teetime_open: TEE }, {},
+                         true, seed);
+    const t0 = await g.p.evaluate(function(){
+      return { tabs: Array.prototype.map.call(
+                 document.querySelectorAll(".cstab [data-cstab]"),
+                 function(a){ return a.getAttribute("data-cstab"); }),
+               teeOn: !document.getElementById("teepane").hidden,
+               csOn:  !document.getElementById("cspane").hidden };
+    });
+    ok("③ 탭 둘이 서고 **처음에는 티타임**이 열린다",
+       t0.tabs.join(",") === "tee,course" && t0.teeOn && !t0.csOn,
+       JSON.stringify(t0));
+
+    /* 탭을 누르면 — ⚠️ 주소도 같이 바뀌어야 복사해 보낼 수 있습니다 */
+    await g.p.click('.cstab [data-cstab="course"]');
+    await g.p.waitForTimeout(250);
+    const t1 = await g.p.evaluate(function(){
+      return { teeOn: !document.getElementById("teepane").hidden,
+               csOn:  !document.getElementById("cspane").hidden,
+               url: location.search,
+               /* 카드 이름을 **그려진 차례대로** */
+               names: Array.prototype.map.call(
+                 document.querySelectorAll("#cslist .csc-n"),
+                 function(h){ return h.textContent; }),
+               dead: document.querySelectorAll("#cslist .csc-dead").length,
+               site: document.querySelectorAll("#cslist .csc-site").length,
+               img:  document.querySelectorAll("#cslist .csc-ph-img img").length,
+               ico:  document.querySelectorAll("#cslist .csc-ph svg").length,
+               cnt:  (document.getElementById("csf-n") || {}).textContent || "" };
+    });
+    ok("  누르면 **골프장 정보**가 열리고 티타임이 가려진다",
+       t1.csOn && !t1.teeOn, JSON.stringify(t1).slice(0, 160));
+    ok("  주소도 같이 바뀐다 (복사해 보내면 같은 화면입니다)",
+       t1.url.indexOf("tab=course") >= 0, t1.url);
+    /* ⚠️⚠️ **연습장은 안 나옵니다** — 갯수를 박지 않고 `kind` 로 셉니다 */
+    ok("  ⚠️⚠️ 연습장(kind=range)은 **부킹 탭에 안 나온다**",
+       t1.names.length === CS.filter(function(c){ return c.kind === "golf"; }).length &&
+       t1.names.every(function(n){ return n.indexOf("연습장") < 0; }),
+       t1.names.join(" | "));
+    /* ⚠️ 폐업은 **맨 뒤**입니다 — 이름은 「가」로 시작해 앞서야 하는데도 */
+    ok("  ⚠️ 폐업은 **맨 뒤**에 서고 딱지가 붙는다 (지우지 않습니다)",
+       t1.dead === 1 && /폐업/.test(t1.names[t1.names.length - 1]),
+       t1.names.join(" | "));
+    /* ⚠️⚠️⚠️ `javascript:` 는 단추를 **아예 안 냅니다** */
+    ok("  ⚠️⚠️⚠️ `javascript:` 주소에는 **공식 홈페이지 단추를 안 낸다**",
+       t1.site === 1, "단추 " + t1.site + "개 (https 인 한 곳만이어야 합니다)");
+    ok("  사진이 0장이라 **전부 아이콘 타일**이다 (남의 사진을 안 깝니다)",
+       t1.img === 0 && t1.ico === t1.names.length,
+       "img=" + t1.img + " ico=" + t1.ico);
+    ok("  센 수를 적는다 (세어 본 값입니다)",
+       t1.cnt.indexOf(String(t1.names.length) + "곳") >= 0, t1.cnt);
+
+    /* 지역 칩 — ⚠️ **0곳인 지역은 안 냅니다**(눌러도 0건인 칸) */
+    const ch = await g.p.evaluate(function(){
+      return { keys: Array.prototype.map.call(
+                 document.querySelectorAll(".chips-csrg [data-csrg]"),
+                 function(a){ return a.getAttribute("data-csrg"); }),
+               want: (window.amCourseRegions ? window.amCourseRegions("golf") : [])
+                 .map(function(r){ return r.key; }) };
+    });
+    ok("  지역 칩이 **있는 지역만** 선다 (갯수를 박지 않습니다)",
+       ch.want.length > 0 &&
+       ch.keys.join(",") === ([""].concat(ch.want)).join(","),
+       JSON.stringify(ch));
+
+    await g.p.click('.chips-csrg [data-csrg="incheon"]');
+    await g.p.waitForTimeout(250);
+    const t2 = await g.p.evaluate(function(){
+      return { names: Array.prototype.map.call(
+                 document.querySelectorAll("#cslist .csc-n"),
+                 function(h){ return h.textContent; }),
+               url: location.search,
+               clear: document.querySelectorAll(".csf-all:not([hidden])").length };
+    });
+    ok("  지역 칩으로 좁혀진다",
+       t2.names.length === 1 && t2.names[0].indexOf("인천") >= 0,
+       t2.names.join(" | "));
+    ok("  주소에 지역이 남고 **조건 지우기**가 나온다",
+       t2.url.indexOf("rg=incheon") >= 0 && t2.clear >= 1,
+       t2.url + " / 지우기 " + t2.clear);
+
+    /* ⚠️⚠️ 뒤로 가기 — `pushState` 로 바꾸므로 받는 줄이 없으면 주소만
+       바뀌고 **화면이 그대로** 있습니다 (0069 의 그 자리). */
+    await g.p.goBack();
+    await g.p.waitForTimeout(300);
+    const t3 = await g.p.evaluate(function(){
+      return { n: document.querySelectorAll("#cslist .csc-n").length,
+               url: location.search };
+    });
+    ok("  ⚠️⚠️ 뒤로 가면 **화면도 되돌아간다** (주소만 바뀌지 않습니다)",
+       t3.url.indexOf("rg=") < 0 && t3.n === t1.names.length,
+       t3.url + " / " + t3.n + "곳");
+
+    /* 이름 찾기 — ⚠️ 띄어쓰기를 지우고 봅니다 */
+    await g.p.fill("#csf-q", "인천");
+    await g.p.click("#csf button[type=submit]");
+    await g.p.waitForTimeout(250);
+    const t4 = await g.p.evaluate(function(){
+      return { names: Array.prototype.map.call(
+                 document.querySelectorAll("#cslist .csc-n"),
+                 function(h){ return h.textContent; }),
+               url: location.search };
+    });
+    ok("  이름으로 찾아진다",
+       t4.names.length === 1 && t4.url.indexOf("q=") >= 0,
+       t4.names.join(" | ") + " / " + t4.url);
+
+    /* 조건에 맞는 것이 없을 때 — ⚠️ **「아직 없다」 와 다른 말**입니다 */
+    await g.p.fill("#csf-q", "없는이름123");
+    await g.p.click("#csf button[type=submit]");
+    await g.p.waitForTimeout(250);
+    const t5 = await g.p.evaluate(function(){
+      return (document.getElementById("cslist") || {}).innerText || "";
+    });
+    ok("  ⚠️⚠️ 0건을 **「조건에 안 맞는다」로** 말한다 (「아직 없다」가 아닙니다)",
+       t5.indexOf("조건에 맞는") >= 0 && t5.indexOf("아직 등록된") < 0,
+       t5.slice(0, 120));
+
+    /* ⚠️⚠️⚠️ **날짜 · 시간 거르개가 골프장 목록을 안 바꿉니다** */
+    await g.p.click(".csf-all");
+    await g.p.waitForTimeout(250);
+    const n0 = await g.p.evaluate(function(){
+      return document.querySelectorAll("#cslist .csc-n").length; });
+    await g.p.click('.cstab [data-cstab="tee"]');
+    await g.p.waitForTimeout(200);
+    await g.p.fill("#tf-d", TKST(2));
+    await g.p.click("#ttf-find button[type=submit]");
+    await g.p.waitForTimeout(400);
+    await g.p.click('.cstab [data-cstab="course"]');
+    await g.p.waitForTimeout(250);
+    const n1 = await g.p.evaluate(function(){
+      return document.querySelectorAll("#cslist .csc-n").length; });
+    ok("  ⚠️⚠️⚠️ 날짜를 골라도 **골프장 목록이 안 바뀐다** (날짜로 달라지지 않습니다)",
+       n0 > 0 && n0 === n1, "전 " + n0 + "곳 → 후 " + n1 + "곳");
+    await g.p.close();
+  }
+
+  /* ③-2 설정(Supabase)이 없어도 골프장 정보 탭이 돈다
+     ⚠️⚠️⚠️ 이 탭은 DB 를 안 부르므로 **환경변수가 없어도** 돌아야 합니다 —
+     메인의 찾는 칸이 설정이 없으면 통째로 사라지던 그 자리입니다
+     (절대 규칙 5 — 눌러도 아무 일이 안 나는 칸을 만들지 않습니다). */
+  {
+    const CS2 = [{ id:"tc-9", slug:"tc-9", kind:"golf", name:"(검사) 설정없음 코스",
+      region:"seoul", holes:18, state:"open" }];
+    /* ⚠️⚠️ `open()` 의 흉내 장치를 **안 씁니다** — `stub()` 은 `tables` 가
+       null 이면 `Object.keys(null)` 로 **그 자리에서 터집니다**(처음에
+       그렇게 적어 뒤 검사가 통째로 안 돌았습니다). 설정이 없는 자리는
+       저장소의 다른 검사처럼 `/api/session` 만 가로챕니다. */
+    const p0 = await b.newPage({ viewport: view });
+    await p0.addInitScript("(function(){var V=" + JSON.stringify(CS2) + ";" +
+      "Object.defineProperty(window,'AM_COURSES',{" +
+      "get:function(){return V;},set:function(){},configurable:true});})();");
+    await p0.route("**/api/session", function(r){
+      return r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ auth:false, signedIn:false, conf:null }) });
+    });
+    await p0.goto(base + "/cat/booking?tab=course", { waitUntil:"networkidle" });
+    await p0.waitForTimeout(500);
+    const g = { p: p0 };
+    const r = await g.p.evaluate(function(){
+      return { csOn: !document.getElementById("cspane").hidden,
+               n: document.querySelectorAll("#cslist .csc-n").length,
+               tee: (document.getElementById("ttlist") || {}).innerText || "" };
+    });
+    ok("③-2 설정이 없어도 **골프장 정보 탭이 열리고 목록이 선다**",
+       r.csOn && r.n === 1, JSON.stringify(r).slice(0, 160));
+    /* ⚠️ 티타임 쪽은 설정이 없으면 "열지 않았습니다" 라고 적습니다 —
+       거기는 DB 가 있어야 하는 자리이므로 그게 맞습니다. */
+    ok("  ⚠️ 티타임 쪽은 **열지 않았다고** 적는다 (0건이라고 말하지 않습니다)",
+       r.tee.indexOf("0건") < 0, r.tee.slice(0, 120));
+    await g.p.close();
+  }
+
+  /* ③-3 오늘 **이미 지난 티오프는 뺍니다** (2026-11-13)
+     ⚠️⚠️⚠️ 보기(`v_teetime_open`)는 `play_at >= kst_today()` 까지만
+     거릅니다 — **날짜**만 봅니다. 그래서 오늘 새벽 자리가 오후에도
+     「예약 가능」으로 섰습니다. 지나간 자리에 신청을 보내시면 업체가
+     거절할 수밖에 없고, 그건 우리가 못 지킬 것을 보여 준 것입니다.
+     ⚠️⚠️ **거르는 것은 서버입니다** — 보내는 질의를 뜯어 봅니다.
+     ⚠️ 지금 시각을 **글자로 박지 않습니다** — 꼴만 봅니다(`HH:MM`). */
+  {
+    const CUST = { role:"customer", name:"손님", signedIn:true };
+    const g = await open("/cat/booking", CUST, { v_teetime_open: TEE }, {}, true);
+    const q0 = g.sent.filter(function(x){ return x.name === "GET"; })
+                 .map(function(x){ return String(x.body); }).join(" | ");
+    /* 처음(전체)에는 **오늘만** 시각으로 거릅니다 — 내일 아침 자리가
+       같이 빠지면 안 됩니다. */
+    ok("③-3 전체일 때 **오늘만** 시각으로 거른다 (내일 자리는 그대로)",
+       q0.indexOf("or=") >= 0 &&
+       q0.indexOf(encodeURIComponent("play_at.gt." + TKST(0))) >= 0,
+       q0.slice(0, 300));
+    ok("  ⚠️ 시각이 **아직 안 정해진 자리는 남긴다** (`tee_at.is.null`)",
+       q0.indexOf(encodeURIComponent("tee_at.is.null")) >= 0, q0.slice(0, 300));
+
+    const m1 = g.sent.length;
+    await g.p.fill("#tf-d", TKST(0));
+    await g.p.click("#ttf-find button[type=submit]");
+    await g.p.waitForTimeout(400);
+    const q1 = g.sent.slice(m1).filter(function(x){ return x.name === "GET"; })
+                 .map(function(x){ return String(x.body); }).join(" | ");
+    ok("  오늘을 고르면 **tee_at 을 지금 시각부터** 묻는다",
+       /tee_at\.gte\.\d{2}(%3A|:)\d{2}/.test(decodeURIComponent(q1)) ||
+       /tee_at\.gte\.\d{2}:\d{2}/.test(decodeURIComponent(q1)),
+       decodeURIComponent(q1).slice(0, 300));
+
+    const m2 = g.sent.length;
+    await g.p.fill("#tf-d", TKST(3));
+    await g.p.click("#ttf-find button[type=submit]");
+    await g.p.waitForTimeout(400);
+    const q2 = decodeURIComponent(
+      g.sent.slice(m2).filter(function(x){ return x.name === "GET"; })
+        .map(function(x){ return String(x.body); }).join(" | "));
+    /* ⚠️⚠️ **미래 날짜에는 아무것도 안 겁니다** — 그 날은 지난 시각이
+       없습니다. 걸면 아침 자리가 통째로 빠집니다. */
+    ok("  ⚠️⚠️ 미래 날짜에는 **시각을 안 건다** (그 날은 지난 시각이 없습니다)",
+       q2.indexOf("tee_at.gte.") < 0 && q2.indexOf("or=") < 0,
+       q2.slice(0, 300));
+    await g.p.close();
+  }
+
+  /* ③-4 한국 밖 시간대에서도 **같은 날짜**를 냅니다
+     ⚠️⚠️⚠️ 전에는 `new Date(iso + "T00:00:00+09:00")` 로 지어 놓고
+     `getMonth()` · `getDate()` 로 꺼냈는데, 그 둘은 **보는 분 기계의
+     시간대**로 돌려줍니다 — 시간대가 UTC 인 기계에서 11-08 자리가
+     「11월 7일」로 보였고, 그러면 손님이 **다른 날짜를 예약**하십니다.
+     ⚠️ 그래서 **시간대를 바꿔 놓고** 재야 합니다. */
+  {
+    const CUST = { role:"customer", name:"손님", signedIn:true };
+    const want = await (async function(){
+      const g0 = await open("/cat/booking", CUST, { v_teetime_open: TEE }, {}, true);
+      const v = await g0.p.evaluate(function(){
+        return Array.prototype.map.call(document.querySelectorAll("[data-tfd]"),
+          function(a){ return a.textContent.trim(); }).join("|"); });
+      await g0.p.close();
+      return v;
+    })();
+    for(const tz of ["America/New_York", "UTC", "Pacific/Auckland"]){
+      const g = await open("/cat/booking", CUST, { v_teetime_open: TEE }, {},
+                           true, null, tz);
+      const got = await g.p.evaluate(function(){
+        return Array.prototype.map.call(document.querySelectorAll("[data-tfd]"),
+          function(a){ return a.textContent.trim(); }).join("|"); });
+      ok("③-4 " + tz + " 에서도 **날짜 띠가 같다** (한국 날짜 그대로)",
+         got === want && want.length > 0, "기대 " + want + "\n   받음 " + got);
+      await g.p.close();
+    }
   }
 
   /* ②-2 **61~90일은 사전 상담만** (지시서 §5 · 2026-11-07)
@@ -5655,8 +5949,18 @@ function boardsOf(){
               if(fs < 12) small.push(e.tagName + " " + fs);
             }
           });
+          /* ⚠️⚠️⚠️ **안 그려진 칸은 누르는 것이 아닙니다** — `tapsOk()` 는
+             2026-11-09 에 고쳤는데 **이 묶음만 안 고쳐져** 있었습니다.
+             2026-11-13 에 「골프장 정보」 탭이 서면서 가려진 탭 안의
+             `.none` 단추 둘(높이 0 · `getClientRects().length === 0`)을
+             「40px 미만」으로 세어 **멀쩡한 화면을 세 폭에서** 떨어뜨렸습니다.
+             재려는 뜻은 "**그려진** 칸이 손가락에 닿는가" 이지 "안 그려진
+             칸이 있는가" 가 아닙니다(그건 다른 자물쇠입니다).
+             ⚠️ 글자 크기 쪽도 같이 거릅니다 — 가려진 글은 못 읽습니다. */
           Array.prototype.forEach.call(box.querySelectorAll("button, a"), function(e){
-            if(e.getBoundingClientRect().height < 39.5) low.push(e.tagName);
+            if(e.getClientRects().length > 0 &&
+               e.getBoundingClientRect().height < 39.5)
+              low.push(e.tagName + " " + ((e.textContent||"").trim().slice(0,12)));
           });
         });
       return { doc: document.documentElement.scrollWidth, win: window.innerWidth,

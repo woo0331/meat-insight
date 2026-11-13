@@ -20,7 +20,18 @@ const OUT  = path.join(ROOT, "js", "data", "courses.generated.js");
 /* 화면이 쓰는 칸만 — ⚠️ 보기에 칸이 늘어도 이 파일이 저절로 커지지 않게 */
 const VIEW = "v_course_public";
 const COLS = "id,slug,kind,name,region,gu,addr,addr_road,tel,holes,biz_kind," +
-             "site_url,lat,lng,state,source_id,as_of";
+             "site_url,lat,lng,state,source_id,as_of,photo";
+
+/* ⚠️⚠️ **사진은 경로만 담겨 있습니다**(0081 의 `course.photo`) — 주소를
+   짓는 것은 공개 버킷 이름을 아는 쪽입니다. `PROVIDER_BUCKET` 이 없으면
+   **사진 없이** 가져옵니다 — 주소를 지어내면 카드가 깨진 그림이 됩니다
+   (0068 이 매물 사진에서 세운 규칙과 같습니다).
+   ⚠️ 사진이 없으면 화면이 **아이콘 타일**로 돌아갑니다. 남의 사진이나
+   분류 사진을 깔지 않습니다 (표시 · 광고의 공정화에 관한 법률 제3조). */
+function pubBucket(){
+  return String(process.env.PROVIDER_BUCKET || "").trim()
+      || String(process.env.SUPABASE_PUBLIC_BUCKET || "").trim();
+}
 
 function write(rows, at){
   var head =
@@ -62,6 +73,27 @@ function write(rows, at){
     process.exit(1);
   }
 
+  /* ── 사진 경로 → 공개 주소 ────────────────────────────────────────
+     ⚠️⚠️ **버킷이 없으면 그 칸을 통째로 뺍니다**(빈 글자로 두면 화면이
+     "사진을 안 올린 골프장" 과 "버킷이 꺼진 것" 을 구별 못 합니다).
+     ⚠️ 주소를 짓는 자리는 여기 하나입니다 — 화면은 `photo_url` 만 봅니다. */
+  const bk = pubBucket();
+  let shot = 0;
+  if(!bk){
+    rows.forEach(function(c){ delete c.photo; });
+    console.warn("⚠️ PROVIDER_BUCKET 이 없어 **골프장 사진 없이** 가져왔습니다 — " +
+                 "카드는 아이콘 타일로 섭니다.");
+  }else{
+    const pub = url.replace(/\/+$/, "") + "/storage/v1/object/public/" + bk + "/";
+    rows.forEach(function(c){
+      const path0 = String(c.photo || "").trim();
+      delete c.photo;
+      if(!path0) return;
+      c.photo_url = pub + path0.split("/").map(encodeURIComponent).join("/");
+      shot++;
+    });
+  }
+
   /* ⚠️⚠️ **slug 가 없거나 겹치면 멈춥니다** — 주소가 겹치면 빌드가 한
      화면을 다른 화면으로 덮어씁니다 (에러 없이 조용히). */
   const seen = {}, bad = [];
@@ -94,7 +126,7 @@ function write(rows, at){
   const n = { golf:0, range:0 };
   clean.forEach(function(c){ n[c.kind] = (n[c.kind] || 0) + 1; });
   console.log("골프장 " + (n.golf || 0) + "곳 · 연습장 " + (n.range || 0) +
-              "곳을 가져왔습니다 — " + now);
+              "곳 · 사진 " + shot + "장을 가져왔습니다 — " + now);
 })().catch(function(e){
   console.error("❌ " + e.message + "\n   ⚠️ 지금 파일을 그대로 둡니다.");
   process.exit(1);

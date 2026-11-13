@@ -558,7 +558,7 @@
        **「0건」으로** 찍혔습니다(2026-11-13 에 운영이 실제로 그
        꼴이었습니다). 지금은 **던집니다** — 부르는 자리가 잡아
        「불러오지 못했습니다」를 적습니다.
-       ⚠️⚠️ 다시 묻는 것은 **`OPTCOL` 에 적어 둔 신괜 칸이 없다고
+       ⚠️⚠️ 다시 묻는 것은 **`OPTCOL` 에 적어 둔 새 칸이 없다고
        400 이 말할 때만**입니다 — 보기 부재(404) · 권한(403) ·
        인증은 덮지 않습니다(`amRowsSoft`). */
     return window.amRowsSoft(qs, OPTCOL, function(q){
@@ -796,7 +796,7 @@
 
   function paint(a, rows, miss){
     /* ⚠️ 없는 칸이 있었으면 **그 자리에서** 무엇을 못 쓰는지 말합니다 —
-       까닭(칸 이름 · 마이그레이샅)은 적지 않습니다 (절대 주칙 3). */
+       까닭(칸 이름 · 마이그레이션)은 적지 않습니다 (절대 규칙 3). */
     hideOpt();
     var nl = document.getElementById("lsnow");
     if(nl){
@@ -1359,7 +1359,7 @@
       if(e.key === "Escape") sheet(false);
     });
   }
-  /* ⚠️⚠️ 운영 DB 에 아지직 없을 수 있는 **신괜 선택 칸** — 0080 이
+  /* ⚠️⚠️ 운영 DB 에 아직 없을 수 있는 **새 선택 칸** — 0080 이
      더한 둘입니다. 여기 적은 이름만 다시 묻기의 대상이 됩니다
      (목록을 적지 않으면 어떤 400 도 덮지 않습니다). */
   var OPTCOL = ["flex", "hand"];
@@ -1371,7 +1371,7 @@
       if(x.miss && x.miss.length) tookOut(x.miss);
       paint(a, x.rows, MISS);
     }).catch(function(e){
-      /* ⚠️ 까닭은 **개발 기록에만** 적습니다 (절대 주칙 3) */
+      /* ⚠️ 까닭은 **개발 기록에만** 적습니다 (절대 규칙 3) */
       window.amFailLog("listing/v_listing_open", e);
       list.innerHTML = window.amFailHtml("매물 목록");
       bindList(a);
@@ -1398,7 +1398,7 @@
     hideOpt();
   }
   /* 거르개에서 그 칸만 가립니다 — ⚠️ 골라도 못 걸러 주는 칸을
-     내면 눌러도 아무 일이 안 나는 칸입니다 (절대 주칙 5). */
+     내면 눌러도 아무 일이 안 나는 칸입니다 (절대 규칙 5). */
   function hideOpt(){
     if(!MISS.length) return;
     var r = document.getElementById("lsrail");

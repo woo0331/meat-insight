@@ -111,6 +111,48 @@ function run(){
         bad.push(r.id + " tee.photo 꼴이 0081 의 check 와 다릅니다 — " + r.photo);
     });
 
+    /* ②-2 골프장 마스터 (2026-11-13)
+       ⚠️⚠️⚠️ **이름이 티타임의 `course` 와 맞아야** 합니다 — 「골프장
+       정보」 탭과 「예약 가능한 티타임」 탭이 같은 골프장을 말해야
+       하기 때문입니다. 안 맞으면 시연을 보시는 분이 "이 골프장은 왜
+       자리가 없지" 로 읽습니다.
+       ⚠️⚠️ **좌표는 한 줄도 없어야** 합니다 (0066 — 확인 전에는 비웁니다).
+       ⚠️ 폐업 · 연습장이 **섞여 있어야** 합니다 — 그 자리가 화면에
+       어떻게 보이는지도 보셔야 합니다(다 채우면 그 갈래를 못 봅니다). */
+    var CS = demo.COURSES || [];
+    if(!CS.length) bad.push("골프장 마스터가 0곳입니다 (골프장 정보 탭이 빕니다)");
+    var csName = {};
+    CS.forEach(function(c){
+      need(c.id, c.kind, { golf:1, range:1 }, "course.kind");
+      need(c.id, c.region, REG, "course.region");
+      need(c.id, c.state, { open:1, closed:1 }, "course.state");
+      if(String(c.name || "").indexOf("(예시)") !== 0)
+        bad.push(c.id + " 골프장 이름에 (예시) 가 없습니다");
+      if(!c.slug) bad.push(c.id + " slug 가 없습니다 (주소가 안 생깁니다)");
+      if(c.lat || c.lng)
+        bad.push(c.id + " 좌표가 들어 있습니다 — 0066 은 확인 전에는 비웁니다");
+      if(c.site_url && !/^https?:\/\//.test(String(c.site_url)))
+        bad.push(c.id + " site_url 이 http(s) 로 시작하지 않습니다");
+      if(!String(c.addr || c.addr_road || "").trim())
+        bad.push(c.id + " 주소가 없습니다");
+      csName[String(c.name)] = 1;
+    });
+    if(!CS.some(function(c){ return c.state === "closed"; }))
+      bad.push("폐업한 골프장이 한 곳도 없습니다 (그 자리를 못 보십니다)");
+    if(!CS.some(function(c){ return c.kind === "range"; }))
+      bad.push("연습장이 한 곳도 없습니다 (부킹 탭에서 빠지는지 못 보십니다)");
+    if(!CS.some(function(c){ return !c.photo_url; }))
+      bad.push("사진 없는 골프장이 한 곳도 없습니다 (아이콘 타일을 못 보십니다)");
+    /* ⚠️⚠️ 티타임의 골프장이 마스터에 **있는지** — 코스 이름이 붙은 줄
+       (「… 신코스」)은 앞부분이 맞으면 됩니다(0066 의 트리거도 이름이
+       정확히 같을 때만 잇고, 못 찾으면 null 입니다). */
+    rows.v_teetime_open.forEach(function(r){
+      var nm = String(r.course || "");
+      if(!nm) return;
+      var hit = Object.keys(csName).some(function(k){ return nm.indexOf(k) === 0; });
+      if(!hit) bad.push("tee " + r.id + " 골프장이 마스터에 없습니다 — " + nm);
+    });
+
     /* ③ 조인 */
     rows.v_join_open.forEach(function(r){
       need(r.id, r.region, REG, "join.region");

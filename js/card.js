@@ -188,7 +188,13 @@
       .filter(function(s){ return s && s.cat && s.cat.key === "lesson" &&
                                   s.item && s.item.name; });
 
-    return '<a class="lsn-c" href="' + esc(url) + '">' +
+    /* ⚠️⚠️⚠️ **카드 전체를 `<a>` 로 감싸지 않습니다** — 확정 시안 ④ 는
+       카드 안에 「프로필 보기」 단추가 있습니다. 감싸면 링크 안에 링크가
+       들어가 어느 쪽이 눌리는지 브라우저마다 다릅니다(0069 에서 찜 단추로
+       겪은 그 자리). 대신 그 단추가 **카드 전체**로 넓어집니다
+       (`.lsn-go::after` 가 카드를 덮습니다) — 링크는 여전히 하나이고,
+       누르는 자리는 카드 전체입니다. */
+    return '<article class="lsn-c">' +
       '<span class="lsn-ph' + (shots.length ? " lsn-ph-on" : "") + '"' +
         (shots.length ? "" : ' aria-hidden="true"') + '>' +
         (shots.length
@@ -223,8 +229,9 @@
           ? '<span class="lsn-p">' + esc(window.amPriceText(low)) +
             (low.n > 1 ? '<i>부터</i>' : "") + '</span>'
           : '<span class="lsn-p lsn-p0">등록된 레슨 가격이 아직 없습니다</span>') +
+        '<a class="btn btn-pri lsn-go" href="' + esc(url) + '">프로필 보기</a>' +
       '</span>' +
-    '</a>';
+    '</article>';
   };
 
   window.amLessonGrid = function(list){

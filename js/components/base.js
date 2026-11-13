@@ -92,6 +92,7 @@ window.AM_ICONS = {
           '<path d="M9.6 21v-5.4h4.8V21"/>',
   arrow:  '<path d="M4.5 12h14"/><path d="m13 6.5 5.5 5.5-5.5 5.5"/>',
   menu:   '<path d="M3.8 6.8h16.4"/><path d="M3.8 12h16.4"/><path d="M3.8 17.2h16.4"/>',
+  grid:   '<rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/>',
   down:   '<path d="m6.5 9.5 5.5 5.5 5.5-5.5"/>',
   close:  '<path d="M6 6 18 18"/><path d="M18 6 6 18"/>',
   check:  '<path d="m4.8 12.6 4.8 4.8L19.2 7"/>',

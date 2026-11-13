@@ -36,7 +36,10 @@
     var u = new URLSearchParams(W.location.search);
     return { rg: u.get("rg") || "", sub: u.get("sub") || "",
              p: u.get("p") || "", g: u.get("g") || "", q: (u.get("q") || "").trim(),
-             o: u.get("o") || "name" };
+             o: u.get("o") || "name",
+             /* ⚠️ 보기(격자 · 목록)는 **좁히는 조건이 아닙니다** — 칩에도
+                안 넣고 「필터 초기화」로도 안 지웁니다(0068 의 정렬과 같은 결). */
+             v: (u.get("v") === "list") ? "list" : "" };
   }
   function urlOf(f){
     var u = new URLSearchParams();
@@ -45,21 +48,87 @@
     if(f.p)   u.set("p", f.p);
     if(f.g)   u.set("g", f.g);
     if(f.q)   u.set("q", f.q);
-    /* ⚠️ 차례는 **좁히는 조건이 아닙니다** — 기본값이면 주소에 안 싣습니다
-       (주소가 길어지기만 하고 뜻이 같습니다). */
     if(f.o && f.o !== "name") u.set("o", f.o);
+    if(f.v)   u.set("v", f.v);
     var s = u.toString();
     return "/cat/lesson" + (s ? "?" + s : "");
   }
 
+  /* 고른 조건의 **사람이 읽는 이름** — ⚠️ 못 찾으면 그 칩을 **안 냅니다**
+     (키를 날것으로 찍지 않습니다 · 지시 6번). */
+  function nameOf(k, v){
+    if(!v) return "";
+    if(k === "rg")  return W.amRegion ? (W.amRegion(v) || {}).name || "" : "";
+    if(k === "sub"){
+      /* ⚠️ `amSub()` 는 **하위 키 하나**를 받습니다(분류를 같이 넘기지
+         않습니다) — 잘못 부르면 **칩이 조용히 안 그려집니다**(에러 0줄). */
+      var s = W.amSub ? W.amSub(v) : null;
+      return (s && s.item && s.item.name) || "";
+    }
+    if(k === "p"){
+      var b = (W.AM_LESSON_PRICE || []).filter(function(x){ return x.key === v; })[0];
+      return b ? b.name : "";
+    }
+    if(k === "g") return W.amLessonGoalName ? (W.amLessonGoalName(v) || "") : "";
+    if(k === "q") return v;
+    return "";
+  }
+  var CHIPKEYS = ["sub", "g", "p", "rg", "q"];
+  /* ⚠️ 글 덩이를 **이름 있는 함수**로 꺼냅니다 — 삼항으로 innerHTML 에
+     바로 넣으면 `check-safe` 가 "따라갈 함수 이름이 없는 줄" 로 잡습니다. */
+  function chipHtml(f){
+    var on = CHIPKEYS.filter(function(k){ return f[k]; });
+    if(!on.length) return "";
+    return '<span class="lsn-chips-t">선택된 조건</span>' +
+      on.map(function(k){
+        var nm = nameOf(k, f[k]);
+        if(!nm) return "";
+        var g = {}; CHIPKEYS.forEach(function(x){ g[x] = f[x]; });
+        g[k] = "";
+        g.o = f.o; g.v = f.v;
+        return '<a class="lsn-chip" data-off="' + esc(k) + '" href="' +
+          esc(urlOf(g)) + '">' + esc(nm) +
+          '<i aria-hidden="true">' + (W.icon ? W.icon("close", 13) : "") + '</i>' +
+          '<span class="sr">조건 지우기</span></a>';
+      }).join("") +
+      '<a class="lsn-chip-all" href="' + esc(urlOf({ o:f.o, v:f.v })) + '">' +
+        '전체 해제</a>';
+  }
+
   /* 고르개를 지금 조건에 맞춥니다 — ⚠️ 안 맞추면 주소로 들어오신 분께
-     "전체" 라고 적힌 칸 아래 좁혀진 목록이 나옵니다(무엇으로 좁혔는지
-     알 수 없는 자리). */
+     "전체" 라고 적힌 칸 아래 좁혀진 목록이 나옵니다. */
   function fill(f){
     var set = function(id, v){ var e = d.getElementById(id); if(e) e.value = v; };
-    set("lsn-rg", f.rg); set("lsn-sub", f.sub);
-    set("lsn-p", f.p);   set("lsn-g", f.g);   set("lsn-q", f.q);
-    set("lsn-o", f.o);
+    set("lsn-q", f.q); set("lsn-o", f.o);
+    /* ⚠️⚠️ 레일 넷은 **네모 칸(radio)** 입니다(확정 시안 ④) — `value` 로
+       맞출 수가 없으므로 **이름으로 묶어** 그 값의 칸을 켭니다. 모르는 값이
+       실려 오면 「전체」가 켜집니다(빈 채로 두면 아무 칸도 안 켜져 손님이
+       지금 무엇으로 보고 계신지 알 길이 없습니다). */
+    ["rg", "sub", "p", "g"].forEach(function(k){
+      var L = d.querySelectorAll('.lsn-rail input[name="' + k + '"]');
+      var hit = false;
+      Array.prototype.forEach.call(L, function(e){
+        e.checked = (e.value === (f[k] || ""));
+        if(e.checked) hit = true;
+      });
+      if(!hit && L.length) L[0].checked = true;
+    });
+    var box = d.getElementById("lsnchips");
+    if(box){
+      var h = chipHtml(f);
+      box.innerHTML = h;
+      if(h) box.removeAttribute("hidden");
+      else  box.setAttribute("hidden", "");
+    }
+    Array.prototype.forEach.call(d.querySelectorAll(".lsn-vb"), function(a){
+      var on = ((a.getAttribute("data-view") || "") === f.v);
+      a.classList.toggle("on", on);
+      if(on) a.setAttribute("aria-current", "true");
+      else   a.removeAttribute("aria-current");
+    });
+    /* ⚠️ 목록 보기는 **클래스 한 줄**입니다 — 카드를 다시 적지 않습니다
+       (두 벌로 적으면 한쪽만 고치는 날 둘이 달라집니다). */
+    if(list) list.classList.toggle("is-list", f.v === "list");
   }
 
   function lessonSubsOf(p){
@@ -182,7 +251,8 @@
       var any = (W.amProvidersOf ? W.amProvidersOf("lesson") : []).length;
       list.innerHTML = any ? noneNarrow() : noneEmpty();
     }
-    if(cnt) cnt.textContent = (W.won ? W.won(L.length) : String(L.length)) + "분";
+    if(cnt) cnt.textContent = "프로 " +
+      (W.won ? W.won(L.length) : String(L.length)) + "명";
   }
 
   function go(f, push){
@@ -195,24 +265,39 @@
       try{ wrap.scrollIntoView({ block:"start" }); }catch(e){}
   }
 
+  /* ⚠️⚠️ 레일은 네모 칸(radio)이라 **켜진 것**을 읽습니다 — 없으면 빈
+     글자(= 전체)입니다. 보기(`v`)는 양식에 없으므로 **주소에서** 그대로
+     들고 옵니다(안 들고 오면 거르개를 누를 때마다 격자로 되돌아갑니다). */
+  function pickedOf(name){
+    var e = d.querySelector('.lsn-rail input[name="' + name + '"]:checked');
+    return e ? (e.value || "") : "";
+  }
   function fromForm(){
     var v = function(id){ var e = d.getElementById(id); return e ? e.value : ""; };
-    return { rg:v("lsn-rg"), sub:v("lsn-sub"), p:v("lsn-p"), g:v("lsn-g"),
-             q:(v("lsn-q") || "").trim(), o:v("lsn-o") || "name" };
+    return { rg:pickedOf("rg"), sub:pickedOf("sub"),
+             p:pickedOf("p"), g:pickedOf("g"),
+             q:(v("lsn-q") || "").trim(), o:v("lsn-o") || "name",
+             v:now().v };
   }
 
   form.addEventListener("submit", function(e){
     e.preventDefault();
     go(fromForm(), true);
   });
-  /* 고르개는 바꾸는 즉시 — ⚠️ 찾는 칸(`input`)은 **안 받습니다**(글자를
-     칠 때마다 다시 그리면 커서가 튕겨 나갑니다 · 0068 의 그 자리). */
-  ["lsn-rg", "lsn-sub", "lsn-p", "lsn-o"].forEach(function(id){
-    var e = d.getElementById(id);
-    if(e) e.addEventListener("change", function(){ go(fromForm(), true); });
+  /* 고르개는 바꾸는 즉시 — ⚠️ 찾는 칸(`input[type=search]`)은 **안
+     받습니다**(글자를 칠 때마다 다시 그리면 커서가 튕겨 나갑니다 · 0068).
+     ⚠️⚠️ 레일의 칸들은 `form="lsnform"` 으로 묶여 있을 뿐 **양식의 자손이
+     아니라서** 양식에서는 `change` 를 받을 수 없습니다 — 문서에서 받고
+     이름으로 가립니다. */
+  var WATCH = { rg:1, sub:1, p:1, g:1, o:1 };
+  d.addEventListener("change", function(e){
+    var t = e.target;
+    if(!t || !t.name || !WATCH[t.name]) return;
+    if(t.tagName === "INPUT" && t.type === "search") return;
+    go(fromForm(), true);
   });
 
-  /* 칩 · 카테고리 카드 · 「조건 모두 지우기」 — ⚠️ 전부 **링크**이고
+  /* 칩 · 카테고리 카드 · 「전체 해제」 · 보기 토글 — ⚠️ 전부 **링크**이고
      여기서 가로채기만 합니다(자바스크립트가 꺼져 있으면 그대로 이동). */
   d.addEventListener("click", function(e){
     var a = e.target.closest ? e.target.closest("a") : null;
@@ -221,15 +306,27 @@
     if(href.indexOf("/cat/lesson") !== 0) return;
     if(e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
     e.preventDefault();
-    var u = new URL(href, W.location.origin);
-    var q = new URLSearchParams(u.search);
-    /* ⚠️⚠️ 칩 하나를 누르면 **그 조건만** 바뀝니다 — 나머지는 그대로
-       둡니다(지우려면 「조건 모두 지우기」가 있습니다). 주소에 아무것도
-       없는 링크는 **전부 지우기**입니다. */
-    var f = q.toString() ? now() : { rg:"", sub:"", p:"", g:"", q:"", o:now().o };
-    ["rg", "sub", "p", "g", "q"].forEach(function(k){
-      if(q.has(k)) f[k] = q.get(k) || "";
-    });
+    var f = now();
+    var off = a.getAttribute("data-off");
+    var view = a.getAttribute("data-view");
+    if(off){
+      /* ⚠️ 칩은 **그 조건만** 지웁니다 — 주소에 그 열쇠가 **없는 것**이
+         지우라는 뜻이라, 있는 열쇠만 덮어쓰면 아무것도 안 지워집니다. */
+      f[off] = "";
+    } else if(view !== null){
+      f.v = (view === "list") ? "list" : "";
+    } else if(a.classList.contains("lsn-chip-all")){
+      /* ⚠️ 정렬 · 보기는 **좁히는 조건이 아니라** 남깁니다. */
+      f = { rg:"", sub:"", p:"", g:"", q:"", o:f.o, v:f.v };
+    } else {
+      var u = new URL(href, W.location.origin);
+      var q = new URLSearchParams(u.search);
+      if(!q.toString()) f = { rg:"", sub:"", p:"", g:"", q:"", o:f.o, v:f.v };
+      ["rg", "sub", "p", "g", "q", "o"].forEach(function(k){
+        if(q.has(k)) f[k] = q.get(k) || "";
+      });
+      if(q.has("v")) f.v = (q.get("v") === "list") ? "list" : "";
+    }
     go(f, true);
   });
 
@@ -243,7 +340,7 @@
      보게 됩니다(그리고 그만큼 느려집니다). */
   (function(){
     var f = now();
-    if(f.rg || f.sub || f.p || f.q || (f.o && f.o !== "name")) paint();
+    if(f.rg || f.sub || f.p || f.g || f.q || f.v || (f.o && f.o !== "name")) paint();
     else fill(f);
   })();
 })();

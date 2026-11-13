@@ -301,50 +301,22 @@ function lessonHead(c){
    보내면 받는 쪽이 못 찾아 **영원히 0건**이 됩니다(광고 분류 · 지역을
    손으로 적게 두었다가 겪은 그 자리).
    ⚠️ 가격대 · 정렬 목록은 `js/data/lesson.js` **한 곳**입니다. */
+/* ⚠️⚠️⚠️ **고르개 넷을 왼쪽 레일로 옮겼습니다** (확정 시안 ④ · 2026-11-13).
+   시안은 가로 고르개 줄이 아니라 **왼쪽 네모 칸 목록**입니다. 여기에는
+   찾는 칸과 「자주 찾는 조건」만 남습니다.
+   ⚠️ 레일의 칸들은 **이 양식에 묶입니다**(`form="lsnform"`) — 자바스크립트가
+   꺼져도 「검색」 한 번으로 GET 이 그대로 돕니다(HTML 의 form 속성). */
 function lessonFind(c){
-  var items = W.amCatItems(c);
-  var regs  = (W.amRegionsOf ? W.amRegionsOf(c.key) : (W.AM_REGIONS || []));
-  var P     = W.AM_LESSON_PRICE || [];
-  function opts(L, kf, nf){
-    return L.map(function(x){
-      return '<option value="' + esc(kf(x)) + '">' + esc(nf(x)) + '</option>';
-    }).join("");
-  }
   return '<section class="sec sec-alt lsn-find"><div class="wrap">' +
     '<form id="lsnform" class="lsnf" method="get" action="/cat/lesson" ' +
       'role="search" aria-label="골프 프로 찾기">' +
-      '<p class="lsnf-i"><label for="lsn-rg">' + icon("pin", 16) + '지역</label>' +
-        '<select id="lsn-rg" name="rg"><option value="">전체 지역</option>' +
-        opts(regs, function(r){ return r.key; }, function(r){ return r.name; }) +
-        '</select></p>' +
-      '<p class="lsnf-i"><label for="lsn-sub">' + icon("swing", 16) + '레슨 종류</label>' +
-        '<select id="lsn-sub" name="sub"><option value="">전체 레슨</option>' +
-        opts(items, function(i){ return i.key; }, function(i){ return i.name; }) +
-        '</select></p>' +
-      '<p class="lsnf-i"><label for="lsn-p">' + icon("coin", 16) + '가격대 (1회 기준)</label>' +
-        '<select id="lsn-p" name="p"><option value="">전체</option>' +
-        opts(P, function(x){ return x.key; }, function(x){ return x.name; }) +
-        '</select></p>' +
-      /* ⚠️⚠️⚠️ **레슨 목적 거르개는 0071 이 담는 칸을 내 준 뒤에 냈습니다**
-         (2026-11-10 저녁). 그 전에는 `pages/category.js` 머리말에 "담는
-         칸이 없어 안 만들었습니다" 로 적어 두었습니다 — 칸 없이 고르개를
-         내면 골라도 걸러 주지 못하는 칸이고, 그건 눌러도 아무 일이 안 나는
-         칸입니다(절대 규칙 5). 이제 `provider.lesson_goals` 가 있습니다.
-         ⚠️ 목록은 `js/data/lesson.js` 의 `AM_LESSON_GOAL` **한 곳**입니다. */
-      '<p class="lsnf-i"><label for="lsn-g">' + icon("flag", 16) + '레슨 목적</label>' +
-        '<select id="lsn-g" name="g"><option value="">전체</option>' +
-        opts(W.AM_LESSON_GOAL || [], function(x){ return x.key; },
-             function(x){ return x.name; }) +
-        '</select></p>' +
       '<p class="lsnf-q"><label class="sr" for="lsn-q">찾는 말</label>' +
         icon("search", 17) +
         '<input id="lsn-q" name="q" type="search" ' +
-        'placeholder="프로 이름 · 연습장 · 전문 분야 · 지역"></p>' +
+        'placeholder="지역, 프로명, 레슨 키워드로 검색 (예: 안양 레슨, 스윙 교정)"></p>' +
       '<p class="lsnf-go"><button class="btn btn-pri" type="submit">' +
         icon("search", 18) + '검색</button></p>' +
     '</form>' +
-    /* ⚠️ 칩마다 **실제로 걸리는 열쇠**를 답니다. 이름을 못 찾은 칩은
-       줄째 뺍니다(키를 그대로 찍지 않습니다 · 절대 규칙 2). */
     lessonTags() +
   '</div></section>';
 }
@@ -391,70 +363,100 @@ function lessonCats(c){
    누르면 `js/lesson.js` 가 **같은 함수**(`amLessonCard`)로 다시 그립니다 —
    두 벌로 적으면 거르개를 누르는 순간 카드가 조용히 달라지고 그려진
    화면만 보는 검사는 영원히 통과합니다. */
+/* ⚠️⚠️ 확정 시안 ④ 의 짜임 — **왼쪽 레일 + 오른쪽 목록**입니다.
+   레일 · 칩 · 세는 줄은 피팅(⑦)과 **같은 CSS**를 나눠 쓰고 **id 만**
+   가릅니다(`lsn-`) — 0068 의 레일을 구합니다 글이 그대로 쓴 그 자리.
+   ⚠️ 시안에는 오른쪽 레일이 없습니다 — 입점 · 맞춤 요청 · 이용 가이드
+   세 상자는 **목록 아래**로 내립니다(길을 하나도 안 지웁니다). */
 function lessonSec(c, list){
-  var S = W.AM_PV_SORT || [];
+  var S    = W.AM_PV_SORT || [];
+  var items = W.amCatItems(c);
+  var regs  = (W.amRegionsOf ? W.amRegionsOf(c.key) : (W.AM_REGIONS || []));
+  var P     = W.AM_LESSON_PRICE || [];
+  var G     = W.AM_LESSON_GOAL  || [];
   var grid = list.length
     ? W.amLessonGrid(list)
     : '<div class="none"><h3>현재 등록된 레슨 프로가 없습니다.</h3>' +
       '<p>골프 프로라면 지금 입점 신청해 주세요. 신청하신 자격과 경력을 ' +
       '운영자가 확인한 뒤 이 자리에 올려 드립니다.</p>' +
       '<div class="none-b"><a class="btn btn-pri" href="/join">' +
-      icon("store", 20) + '프로 입점 신청</a></div>' +
-      nowOpen(c) + '</div>';
+      icon("store", 20) + '프로 입점 신청</a>' +
+      '<a class="btn btn-line" href="/match?cat=lesson">레슨 조건 남기기</a>' +
+      '</div>' + nowOpen(c) + '</div>';
 
   return '<section class="sec sec-alt lsn-sec"><div class="wrap lsn-w">' +
+    '<aside class="fit-rail lsn-rail" aria-label="필터로 찾기">' +
+      '<p class="lsn-rail-t">' + icon("search", 16) + '필터로 찾기</p>' +
+      fitPick("sub", "레슨 유형", "swing", items, "전체 레슨", "lsn", "lsnform") +
+      fitPick("g",   "레슨 목표", "flag",  G,     "전체",      "lsn", "lsnform") +
+      fitPick("p",   "가격 (1회 기준)", "coin", P, "전체",     "lsn", "lsnform") +
+      fitPick("rg",  "지역", "pin", regs, "전체 지역", "lsn", "lsnform") +
+      '<a class="fit-rail-x" href="' + esc(W.amCatUrl(c)) + '">' +
+        icon("arrow", 15) + '필터 초기화</a>' +
+    '</aside>' +
     '<div class="lsn-main">' +
       '<div class="sec-hd lsn-hd"><h2>레슨 프로</h2>' +
       '<p>골프올인원은 통신판매중개자이며 거래 당사자가 아닙니다. ' +
       '레슨 조건 · 가격은 프로가 직접 등록한 값입니다.</p></div>' +
+      /* ⚠️ 고른 조건을 **칩 한 줄**로 보여 주고 하나씩 지웁니다 —
+         무엇으로 좁혔는지가 안 보이면 0건을 「프로가 없다」로 읽습니다
+         (0068 에서 세운 규칙). 빌드는 **빈 자리**만 찍고 조건이 있을 때
+         `js/lesson.js` 가 채웁니다(조건이 없으면 줄째 안 보입니다). */
+      '<div class="lsn-chips" id="lsnchips" hidden></div>' +
       '<div class="lsn-bar">' +
         '<p class="lsn-cnt" id="lsncnt">' +
-          (list.length ? esc(W.won(list.length)) + '분' : '0분') + '</p>' +
-        '<p class="lsn-sort"><label class="sr" for="lsn-o">차례</label>' +
+          '프로 ' + (list.length ? esc(W.won(list.length)) : '0') + '명</p>' +
+        '<p class="lsn-tools">' +
+          '<label class="sr" for="lsn-o">차례</label>' +
           '<select id="lsn-o" name="o" form="lsnform">' + S.map(function(x){
             return '<option value="' + esc(x.key) + '">' + esc(x.name) + '</option>';
-          }).join("") + '</select></p>' +
+          }).join("") + '</select>' +
+          /* ⚠️⚠️ 보기 바꾸기는 **링크**입니다 — 자바스크립트가 꺼져도
+             주소로 그대로 돕니다(`?v=list`). 단추로만 만들면 눌러도
+             아무 일이 안 나는 칸이 됩니다(절대 규칙 5). */
+          '<span class="lsn-view" role="group" aria-label="보기 바꾸기">' +
+            '<a class="lsn-vb on" data-view="" href="' + esc(W.amCatUrl(c)) +
+              '" aria-label="격자로 보기" title="격자로 보기">' +
+              icon("grid", 17) + '</a>' +
+            '<a class="lsn-vb" data-view="list" href="' +
+              esc(W.amCatUrl(c)) + '?v=list" aria-label="목록으로 보기" ' +
+              'title="목록으로 보기">' + icon("menu", 17) + '</a>' +
+          '</span>' +
+        '</p>' +
       '</div>' +
       '<div id="lsnlist">' + grid + '</div>' +
-      /* ⚠️ 값이 0건인 프로가 섞일 수 있습니다 — 가격대로 좁히면 그분들이
-         빠진다는 것을 **그 자리에서** 말합니다(0건을 "없다" 로 읽지
-         않게 · 티타임의 빈 `tee_at` 에서 겪은 그 자리). */
-      '<p class="jnote">⚠️ 가격대로 좁히면 <b>레슨 가격을 아직 등록하지 ' +
-      '않은 프로</b>는 빠집니다. 값을 모르는 분을 아무 가격대에나 넣으면 ' +
-      '그건 저희가 지어낸 값입니다.</p>' +
-      /* ⚠️⚠️⚠️ **「요청에 적는 것」을 여기 둡니다** — 레슨은 업체 덩이
-         (`pvBlock`)를 안 쓰므로, 안 두면 그 구간이 통째로 사라지고
-         `tools/test-match.js` 가 "여쭙는다고 적어 놓고 안 여쭙는" 자리로
-         잡습니다(화면의 목록과 `/match` 양식이 **같은 줄**을 읽습니다). */
+      '<p class="jnote">⚠️ 가격대 · 레슨 목표로 좁히면 <b>그 값을 아직 ' +
+      '등록하지 않은 프로</b>는 빠집니다. 값을 모르는 분을 아무 칸에나 ' +
+      '넣으면 그건 저희가 지어낸 값입니다.</p>' +
       asksBlock(c) +
+      '<div class="lsn-foot">' +
+        '<div class="lsn-box lsn-box-dark">' +
+          '<p class="lsn-box-h">' + icon("user", 20) + '골프 프로로 입점하세요</p>' +
+          '<p>내 프로필과 레슨 상품을 등록하고 더 많은 골퍼를 만나 보세요. ' +
+          '자격과 경력은 운영자가 확인합니다.</p>' +
+          '<a class="btn btn-gold" href="/join">프로 입점 신청' +
+            icon("arrow", 15) + '</a>' +
+        '</div>' +
+        '<div class="lsn-box">' +
+          '<p class="lsn-box-h">' + icon("cal", 20) + '원하는 레슨을 못 찾으셨나요?</p>' +
+          '<p>지역 · 예산 · 레슨 목적을 남기시면 조건에 맞는 프로를 ' +
+          '찾아 이어 드립니다. 업체에 넘길 때는 상호를 알려 드리고 ' +
+          '다시 여쭙습니다.</p>' +
+          '<a class="btn btn-line" href="/match?cat=lesson">맞춤 레슨 요청하기' +
+            icon("arrow", 15) + '</a>' +
+        '</div>' +
+        '<div class="lsn-box">' +
+          '<p class="lsn-box-h">' + icon("info", 20) + '이용 가이드</p>' +
+          '<ul class="lsn-gd">' +
+            '<li><a href="/guide">프로 찾는 방법과 상담 절차' +
+              icon("arrow", 14) + '</a></li>' +
+            '<li><a href="/join">프로 입점 안내' + icon("arrow", 14) + '</a></li>' +
+            '<li><a href="/help">고객센터 · 자주 묻는 것' +
+              icon("arrow", 14) + '</a></li>' +
+          '</ul>' +
+        '</div>' +
+      '</div>' +
     '</div>' +
-    '<aside class="lsn-side" aria-label="레슨 안내">' +
-      '<div class="lsn-box lsn-box-dark">' +
-        '<p class="lsn-box-h">' + icon("user", 20) + '골프 프로로 입점하세요</p>' +
-        '<p>내 프로필과 레슨 상품을 등록하고 더 많은 골퍼를 만나 보세요. ' +
-        '자격과 경력은 운영자가 확인합니다.</p>' +
-        '<a class="btn btn-gold" href="/join">프로 입점 신청' +
-          icon("arrow", 15) + '</a>' +
-      '</div>' +
-      '<div class="lsn-box">' +
-        '<p class="lsn-box-h">' + icon("cal", 20) + '원하는 레슨을 못 찾으셨나요?</p>' +
-        '<p>지역 · 예산 · 레슨 목적을 남기시면 조건에 맞는 프로를 ' +
-        '찾아 이어 드립니다. 업체에 넘길 때는 상호를 알려 드리고 ' +
-        '다시 여쭙습니다.</p>' +
-        '<a class="btn btn-line" href="/match?cat=lesson">맞춤 레슨 요청하기' +
-          icon("arrow", 15) + '</a>' +
-      '</div>' +
-      '<div class="lsn-box">' +
-        '<p class="lsn-box-h">' + icon("info", 20) + '이용 가이드</p>' +
-        '<ul class="lsn-gd">' +
-          '<li><a href="/guide">프로 찾는 방법과 상담 절차' +
-            icon("arrow", 14) + '</a></li>' +
-          '<li><a href="/join">프로 입점 안내' + icon("arrow", 14) + '</a></li>' +
-          '<li><a href="/help">고객센터 · 자주 묻는 것' +
-            icon("arrow", 14) + '</a></li>' +
-        '</ul>' +
-      '</div>' +
-    '</aside>' +
   '</div></section>';
 }
 
@@ -733,7 +735,7 @@ function fitHead(c){
    ⚠️ 칸마다 **id 가 하나씩** 필요합니다(`<label for>`). 이름에 분류를
    안 섞어도 되는 까닭은 이 화면에 레일이 하나뿐이기 때문입니다 —
    둘이 되는 날 같은 id 가 여럿이 됩니다(0046 의 동의 상자 자리). */
-function fitPick(name, title, ic, items, allName, pfx){
+function fitPick(name, title, ic, items, allName, pfx, formId){
   /* ⚠️ `pfx` 는 id 앞가지입니다 — 레일을 두 화면이 나눠 쓰므로
      비워 두면 같은 id 가 둘이 됩니다(0046 의 동의 상자 자리). */
   pfx = pfx || "fit";
@@ -753,7 +755,8 @@ function fitPick(name, title, ic, items, allName, pfx){
          일이 안 나는 칸이 됩니다(절대 규칙 5). */
       return '<label class="fit-ck" for="' + esc(id) + '">' +
         '<input type="radio" id="' + esc(id) + '" name="' + esc(name) +
-          '" value="' + esc(x.key) + '"' + (x.key ? "" : " checked") + '>' +
+          '" value="' + esc(x.key) + '"' + (x.key ? "" : " checked") +
+          (formId ? ' form="' + esc(formId) + '"' : "") + '>' +
         '<i class="fit-ck-b" aria-hidden="true"></i>' +
         '<span>' + esc(x.name) + '</span></label>';
     }).join("") +

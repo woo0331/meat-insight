@@ -3493,19 +3493,88 @@ picture{ display: contents; }
   color:var(--ink3); }
 .lsn-cat:hover{ border-color:var(--grn-line); background:var(--grn-soft); }
 
-/* 목록 + 우측 레일 — ⚠️ 1000px 아래에서는 레일이 **아래로** 내려옵니다 */
-.lsn-w{ display:grid; gap:24px; grid-template-columns:minmax(0,1fr); }
+/* 목록 + **왼쪽** 필터 레일 (확정 시안 ④) — ⚠️⚠️ 레일 액자 · 네모 칸은
+   피팅 ⑦ 의 `.fit-rail` · `.fit-ck` 를 **그대로** 씁니다. 두 벌로 적으면
+   한쪽만 고치는 날 두 화면이 다른 모양이 되고, 그려진 화면만 보는 검사는
+   영원히 통과합니다. ⚠️ 1000px 아래에서는 레일이 **위로** 올라오고 묶음
+   넷이 가로로 섭니다(세로로 두면 레일만 읽다가 목록에 닿기까지 한 화면을
+   밀어야 합니다 · 피팅에 적어 둔 그 까닭). */
+.lsn-w{ display:grid; gap:20px; grid-template-columns:232px minmax(0,1fr);
+  align-items:start; }
 .lsn-w > *{ min-width:0; }
-@media (min-width:1000px){
-  .lsn-w{ grid-template-columns:minmax(0,1fr) 300px; }
-}
+.lsn-rail-t{ display:flex; align-items:center; gap:6px; margin:0 0 12px;
+  font-size:15px; font-weight:800; color:var(--ink); }
+.lsn-rail-t svg{ flex:none; color:var(--gold-text); }
+
+/* 선택된 조건 칩 — ⚠️⚠️ 무엇으로 좁혔는지가 안 보이면 0건을 "프로가
+   없다" 로 읽습니다(0068 에 적어 둔 그 자리). 하나씩 지웁니다.
+   ⚠️ `[hidden]` 을 같이 적습니다 — `display:flex` 인 칸은 속성만으로는
+   **안 가려집니다**(작성자 CSS 가 브라우저 기본을 이깁니다). */
+.lsn-chips{ display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+  margin:0 0 14px; }
+.lsn-chips[hidden]{ display:none; }
+.lsn-chips-t{ color:var(--ink3); font-size:13px; font-weight:700; }
+.lsn-chip{ display:inline-flex; align-items:center; gap:6px; min-height:40px;
+  padding:6px 11px 6px 13px; border-radius:var(--r-pill);
+  border:1.5px solid var(--grn-line); background:var(--grn-soft);
+  color:var(--grn-text); font-size:14px; font-weight:700;
+  text-decoration:none; }
+.lsn-chip:hover{ border-color:var(--grn); }
+.lsn-chip i{ display:inline-flex; color:var(--ink2); }
+.lsn-chip-all{ display:inline-flex; align-items:center; min-height:40px;
+  padding:6px 10px; color:var(--ink2); font-size:14px; font-weight:700; }
+
 .lsn-bar{ display:flex; flex-wrap:wrap; align-items:center; gap:10px;
   margin:0 0 14px; }
 .lsn-cnt{ margin:0; color:var(--ink2); font-size:15px; font-weight:700; }
-.lsn-sort{ margin:0 0 0 auto; }
-.lsn-sort select{ min-height:var(--tap); padding:8px 12px;
+.lsn-tools{ display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+  margin:0 0 0 auto; }
+.lsn-tools select{ min-height:var(--tap); padding:8px 12px;
   border:1.6px solid var(--line); border-radius:var(--r-sm);
   background:var(--surface); color:var(--ink); font-size:15px; }
+/* 격자 · 목록 보기 — ⚠️ **링크**입니다(단추로 만들면 자바스크립트가 꺼진
+   분께 눌러도 아무 일이 안 나는 칸입니다 · 절대 규칙 5). */
+.lsn-view{ display:inline-flex; border:1.6px solid var(--line);
+  border-radius:var(--r-sm); overflow:hidden; background:var(--surface); }
+.lsn-vb{ display:inline-flex; align-items:center; justify-content:center;
+  width:44px; min-height:var(--tap); color:var(--ink3); }
+.lsn-vb + .lsn-vb{ border-left:1.6px solid var(--line); }
+.lsn-vb.on{ background:var(--grn-soft); color:var(--grn-text); }
+.lsn-vb:hover{ color:var(--ink); }
+
+/* 목록 보기 — ⚠️ **클래스 한 줄**로 바꿉니다(카드를 두 벌로 적지
+   않습니다). 사진이 왼쪽에 서고 글이 오른쪽에 섭니다. */
+#lsnlist.is-list .lsn-g{ grid-template-columns:minmax(0,1fr); }
+#lsnlist.is-list .lsn-c{ flex-direction:row; }
+#lsnlist.is-list .lsn-ph{ flex:none; width:168px; aspect-ratio:auto; }
+#lsnlist.is-list .lsn-b{ flex:1 1 0; min-width:0; }
+@media (max-width:560px){
+  #lsnlist.is-list .lsn-ph{ width:112px; }
+}
+
+/* 아래 안내 상자 셋 — ⚠️ 시안 ④ 는 레일이 **왼쪽**이라 그 셋이 목록
+   **아래**로 내려옵니다(오른쪽에 두면 레일이 양쪽에 둘입니다). */
+.lsn-foot{ display:grid; gap:16px; margin-top:24px;
+  grid-template-columns:minmax(0,1fr); }
+.lsn-foot > *{ min-width:0; }
+@media (min-width:760px){
+  .lsn-foot{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+}
+@media (max-width:1000px){
+  .lsn-w{ grid-template-columns:minmax(0,1fr); }
+  .lsn-rail{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr));
+    gap:10px 14px; align-items:start; }
+  .lsn-rail > *{ min-width:0; }
+  .lsn-rail-t{ grid-column:1 / -1; margin:0; }
+  .lsn-rail .fit-rail-g{ margin:0; }
+  .lsn-rail .fit-rail-x{ grid-column:1 / -1; margin-top:0; }
+}
+/* ⚠️⚠️ 폰에서도 **두 칸**입니다 — 레슨은 고르는 묶음이 넷(유형 · 목표 ·
+   가격 · 지역)이고 칸이 마흔을 넘습니다. 한 칸으로 두면 목록에 닿기까지
+   두 화면을 밀어야 합니다. 글자가 짧아 두 칸에서도 안 잘립니다. */
+@media (max-width:760px){
+  .lsn-rail{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+}
 
 /* 프로 카드 — ⚠️ 사진은 **1:1 정사각**이고 칸 수를 폭마다 박습니다
    (auto-fill 을 쓰면 폭마다 칸 수가 달라져 사진이 들쭉날쭉합니다 ·
@@ -3521,7 +3590,8 @@ picture{ display: contents; }
 .lsn-ph{ display:flex; align-items:center; justify-content:center;
   aspect-ratio:1 / 1; background:var(--ic-bg); color:var(--ic-ink); }
 .lsn-ph img{ width:100%; height:100%; object-fit:cover; display:block; }
-.lsn-b{ display:flex; flex-direction:column; gap:6px; padding:14px; }
+.lsn-b{ display:flex; flex-direction:column; gap:6px; padding:14px;
+  flex:1 1 auto; }
 .lsn-n{ display:flex; align-items:center; gap:6px; font-size:16px;
   font-weight:800; }
 .lsn-ok{ display:inline-flex; color:var(--ok-text); }
@@ -3538,9 +3608,15 @@ picture{ display: contents; }
 .lsn-p i{ font-style:normal; font-weight:600; color:var(--ink2);
   font-size:14px; margin-left:2px; }
 .lsn-p0{ font-size:14px; font-weight:600; color:var(--ink3); }
+/* ⚠️⚠️ 카드가 **링크가 아니라 `<article>`** 입니다(시안 ④ 에 「프로필
+   보기」 단추가 있습니다). 누르는 자리는 그 단추가 카드 전체로 넓어져
+   만듭니다 — 링크는 하나뿐이라 링크 안에 링크가 생기지 않습니다. */
+.lsn-c{ position:relative; }
+.lsn-go{ margin-top:auto; width:100%; justify-content:center; }
+.lsn-go::after{ content:""; position:absolute; inset:0;
+  border-radius:var(--r); }
 
-/* 우측 레일 */
-.lsn-side{ display:flex; flex-direction:column; gap:16px; }
+/* 안내 상자 셋 — 모양은 그대로이고 자리만 목록 아래로 내려왔습니다 (.lsn-foot) */
 .lsn-box{ padding:18px; border:1.6px solid var(--line);
   border-radius:var(--r); background:var(--surface); }
 .lsn-box p{ margin:0 0 10px; color:var(--ink2); font-size:14px;

@@ -425,14 +425,63 @@ function nowServe(){ return serve(0); }
        (await lsn("?q=" + encodeURIComponent("없는말123"))).n === 0);
     /* ⚠️⚠️ **고르개가 지금 조건에 맞춰져 있는가** — 안 맞추면 주소로
        들어오신 분께 "전체" 라고 적힌 칸 아래 좁혀진 목록이 나옵니다
-       (무엇으로 좁혔는지 알 수 없는 자리). */
+       (무엇으로 좁혔는지 알 수 없는 자리).
+       ⚠️ 확정 시안 ④ 부터 레일은 **네모 칸(radio)** 입니다 — 값이 아니라
+       **켜졌는지**를 봅니다. */
     await p.goto("http://127.0.0.1:" + h.port + "/cat/lesson?sub=ls-solo&rg=gyeonggi",
                  { waitUntil:"networkidle" });
     await p.waitForTimeout(250);
     ok("고르개가 **지금 조건**을 보여 준다",
-       (await p.inputValue("#lsn-sub")) === "ls-solo" &&
-       (await p.inputValue("#lsn-rg")) === "gyeonggi",
-       (await p.inputValue("#lsn-sub")) + " · " + (await p.inputValue("#lsn-rg")));
+       (await p.isChecked("#lsn-sub-ls-solo")) &&
+       (await p.isChecked("#lsn-rg-gyeonggi")),
+       JSON.stringify({ sub: await p.isChecked("#lsn-sub-ls-solo"),
+                        rg:  await p.isChecked("#lsn-rg-gyeonggi") }));
+    ok("  안 고른 칸은 꺼져 있다 (「전체」도 같이 켜져 있지 않다)",
+       !(await p.isChecked("#lsn-sub-all")) && !(await p.isChecked("#lsn-rg-all")));
+    /* ⚠️⚠️ **고른 조건 칩** — 무엇으로 좁혔는지가 안 보이면 0건을
+       「프로가 없다」로 읽습니다(0068 에서 세운 규칙). */
+    const chips = await p.locator("#lsnchips .lsn-chip").allTextContents();
+    ok("고른 조건이 **칩 한 줄**로 보인다 (키가 아니라 사람이 읽는 이름)",
+       chips.length === 2 &&
+       chips.join(" ").indexOf("개인 레슨") >= 0 &&
+       chips.join(" ").indexOf("경기") >= 0,
+       JSON.stringify(chips));
+    await p.click('#lsnchips .lsn-chip[data-off="rg"]');
+    await p.waitForTimeout(300);
+    ok("  칩을 누르면 **그 조건만** 빠진다 (나머지는 그대로)",
+       (await p.evaluate(function(){ return location.search; })) === "?sub=ls-solo" &&
+       (await p.locator("#lsnchips .lsn-chip").count()) === 1,
+       await p.evaluate(function(){ return location.search; }));
+    await p.click("#lsnchips .lsn-chip-all");
+    await p.waitForTimeout(300);
+    ok("  「전체 해제」를 누르면 조건이 **하나도 안 남는다**",
+       (await p.evaluate(function(){ return location.search; })) === "" &&
+       (await p.locator("#lsnchips .lsn-chip").count()) === 0,
+       await p.evaluate(function(){ return location.search; }));
+    /* ⚠️ 레일의 네모 칸을 **눌러서** 좁혀지는가 — 양식의 자손이 아니라
+       (`form="lsnform"`) 양식에서는 `change` 가 안 올라옵니다. */
+    await p.click('label[for="lsn-sub-ls-field"]');
+    await p.waitForTimeout(350);
+    ok("레일의 네모 칸을 누르면 **새로고침 없이** 좁혀진다",
+       (await p.evaluate(function(){ return location.search; })).indexOf("sub=ls-field") >= 0 &&
+       (await p.locator("#lsnlist .lsn-c").count()) === 0,
+       await p.evaluate(function(){ return location.search; }));
+    /* ⚠️⚠️ **격자 · 목록 보기** — 좁히는 조건이 아니므로 칩에 안 넣고
+       「전체 해제」로도 안 지웁니다. */
+    await p.goto("http://127.0.0.1:" + h.port + "/cat/lesson?rg=gyeonggi",
+                 { waitUntil:"networkidle" });
+    await p.waitForTimeout(250);
+    await p.click('.lsn-vb[data-view="list"]');
+    await p.waitForTimeout(300);
+    ok("목록 보기로 바꾸면 **주소와 모양이 같이** 바뀐다",
+       (await p.evaluate(function(){ return location.search; })).indexOf("v=list") >= 0 &&
+       (await p.locator("#lsnlist.is-list").count()) === 1,
+       await p.evaluate(function(){ return location.search; }));
+    ok("  보기를 바꿔도 **고른 조건은 그대로**다",
+       (await p.locator("#lsnchips .lsn-chip").count()) === 1 &&
+       (await p.isChecked("#lsn-rg-gyeonggi")));
+    ok("  보기는 **칩에 안 들어간다** (좁히는 조건이 아닙니다)",
+       (await p.locator('#lsnchips .lsn-chip[data-off="v"]').count()) === 0);
 
     /* ⚠️⚠️⚠️ **카테고리 카드를 실제로 눌러 봅니다** (§5 — "각 카드를
        누르면 해당 카테고리로 필터링된 프로 목록을 표시한다").
@@ -460,9 +509,9 @@ function nowServe(){ return serve(0); }
     /* 카드를 누르면 그 프로의 상세로 — ⚠️ 지시서 §6 이 "사진 또는 카드
        클릭 시 반드시 상세 페이지로 이동한다" 고 적었습니다. */
     ok("카드가 **그 프로의 상세 주소**를 가리킨다",
-       (await p.locator("#lsnlist .lsn-c").first().getAttribute("href")) ===
+       (await p.locator("#lsnlist .lsn-c .lsn-go").first().getAttribute("href")) ===
        "/pro/green-pt",
-       await p.locator("#lsnlist .lsn-c").first().getAttribute("href"));
+       await p.locator("#lsnlist .lsn-c .lsn-go").first().getAttribute("href"));
     /* ⚠️⚠️ 지어낸 것이 한 줄도 없는가 — 시안의 평점 · 후기 수 · 인증
        배지는 전부 예시입니다(지시서 §2 · §13). */
     ok("⚠️⚠️ 후기가 0건이면 **별도 숫자도 안 찍는다** (절대 규칙 1)",

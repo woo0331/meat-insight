@@ -4570,3 +4570,108 @@ picture{ display: contents; }
 @media (max-width:560px){
   .lsmode-i{ flex:1 1 0; min-width:0; padding:0 10px; font-size:14.5px; }
 }
+
+/* ── 티타임 카드 (확정 시안 ① · 2026-11-13) ─────────────────────────
+   ⚠️ `li` 에 `tf-i` 를 **그대로 둡니다** — 그 이름으로 세는 검사가 넷
+   있습니다(이름을 갈면 그 자리가 조용히 0건이 됩니다). 모양만 `.tfc` 가
+   덮고, 특정도를 올려(`.tf-i.tfc`) 앞의 `.tf-i` 규칙을 이깁니다 —
+   파일 뒤에 적었다고 이기는 것이 아닙니다. */
+.tf-i.tfc{ display:grid; gap:14px; padding:14px;
+  grid-template-columns:auto minmax(0,1fr) auto; align-items:start; }
+.tfc > *{ min-width:0; }
+.tfc-ph{ display:flex; align-items:center; justify-content:center;
+  width:92px; height:92px; flex:none; border-radius:12px;
+  background:var(--grn-soft); color:var(--grn-deep); }
+.tfc-b{ display:grid; gap:5px; align-content:start; }
+.tfc-n{ margin:0; font-size:17.5px; font-weight:800; color:var(--ink); }
+.tfc-rg, .tfc-when{ display:flex; flex-wrap:wrap; align-items:center; gap:5px;
+  margin:0; font-size:14.5px; color:var(--ink2); }
+.tfc-rg svg, .tfc-when svg{ flex:none; color:var(--ink3); }
+.tfc-when b{ color:var(--ink); }
+.tfc-sep{ color:var(--ink3); }
+.tfc-m{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px;
+  margin:2px 0 0; font-size:14px; color:var(--ink2); }
+.tfc-pv{ font-weight:700; color:var(--ink); }
+.tfc-tel{ color:var(--grn-text); font-weight:700; }
+.tfc-note{ margin:4px 0 0; font-size:14px; color:var(--ink2); }
+.tfc-r{ display:grid; gap:6px; justify-items:end; align-content:start;
+  text-align:right; }
+/* ⚠️ 「업체 확인 후 확정」 — 시안의 말이고 **우리 코드의 참**입니다
+   (신청은 applied 로 들어가고 확정은 업체만 합니다 · 0060) */
+.tfc-badge{ display:inline-flex; align-items:center; padding:4px 10px;
+  border-radius:var(--r-pill); font-size:12.5px; font-weight:700;
+  color:var(--gold-text); background:#fff;
+  border:1.3px solid var(--gold-line); }
+.tfc-fee{ margin:2px 0 0; font-size:19px; font-weight:800; color:var(--ink); }
+.tfc-fee i{ font-style:normal; font-size:13.5px; font-weight:700;
+  color:var(--ink2); margin-right:3px; }
+.tfc-fee-x{ margin:0; font-size:12.5px; color:var(--ink3); max-width:17ch; }
+.tfc-fee0{ margin:2px 0 0; font-size:14px; font-weight:600; color:var(--ink3); }
+.tf-i.tfc .btn{ justify-self:end; min-height:44px; }
+.tfc-bx{ grid-column:1 / -1; }
+@media (max-width:760px){
+  .tf-i.tfc{ grid-template-columns:auto minmax(0,1fr); }
+  .tfc-ph{ width:62px; height:62px; }
+  /* ⚠️ 폰에서는 값 · 단추가 **아래 한 줄**로 내려옵니다 — 오른쪽에 두면
+     이름이 두 글자 폭으로 눌립니다(찍어 보고 정한 자리). */
+  .tfc-r{ grid-column:1 / -1; justify-items:stretch; text-align:left;
+    border-top:1px solid var(--line); padding-top:10px; }
+  .tfc-fee-x{ max-width:none; }
+  .tf-i.tfc .btn{ justify-self:stretch; justify-content:center; }
+}
+
+/* ── 조인 카드 (확정 시안 ② · 2026-11-13) ───────────────────────────
+   ⚠️ `.jnc` 이름을 **그대로 둡니다**(세는 검사가 있습니다) — 모양만
+   덮고 특정도를 올립니다(`.jnc.jnc`). 가운데 칸은 `.jnc-mid` 입니다
+   (`.jnc-b` 는 본문 글이라 두 곳에 쓰면 안 됩니다). */
+.jnc.jnc{ display:grid; gap:14px; padding:14px;
+  grid-template-columns:auto minmax(0,1fr) auto; align-items:start; }
+.jnc-ph{ display:flex; align-items:center; justify-content:center;
+  width:84px; height:84px; flex:none; border-radius:12px;
+  background:var(--grn-soft); color:var(--grn-deep); }
+.jnc-mid{ display:grid; gap:6px; align-content:start; min-width:0; }
+.jnc-mid .jnc-h{ flex-wrap:wrap; align-items:center;
+  justify-content:flex-start; gap:8px; }
+.jnc-mid .jnc-h h3{ font-size:17.5px; font-weight:800; }
+.jnc-mid .jnc-m{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px;
+  color:var(--ink2); }
+.jnc-mid .jnc-m svg{ flex:none; color:var(--ink3); }
+.jnc-mid .jnc-m b{ color:var(--ink); font-weight:700; }
+.jnc-sep{ color:var(--ink3); }
+/* ⚠️ 0080 — 실력 딱지. 안 고르신 자리는 **딱지 자체가 없습니다** */
+.jnc-lv{ display:inline-flex; align-items:center; padding:3px 9px;
+  border-radius:var(--r-pill); font-size:12.5px; font-weight:700;
+  color:var(--grn-text); background:var(--grn-soft); }
+.jnc-r{ display:grid; gap:8px; justify-items:end; align-content:start;
+  text-align:right; }
+.jnc-fee{ margin:0; font-size:19px; font-weight:800; color:var(--ink); }
+.jnc-fee i{ display:block; font-style:normal; font-size:12.5px;
+  font-weight:700; color:var(--ink2); }
+.jnc.jnc .jnc-go{ justify-self:end; min-height:44px; }
+@media (max-width:760px){
+  .jnc.jnc{ grid-template-columns:auto minmax(0,1fr); }
+  .jnc-ph{ width:58px; height:58px; }
+  /* ⚠️ 폰에서는 값 · 단추가 **아래 한 줄**로 내려옵니다 (티타임 카드와
+     같은 규칙) — 오른쪽에 두면 제목이 두 글자 폭으로 눌립니다. */
+  .jnc-r{ grid-column:1 / -1; justify-items:stretch; text-align:left;
+    border-top:1px solid var(--line); padding-top:10px; }
+  .jnc-fee i{ display:inline; margin-right:4px; }
+  .jnc.jnc .jnc-go{ justify-self:stretch; justify-content:center; }
+}
+
+/* ── 모집 중 / 내 조인 탭 (확정 시안 ②) ─────────────────────────────
+   ⚠️⚠️ 「내 조인」은 **이미 있는 자리**(`/my` 의 `#joinmine`)로 갑니다 —
+   같은 목록을 두 곳에 그리면 한쪽만 고치는 날 둘이 다른 말을 합니다.
+   ⚠️ 그래서 **링크**입니다(탭처럼 보이지만 가는 자리가 다릅니다). */
+.jntab{ display:flex; gap:8px; border-bottom:1.6px solid var(--line);
+  margin:0 0 16px; }
+.jntab-i{ display:inline-flex; align-items:center; justify-content:center;
+  min-height:46px; padding:0 18px; font-size:15px; font-weight:700;
+  color:var(--ink2); text-decoration:none;
+  border:1.6px solid transparent; border-bottom:0;
+  border-radius:10px 10px 0 0; margin-bottom:-1.6px; }
+.jntab-i:hover{ color:var(--ink); }
+.jntab-i.on{ color:var(--grn-text); background:#fff; border-color:var(--line); }
+@media (max-width:560px){
+  .jntab-i{ flex:1 1 0; min-width:0; padding:0 8px; font-size:14.5px; }
+}

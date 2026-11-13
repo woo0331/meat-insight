@@ -1017,6 +1017,28 @@ window.AM_JOIN_LEVEL = [
   { key:"mid",      name:"중급 이상" },
   { key:"low",      name:"싱글 · 로우핸디" }
 ];
+/* ── 그린피 구간 (확정 시안 ① 의 「가격」 거르개 · 2026-11-13) ────────
+   ⚠️⚠️ **1인 그린피**(`teetime.green_fee`)를 가릅니다 — 카트 · 캐디 ·
+   식사가 포함되는지는 **우리가 모릅니다**. 그래서 이름에도 「1인 그린피
+   기준」이라고 적고, 포함 여부는 업체에 확인하시라고 화면이 말합니다
+   (모르는 것을 포함이라고 적으면 지어낸 약속입니다 · 절대 규칙 5).
+   ⚠️⚠️ 경계는 **아래를 닫고 위를 엽니다**(gte · lt) — 둘 다 닫으면 딱
+   15만원짜리가 두 칸에 다 걸립니다. 이름도 그 뜻으로 적습니다.
+   ⚠️ **값을 안 올린 자리는 이 조건으로 좁히면 빠집니다**(null 과 견주는
+   순간 빠집니다) — 화면이 그 사실을 그 자리에서 적습니다. */
+window.AM_TEE_PRICE = [
+  { key:"g10", name:"10만원 미만",    from:null,   to:100000 },
+  { key:"g15", name:"10만 ~ 15만원",  from:100000, to:150000 },
+  { key:"g20", name:"15만 ~ 20만원",  from:150000, to:200000 },
+  { key:"g25", name:"20만 ~ 25만원",  from:200000, to:250000 },
+  { key:"g99", name:"25만원 이상",    from:250000, to:null   }
+];
+window.amTeePriceBand = function(k){
+  var L = window.AM_TEE_PRICE || [];
+  for(var i = 0; i < L.length; i++) if(L[i].key === k) return L[i];
+  return null;
+};
+
 window.AM_LST_FLEX = [
   { key:"r",  name:"R (레귤러)" },
   { key:"sr", name:"SR" },

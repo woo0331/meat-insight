@@ -342,12 +342,17 @@ const JROOM = [
     title:"(예시) 주말 아침 같이 치실 분 구합니다",
     body:"초보도 환영합니다. 편하게 치실 분이면 좋겠습니다.",
     region:"seoul", play_at:KST(2), course:"(예시) 한강CC",
-    booked:true, tee:"아침", need:2, budget:150000, left_n:1 },
+    booked:true, tee:"아침", need:2, budget:150000, left_n:1,
+    /* ⚠️ 0080 — 실력. **한 줄은 비워 둡니다** — 안 고르신 자리에
+       딱지가 안 붙는지를 찍어서 보려고 갈라 둡니다. */
+    level:"beginner" },
   { id:"eeeeeeee-0046-4000-8000-000000000002",
     title:"(예시) 평일 조인 한 자리",
     body:"카트비는 나눠 냅니다.", region:"gangwon", play_at:KST(4),
     course:"(예시) 설악CC", booked:false, tee:"오전", need:1,
-    budget:0, left_n:1 }
+    /* ⚠️ 예상 금액을 **안 적으신 자리** — 그 줄이 줄째 빠지는지를
+       봅니다(「협의」를 지어 적지 않습니다 · 절대 규칙 2). */
+    budget:null, left_n:1 }
 ];
 
 /* ── 중고장터 (시안 ③) ────────────────────────────────────────────

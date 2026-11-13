@@ -34,7 +34,7 @@
   var A = null, PICK = null;
   /* ⚠️ `course` 는 메인의 찾는 칸이 보내는 열쇠입니다 — 여기 없으면
      `val("course")` 가 읽을 칸이 없어 조용히 안 걸립니다. */
-  var S = { rg:"", d:"", course:"", t:"" };
+  var S = { rg:"", d:"", course:"", t:"", p:"" };
   /* 티오프 시간대 — ⚠️ 말과 경계는 `js/data/deal.js` 의 `AM_TEE_BAND`
      **한 곳**이고 메인의 찾는 칸이 같은 줄을 읽습니다. 두 곳에 적으면
      "오전" 이 화면마다 다른 시각을 가리킵니다.
@@ -124,6 +124,7 @@
     if(S.course) q.push("course=" + encodeURIComponent(S.course));
     /* ⚠️ 날짜 띠를 눌러도 **고르신 시간대는 그대로** 들고 갑니다 */
     if(S.t) q.push("t=" + encodeURIComponent(S.t));
+    if(S.p) q.push("p=" + encodeURIComponent(S.p));
     return window.location.pathname + (q.length ? "?" + q.join("&") : "");
   }
   function shortDay(iso){
@@ -173,6 +174,14 @@
            떨어집니다 (둘 다 비면 달력 끝을 안 겁니다). */
         ((AHEAD || SEARCH)
           ? ' max="' + esc(kstISO(AHEAD || SEARCH)) + '"' : '') + '></div>' +
+      /* ⚠️⚠️ **골프장 이름으로 찾기** (확정 시안 ①) — 전에는 메인에서
+         고른 **이름이 정확히 같을 때만**(`eq.`) 걸려서, 「남서울」만
+         치면 0건이었습니다. 지금은 서버가 `ilike` 로 찾습니다.
+         ⚠️ 찾기도 **서버**가 합니다 — 백 줄만 받아 화면에서 찾으면 그
+         백 줄 밖의 자리가 영영 안 나옵니다. */
+      '<div class="jrow jrow-full tf-q"><label for="tf-course">골프장 이름</label>' +
+      '<input id="tf-course" name="course" type="search" maxlength="40" ' +
+        'value="' + esc(S.course) + '" placeholder="골프장 이름으로 찾기"></div>' +
       '<div class="jrow"><label for="tf-rg">지역</label>' +
       '<select id="tf-rg" name="rg"><option value="">전체 지역</option>' +
         regs + '</select></div>' +
@@ -186,42 +195,77 @@
               ' ' + esc(b.lead) + '</option>';
           }).join("") + '</select></div>'
         : "") +
+      /* 가격(1인 그린피) — ⚠️ **값을 안 올린 자리는 빠집니다**(null 과
+         견주는 순간 빠집니다). 화면이 0건 상자에서 그 사실을 적습니다. */
+      '<div class="jrow"><label for="tf-p">가격</label>' +
+      '<select id="tf-p" name="p"><option value="">전체 가격</option>' +
+        (window.AM_TEE_PRICE || []).map(function(x){
+          return '<option value="' + esc(x.key) + '"' +
+            (S.p === x.key ? " selected" : "") + '>' + esc(x.name) + '</option>';
+        }).join("") + '</select></div>' +
       '<div class="jrow tf-go">' +
       '<button type="submit" class="btn btn-pri">자리 찾기</button>' +
-      (S.rg || S.d || S.t
+      (S.rg || S.d || S.t || S.course || S.p
         ? '<button type="button" class="btn btn-line tf-all">조건 지우기</button>'
         : '') +
       '</div></form>';
   }
 
   /* ── 자리 한 줄 ─────────────────────────────────────────────────── */
+  /* ── 티타임 카드 (확정 시안 ① · 2026-11-13) ──────────────────────
+     ⚠️⚠️⚠️ **사진을 깔지 않습니다** — 골프장 사진을 담는 칸이 어디에도
+     없습니다(0066 이 제휴가 필요한 값에 칸을 안 만든 그 자리). 남의
+     사진이나 분류 사진을 깔면 **그 골프장인 것처럼** 보입니다(절대
+     규칙 1 · 업체 카드 · 매물 카드와 같은 규칙) — **아이콘 타일**입니다.
+     ⚠️⚠️ 「업체 확인 후 확정」은 시안의 말이고 **우리 코드의 참**입니다 —
+     신청은 `applied` 로 들어가고 확정은 업체만 합니다(0060 · 지시서 §6).
+     ⚠️⚠️ **「카트 · 캐디 별도」라고 단정하지 않습니다** — 그린피에 무엇이
+     포함되는지 우리는 **모릅니다**. 포함 여부를 업체에 확인하시라고
+     적습니다(모르는 것을 적으면 지어낸 약속입니다 · 절대 규칙 5). */
   function row(t){
     var fee = window.amTeeFee(t.green_fee);
     var left = Number(t.left_n);
-    return '<li class="tf-i" data-tee="' + esc(t.id) + '">' +
-      '<p class="tf-d"><b>' + esc(day(t.play_at)) + '</b>' +
-        (hhmm(t.tee_at) ? ' <span>' + esc(hhmm(t.tee_at)) + '</span>' : '') +
-      '</p>' +
-      '<p class="tf-c">' + esc(t.course) +
-        '<span class="tf-rg">' + esc(rgName(t.region)) + '</span></p>' +
-      '<p class="tf-m">' +
-        /* ⚠️⚠️ **상호와 전화번호는 공개가 맞는 값입니다** — 사업자
-           신원정보(제20조 제2항)이거나 업체가 공개를 고른 예약 문의
-           번호입니다. 배정 담당자 직통은 여기 안 옵니다 (0013). */
-        '<span class="tf-pv">' + esc(t.provider_name) + '</span>' +
-        (t.tel ? '<a class="tf-tel" href="tel:' + esc(t.tel) + '">' +
-                 esc(t.tel) + '</a>' : '') +
-        (t.holes ? '<span>' + esc(String(t.holes)) + '홀</span>' : '') +
-        (fee ? '<span>' + esc(fee) + '</span>' : '') +
-        '<span>' + (left > 0 ? '남은 자리 ' + esc(String(left)) : '자리 찼습니다') +
-        '</span>' +
-      '</p>' +
-      (t.note ? '<p class="tf-n">' + esc(t.note) + '</p>' : '') +
-      (left > 0
-        ? '<button type="button" class="btn btn-sm btn-pt tf-book">예약 신청</button>'
-        /* ⚠️ 자리가 찬 곳에는 단추를 **안 냅니다** (눌러도 거절됩니다) */
-        : '') +
-      '<div class="tf-bx"></div>' +
+    /* ⚠️ `tf-i` 를 **그대로 둡니다** — 그 이름으로 세는 검사가
+       넷 있습니다(이름을 갈면 그 자리가 조용히 0건이 됩니다). */
+    return '<li class="tf-i tfc" data-tee="' + esc(t.id) + '">' +
+      '<span class="tfc-ph" aria-hidden="true">' + window.icon("flag", 26) + '</span>' +
+      '<div class="tfc-b">' +
+        '<p class="tfc-n">' + esc(t.course) + '</p>' +
+        '<p class="tfc-rg">' + window.icon("pin", 14) + esc(rgName(t.region)) + '</p>' +
+        '<p class="tfc-when">' + window.icon("cal", 14) +
+          '<b>' + esc(day(t.play_at)) + '</b>' +
+          (hhmm(t.tee_at)
+            ? '<span class="tfc-sep">·</span>' + window.icon("clock", 14) +
+              esc(hhmm(t.tee_at))
+            : '') +
+        '</p>' +
+        '<p class="tfc-m">' +
+          /* ⚠️⚠️ **상호와 전화번호는 공개가 맞는 값입니다** — 사업자
+             신원정보(제20조 제2항)이거나 업체가 공개를 고른 예약 문의
+             번호입니다. 배정 담당자 직통은 여기 안 옵니다 (0013). */
+          '<span class="tfc-pv">' + esc(t.provider_name) + '</span>' +
+          (t.tel ? '<a class="tfc-tel" href="tel:' + esc(t.tel) + '">' +
+                   esc(t.tel) + '</a>' : '') +
+          (t.holes ? '<span>' + esc(String(t.holes)) + '홀</span>' : '') +
+          '<span>' + (left > 0 ? '남은 자리 ' + esc(String(left)) : '자리 찼습니다') +
+          '</span>' +
+        '</p>' +
+        (t.note ? '<p class="tfc-note">' + esc(t.note) + '</p>' : '') +
+      '</div>' +
+      '<div class="tfc-r">' +
+        '<span class="tfc-badge">업체 확인 후 확정</span>' +
+        (fee
+          ? '<p class="tfc-fee"><i>1인</i> ' + esc(fee) + '</p>' +
+            '<p class="tfc-fee-x">카트 · 캐디 비용이 포함되는지는 ' +
+            '업체에 확인해 주세요.</p>'
+          /* ⚠️ 값을 안 올린 자리는 **"문의" 를 지어 적지 않습니다** */
+          : '<p class="tfc-fee0">그린피가 아직 안 올라왔습니다</p>') +
+        (left > 0
+          ? '<button type="button" class="btn btn-pt tf-book">예약 신청</button>'
+          /* ⚠️ 자리가 찬 곳에는 단추를 **안 냅니다** (눌러도 거절됩니다) */
+          : '') +
+      '</div>' +
+      '<div class="tfc-bx tf-bx"></div>' +
     '</li>';
   }
 
@@ -281,12 +325,14 @@
        아직 아무도 안 올린 것과, 조건에 맞는 것이 없는 것은 다릅니다. */
     var k = (KIND === "join") ? "조인 자리" : "티타임";
     return '<div class="none">' +
-      (S.rg || S.d || S.t
+      (S.rg || S.d || S.t || S.course || S.p
         ? '<h3>그 조건에 맞는 ' + esc(k) + '이 없습니다.</h3>' +
           '<p>날짜나 지역을 넓혀 보세요. 지어낸 자리를 채우지 않습니다.' +
           /* ⚠️ 시간대를 고르면 **시각이 안 적힌 자리**가 빠집니다 —
              손님이 "없다" 로 읽지 않게 그 사실을 적습니다. */
           (S.t ? ' 시간대를 고르시면 <b>티오프 시각이 적힌 자리만</b> 나옵니다.' : '') +
+          /* ⚠️ 값을 안 올린 자리가 빠진다는 것을 **그 자리에서** 말합니다 */
+          (S.p ? ' 가격으로 좁히시면 <b>그린피가 적힌 자리만</b> 나옵니다.' : '') +
           '</p>' +
           '<button type="button" class="btn btn-line tf-all">조건 지우기</button>'
         : '<h3>아직 올라온 ' + esc(k) + '이 <b>0건</b>입니다.</h3>' +
@@ -343,7 +389,21 @@
        쪽이 달라 거르개가 아무것도 안 걸렀던 그 자리). 거르는 것은
        서버입니다 — 쉰 줄만 받아 화면에서 거르면 조건에 맞는 것이
        그 쉰 줄 밖에 있을 때 0건으로 보입니다. */
-    if(S.course) qs.push("course=eq." + encodeURIComponent(S.course));
+    /* ⚠️⚠️ **`eq.` 에서 `ilike` 로 바꿨습니다**(확정 시안 ①) — 전에는
+       이름이 **정확히 같을 때만** 걸려서 「남서울」만 치면 0건이었습니다.
+       ⚠️ `*` 는 PostgREST 의 자리표이고 손님 글자는 그대로 갑니다. */
+    if(S.course) qs.push("course=ilike." +
+      encodeURIComponent("*" + S.course + "*"));
+    /* ⚠️⚠️ 가격(1인 그린피) — 아래를 닫고 위를 여달니다(gte · lt).
+       ⚠️ **값을 안 올린 자리는 빠집니다**(null 과 견주는 순간 빠집니다) —
+       0건 안내가 그 사실을 적습니다. */
+    var pb = window.amTeePriceBand ? window.amTeePriceBand(S.p) : null;
+    if(pb){
+      if(pb.from !== null && pb.from !== undefined)
+        qs.push("green_fee=gte." + encodeURIComponent(String(pb.from)));
+      if(pb.to !== null && pb.to !== undefined)
+        qs.push("green_fee=lt." + encodeURIComponent(String(pb.to)));
+    }
     /* ⚠️⚠️ **시간대도 서버가 거릅니다** — 백 줄만 받아 화면에서 거르면
        맞는 자리가 그 백 줄 밖에 있을 때 0건으로 보입니다.
        ⚠️ 아래를 열고 위를 닫습니다(gte · lt) — 둘 다 닫으면 12:00 이
@@ -378,7 +438,7 @@
     };
     if(f.id === "ttf-find"){
       S.d = val("d"); S.rg = val("rg"); S.course = val("course");
-      S.t = val("t");
+      S.t = val("t"); S.p = val("p");
       load();
       return;
     }
@@ -412,7 +472,8 @@
     var t = e.target;
     if(!t || !t.closest) return;
     if(t.closest(".tf-all")){
-      S.rg = ""; S.d = ""; S.course = ""; S.t = ""; return void load();
+      S.rg = ""; S.d = ""; S.course = ""; S.t = ""; S.p = "";
+      return void load();
     }
     /* 날짜 띠 — ⚠️ 주소를 **같이 바꿉니다**(뒤로 가기도 됩니다) */
     var dd = t.closest("[data-tfd]");
@@ -464,6 +525,10 @@
          영원히 0건인 화면이 됩니다(절대 규칙 1). */
       var tb = (u.get("t") || "").trim();
       if(tb && window.amTeeBand && window.amTeeBand(tb)) S.t = tb;
+      /* ⚠️ 가격대도 **아는 값만** 받습니다 — 모르는 값을 그대로 쓰면
+         영원히 0건인 화면이 됩니다(절대 규칙 1). */
+      var pv = (u.get("p") || "").trim();
+      if(pv && window.amTeePriceBand && window.amTeePriceBand(pv)) S.p = pv;
     }catch(e){ }
     return load();
   }).catch(function(){});

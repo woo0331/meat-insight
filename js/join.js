@@ -43,36 +43,54 @@
     return (d.getMonth() + 1) + "월 " + d.getDate() + "일 (" + w + ")";
   }
 
+  /* ── 조인 카드 (확정 시안 ② · 2026-11-13) ───────────────────────
+     ⚠️⚠️⚠️ **사진을 깔지 않습니다** — 조인 글에는 사진을 담는 칸이
+     없습니다(0046). 남의 사진이나 분류 사진을 깔면 그 자리인 것처럼
+     보입니다(절대 규칙 1) — **아이콘 타일**입니다.
+     ⚠️⚠️ `.jnc-b` 는 **본문 글**입니다 — 가운데 칸을 그 이름으로 쓰면
+     `.lg`(로고 · 약관) · `.pvst-n`(담당자 · 상호) · `.lsd-t`(제목 · 그림
+     단추)에 이은 **넷째**가 됩니다. 가운데 칸은 `.jnc-mid` 입니다. */
   function card(r){
     var left = Number(r.left_n);
+    var lv = window.amJoinLevel ? window.amJoinLevel(r.level) : "";
     return '<li class="jnc">' +
-      '<div class="jnc-h">' +
-        '<h3>' + esc(r.title) + '</h3>' +
-        '<span class="jnc-n">' + (left > 0 ? esc(String(left)) + '자리 남음' : '마감') + '</span>' +
+      '<span class="jnc-ph" aria-hidden="true">' + window.icon("flag", 24) + '</span>' +
+      '<div class="jnc-mid">' +
+        '<div class="jnc-h">' +
+          '<h3>' + esc(r.title) + '</h3>' +
+          /* ⚠️⚠️ 골프장이 적혀 있어도 **부킹이 잡혔다는 뜻이 아닙니다**
+             (지시서 §2.A — 부킹 보장 금지). 두 딱지를 **따로** 냅니다 —
+             골프장 이름이 비어 있어도 `booked` 는 켜질 수 있습니다. */
+          (r.booked
+            ? '<span class="jnc-ok">티타임 확정</span>'
+            : '<span class="jnc-w">부킹은 아직입니다</span>') +
+          /* ⚠️ 0080 — 실력. **안 고르신 자리는 딱지를 안 냅니다**
+             (「무관」을 우리가 지어 적지 않습니다 · 절대 규칙 1). */
+          (lv ? '<span class="jnc-lv">' + esc(lv) + '</span>' : '') +
+        '</div>' +
+        '<p class="jnc-m">' + window.icon("cal", 14) +
+          '<b>' + esc(dayText(r.play_at)) + '</b>' +
+          (r.tee ? '<span class="jnc-sep">·</span>' + esc(r.tee) : '') +
+          '<span class="jnc-sep">·</span>' + window.icon("pin", 14) +
+          esc(rgName(r.region)) +
+          '<span class="jnc-sep">·</span>' + window.icon("people", 14) +
+          (left > 0 ? esc(String(left)) + '명 모집' : '모집 마감') +
+        '</p>' +
+        (r.course ? '<p class="jnc-c">' + esc(r.course) + '</p>' : '') +
+        '<p class="jnc-b">' + esc(r.body) + '</p>' +
       '</div>' +
-      '<p class="jnc-m">' + esc(dayText(r.play_at)) + ' · ' + esc(rgName(r.region)) +
-        (r.tee ? ' · ' + esc(r.tee) : '') +
-        (r.budget != null ? ' · 1인 ' + esc(Number(r.budget).toLocaleString()) + '원' : '') +
-      '</p>' +
-      /* ⚠️⚠️ 골프장이 적혀 있어도 **부킹이 잡혔다는 뜻이 아닙니다**
-         (지시서 §2.A — 부킹 보장 금지). 그 사실을 같이 적습니다. */
-      /* ⚠️⚠️ 전에는 **부킹이 아직일 때만** 적었습니다 — 거르개가 생긴
-         뒤로는 "부킹이 잡힌 자리만" 을 눌러도 무엇이 걸러졌는지 화면에
-         아무 표가 없어서, 눌러도 아무 일이 안 난 것처럼 보입니다.
-         ⚠️ 골프장 이름이 비어 있어도 `booked` 는 켜질 수 있으므로 그
-         줄을 **따로** 냅니다 (한 줄에 묶으면 조용히 안 보입니다). */
-      (r.course
-        ? '<p class="jnc-c">' + esc(r.course) +
-          (r.booked ? '' : ' <span class="jnc-w">부킹은 아직입니다</span>') + '</p>'
-        : (r.booked ? '' : '<p class="jnc-c"><span class="jnc-w">' +
-             '부킹은 아직입니다</span></p>')) +
-      (r.booked
-        ? '<p class="jnc-c"><span class="jnc-ok">티타임이 잡혀 있습니다</span></p>'
-        : '') +
-      '<p class="jnc-b">' + esc(r.body) + '</p>' +
-      '<button type="button" class="btn btn-pt jnc-go" data-id="' + esc(r.id) + '"' +
-        (left > 0 ? '' : ' disabled') + '>' +
-        (left > 0 ? '참가 신청하기' : '자리가 찼습니다') + '</button>' +
+      '<div class="jnc-r">' +
+        /* ⚠️⚠️ **예상 금액입니다** — 여신 분이 적은 값이고 우리가 받는
+           돈이 아닙니다. 안 적으셨으면 **그 줄이 통째로 빠집니다**
+           ("협의" 를 지어 적지 않습니다 · 절대 규칙 2). */
+        (r.budget != null
+          ? '<p class="jnc-fee"><i>예상 1인</i> ' +
+            esc(Number(r.budget).toLocaleString()) + '원</p>'
+          : '') +
+        '<button type="button" class="btn btn-pt jnc-go" data-id="' + esc(r.id) + '"' +
+          (left > 0 ? '' : ' disabled') + '>' +
+          (left > 0 ? '참가 신청하기' : '자리가 찼습니다') + '</button>' +
+      '</div>' +
     '</li>';
   }
 
@@ -96,6 +114,11 @@
       if(t.id === "jf-rg")      F.rg = t.value;
       else if(t.id === "jf-wh") F.wh = whenOf(t.value).key;
       else if(t.id === "jf-bk") F.bk = !!t.checked;
+      else if(t.id === "jf-lv") F.lv = levelKey(t.value);
+      else if(t.id === "jf-pp") F.pp = t.value;
+      /* ⚠️ 찾는 칸은 `change` 로만 받습니다 — 글자를 칠 때마다
+         다시 읽으면 커서가 튀길 일은 없지만 호출이 늘어납니다. */
+      else if(t.id === "jf-q")  F.q  = String(t.value || "").trim().slice(0, 30);
       else return;
       writeUrl();
       reload(a);
@@ -255,7 +278,7 @@
      "오늘 · 내일" 이 하루씩 밀립니다. `play_at` 은 여신 분이 **제 달력
      에서** 고른 날이므로 **그 자리의 날짜**로 셉니다.
      ════════════════════════════════════════════════════════════════ */
-  var F = { rg:"", wh:"", bk:false };
+  var F = { rg:"", wh:"", bk:false, lv:"", pp:"", q:"" };
   /* ⚠️ 0058 — 로그인한 분에게만 "조건 저장" 길을 냅니다. 로그인 전에
      그리면 눌러서 로그인 화면으로 갔다가 돌아와도 **저장된 것이 없는**
      꼴이 됩니다 (절대 규칙 5). */
@@ -286,6 +309,15 @@
     return WHEN[0];
   }
 
+  /* 0080 — 실력 키가 묶음에 있는지만 봅니다(이름으로 가르면 그
+     문구를 고치는 날 거르개가 조용히 망가집니다) */
+  function levelKey(v){
+    if(!v) return "";
+    var L = window.AM_JOIN_LEVEL || [];
+    for(var i = 0; i < L.length; i++) if(L[i].key === v) return v;
+    return "";
+  }
+
   /* 주소에서 읽습니다 — ⚠️ 주소를 복사해 보내도 같은 화면이어야 합니다 */
   function readUrl(){
     try{
@@ -293,6 +325,13 @@
       F.rg = (u.get("rg") || "").trim();
       F.wh = whenOf((u.get("when") || "").trim()).key;
       F.bk = u.get("bk") === "1";
+      /* ⚠️ 모르는 키는 **버립니다** — 주소를 손으로 고쳐 오시면
+         아무것도 안 걸리는 화면이 되는데 「자리가 없다」로 읽힙니다. */
+      var lv = (u.get("lv") || "").trim();
+      F.lv = levelKey(lv);
+      var pp = (u.get("pp") || "").trim();
+      F.pp = (pp === "1" || pp === "2" || pp === "3") ? pp : "";
+      F.q  = (u.get("q") || "").trim().slice(0, 30);
     }catch(e){}
   }
   function writeUrl(){
@@ -301,6 +340,9 @@
       if(F.rg) qs.push("rg=" + encodeURIComponent(F.rg));
       if(F.wh) qs.push("when=" + encodeURIComponent(F.wh));
       if(F.bk) qs.push("bk=1");
+      if(F.lv) qs.push("lv=" + encodeURIComponent(F.lv));
+      if(F.pp) qs.push("pp=" + encodeURIComponent(F.pp));
+      if(F.q)  qs.push("q="  + encodeURIComponent(F.q));
       history.replaceState(null, "",
         location.pathname + (qs.length ? "?" + qs.join("&") : ""));
     }catch(e){}
@@ -309,18 +351,60 @@
   /* ⚠️ 고르개 · 체크박스로 냅니다 — 목록 자체가 자바스크립트로만
      그려지는 자리라 링크로 만들어도 봇에게는 보일 것이 없습니다
      (`/search` 의 거르개를 링크로 둔 까닭과 다른 자리입니다). */
+  /* ── 모집 중 / 내 조인 탭 (확정 시안 ② · 2026-11-13) ────────────
+     ⚠️⚠️⚠️ 「내 조인」은 **이미 있는 자리**(`/my` 의 `#joinmine`)로
+     보냅니다 — 같은 목록을 두 곳에 그리면 한쪽만 고치는 날 둘이 다른
+     말을 하고, 거기는 **연락처를 주고받는 유일한 자리**입니다(0046 ·
+     제17조). 그래서 탭처럼 보이지만 **링크**입니다.
+     ⚠️ 로그인 전에는 **로그인 길**로 보냅니다 — 눌러서 빈 화면으로
+     보내지 않습니다(절대 규칙 2). */
+  function tabs(){
+    var mine = SIGNED
+      ? "/my#joinmine"
+      : (window.amLoginUrl ? window.amLoginUrl("/my") : "/login");
+    return '<nav class="jntab" aria-label="조인 갈래">' +
+      '<a class="jntab-i on" href="' + esc(location.pathname) + '" ' +
+        'aria-current="true">모집 중</a>' +
+      '<a class="jntab-i" href="' + esc(mine) + '">내 조인</a>' +
+    '</nav>';
+  }
+
   function filterBar(){
     var rg = (window.AM_REGIONS || []).map(function(r){
       return '<option value="' + esc(r.key) + '"' +
         (F.rg === r.key ? " selected" : "") + '>' + esc(r.name) + '</option>';
     }).join("");
-    return '<form class="jform jnf-f" id="jnfil">' +
+    return tabs() +
+      '<form class="jform jnf-f" id="jnfil">' +
       '<div class="jrow"><label for="jf-rg">지역</label>' +
         '<select id="jf-rg"><option value="">전국</option>' + rg + '</select></div>' +
       '<div class="jrow"><label for="jf-wh">날짜</label>' +
         '<select id="jf-wh">' + WHEN.map(function(w){
           return '<option value="' + esc(w.key) + '"' +
             (F.wh === w.key ? " selected" : "") + '>' + esc(w.name) + '</option>';
+        }).join("") + '</select></div>' +
+      /* ⚠️⚠️ **찾는 말** (확정 시안 ②) — 제목과 골프장 이름을 같이
+         봅니다. 찾기도 **서버**가 합니다(쉰 줄만 받아 화면에서 찾으면
+         그 쉰 줄 밖의 자리가 영영 안 나옵니다). */
+      '<div class="jrow jrow-full"><label for="jf-q">찾기</label>' +
+        '<input id="jf-q" type="search" maxlength="30" value="' + esc(F.q) + '" ' +
+        'placeholder="골프장 · 글 제목으로 찾기"></div>' +
+      /* ⚠️⚠️ 0080 — 실력. **안 고르신 자리는 이 조건으로 좁히면
+         빠집니다**(null 과 견주는 순간 빠집니다) — 0건 안내가 그 사실을
+         적습니다. */
+      '<div class="jrow"><label for="jf-lv">실력</label>' +
+        '<select id="jf-lv"><option value="">전체</option>' +
+        (window.AM_JOIN_LEVEL || []).map(function(x){
+          return '<option value="' + esc(x.key) + '"' +
+            (F.lv === x.key ? " selected" : "") + '>' + esc(x.name) + '</option>';
+        }).join("") + '</select></div>' +
+      /* ⚠️ 모집 인원은 **남은 자리 수**로 셉니다(`left_n`) — 여신 분이
+         적은 정원이 아니라 **지금 들어갈 수 있는 자리**입니다. */
+      '<div class="jrow"><label for="jf-pp">모집 인원</label>' +
+        '<select id="jf-pp"><option value="">전체</option>' +
+        [1, 2, 3].map(function(n){
+          return '<option value="' + n + '"' +
+            (F.pp === String(n) ? " selected" : "") + '>' + n + '명 이상 남은 자리</option>';
         }).join("") + '</select></div>' +
       '<div class="jrow jrow-full">' +
         '<label class="chk"><input type="checkbox" id="jf-bk"' +
@@ -342,6 +426,20 @@
               "order=play_at.asc", "limit=50"];
     if(F.rg) qs.push("region=eq." + encodeURIComponent(F.rg));
     if(F.bk) qs.push("booked=is.true");
+    /* ⚠️⚠️ 0080 — 실력. **안 고르신 자리는 빠집니다**(null 과 견주는
+       순간 빠집니다) — 0건 안내가 그 사실을 적습니다. */
+    if(F.lv) qs.push("level=eq." + encodeURIComponent(F.lv));
+    /* ⚠️ 남은 자리 — 보기가 세어 주는 `left_n` 으로 거릅니다 */
+    if(F.pp) qs.push("left_n=gte." + encodeURIComponent(F.pp));
+    /* ⚠️⚠️ 찾기도 **서버**가 합니다 — 제목과 골프장 이름 둘을 봅니다.
+       ⚠️ `*` 는 PostgREST 의 자리표이고 손님 글자는 그대로 갑니다.
+       ⚠️ 쉼표 · 괄호가 든 말은 `or=(…)` 를 깨뜨리므로 **빼고** 보냅니다
+       (못 막는 것을 막는다고 적지 않습니다 — 그 글자로는 못 찾습니다). */
+    if(F.q){
+      var w = F.q.replace(/[(),*]/g, " ").trim();
+      if(w) qs.push("or=" + encodeURIComponent(
+        "(title.ilike.*" + w + "*,course.ilike.*" + w + "*)"));
+    }
     var w = whenOf(F.wh);
     /* ⚠️ 보기가 이미 지난 날짜를 빼므로 아래쪽만 겁니다 (`play_at >= 오늘`) */
     if(w.days !== null) qs.push("play_at=lte." + plusDays(w.days));
@@ -357,6 +455,9 @@
     if(F.rg) b.push(rgName(F.rg));
     if(F.wh) b.push(whenOf(F.wh).name);
     if(F.bk) b.push("부킹이 잡힌 자리");
+    if(F.lv) b.push(window.amJoinLevel ? window.amJoinLevel(F.lv) : "");
+    if(F.pp) b.push(F.pp + "명 이상 남은 자리");
+    if(F.q)  b.push('"' + F.q + '"');
     return b;
   }
 
@@ -387,7 +488,7 @@
         '</div>';
       var allb = document.getElementById("jf-all");
       if(allb) allb.addEventListener("click", function(){
-        F.rg = ""; F.wh = ""; F.bk = false;
+        F.rg = ""; F.wh = ""; F.bk = false; F.lv = ""; F.pp = ""; F.q = "";
         writeUrl(); mountBar(); reload(a);
       });
       return;

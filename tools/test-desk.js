@@ -3932,6 +3932,86 @@ function boardsOf(){
     ok("  조건이 주소에 남는다 (복사해 보낼 수 있게)",
        u.indexOf("rg=seoul") >= 0 && u.indexOf("bk=1") >= 0 &&
        u.indexOf("when=d1") >= 0, u);
+    /* ⚠️⚠️ 확정 시안 ② — 실력(0080) · 모집 인원 · 찾는 말 · 탭 둘.
+       ⚠️ 흉내 장치는 걸러 주지 않으므로 **보내는 질의를 뜯어** 봅니다. */
+    {
+      const more = await g.p.evaluate(function(){
+        return { lv: !!document.getElementById("jf-lv"),
+                 pp: !!document.getElementById("jf-pp"),
+                 q:  !!document.getElementById("jf-q"),
+                 lopt: Array.prototype.map.call(
+                   document.querySelectorAll("#jf-lv option"),
+                   function(o){ return o.value; }).filter(Boolean),
+                 lwant: (window.AM_JOIN_LEVEL || []).map(function(x){ return x.key; }),
+                 tabs: document.querySelectorAll(".jntab-i").length,
+                 mine: (document.querySelectorAll(".jntab-i")[1] || {})
+                         .getAttribute("href") };
+      });
+      ok("⚠️⚠️ 확정 시안 ② — 실력 · 모집 인원 · 찾는 칸이 있다",
+         more.lv && more.pp && more.q, JSON.stringify(more).slice(0, 160));
+      ok("  ⚠️ 실력 목록이 **AM_JOIN_LEVEL 과 같다** (갯수를 박지 않습니다)",
+         more.lwant.length > 0 && more.lopt.join(",") === more.lwant.join(","),
+         more.lopt.join(","));
+      /* ⚠️⚠️ 「내 조인」은 **이미 있는 자리**로 보냅니다 — 같은 목록을
+         두 곳에 그리면 한쪽만 고치는 날 둘이 다른 말을 합니다. */
+      ok("  탭이 둘이고 「내 조인」이 **/my 의 그 상자**로 간다",
+         more.tabs === 2 && String(more.mine).indexOf("/my") >= 0, more.mine);
+
+      const n3 = g.sent.length;
+      await g.p.selectOption("#jf-lv", more.lwant[1]);
+      await g.p.waitForTimeout(350);
+      const q3 = g.sent.slice(n3).map(function(x){ return String(x.body); }).join(" | ");
+      ok("  실력을 고르면 **서버에** level=eq. 를 보낸다",
+         q3.indexOf("level=eq." + more.lwant[1]) >= 0, q3.slice(0, 220));
+
+      const n4 = g.sent.length;
+      await g.p.selectOption("#jf-pp", "2");
+      await g.p.waitForTimeout(350);
+      const q4 = g.sent.slice(n4).map(function(x){ return String(x.body); }).join(" | ");
+      /* ⚠️ 모집 인원은 **남은 자리 수**로 셉니다(`left_n`) */
+      ok("  모집 인원을 고르면 left_n=gte. 를 보낸다",
+         q4.indexOf("left_n=gte.2") >= 0, q4.slice(0, 220));
+
+      const n5 = g.sent.length;
+      await g.p.fill("#jf-q", "한강");
+      await g.p.dispatchEvent("#jf-q", "change");
+      await g.p.waitForTimeout(350);
+      const q5 = g.sent.slice(n5).map(function(x){ return String(x.body); }).join(" | ");
+      /* ⚠️⚠️ 제목과 골프장 이름 **둘 다** 봅니다 (서버가 찾습니다) */
+      ok("  찾는 말을 적으면 **제목과 골프장 이름 둘 다** 묻는다",
+         q5.indexOf("or=") >= 0 &&
+         q5.indexOf(encodeURIComponent("title.ilike")) >= 0 &&
+         q5.indexOf(encodeURIComponent("course.ilike")) >= 0, q5.slice(0, 240));
+      /* 되돌려 놓습니다 — ⚠️ 앞 검사가 만든 상태를 뒤 검사가 물려받습니다 */
+      await g.p.selectOption("#jf-lv", "");
+      await g.p.selectOption("#jf-pp", "");
+      await g.p.fill("#jf-q", "");
+      await g.p.dispatchEvent("#jf-q", "change");
+      await g.p.waitForTimeout(300);
+    }
+
+    /* 카드 꼴 — ⚠️ 0080 의 실력 딱지는 **고른 자리에만** 붙습니다 */
+    {
+      const c = await g.p.evaluate(function(){
+        const el = document.querySelector(".jnc");
+        if(!el) return { card:0 };
+        const cs = getComputedStyle(el);
+        return { card:1, cols: cs.gridTemplateColumns.split(" ").length,
+                 img: el.querySelectorAll("img").length,
+                 ph: !!el.querySelector(".jnc-ph svg"),
+                 lv: document.querySelectorAll(".jnc-lv").length,
+                 n: document.querySelectorAll(".jnc").length };
+      });
+      ok("⚠️⚠️ 조인 카드가 **세 칸**으로 선다 (사진 자리 · 글 · 값과 단추)",
+         c.card === 1 && c.cols === 3, JSON.stringify(c).slice(0, 160));
+      ok("  ⚠️⚠️ 사진을 **깔지 않는다** (담는 칸이 없습니다 · 아이콘 타일)",
+         c.img === 0 && c.ph === true, JSON.stringify({ img:c.img, ph:c.ph }));
+      /* ⚠️ 씨앗 둘 다 실력을 안 적었으므로 딱지가 **0개**여야 합니다 —
+         안 고르신 자리에 「무관」을 지어 붙이지 않습니다(절대 규칙 1). */
+      ok("  ⚠️ 실력을 **안 적은 자리에는 딱지를 안 붙인다**",
+         c.n > 0 && c.lv === 0, JSON.stringify({ n:c.n, lv:c.lv }));
+    }
+
     await g.p.close();
   }
 
@@ -4633,6 +4713,71 @@ function boardsOf(){
     ok("  대신 **'예약 신청'** 이라고 적는다", r.body.indexOf("예약 신청") >= 0, "");
     ok("  ⚠️ 결제를 받는다고 적지 않는다",
        r.body.indexOf("안전거래") < 0 && r.body.indexOf("에스크로") < 0, "");
+    await g.p.close();
+  }
+
+  /* ⚠️⚠️ 확정 시안 ① — 골프장 이름 찾기 · 가격(1인 그린피) 거르개 ·
+     카드 꼴. 흉내 장치는 걸러 주지 않으므로 **보내는 질의를 뜯어** 봅니다
+     (줄 수로 재면 그 칸을 통째로 떼어도 영원히 초록입니다). */
+  {
+    const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },
+                         { v_teetime_open: TEE }, {}, true);
+    const has = await g.p.evaluate(function(){
+      return { q: !!document.getElementById("tf-course"),
+               p: !!document.getElementById("tf-p"),
+               popt: Array.prototype.map.call(
+                 document.querySelectorAll("#tf-p option"),
+                 function(o){ return o.value; }).filter(Boolean),
+               want: (window.AM_TEE_PRICE || []).map(function(x){ return x.key; }) };
+    });
+    ok("⚠️⚠️ 확정 시안 ① — 골프장 이름 칸과 가격 칸이 있다",
+       has.q && has.p, JSON.stringify(has).slice(0, 140));
+    ok("  ⚠️ 가격 구간이 **AM_TEE_PRICE 와 같다** (갯수를 박지 않습니다)",
+       has.want.length > 0 && has.popt.join(",") === has.want.join(","),
+       has.popt.join(","));
+
+    const m0 = g.sent.length;
+    await g.p.fill("#tf-course", "그린밸리");
+    await g.p.selectOption("#tf-p", has.want[1]);
+    await g.p.click("#ttf-find button[type=submit]");
+    await g.p.waitForTimeout(450);
+    const q1 = g.sent.slice(m0).filter(function(x){ return x.name === "GET"; })
+                .map(function(x){ return String(x.body); }).join(" | ");
+    /* ⚠️⚠️ **`eq.` 가 아니라 `ilike`** 입니다 — 전에는 이름이 정확히
+       같을 때만 걸려서 「그린밸리」만 치면 0건이었습니다. */
+    ok("  골프장 이름을 **ilike 로** 보낸다 (한 조각만 쳐도 걸리게)",
+       q1.indexOf("course=ilike.") >= 0 &&
+       q1.indexOf(encodeURIComponent("그린밸리")) >= 0, q1.slice(0, 220));
+    /* ⚠️ 아래를 닫고 위를 엽니다(gte · lt) — 둘 다 닫으면 딱 15만원짜리가
+       두 칸에 다 걸립니다. */
+    const bd = await g.p.evaluate(function(k){
+      return (window.amTeePriceBand && window.amTeePriceBand(k)) || null;
+    }, has.want[1]);
+    ok("  가격을 고르면 **green_fee 를 gte · lt 로** 보낸다",
+       q1.indexOf("green_fee=gte." + bd.from) >= 0 &&
+       q1.indexOf("green_fee=lt." + bd.to) >= 0, q1.slice(0, 260));
+
+    /* 카드 꼴 — ⚠️ 「업체 확인 후 확정」은 **우리 코드의 참**입니다
+       (신청은 applied 로 들어가고 확정은 업체만 합니다 · 0060). */
+    const c = await g.p.evaluate(function(){
+      const el = document.querySelector(".tf-i.tfc");
+      if(!el) return { card:0 };
+      const cs = getComputedStyle(el);
+      return { card: 1,
+               cols: cs.gridTemplateColumns.split(" ").length,
+               badge: (el.querySelector(".tfc-badge") || {}).textContent || "",
+               fee: (el.querySelector(".tfc-fee") || {}).textContent || "",
+               /* ⚠️ 사진 칸을 **아이콘 타일**로 둡니다 — 골프장 사진을
+                  담는 칸이 없습니다(0066) */
+               img: el.querySelectorAll("img").length,
+               ph: !!el.querySelector(".tfc-ph svg") };
+    });
+    ok("⚠️⚠️ 카드가 **세 칸**으로 선다 (사진 자리 · 글 · 값과 단추)",
+       c.card === 1 && c.cols === 3, JSON.stringify(c).slice(0, 160));
+    ok("  「업체 확인 후 확정」 딱지가 있다 ('예약 완료' 가 아닙니다)",
+       c.badge.indexOf("업체 확인 후 확정") >= 0, c.badge);
+    ok("  ⚠️⚠️ 사진을 **깔지 않는다** (담는 칸이 없습니다 · 아이콘 타일)",
+       c.img === 0 && c.ph === true, JSON.stringify({ img:c.img, ph:c.ph }));
     await g.p.close();
   }
 

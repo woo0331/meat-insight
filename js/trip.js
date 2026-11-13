@@ -78,12 +78,47 @@
   }
 
   /* ── 읽기 ──────────────────────────────────────────────────────── */
+  /* ⚠️⚠️ 운영 DB 에 아지직 없을 수 있는 **확인된 신괜 칸** — 0077 이
+     더한 `months` 하나입니다(찾는 칸은 `select=*` 라 선택 칸 문제는
+     없고, 위험한 것은 **거르개** 하나입니다 — 그 칸이 없으면
+     PostgREST 가 400 을 내고 목록이 통째로 사라집니다).
+     ⚠️⚠️ 보기 부재(404) · 권한(403) · 인증은 덮지 않습니다. */
+  var OPTCOL = ["months"];
+  var MISS = [];
+
+  /* 거르개 한 칸만 주소에서 끩니다 */
+  function dropFilter(path, col){
+    return path.split("&").filter(function(p){
+      return p.indexOf(col + "=") !== 0;
+    }).join("&");
+  }
+
+  /* ⚠️⚠️ 한 번만 다시 묻습니다 */
   function get(path){
+    return once(path).then(function(r){
+      if(r.rows !== null || r.status !== 400) return r;
+      var c = W.amMissCol ? W.amMissCol(r.why || "") : "";
+      if(!c || OPTCOL.indexOf(c) < 0) return r;
+      var p2 = dropFilter(path, c);
+      if(p2 === path) return r;
+      if(MISS.indexOf(c) < 0) MISS.push(c);
+      try{ console.warn("[trip] 운영 DB 에 아지직 없는 칸으로 제한한 것을 " +
+        "뻐고 다시 물었습니다 — " + c); }catch(_){}
+      return once(p2);
+    });
+  }
+
+  function once(path){
     return fetch(CONF.url + "/rest/v1/" + path, {
       headers: Object.assign({ apikey:CONF.anonKey },
                              W.amAuthHeaders ? W.amAuthHeaders() : {})
     }).then(function(r){
-      if(!r.ok) return { rows:null };
+      /* ⚠️ 까닭은 **다시 묻는 한 곳**에서만 봅니다 — 손님 화면에는
+         한 글자도 안 나가고(절대 주칙 3) 개발 기록에만 적힙니다. */
+      if(!r.ok) return r.text().then(function(t){
+        var o = {}; try{ o = JSON.parse(t) || {}; }catch(_){}
+        return { rows:null, status:r.status, why:(o.message || t || "") };
+      }, function(){ return { rows:null, status:r.status, why:"" }; });
       return r.json().then(function(rows){
         return { rows: Array.isArray(rows) ? rows : [] };
       }, function(){ return { rows:null }; });

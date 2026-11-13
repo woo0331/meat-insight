@@ -2517,6 +2517,274 @@ function boardsOf(){
      `move_listing` 을 부르는 자리가 신고함 하나였습니다. 그리고 0056 의
      문은 `hidden` 으로만 가서 **되돌릴 길이 아무에게도 없었습니다.**
      ════════════════════════════════════════════════════════════════ */
+  /* ════════════════════════════════════════════════════════════════
+     조회 실패 ↔ 정상 0건 (2026-11-13)
+
+     ⚠️⚠️⚠️ 화면 열넷이 `r.ok ? r.json() : []` 로 적어 **거절당한 것을
+     0건으로** 찍고 있었습니다 — 운영 /cat/used 가 공개 보기가 없어
+     한 줄도 못 읽었는데 「아직 올라온 매물이 없습니다」로 보였습니다.
+     ⚠️⚠️ 그리고 **표는 있고 새 칸이 없는** 부분 적용 DB 에서는 400
+     `42703` 으로 목록이 통째로 사라집니다. 거기만 다시 묻습니다.
+
+     ⚠️ 재는 뜻 다섯 —
+       ① 정상 0건은 **0건이라고** 적는다
+       ② 보기 부재(404)는 **실패**로 적고 **다시 묻지 않는다**
+       ③ 권한(403)도 같다 (자물쇠마다 **갈라서** 잽니다)
+       ④ 확인된 신규 칸 누락(400 · 42703)만 **한 번** 다시 묻고
+          목록은 그대로 보이고 **그 거르개는 사라진다**
+       ⑤ 손님 화면에 **칸 이름 · 코드 · 설정 이름을 한 글자도** 안 적는다
+     ════════════════════════════════════════════════════════════════ */
+  console.log("\n── 조회 실패 ↔ 정상 0건 (2026-11-13)");
+  {
+    const WHO = { role:"customer", name:"손님", signedIn:true };
+    const ROW = { id:"ffffffff-1113-4000-8000-000000000001",
+      title:"아이언 세트 팝니다", sub:"us-iron", brand:"타이틀리스트",
+      model:"T100", region:"seoul", ship:true, price:450000, cond:"good",
+      ask_n:0, state:"open", photo_n:0, thumb:null,
+      created_at:"2026-11-12T01:00:00Z", seller:"김**" };
+
+    /* ① 정상 0건 — 「없습니다」가 맞습니다 */
+    {
+      const g = await open("/cat/used", WHO, { v_listing_open: [] });
+      const t = await g.p.evaluate(function(){
+        const e = document.getElementById("lslist");
+        return e ? e.innerText.replace(/\s+/g, " ") : ""; });
+      ok("① 정상 0건은 **0건이라고** 적는다",
+         t.indexOf("아직 올라온 매물이 없습니다") >= 0, t.slice(0, 120));
+      ok("  ⚠️ 그때는 「불러오지 못했습니다」를 **안 적는다**",
+         t.indexOf("불러오지 못했습니다") < 0, t.slice(0, 120));
+      await g.p.close();
+    }
+
+    /* ② 보기 부재(404) — ⚠️⚠️ **재질의로 숨기지 않습니다** */
+    {
+      const g = await open("/cat/used", WHO, { v_listing_open:
+        { amErr:{ status:404, code:"PGRST205",
+          message:"Could not find the table 'public.v_listing_open' in the schema cache" } } });
+      const t = await g.p.evaluate(function(){
+        const e = document.getElementById("lslist");
+        return e ? e.innerText.replace(/\s+/g, " ") : ""; });
+      ok("② 보기가 없으면 **조회 실패**로 적는다",
+         t.indexOf("불러오지 못했습니다") >= 0, t.slice(0, 140));
+      ok("  ⚠️⚠️ 「0건이라는 뜻이 아닙니다」를 그 자리에서 말한다",
+         t.indexOf("0건이라는 뜻이 아닙니다") >= 0, t.slice(0, 140));
+      ok("  ⚠️ 「아직 올라온 매물이 없습니다」를 **안 적는다**",
+         t.indexOf("아직 올라온 매물이 없습니다") < 0, t.slice(0, 140));
+      ok("  ⚠️ **다시 시도** 단추가 있다",
+         (await g.p.locator("#lslist [data-amretry]").count()) === 1);
+      /* ⚠️⚠️⚠️ 404 를 **다시 묻지 않습니다** — 물으면 설정이 안 된 것이
+         자료가 없는 것으로 보입니다. 질의가 **한 번**인지 셉니다. */
+      const n = g.sent.filter(function(x){
+        return x.name === "GET" && String(x.body || "").indexOf("v_listing_open") >= 0;
+      }).length;
+      ok("  ⚠️⚠️⚠️ 404 는 **다시 묻지 않는다** (질의 " + n + "번)", n === 1);
+      await g.p.close();
+    }
+
+    /* ③ 권한(403) — 같은 자물쇠가 아니므로 **갈라서** 잽니다 */
+    {
+      const g = await open("/cat/used", WHO, { v_listing_open:
+        { amErr:{ status:403, code:"42501",
+          message:"permission denied for view v_listing_open" } } });
+      const t = await g.p.evaluate(function(){
+        const e = document.getElementById("lslist");
+        return e ? e.innerText.replace(/\s+/g, " ") : ""; });
+      ok("③ 권한 오류도 **조회 실패**로 적는다",
+         t.indexOf("불러오지 못했습니다") >= 0, t.slice(0, 140));
+      const n = g.sent.filter(function(x){
+        return x.name === "GET" && String(x.body || "").indexOf("v_listing_open") >= 0;
+      }).length;
+      ok("  ⚠️ 403 도 **다시 묻지 않는다** (질의 " + n + "번)", n === 1);
+      /* ⚠️⚠️ 손님 화면에 **까닭을 한 글자도** 안 적습니다 (절대 규칙 3) */
+      ok("  ⚠️⚠️ 칸 이름 · 코드 · permission 을 **안 적는다**",
+         t.indexOf("permission") < 0 && t.indexOf("42501") < 0 &&
+         t.indexOf("v_listing_open") < 0, t.slice(0, 140));
+      await g.p.close();
+    }
+
+    /* ④ 확인된 신규 칸 누락 — 목록은 **그대로 보이고** 그 거르개만 사라집니다 */
+    {
+      const g = await open("/cat/used?fx=s", WHO, {
+        /* ⚠️⚠️ **주소를 보고 달리 답합니다** — `flex` 가 들어 있으면 400,
+           빠지면 줄을 냅니다. 정해진 JSON 하나로는 "다시 물었나" 를
+           잴 수가 없습니다(재도 거짓으로 통과합니다). */
+        /* ⚠️⚠️ 중고는 flex · hand 를 **select 에 안 담습니다** — 카드가
+           그 칸을 쓰지 않아서 거르개에만 싣습니다. 그러므로 없는 칸으로
+           400 이 나는 자리는 **그 조건을 고르실 때만**이고, 안 고르시면
+           부분 적용된 DB 에서도 목록은 그대로 돕니다. */
+        v_listing_open: function(u){
+          return /[?&]flex=/.test(u) || /[?&]hand=/.test(u)
+            ? { amErr:{ status:400, code:"42703",
+                message:"column v_listing_open.flex does not exist" } }
+            : [ROW];
+        } });
+      const t = await g.p.evaluate(function(){
+        const e = document.getElementById("lslist");
+        return e ? e.innerText.replace(/\s+/g, " ") : ""; });
+      ok("④ 새 칸이 없어도 **목록이 그대로 보인다**",
+         t.indexOf("아이언 세트 팝니다") >= 0, t.slice(0, 160));
+      ok("  ⚠️ 「불러오지 못했습니다」가 **아니다**",
+         t.indexOf("불러오지 못했습니다") < 0, t.slice(0, 160));
+      ok("  ⚠️⚠️ 그 조건을 **쓸 수 없다고 그 자리에서** 말한다",
+         t.indexOf("사용하실 수 없어") >= 0, t.slice(0, 200));
+      /* ⚠️⚠️ 거르개에서 그 칸만 **가려집니다** — 골라도 못 걸러 주는 칸을
+         내면 눌러도 아무 일이 안 나는 칸입니다 (절대 규칙 5). */
+      const vis = await g.p.evaluate(function(){
+        function on(k){
+          const e = document.querySelector('[data-optcol="' + k + '"]');
+          return !!e && e.getClientRects().length > 0;
+        }
+        return { flex:on("flex"), hand:on("hand"),
+                 cond: !!document.getElementById("lf-cd") };
+      });
+      ok("  ⚠️⚠️ 플렉스 · 좌우타 칸이 **사라진다**",
+         !vis.flex && !vis.hand, JSON.stringify(vis));
+      ok("  ⚠️ 멀쩡한 칸(물건 상태)은 **그대로 있다**", vis.cond);
+      /* ⚠️ 두 번째 질의에 그 칸이 **한 글자도** 없어야 합니다 */
+      const qs = g.sent.filter(function(x){
+        return x.name === "GET" && String(x.body || "").indexOf("v_listing_open") >= 0;
+      }).map(function(x){ return String(x.body); });
+      ok("  ⚠️ 다시 물은 질의가 **한 번 더**다 (" + qs.length + "번)", qs.length === 2);
+      ok("  ⚠️ 다시 물을 때 flex · hand 를 **안 보낸다**",
+         qs.length === 2 && qs[1].indexOf("flex") < 0 && qs[1].indexOf("hand") < 0,
+         (qs[1] || "").slice(0, 200));
+      ok("  ⚠️⚠️ 칸 이름을 **손님 화면에 안 적는다**",
+         t.indexOf("flex") < 0 && t.indexOf("42703") < 0, t.slice(0, 200));
+      await g.p.close();
+    }
+
+    /* ⑤ 조인 — `level`(0080) 이 없어도 목록은 그대로 */
+    {
+      const JR = { id:"ffffffff-1113-4000-8000-000000000002",
+        title:"주말 조인 구합니다", body:"같이 치실 분", region:"seoul",
+        play_at:"2099-05-05", course:"그린밸리CC", booked:false, tee:"오전",
+        need:2, budget:150000, left_n:2 };
+      const g = await open("/cat/matchup?lv=beginner", WHO, {
+        v_join_open: function(u){
+          return /[?&]select=[^&]*\blevel\b/.test(u) || /[?&]level=/.test(u)
+            ? { amErr:{ status:400, code:"42703",
+                message:"column v_join_open.level does not exist" } }
+            : [JR];
+        } });
+      const t = await g.p.evaluate(function(){
+        const e = document.getElementById("joinlist");
+        return e ? e.innerText.replace(/\s+/g, " ") : "(joinlist 없음)"; });
+      ok("⑤ 조인 — 새 칸이 없어도 **목록이 보인다**",
+         t.indexOf("주말 조인 구합니다") >= 0, t.slice(0, 160));
+      ok("  ⚠️ 실력 조건을 쓸 수 없다고 말한다",
+         t.indexOf("사용하실 수 없어") >= 0, t.slice(0, 200));
+      await g.p.close();
+    }
+
+    /* ⑥ 조인 — 보기 부재는 **실패**로 */
+    {
+      const g = await open("/cat/matchup", WHO, { v_join_open:
+        { amErr:{ status:404, code:"PGRST205",
+          message:"Could not find the table 'public.v_join_open' in the schema cache" } } });
+      const t = await g.p.evaluate(function(){
+        const e = document.getElementById("joinlist");
+        return e ? e.innerText.replace(/\s+/g, " ") : ""; });
+      ok("⑥ 조인 — 보기가 없으면 **조회 실패**로 적는다",
+         t.indexOf("불러오지 못했습니다") >= 0 &&
+         t.indexOf("0건이라는 뜻이 아닙니다") >= 0, t.slice(0, 160));
+      ok("  ⚠️ 「아직 열린 조인이 없습니다」를 **안 적는다**",
+         t.indexOf("아직 열린 조인이 없습니다") < 0, t.slice(0, 160));
+      await g.p.close();
+    }
+
+    /* ⑦ 부킹 — `photo`(0081) 가 없어도 카드는 그대로 (아이콘 타일) */
+    {
+      const TT = { id:"ffffffff-1113-4000-8000-000000000003",
+        provider_id:"t-range", provider_name:"성남 그린골프연습장",
+        kind:"booking", region:"gyeonggi", course:"그린밸리CC 신코스",
+        play_at:"2099-05-05", tee_at:"07:10:00", holes:18, slots:4,
+        green_fee:150000, tel:"031-555-7777", note:"", left_n:2,
+        created_at:"2026-11-12T01:00:00Z" };
+      const g = await open("/cat/booking", WHO, {
+        v_teetime_open: function(u){
+          return /[?&]select=[^&]*\bphoto\b/.test(u)
+            ? { amErr:{ status:400, code:"42703",
+                message:"column v_teetime_open.photo does not exist" } }
+            : [TT];
+        } });
+      const t = await g.p.evaluate(function(){
+        const e = document.getElementById("ttlist");
+        return e ? e.innerText.replace(/\s+/g, " ") : "(ttlist 없음)"; });
+      ok("⑦ 부킹 — 사진 칸이 없어도 **자리가 보인다**",
+         t.indexOf("그린밸리CC 신코스") >= 0, t.slice(0, 160));
+      await g.p.close();
+    }
+
+    /* ⑧ 부킹 — 보기 부재는 **실패**로 (0건이라고 말하지 않습니다) */
+    {
+      const g = await open("/cat/booking", WHO, { v_teetime_open:
+        { amErr:{ status:404, code:"PGRST205",
+          message:"Could not find the table 'public.v_teetime_open' in the schema cache" } } });
+      const t = await g.p.evaluate(function(){
+        const e = document.getElementById("ttlist");
+        return e ? e.innerText.replace(/\s+/g, " ") : ""; });
+      ok("⑧ 부킹 — 보기가 없으면 **조회 실패**로 적는다",
+         t.indexOf("불러오지 못했습니다") >= 0, t.slice(0, 160));
+      ok("  ⚠️ 「아직 올라온 티타임이」를 **안 적는다**",
+         t.indexOf("아직 올라온 티타임") < 0, t.slice(0, 160));
+      await g.p.close();
+    }
+
+    /* ⑨ 인력 — 0072 의 칸 넷이 없어도 공고는 그대로 */
+    {
+      const JB = { id:"ffffffff-1113-4000-8000-000000000004", kind:"hire",
+        sub:"cr-pro", region:"seoul", title:"레슨 프로를 모십니다",
+        body:"주말 근무", pay:"협의", terms:"", close_at:null,
+        created_at:"2026-11-12T01:00:00Z", who:"김**", pro_name:null, apply_n:0 };
+      const g = await open("/cat/career?ro=jr-coach", WHO, {
+        v_job_open: function(u){
+          return /[?&]select=[^&]*\brole\b/.test(u) || /[?&]role=/.test(u)
+            ? { amErr:{ status:400, code:"42703",
+                message:"column v_job_open.role does not exist" } }
+            : [JB];
+        } });
+      const t = await g.p.evaluate(function(){
+        const e = document.getElementById("joblist");
+        return e ? e.innerText.replace(/\s+/g, " ") : "(joblist 없음)"; });
+      ok("⑨ 인력 — 새 칸 넷이 없어도 **공고가 보인다**",
+         t.indexOf("레슨 프로를 모십니다") >= 0, t.slice(0, 160));
+      await g.p.close();
+    }
+
+    /* ⑩ 인력 — 보기 부재는 **실패**로 */
+    {
+      const g = await open("/cat/career", WHO, { v_job_open:
+        { amErr:{ status:404, code:"PGRST205",
+          message:"Could not find the table 'public.v_job_open' in the schema cache" } } });
+      const t = await g.p.evaluate(function(){
+        const e = document.getElementById("joblist");
+        return e ? e.innerText.replace(/\s+/g, " ") : ""; });
+      ok("⑩ 인력 — 보기가 없으면 **조회 실패**로 적는다",
+         t.indexOf("불러오지 못했습니다") >= 0, t.slice(0, 160));
+      await g.p.close();
+    }
+
+    /* ⑪ 커뮤니티 — `thumb`(0075) 가 없어도 글은 그대로 */
+    {
+      const CQ = { id:"ffffffff-1113-4000-8000-000000000005", cat:"cm-open",
+        title:"드라이버 추천 부탁드립니다", who:"김**", named:false,
+        created_at:"2026-11-12T01:00:00Z", answer_n:0, view_n:0, photo_n:0 };
+      const g = await open("/cat/community?s=cm-open", WHO, {
+        v_cq_public: function(u){
+          return /[?&]select=[^&]*\bthumb\b/.test(u)
+            ? { amErr:{ status:400, code:"42703",
+                message:"column v_cq_public.thumb does not exist" } }
+            : [CQ];
+        } });
+      const t = await g.p.evaluate(function(){
+        const e = document.getElementById("cqlist");
+        return e ? e.innerText.replace(/\s+/g, " ") : "(cqbox 없음)"; });
+      ok("⑪ 커뮤니티 — 사진 칸이 없어도 **글이 보인다**",
+         t.indexOf("드라이버 추천 부탁드립니다") >= 0, t.slice(0, 160));
+      await g.p.close();
+    }
+  }
+
   console.log("\n── /admin 중고 매물 관리 (0070)");
   {
     const LSA = [

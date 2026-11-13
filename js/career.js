@@ -502,15 +502,15 @@
         '상세 필터</p>' +
       '<p class="jbrail-c"><label for="jb-rg">지역</label>' +
         '<select id="jb-rg" name="rg">' + rgOpt + '</select></p>' +
-      '<p class="jbrail-c"><label for="jb-ro">직무 · 역할</label>' +
+      '<p class="jbrail-c" data-optcol="role"><label for="jb-ro">직무 · 역할</label>' +
         '<select id="jb-ro" name="ro">' +
           opt(window.AM_JOB_ROLE || [], f.ro, "전체") + '</select></p>' +
-      '<p class="jbrail-c"><label for="jb-em">고용 형태</label>' +
+      '<p class="jbrail-c" data-optcol="emp_type"><label for="jb-em">고용 형태</label>' +
         '<select id="jb-em" name="em">' +
           opt(window.AM_JOB_EMP || [], f.em, "전체") + '</select></p>' +
       /* ⚠️ 급여는 **갈래**로 좁힙니다 — 0048 의 `pay` 는 자유 글자라
          숫자로 못 견줍니다(0072 가 `pay_type` 을 따로 둔 그 까닭). */
-      '<p class="jbrail-c"><label for="jb-py">급여 조건</label>' +
+      '<p class="jbrail-c" data-optcol="pay_type"><label for="jb-py">급여 조건</label>' +
         '<select id="jb-py" name="py">' +
           opt(window.AM_JOB_PAY || [], f.py, "전체") + '</select></p>' +
       /* ⚠️⚠️⚠️ **금액 칸은 급여 갈래를 고르셨을 때만** 냅니다 — 월급 ·
@@ -654,7 +654,8 @@
     '</div>';
   }
 
-  function paint(a, rows, f, one){
+  function paint(a, rows, f, one, miss){
+    hideOpt();
     var html = tabs(f) + findBox(f) + subLine(f.sub, f.rg);
     /* ⚠️⚠️ 0058 — "조건을 저장하고 알림 받기". 글과 주소는
        js/data/deal.js 의 amWatchLink() 한 곳입니다 (분류 화면 셋이
@@ -676,6 +677,7 @@
           '<p class="jbcnt">전체 공고 <b>' +
             (window.won ? window.won(rows.length) : String(rows.length)) + '건</b>' +
             (rows.length >= 50 ? ' 이상' : '') + '</p>' +
+          missNote(miss) +
           (rows.length ? listHtml(rows, f) : noneHtml(f)) +
         '</div>' +
       '</div>';
@@ -821,20 +823,23 @@
         paint(a, [], f, (rows || [])[0] || null);
       });
     }
-    var q = "v_job_open?select=id,kind,sub,region,title,body,pay,terms," +
-            "role,emp_type,pay_type,pay_min," +
-            "close_at,created_at,who,pro_name,apply_n" +
-            "&order=created_at.desc&limit=50";
-    if(f.k)   q += "&kind=eq." + encodeURIComponent(f.k);
+    /* ⚠️⚠️ 질의를 **배열**로 둡니다 — 운영 DB 에 아지직 없는 칸이
+       있으면 `amDropCols` 가 그 칸과 그 칸으로 물은 거르개만 도려내고
+       한 번 다시 묻습니다(글자 하나로 두면 골라낼 수가 없습니다). */
+    var qs = ["select=id,kind,sub,region,title,body,pay,terms," +
+              "role,emp_type,pay_type,pay_min," +
+              "close_at,created_at,who,pro_name,apply_n",
+              "order=created_at.desc", "limit=50"];
+    if(f.k)   qs.push("kind=eq." + encodeURIComponent(f.k));
     /* ⚠️ 열쇠 이름이 DB 의 칸과 **글자까지** 같아야 합니다 — 다르면
        아무것도 안 걸렀는데 화면은 멀쩡해 보입니다. */
-    if(f.sub) q += "&sub=eq." + encodeURIComponent(f.sub);
+    if(f.sub) qs.push("sub=eq." + encodeURIComponent(f.sub));
     /* ⚠️⚠️ 0072 의 칸 셋 — **안 적으신 공고는 빠집니다**(모르는 것을
        아무 칸에나 넣으면 지어낸 값입니다 · 절대 규칙 1). 화면이 그
        사실을 0건 안내에서 말합니다. */
-    if(f.ro) q += "&role=eq." + encodeURIComponent(f.ro);
-    if(f.em) q += "&emp_type=eq." + encodeURIComponent(f.em);
-    if(f.py) q += "&pay_type=eq." + encodeURIComponent(f.py);
+    if(f.ro) qs.push("role=eq." + encodeURIComponent(f.ro));
+    if(f.em) qs.push("emp_type=eq." + encodeURIComponent(f.em));
+    if(f.py) qs.push("pay_type=eq." + encodeURIComponent(f.py));
     /* ⚠️⚠️⚠️ **금액은 갈래와 짝으로만** 겁니다 — 월급 · 연봉 · 시급을
        한 칸으로 견주면 「300만원 이상」이 시급 300만원과 연봉 300만원을
        같은 줄에 세웁니다. 그래서 `f.py` 가 있을 때만 겁니다.
@@ -842,19 +847,68 @@
        이면 `gte` 가 거짓입니다. 그것이 맞습니다(모르는 금액을 0 으로
        치면 가장 싼 공고가 되고 그건 지어낸 값입니다 · 절대 규칙 1).
        화면이 그 사실을 거르개 옆에서 말합니다. */
-    if(f.py && f.pm) q += "&pay_min=gte." + encodeURIComponent(f.pm);
+    if(f.py && f.pm) qs.push("pay_min=gte." + encodeURIComponent(f.pm));
     /* ⚠️ `*` 와 `%` 는 ilike 의 글자라 빼고 보냅니다 (그대로 보내면
        손님이 친 말과 다른 것을 찾습니다). */
-    if(f.q)  q += "&title=ilike.*" +
-      encodeURIComponent(f.q.replace(/[*%]/g, "")) + "*";
+    if(f.q)  qs.push("title=ilike.*" +
+      encodeURIComponent(f.q.replace(/[*%]/g, "")) + "*");
     /* ⚠️⚠️ **거르는 것은 서버입니다** — 쉰 줄만 받아 화면에서 거르면
        서울 글이 쉰 줄 밖에 있을 때 **0건으로 보입니다**.
        ⚠️⚠️⚠️ **묶음(수도권)과 시 · 도(서울)를 한 열쇠로 받습니다** —
        현황표의 칸은 묶음을 보내고 고르개는 시 · 도를 보냅니다. 푸는
        규칙은 `amRegionsFor()` 한 곳입니다. */
     var rs = window.amRegionsFor ? window.amRegionsFor(f.rg) : [];
-    if(rs.length) q += "&region=in.(" + rs.map(encodeURIComponent).join(",") + ")";
-    return get(a, q).then(function(rows){ paint(a, rows || [], f, null); });
+    if(rs.length) qs.push("region=in.(" + rs.map(encodeURIComponent).join(",") + ")");
+    /* ⚠️⚠️⚠️ **정상 0건과 조회 실패를 가립니다** — 전에는 `get()`
+       이 거절도 번 배열로 바꿔 「아직 올라온 공고가 없습니다」로
+       찍혔습니다(절대 주칙 1). ⚠️⚠️ 다시 묻는 것은 **0072 가 더한
+       칸 넷이 없다고 400 이 말할 때만**이고, 보기 부재(404) ·
+       권한(403) · 인증은 덮지 않습니다. */
+    return window.amRowsSoft(qs, OPTCOL, function(qq){
+      return fetch(a.conf.url + "/rest/v1/v_job_open?" + qq.join("&"), {
+        headers: Object.assign({ apikey:a.conf.anonKey },
+                               window.amAuthHeaders ? window.amAuthHeaders() : {})
+      });
+    }).then(function(x){
+      if(x.miss && x.miss.length) tookOut(x.miss, f);
+      paint(a, x.rows, f, null, MISS);
+    }).catch(function(e){
+      window.amFailLog("career/v_job_open", e);
+      var box = document.getElementById("joblist");
+      if(!box) return;
+      box.innerHTML = window.amFailHtml("공고 목록");
+      var t = box.querySelector("[data-amretry]");
+      if(t) t.addEventListener("click", function(){ load(a); });
+    });
+  }
+
+  /* ⚠️⚠️ 운영 DB 에 아지직 없을 수 있는 **신괜 선택 칸** — 0072 가
+     더한 넷입니다. 여기 적은 이름만 다시 묻기의 대상이 됩니다. */
+  var OPTCOL = ["role", "emp_type", "pay_type", "pay_min"];
+  var MISS = [];
+  function tookOut(gone, f){
+    gone.forEach(function(c){ if(MISS.indexOf(c) < 0) MISS.push(c); });
+    /* ⚠️ 고른 조건을 남기고 안 걸리면 **걸렸는데 안 걸린 것처럼**
+       보여, 그것이 거짓말이 됩니다 — 같이 둉니다. */
+    if(f){
+      if(MISS.indexOf("role") >= 0) f.ro = "";
+      if(MISS.indexOf("emp_type") >= 0) f.em = "";
+      if(MISS.indexOf("pay_type") >= 0){ f.py = ""; f.pm = ""; }
+    }
+    hideOpt();
+  }
+  function hideOpt(){
+    if(!MISS.length) return;
+    MISS.forEach(function(c){
+      var e = document.querySelector('[data-optcol="' + c + '"]');
+      if(e){ e.hidden = true; e.style.display = "none"; }
+    });
+  }
+  /* ⚠️ 글자만이라도 **이름 있는 함수**로 둡니다 (check-safe ⑥) */
+  function missNote(miss){
+    if(!miss || !miss.length) return "";
+    return '<p class="jbrail-n">지금은 상세 필터 가운데 일부를 사용하실 수 ' +
+      '없어 빼 두었습니다. 공고 목록은 그대로 보여 드립니다.</p>';
   }
 
   window.amAuthAsk().then(function(a){

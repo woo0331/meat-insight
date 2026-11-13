@@ -437,15 +437,37 @@
     }
     /* ⚠️ 달력으로 찾을 수 있는 끝 — 지시서 §5 (61~90일은 사전 상담만) */
     else if(SEARCH) qs.push("play_at=lte." + encodeURIComponent(kstISO(SEARCH)));
-    return get("v_teetime_open?" + qs.join("&")).then(function(rows){
-      if(!rows){
-        /* ⚠️ 못 읽었으면 **0건이라고 말하지 않습니다** */
-        box.innerHTML = bar() +
-          '<p class="myhint">지금 불러오지 못했습니다. 잠시 뒤에 다시 열어 주세요.</p>';
-        return;
-      }
-      paint(rows);
+    /* ⚠️⚠️⚠️ **정상 0건과 조회 실패를 가립니다** — 여기는 전부터
+       갈려 있었고(`get` 이 null 을 돌린다), 이번에 더한 것은 **확인된
+       신괜 선택 칸만 분리해 다시 묻는 것**입니다 — 0081 이 더한
+       `photo` 가 운영 DB 에 아지직 없으면 PostgREST 가 400 을 내고
+       **티타임 목록이 통째로** 사라집니다. 그때만 그 칸을 뻐고 한 번
+       다시 묻습니다(사진은 아이콘 타일로 돌아갑니다).
+       ⚠️⚠️ 보기 부재(404) · 권한(403) · 인증은 **덮지 않습니다.** */
+    return window.amRowsSoft(qs, OPTCOL, function(q){
+      var h = { apikey:(A && A.conf ? A.conf.anonKey : "") };
+      if(window.amAuthHeaders) h = Object.assign(h, window.amAuthHeaders());
+      return fetch(A.conf.url + "/rest/v1/v_teetime_open?" + q.join("&"), { headers:h });
+    }).then(function(x){
+      if(x.miss && x.miss.length) tookOut(x.miss);
+      paint(x.rows, MISS);
+    }).catch(function(e){
+      /* ⚠️ 까닭은 **개발 기록에만** 적습니다 (절대 주칙 3) */
+      window.amFailLog("booking/v_teetime_open", e);
+      box.innerHTML = bar() + window.amFailHtml("티타임 목록");
+      var t = box.querySelector("[data-amretry]");
+      if(t) t.addEventListener("click", function(){ load(); });
     });
+  }
+
+  /* ⚠️⚠️ 운영 DB 에 아지직 없을 수 있는 **신괜 선택 칸** — 0081 이
+     더한 `photo` 하나입니다. ⚠️ 이것은 거르개가 아니라 **그림**이므로
+     가릴 거르개가 없습니다 — 사진이 없으면 `phHtml` 이 아이콘 타일로
+     돌아가므로 화면은 그대로 서고, 달리 안내할 것도 없습니다. */
+  var OPTCOL = ["photo"];
+  var MISS = [];
+  function tookOut(gone){
+    gone.forEach(function(c){ if(MISS.indexOf(c) < 0) MISS.push(c); });
   }
 
   box.addEventListener("submit", function(e){

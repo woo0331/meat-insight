@@ -32,11 +32,41 @@
      안 보인다" 가 됩니다). */
   var LIMIT = 200;
 
+
+
+  /* ⚠️⚠️⚠️ **정상 0건과 조회 실패를 가립니다** — 전에는
+     `r.ok ? r.json() : []` 로 적어, 거절당한 것도 보기가 없는 것도
+     **번 배열**이 되어 화면이 「아직 ~이 없습니다」를 찍었습니다
+     (절대 주칙 1 — 0 은 세어 본 값입니다). 지금은 **던집니다.**
+     ⚠️⚠️ 다시 묻는 것은 **`OPTCOL` 에 적어 둔 확인된 신괜 칸**이
+     없다고 400 이 말할 때만이고, 보기 부재(404) · 권한(403) · 인증은
+     덮지 않습니다. */
+  var OPTCOL = ["role", "emp_type"];
+  var MISS = [];
+
   function get(a, path){
-    return fetch(a.conf.url + "/rest/v1/" + path, {
-      headers: Object.assign({ apikey:a.conf.anonKey },
-                             window.amAuthHeaders ? window.amAuthHeaders() : {})
-    }).then(function(r){ return r.ok ? r.json() : []; });
+    return window.amPathSoft(path, OPTCOL, function(p){
+      return fetch(a.conf.url + "/rest/v1/" + p, {
+        headers: Object.assign({ apikey:a.conf.anonKey },
+                               window.amAuthHeaders ? window.amAuthHeaders() : {})
+      });
+    }).then(function(x){
+      if(x.miss && x.miss.length) x.miss.forEach(function(c){
+        if(MISS.indexOf(c) < 0) MISS.push(c); });
+      return x.rows;
+    });
+  }
+
+  /* 조회 실패를 새 상자에 적습니다 — ⚠️ 손님에게는 **안내와 다시
+     시도**까지이고 까닭은 개발 기록에만 적습니다 (절대 주칙 3). */
+  function failBox(a, e, again){
+    window.amFailLog("jobfavbox", e);
+    var b = document.getElementById("jobfavbox");
+    if(!b) return;
+    b.hidden = false;
+    b.innerHTML = window.amFailHtml("저장한 공고");
+    var t = b.querySelector("[data-amretry]");
+    if(t) t.addEventListener("click", function(){ again(a); });
   }
   function call(a, fn, p){
     return fetch(a.conf.url + "/rest/v1/rpc/" + fn, {
@@ -128,7 +158,14 @@
     });
   }
 
+  /* ⚠️⚠️ 조회 실패는 **한 곳에서** 받습니다 — 부르는 자리마다
+     적으면 한쪽을 빠뜨리는 날 그 자리만 「0건」으로 보이거나 상자가
+     「불러오는 중」에서 조용히 멈춥니다. */
   function reload(a){
+    return draw(a).catch(function(e){ failBox(a, e, reload); });
+  }
+
+  function draw(a){
     /* ⚠️⚠️ **`fav_at` 차례**로 냅니다 — 공고를 올린 차례로 두면 오래된
        공고를 방금 저장하셔도 맨 아래에 있습니다. */
     return get(a, "v_job_fav?select=id,title,kind,sub,region,role,emp_type," +

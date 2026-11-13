@@ -124,8 +124,53 @@
       reload(a);
     });
   }
+  /* ⚠️⚠️ 운영 DB 에 아지직 없을 수 있는 **신괜 선택 칸** — 0080 이
+     더한 `level` 하나입니다. 여기 적은 이름만 다시 묻기의 대상입니다. */
+  var OPTCOL = ["level"];
+  var MISS = [];
+
   function reload(a){
-    return load(a).then(function(rows){ paint(a, rows); });
+    return load(a).then(function(x){
+      if(x.miss && x.miss.length) tookOut(x.miss);
+      paint(a, x.rows, MISS);
+    }).catch(function(e){
+      window.amFailLog("join/v_join_open", e);
+      list.innerHTML = window.amFailHtml("조인 목록");
+      bindRetry(a);
+    });
+  }
+  /* 다시 시도 — ⚠️ 새로고침이 아니라 다시 묻기만 합니다 */
+  function bindRetry(a){
+    var t = list.querySelector("[data-amretry]");
+    if(t) t.addEventListener("click", function(){
+      list.innerHTML = '<p class="jnf-n">불러오고 있습니다…</p>';
+      reload(a);
+    });
+  }
+  /* 없는 칸이 드러나면 — 그 조건을 끄고 거르개에서 가립니다
+     (고른 것을 남기고 안 걸리면 걸렸는데 안 걸린 것처럼 보입니다). */
+  function tookOut(gone){
+    var ch = false;
+    for(var i = 0; i < gone.length; i++){
+      if(MISS.indexOf(gone[i]) < 0) MISS.push(gone[i]);
+      if(gone[i] === "level" && F.lv){ F.lv = ""; ch = true; }
+    }
+    if(ch){ try{ writeUrl(); }catch(_){} }
+    hideOpt();
+  }
+  function hideOpt(){
+    if(!MISS.length) return;
+    MISS.forEach(function(c){
+      var e = document.querySelector('[data-optcol="' + c + '"]');
+      if(e){ e.hidden = true; e.style.display = "none"; }
+    });
+  }
+  /* ⚠️ 글자만이라도 **이름 있는 함수**로 둡니다 (check-safe ⑥) */
+  function missNote(miss){
+    if(!miss || !miss.length) return "";
+    if(miss.indexOf("level") < 0) return "";
+    return '<p class="jnf-n">실력 조건은 아직 사용하실 수 없어 ' +
+      '거르개에서 빼 두었습니다. 조인 목록은 그대로 보여 드립니다.</p>';
   }
 
   function openForm(){
@@ -392,7 +437,7 @@
       /* ⚠️⚠️ 0080 — 실력. **안 고르신 자리는 이 조건으로 좁히면
          빠집니다**(null 과 견주는 순간 빠집니다) — 0건 안내가 그 사실을
          적습니다. */
-      '<div class="jrow"><label for="jf-lv">실력</label>' +
+      '<div class="jrow" data-optcol="level"><label for="jf-lv">실력</label>' +
         '<select id="jf-lv"><option value="">전체</option>' +
         (window.AM_JOIN_LEVEL || []).map(function(x){
           return '<option value="' + esc(x.key) + '"' +
@@ -448,10 +493,18 @@
     var w = whenOf(F.wh);
     /* ⚠️ 보기가 이미 지난 날짜를 빼므로 아래쪽만 겁니다 (`play_at >= 오늘`) */
     if(w.days !== null) qs.push("play_at=lte." + plusDays(w.days));
-    return fetch(a.conf.url + "/rest/v1/v_join_open?" + qs.join("&"), {
-      headers: Object.assign({ apikey:a.conf.anonKey },
-                             window.amAuthHeaders ? window.amAuthHeaders() : {})
-    }).then(function(r){ return r.ok ? r.json() : []; });
+    /* ⚠️⚠️⚠️ **정상 0건과 조회 실패를 가립니다** — 전에는
+       거절당한 것도 보기가 없는 것도 모두 번 배열이 되어 「아직 열린
+       자리가 없습니다」로 보였습니다(절대 주칙 1 — 0 은 세어 본
+       값입니다). ⚠️⚠️ 다시 묻는 것은 **`OPTCOL` 에 적어 둔 신괜 칸**이
+       없다고 400 이 말할 때만이고, 보기 부재(404) · 권한(403) · 인증은
+       덮지 않습니다. */
+    return window.amRowsSoft(qs, OPTCOL, function(q){
+      return fetch(a.conf.url + "/rest/v1/v_join_open?" + q.join("&"), {
+        headers: Object.assign({ apikey:a.conf.anonKey },
+                               window.amAuthHeaders ? window.amAuthHeaders() : {})
+      });
+    });
   }
 
   /* 지금 걸린 조건을 말로 — ⚠️ 켜진 것이 없으면 빈 글자입니다 */
@@ -484,7 +537,8 @@
     '</div>';
   }
 
-  function paint(a, rows){
+  function paint(a, rows, miss){
+    hideOpt();
     /* 센 수를 적습니다 — ⚠️ 갯수를 글자로 박지 않고 **세어서** 냅니다 */
     var nl = document.getElementById("jfnow");
     if(nl){
@@ -503,7 +557,8 @@
          「따라갈 함수 이름이 없는 줄」로 잡습니다. 그 검사가 맞습니다 —
          찾는 말(`F.q`)이 `nowBits()` 에 들어오면서 **손님 글자가 그
          줄을 지나게** 됐습니다(0061 · 0068 에서 세운 규칙). */
-      list.innerHTML = nowBits().length ? noneNarrow() : noneEmpty();
+      list.innerHTML = missNote(miss) +
+        (nowBits().length ? noneNarrow() : noneEmpty());
       var allb = document.getElementById("jf-all");
       if(allb) allb.addEventListener("click", function(){
         F.rg = ""; F.wh = ""; F.bk = false; F.lv = ""; F.pp = ""; F.q = "";
@@ -511,7 +566,8 @@
       });
       return;
     }
-    list.innerHTML = '<ul class="jnl">' + rows.map(card).join("") + '</ul>';
+    list.innerHTML = missNote(miss) + '<ul class="jnl">' +
+      rows.map(card).join("") + '</ul>';
     Array.prototype.forEach.call(list.querySelectorAll(".jnc-go"), function(b){
       b.addEventListener("click", function(){
         if(!a.signedIn){ window.location.href = window.amLoginUrl

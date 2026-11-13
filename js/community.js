@@ -131,7 +131,38 @@
   /* ── DB ─────────────────────────────────────────────────────────
      ⚠️ 몇 줄인지는 `content-range` 가 알려 줍니다 — 그 머리글이 없으면
      **쪽 수를 지어내지 않고** 다음 쪽이 있는지만 봅니다. */
+  /* ⚠️⚠️ 운영 DB 에 아지직 없을 수 있는 **신괜 선택 칸** — 0075 가
+     더한 `thumb` 하나입니다. 여기 적은 이름만 다시 묻기의 대상이고,
+     보기 부재(404) · 권한(403) · 인증은 덮지 않습니다. */
+  var OPTCOL = ["thumb"];
+  var MISS = [];
+
+  /* `select=` 에서 그 칸만 끩니다 — ⚠️ 주소가 글자 하나라
+     `amDropCols`(배열용) 대슴 여기서 끩습니다. */
+  function dropSel(path, col){
+    return path.replace(/([?&]select=)([^&]*)/, function(all, pre, sel){
+      var keep = sel.split(",").filter(function(c){ return c.trim() !== col; });
+      return pre + keep.join(",");
+    });
+  }
+
+  /* ⚠️⚠️ 한 번만 다시 묻습니다 — 두 번째도 안 되면 그대로
+     조회 실패입니다(끝없이 묻지 않습니다). */
   function get(path, count){
+    return once(path, count).then(function(r){
+      if(!r.failed || r.status !== 400) return r;
+      var c = window.amMissCol ? window.amMissCol(r.why || "") : "";
+      if(!c || OPTCOL.indexOf(c) < 0) return r;
+      var p2 = dropSel(path, c);
+      if(p2 === path) return r;
+      if(MISS.indexOf(c) < 0) MISS.push(c);
+      try{ console.warn("[community] 운영 DB 에 아지직 없는 칸을 뻐고 다시 " +
+        "물었습니다 — " + c); }catch(_){}
+      return once(p2, count);
+    });
+  }
+
+  function once(path, count){
     var h = Object.assign({ apikey:A.conf.anonKey },
                           window.amAuthHeaders ? window.amAuthHeaders() : {});
     if(count) h.Prefer = "count=exact";
@@ -152,7 +183,15 @@
            본 것처럼 말하는 것이라 절대 규칙 1 입니다(그리고 손님은
            고칠 길이 없습니다). 지금은 `failed` 를 같이 내고 부르는
            쪽이 **갈라서** 적습니다. */
-        if(!r.ok) return { rows:[], total:null, failed:true };
+        /* ⚠️ 까닭은 **부르는 자리가 가리는 대** 쓸 것이고, 여기서
+           새는 것은 `status` · `why` 둘입니다 — 손님 화면에는 한 글자도
+           안 나가고(절대 주칙 3) 다시 묻는 한 곳에서만 봅니다. */
+        if(!r.ok) return r.text().then(function(t){
+          var o = {}; try{ o = JSON.parse(t) || {}; }catch(_){}
+          return { rows:[], total:null, failed:true,
+                   status:r.status, why:(o.message || t || "") };
+        }, function(){ return { rows:[], total:null, failed:true,
+                                status:r.status, why:"" }; });
         return r.json().then(function(rows){
           return { rows: Array.isArray(rows) ? rows : [], total: tot };
         }, function(){ return { rows:[], total:null, failed:true }; });

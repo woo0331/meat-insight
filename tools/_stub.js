@@ -168,7 +168,20 @@ function stub(p, who, tables, rpcs, up){
       if(key === undefined)
         return r.fulfill({ status:200, contentType:"application/json",
                            headers:{ "content-range":"0-0/0" }, body:"[]" });
-      const v = tables[key];
+      let v = tables[key];
+      /* ⚠️⚠️ **주소를 보고 달리 답할 수 있어야** 「없는 칸을 뻐고 다시
+         묻는가」를 재어 봅니다 — 없는 칸이 들어 있으면 400 · 뻐으면
+         줄을 내야 하므로, 정해진 JSON 하나로는 재도 거짓으로 통과합니다. */
+      if(typeof v === "function") v = v(u);
+      /* ⚠️⚠️⚠️ **거절을 그대로 흔내 낼 수 있어야** 합니다 — 400(없는
+         칸) · 404(보기 부재) · 403(권한)은 화면이 **갈라서** 다르게
+         해야 하는데, 500 한 가지로만 흔내 내면 그 갈라지는 자리를
+         아무도 재지 않습니다. */
+      if(v && v.amErr)
+        return r.fulfill({ status: v.amErr.status || 400,
+          contentType:"application/json",
+          body: JSON.stringify({ code: v.amErr.code || "",
+                                 message: v.amErr.message || "" }) });
       if(v === null)
         return r.fulfill({ status:500, contentType:"application/json", body:"{}" });
       /* ⚠️⚠️⚠️ **`content-range` 를 노출 헤더에 적어야 브라우저가 읽습니다.**

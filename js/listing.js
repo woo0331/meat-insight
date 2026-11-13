@@ -334,9 +334,9 @@
          ⚠️ **안 적으신 매물은 이 조건으로 좁히면 빠집니다** — 모르는 것을
          아무 칸에나 넣으면 지어낸 값입니다(절대 규칙 1 · 가격대와 같은
          결). 그 사실을 바로 아래에서 말합니다. */
-      '<div class="jrow"><label for="lf-fx">샤프트 플렉스</label>' +
+      '<div class="jrow" data-optcol="flex"><label for="lf-fx">샤프트 플렉스</label>' +
         '<select id="lf-fx"><option value="">전체</option>' + fx + '</select></div>' +
-      '<div class="jrow"><label for="lf-hd">좌 · 우타</label>' +
+      '<div class="jrow" data-optcol="hand"><label for="lf-hd">좌 · 우타</label>' +
         '<select id="lf-hd"><option value="">전체</option>' + hd + '</select>' +
         '<span class="jhint">둘은 <b>골프채</b>에 적는 칸입니다. ' +
         '안 적어 주신 매물은 이 조건으로 좁히면 빠집니다.</span></div>' +
@@ -553,10 +553,20 @@
       if(bd.to !== null && bd.to !== undefined)
         qs.push("price=lt."  + encodeURIComponent(String(bd.to)));
     }
-    return fetch(a.conf.url + "/rest/v1/v_listing_open?" + qs.join("&"), {
-      headers: Object.assign({ apikey:a.conf.anonKey },
-                             window.amAuthHeaders ? window.amAuthHeaders() : {})
-    }).then(function(r){ return r.ok ? r.json() : []; });
+    /* ⚠️⚠️⚠️ **정상 0건과 조회 실패를 가립니다** — 전에는
+       `r.ok ? r.json() : []` 로 적어, 보기가 없거나 거절당한 것이
+       **「0건」으로** 찍혔습니다(2026-11-13 에 운영이 실제로 그
+       꼴이었습니다). 지금은 **던집니다** — 부르는 자리가 잡아
+       「불러오지 못했습니다」를 적습니다.
+       ⚠️⚠️ 다시 묻는 것은 **`OPTCOL` 에 적어 둔 신괜 칸이 없다고
+       400 이 말할 때만**입니다 — 보기 부재(404) · 권한(403) ·
+       인증은 덮지 않습니다(`amRowsSoft`). */
+    return window.amRowsSoft(qs, OPTCOL, function(q){
+      return fetch(a.conf.url + "/rest/v1/v_listing_open?" + q.join("&"), {
+        headers: Object.assign({ apikey:a.conf.anonKey },
+                               window.amAuthHeaders ? window.amAuthHeaders() : {})
+      });
+    });
   }
 
   /* 지금 걸린 가격대 — ⚠️ 거르는 자리와 **같은 함수**를 읽습니다
@@ -784,7 +794,10 @@
     return b;
   }
 
-  function paint(a, rows){
+  function paint(a, rows, miss){
+    /* ⚠️ 없는 칸이 있었으면 **그 자리에서** 무엇을 못 쓰는지 말합니다 —
+       까닭(칸 이름 · 마이그레이샅)은 적지 않습니다 (절대 주칙 3). */
+    hideOpt();
     var nl = document.getElementById("lsnow");
     if(nl){
       nl.hidden = false;
@@ -807,13 +820,13 @@
          ⚠️⚠️ **쪽을 넘겨 와서 0건인 것은 셋째 경우**입니다 — 조건을
          지우라고 적으면 엉뚱한 말입니다(조건은 맞고 쪽이 지나간
          것입니다). */
-      list.innerHTML = PG > 0 ? nonePage() :
-        (nowBits().length ? noneNarrow() : noneEmpty());
+      list.innerHTML = missNote(miss) + (PG > 0 ? nonePage() :
+        (nowBits().length ? noneNarrow() : noneEmpty()));
       bindList(a);
       return;
     }
-    list.innerHTML = tabs() + '<ul class="lsc-g">' + rows.map(card).join("") +
-      '</ul>' + pager(rows.length);
+    list.innerHTML = tabs() + missNote(miss) + '<ul class="lsc-g">' +
+      rows.map(card).join("") + '</ul>' + pager(rows.length);
     bindList(a);
   }
   /* ⚠️⚠️ **고르는 것과 찍는 것을 갈라 둡니다** — 삼항으로 두 글 덩이 중
@@ -839,6 +852,18 @@
            그대로 걸린 채 "지웠습니다" 가 됐습니다. */
         '<button type="button" class="btn btn-line lsf-clear">조건 지우기</button>' +
       '</div></div>';
+  }
+  /* ⚠️ 고른 것과 찍는 것을 갈라 둡니다 — 글자만이라도 이름 있는
+     함수로 두어야 `check-safe` ⑥ 가 따라갈 수 있습니다. */
+  function missNote(miss){
+    if(!miss || !miss.length) return "";
+    var what = [];
+    if(miss.indexOf("flex") >= 0) what.push("샤프트 플렉스");
+    if(miss.indexOf("hand") >= 0) what.push("좌 · 우타");
+    if(!what.length) return "";
+    return '<p class="jhint lsf-miss">' + esc(what.join(" · ")) +
+      ' 조건은 아직 사용하실 수 없어 거르개에서 빼 두었습니다. ' +
+      '매물 목록은 그대로 보여 드립니다.</p>';
   }
   function noneEmpty(){
     return '<div class="none">' +
@@ -1166,6 +1191,18 @@
     var w = document.getElementById("lswrap");
     if(!w) return;
 
+    /* 「다시 시도」 — ⚠️⚠️ 눌림은 **감싸 자리 한 곳**에서 받습니다
+       (그릴 때마다 달면 조건을 지우는 자리가 둘이 됩니다 · 0069).
+       ⚠️ 새로고침이 아니라 **다시 묻기**만 합니다 — 고른 조건을
+       지키고 보시는 자리도 안 잘어버립니다. */
+    w.addEventListener("click", function(e){
+      var t = e.target && e.target.closest ? e.target.closest("[data-amretry]") : null;
+      if(!t) return;
+      e.preventDefault();
+      list.innerHTML = '<p class="jhint">불러오고 있습니다…</p>';
+      reload(a);
+    });
+
     /* 고르개 · 정렬 — ⚠️ 레일은 **다시 안 그립니다**(고른 값이 이미 보입니다) */
     w.addEventListener("change", function(e){
       var t = e.target;
@@ -1322,7 +1359,49 @@
       if(e.key === "Escape") sheet(false);
     });
   }
-  function reload(a){ return load(a).then(function(rows){ paint(a, rows); }); }
+  /* ⚠️⚠️ 운영 DB 에 아지직 없을 수 있는 **신괜 선택 칸** — 0080 이
+     더한 둘입니다. 여기 적은 이름만 다시 묻기의 대상이 됩니다
+     (목록을 적지 않으면 어떤 400 도 덮지 않습니다). */
+  var OPTCOL = ["flex", "hand"];
+  /* 지금 DB 에 없는 것으로 한 번 드러난 칸들 */
+  var MISS = [];
+
+  function reload(a){
+    return load(a).then(function(x){
+      if(x.miss && x.miss.length) tookOut(x.miss);
+      paint(a, x.rows, MISS);
+    }).catch(function(e){
+      /* ⚠️ 까닭은 **개발 기록에만** 적습니다 (절대 주칙 3) */
+      window.amFailLog("listing/v_listing_open", e);
+      list.innerHTML = window.amFailHtml("매물 목록");
+      bindList(a);
+    });
+  }
+
+  /* 없는 칸이 드러나면 — 그 조건을 **끄고** 거르개에서 가립니다.
+     ⚠️⚠️ 고른 것을 남기고 안 걸리면 **걸렸는데 안 걸린 것처럼** 보이고,
+     칩에는 남아 있으므로 그것이 거짓말이 됩니다. 주소도 같이 맞춤니다. */
+  function tookOut(gone){
+    var ch = false;
+    for(var i = 0; i < gone.length; i++){
+      if(MISS.indexOf(gone[i]) < 0) MISS.push(gone[i]);
+      if(gone[i] === "flex" && F.fx){ F.fx = ""; ch = true; }
+      if(gone[i] === "hand" && F.hd){ F.hd = ""; ch = true; }
+    }
+    if(ch){ try{ writeUrl(); }catch(_){} }
+    hideOpt();
+  }
+  /* 거르개에서 그 칸만 가립니다 — ⚠️ 골라도 못 걸러 주는 칸을
+     내면 눌러도 아무 일이 안 나는 칸입니다 (절대 주칙 5). */
+  function hideOpt(){
+    if(!MISS.length) return;
+    var r = document.getElementById("lsrail");
+    if(!r) return;
+    MISS.forEach(function(c){
+      var e = r.querySelector('[data-optcol="' + c + '"]');
+      if(e){ e.hidden = true; e.style.display = "none"; }
+    });
+  }
 
   /* ⚠️⚠️ 제15조 제2항 — 수집 항목 · 이용 목적 · 보유 기간을 **동의받는
      그 자리에서** 같이 보여 줍니다. 링크로 빼 두면 "같이 보여 준 것" 이

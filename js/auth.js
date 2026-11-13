@@ -427,3 +427,170 @@ window.amShut = function(id){
     '먼저 물어보실 것이 있으면 고객센터로 알려 주세요.</p>' +
     '<a class="btn btn-pt" href="/help">고객센터</a></div>';
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   목록을 읽는 자리 — 「정상 0건」과 「조회 실패」를 가릅니다 (2026-11-13)
+
+   ⚠️⚠️⚠️ **화면 열두 곳이 `r.ok ? r.json() : []` 로 적고 있었습니다.**
+   그러면 거절당한 것도 · 보기가 없는 것도 **빈 배열**이 되어, 화면이
+   "아직 올라온 것이 없습니다" 를 찍습니다. 2026-11-13 에 운영
+   `/cat/used` 가 실제로 그 꼴이었습니다 — 공개 보기가 운영에 없어서
+   **한 줄도 못 읽었는데** 손님에게는 "아직 올라온 매물이 없습니다" 로
+   보였습니다. **0 은 세어 본 값입니다**(절대 규칙 1) — 못 읽은 것을
+   0 으로 적으면 그건 지어낸 숫자입니다.
+
+   ⚠️⚠️ 그리고 **부분 적용된 DB** 를 버팁니다. 표는 있고 **새 칸이
+   없으면** PostgREST 가 400 `42703` 을 내고 그 질의가 통째로 거절되어
+   **목록이 사라집니다.** 그때만 그 칸을 빼고 **한 번** 다시 묻습니다.
+
+   ⚠️⚠️⚠️ **숨기는 범위를 좁게 못 박습니다.** 다시 묻는 것은
+   **① 400 이고 ② 거절한 말이 칸 이름을 말하고 ③ 그 이름이 부르는 쪽이
+   미리 적어 둔 목록에 있을 때**뿐입니다. 공개 보기가 없는 것(404 ·
+   `PGRST205`) · 권한(401 · 403 · `42501`) · 인증(JWT)은 **다시 묻지
+   않고 그대로 실패로 올립니다** — 그것을 재질의로 덮으면 "설정이
+   안 된 것" 이 "자료가 없는 것" 으로 보이고, 그게 바로 위에서 고친
+   고장입니다.
+
+   ⚠️ 손님 화면에는 **간단한 안내와 다시 시도**까지입니다 — 까닭 ·
+   칸 이름 · 코드는 `console` 에만 적습니다(절대 규칙 3).
+   ════════════════════════════════════════════════════════════════════ */
+
+/* 거절한 말에서 **없는 칸 이름**을 꺼냅니다.
+   ⚠️ PostgREST 가 두 가지로 말합니다 —
+     42703   : column v_listing_open.flex does not exist
+     PGRST204: Could not find the 'flex' column of 'listing' in the schema cache
+   ⚠️ 표가 없다는 말(`Could not find the table ...`)은 **안 걸립니다** —
+   그 꼴은 칸 이름을 말하지 않으므로 여기서 빈 글자가 되고, 그래서
+   재질의로 넘어가지 않습니다. */
+window.amMissCol = function(msg){
+  var s = String(msg || "");
+  var m = /column\s+(?:[A-Za-z0-9_]+\.)?"?([A-Za-z0-9_]+)"?\s+does not exist/i.exec(s);
+  if(m) return m[1];
+  m = /'([A-Za-z0-9_]+)'\s+column\s+of/i.exec(s);
+  return m ? m[1] : "";
+};
+
+/* 응답 하나를 `{ rows, miss }` 로 바꿉니다. 거절이면 **던집니다** —
+   ⚠️ 빈 배열로 바꾸면 그 순간 「조회 실패」가 「0건」이 됩니다. */
+window.amRows = function(r){
+  if(r.ok) return r.json().then(function(j){
+    return { rows: Array.isArray(j) ? j : [], miss: [] }; });
+  return r.text().then(function(t){
+    var o = {}; try{ o = JSON.parse(t) || {}; }catch(_){}
+    var e = new Error(o.message || ("HTTP " + r.status));
+    e.amStatus = r.status;
+    e.amCode = o.code || "";
+    e.amCol = window.amMissCol(o.message || t);
+    throw e;
+  });
+};
+
+/* `select=` 와 거르개에서 그 칸들을 빼냅니다 — **실제로 뺀 이름**을
+   돌려줍니다(0개면 다시 물어볼 까닭이 없습니다).
+   ⚠️ `qs` 를 **제자리에서** 고칩니다(부르는 쪽이 같은 배열로 다시
+   묻습니다). ⚠️ 차례(`order`)는 손대지 않습니다 — 지금 뺄 칸 가운데
+   차례로 쓰는 것이 하나도 없고, 손대면 목록이 조용히 다른 차례로
+   보입니다(정렬이 안 되는 것은 에러가 안 납니다). */
+window.amDropCols = function(qs, cols){
+  var gone = [];
+  function mark(c){ if(cols.indexOf(c) >= 0 && gone.indexOf(c) < 0) gone.push(c); }
+  for(var i = 0; i < qs.length; i++){
+    var p = String(qs[i]), eq = p.indexOf("=");
+    if(eq < 0) continue;
+    var k = p.slice(0, eq);
+    if(k === "select"){
+      var keep = p.slice(eq + 1).split(",").filter(function(c){
+        var n = c.trim();
+        if(cols.indexOf(n) < 0) return true;
+        mark(n); return false;
+      });
+      qs[i] = "select=" + keep.join(",");
+    }else if(cols.indexOf(k) >= 0){
+      mark(k); qs.splice(i, 1); i--;
+    }
+  }
+  return gone;
+};
+
+/* 다시 묻는 자리 — ⚠️ **한 곳**입니다(화면마다 적으면 한쪽만 고치는
+   날 어떤 화면은 버티고 어떤 화면은 통째로 사라집니다).
+   `go(qs)` 는 그 배열로 fetch 를 돌려주는 함수이고, `opt` 는 부르는
+   쪽이 **미리 적어 둔** 신규 선택 칸 목록입니다.
+   ⚠️ 다시 묻는 것은 **한 번**뿐입니다 — 두 번째도 실패하면 그대로
+   실패로 올립니다(끝없이 묻지 않습니다). */
+window.amRowsSoft = function(qs, opt, go){
+  return go(qs).then(window.amRows).catch(function(e){
+    /* ⚠️⚠️ 좁게 가립니다 — 400 이 아니면(404 보기 부재 · 403 권한 ·
+       401 인증) **덮지 않습니다.** */
+    if(!e || e.amStatus !== 400) throw e;
+    var c = e.amCol;
+    if(!c || opt.indexOf(c) < 0) throw e;
+    /* ⚠️ 한 마이그레이션이 같이 더한 칸들이라 **묶어서** 뺍니다 —
+       거절한 말은 한 칸만 말하지만, 하나가 없으면 나머지도 없습니다. */
+    var gone = window.amDropCols(qs, opt);
+    if(!gone.length) throw e;
+    try{ console.warn("[amRowsSoft] 운영 DB 에 아직 없는 칸을 빼고 다시 " +
+      "물었습니다 — " + gone.join(", ") + " (" + (e.amCode || "400") + ")"); }catch(_){}
+    return go(qs).then(window.amRows).then(function(x){
+      x.miss = gone; return x; });
+  });
+};
+
+/* 조회 실패를 손님에게 적는 글 — ⚠️ **한 곳**입니다.
+   ⚠️⚠️ 까닭을 적지 않습니다(절대 규칙 3) — 보기가 없는지 · 권한인지 ·
+   그물이 끊겼는지는 `console` 에만 남깁니다. 손님에게는 **0건이 아니라는
+   것**과 **다시 시도**까지입니다.
+   ⚠️ `what` 은 "매물" · "티타임" 처럼 **무엇을** 못 읽었는지입니다. */
+window.amFailHtml = function(what){
+  var w = String(what || "목록");
+  /* ⚠️⚠️ 조사를 **글자로 박지 않습니다** — 받침에 따라 갈립니다
+     ("프로을" 이 나갑니다). 붙이는 자리는 js/data/korean.js 한 곳이고,
+     그 파일이 안 실린 화면에서는 「…를」 없이 적습니다. */
+  var jo = window.josa ? window.josa(w, "을를") : "";
+  return '<div class="none"><h3>지금 ' + window.esc(w) + window.esc(jo) +
+    ' 불러오지 못했습니다</h3>' +
+    '<p>잠시 뒤에 다시 시도해 주세요. <b>0건이라는 뜻이 아닙니다.</b></p>' +
+    '<button class="btn btn-pt" type="button" data-amretry="1">다시 시도</button></div>';
+};
+
+/* 조회 실패를 개발 기록에만 적습니다 — ⚠️ 손님 화면에 한 글자도 안
+   냅니다(절대 규칙 3). `where` 는 어느 화면 · 어느 보기인지입니다. */
+window.amFailLog = function(where, e){
+  try{
+    console.warn("[" + String(where) + "] 조회 실패 — status=" +
+      ((e && e.amStatus) || "?") + " code=" + ((e && e.amCode) || "") +
+      " " + ((e && e.message) || ""));
+  }catch(_){}
+};
+
+/* 주소가 **글자 하나**인 자리를 위한 짝 — `/my` 의 화면들이 `get(a, path)`
+   꼴로 적혀 있어 배열이 아닙니다.
+   ⚠️ `select=` 에서 그 칸만 덥니다 (거르개는 손대지 않습니다 — 이 자리의
+   신규 칸은 전부 **고르는 칸이 아니라 보여 주는 칸**입니다). */
+window.amDropSel = function(path, col){
+  return String(path).replace(/([?&]select=)([^&]*)/, function(all, pre, sel){
+    var keep = sel.split(",").filter(function(c){ return c.trim() !== col; });
+    return pre + keep.join(",");
+  });
+};
+
+/* 주소 하나로 한 번만 다시 묻습니다 — `{ rows, miss }` 를 돌려줍니다.
+   ⚠️⚠️ 다시 묻는 조건은 `amRowsSoft` 와 **같습니다** — 400 이고 · 거절한
+   말이 칸 이름을 말하고 · 그 이름이 `opt` 에 있을 때만입니다. 보기
+   부재(404) · 권한(403) · 인증은 **그대로 던집니다.** */
+window.amPathSoft = function(path, opt, go){
+  return go(path).then(window.amRows).catch(function(e){
+    if(!e || e.amStatus !== 400) throw e;
+    var c = e.amCol;
+    if(!c || !opt || opt.indexOf(c) < 0) throw e;
+    var p2 = path, gone = [];
+    opt.forEach(function(k){
+      var n = window.amDropSel(p2, k);
+      if(n !== p2){ p2 = n; gone.push(k); }
+    });
+    if(!gone.length) throw e;
+    try{ console.warn("[amPathSoft] 운영 DB 에 아직 없는 칸을 빼고 다시 " +
+      "물었습니다 — " + gone.join(", ") + " (" + (e.amCode || "400") + ")"); }catch(_){}
+    return go(p2).then(window.amRows).then(function(x){ x.miss = gone; return x; });
+  });
+};

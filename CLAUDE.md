@@ -125,7 +125,7 @@ site.js    naverVerify · googleVerify   검색엔진 등록 확인
 Vercel     SUPABASE_URL · SUPABASE_ANON_KEY   로그인 · 입점 신청 · 매칭 요청 · **고객센터 문의**가 그때 켜집니다
 Supabase   **비공개** 버킷 + INTAKE_BUCKET   손님 사진 · 업체 증빙서류 (⚠️ 공개로 만들면 사업자등록증이 주소만 알면 열립니다)
 Supabase   **공개** 버킷 + PROVIDER_BUCKET   업체 시설 사진 · **매물 사진** · 게시판 글 사진 · 광고 소재 (⚠️ 공개가 맞습니다 — 크롤러가 보는 정적 HTML 에 박힙니다)
-Supabase   db/apply-from-0008.sql 를 붙여 넣기 (0008~**0079** · 72개)
+Supabase   db/apply-from-0008.sql 를 붙여 넣기 (0008~**0081** · 폴더가 세어 줍니다)
 ```
 
 ⚠️⚠️ **위 둘째 · 셋째 줄은 이제 빌드가 막습니다** (2026-11-03). `SITE_LIVE`

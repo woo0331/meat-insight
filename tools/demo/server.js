@@ -129,11 +129,24 @@ function query(rows, qs){
   var ps = pairs(qs);
   var out = rows.slice();
 
+  /* ⚠️⚠️⚠️ **빈 값은 조건이 아닙니다.** 처음엔 `?fx=` 같은 빈
+     열쇠를 그대로 걸러서 **전부 0건**으로 돌아왔습니다 — 화면은
+     「매물이 없습니다」로 읽고, 이 저장소가 가장 싫어하는 **조용한 0건**
+     입니다. 비어 있으면 **건너뜁니다**.
+     ⚠️⚠️ 반대로 **모르는 칸**은 조용히 넘기지 않고 **400** 으로
+     크게 거절합니다(진짜 PostgREST 도 그렇게 합니다) — 화면이 칸
+     이름을 틀리면 **그 자리에서** 드러나야 합니다. */
+  var cols = {};
+  rows.forEach(function(r){ Object.keys(r).forEach(function(c){ cols[c] = 1; }); });
+  var unknown = null;
   ps.forEach(function(p){
     var k = p[0], v = p[1];
     if(RESERVED[k]) return;
+    if(v === "") return;
+    if(rows.length && !cols[k]){ unknown = k; return; }
     out = out.filter(function(r){ return test(r, k, v); });
   });
+  if(unknown) return { bad: unknown };
 
   /* `or=(a.ilike.*x*,b.ilike.*x*)` */
   ps.filter(function(p){ return p[0] === "or"; }).forEach(function(p){
@@ -350,6 +363,11 @@ function serve(opt){
         return json(res, 200, [], { "content-range":"*/0" });
       }
       var r2 = query(src, qs);
+      if(r2.bad){
+        return json(res, 400, {
+          message:"column " + tbl + "." + r2.bad + " does not exist",
+          code:"42703" });
+      }
       var last = r2.from + r2.rows.length - 1;
       return json(res, 200, r2.rows, {
         "content-range": (r2.rows.length

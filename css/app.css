@@ -4551,3 +4551,22 @@ picture{ display: contents; }
   .mk-hd-r{ align-items:stretch; }
   .mk-cta{ width:100%; justify-content:center; }
 }
+
+/* ── 개인 매물 / 업체 매입 · 위탁 탭 (확정 시안 ③) ───────────────────
+   ⚠️ `.lstab`(물건 묶음)과 **이름을 갈라 둡니다** — 한 화면에 둘이 같이
+   서는데 모양이 다릅니다(이쪽은 밑줄 탭 · 저쪽은 알약). 같은 이름을 두
+   자리에 쓰면 한쪽을 고치는 날 둘이 같이 바뀝니다. */
+.lsmode-sec{ padding-block:0; }
+.lsmode{ display:flex; gap:8px; border-bottom:1.6px solid var(--line);
+  margin-top:18px; }
+.lsmode-i{ display:inline-flex; align-items:center; justify-content:center;
+  min-height:48px; padding:0 20px; font-size:15.5px; font-weight:700;
+  color:var(--ink2); text-decoration:none;
+  border:1.6px solid transparent; border-bottom:0;
+  border-radius:10px 10px 0 0; margin-bottom:-1.6px; }
+.lsmode-i:hover{ color:var(--ink); }
+.lsmode-i.on{ color:var(--grn-text); background:#fff;
+  border-color:var(--line); }
+@media (max-width:560px){
+  .lsmode-i{ flex:1 1 0; min-width:0; padding:0 10px; font-size:14.5px; }
+}

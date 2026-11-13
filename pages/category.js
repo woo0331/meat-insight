@@ -154,6 +154,27 @@ KIND.trade.zeroD = KIND.provider.zeroD;
    글자 대비를 책임지는 딥그린 막이 거기 있고, 두 벌로 적으면 한쪽만
    고치는 날 한 화면에서만 글이 안 읽힙니다. `.hero-sm` 은 높이만
    줄입니다. */
+/* ── 개인 매물 / 업체 매입·위탁 탭 (확정 시안 ③) ─────────────────────
+   ⚠️⚠️⚠️ **단추가 아니라 링크**입니다 — 자바스크립트가 꺼진 분 · 봇에게
+   단추는 눌러도 아무 일이 안 나는 칸입니다(절대 규칙 5). 주소가 바뀌므로
+   복사해 보내도 같은 화면입니다.
+   ⚠️⚠️ **두 구간을 다 찍습니다** — 빌드는 주소를 모르므로(정적 HTML 한
+   장입니다) 둘 다 찍어 두고, `js/listing.js` 가 `?mode=` 를 보고 한쪽을
+   가립니다. 자바스크립트가 꺼져 있으면 둘 다 보입니다 — 그래도 **길이
+   끊기지 않습니다**(없는 것을 있다고 적지 않습니다).
+   ⚠️ 켜진 탭은 **첫 탭(개인 매물)** 으로 찍습니다 — 기본 주소가 그쪽이고,
+   `?mode=pro` 로 들어오시면 화면이 옮겨 답니다. */
+function usedTabs(){
+  var T = [["", "개인 매물"], ["pro", "업체 매입 · 위탁"]];
+  return '<section class="sec lsmode-sec"><div class="wrap">' +
+    '<nav class="lsmode" aria-label="매물 갈래">' + T.map(function(x){
+      return '<a class="lsmode-i' + (x[0] ? "" : " on") + '" data-mode="' +
+        esc(x[0]) + '" href="/cat/used' + (x[0] ? "?mode=" + esc(x[0]) : "") +
+        '"' + (x[0] ? "" : ' aria-current="true"') + '>' + esc(x[1]) + '</a>';
+    }).join("") + '</nav>' +
+  '</div></section>';
+}
+
 function usedHead(c){
   var ph = W.amPhoto ? W.amPhoto("hero") : null;
   return '<section class="hero hero-sm' + (ph ? " hero-ph" : "") + '">' +
@@ -1684,7 +1705,8 @@ exports.build = function(c){
        업체가 실제로 있으면 그때만 업체가 앞으로 옵니다. */
     /* ⚠️ 안전거래 가이드는 **중고장터에만** 섭니다 — 히어로의 그 링크가
        갈 자리이고(절대 규칙 5), 회원끼리 돈이 오가는 자리가 여기입니다. */
-    body: head + adTop + teeFind + lsnTop +
+    body: head + (c.key === "used" ? usedTabs() : "") +
+          adTop + teeFind + lsnTop +
           /* ⚠️⚠️ 레슨은 **프로 목록이 알맹이**라 프로가 0분이어도
              맨 앞입니다 — 그 자리가 §13 의 「등록된 프로가 없습니다」와
              입점 신청을 냅니다. 뒤로 미루면 시안에서 가장 중요한 구간이
@@ -1693,8 +1715,16 @@ exports.build = function(c){
              0곳이어도 **맨 앞**입니다 — 그 자리가 시안의 「등록된 …이
              없습니다」와 등록 길을 냅니다. 뒤로 미루면 시안에서 가장
              중요한 구간이 「이런 걸 찾고 있어요」 아래로 내려갑니다. */
-          ((list.length || c.key === "lesson" || c.key === "range" ||
-            c.key === "fitting" || c.key === "travel" || c.key === "market")
+          /* ⚠️⚠️ 중고는 **탭 둘**입니다(확정 시안 ③) — 개인 매물과
+             업체 매입 · 위탁은 **다른 거래**라 한 화면에 쌓아 두면 어느 쪽에
+             물어보는 것인지 알 수 없습니다(제20조의4 ③ — 개인과 사업자를
+             **구분해 표시**하라는 그 줄과 같은 결입니다).
+             ⚠️ 가리는 것은 `js/listing.js` 한 곳이고 비드는 **둘 다** 찍습니다. */
+          (c.key === "used"
+            ? ('<div id="lsmine">' + ownSec + '</div>' +
+               '<div id="lspro">'  + pvSec  + '</div>')
+            : (list.length || c.key === "lesson" || c.key === "range" ||
+               c.key === "fitting" || c.key === "travel" || c.key === "market")
                        ? (pvSec + teeSec + ownSec)
                        : (ownSec + teeSec + pvSec)) +
           (c.key === "used" ? safeGuide() : "") +

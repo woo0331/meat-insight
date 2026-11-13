@@ -6320,6 +6320,111 @@ function boardsOf(){
            qq.indexOf("title=ilike.") >= 0 &&
            qq.indexOf(encodeURIComponent("드라이버")) >= 0, qq.slice(0, 200));
 
+
+        /* ⚠️⚠️ 0080 — 샤프트 플렉스 · 좌/우타 (확정 시안 ③).
+           ⚠️ 흉내 장치는 걸러 주지 않으므로 **보내는 질의를 뜯어** 봅니다 —
+           줄 수로 재면 그 칸을 통째로 떼어도 영원히 초록입니다. */
+        {
+          const f0 = await g.p.evaluate(function(){
+            return { fx: !!document.getElementById("lf-fx"),
+                     hd: !!document.getElementById("lf-hd"),
+                     fopt: Array.prototype.map.call(
+                       document.querySelectorAll("#lf-fx option"),
+                       function(o){ return o.value; }).filter(Boolean),
+                     fwant: (window.AM_LST_FLEX || []).map(function(x){ return x.key; }),
+                     hopt: Array.prototype.map.call(
+                       document.querySelectorAll("#lf-hd option"),
+                       function(o){ return o.value; }).filter(Boolean),
+                     hwant: (window.AM_LST_HAND || []).map(function(x){ return x.key; }) };
+          });
+          ok("⚠️⚠️ 0080 — 샤프트 플렉스 · 좌/우타 칸이 있다 (확정 시안 ③)",
+             f0.fx && f0.hd, JSON.stringify(f0).slice(0, 140));
+          ok("  ⚠️ 두 목록이 **AM_LST_FLEX · AM_LST_HAND 와 같다** (갯수를 박지 않습니다)",
+             f0.fwant.length > 0 && f0.hwant.length > 0 &&
+             f0.fopt.join(",") === f0.fwant.join(",") &&
+             f0.hopt.join(",") === f0.hwant.join(","),
+             f0.fopt.join(",") + " / " + f0.hopt.join(","));
+
+          const mf = g.sent.length;
+          await g.p.selectOption("#lf-fx", "s");
+          await g.p.waitForTimeout(350);
+          const qf = g.sent.slice(mf).map(function(x){ return String(x.body); }).join(" | ");
+          ok("  플렉스를 고르면 **서버에** flex=eq. 를 보낸다",
+             qf.indexOf("flex=eq.s") >= 0, qf.slice(0, 200));
+
+          const mh = g.sent.length;
+          await g.p.selectOption("#lf-hd", "left");
+          await g.p.waitForTimeout(350);
+          const qh = g.sent.slice(mh).map(function(x){ return String(x.body); }).join(" | ");
+          ok("  좌/우타를 고르면 **서버에** hand=eq. 를 보낸다",
+             qh.indexOf("hand=eq.left") >= 0, qh.slice(0, 200));
+
+          const k0 = await g.p.evaluate(function(){
+            return Array.prototype.map.call(document.querySelectorAll(".lsf-chip"),
+              function(b){ return b.getAttribute("data-off"); });
+          });
+          ok("  둘 다 **칩**으로 보인다 (무엇으로 좁혔는지 보이게)",
+             k0.indexOf("fx") >= 0 && k0.indexOf("hd") >= 0, k0.join(","));
+
+          /* ⚠️ 지우면 **그 조건만** 빠집니다 */
+          const md = g.sent.length;
+          await g.p.click('.lsf-chip[data-off="fx"]');
+          await g.p.waitForTimeout(350);
+          const qd = g.sent.slice(md).map(function(x){ return String(x.body); }).join(" | ");
+          ok("  칩을 지우면 플렉스만 빠지고 좌/우타는 남는다",
+             qd.indexOf("flex=eq.") < 0 && qd.indexOf("hand=eq.left") >= 0,
+             qd.slice(0, 200));
+          await g.p.click('.lsf-chip[data-off="hd"]');
+          await g.p.waitForTimeout(300);
+        }
+
+
+        /* ⚠️⚠️⚠️ **개인 매물 / 업체 매입 · 위탁 탭** (확정 시안 ③).
+           ⚠️ 이 탭은 **설정과 상관없이** 돌아야 합니다(주소만 보고 구간을
+           가립니다) — 큰 덩이 안에 두면 설정이 없을 때 `return` 에 걸려
+           눌러도 아무 일이 안 나는 칸이 됩니다(절대 규칙 5).
+           ⚠️⚠️ **구간을 지우지 않고 가립니다** — 돌아올 때 다시 세워야
+           합니다. 그려졌는지는 `getClientRects()` 로 봅니다
+           (`offsetParent` 는 `position:fixed` 를 null 로 읽습니다). */
+        {
+          const t0 = await g.p.evaluate(function(){
+            const v = function(id){
+              const e = document.getElementById(id);
+              return !!(e && e.getClientRects().length);
+            };
+            return { tabs: document.querySelectorAll(".lsmode-i").length,
+                     mine: v("lsmine"), pro: v("lspro"),
+                     on: (document.querySelector(".lsmode-i.on") || {}).textContent };
+          });
+          ok("⚠️⚠️ 확정 시안 ③ — 개인 매물 / 업체 매입 · 위탁 **탭 둘**이 있다",
+             t0.tabs === 2 && t0.mine === true && t0.pro === false,
+             JSON.stringify(t0));
+          await g.p.click('.lsmode-i[data-mode="pro"]');
+          await g.p.waitForTimeout(300);
+          const t1 = await g.p.evaluate(function(){
+            const v = function(id){
+              const e = document.getElementById(id);
+              return !!(e && e.getClientRects().length);
+            };
+            return { url: location.search, mine: v("lsmine"), pro: v("lspro"),
+                     on: (document.querySelector(".lsmode-i.on") || {})
+                           .getAttribute("data-mode") };
+          });
+          ok("  업체 탭을 누르면 **구간이 갈리고 주소도 바뀐다**",
+             t1.mine === false && t1.pro === true &&
+             t1.url.indexOf("mode=pro") >= 0 && t1.on === "pro",
+             JSON.stringify(t1));
+          /* ⚠️ 갈래를 바꿔도 **다른 조건은 그대로** 둡니다 */
+          await g.p.click('.lsmode-i[data-mode=""]');
+          await g.p.waitForTimeout(300);
+          const t2 = await g.p.evaluate(function(){
+            return { url: location.search,
+                     mine: !!document.getElementById("lsmine").getClientRects().length };
+          });
+          ok("  개인 탭으로 돌아오면 **주소에서 빠지고** 매물이 다시 보인다",
+             t2.mine === true && t2.url.indexOf("mode=") < 0, JSON.stringify(t2));
+        }
+
         /* ⚠️⚠️ Baymard 가 "사이트의 20% 가 고른 조건을 안 보여 준다" 고
            짚은 자리 — 무엇으로 좁혔는지가 안 보이면 0건을 "매물이 없다"
            로 읽습니다. 칩 하나하나를 지울 수 있어야 합니다. */
@@ -6808,6 +6913,11 @@ function boardsOf(){
       await g.p.selectOption("#l-brand", "핑");
       await g.p.selectOption("#l-sub", "us-driver");
       await g.p.selectOption("#l-cond", "like");
+      /* ⚠️⚠️ 0080 — 샤프트 플렉스 · 좌/우타는 **비울 수 있고**
+         비우는 것도 보내는 것입니다 — 여기서는 골라 보고, 비운 것은
+         `tools/sql/listing.js` 가 문으로 눌러 봅니다. */
+      await g.p.selectOption("#l-flex", "s");
+      await g.p.selectOption("#l-hand", "left");
       await g.p.selectOption("#l-rg", "seoul");
       await g.p.fill("#l-price", "250000");
       await g.p.check("#l-ship");
@@ -6924,6 +7034,11 @@ function boardsOf(){
       /* ⚠️ 브랜드는 **글자 그대로** 담깁니다 (키가 없습니다 · 0068) */
       ok("  ⚠️ 0068 — 브랜드를 **글자 그대로** 보낸다", pl.brand === "핑",
          JSON.stringify(pl.brand));
+      /* ⚠️⚠️ 0080 — 안 보내면 올릴 때마다 그 칸이 비어 거르개에
+         영원히 안 걸리는 매물이 됩니다(에러 0줄). */
+      ok("  ⚠⚠ 0080 — 샤프트 플렉스 · 좌/우타를 같이 보낸다",
+         pl.flex === "s" && pl.hand === "left",
+         JSON.stringify({ flex: pl.flex, hand: pl.hand }));
       /* ⚠️ 체크박스는 **참 · 거짓**으로 보냅니다 ("on" 이 아닙니다 —
          문이 `(p->>'ship')::boolean` 으로 읽습니다) */
       ok("  ⚠️ 택배 여부를 **참 · 거짓**으로 보낸다 ('on' 이 아닙니다)",

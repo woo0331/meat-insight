@@ -25,6 +25,60 @@
    돈이 우리를 지나가지 않고 물건을 우리가 보지 않습니다 — 에스크로도
    안전거래도 **없습니다**. 있다고 적으면 절대 규칙 5 입니다.
    ════════════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════════════
+   개인 매물 / 업체 매입 · 위탁 탭 (확정 시안 ③)
+   ────────────────────────────────────────────────────────────────────
+   ⚠️⚠️⚠️ **설정(Supabase)과 상관없이 돕니다** — 이 탭은 주소만 보고
+   구간 둘을 가립니다(DB 를 안 읽습니다). 아래 큰 덩이 안에 두면
+   설정이 없을 때 `return` 에 걸려 **탭이 눌러도 아무 일이 안 나는
+   칸**이 됩니다(절대 규칙 5 · 메인의 찾는 칸에서 겪은 그 자리).
+   ⚠️⚠️ **구간을 지우지 않고 가립니다** — 돌아올 때 다시 세워야 합니다.
+   ⚠️ 빌드는 둘 다 찍습니다(주소를 모릅니다) — 자바스크립트가 꺼져
+   있으면 둘 다 보입니다. 길이 끊기지는 않습니다.
+   ════════════════════════════════════════════════════════════════════ */
+(function(){
+  var nav = document.querySelector(".lsmode");
+  var mine = document.getElementById("lsmine");
+  var pro  = document.getElementById("lspro");
+  if(!nav || !mine || !pro) return;
+
+  function now(){
+    try{
+      return (new URLSearchParams(location.search).get("mode") === "pro")
+        ? "pro" : "";
+    }catch(e){ return ""; }
+  }
+  function apply(){
+    var m = now();
+    mine.hidden = (m === "pro");
+    pro.hidden  = (m !== "pro");
+    Array.prototype.forEach.call(nav.querySelectorAll(".lsmode-i"), function(a){
+      var on = ((a.getAttribute("data-mode") || "") === m);
+      a.classList.toggle("on", on);
+      if(on) a.setAttribute("aria-current", "true");
+      else   a.removeAttribute("aria-current");
+    });
+  }
+  nav.addEventListener("click", function(e){
+    var a = e.target.closest ? e.target.closest(".lsmode-i") : null;
+    if(!a) return;
+    if(e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+    e.preventDefault();
+    /* ⚠️ 갈래를 바꿀 때 **다른 조건은 그대로** 둡니다 — 거르개를 걸어
+       두고 업체 쪽을 봤다가 돌아오면 그 조건이 남아 있어야 합니다. */
+    try{
+      var u = new URLSearchParams(location.search);
+      var m = a.getAttribute("data-mode") || "";
+      if(m) u.set("mode", m); else u.delete("mode");
+      var q = u.toString();
+      history.pushState(null, "", location.pathname + (q ? "?" + q : ""));
+    }catch(_){ location.href = a.getAttribute("href"); return; }
+    apply();
+  });
+  window.addEventListener("popstate", apply);
+  apply();
+})();
+
 (function(){
   var list = document.getElementById("lslist");
   if(!list || !window.amAuthAsk) return;
@@ -73,7 +127,8 @@
   /* ⚠️ `g` 는 묶음 탭 · `v` 는 상세로 볼 매물 id 입니다 (0069).
      ⚠️⚠️ **`q` 는 찾는 말이고 `v` 는 매물 하나**입니다 — 한 열쇠로 두면
      "타이틀리스트" 를 찾는 것과 그 매물 하나를 보는 것이 섞입니다. */
-  var F = { sub:"", rg:"", ship:false, p:"", br:"", o:"", q:"", cd:"", g:"", v:"" };
+  var F = { sub:"", rg:"", ship:false, p:"", br:"", o:"", q:"", cd:"", g:"", v:"",
+            fx:"", hd:"", mode:"" };
   /* 지금 보고 있는 쪽 몇째 — ⚠️ 0 에서 셉니다 */
   var PG = 0;
   /* 내가 찜한 매물 — ⚠️⚠️ **제 것만** 받습니다(`v_listing_fav`). 남의
@@ -95,6 +150,14 @@
      다음 쪽이 있다는 뜻입니다. ⚠️ 전체 쪽 수는 **모릅니다** — 그래서
      "3 / 12" 처럼 적지 않고 「다음」 단추만 냅니다(모르는 수를 적으면
      그건 지어낸 숫자입니다 · 절대 규칙 1). */
+
+  /* 키 묶음에 있는 키만 돌려줍니다 — 없으면 빈 글자입니다 */
+  function keyIn(L, v){
+    if(!v) return "";
+    var A = L || [];
+    for(var i = 0; i < A.length; i++) if(A[i].key === v) return v;
+    return "";
+  }
 
   function readUrl(){
     try{
@@ -125,6 +188,13 @@
       /* ⚠️⚠️ **상세로 볼 매물 id** — 꼴만 봅니다(36자). 틀린 꼴을 그대로
          서버에 보내면 PostgREST 가 400 을 내고 화면은 "못 읽었습니다" 가
          됩니다 — 꼴이 아니면 **목록으로** 갑니다. */
+      /* ⚠️ 모르는 키는 **버립니다** — 주소를 손으로 고쳐 오시면 아무것도
+         안 걸리는 화면이 되는데 「매물이 없다」로 읽힙니다.
+         ⚠️⚠️ 이름이 아니라 **키 묶음에 있는지**로 봅니다 — 「… 미확인」
+         같은 말로 가르면 그 문구를 고치는 날 거르개가 조용히 망가집니다. */
+      F.fx = keyIn(window.AM_LST_FLEX, (u.get("fx") || "").trim());
+      F.hd = keyIn(window.AM_LST_HAND, (u.get("hd") || "").trim());
+      F.mode = (u.get("mode") === "pro") ? "pro" : "";
       var vv = (u.get("v") || "").trim();
       F.v = /^[0-9a-fA-F-]{36}$/.test(vv) ? vv : "";
       /* ⚠️ 쪽은 주소에 **1 부터** 적고 안에서는 0 부터 셉니다 — 주소에
@@ -145,6 +215,9 @@
       if(F.q)    qs.push("q="  + encodeURIComponent(F.q));
       if(F.cd)   qs.push("cd=" + encodeURIComponent(F.cd));
       if(F.g)    qs.push("g="  + encodeURIComponent(F.g));
+      if(F.fx)   qs.push("fx=" + encodeURIComponent(F.fx));
+      if(F.hd)   qs.push("hd=" + encodeURIComponent(F.hd));
+      if(F.mode) qs.push("mode=" + encodeURIComponent(F.mode));
       if(F.v)    qs.push("v="  + encodeURIComponent(F.v));
       /* ⚠️ 쪽은 주소에 **남깁니다** — 셋째 쪽을 보시다 새로 고치면 첫
          쪽으로 돌아가고, 그러면 복사해 보낸 주소도 다른 화면입니다. */
@@ -229,6 +302,14 @@
       return '<option value="' + esc(c.key) + '"' +
         (F.cd === c.key ? " selected" : "") + '>' + esc(c.name) + '</option>';
     }).join("");
+    var fx = (window.AM_LST_FLEX || []).map(function(x){
+      return '<option value="' + esc(x.key) + '"' +
+        (F.fx === x.key ? " selected" : "") + '>' + esc(x.name) + '</option>';
+    }).join("");
+    var hd = (window.AM_LST_HAND || []).map(function(x){
+      return '<option value="' + esc(x.key) + '"' +
+        (F.hd === x.key ? " selected" : "") + '>' + esc(x.name) + '</option>';
+    }).join("");
     return '<div class="lsf-h"><b>필터</b>' +
       '<button type="button" class="lsf-x" id="lf-close" aria-label="필터 닫기">' +
       window.icon("close", 16) + '</button></div>' +
@@ -249,6 +330,16 @@
         '<select id="lf-p"><option value="">전체 가격</option>' + pb + '</select></div>' +
       '<div class="jrow"><label for="lf-cd">물건 상태</label>' +
         '<select id="lf-cd"><option value="">전체 상태</option>' + cd + '</select></div>' +
+      /* ⚠️⚠️ 0080 — 확정 시안 ③ 의 「샤프트 플렉스」 · 「좌/우타」입니다.
+         ⚠️ **안 적으신 매물은 이 조건으로 좁히면 빠집니다** — 모르는 것을
+         아무 칸에나 넣으면 지어낸 값입니다(절대 규칙 1 · 가격대와 같은
+         결). 그 사실을 바로 아래에서 말합니다. */
+      '<div class="jrow"><label for="lf-fx">샤프트 플렉스</label>' +
+        '<select id="lf-fx"><option value="">전체</option>' + fx + '</select></div>' +
+      '<div class="jrow"><label for="lf-hd">좌 · 우타</label>' +
+        '<select id="lf-hd"><option value="">전체</option>' + hd + '</select>' +
+        '<span class="jhint">둘은 <b>골프채</b>에 적는 칸입니다. ' +
+        '안 적어 주신 매물은 이 조건으로 좁히면 빠집니다.</span></div>' +
       '<div class="jrow jrow-full">' +
         '<label class="jchk"><input type="checkbox" id="lf-sh"' +
           (F.ship ? " checked" : "") + '><span>택배도 되는 것만</span></label>' +
@@ -432,6 +523,12 @@
     /* ⚠️ 브랜드는 **글자 그대로** 견줍니다 (키가 따로 없습니다) */
     if(F.br)   qs.push("brand=eq."  + encodeURIComponent(F.br));
     if(F.cd)   qs.push("cond=eq."   + encodeURIComponent(F.cd));
+    /* ⚠️⚠️ 0080 — 샤프트 플렉스 · 좌·우타입니다(확정 시안 ③).
+       ⚠️ **안 적으신 매물은 이 조건으로 좁히면 빠집니다** — 모르는 것을
+       아무 칸에나 넣으면 그건 지어낸 값입니다(절대 규칙 1). 화면이 그
+       사실을 **그 자리에서** 적습니다. */
+    if(F.fx)   qs.push("flex=eq."   + encodeURIComponent(F.fx));
+    if(F.hd)   qs.push("hand=eq."   + encodeURIComponent(F.hd));
     /* ⚠️⚠️ 찾기도 **서버**가 합니다 — 쉰 줄만 받아 화면에서 찾으면
        그 쉰 줄 밖의 매물이 영영 안 나옵니다.
        ⚠️ `*` 는 PostgREST 의 자리표이고 손님 글자는 그대로 갑니다 —
@@ -498,7 +595,8 @@
                           window.amAuthHeaders ? window.amAuthHeaders() : {});
     return Promise.all([
       fetch(a.conf.url + "/rest/v1/v_listing_open?select=id,sub,region,ship," +
-            "title,body,price,cond,brand,model,state,seller,ask_n,photo_n" +
+            "title,body,price,cond,brand,model,state,seller,ask_n,photo_n," +
+            "flex,hand" +
             "&id=eq." + encodeURIComponent(id) + "&limit=1",
             { headers:h }).then(function(r){ return r.ok ? r.json() : []; }),
       fetch(a.conf.url + "/rest/v1/v_listing_photo_public?select=path,caption,ord" +
@@ -541,6 +639,9 @@
     out.push(["물건 종류", subName(r.sub)]);
     if(r.brand) out.push(["브랜드", r.brand]);
     if(r.model) out.push(["모델명", r.model]);
+    /* ⚠️ 0080 — 비어 있으면 **줄째 빠집니다**(자리표시자를 안 찍습니다) */
+    if(r.flex) out.push(["샤프트 플렉스", window.amLstFlex(r.flex)]);
+    if(r.hand) out.push(["좌 · 우타", window.amLstHand(r.hand)]);
     out.push(["물건 상태", window.amLstCondName(r.cond)]);
     out.push(["거래 지역", rgName(r.region) + (r.ship ? " · 택배도 됩니다" : " · 직거래만")]);
     /* ⚠️ 판매자는 **보기가 가려서** 냅니다(`김**`) — 화면이 가리면
@@ -664,6 +765,8 @@
     if(F.br)   out.push(["br",  F.br]);
     if(F.rg)   out.push(["rg",  window.amRegionLabel ? window.amRegionLabel(F.rg) : rgName(F.rg)]);
     if(F.cd)   out.push(["cd",  window.amLstCondName(F.cd)]);
+    if(F.fx)   out.push(["fx",  window.amLstFlex(F.fx)]);
+    if(F.hd)   out.push(["hd",  window.amLstHand(F.hd)]);
     if(bd0())  out.push(["p",   bd0().name]);
     if(F.ship) out.push(["sh",  "택배 가능"]);
     return out;
@@ -674,6 +777,8 @@
     if(F.br)   b.push(F.br);
     if(F.rg)   b.push(window.amRegionLabel ? window.amRegionLabel(F.rg) : rgName(F.rg));
     if(F.cd)   b.push(window.amLstCondName(F.cd));
+    if(F.fx)   b.push(window.amLstFlex(F.fx));
+    if(F.hd)   b.push(window.amLstHand(F.hd));
     if(F.ship) b.push("택배 가능");
     if(bd0()) b.push(bd0().name);
     return b;
@@ -1048,6 +1153,8 @@
     else if(k === "p")   F.p = "";
     else if(k === "br")  F.br = "";
     else if(k === "cd")  F.cd = "";
+    else if(k === "fx")  F.fx = "";
+    else if(k === "hd")  F.hd = "";
     else if(k === "q"){
       F.q = "";
       var q = document.getElementById("lf-q");
@@ -1068,6 +1175,8 @@
       else if(t.id === "lf-rg") F.rg  = t.value;
       else if(t.id === "lf-p")  F.p   = t.value;
       else if(t.id === "lf-cd") F.cd  = t.value;
+      else if(t.id === "lf-fx") F.fx  = t.value;
+      else if(t.id === "lf-hd") F.hd  = t.value;
       else if(t.id === "lf-sh") F.ship = !!t.checked;
       else if(t.id === "lf-o")  F.o   = t.value;
       else return;
@@ -1250,6 +1359,12 @@
       return '<option value="' + esc(n) + '">' +
         esc(n === "기타" ? "기타 (직접 적기)" : n) + '</option>';
     }).join("");
+    var fx = (window.AM_LST_FLEX || []).map(function(x){
+      return '<option value="' + esc(x.key) + '">' + esc(x.name) + '</option>';
+    }).join("");
+    var hd = (window.AM_LST_HAND || []).map(function(x){
+      return '<option value="' + esc(x.key) + '">' + esc(x.name) + '</option>';
+    }).join("");
     return '<form id="lsf" class="jform">' +
       /* ⚠️⚠️⚠️ **사진이 글보다 위입니다** (시안 · 2026-11-10) — 2026-11-09
          까지는 사진을 붙이는 칸이 **올린 뒤에야** 나왔습니다.
@@ -1301,6 +1416,25 @@
         '<label for="l-cond">물건 상태 <b>*</b></label>' +
         '<select id="l-cond" name="cond" required>' +
           '<option value="">고르세요</option>' + cd + '</select>' +
+      '</div>' +
+      /* ⚠️⚠️ 0080 — 샤프트 플렉스 · 좌/우타 (확정 시안 ③ 의 거르개).
+         ⚠️ **비울 수 있습니다** — 골프채가 아닌 물건(공 · 장갑 · 모자)에는
+         없는 칸이고, 반드시 받으면 그 물건을 **아예 못 올리십니다**
+         (절대 규칙 2 · 모델명과 같은 결). 비우면 상세 화면에서 **줄째
+         빠집니다**(「(미기재)」를 안 찍습니다).
+         ⚠️ 안 적으시면 그 조건으로 좁히는 분께는 **안 보입니다** — 그
+         사실을 그 자리에서 말합니다(지어낸 값을 안 넣습니다). */
+      '<div class="jrow">' +
+        '<label for="l-flex">샤프트 플렉스</label>' +
+        '<select id="l-flex" name="flex">' +
+          '<option value="">해당 없음 · 모름</option>' + fx + '</select>' +
+      '</div>' +
+      '<div class="jrow">' +
+        '<label for="l-hand">좌 · 우타</label>' +
+        '<select id="l-hand" name="hand">' +
+          '<option value="">해당 없음 · 모름</option>' + hd + '</select>' +
+        '<span class="jhint">골프채면 적어 주세요 — 찾는 분이 ' +
+        '이 조건으로 좁혀 봅니다.</span>' +
       '</div>' +
       '<div class="jrow">' +
         '<label for="l-rg">지역 <b>*</b></label>' +
@@ -1480,6 +1614,8 @@
         /* ⚠️ 모델명은 **비울 수 있습니다** — 빈 글자를 보내면 0069 가
            null 로 담습니다 (보냈는지를 `p ? 'model'` 로 봅니다). */
         model: f.model.value,
+        /* ⚠️ 0080 — 비우면 null 로 담깁니다(비우는 것도 보내는 것입니다) */
+        flex: f.flex.value, hand: f.hand.value,
         region: f.region.value, price: f.price.value,
         /* ⚠️ 체크박스는 **참 · 거짓**으로 보냅니다 ("on" 이 아닙니다) */
         ship: !!document.getElementById("l-ship").checked,

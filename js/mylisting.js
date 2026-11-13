@@ -321,6 +321,15 @@
             '<span class="jhint">모르시면 비워 두셔도 됩니다.</span></div>' +
             '<div class="jrow"><label>물건 상태 <b>*</b></label>' +
             '<select name="cond" required>' + cd + '</select></div>' +
+            /* ⚠️⚠️ 0080 — 샤프트 플렉스 · 좌/우타. **비울 수 있고 비우는
+               것도 보내는 것**입니다 — 적혀 있던 값을 미리 채우지 않으면
+               저장할 때마다 지워집니다(모델명과 같은 자리). */
+            '<div class="jrow"><label>샤프트 플렉스</label>' +
+            '<select name="flex">' + fxOpts(r.flex) + '</select></div>' +
+            '<div class="jrow"><label>좌 · 우타</label>' +
+            '<select name="hand">' + hdOpts(r.hand) + '</select>' +
+            '<span class="jhint">골프채가 아니면 <b>해당 없음</b> 으로 ' +
+            '두세요.</span></div>' +
             '<div class="jrow jrow-full"><label class="jchk">' +
             '<input type="checkbox" name="ship"' + (r.ship ? " checked" : "") + '> ' +
             '<span>택배로도 보내 드릴 수 있습니다</span></label></div>' +
@@ -368,6 +377,8 @@
                        보냈는지를 봅니다). `coalesce` 로 받는 칸이면 빈
                        글자가 "안 보냈다" 와 섞여 **지울 수가 없습니다**. */
                     model: f.model.value,
+                    /* ⚠️ 0080 — 비우면 null 로 담깁니다 */
+                    flex: f.flex.value, hand: f.hand.value,
                     cond: f.cond.value, ship: !!f.ship.checked };
           if(f.contact.value) p.contact = f.contact.value;
           call(a, "edit_listing", p)
@@ -381,6 +392,22 @@
     });
   }
 
+  /* 0080 — 고르개 글자를 **한 곳**에서 짓습니다 (고치기 양식만 씁니다) */
+  function fxOpts(v){
+    return optList(window.AM_LST_FLEX, v);
+  }
+  function hdOpts(v){
+    return optList(window.AM_LST_HAND, v);
+  }
+  function optList(L, v){
+    return '<option value="">해당 없음 · 모름</option>' +
+      (L || []).map(function(x){
+        return '<option value="' + esc(x.key) + '"' +
+          (String(v || "") === x.key ? " selected" : "") + '>' +
+          esc(x.name) + '</option>';
+      }).join("");
+  }
+
   function reload(a){
     return Promise.all([
       /* ⚠️ 고치기 양식이 읽을 칸까지 **같이** 가져옵니다 — 빠뜨리면
@@ -389,7 +416,8 @@
          칸을 안 줬으므로 부르면 **질의가 통째로 거절**됩니다 (0053 의
          `memo` · `answered_by` 에서 겪은 그 자리입니다). */
       get(a, "listing?select=id,title,body,sub,region,ship,price,cond,state," +
-             "brand,model,hidden_why,created_at&order=created_at.desc&limit=50"),
+             "brand,model,flex,hand,hidden_why,created_at" +
+             "&order=created_at.desc&limit=50"),
       get(a, "listingask?select=id,listing_id,msg,state,created_at,by_user," +
              "seller_share_at,buyer_share_at&order=created_at.desc&limit=200"),
       get(a, "v_listing_contact?select=ask_id,seller_contact,buyer_contact," +

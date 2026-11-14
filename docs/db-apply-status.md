@@ -10,8 +10,8 @@
 | 2 | 0001 ~ 0067 | ✅ 적용 | 05:47 | 판 67 |
 | 3 | `db/apply-0068-0081/0068_listing_photo.sql` | ✅ 적용 | 06:22 적용 · 06:25 확인 | 판 68 · `listingphoto` 있음 · 16표 지문 동일 |
 | 4 | `0069_listing_market.sql` | ✅ 적용 | 06:27 적용 · 06:28 확인 | 판 69 · `listingfav` 있음 · 16표 지문 동일 |
-| 5 | `0070_listing_unhide.sql` | ⏳ 다음 | | 판 70 |
-| 6 | `0071_pro_self.sql` | 대기 | | 판 71 ⚠️ 트랜잭션 없음 |
+| 5 | `0070_listing_unhide.sql` | ✅ 적용 | 06:29 적용 · 06:31 확인 | 판 70 · `listing.hidden_from` 있음 |
+| 6 | `0071_pro_self.sql` | ⏳ 다음 | | 판 71 ⚠️ 트랜잭션 없음 |
 | 7 | `0072_job_fields.sql` | 대기 | | 판 72 ⚠️ 트랜잭션 없음 |
 | 8 | `0073_trip.sql` | 대기 | | 판 73 · `trip` 생김 ⚠️ 트랜잭션 없음 |
 | 9 | `0074_range_facility.sql` | 대기 | | 판 74 ⚠️ 트랜잭션 없음 |

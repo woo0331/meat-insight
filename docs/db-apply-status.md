@@ -18,8 +18,8 @@
 | 10 | `0075_cq_thumb.sql` | ✅ 적용 | 09:33 적용 · 확인 | 판 75 · `v_cq_public.thumb` · anon 읽기 유지 |
 | 11 | `0076_fitting.sql` | ✅ 적용 | 09:34 적용 · 확인 | 판 76 · `provider.fit_ways` 있음 |
 | 12 | `0077_trip_depart.sql` | ✅ 적용 | 09:35 적용 · 09:36 확인 | 판 77 · `tripdate` · 출발일 보기 있음 |
-| 13 | `0078_job_fav.sql` | ⏳ 다음 | | 판 78 |
-| 14 | `0079_fitting_terms.sql` | 대기 | | 판 79 |
+| 13 | `0078_job_fav.sql` | ✅ 적용 | 09:37 적용 · 확인 | 판 78 · `jobfav` · `v_job_fav` · anon 표 접근 없음 |
+| 14 | `0079_fitting_terms.sql` | ⏳ 다음 | | 판 79 |
 | 15 | `0080_join_level_listing_spec.sql` | 대기 | | 판 80 ⚠️ 트랜잭션 없음 |
 | 16 | `0081_course_photo.sql` | 대기 | | 판 81 ⚠️ 트랜잭션 없음 |
 | 17 | `db/post-apply.sql` | 대기 | | 기본 권한 지문 = 4b42f19c… |

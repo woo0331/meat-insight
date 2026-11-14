@@ -223,6 +223,18 @@
         '<input id="j-budget" name="budget" type="number" min="0" max="10000000" ' +
         'step="1000" inputmode="numeric" placeholder="원">' +
       '</div>' +
+      /* ⚠️⚠️ 0080 의 `level` — 목록에 실력 거르개 · 딱지가 있는데 **여는 양식에
+         칸이 없어** 모든 자리가 null 이었고, 실력을 고르면 늘 0건이었습니다
+         (2026-11-14). 고르지 않아도 됩니다(안 고르면 딱지를 안 냅니다). */
+      ((window.AM_JOIN_LEVEL || []).length
+        ? '<div class="jrow">' +
+            '<label for="j-level">실력</label>' +
+            '<select id="j-level" name="level"><option value="">고르지 않음</option>' +
+            window.AM_JOIN_LEVEL.map(function(x){
+              return '<option value="' + esc(x.key) + '">' + esc(x.name) + '</option>';
+            }).join("") + '</select>' +
+          '</div>'
+        : '') +
       '<div class="jrow jrow-full">' +
         '<label for="j-body">설명 <b>*</b></label>' +
         '<textarea id="j-body" name="body" rows="4" required minlength="5" ' +
@@ -399,18 +411,21 @@
       if(F.rg && !REG[F.rg] && !(window.amZone && window.amZone(F.rg))) F.rg = "";
     }catch(e){}
   }
+  /* ⚠️⚠️ 같은 화면의 업체 조인 목록(js/booking.js)과 **주소를 나눠 씁니다** —
+     지금 주소에서 **제 열쇠만** 바꿉니다(전에는 course · t · p 를 지웠습니다). */
   function writeUrl(){
     try{
-      var qs = [];
-      if(F.rg) qs.push("rg=" + encodeURIComponent(F.rg));
-      if(F.d)  qs.push("d=" + encodeURIComponent(F.d));
-      else if(F.wh) qs.push("when=" + encodeURIComponent(F.wh));
-      if(F.bk) qs.push("bk=1");
-      if(F.lv) qs.push("lv=" + encodeURIComponent(F.lv));
-      if(F.pp) qs.push("pp=" + encodeURIComponent(F.pp));
-      if(F.q)  qs.push("q="  + encodeURIComponent(F.q));
-      history.replaceState(null, "",
-        location.pathname + (qs.length ? "?" + qs.join("&") : ""));
+      var u = new URLSearchParams(location.search);
+      ["rg","d","when","bk","lv","pp","q"].forEach(function(k){ u.delete(k); });
+      if(F.rg) u.set("rg", F.rg);
+      if(F.d)  u.set("d", F.d);
+      else if(F.wh) u.set("when", F.wh);
+      if(F.bk) u.set("bk", "1");
+      if(F.lv) u.set("lv", F.lv);
+      if(F.pp) u.set("pp", F.pp);
+      if(F.q)  u.set("q", F.q);
+      var qs = u.toString();
+      history.replaceState(null, "", location.pathname + (qs ? "?" + qs : ""));
     }catch(e){}
   }
 
@@ -427,7 +442,7 @@
   function tabs(){
     var mine = SIGNED
       ? "/my#joinmine"
-      : (window.amLoginUrl ? window.amLoginUrl("/my") : "/login");
+      : (window.amLoginUrl ? window.amLoginUrl("/my#joinmine") : "/login");
     return '<nav class="jntab" aria-label="조인 갈래">' +
       '<a class="jntab-i on" href="' + esc(location.pathname) + '" ' +
         'aria-current="true">모집 중</a>' +
@@ -620,9 +635,20 @@
       rows.map(card).join("") + '</ul>';
     Array.prototype.forEach.call(list.querySelectorAll(".jnc-go"), function(b){
       b.addEventListener("click", function(){
-        if(!a.signedIn){ window.location.href = window.amLoginUrl
-          ? window.amLoginUrl(window.location.pathname + window.location.search) : "/login"; return; }
         var li = b.closest(".jnc");
+        /* ⚠️ 로그인 전에는 **왜 필요한지** 그 카드 안에서 말하고 길을 냅니다 —
+           전에는 설명 없이 곧장 /login 으로 넘어갔습니다(2026-11-14). */
+        if(!a.signedIn){
+          var nb = li.querySelector(".jnc-login");
+          if(nb){ nb.remove(); return; }
+          li.insertAdjacentHTML("beforeend", '<div class="jnote jnc-login">' +
+            '참가 신청에는 로그인이 필요합니다 — 여신 분이 신청을 받아들이고, 연락처는 ' +
+            '각자 따로 열어 주고받기 때문입니다. 로그인하시면 이 화면으로 돌아옵니다. ' +
+            '<a class="btn btn-pt btn-sm" href="' + esc(window.amLoginUrl
+              ? window.amLoginUrl(window.location.pathname + window.location.search) : "/login") +
+            '">로그인하기</a></div>');
+          return;
+        }
         var old = li.querySelector("#jaf");
         if(old){ old.remove(); return; }
         li.insertAdjacentHTML("beforeend",
@@ -649,10 +675,10 @@
               '<p>여신 분이 보고 수락하시면 연락처를 주고받으실 수 있습니다. ' +
               /* ⚠️ 지킬 수 없는 약속을 하지 않습니다 */
               '언제까지라고 약속드리지는 않습니다.</p>' +
-              '<a class="btn btn-pt" href="/my">내 정보에서 보기</a></div>';
+              '<a class="btn btn-pt" href="/my#joinmine">내 정보에서 보기</a></div>';
           }).catch(function(err){
             btn.disabled = false;
-            msg.textContent = String((err && err.message) || "보내지 못했습니다.");
+            msg.textContent = window.amErrText(err, "보내지 못했습니다.");
           });
         });
       });
@@ -683,6 +709,10 @@
     mountBar();
     bindBar(a);
     reload(a);
+    /* ⚠️ 뒤로 가기 — 같은 화면의 업체 조인 목록이 주소를 바꾸면(날짜 띠 ·
+       지역) 이 목록도 **그 조건으로** 다시 그립니다. 전에는 그쪽만 따라가
+       주소와 회원 조인 목록이 다른 조건을 말했습니다(2026-11-14). */
+    window.addEventListener("popstate", function(){ readUrl(); mountBar(); reload(a); });
 
     var box = document.getElementById("joinbox");
     if(!box) return;
@@ -692,7 +722,7 @@
       : '<div class="none"><h3>조인을 열려면 로그인하셔야 합니다.</h3>' +
         '<p>여신 분과 신청하신 분을 잇는 자리라, 누가 여셨는지 알아야 합니다.</p>' +
         '<a class="btn btn-pt" href="' +
-          (window.amLoginUrl ? esc(window.amLoginUrl(window.location.pathname + window.location.search)) : "/login") +
+          (window.amLoginUrl ? esc(window.amLoginUrl(window.location.pathname + window.location.search + "#joinbox")) : "/login") +
         '">로그인하기</a></div>';
     if(!a.signedIn) return;
 
@@ -711,19 +741,20 @@
         title: f.title.value, body: f.body.value, region: f.region.value,
         play_at: f.play_at.value, need: f.need.value, tee: f.tee.value,
         course: f.course.value, budget: f.budget.value, contact: f.contact.value,
+        level: f.level ? f.level.value : "",
         agree_at: new Date().toISOString()
       }).then(function(){
         box.className = "none";
         box.innerHTML = '<h3>조인을 열었습니다.</h3>' +
           '<p>목록에 바로 보입니다. 신청이 들어오면 내 정보에서 ' +
           '수락하실 수 있습니다.</p>' +
-          '<a class="btn btn-pt" href="/my">내 정보에서 보기</a>';
+          '<a class="btn btn-pt" href="/my#joinmine">내 정보에서 보기</a>';
         /* ⚠️ `load()` 는 `{rows, miss}` 를 돌려줍니다 — 배열로 받아 그리면
            방금 연 자리가 있어도 「아직 열린 조인이 없습니다」가 됐습니다. */
         reload(a);
       }).catch(function(err){
         btn.disabled = false;
-        msg.textContent = String((err && err.message) || "열지 못했습니다.");
+        msg.textContent = window.amErrText(err, "열지 못했습니다.");
       });
     });
   }).catch(function(){ /* 못 물어봤으면 빌드가 찍은 글 그대로 */ });

@@ -166,15 +166,21 @@
         box.className = "none";
         box.innerHTML = '<h2>문의를 접수했습니다.</h2>' +
           '<p>접수번호 <b>' + esc(String(no).replace(/^"|"$/g, "")) + '</b></p>' +
-          '<p>운영자가 확인하고 적어 주신 곳으로 답해 드립니다. ' +
-          /* ⚠️ 지킬 수 없는 약속을 하지 않습니다 — 몇 시간 · 며칠을
-             적지 않습니다 (절대 규칙 5). */
-          '언제까지라고 약속드리지는 않습니다.</p>';
+          /* ⚠️ 로그인하신 분은 연락처를 비우셨을 수 있습니다 — 답은 /my 에 나옵니다
+             (0053 · js/myinq.js). 전에는 「적어 주신 곳으로」라고만 했습니다. */
+          (a.signedIn
+            ? '<p>운영자가 확인한 답은 <b>내 정보</b>의 「내가 보낸 문의」에 나옵니다. ' +
+              '언제까지라고 약속드리지는 않습니다.</p>' +
+              '<a class="btn btn-pt" href="/my#myinqbox">내 정보에서 보기</a>'
+            : '<p>운영자가 확인하고 적어 주신 곳으로 답해 드립니다. ' +
+              /* ⚠️ 지킬 수 없는 약속을 하지 않습니다 (절대 규칙 5). */
+              '언제까지라고 약속드리지는 않습니다.</p>');
       }).catch(function(err){
         btn.disabled = false;
         /* ⚠️ DB 가 거절한 말을 **그대로** 보여 줍니다 — 우리가 고쳐
            쓰면 까닭이 바뀝니다. */
-        msg.textContent = String((err && err.message) || "보내지 못했습니다.");
+        msg.textContent = window.amErrText ? window.amErrText(err, "보내지 못했습니다.")
+          : String((err && err.message) || "보내지 못했습니다.");
       });
     });
   }).catch(function(){ /* 못 물어봤으면 닫힌 글 그대로 둡니다 */ });

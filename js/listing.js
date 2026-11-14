@@ -203,28 +203,36 @@
       PG = (gp > 1 && gp < 500) ? gp - 1 : 0;
     }catch(e){}
   }
+  /* ⚠️⚠️ 주소를 짓는 자리는 **이 한 함수**입니다 (2026-11-14) — 전에는
+     writeUrl · backUrl · pageUrl 이 따로 적어, 뒤 둘이 플렉스(fx) · 좌우타(hd) ·
+     탭(mode)을 빠뜨려 「매물 목록으로」 · 쪽 넘김을 누르면 그 조건이
+     **주소에서** 사라졌습니다(새로고침 · 복사하면 풀렸습니다). */
+  function urlQs(o){
+    var v = ("v" in o) ? o.v : F.v, pg = ("pg" in o) ? o.pg : PG;
+    var qs = [];
+    if(F.sub)  qs.push("s="  + encodeURIComponent(F.sub));
+    if(F.g)    qs.push("g="  + encodeURIComponent(F.g));
+    if(F.rg)   qs.push("rg=" + encodeURIComponent(F.rg));
+    if(F.ship) qs.push("sh=1");
+    if(F.p)    qs.push("p="  + encodeURIComponent(F.p));
+    if(F.br)   qs.push("br=" + encodeURIComponent(F.br));
+    if(F.o)    qs.push("o="  + encodeURIComponent(F.o));
+    if(F.q)    qs.push("q="  + encodeURIComponent(F.q));
+    if(F.cd)   qs.push("cd=" + encodeURIComponent(F.cd));
+    if(F.fx)   qs.push("fx=" + encodeURIComponent(F.fx));
+    if(F.hd)   qs.push("hd=" + encodeURIComponent(F.hd));
+    /* ⚠️ 탭(mode)은 위의 작은 덩이가 주소만 바꾸므로 **주소에서** 읽습니다 —
+       F.mode 는 처음 열 때의 값이라, 탭을 바꾼 뒤에는 옛 값입니다. */
+    var md = "";
+    try{ md = (new URLSearchParams(location.search).get("mode") === "pro") ? "pro" : ""; }catch(_){}
+    if(("mode" in o) ? o.mode : md) qs.push("mode=pro");
+    if(v)      qs.push("v="  + encodeURIComponent(v));
+    /* ⚠️ 쪽은 주소에 **1 부터** — 「0쪽」은 손님이 못 읽습니다 */
+    if(pg > 0) qs.push("pg=" + String(pg + 1));
+    return qs.length ? "?" + qs.join("&") : "";
+  }
   function writeUrl(){
-    try{
-      var qs = [];
-      if(F.sub)  qs.push("s="  + encodeURIComponent(F.sub));
-      if(F.rg)   qs.push("rg=" + encodeURIComponent(F.rg));
-      if(F.ship) qs.push("sh=1");
-      if(F.p)    qs.push("p="  + encodeURIComponent(F.p));
-      if(F.br)   qs.push("br=" + encodeURIComponent(F.br));
-      if(F.o)    qs.push("o="  + encodeURIComponent(F.o));
-      if(F.q)    qs.push("q="  + encodeURIComponent(F.q));
-      if(F.cd)   qs.push("cd=" + encodeURIComponent(F.cd));
-      if(F.g)    qs.push("g="  + encodeURIComponent(F.g));
-      if(F.fx)   qs.push("fx=" + encodeURIComponent(F.fx));
-      if(F.hd)   qs.push("hd=" + encodeURIComponent(F.hd));
-      if(F.mode) qs.push("mode=" + encodeURIComponent(F.mode));
-      if(F.v)    qs.push("v="  + encodeURIComponent(F.v));
-      /* ⚠️ 쪽은 주소에 **남깁니다** — 셋째 쪽을 보시다 새로 고치면 첫
-         쪽으로 돌아가고, 그러면 복사해 보낸 주소도 다른 화면입니다. */
-      if(PG > 0)  qs.push("pg=" + String(PG + 1));
-      history.replaceState(null, "",
-        location.pathname + (qs.length ? "?" + qs.join("&") : ""));
-    }catch(e){}
+    try{ history.replaceState(null, "", location.pathname + urlQs({})); }catch(e){}
   }
 
   /* ── 거르개 — ⚠️⚠️ PC 는 **왼쪽 레일** · 폰은 **「필터」 단추 하나**
@@ -608,7 +616,12 @@
             "title,body,price,cond,brand,model,state,seller,ask_n,photo_n," +
             "flex,hand" +
             "&id=eq." + encodeURIComponent(id) + "&limit=1",
-            { headers:h }).then(function(r){ return r.ok ? r.json() : []; }),
+            /* ⚠️⚠️ 못 읽은 것(400 · 403 · 5xx)을 0줄로 바꾸지 않습니다 — 0줄은
+               「지금은 볼 수 없는 매물」로 읽히므로, 조회 실패가 「팔린 매물」로
+               보였습니다(2026-11-14). 던져서 실패 상자로 보냅니다. */
+            { headers:h }).then(function(r){
+              if(!r.ok) throw new Error("v_listing_open " + r.status);
+              return r.json(); }),
       fetch(a.conf.url + "/rest/v1/v_listing_photo_public?select=path,caption,ord" +
             "&listing_id=eq." + encodeURIComponent(id) +
             "&order=ord.asc&limit=10",
@@ -710,22 +723,7 @@
   }
   /* 목록으로 돌아가는 주소 — ⚠️ **걸려 있던 조건을 그대로** 들고
      갑니다(안 들고 가면 셋째 쪽에서 들어온 분이 첫 쪽으로 떨어집니다). */
-  function backUrl(){
-    var keep = F.v; F.v = "";
-    var qs = [];
-    if(F.sub)  qs.push("s="  + encodeURIComponent(F.sub));
-    if(F.g)    qs.push("g="  + encodeURIComponent(F.g));
-    if(F.rg)   qs.push("rg=" + encodeURIComponent(F.rg));
-    if(F.ship) qs.push("sh=1");
-    if(F.p)    qs.push("p="  + encodeURIComponent(F.p));
-    if(F.br)   qs.push("br=" + encodeURIComponent(F.br));
-    if(F.o)    qs.push("o="  + encodeURIComponent(F.o));
-    if(F.q)    qs.push("q="  + encodeURIComponent(F.q));
-    if(F.cd)   qs.push("cd=" + encodeURIComponent(F.cd));
-    if(PG > 0) qs.push("pg=" + String(PG + 1));
-    F.v = keep;
-    return "/cat/used" + (qs.length ? "?" + qs.join("&") : "");
-  }
+  function backUrl(){ return "/cat/used" + urlQs({ v:"" }); }
   /* 상세의 단추 줄 — ⚠️⚠️ 로그인 여부로 **할 말이 갈립니다** */
   function oneBtns(r, mine){
     if(mine){
@@ -734,7 +732,7 @@
          고치고 내리는 자리는 `/my` 입니다. */
       return '<p class="lsd-mine">올리신 매물입니다. ' +
         '고치거나 내리시는 자리는 내 정보입니다.</p>' +
-        '<a class="btn btn-pt" href="/my">내 정보에서 관리하기</a>';
+        '<a class="btn btn-pt" href="/my#lsmine">내 정보에서 관리하기</a>';
     }
     if(!SIGNED){
       return '<p class="lsd-mine">문의하시려면 로그인하셔야 합니다. ' +
@@ -897,23 +895,8 @@
     return '<nav class="lspg" aria-label="쪽 넘기기">' + prev +
       '<span class="lspg-i">' + (PG + 1) + '쪽</span>' + next + '</nav>';
   }
-  function pageUrl(n){
-    var keep = PG; PG = n;
-    var keepV = F.v; F.v = "";
-    var qs = [];
-    if(F.sub)  qs.push("s="  + encodeURIComponent(F.sub));
-    if(F.g)    qs.push("g="  + encodeURIComponent(F.g));
-    if(F.rg)   qs.push("rg=" + encodeURIComponent(F.rg));
-    if(F.ship) qs.push("sh=1");
-    if(F.p)    qs.push("p="  + encodeURIComponent(F.p));
-    if(F.br)   qs.push("br=" + encodeURIComponent(F.br));
-    if(F.o)    qs.push("o="  + encodeURIComponent(F.o));
-    if(F.q)    qs.push("q="  + encodeURIComponent(F.q));
-    if(F.cd)   qs.push("cd=" + encodeURIComponent(F.cd));
-    if(n > 0)  qs.push("pg=" + String(n + 1));
-    PG = keep; F.v = keepV;
-    return "/cat/used" + (qs.length ? "?" + qs.join("&") : "");
-  }
+  function pageUrl(n){ return "/cat/used" + urlQs({ v:"", pg:n }); }
+
 
   /* ⚠️⚠️⚠️ **눌림을 묶는 자리는 `bindBar()` 한 곳입니다.** 이 파일이
      스스로 적어 둔 규칙입니다 — "칩은 다시 그려지고 0건 상자는 목록 안에
@@ -935,7 +918,9 @@
   function toggleFav(a, btn, id){
     if(!a.signedIn){
       window.location.href = window.amLoginUrl
-        ? window.amLoginUrl("/cat/used?v=" + id) : "/login";
+        /* ⚠️ 돌아올 자리는 **보고 계시던 그 화면**입니다(목록이면 그 조건 그대로) —
+           전에는 그 매물의 상세로 보내 거르개 조건을 잃었습니다. */
+        ? window.amLoginUrl(window.location.pathname + window.location.search) : "/login";
       return;
     }
     btn.disabled = true;
@@ -958,7 +943,7 @@
     }).catch(function(err){
       btn.disabled = false;
       /* ⚠️ 거절한 말을 **그대로** 보여 줍니다 (지어내지 않습니다) */
-      try{ window.alert(String((err && err.message) || "담지 못했습니다.")); }catch(_){}
+      try{ window.alert(window.amErrText(err, "담지 못했습니다.")); }catch(_){}
     });
   }
 
@@ -1042,8 +1027,9 @@
       /* ⚠️ 못 읽은 것을 "없다" 로 적지 않습니다 */
       list.innerHTML = '<div class="none none-fail">' +
         '<h3>매물을 불러오지 못했습니다.</h3>' +
-        '<p>잠시 뒤에 다시 열어 보세요. 0건이라는 뜻이 아닙니다.</p>' +
-        '<div class="none-b"><a class="btn btn-pt" href="' + esc(backUrl()) +
+        '<p>그물이 잠깐 끊겼을 수 있습니다. 매물이 없어졌다는 뜻이 아닙니다.</p>' +
+        '<div class="none-b"><button type="button" class="btn btn-pt" data-amretry="1">다시 시도</button>' +
+        '<a class="btn btn-line" href="' + esc(backUrl()) +
           '" data-back="1">매물 목록으로</a></div></div>';
       bindOne(a, null);
     });
@@ -1094,12 +1080,12 @@
         '<p>올리신 분이 보고 받아들이시면 연락처를 주고받으실 수 ' +
         /* ⚠️ 지킬 수 없는 약속을 하지 않습니다 */
         '있습니다. 언제까지라고 약속드리지는 않습니다.</p>' +
-        '<a class="btn btn-pt" href="/my">내 정보에서 보기</a></div>';
+        '<a class="btn btn-pt" href="/my#lsmine">내 정보에서 보기</a></div>';
     }).catch(function(err){
       if(btn) btn.disabled = false;
       /* ⚠️ 거절한 말을 **그대로** 보여 줍니다 — 제 매물에 문의하시면
          문이 "올리신 분은 문의하실 수 없습니다" 라고 말합니다 */
-      if(msg) msg.textContent = String((err && err.message) || "보내지 못했습니다.");
+      if(msg) msg.textContent = window.amErrText(err, "보내지 못했습니다.");
     });
   }
 
@@ -1191,6 +1177,19 @@
     }
   }
 
+  /* ⚠️⚠️ 「판매글 등록」(#lsbox)이 **숨은 자리**를 가리키지 않게 (2026-11-14) —
+     상세(?v=)에서는 side() 가, 업체 탭(mode=pro)에서는 #lsmine 이 그 상자를
+     가립니다. 그때 누르면 화면이 그대로라 눌러도 아무 일이 없었습니다(절대 규칙 5).
+     목록 · 개인 매물로 돌아간 주소에서 그 자리로 갑니다(조건은 그대로). */
+  document.addEventListener("click", function(e){
+    var t = e.target && e.target.closest ? e.target.closest('a[href="#lsbox"]') : null;
+    if(!t || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+    var box = document.getElementById("lsbox");
+    if(box && box.getClientRects().length) return;   /* 보이면 그냥 갑니다 */
+    e.preventDefault();
+    window.location.href = "/cat/used" + urlQs({ v:"", pg:0, mode:"" }) + "#lsbox";
+  });
+
   function bindBar(a){
     var w = document.getElementById("lswrap");
     if(!w) return;
@@ -1204,7 +1203,8 @@
       if(!t) return;
       e.preventDefault();
       list.innerHTML = '<p class="jhint">불러오고 있습니다…</p>';
-      reload(a);
+      /* ⚠️ 상세에서 누른 「다시 시도」는 **그 매물**을 다시 묻습니다(목록이 아닙니다) */
+      if(F.v) drawOne(a, F.v); else reload(a);
     });
 
     /* 고르개 · 정렬 — ⚠️ 레일은 **다시 안 그립니다**(고른 값이 이미 보입니다) */
@@ -1597,7 +1597,7 @@
         : '<p>목록에 바로 보입니다. 문의가 들어오면 내 정보에서 ' +
           '받아들이실 수 있습니다.</p>') +
       /* ⚠️ 문단 한가운데 링크를 박지 않습니다 — 단추로 냅니다 */
-      '<a class="btn btn-line" href="/my">내 정보에서 보기</a>';
+      '<a class="btn btn-line" href="/my#lsmine">내 정보에서 보기</a>';
   }
 
   function askForm(id, title){
@@ -1751,7 +1751,7 @@
         reload(a);
       }).catch(function(err){
         btn.disabled = false;
-        msg.textContent = String((err && err.message) || "올리지 못했습니다.");
+        msg.textContent = window.amErrText(err, "올리지 못했습니다.");
       });
     });
   }
@@ -1820,7 +1820,7 @@
         '<div class="none"><h3>매물을 올리려면 로그인하셔야 합니다.</h3>' +
         '<p>올리신 분과 사실 분을 잇는 자리라, 누가 올렸는지 알아야 합니다.</p>' +
         '<a class="btn btn-pt" href="' +
-          (window.amLoginUrl ? esc(window.amLoginUrl(window.location.pathname)) : "/login") +
+          (window.amLoginUrl ? esc(window.amLoginUrl(window.location.pathname + window.location.search + "#lsbox")) : "/login") +
         '">로그인하기</a></div>';
       return;
     }

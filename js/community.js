@@ -834,7 +834,7 @@
         }).catch(function(err){
           btn.disabled = false;
           /* ⚠️⚠️ DB 가 거절한 **그 말** 그대로 (이미 내려간 글입니다 …) */
-          msg.textContent = String((err && err.message) || "보내지 못했습니다.");
+          msg.textContent = window.amErrText(err, "보내지 못했습니다.");
         });
       });
     }
@@ -1018,7 +1018,7 @@
         .catch(function(err){
           btn.disabled = false;
           /* ⚠️ DB 가 거절한 **그 말**을 그대로 보여 줍니다 */
-          msg.textContent = String((err && err.message) || "올리지 못했습니다.");
+          msg.textContent = window.amErrText(err, "올리지 못했습니다.");
         });
     });
   }
@@ -1074,7 +1074,7 @@
         .then(function(){ rep.textContent = "신고했습니다"; })
         .catch(function(err){
           rep.disabled = false;
-          window.alert(String((err && err.message) || "신고하지 못했습니다."));
+          window.alert(window.amErrText(err, "신고하지 못했습니다."));
         });
     });
 
@@ -1089,7 +1089,7 @@
         .then(function(){ draw(); })
         .catch(function(err){
           sb.disabled = false;
-          msg.textContent = String((err && err.message) || "달지 못했습니다.");
+          msg.textContent = window.amErrText(err, "달지 못했습니다.");
         });
     });
 
@@ -1154,7 +1154,7 @@
           .then(function(){ draw(); })
           .catch(function(err){
             b.disabled = false;
-            window.alert(String((err && err.message) || "빼지 못했습니다."));
+            window.alert(window.amErrText(err, "빼지 못했습니다."));
           });
       });
     });
@@ -1171,7 +1171,7 @@
           .then(function(){ draw(); })
           .catch(function(err){
             b.disabled = false;
-            window.alert(String((err && err.message) || "고치지 못했습니다."));
+            window.alert(window.amErrText(err, "고치지 못했습니다."));
           });
       });
     });
@@ -1184,7 +1184,7 @@
           .then(function(){ draw(); })
           .catch(function(err){
             b.disabled = false;
-            window.alert(String((err && err.message) || "내리지 못했습니다."));
+            window.alert(window.amErrText(err, "내리지 못했습니다."));
           });
       });
     });

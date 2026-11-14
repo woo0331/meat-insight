@@ -163,7 +163,7 @@
       try{ box.scrollIntoView({ behavior:"smooth", block:"center" }); }catch(_){}
     }).catch(function(err){
       btn.disabled = false;
-      msg.textContent = String(err && err.message || "보내지 못했습니다.");
+      msg.textContent = window.amErrText(err, "보내지 못했습니다.");
     });
   }
 

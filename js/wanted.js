@@ -433,8 +433,9 @@
          안 적습니다(못 읽은 것과 0건은 다릅니다 · 절대 규칙 1). */
       if(!rows){
         mountBar();
-        list.innerHTML =
-          '<p class="myhint">지금 불러오지 못했습니다. 잠시 뒤에 다시 열어 주세요.</p>';
+        /* ⚠️ 다른 목록과 같은 실패 상자 · 「다시 시도」 (2026-11-14) */
+        list.innerHTML = window.amFailHtml ? window.amFailHtml("구합니다 글")
+          : '<p class="myhint">지금 불러오지 못했습니다. 잠시 뒤에 다시 열어 주세요.</p>';
         var nl = document.getElementById("wtnow");
         if(nl){ nl.hidden = true; nl.textContent = ""; }
         bindBar();
@@ -581,7 +582,7 @@
         say(msg, "");
         return reload();
       }).catch(function(err){
-        say(msg, String((err && err.message) || "올리지 못했습니다."));
+        say(msg, window.amErrText(err, "올리지 못했습니다."));
       });
     });
   }
@@ -612,17 +613,32 @@
         if(box) box.innerHTML =
           '<p class="jafh">답을 보냈습니다. 올리신 분이 받아들이면 ' +
           '<b>내 정보</b> 화면에서 연락처를 여실 수 있습니다.</p>' +
-          '<p class="wtc-go"><a class="btn btn-line" href="/my">내 정보로 가기</a></p>';
+          '<p class="wtc-go"><a class="btn btn-line" href="/my#wtmine">내 정보로 가기</a></p>';
         return reload();
       }).catch(function(err){
-        say(msg, String((err && err.message) || "보내지 못했습니다."));
+        say(msg, window.amErrText(err, "보내지 못했습니다."));
       });
     });
   }
 
+  /* ⚠️ 답 양식 · 로그인 안내는 목록 **아래** 공용 상자(#wtbox)에 열립니다 — 글이
+     여럿이면 그 자리가 화면 밖이라 눌러도 아무 일이 없는 것처럼 보였습니다
+     (2026-11-14). 채운 뒤 그 자리로 옮기고 첫 칸에 초점을 둡니다. */
+  function showBox(){
+    if(!box) return;
+    try{ box.scrollIntoView({ block:"start", behavior:"smooth" }); }catch(_){ }
+    var f = box.querySelector("textarea, input:not([type=hidden]), a.btn");
+    if(f) try{ f.focus({ preventScroll:true }); }catch(_){ }
+  }
   list.addEventListener("click", function(e){
     var t = e.target;
     if(!t || !t.closest) return;
+    if(t.closest("[data-amretry]")){
+      e.preventDefault();
+      list.innerHTML = '<p class="jhint">불러오고 있습니다…</p>';
+      reload();
+      return;
+    }
 
     var go = t.closest(".wt-go");
     if(go){
@@ -634,9 +650,10 @@
           '누가 답했는지 알아야 올리신 분이 받아들일 수 있습니다.</p>' +
           '<p class="wtc-go"><a class="btn btn-pri" href="' + loginUrl() +
           '">로그인</a></p>';
+        showBox();
         return;
       }
-      if(box){ box.innerHTML = replyForm(go.getAttribute("data-id")); bindReply(); }
+      if(box){ box.innerHTML = replyForm(go.getAttribute("data-id")); bindReply(); showBox(); }
       return;
     }
 
@@ -647,6 +664,7 @@
           '<p class="jafh">신고는 로그인한 뒤에 하실 수 있습니다.</p>' +
           '<p class="wtc-go"><a class="btn btn-pri" href="' + loginUrl() +
           '">로그인</a></p>';
+        showBox();
         return;
       }
       var why = window.prompt("무슨 일이 있었는지 적어 주세요 (다섯 글자 이상)");
@@ -655,7 +673,7 @@
                             body: String(why || "") })
         .then(function(){ window.alert("접수했습니다. 운영자가 확인합니다."); })
         .catch(function(err){
-          window.alert(String((err && err.message) || "신고하지 못했습니다."));
+          window.alert(window.amErrText(err, "신고하지 못했습니다."));
         });
       return;
     }

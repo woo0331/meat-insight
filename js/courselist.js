@@ -46,13 +46,25 @@
     S.rg  = String(p.get("rg") || "");
     S.q   = String(p.get("q")  || "");
   }
+  /* ⚠️⚠️ 같은 화면의 부킹 탭(js/booking.js)과 **주소를 나눠 씁니다** (2026-11-14) —
+     전에는 탭을 바꿀 때 새 주소를 통째로 지어 부킹 조건(d · t · course · p)이
+     사라졌습니다. 지금 주소에서 **제 열쇠만** 바꿉니다. */
   function url(){
-    var p = new URLSearchParams();
+    var p = new URLSearchParams(location.search);
+    p.delete("tab"); p.delete("rg"); p.delete("q");
     if(S.tab === "course") p.set("tab", "course");
     if(S.rg) p.set("rg", S.rg);
     if(S.q)  p.set("q",  S.q);
     var s = p.toString();
     return location.pathname + (s ? "?" + s : "");
+  }
+  /* ⚠️⚠️ 메인 찾는 칸은 **권역 키**(capital)를 보냅니다 — 이 탭은 시·도 키로
+     거르므로, 권역이면 그 시·도들로 풉니다. 전에는 rg=capital 로 들어와
+     이 탭을 누르면 늘 「조건에 맞는 골프장이 없습니다」였습니다. */
+  function rgKeys(){
+    if(S.rg && window.amZone && window.amZone(S.rg) && window.amZoneRegions)
+      return window.amZoneRegions(S.rg).join(",");
+    return S.rg;
   }
   function go(push){
     if(push) history.pushState({ cs:1 }, "", url());
@@ -124,7 +136,7 @@
 
     var all = window.amCourseList ? window.amCourseList(KIND) : [];
     var L   = window.amCoursePickCards
-                ? window.amCoursePickCards({ rg:S.rg, q:S.q }, KIND) : all;
+                ? window.amCoursePickCards({ rg:rgKeys(), q:S.q }, KIND) : all;
     if(list){
       list.innerHTML = L.length ? window.amCourseCards(L)
                      : (all.length ? zeroNarrow() : zeroEmpty());

@@ -153,15 +153,24 @@
     }catch(e){ }
   }
 
+  /* ⚠️⚠️ 주소는 **같은 화면의 다른 목록과 나눠 씁니다** (2026-11-14) —
+     /cat/matchup 의 회원 조인(js/join.js)은 when · bk · lv · pp · q 를,
+     /cat/booking 의 골프장 탭(js/courselist.js)은 tab · q 를 씁니다. 전에는 여기서
+     주소를 통째로 지어 그 열쇠들을 지웠습니다. 지금 주소에서 **제 열쇠만** 바꿉니다.
+     ⚠️ rg · d 는 두 목록이 **같은 뜻**으로 같이 읽습니다(지역 · 날짜). */
   function myUrl(d){
-    var q = [];
-    if(S.rg) q.push("rg=" + encodeURIComponent(S.rg));
-    if(d)    q.push("d="  + encodeURIComponent(d));
-    if(S.course) q.push("course=" + encodeURIComponent(S.course));
+    var u;
+    try{ u = new URLSearchParams(window.location.search); }catch(e){ u = null; }
+    if(!u) return window.location.pathname;
+    ["rg","d","course","t","p"].forEach(function(k){ u.delete(k); });
+    if(S.rg) u.set("rg", S.rg);
+    if(d)    u.set("d", d);
+    if(S.course) u.set("course", S.course);
     /* ⚠️ 날짜 띠를 눌러도 **고르신 시간대는 그대로** 들고 갑니다 */
-    if(S.t) q.push("t=" + encodeURIComponent(S.t));
-    if(S.p) q.push("p=" + encodeURIComponent(S.p));
-    return window.location.pathname + (q.length ? "?" + q.join("&") : "");
+    if(S.t) u.set("t", S.t);
+    if(S.p) u.set("p", S.p);
+    var q = u.toString();
+    return window.location.pathname + (q ? "?" + q : "");
   }
   function shortDay(iso){
     var dt = new Date(String(iso) + "T00:00:00Z");   /* ⚠️ 위와 같은 까닭 */
@@ -412,10 +421,17 @@
           (S.p ? ' 가격으로 좁히시면 <b>그린피가 적힌 자리만</b> 나옵니다.' : '') +
           '</p>' +
           '<button type="button" class="btn btn-line tf-all">조건 지우기</button>'
-        : '<h3>아직 올라온 ' + esc(kI) + ' <b>0건</b>입니다.</h3>' +
-          '<p>제휴 골프장이 확인한 자리만 여기에 올라옵니다. ' +
-          '지금은 <b>상담 요청</b>으로 받고 있습니다.</p>' +
-          '<a class="btn btn-pt" href="/match?cat=booking">부킹 상담 요청하기</a>') +
+        : (KIND === "join"
+          /* ⚠️ /cat/matchup 의 **업체가 올린 조인 자리**입니다 — 부킹 상담으로
+             보내면 조인을 찾는 분을 엉뚱한 곳으로 보냅니다(2026-11-14). 같은
+             화면의 회원 조인 목록 · 모집 양식으로 보냅니다. */
+          ? '<h3>업체가 올린 ' + esc(kI) + ' 아직 <b>0건</b>입니다.</h3>' +
+            '<p>아래 <b>회원이 연 조인</b>도 함께 보세요. 직접 모집하실 수도 있습니다.</p>' +
+            '<div class="none-b"><a class="btn btn-pt" href="#joinbox">조인 모집하기</a></div>'
+          : '<h3>아직 올라온 ' + esc(kI) + ' <b>0건</b>입니다.</h3>' +
+            '<p>제휴 골프장이 확인한 자리만 여기에 올라옵니다. ' +
+            '지금은 <b>상담 요청</b>으로 받고 있습니다.</p>' +
+            '<a class="btn btn-pt" href="/match?cat=booking">부킹 상담 요청하기</a>')) +
     '</div>';
   }
 
@@ -638,11 +654,16 @@
         /* ⚠️⚠️ **"완료" 라고 적지 않습니다** — 업체가 확정해야 잡힙니다 */
         '<p>업체가 확인한 뒤 확정 여부를 알려 드립니다. ' +
         '진행 상황은 <b>내 정보</b>에서 보실 수 있습니다.</p>' +
-        '<a class="btn btn-pt" href="/my">내 정보에서 보기</a></div>';
+        '<a class="btn btn-pt" href="/my#bkbox">내 정보에서 보기</a></div>';
+      /* ⚠️ 신청한 카드의 「예약 신청」 단추를 거둡니다 — 남겨 두면 누르는 순간
+         이 안내가 지워지고, 한 번 더 누르면 새 양식이 열려 **같은 자리에 두 번**
+         신청하기 쉬웠습니다(2026-11-14). 다시 하시려면 목록을 새로 여시면 됩니다. */
+      var ob = li.querySelector(".tf-book");
+      if(ob) ob.remove();
     }).catch(function(err){
       if(bt) bt.disabled = false;
       /* ⚠️ DB 가 거절한 **그 말**을 그대로 보여 줍니다 */
-      if(msg){ msg.hidden = false; msg.textContent = String(err.message || err); }
+      if(msg){ msg.hidden = false; msg.textContent = window.amErrText(err); }
     });
   });
 
@@ -698,7 +719,14 @@
     readUrl();
     /* ⚠️ 뒤로 가기 · 앞으로 가기 — 날짜 띠 · 찾는 칸이 pushState 를 쓰므로
        이 줄이 없으면 주소만 바뀌고 목록은 그대로였습니다(2026-11-14) */
-    window.addEventListener("popstate", function(){ readUrl(); load(); });
+    /* ⚠️ 골프장 정보 탭에서 생긴 뒤로 가기는 그 탭이 받습니다(courselist) —
+       여기서 가려진 목록을 또 묻지 않습니다. */
+    window.addEventListener("popstate", function(){
+      var tab = "";
+      try{ tab = new URLSearchParams(window.location.search).get("tab") || ""; }catch(e){}
+      readUrl();
+      if(tab !== "course") load();
+    });
     watchDay();
     return load();
   }).catch(function(){});

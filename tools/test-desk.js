@@ -8042,7 +8042,8 @@ function boardsOf(){
         return { done: (bx ? bx.innerText : "").indexOf("매물을 올렸습니다") >= 0,
                  box: !!(bx && bx.querySelector(".lsp")),
                  file: !!(bx && bx.querySelector(".lsp-i")),
-                 my: !!(bx && bx.querySelector('a[href="/my"]')) };
+                 /* ⚠️ 내 정보의 **그 상자**(/my#lsmine)로 가도 같은 길입니다 */
+                 my: !!(bx && bx.querySelector('a[href="/my"], a[href^="/my#"]')) };
       });
       ok("⚠️⚠️ 0068 — 올린 **그 자리에서 사진 상자**가 열린다",
          dn.done && dn.box && dn.file, JSON.stringify(dn));

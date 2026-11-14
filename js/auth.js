@@ -594,3 +594,48 @@ window.amPathSoft = function(path, opt, go){
     return go(p2).then(window.amRows).then(function(x){ x.miss = gone; return x; });
   });
 };
+
+/* ⚠️⚠️ **주소의 #자리로 늦게라도 갑니다** (2026-11-14) — 「내 정보에서 보기」
+   (/my#bkbox)나 로그인 뒤 돌아오는 자리(/cat/used#lsbox)는 그 상자를 **화면이
+   나중에** 그립니다. 브라우저는 처음 열 때 한 번만 #자리로 가므로, 그때 아직
+   숨어 있던 상자로는 안 가고 맨 위에 남았습니다(누른 단추가 아무 일도 안 한
+   것처럼 보입니다). 그 상자가 보이게 되면 **한 번** 그리로 갑니다.
+   ⚠️ 손님이 먼저 화면을 움직이면(휠 · 터치 · 키) 멈춥니다 — 읽고 계신 자리를
+   빼앗지 않습니다. ⚠️ 매직링크 토큰(#access_token=…)은 건드리지 않습니다. */
+(function(){
+  var h = "";
+  try{ h = decodeURIComponent(String(window.location.hash || "").slice(1)); }catch(e){ return; }
+  if(!/^[A-Za-z][A-Za-z0-9_-]{0,40}$/.test(h)) return;
+  var stop = false, n = 0;
+  function off(){ stop = true; }
+  ["wheel","touchstart","keydown"].forEach(function(k){
+    window.addEventListener(k, off, { once:true, passive:true });
+  });
+  function tick(){
+    if(stop || ++n > 40) return;
+    var el = document.getElementById(h);
+    if(el && el.getClientRects().length && el.getBoundingClientRect().height > 8){
+      var r = el.getBoundingClientRect();
+      if(r.top < 0 || r.top > window.innerHeight * 0.6){
+        try{ el.scrollIntoView({ block:"start" }); }catch(_){ }
+      }
+      return;
+    }
+    setTimeout(tick, 200);
+  }
+  if(document.readyState === "loading")
+    document.addEventListener("DOMContentLoaded", function(){ setTimeout(tick, 300); });
+  else setTimeout(tick, 300);
+})();
+
+/* ⚠️⚠️ **손님에게 보이는 실패 문장** (2026-11-14) — 양식들이 `err.message` 를
+   그대로 찍어, 그물이 끊기면 영문 「Failed to fetch」가, 500 이면 HTML 원문이,
+   제약 위반이면 `new row violates check constraint …` 가 손님 화면에 나왔습니다.
+   문(RPC)이 적어 둔 **한국어 거절**은 그대로 둡니다(그것이 까닭입니다 — 우리가
+   고쳐 쓰면 까닭이 바뀝니다). 한글이 하나도 없는 말만 바꾸고 원문은 개발 기록에. */
+window.amErrText = function(err, fall){
+  var m = String((err && err.message) || err || "");
+  if(m && /[가-힣]/.test(m) && m.length <= 300 && m.indexOf("<") < 0) return m;
+  try{ console.warn("[form] 보내기 실패 원문:", m); }catch(_){ }
+  return (fall || "지금 처리하지 못했습니다.") + " 연결이 잠깐 끊겼을 수 있습니다 — 잠시 뒤 다시 눌러 주세요.";
+};

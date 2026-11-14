@@ -663,7 +663,9 @@ const FAKE = "https://sb-test.supabase.co";
     ok("요청번호를 그대로 보여 준다", r.text.indexOf("SW-9Z8Y-7X6W") >= 0,
        r.text.slice(0, 120).replace(/\n/g, " | "));
     ok("로그인하셨으면 **내 정보로 가는 단추**를 낸다",
-       r.hrefs.indexOf("/my") >= 0, r.hrefs.join(" · "));
+       /* ⚠️ 내 정보의 **그 상자**(/my#reqbox)로 가도 같은 길입니다 */
+       r.hrefs.some(function(h){ return h === "/my" || h.indexOf("/my#") === 0; }),
+       r.hrefs.join(" · "));
     ok("  거기서 견적을 나란히 보고 고른다고 적는다",
        r.text.indexOf("나란히") >= 0, r.text.slice(0, 400).replace(/\n/g, " | "));
     /* ⚠️⚠️ 밖으로 안 보냅니다 (0050) — 그 사실을 적습니다 */

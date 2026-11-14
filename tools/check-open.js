@@ -143,18 +143,21 @@ LOOK.forEach(r => line(r[0], r[1], r[2], "look"));
 const migs = fs.readdirSync(path.join(ROOT, "db/migrations"))
   .filter(f => /^\d{4}_.*\.sql$/.test(f) && !/_down\.sql$/.test(f)).sort();
 const last = migs[migs.length - 1].slice(0, 4);
-const applyTxt = fs.readFileSync(path.join(ROOT, "db/apply-from-0008.sql"), "utf8");
-const applyHas = applyTxt.indexOf(migs[migs.length - 1].replace(/\.sql$/, "")) >= 0;
 
 console.log("\n④ 사장님이 **바깥에서** 하실 것 — ⚠️ 여기서는 못 봅니다");
 console.log("   (저장소만 보고 됐다 · 안 됐다를 말할 수 없어서, 확인한 척하지 않습니다)");
-console.log("   □ Supabase → SQL Editor 에 db/apply-from-0008.sql 붙여넣기");
-console.log("     · 지금 파일이 담는 범위 0008 ~ " + last +
-            (applyHas ? "  ✅ 마지막 번호까지 들어 있습니다"
-                      : "  ⚠️ 마지막 번호가 안 들어 있습니다 — node tools/make-apply.js"));
-console.log("     · ⚠️ 운영에는 0001~0007 만 돌아가 있습니다 (두 번 붙여 넣어도 안전합니다)");
+/* ⚠️ 2026-11-14 — 운영 DB 에 0001~0081 을 올렸습니다(docs/db-apply-status.md).
+   **같은 파일을 다시 붙여 넣지 않습니다.** 0082 부터는 db/pre-apply.sql 을
+   먼저 돌리고 그 번호만 올린 뒤 db/post-apply.sql 로 권한을 되돌립니다. */
+console.log("   ■ 운영 DB — 0001~0081 적용 · 권한 복원 · 검증 완료 (2026-11-14 · docs/db-apply-status.md)");
+console.log("     · 이 저장소의 마지막 번호 " + last + (last === "0081"
+            ? "  ✅ 운영과 같습니다"
+            : "  ⚠️ 운영보다 새 번호가 있습니다 — db/pre-apply.sql → 그 번호만 → db/post-apply.sql"));
 console.log("   □ Supabase → Authentication 에서 사장님 UID 로 관리자 만들기 (SQL 로만)");
-console.log("   □ Vercel → SUPABASE_URL · SUPABASE_ANON_KEY 넣고 **다시 배포**");
+/* ⚠️ 2026-11-14 운영 /api/session 이 auth:true 를 돌려주었습니다 — 두 값은 들어가 있습니다.
+   /api/upload 는 전부 false 였습니다 — service key 와 버킷 가운데 무엇이 빠졌는지는
+   그 답만으로 가를 수 없습니다(미확인). */
+console.log("   ■ Vercel → SUPABASE_URL · SUPABASE_ANON_KEY — 운영 /api/session 이 auth:true (2026-11-14 확인)");
 console.log("     · 넣는 순간 로그인 · 입점 신청 · 매칭 요청 · **고객센터 문의**가 켜집니다");
 console.log("     · ⚠️ Vercel 은 떠 있는 함수에 값을 밀어 넣지 않습니다 — 다시 배포해야 켜집니다");
 /* ⚠️⚠️⚠️ **사진을 올리는 길은 이 키가 있어야 섭니다 — 2026-11-12 에

@@ -13,8 +13,8 @@
 | 5 | `0070_listing_unhide.sql` | ✅ 적용 | 06:29 적용 · 06:31 확인 | 판 70 · `listing.hidden_from` 있음 |
 | 6 | `0071_pro_self.sql` | ✅ 적용 | 06:31 적용 · 09:20 확인 | 판 71 · `provider_apply.by_user` · provider 칸 3 · 문 2 |
 | 7 | `0072_job_fields.sql` | ✅ 적용 | 09:27 적용 · 확인 | 판 72 · jobpost 칸 4 (09:21 에 0071 이 한 번 더 돌았으나 오류·변화 없음) |
-| 8 | `0073_trip.sql` | ⏳ 다음 | | 판 73 · `trip` 생김 ⚠️ 트랜잭션 없음 |
-| 9 | `0074_range_facility.sql` | 대기 | | 판 74 ⚠️ 트랜잭션 없음 |
+| 8 | `0073_trip.sql` | ✅ 적용 | 09:30 적용 · 09:31 확인 | 판 73 · `trip` · `tripphoto` · `v_trip_photo_mine` 있음 · anon 표 접근 없음 |
+| 9 | `0074_range_facility.sql` | ⏳ 다음 | | 판 74 ⚠️ 트랜잭션 없음 |
 | 10 | `0075_cq_thumb.sql` | 대기 | | 판 75 ⚠️ 트랜잭션 없음 |
 | 11 | `0076_fitting.sql` | 대기 | | 판 76 ⚠️ 트랜잭션 없음 |
 | 12 | `0077_trip_depart.sql` | 대기 | | 판 77 ⚠️ 트랜잭션 없음 |

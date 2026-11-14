@@ -12,8 +12,8 @@
 | 4 | `0069_listing_market.sql` | ✅ 적용 | 06:27 적용 · 06:28 확인 | 판 69 · `listingfav` 있음 · 16표 지문 동일 |
 | 5 | `0070_listing_unhide.sql` | ✅ 적용 | 06:29 적용 · 06:31 확인 | 판 70 · `listing.hidden_from` 있음 |
 | 6 | `0071_pro_self.sql` | ✅ 적용 | 06:31 적용 · 09:20 확인 | 판 71 · `provider_apply.by_user` · provider 칸 3 · 문 2 |
-| 7 | `0072_job_fields.sql` | ⏳ 다음 | | 판 72 ⚠️ 트랜잭션 없음 |
-| 8 | `0073_trip.sql` | 대기 | | 판 73 · `trip` 생김 ⚠️ 트랜잭션 없음 |
+| 7 | `0072_job_fields.sql` | ✅ 적용 | 09:27 적용 · 확인 | 판 72 · jobpost 칸 4 (09:21 에 0071 이 한 번 더 돌았으나 오류·변화 없음) |
+| 8 | `0073_trip.sql` | ⏳ 다음 | | 판 73 · `trip` 생김 ⚠️ 트랜잭션 없음 |
 | 9 | `0074_range_facility.sql` | 대기 | | 판 74 ⚠️ 트랜잭션 없음 |
 | 10 | `0075_cq_thumb.sql` | 대기 | | 판 75 ⚠️ 트랜잭션 없음 |
 | 11 | `0076_fitting.sql` | 대기 | | 판 76 ⚠️ 트랜잭션 없음 |

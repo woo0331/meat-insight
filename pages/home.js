@@ -1,434 +1,260 @@
 /* ════════════════════════════════════════════════════════════════════
-   메인 화면 — 지시서 3번 "메인페이지 구성" · 첨부 시안
+   메인 화면 — 「예약 검색 우선형」 확정 시안 (docs/spec/00-main.webp · 2026-11-14)
 
-   ⚠️⚠️ **여기 적는 글이 곧 구글에 나가는 글입니다.** build.js 가 이
-   글자를 그대로 index.html 에 넣습니다 — 화면과 크롤러 본문이 어긋날
-   길이 없습니다. 그래서 **지킬 수 없는 말을 적으면 그대로 거짓말이
-   됩니다** (절대 규칙 5).
+   차례는 시안 그대로입니다 —
+     ① 히어로 + 찾는 칸(골프장 부킹 · 골프 조인 · 골프장 정보)
+     ② 띠 「골프의 모든 순간을, 한곳에서.」
+     ③ 어떤 골프를 찾으세요? (분류 열 칸)
+     ④ 지금, 나에게 필요한 골프 (사진 카드 셋)
+     ⑤ 어디에서 라운드할까요? (지역별 골프장 정보로 가는 길)
+     ⑥ 골프 이야기가 모이는 곳 (커뮤니티 · 조인)
+     ⑦ 띠 「골프 사업의 다음 기회」 (입점)
+     ⑧ 찾고, 비교하고, 연결하세요
+     → 푸터 · 폰 바닥 메뉴
 
-   ⚠️⚠️ **지금 입점업체는 0곳입니다.** 업체 카드를 만들어 채우면 그
-   순간 없는 회사를 광고하는 것이고 표시 · 광고의 공정화에 관한 법률
-   제3조 위반입니다. 0 이면 화면이 **0 이라고 말합니다** — 다만
-   막다른 길로 두지 않고 지금 실제로 되는 것을 같이 냅니다.
+   ⚠️⚠️ **여기 적는 글이 곧 구글에 나가는 글입니다** — 지킬 수 없는 말을
+   적으면 그대로 거짓말이 됩니다(절대 규칙 5).
+   ⚠️⚠️ **지어낸 업체 · 상품 · 숫자를 한 줄도 넣지 않습니다**(절대 규칙 1).
+   시안의 사진은 디자인 예시입니다 — 여기서는 저장소에 이미 있는, 상표를
+   확인한 분류 사진만 씁니다(`js/data/photos.js`).
+   ⚠️ 새 기능을 만들지 않았습니다 — 찾는 칸은 **주소만 짓고** 받는 쪽은
+   이미 있는 `/cat/booking`(`rg` · `d` · `t`) · `/cat/matchup`(`rg` · `d`) ·
+   골프장 정보 탭(`?tab=course` · `rg` · `q`)입니다.
    ════════════════════════════════════════════════════════════════════ */
 var W = global.window, esc = W.esc, icon = W.icon;
-var card = require("./_card.js");
 
-/* ⚠️⚠️ **네 영역은 js/data/catalog.js 의 AM_ZONES 한 곳에서 옵니다**
-   (2차 지시서 §4). 이름도 분류도 여기 다시 적지 않습니다 — 두 곳에
-   적으면 한쪽만 고쳐서 조용히 달라집니다. */
+function catUrl(k){ var c = W.amCat ? W.amCat(k) : null; return c ? W.amCatUrl(c) : "/categories"; }
+/* 골프장 정보 탭으로 가는 주소 — ⚠️ 한 곳에서 짓습니다 */
+function courseUrl(rg){
+  return catUrl("booking") + "?tab=course" + (rg ? "&rg=" + encodeURIComponent(rg) : "");
+}
 
-/* ⚠️⚠️ 시안의 "다양한 혜택 — 특가 · 프로모션 · 이벤트 지속 제공" 은
-   **지금 지킬 수 없는 약속**이라 뺐습니다 (쿠폰도 이벤트도 0건입니다).
-   "검증된 업체" 도 심사가 돌기 전에는 쓸 수 없어서, 실제로 하게 될
-   일(사업자등록 확인)로 바꿔 적었습니다. 나머지 둘은 시안 그대로입니다. */
-var WHY = [
-  { icon:"shield", t:"사업자 확인",
-    d:"사업자등록을 확인한 업체만 등록합니다." },
-  { icon:"bolt",   t:"한눈에 비교",
-    d:"지역 · 가격 · 조건을 같은 기준으로 나란히 봅니다." },
-  { icon:"cal",    t:"간편한 상담",
-    d:"상담 신청부터 업체 연결까지 한곳에서." },
-  { icon:"info",   t:"있는 그대로",
-    d:"업체가 없는 분류는 없다고 말합니다. 숫자를 지어내지 않습니다." }
-];
-
-/* 고객 이용 과정 **셋** (4차 지시서 §5 "고객 이용 방법 3단계").
-   ⚠️ 전에는 넷이었고 앞의 둘("서비스 선택" · "조건 입력")이 실제로는
-   **같은 양식의 윗칸 · 아랫칸**이었습니다 — 손님에게는 한 걸음입니다.
-   ⚠️⚠️ 여기 적은 것은 **실제로 그렇게 돌아야 합니다**. 그래서 "예약" 을
-   뺐습니다 — 우리가 예약을 잡아 드리는 장치가 없습니다 (부킹 자료가
-   0건입니다). 예약은 손님과 업체가 직접 하십니다 (§6 · 절대 규칙 5). */
-var STEPS = [
-  { n:"01", t:"조건 남기기",     d:"필요한 골프 서비스와 지역 · 예산 · 일정을 한 양식에 적습니다." },
-  { n:"02", t:"업체 제안 비교",   d:"여러 업체의 제안을 같은 기준으로 나란히 놓고 봅니다." },
-  { n:"03", t:"상담 · 거래",     d:"마음에 드는 업체와 바로 진행합니다." }
-];
-
-/* 시안 가운데의 매칭 띠 — ⚠️ 여기 적는 셋은 **매칭이 실제로 하는 일**
-   입니다. 지키지 못할 말을 적으면 그대로 거짓말이 됩니다. */
-/* 히어로 아래의 믿음 줄 넷 (3차 시안) — ⚠️⚠️ **시안의 "검증된 업체
-   연결" 을 그대로 쓰지 않았습니다.** "검증" 은 우리가 무엇을 얼마나
-   봤는지 말해 주지 않는 말이고, 지금 실제로 하는 것은 **사업자등록을
-   확인하는 것**입니다 (provider.verified 는 플랫폼이 서류를 본 뒤에만
-   켜집니다 — 업체가 스스로 못 켭니다). 할 수 있는 말로 적습니다
-   (절대 규칙 1 · 5 · 지시서의 "실제 검증 프로세스가 존재하는 경우에만").
-   ⚠️ 아래 "일하는 방식" 이 같은 넷을 **풀어서** 적습니다 — 여기는
-   이름표, 거기는 설명입니다. 두 곳의 뜻이 어긋나면 안 됩니다. */
-/* ⚠️⚠️ **전에는 이 셋이 바로 위 "이용 방법" 과 같은 말이었습니다** —
-   "원하는 조건만 입력하면 / 여러 업체가 제안하고 / 비교 후 선택할 수
-   있어요" 는 01 · 02 · 03 을 그대로 다시 적은 것입니다 (§5 "매칭 배너와
-   히어로에서 동일한 내용을 장황하게 반복하지 않는다").
-   ⚠️ 흐름 설명은 이용 방법 셋이 합니다. 여기는 **거기서 말하지 않는 것**
-   만 적습니다 — 전부 지금 실제로 참인 내용입니다:
-     ① 업체가 0곳이어도 요청은 들어갑니다 (make_request · 0029)
-     ② 요청은 무료입니다
-     ③ 연락처는 업체가 정해진 뒤에 **다시 동의를 받고** 넘어갑니다
-        (개인정보보호법 제17조 제2항 — agree3rd_at 을 비운 채 넣습니다) */
-var MATCH_WHY = [
-  "아직 업체가 등록되지 않은 분야도 요청은 들어갑니다",
-  "요청은 무료이고, 적는 동안 비용이 생기지 않습니다",
-  "성함 · 연락처는 업체가 정해진 뒤에 다시 여쭙고 넘깁니다"
-];
-
+/* ── ① 히어로 + 찾는 칸 ─────────────────────────────────────────────
+   ⚠️⚠️ **양식(form)입니다** — 자바스크립트가 꺼져도 GET 으로 `/cat/booking`
+   에 갑니다. 켜져 있으면 `js/homefind.js` 가 날짜 칩을 세우고, 탭에 따라
+   보내는 곳과 칸을 바꿉니다.
+   ⚠️⚠️ **날짜 칩은 빌드가 찍지 않습니다** — 찍으면 배포한 날의 날짜가
+   굳습니다. 빌드는 날짜 고르개(`input type=date`)만 냅니다.
+   ⚠️ 탭은 **링크**입니다(자바스크립트가 꺼진 분 · 봇에게 눌러도 아무 일이
+   안 나는 칸이 되지 않게 — 절대 규칙 5). */
 function hero(){
-  var B = W.AM_BRAND;
-  /* ⚠️⚠️ **사진이 없으면 그냥 딥그린 그대로입니다** — 빈 회색 액자를
-     두지 않습니다 (절대 규칙 2). 사진이 들어오면 **뒤에 깔리고**
-     그 위에 딥그린 막이 덮습니다.
-     ⚠️⚠️ 글자 대비는 **막이 책임집니다** — 사진이 밝든 어둡든 흰 글자가
-     AA 를 넘도록, 막을 거의 불투명하게 둡니다 (tools/contrast.js 로
-     잽니다). 사진을 넣었다고 대비가 흔들리면 안 됩니다.
-     ⚠️ `aria-hidden` 입니다 — 배경 장식이라 소리로 읽을 것이 없습니다.
-     (`alt` 는 photos.js 가 들고 있고, 글이 주인공인 자리에서 씁니다.) */
   var ph = W.amPhoto ? W.amPhoto("hero") : null;
-  return '<section class="hero' + (ph ? " hero-ph" : "") + '">' +
-    /* ⚠️⚠️ 그림 한 장을 그리는 자리는 **photos.js 한 곳**입니다 —
-       srcset · sizes · width · height 를 화면마다 따로 적으면 한 곳에만
-       붙고 나머지는 조용히 큰 파일을 받습니다. */
-    (ph ? W.amPhotoImg("hero", { cls:"hero-bg", eager:true }) : "") +
-    '<div class="wrap hero-in">' +
-    '<p class="hero-kick">' + esc(B.en) + '</p>' +
-    /* ⚠️⚠️ **글자는 최종 디자인 지시서 1번이 준 그대로**입니다 (2026-11-08).
-       ⚠️ 상호는 `AM_BRAND` 에서 옵니다 — 글자로 박으면 상호를 고치는 날
-       여기만 옛 이름으로 남습니다. */
-    '<h1>골프의 모든 것을 한곳에<br><b>' + esc(B.name) + '</b></h1>' +
-    /* ⚠️⚠️⚠️ **"예약 확정" · "직접 판매" 를 적지 않습니다** — 저희는
-       중개자이고 결제를 받지 않습니다 (지시서 §7 · 절대 규칙 5). */
-    '<p class="hero-sub">레슨 · 부킹 · 조인 · 중고장터 · 용품 · 여행까지<br>' +
-      '골프 라이프의 모든 서비스를 만나보세요!</p>' +
-    /* ⚠️⚠️ **두 단추는 서로 다른 일을 합니다** (2차 지시서 §3-B).
-       업체 직접 찾기 = 손님이 고르고 비교 · 매칭 요청 = 업체가 제안.
-       같은 곳으로 보내면 지시서가 못 박은 것을 어깁니다. */
-    '<div class="hero-cta">' +
-      /* ⚠️⚠️ 지시서 1번이 **'서비스 전체보기'** 를 첫 단추로 못 박았습니다.
-         ⚠️ 보내는 자리는 `/categories` 입니다 — 열 분류가 다 있는 화면이고,
-         업체가 0곳인 동안 `/search` 로 보내면 "아직 없습니다" 만 보십니다. */
-      /* ⚠️⚠️ **단추는 하나입니다** (2026-11-08 · 시안) — '서비스 전체보기'.
-         ⚠️ 매칭 요청으로 가는 길은 없어지지 않았습니다 — 메인의 매칭 띠,
-         푸터의 '이용 안내' 칸, 업체가 0곳인 자리의 상자에 있습니다. */
-      '<a class="btn btn-gold" href="/categories">' + icon("menu",20) +
-        '서비스 전체보기' + icon("arrow",18) + '</a>' +
+  var Z = W.AM_REGION_ZONES || [];
+  var B = W.AM_TEE_BAND || [];
+  var tab = function(k, href, ic, name, on){
+    return '<a class="hm-tab' + (on ? " on" : "") + '" data-hmtab="' + k + '" href="' +
+      esc(href) + '"' + (on ? ' aria-current="true"' : "") + '>' +
+      icon(ic, 20) + '<span>' + esc(name) + '</span></a>';
+  };
+  return '<section class="hm-hero' + (ph ? " hm-hero-ph" : "") + '">' +
+    (ph ? W.amPhotoImg("hero", { cls:"hm-hero-bg", eager:true }) : "") +
+    '<div class="wrap hm-hero-in">' +
+      '<h1 class="hm-h1">오늘의 라운드, <b>여기서 시작하세요</b></h1>' +
+      '<form class="hm-find" id="hmfind" method="get" action="' + esc(catUrl("booking")) + '">' +
+        '<nav class="hm-tabs" aria-label="무엇을 찾으시나요">' +
+          tab("booking", catUrl("booking"), "cal",  "골프장 부킹", true) +
+          tab("join",    catUrl("matchup"), "flag", "골프 조인",  false) +
+          tab("course",  courseUrl(""),     "pin",  "골프장 정보", false) +
+        '</nav>' +
+        '<div class="hm-days" id="hmdays">' +
+          '<label class="hm-date" for="hm-d">' + icon("cal", 18) +
+            '<span>날짜 선택</span>' +
+            '<input id="hm-d" name="d" type="date"></label>' +
+        '</div>' +
+        /* 골프장 정보 탭에서만 쓰는 칸 — ⚠️ 처음에는 **꺼 둡니다**(disabled 는
+           보내지 않습니다). 자바스크립트가 없으면 이 탭은 링크로 갑니다. */
+        '<input type="hidden" name="tab" value="course" disabled data-hmonly="course">' +
+        '<div class="hm-q" data-hmonly="course" hidden>' +
+          '<label class="sr" for="hm-q">골프장 이름</label>' +
+          '<input id="hm-q" name="q" type="search" maxlength="40" disabled ' +
+            'placeholder="골프장 이름 · 지역으로 찾기"></div>' +
+        '<div class="hm-row">' +
+          '<div class="hm-sel" data-hmhide="course">' + icon("pin", 18) +
+            '<label class="sr" for="hm-rg">지역</label>' +
+            '<select id="hm-rg" name="rg"><option value="">지역 전체</option>' +
+            Z.map(function(z){
+              return '<option value="' + esc(z.key) + '">' +
+                esc(W.amZoneLong ? W.amZoneLong(z.key) : z.name) + '</option>';
+            }).join("") + '</select></div>' +
+          (B.length
+            ? '<div class="hm-sel" data-hmhide="join course">' + icon("clock", 18) +
+              '<label class="sr" for="hm-t">시간대</label>' +
+              '<select id="hm-t" name="t"><option value="">전체 시간</option>' +
+              B.map(function(b){
+                return '<option value="' + esc(b.key) + '">' + esc(b.name) +
+                  ' ' + esc(b.lead) + '</option>';
+              }).join("") + '</select></div>'
+            : '') +
+          '<button type="submit" class="btn btn-pt hm-go">' + icon("search", 20) +
+            '<span id="hm-go-t">티타임 찾기</span></button>' +
+        '</div>' +
+        /* ⚠️⚠️ 시안의 이 한 줄은 **우리 코드의 참**입니다 — 신청은 `applied`
+           로 들어가고 확정은 업체만 합니다(0060). 탭마다 맞는 말로 바꿉니다. */
+        '<p class="hm-note" id="hm-note">' + icon("info", 16) +
+          '<span>예약 신청 후 업체 확인을 거쳐 확정됩니다</span></p>' +
+      '</form>' +
     '</div>' +
-    /* ⚠️ 아이콘은 장식이라 소리로 읽을 것이 없습니다 — icon() 이
-       aria-hidden 을 답니다. 글은 그 옆에 그대로 있습니다. */
-  '</div>' +
-    /* ⚠️⚠️ **믿음 줄을 뺐습니다** (UX 검수 §6 · §7). 아래 "일하는 방식"
-       구간이 **같은 넷을 같은 아이콘으로** 말하고 있었습니다 —
-       사업자 확인 · 한눈에 비교 · 간편한 상담 · 있는 그대로.
-       짧은 쪽을 빼고 **설명이 있는 쪽**을 남겼습니다 (짧은 쪽만 남기면
-       무엇을 확인한다는 것인지 알 수 없습니다).
-       ⚠️ 말을 두 곳에 적어 두면 한쪽만 고치는 날 둘이 다른 말을 합니다. */
   '</section>';
 }
 
-/* ═════════════════════════════════════════════════════════════════════
-   분류로 바로 가는 띄 — 시안의 히어로 바로 아래 줄 (2026-11-07)
-
-   ⚠️⚠️ 아래 `cats()` 와 **하는 일이 다릅니다** — 여기는 첫 화면에서
-   바로 누르는 **길**이고(아이콘 + 이름뿐), 그쪽은 사진과 한 줄 설명으로
-   **무엇인지 보여 주는** 자리입니다. 그래서 둘 사이에 부킹 띠가 들어갑니다.
-   ⚠️⚠️⚠️ **이름을 글자로 적지 않습니다** — `AM_CATS` 한 곳에서 끌어옵니다.
-   두 벌로 적으면 분류를 고치는 날 한쪽만 바뀝니다(주소도 `amCatUrl()` 한 함수).
-   ⚠️⚠️ **가로로 밀게 두지 않습니다**(`flex-wrap:wrap`) — 머리말 메뉴에서 겪은
-   "**밀면 보이는 것은 보이는 것이 아닙니다**" 가 그대로 나는 자리입니다.
-   ⚠️ 히어를 덮고 올라오는 것이 이제 **이 띄**입니다(전에는 `.cats-in`) —
-   겹침값을 건드리는 날 히어의 단추가 가려지는지 찍어서 보세요.
-   ═════════════════════════════════════════════════════════════════════ */
-function quickNav(){
-  return '<section class="qnav" aria-labelledby="qn-h"><div class="wrap">' +
-    '<h2 id="qn-h" class="sr">분류로 바로 가기</h2>' +
-    '<div class="qnav-in">' +
-    W.AM_CATS.map(function(c){
-      return '<a class="qn" href="' + esc(W.amCatUrl(c)) + '">' +
-        '<span class="qn-ic">' + icon(c.icon, 24) + '</span>' +
-        '<span class="qn-n">' + esc(c.name) + '</span>' +
-      '</a>';
-    }).join("") +
-    '</div></div></section>';
-}
-
-/* ⚠️⚠️⚠️ **분류 열 장 격자도 2026-11-07 에 메인에서 빠졌습니다.**
-   지시서 A-3 은 "10개 카테고리 아이콘(기존 유지)" 이고, 그 자리를
-   `quickNav()` 가 받았습니다(아이콘 열 칸). 같은 분류를 사진 카드로
-   한 번 더 깔면 A 가 말한 **중복**입니다.
-   ⚠️ 분류 사진(`cat-*`)은 죽지 않았습니다 — `svcCards()` 의 넷 ·
-   `/categories` · `/cat/<key>` 가 그대로 씩니다. */
-
-/* ════════════════════════════════════════════════════════════════════
-   날짜 · 지역별 현황 (0060 · 지시서 §5)
-
-   ⚠️⚠️ **알맹이는 브라우저가 그립니다** (`js/teeboard.js`) — 자리는 날마다
-   바뀌므로 빌드 때 찍으면 **배포할 때만** 바뀝니다. 그래서 여기서는
-   **무엇을 보는 자리인지**만 찍습니다 (크롤러 · 자바스크립트 꺼진 분 몫).
-   ⚠️ 그 설명을 지우면 봇에게는 빈 상자입니다.
-   ⚠️⚠️⚠️ **0 을 포장하지 않습니다** — 부킹은 제휴 골프장이 확인한
-   티타임만 올라오고 지금 0건입니다. 그 사실과 **지금 되는 길**을
-   브라우저가 표 아래에 적습니다 (절대 규칙 1 · 2).
-   ════════════════════════════════════════════════════════════════════ */
-function teeBoard(){
-  return '<section class="sec sec-alt" aria-labelledby="tbd-h"><div class="wrap">' +
-    '<div class="sec-hd"><h2 id="tbd-h">원하는 날짜와 지역의 자리 찾기</h2>' +
-    '<p>제휴 골프장이 올린 <b>티타임</b>과 회원이 연 <b>조인</b>을 ' +
-    '날짜 · 지역으로 나눠 보여 드립니다. ' +
-    /* ⚠️⚠️ 지어낸 약속을 하지 않습니다 — 예약을 대신 잡아 드리지 않습니다 */
-    '골프올인원은 거래 당사자가 아니며 <b>결제를 받지 않습니다.</b> ' +
-    '예약 신청을 보내시면 업체가 확인하고 확정합니다.</p></div>' +
-    '<div id="teeboard" hidden></div>' +
-    '</div></section>';
-}
-
-/* ⚠️⚠️⚠️ **네 묶음 카드는 2026-11-07 에 메인에서 빠졌습니다.**
-   최종 작업지시서 A 가 "기존 10개 이미지 카테고리 반복 영역은 위
-   서비스 카드 / 실제 콘텐츠로 대체하여 중복 축소" 라고 적었고,
-   그 자리를 `svcCards()` 가 받았습니다.
-   ⚠️⚠️ **함수를 남겨 두지 않고 지웠습니다** — 부르는 자리가 0곳인
-   함수를 남겨 두면 다음에 읽는 사람이 "메인에 이 카드가 있다" 고
-   읽습니다(주석이 코드와 다른 자리를 여섯 번 겪은 저장소입니다).
-   ⚠️ 그 카드가 쓰던 사진 넷(`zone-*`)은 **`/categories` 의 묶음 머리**로
-   옮겨 놓았습니다 — 그냥 두면 저장소에 파일만 남고 **아무 데도 안
-   나오는** 자리가 됩니다(`test-photos` 가 그것을 잡았습니다). */
-
-function why(){
-  return '<div class="pair-c">' +
-    '<div class="why">' +
-      /* ⚠️ 조사를 글자로 박지 않습니다 — 이름이 바뀌면 "골프파크이" 가
-         됩니다. 받침에 따라 갈리는 일은 koWith() 한 곳에서 합니다. */
-      '<p class="why-t">' + esc(W.koWith(W.AM_BRAND.name, "이가")) + '<br>일하는 방식</p>' +
-      WHY.map(function(w){
-        return '<div class="why-i">' + icon(w.icon, 24) +
-          '<div><h3>' + esc(w.t) + '</h3><p>' + esc(w.d) + '</p></div></div>';
-      }).join("") +
+/* ── ② 띠 — 골프의 모든 순간을, 한곳에서. ─────────────────────────── */
+function band(){
+  var bp = W.amPhoto ? W.amPhoto("match-banner") : null;
+  return '<section class="sec hm-s"><div class="wrap">' +
+    '<div class="hm-band' + (bp ? " hm-band-ph" : "") + '">' +
+      (bp ? W.amPhotoImg("match-banner", { cls:"hm-band-bg" }) : "") +
+      '<div class="hm-band-t">' +
+        '<p class="hm-kick">YOUR GOLF, ALL IN ONE</p>' +
+        '<h2>골프의 모든 순간을, <b>한곳에서.</b></h2>' +
+        '<p>라운드부터 장비, 레슨과 여행까지. 나에게 맞는 골프를 찾아보세요.</p>' +
+        '<p class="hm-band-go">' +
+          '<a class="btn btn-pt" href="/categories">골프 서비스 찾기' + icon("arrow", 18) + '</a>' +
+          '<a class="hm-link" href="' + esc(courseUrl("")) + '">골프장 둘러보기' + icon("arrow", 18) + '</a>' +
+        '</p>' +
+      '</div>' +
     '</div>' +
-  '</div>';
-}
-
-/* ⚠️⚠️ 입점업체 0곳 — 카드를 지어내지 않습니다. 대신 지금 실제로
-   되는 것(입점 신청 · 분류 둘러보기)을 같이 냅니다. */
-function providers(){
-  var list = W.amProviders();
-  if(list.length){
-    /* ⚠️ 최근 여섯 곳만 — 메인이 목록 화면이 되면 분류 화면이 할 일이
-       없어집니다. 전부 보는 길은 분류 · 업체찾기입니다.
-       ⚠️ 평점 · 후기 수는 값으로 들고 있지 않습니다 (절대 규칙 1). */
-    /* ⚠️ 제목 줄에 "더 보기" 를 둡니다 (시안) — 아래에 같은 단추를 또
-       두지 않습니다 (같은 단추가 두 번 이어 붙어 있던 자리입니다). */
-    return '<div class="pair-c">' +
-      '<div class="sec-hd sec-hd-r"><h2>신규 입점업체</h2>' +
-      '<a class="btn btn-sm btn-line" href="/search">더 보기</a></div>' +
-      '<p class="nw-lead">지금 ' + W.won(list.length) + '곳이 등록되어 있습니다.</p>' +
-      card.grid(list.slice(0, 6)) +
-    '</div>';
-  }
-  /* ⚠️⚠️ **입점 단추를 여기 두지 않습니다** (UX 검수 §7). 바로 아래
-     띠가 "골프 관련 사업자라면 지금 바로 입점하세요" 로 같은 말을
-     합니다 — 같은 단추가 두 번 이어 붙어 있었습니다.
-     ⚠️ 그리고 이 구간을 읽는 사람은 **업체를 찾는 손님**입니다. 손님이
-     읽는 자리에서 입점을 권하면 자리가 어긋납니다.
-     ⚠️⚠️ 그래도 **막다른 길로 두지 않습니다** — 지금 실제로 되는 것
-     (요청을 남겨 두는 것)을 한 줄로 말합니다. 그 길은 바로 위
-     "한 번에 견적 · 매칭 요청하기" 띠입니다. */
-  /* ⚠️⚠️⚠️ **업체를 기다리는 동안 할 수 있는 것을 같이 냅니다**
-     (지시서 §7 · 2026-11-05). 업체가 0곳이어도 **회원끼리 되는 것**이
-     셋 있습니다 — 조인 · 커뮤니티 · 구인 · 구직 (0046 · 0047 · 0048).
-     전에는 "업체가 등록되면 여기에 바로 보입니다" 로 끝나서, 손님이
-     할 수 있는 일이 **기다리는 것뿐**인 것처럼 보였습니다.
-     ⚠️ 그래도 **입점 권유는 여기 두지 않습니다** — 이 구간을 읽는
-     사람은 업체를 찾는 손님이고, 바로 아래 띠가 입점을 말합니다
-     (같은 단추가 두 번 이어 붙어 있던 자리입니다).
-     ⚠️ 줄은 `amOpenNow()` 한 곳에서 옵니다 (업체찾기의 0곳 상자와
-     **같은 줄**을 읽습니다 — 두 곳에 적으면 조용히 어긋납니다). */
-  var now = (W.amOpenNow ? W.amOpenNow() : []);
-  return '<div class="pair-c">' +
-    /* ⚠️ 0곳이어도 "더 보기" 는 **업체찾기**로 갑니다 — 거기도 0곳이라고
-       말하는 자리이고, 막다른 길이 아닙니다 (절대 규칙 2). */
-    '<div class="sec-hd sec-hd-r"><h2>신규 입점업체</h2>' +
-    '<a class="btn btn-sm btn-line" href="/search">더 보기</a></div>' +
-    '<div class="none">' +
-      '<h2>아직 입점한 업체가 없습니다.</h2>' +
-      /* ⚠️⚠️ 2026-11-11 — 세 문장이 거의 같은 말이라 두 문장으로 줄였습니다
-         (폰에서 이 구간이 666px 였습니다). 줄이면서도 **지어내지 않는다**와
-         **언제 보이나** 둘은 남깁니다 — 그 둘이 이 상자가 하는 말입니다. */
-      '<p>없는 업체를 지어내 보여 드리지 않습니다. 업체가 등록되면 여기에 바로 보입니다.</p>' +
-      (now.length
-        ? '<p class="none-or">업체를 기다리지 않고 지금 하실 수 있는 것</p>' +
-          '<div class="none-b">' + now.map(function(x){
-            return '<a class="btn btn-line" href="' + esc(x.href) + '">' +
-              icon(x.icon, 18) + esc(x.label) + '</a>';
-          }).join("") + '</div>'
-        : '') +
-    '</div>' +
-  '</div>';
-}
-
-function steps(){
-  /* ⚠️⚠️ 차례를 **화살표로 잇습니다** (3차 시안). 화살표는 장식이라
-     `aria-hidden` 입니다 — 소리로 듣는 분께는 01 · 02 · 03 · 04 가
-     이미 차례를 말합니다. ⚠️ 폰에서는 화살표가 **아래를 가리켜야**
-     맞는데, 돌려 그리면 CSS 한 줄로 끝납니다 (글은 그대로입니다). */
-  return '<section class="sec sec-alt"><div class="wrap">' +
-    '<div class="sec-hd"><h2>이용 방법</h2></div>' +
-    '<ol class="steps">' + STEPS.map(function(s, i){
-      return (i ? '<li class="steps-a" aria-hidden="true">' + icon("arrow", 20) + '</li>' : "") +
-        '<li class="step"><p class="step-n">' + esc(s.n) + '</p>' +
-        '<h3>' + esc(s.t) + '</h3><p>' + esc(s.d) + '</p></li>';
-    }).join("") + '</ol>' +
-    /* 흐름을 읽은 바로 다음이 누를 자리입니다 */
-    matchBand() +
-    /* ⚠️ 머리말에서 뺀 이용안내로 가는 길 셋 가운데 하나입니다
-       (UX 검수 §3) — 흐름을 설명한 바로 다음이 그 글을 읽을 자리입니다. */
-    '<p class="steps-go"><a class="btn btn-line" href="/guide">' +
-      icon("info", 18) + '이용안내 자세히 보기</a></p>' +
   '</div></section>';
 }
 
-/* ⚠️ 히어로의 두 번째 단추와 **같은 곳**으로 갑니다 (/match).
-   두 곳에 서로 다른 주소를 적으면 한쪽만 고쳐서 어긋납니다. */
-function matchBand(){
-  /* ⚠️⚠️ 사진이 **뒤에 깔립니다** — 글은 왼쪽의 밝은 판 위에 앉습니다.
-     그래서 이 자리는 히어로와 달리 **막을 깔지 않습니다**: 사진이
-     그대로 보여야 시안처럼 됩니다. 대신 글이 앉는 왼쪽은 흰 판이
-     받치므로 대비가 사진에 흔들리지 않습니다 (판이 책임집니다).
-     ⚠️ 사진이 없으면 연초록 면 그대로입니다 — 빈 액자를 두지 않습니다. */
-  var mp = W.amPhoto ? W.amPhoto("match-banner") : null;
-  /* ⚠️ 제 구간을 갖지 않고 **이용 방법 구간 안**에 들어갑니다 (§5 의
-     일곱 차례에 띠가 따로 없습니다). 흐름을 읽은 바로 다음이 누를
-     자리이고, 구간이 하나 줄어 빈 여백도 한 벌 줄었습니다. */
-  return '<div class="mband' + (mp ? " mband-ph" : "") + '">' +
-    (mp ? W.amPhotoImg("match-banner", { cls:"mband-bg" }) : "") +
-    '<div class="mband-t">' +
-      '<h3>업체를 직접 고르기 어려우시면</h3>' +
-      '<ul class="mband-l">' + MATCH_WHY.map(function(t){
-        return '<li>' + icon("check", 18) + esc(t) + '</li>';
-      }).join("") + '</ul>' +
-      '<a class="btn btn-pt" href="/match">지금 매칭 요청하기' + icon("arrow",18) + '</a>' +
-    '</div>' +
-    (mp ? "" : '<div class="mband-s">' + icon("match", 72) + '</div>') +
-  '</div>';
+/* ── ③ 어떤 골프를 찾으세요? ───────────────────────────────────────
+   ⚠️⚠️ 이름 · 아이콘 · 주소는 `AM_CATS` 한 곳에서 옵니다 — 두 벌로 적으면
+   분류를 고치는 날 한쪽만 바뀝니다. */
+function cats(){
+  return '<section class="sec hm-s" aria-labelledby="hm-cat-h"><div class="wrap">' +
+    '<h2 class="hm-h2" id="hm-cat-h">어떤 골프를 찾으세요?</h2>' +
+    '<div class="hm-cats">' + (W.AM_CATS || []).map(function(c){
+      return '<a class="hm-cat" href="' + esc(W.amCatUrl(c)) + '">' +
+        '<span class="hm-cat-ic">' + icon(c.icon, 30) + '</span>' +
+        '<span class="hm-cat-n">' + esc(c.name) + '</span></a>';
+    }).join("") + '</div>' +
+  '</div></section>';
 }
 
-function joinBand(){
-  /* ⚠️ 매칭 띠와 **같은 규칙**입니다 — 사진은 뒤에, 글은 왼쪽 밝은 판
-     위에. 사진이 없으면 연초록 면 그대로입니다. */
-  var pp = W.amPhoto ? W.amPhoto("partner-banner") : null;
-  return '<div class="pair-c">' +
-    '<div class="join' + (pp ? " join-ph" : "") + '">' +
-    (pp ? W.amPhotoImg("partner-banner", { cls:"join-bg" }) : "") +
-    '<span class="join-ic">' + icon("store", 30) + '</span>' +
-    '<div class="join-t"><h3>골프 관련 사업자라면 지금 바로 입점하세요</h3>' +
-    '<p>입점은 무료입니다. 사업자 정보와 하시는 일을 등록하시면 그 일을 찾는 손님에게 이어집니다.</p></div>' +
-    '<a class="btn btn-pri" href="/join">업체 입점하기' + icon("arrow",18) + '</a>' +
-  '</div>';
-}
-
-/* 광고 자리 — ⚠️⚠️⚠️ **전에는 이 자리에 "집행 중인 광고가 0건이라
-   그리지 않습니다" 라는 주석만 있었습니다.** 그런데 0건이라서 안 그린
-   것이 아니라 **그리는 코드가 아예 없었습니다** — `ad_run` 에 줄을 넣고
-   `live` 로 바꿔도 손님 화면에 아무 것도 안 나왔습니다 (주석이 코드와
-   다른 자리의 또 한 판 · 2026-11-06).
-   ⚠️⚠️ **알맹이는 브라우저가 그립니다** (`js/adslot.js`) — 광고는 날짜로
-   켜지고 꺼지므로 빌드가 찍으면 배포할 때만 바뀝니다. 여기서는 **자리만**
-   냅니다. 0건이면 `hidden` 으로 남고, 감싼 구간은 CSS 의 `:has()` 가
-   줄째 가립니다 (빈 광고 액자를 두지 않습니다 · 절대 규칙 2).
-   ⚠️ "광고" 표시는 `js/adslot.js` 가 **보기가 내려준 말**로 붙입니다
-   (표시 · 광고의 공정화에 관한 법률 제3조). */
-/* ════════════════════════════════════════════════════════════════════
-   주요 골프 서비스 넷 (지시서 A-5 · 2026-11-07)
-
-   ⚠️⚠️⚠️ **"인기" 라고 적지 않습니다.** 시안에는 "지금 인기 있는 골프
-   서비스" 라고 쓰여 있지만 우리에게는 **인기도를 셀 자료가 없습니다** —
-   조회 수도 · 클릭도 · 거래 건수도 세는 장치가 없습니다. 없는 것을
-   "인기" 라고 적으면 그건 우리가 지어낸 평가입니다 (절대 규칙 1 ·
-   지시서도 "실제 인기도 데이터가 없으면 '인기' 표기 금지" 라고
-   못박았습니다).
-   ⚠️⚠️ 넷은 `AM_CATS` 에서 **키로 끌어옵니다** — 이름 · 한 줄 · 주소 ·
-   사진을 글자로 박으면 분류를 고치는 날 한쪽만 바뀝니다.
-   ⚠️ 그래서 **10개 사진 격자(`cats()`)를 뺐습니다** — 같은 열 장을 두
-   번 보여 주던 자리입니다 (지시서 A: "중복 축소"). 열 분류로 가는 길은
-   바로 위 아이콘 띠와 머리말 카테고리에 그대로 있습니다.
-   ════════════════════════════════════════════════════════════════════ */
-/* 서비스 카드 위 분류 탭 (사장님 시안 · 2026-11-07)
-
-   ⚠️⚠️⚠️ **단추가 아니라 링크입니다.** 시안은 탭처럼 그려져 있지만,
-   누르면 걸러지는 자료가 메인에 없습니다 — 카드 넷은 **분류로 가는
-   길**이고 탭도 같은 분류로 갑니다. 단추로 만들어 아무 일도 안 나게
-   두면 그건 눌러도 아무 일이 안 나는 칸입니다 (절대 규칙 5).
-   ⚠️⚠️ **이름을 글자로 박지 않습니다** — `amCat()` 에서 끌어옵니다.
-   분류 이름을 고치는 날 두 곳이 어긋나지 않게.
-   ⚠️ 그래서 짧은 이름만 여기 둡니다 (시안이 "레슨 · 부킹 · 조인 ·
-   용품 · 여행" 으로 줄여 적었습니다) — 없는 분류는 줄째 빠집니다.
-   ⚠️ "전체" 는 `/categories` 입니다 (열 분류가 다 있는 자리) —
-   묶음을 눌렀는데 분류 하나로 보내면 나머지는 어디 갔는지 모릅니다. */
-/* ⚠️⚠️⚠️ **서비스 탭 줄을 뺐습니다** (2026-11-08).
-   카드 위에 알약 모양 칩이 줄지어 있고 '전체' 하나가 켜져 있으면,
-   그건 **거르개로 읽힙니다** — 누르면 아래 카드가 걸러질 것 같습니다.
-   그런데 실제로는 그 분류 화면으로 **떠나는 링크**였습니다. 하는 일과
-   달리 보이는 칸이라 절대 규칙 5 의 사촌입니다.
-   ⚠️ 가는 길은 하나도 안 없어졌습니다 — 열 분류는 이제 머리말 띠에
-   **늘 서 있고**(넓은 PC), 카드 여섯이 같은 자리로 가며, '서비스
-   전체보기' 와 '카테고리' 가 /categories 로 갑니다.
-   ⚠️ CSS 의 `.svc-tab` 은 그대로 두었습니다 — 지우면 다시 낼 때
-   모양을 새로 짜야 하고, 안 쓰는 규칙은 화면을 깨뜨리지 않습니다. */
-
-function svcCards(){
-  /* ⚠️⚠️ **최종 디자인 지시서 1번이 준 여섯**입니다 (2026-11-08) —
-     골프 레슨 · 골프장 부킹 · 골프 조인 · 중고 골프장터 · 피팅 · 수리 ·
-     골프 여행. 전에는 넷이었습니다.
-     ⚠️⚠️⚠️ 제목을 **'오늘의 추천' 이라고 적지 않습니다** — 지시서가
-     "실사용 데이터에 기반한 개인화 추천이 없는 경우 '주요 골프 서비스'
-     라는 제목 사용" 이라고 적었고, 저희는 누가 무엇을 보셨는지 세지
-     않습니다. 추천이라고 적으면 **하지 않은 일을 했다고** 하는 것입니다
-     (절대 규칙 5).
-     ⚠️ 2026-11-08 에 한 번 '오늘의 추천' 으로 바뀌었다가 2026-11-09 에
-     되돌렸습니다 — 그때 **코드만 바꾸고 이 주석을 안 고쳐서** 바로 위
-     주석과 아래 코드가 하루 동안 서로 다른 말을 했습니다. 코드를 바꾸는
-     날 **그 코드를 설명하는 글도 같이** 고치세요. */
-  var KEYS = ["lesson", "booking", "matchup", "used", "fitting", "travel"];
-  /* ⚠️⚠️ **카드 밑줄은 시안 글자**입니다 — 분류의 `lead`(카드 · 목록에
-     쓰는 짧은 말)와 **다른 말**이라 여기 따로 둡니다. 한 곳에 묶으면
-     분류 화면의 말까지 같이 바뀝니다. */
-  var LEAD = {
-    lesson:  "실력 향상을 위한 맞춤 레슨",
-    booking: "원하는 일정의 티타임 예약",
-    matchup: "함께하는 즐거운 라운딩",
-    used:    "골프용품 사고팔기",
-    fitting: "내 스윙에 맞는 클럽 찾기",
-    travel:  "국내 · 해외 골프여행"
-  };
-  var cards = KEYS.map(function(k){
-    var c = W.amCat ? W.amCat(k) : null;
-    if(!c) return "";
-    var cp = W.amPhoto ? W.amPhoto("cat-" + k) : null;
-    return '<a class="svc" href="' + esc(W.amCatUrl(c)) + '">' +
-      '<span class="svc-ph' + (cp ? " svc-ph-on" : "") + '">' +
-        (cp ? W.amPhotoImg("cat-" + k) : "") + '</span>' +
-      '<span class="svc-t">' +
-        '<b class="svc-n">' + esc(c.name) + '</b>' +
-        '<span class="svc-l">' + esc(LEAD[k] || c.lead) + '</span>' +
+/* ── ④ 지금, 나에게 필요한 골프 ────────────────────────────────────
+   ⚠️⚠️ **개인화 추천이 아닙니다** — 모든 분께 같은 세 장이고, 누가 무엇을
+   보셨는지 세지 않습니다. 그래서 「추천」 이라는 말을 쓰지 않습니다
+   (절대 규칙 5 · 표시광고법 제3조). 제목은 시안 글자 그대로입니다. */
+function needs(){
+  var one = function(k, ph, cls, title, lead, cta){
+    var has = W.amPhoto ? W.amPhoto(ph) : null;
+    return '<a class="hm-need ' + cls + (has ? " hm-need-ph" : "") + '" href="' +
+      esc(catUrl(k)) + '">' +
+      (has ? W.amPhotoImg(ph, { cls:"hm-need-bg" }) : "") +
+      '<span class="hm-need-t"><b>' + title + '</b>' +
+        (lead ? '<span class="hm-need-l">' + esc(lead) + '</span>' : "") +
+        (cta ? '<span class="btn btn-sm btn-pt hm-need-c">' + esc(cta) + icon("arrow", 16) + '</span>' : "") +
       '</span>' +
-      '<span class="svc-go" aria-hidden="true">' + icon("arrow", 18) + '</span>' +
+      (cta ? "" : '<span class="hm-need-go" aria-hidden="true">' + icon("arrow", 18) + '</span>') +
     '</a>';
-  }).join("");
-  if(!cards) return "";
-  return '<section class="sec"><div class="wrap">' +
-    /* ⚠️⚠️⚠️ **「오늘의 추천」으로 돌아가지 마세요** (2026-11-09).
-       2026-11-08 에 시안 글자를 그대로 쓰려고 그렇게 바꿨다가 되돌렸습니다 —
-       저희는 **누가 무엇을 보셨는지 한 줄도 안 셉니다.** 카드 여섯은
-       모든 분께 똑같이 고정이라, '추천' 이라고 적으면 안 하는 일(개인화)을
-       한다고 말하는 것입니다(절대 규칙 5 · 표시광고법 제3조).
-       ⚠️ 지시서도 "실사용 데이터에 기반한 개인화 추천이 없는 경우
-       **'주요 골프 서비스'** 라는 제목 사용" 이라고 적었습니다.
-       ⚠️ 실제로 보신 분을 세기 시작하시는 날 — 그때 이 제목을 바꾸고
-       **그 사실을 여기 적으세요.** */
-    '<div class="sec-hd"><h2>주요 골프 서비스</h2></div>' +
-    '<div class="svc-grid">' + cards + '</div>' +
+  };
+  return '<section class="sec hm-s" aria-labelledby="hm-need-h"><div class="wrap">' +
+    '<h2 class="hm-h2" id="hm-need-h">지금, 나에게 필요한 골프</h2>' +
+    '<div class="hm-needs">' +
+      one("used", "cat-used", "hm-need-big", "장비를 바꾸는<br>더 좋은 방법",
+          "중고장터 · 매입 · 위탁", "중고장터 둘러보기") +
+      one("lesson", "cat-lesson", "", "나에게 맞는<br>레슨 찾기", "", "") +
+      one("travel", "cat-travel", "", "다음 여행은<br>골프로", "", "") +
+    '</div>' +
   '</div></section>';
 }
 
-/* 스폰서 광고 둘 — ⚠️ PC 2열 · 폰 1열 (지시서 A-6).
-   ⚠️⚠️ 0건이면 `js/adslot.js` 가 자리를 `hidden` 으로 두고, 감싼 구간은
-   `:has()` 가 줄째 가립니다 — **빈 띠를 남기지 않습니다**(절대 규칙 2 ·
-   오늘 현황표에서 그 꼴을 한 번 냈습니다). */
+/* ── ⑤ 어디에서 라운드할까요? ───────────────────────────────────────
+   ⚠️⚠️ 누르면 **골프장 정보 탭**(`/cat/booking?tab=course`)이 그 지역으로
+   좁혀져 열립니다 — 합의한 골프장 찾기 화면입니다.
+   ⚠️⚠️ 지역이 둘 이상인 칸은 **쉼표**로 보냅니다(경기 · 인천 · 충청) —
+   받는 쪽(`amCoursePickCards`)이 쉼표를 갈라 읽습니다.
+   ⚠️ 사진은 **그 지역 사진이 아닙니다** — 분위기를 위한 골프장 풍경이라
+   `alt` 를 비우고(장식) 이름표가 지역을 말합니다. */
+var RG = [
+  { name:"경기 · 인천", rg:"gyeonggi,incheon", ph:"cat-booking" },
+  { name:"강원",        rg:"gangwon",          ph:"zone-play" },
+  { name:"충청",        rg:"chungbuk,chungnam", ph:"cat-matchup" },
+  { name:"제주",        rg:"jeju",             ph:"cat-travel" }
+];
+function where(){
+  return '<section class="sec hm-s" aria-labelledby="hm-rg-h"><div class="wrap">' +
+    '<div class="hm-hd"><h2 class="hm-h2" id="hm-rg-h">어디에서 라운드할까요?</h2>' +
+      '<p class="hm-sub">지역별 골프장 정보와 공식 홈페이지를 확인하세요.</p>' +
+      '<a class="btn btn-sm btn-line hm-all" href="' + esc(courseUrl("")) + '">전국 골프장 보기' +
+        icon("arrow", 16) + '</a></div>' +
+    '<div class="hm-rgs">' + RG.map(function(r){
+      var has = W.amPhoto ? W.amPhoto(r.ph) : null;
+      return '<a class="hm-rg' + (has ? " hm-rg-ph" : "") + '" href="' + esc(courseUrl(r.rg)) + '">' +
+        (has ? W.amPhotoImg(r.ph, { cls:"hm-rg-bg", alt:"" }) : "") +
+        '<span class="hm-rg-n">' + esc(r.name) + icon("arrow", 16) + '</span></a>';
+    }).join("") + '</div>' +
+  '</div></section>';
+}
+
+/* ── ⑥ 골프 이야기가 모이는 곳 ─────────────────────────────────────
+   ⚠️ 게시판 키는 `AM_CATS` 의 커뮤니티 하위입니다(`cm-ask` · `cm-course` ·
+   `cm-gear`) — 받는 쪽(`js/community.js`)이 쉼표를 갈라 읽습니다. */
+function story(){
+  var cu = catUrl("community");
+  var one = function(href, ic, t, l){
+    return '<a class="hm-st" href="' + esc(href) + '">' +
+      '<span class="hm-st-ic">' + icon(ic, 26) + '</span>' +
+      '<span class="hm-st-t"><b>' + esc(t) + '</b><span>' + esc(l) + '</span></span>' +
+      '<span class="hm-st-go" aria-hidden="true">' + icon("arrow", 16) + '</span></a>';
+  };
+  return '<section class="sec hm-s" aria-labelledby="hm-st-h"><div class="wrap">' +
+    '<h2 class="hm-h2" id="hm-st-h">골프 이야기가 모이는 곳</h2>' +
+    '<div class="hm-sts">' +
+      one(cu + "?s=cm-ask", "chat", "궁금한 건 물어보세요", "질문 · 답변") +
+      one(catUrl("matchup"), "people", "함께 라운드해요", "골프 조인") +
+      one(cu + "?s=cm-course,cm-gear", "swing", "경험을 나눠주세요", "라운드 · 장비 이야기") +
+      '<a class="btn btn-pt hm-st-all" href="' + esc(cu) + '">커뮤니티 가기' + icon("arrow", 18) + '</a>' +
+    '</div>' +
+  '</div></section>';
+}
+
+/* ── ⑦ 띠 — 골프 사업의 다음 기회 ──────────────────────────────── */
+function biz(){
+  var pp = W.amPhoto ? W.amPhoto("partner-banner") : null;
+  return '<section class="sec hm-s"><div class="wrap">' +
+    '<div class="hm-biz' + (pp ? " hm-biz-ph" : "") + '">' +
+      (pp ? W.amPhotoImg("partner-banner", { cls:"hm-biz-bg" }) : "") +
+      '<div class="hm-biz-t">' +
+        '<h2>골프 사업의 다음 기회,<br><b>' + esc(W.AM_BRAND.name) + '에서.</b></h2>' +
+        '<p>프로 · 연습장 · 골프샵 · 여행사</p>' +
+      '</div>' +
+      '<p class="hm-biz-go">' +
+        '<a class="btn btn-pt" href="/join">업체 · 프로 등록하기' + icon("arrow", 18) + '</a>' +
+        '<a class="btn btn-ghost" href="/guide">입점 안내</a>' +
+      '</p>' +
+    '</div>' +
+  '</div></section>';
+}
+
+/* ── ⑧ 찾고, 비교하고, 연결하세요 ──────────────────────────────────
+   ⚠️⚠️ 세 줄은 **지금 실제로 하는 일**입니다 — 찾기(분류 · 업체찾기) ·
+   비교(업체찾기의 나란히 보기 · 견적 비교) · 연결(상담 요청). 결제 ·
+   예약 확정을 대신 한다고 적지 않습니다(절대 규칙 5). */
+function flow(){
+  var one = function(href, ic, t, l){
+    return '<a class="hm-fl" href="' + esc(href) + '">' +
+      '<span class="hm-fl-ic">' + icon(ic, 26) + '</span>' +
+      '<span class="hm-fl-t"><b>' + esc(t) + '</b><span>' + esc(l) + '</span></span></a>';
+  };
+  return '<section class="sec hm-s" aria-labelledby="hm-fl-h"><div class="wrap">' +
+    '<div class="hm-hd"><h2 class="hm-h2" id="hm-fl-h">찾고, 비교하고, 연결하세요</h2>' +
+      '<p class="hm-sub">서비스 조건은 등록 업체와 직접 확인하세요.</p></div>' +
+    '<div class="hm-fls">' +
+      one("/categories", "search", "찾아보기", "원하는 골프 서비스를 쉽게 찾고") +
+      one("/search", "grid", "비교하기", "여러 업체를 같은 기준으로 비교하고") +
+      one("/match", "match", "연결하기", "원하는 업체 또는 전문가와 바로 연결하세요") +
+    '</div>' +
+  '</div></section>';
+}
+
+/* 광고 자리 — ⚠️ 0건이면 손님에게는 줄째 숨고(`:has()`), 운영자에게만
+   점선 자리가 섭니다(`js/adslot.js`). 시안에 없는 빈 띠를 손님에게 내지
+   않습니다. 팔고 있는 자리라 지우지 않았습니다. */
+function adSlot(place){
+  return '<section class="sec sec-ad"><div class="wrap">' +
+    '<div class="adsl-w" data-adslot="' + place + '" hidden></div>' +
+  '</div></section>';
+}
 function sponsors(){
   return '<section class="sec sec-ad sec-spon"><div class="wrap">' +
     '<div class="spon-grid">' +
@@ -438,111 +264,34 @@ function sponsors(){
   '</div></section>';
 }
 
-/* ════════════════════════════════════════════════════════════════════
-   중고장터 최신 등록 (지시서 A-7 · 2026-11-07)
-
-   ⚠️⚠️⚠️ **실제 매물만 냅니다.** 시안에는 드라이버 380,000원 · 아이언
-   650,000원 같은 카드가 있지만 그건 **그림**입니다 — 지시서 최우선
-   원칙이 "참고 이미지 속 가상 업체 · 후기 · 평점 · 상품 가격 등은
-   실제 데이터로 사용 금지" 라고 못박았습니다. 올라온 매물이 0건이면
-   이 구간은 **줄째 사라집니다**.
-   ⚠️⚠️ **알맹이는 브라우저가 그립니다** — 매물은 아무 때나 바뀌므로
-   빌드 때 찍으면 **배포할 때만** 바뀝니다.
-   ⚠️⚠️⚠️ **빈 띠를 남기지 않습니다** — 오늘 현황표에서 "제목만 덩그러니"
-   를 한 번 냈습니다. 설정이 없거나 0건이면 `js/newest.js` 가 감싼
-   구간을 통째로 치웁니다 (절대 규칙 2).
-   ════════════════════════════════════════════════════════════════════ */
-function newest(){
-  return '<div class="pair-c" aria-labelledby="nw-h">' +
-    '<div class="sec-hd sec-hd-r">' +
-      '<h2 id="nw-h">중고 골프장터 최신 등록</h2>' +
-      '<a class="btn btn-sm btn-line" href="' + esc(W.amCatUrl(W.amCat("used"))) +
-        '">더 보기</a>' +
-    '</div>' +
-    /* ⚠️ 크롤러 · 자바스크립트가 꺼진 분 몫으로 **무엇을 보는 자리인지**만
-       찍습니다. 지우면 봇에게는 빈 상자입니다. */
-    '<p class="nw-lead">회원끼리 직접 사고파는 자리입니다. ' +
-    '골프올인원은 거래 당사자가 아니며 <b>결제를 받지 않습니다.</b></p>' +
-    '<div id="nwlist" hidden></div>' +
-  '</div>';
+/* 폰 바닥 메뉴 — ⚠️ 분류 화면과 **같은 꼴**(`.cqnav`)입니다. 「등록」은
+   업체 · 프로 등록(`/join`)입니다 — 메인에는 손님이 올릴 글 자리가
+   없습니다. PC 에서는 CSS 가 안 그립니다. */
+function botNav(){
+  var one = function(href, name, ic, cls){
+    return '<a href="' + esc(href) + '"' + (cls ? ' class="' + cls + '"' : '') + '>' +
+      '<i class="cqnav-i">' + icon(ic) + '</i><span>' + esc(name) + '</span></a>';
+  };
+  return '<nav class="cqnav" aria-label="빠른 이동">' +
+    one("/", "홈", "home") + one("/search", "검색", "search") +
+    one("/join", "등록", "plus", "cqnav-put") + one("/my", "내정보", "user") +
+  '</nav>';
 }
-
-/* ════════════════════════════════════════════════════════════════════
-   가로 2단으로 묶는 자리 (사장님 시안 · 2026-11-07)
-
-   ⚠️⚠️ 시안은 **신규 입점업체 | 중고장터 최신**, **장점 | 입점 CTA** 를
-   각각 나란히 놓습니다. 세로로 쌓으면 같은 내용이 화면 두 배를 먹고,
-   사장님이 "시안과 다르다" 고 하신 자리입니다.
-   ⚠️⚠️⚠️ **한쪽이 없어지는 날 남은 쪽이 반 폭으로 남으면 안 됩니다** —
-   중고장터는 매물이 0건이면 `js/newest.js` 가 그 구간을 통째로 치웁니다.
-   그래서 `:has()` 로 **한쪽만 남으면 한 단**으로 돌아갑니다. `:has()` 를
-   못 읽는 브라우저에서는 그냥 두 단으로 보일 뿐 깨지지 않습니다.
-   ⚠️ 폰에서는 **늘 한 단**입니다 (격자 칸이 제 내용만큼 벌어져 가로로
-   미는 그 자리라 `min-width:0` 도 같이 줍니다).
-   ════════════════════════════════════════════════════════════════════ */
-function pair(a, b){
-  return '<section class="sec pair-s"><div class="wrap">' +
-    '<div class="pair">' + a + b + '</div>' +
-  '</div></section>';
-}
-
-function adSlot(place){
-  return '<section class="sec sec-ad"><div class="wrap">' +
-    '<div class="adsl-w" data-adslot="' + place + '" hidden></div>' +
-  '</div></section>';
-}
-
 
 exports.build = function(){
   return {
     route: "/",
     title: W.AM_BRAND.slogan,
-    desc: W.AM_BRAND.desc + " 레슨 · 중고 골프장터 · 부킹 · 조인 · 연습장 · 용품 · 피팅 · 여행까지 " +
-          "골프 업체를 한곳에서 찾고 비교합니다.",
-    /* ⚠️⚠️ **차례는 4차 지시서 §5 가 준 그대로입니다.**
-         ① 히어로 → ② 분류 열 → ③ 목적별 넷 → ④ 입점 상태 안내
-         → ⑤ 이용 방법 셋(+ 매칭 띠) → ⑥ 일하는 방식 → ⑦ 입점 안내 → 푸터
-       ⚠️ 전에는 매칭 띠가 ③ 과 ④ 사이에 따로 서 있었고, 손님이 **무엇을
-       고를 수 있는지 보기도 전에** 요청부터 권하는 자리였습니다.
-       ⚠️ "일하는 방식" 은 §5 의 일곱에 없지만 중복이 아니라 **왜 믿을 수
-       있는지**를 말하는 자리라 남겼습니다 — 입점 안내 바로 앞입니다. */
-    /* ⚠️ 광고 자리 둘은 **히어로 바로 아래**와 **입점 안내 바로 앞**
-       입니다 — 분류 열을 보기도 전에 광고를 먼저 보이지 않게 ②보다
-       뒤에 둡니다. */
-    /* ⚠️ 현황표는 **분류 열 바로 아래**입니다 (지시서의 목업 자리) —
-       손님이 무엇을 고를 수 있는지 본 **다음**에 날짜를 고릅니다. */
-    /* ⚠️⚠️ **차례는 최종 지시서 A 가 준 그대로입니다** (2026-11-07) —
-         ① 머리말 · 검색 → ② 히어로 → ③ 분류 아이콘 열 →
-         ④ HOME_PREMIUM → ⑤ 주요 골프 서비스 넷 → ⑥ 스폰서 A · B →
-         ⑦ 신규 입점업체 → ⑧ HOME_BOTTOM → ⑨ 장점 · 입점 안내 → 푸터
-       ⚠️ 날짜 · 지역별 현황(부킹 · 조인)은 지시서 A 목록에는 없지만
-       **쓰고 있는 기능**이라 남겼습니다 (지시서: "기존 기능 유지 ·
-       전체 재개발 금지"). 자리는 서비스 넷 바로 뒤입니다.
-       ⚠️ "이용 방법" 도 남겼습니다 — `/guide` 로 가는 길 셋 가운데
-       하나라서, 빼면 이용안내가 **아무 데서도 안 이어집니다**. */
-    /* ⚠️⚠️ 사장님 시안대로 **둘씩 가로로** 묶습니다 —
-       신규 입점업체 | 중고장터 최신 · 장점 | 입점 CTA.
-       ⚠️ 한쪽이 0건으로 사라지면 `:has()` 가 **한 단**으로 돌려놀습니다. */
-    body: hero() + quickNav() + adSlot("main_hero") + svcCards() + sponsors() +
-          teeBoard() + pair(providers(), newest()) + adSlot("home_bottom") +
-          steps() + pair(why(), joinBand()),
-    /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — adslot 이
-       `/pro/<id>` 주소를 `amProviderUrl()` 로 짓고, 그 업체가 **빌드에
-       있는지**를 `amProvider()` 로 봅니다 (없으면 링크를 안 걸어 404 로
-       보내지 않습니다). 그래서 그 둘을 같이 싣습니다.
-       ⚠️ 메인은 전에 스크립트가 한 장도 없었습니다 — 광고 자리 때문에
-       늘어난 것이고, 자료 파일이 커지면 그때 다시 봅니다. */
-    /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — 0060 의
-       현황표는 `site.js`(며칠을 펼치나)와 `regions.js`(지역 묶음)를
-       읽습니다. 하나라도 빠지면 표가 **조용히** 안 그려집니다. */
+    desc: W.AM_BRAND.desc + " 골프장 부킹 · 조인 · 골프장 정보부터 레슨 · 중고 골프장터 · " +
+          "용품 · 피팅 · 여행까지 골프 업체를 한곳에서 찾고 비교합니다.",
+    botnav: botNav(),
+    body: hero() + adSlot("main_hero") + band() + cats() + needs() + sponsors() +
+          where() + story() + adSlot("home_bottom") + biz() + flow(),
+    /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — 찾는 칸은
+       `site.js`(날 수) · `regions.js`(지역 묶음) · `deal.js`(시간대)를,
+       광고 자리는 업체 자료를 읽습니다. */
     js: ["/js/data/providers.generated.js", "/js/data/providers.js",
-         "/js/data/site.js", "/js/data/regions.js",
-         /* ⚠️⚠️ newest.js — 중고 최신 등록입니다. 안 실으면 그 상자가
-            `hidden` 인 채로 남고 **에러도 안 납니다**.
-            ⚠️ `data/deal.js` 가 `amLstPrice()`(0 은 "무료로 나눔")를,
-            `data/regions.js` 가 지역 이름을 줍니다 — 하나라도 빠지면
-            값과 지역이 조용히 영문 키로 찍힙니다. */
-         "/js/adslot.js", "/js/teeboard.js", "/js/data/deal.js",
-         "/js/newest.js"]
+         "/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
+         "/js/adslot.js", "/js/homefind.js"]
   };
 };

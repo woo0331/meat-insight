@@ -92,7 +92,13 @@
     s = s || {};
     if(s.cat && s.cat !== "booking" && s.cat !== "range") return [];
     var L = s.q ? W.amCourseFind(s.q) : W.amCoursesOpen();
-    if(s.rg) L = L.filter(function(c){ return c.region === s.rg; });
+    /* ⚠️ 지역은 **쉼표로 여럿**을 받습니다(메인의 「경기 · 인천」 · 「충청」 칸).
+       보내는 쪽(`pages/home.js` 의 `RG`)과 **같이** 고치세요. */
+    if(s.rg){
+      var want = String(s.rg).split(",").map(function(x){ return x.trim(); })
+                   .filter(Boolean);
+      L = L.filter(function(c){ return want.indexOf(c.region) >= 0; });
+    }
     if(s.cat === "range")   L = L.filter(function(c){ return c.kind === "range"; });
     if(s.cat === "booking") L = L.filter(function(c){ return c.kind === "golf"; });
     return L;
@@ -245,7 +251,13 @@
   W.amCoursePickCards = function(s, kind){
     s = s || {};
     var L = W.amCourseList(kind);
-    if(s.rg) L = L.filter(function(c){ return c.region === s.rg; });
+    /* ⚠️ 지역은 **쉼표로 여럿**을 받습니다(메인의 「경기 · 인천」 · 「충청」 칸).
+       보내는 쪽(`pages/home.js` 의 `RG`)과 **같이** 고치세요. */
+    if(s.rg){
+      var want = String(s.rg).split(",").map(function(x){ return x.trim(); })
+                   .filter(Boolean);
+      L = L.filter(function(c){ return want.indexOf(c.region) >= 0; });
+    }
     var q = String(s.q || "").replace(/\s+/g, "").toLowerCase();
     if(q) L = L.filter(function(c){
       var hay = (String(c.name) + String(c.gu || "") +

@@ -16,6 +16,7 @@
 
 | 파일 | 시안 번호 | 대상 주소 | 그리는 곳 |
 |---|---|---|---|
+| `00-main.webp` | 메인 「예약 검색 우선형」 (2026-11-14 확정) | `/` | `pages/home.js` · `js/homefind.js` |
 | `01-booking.webp` | ① 골프장 부킹 | `/cat/booking` | `pages/category.js` · `js/booking.js` · `js/teeboard.js` |
 | `02-matchup.webp` | ② 골프 조인 | `/cat/matchup` | `pages/category.js` · `js/join.js` · `js/booking.js` |
 | `03-used.webp` | ③ 중고 골프장터 | `/cat/used` | `pages/category.js` · `js/listing.js` · `js/lstphoto.js` |

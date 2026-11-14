@@ -4787,3 +4787,179 @@ picture{ display: contents; }
 .cs-ph img{ display:block; width:100%; height:auto; aspect-ratio:16 / 9;
   object-fit:cover; }
 .cs-site{ margin:14px 0 0; }
+
+/* ════════════════════════════════════════════════════════════════════
+   메인 — 「예약 검색 우선형」 확정 시안 (docs/spec/00-main.webp · 2026-11-14)
+   ⚠️ 이름은 전부 `hm-` 로 시작합니다 — 짧은 이름을 두 곳에 쓰면 로고 ·
+   약관(`.lg`)처럼 조용히 엉뚱한 자리에 걸립니다.
+   ⚠️⚠️ 초록 단추는 `.btn-pt`(액션그린 면 + 짙은 글자 7.30)입니다 — 시안은
+   흰 글자였지만 흰 글자는 3.14 라 AA 를 못 넘습니다(토큰 파일의 규칙).
+   ════════════════════════════════════════════════════════════════════ */
+.hm-s{ padding-block: 26px; }
+.hm-h2{ font-size: clamp(20px, 2.2vw, 26px); font-weight:800; color: var(--ink);
+        padding-left:12px; border-left:4px solid var(--pt); line-height:1.25;
+        margin-bottom:18px; }
+.hm-hd{ display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 14px; margin-bottom:18px; }
+.hm-hd .hm-h2{ margin-bottom:0; }
+.hm-sub{ color: var(--ink3); font-size:14px; }
+.hm-hd .hm-all{ margin-left:auto; }
+.hm-kick{ font-size:13px; letter-spacing:.18em; font-weight:700; color: var(--gold); }
+.hm-link{ display:inline-flex; align-items:center; gap:6px; min-height: var(--tap);
+          color:#fff; font-weight:700; text-decoration: underline; text-underline-offset:4px; }
+
+/* ① 히어로 + 찾는 칸 */
+.hm-hero{ position:relative; overflow:hidden; background: var(--grn-soft); }
+.hm-hero-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+/* ⚠️⚠️ 글자 대비는 **막이 책임집니다** — 사진이 어떻든 위쪽 제목이
+   짙은 글자로 읽히게 위를 밝게 덮습니다. */
+.hm-hero-ph::after{ content:""; position:absolute; inset:0;
+  background: linear-gradient(180deg, rgba(255,255,255,.88) 0%, rgba(255,255,255,.62) 32%,
+                                      rgba(255,255,255,.18) 70%, rgba(255,255,255,0) 100%); }
+.hm-hero-in{ position:relative; z-index:1; padding-block: 34px 40px; }
+.hm-h1{ text-align:center; font-size: clamp(26px, 4vw, 44px); line-height:1.2;
+        color: var(--grn); font-weight:800; letter-spacing:-.01em; }
+.hm-h1 b{ color: var(--grn-text); }
+.hm-find{ max-width: 880px; margin: 22px auto 0; background:#fff; border-radius: 18px;
+          box-shadow: var(--shadow); padding: 18px 22px 16px; }
+.hm-tabs{ display:grid; grid-template-columns: repeat(3, 1fr); gap:6px;
+          background: var(--bg-2); border-radius: 12px; padding:5px; }
+.hm-tab{ display:flex; align-items:center; justify-content:center; gap:8px; min-height:48px;
+         border-radius:9px; font-weight:700; color: var(--ink2); text-decoration:none; }
+.hm-tab:hover{ background:#fff; }
+.hm-tab.on{ background: var(--grn); color:#fff; }
+.hm-days{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+.hm-days[hidden]{ display:none; }
+.hm-day{ min-height:44px; padding: 6px 12px; border:1px solid var(--line); border-radius:10px;
+         background:#fff; color: var(--ink); font-size:15px; cursor:pointer; }
+.hm-day b{ font-weight:700; }
+.hm-day.on{ background: var(--grn); border-color: var(--grn); color:#fff; }
+.hm-date{ display:inline-flex; align-items:center; gap:6px; min-height:44px; padding: 4px 10px;
+          border:1px solid var(--line); border-radius:10px; color: var(--ink2); font-size:15px; }
+.hm-date input{ border:0; padding:0; min-height:40px; font:inherit; color: var(--ink); background:transparent; }
+.hm-q{ margin-top:14px; }
+.hm-q[hidden]{ display:none; }
+.hm-q input{ width:100%; min-height:48px; padding: 0 14px; border:1px solid var(--line);
+             border-radius:10px; font-size:16px; }
+.hm-row{ display:grid; grid-template-columns: 1fr 1fr 1.1fr; gap:10px; margin-top:14px; }
+.hm-row > *{ min-width:0; }
+.hm-sel{ display:flex; align-items:center; gap:8px; min-height:52px; padding: 0 12px;
+         border:1px solid var(--line); border-radius:10px; background:#fff; color: var(--ink3); }
+.hm-sel[hidden]{ display:none; }
+.hm-sel select{ flex:1; min-width:0; min-height:46px; border:0; background:transparent;
+                font-size:16px; color: var(--ink); }
+.hm-go{ min-height:52px; border-radius:10px; font-size:17px; width:100%; }
+.hm-note{ display:flex; align-items:center; justify-content:center; gap:6px; margin-top:12px;
+          font-size:13px; color: var(--ink3); text-align:center; }
+
+/* ② 띠 · ⑦ 띠 — 딥그린 면 위 흰 글자 (15.25) · 사진은 오른쪽에 비칩니다 */
+.hm-band, .hm-biz{ position:relative; overflow:hidden; border-radius:16px;
+  background: var(--grn); color:#fff; padding: 30px 34px; }
+.hm-band-bg, .hm-biz-bg{ position:absolute; top:0; right:0; height:100%; width:55%;
+  object-fit:cover; opacity:.85; }
+.hm-band-ph::after, .hm-biz-ph::after{ content:""; position:absolute; inset:0;
+  background: linear-gradient(90deg, var(--grn) 0%, var(--grn) 45%, rgba(8,43,32,.55) 70%, rgba(8,43,32,.2) 100%); }
+.hm-band-t, .hm-biz-t, .hm-biz-go{ position:relative; z-index:1; }
+.hm-band h2, .hm-biz h2{ color:#fff; font-size: clamp(22px, 3vw, 34px); line-height:1.25; margin-top:6px; }
+.hm-band h2 b, .hm-biz h2 b{ color: var(--pt-on-dark); }
+.hm-band p, .hm-biz p{ color: var(--on-dark-2); }
+.hm-band-go{ display:flex; flex-wrap:wrap; align-items:center; gap:10px 20px; margin-top:16px; }
+.hm-biz{ display:flex; flex-wrap:wrap; align-items:center; gap:16px 30px; }
+.hm-biz-go{ display:flex; flex-wrap:wrap; gap:10px; margin:0; }
+
+/* ③ 분류 열 칸 — PC 5칸 · 폰 5칸(작게) */
+.hm-cats{ display:grid; grid-template-columns: repeat(5, 1fr); gap:12px; }
+.hm-cats > *{ min-width:0; }
+.hm-cat{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+         min-height:92px; padding:12px 6px; border-radius:12px; background: var(--bg-2);
+         color: var(--ink); text-decoration:none; text-align:center; font-weight:700; }
+.hm-cat:hover{ background: var(--grn-soft); }
+.hm-cat-ic{ color: var(--grn-text); }
+.hm-cat-n{ font-size:15px; line-height:1.25; word-break:keep-all; }
+
+/* ④ 사진 카드 셋 — 큰 하나 + 작은 둘 */
+.hm-needs{ display:grid; grid-template-columns: 1.15fr 1fr; grid-template-rows: 1fr 1fr; gap:12px; }
+.hm-needs > *{ min-width:0; }
+.hm-need{ position:relative; overflow:hidden; display:flex; align-items:center; min-height:132px;
+          border-radius:14px; background: var(--grn); color:#fff; text-decoration:none; padding:18px 22px; }
+.hm-need-big{ grid-row: 1 / 3; min-height:280px; }
+.hm-need-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.hm-need-ph::after{ content:""; position:absolute; inset:0;
+  background: linear-gradient(90deg, rgba(8,43,32,.92) 0%, rgba(8,43,32,.72) 48%, rgba(8,43,32,.25) 100%); }
+.hm-need-t{ position:relative; z-index:1; display:flex; flex-direction:column; gap:6px; }
+.hm-need-t > b{ font-size: clamp(19px, 2.2vw, 28px); line-height:1.25; color:#fff; }
+.hm-need-l{ color: var(--on-dark-2); font-size:15px; }
+.hm-need-c{ align-self:flex-start; margin-top:8px; }
+.hm-need-go{ position:absolute; z-index:1; right:16px; bottom:16px; width:34px; height:34px;
+             display:flex; align-items:center; justify-content:center; border-radius:50%;
+             background:#fff; color: var(--grn); }
+
+/* ⑤ 지역 넷 */
+.hm-rgs{ display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; }
+.hm-rgs > *{ min-width:0; }
+.hm-rg{ position:relative; overflow:hidden; display:flex; align-items:flex-end; min-height:150px;
+        border-radius:12px; background: var(--grn); color:#fff; text-decoration:none; padding:12px 14px; }
+.hm-rg-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.hm-rg-ph::after{ content:""; position:absolute; inset:0;
+  background: linear-gradient(0deg, rgba(8,43,32,.9) 0%, rgba(8,43,32,.45) 45%, rgba(8,43,32,0) 75%); }
+.hm-rg-n{ position:relative; z-index:1; display:inline-flex; align-items:center; gap:6px;
+          font-size:19px; font-weight:800; color:#fff; }
+
+/* ⑥ 이야기 셋 + 커뮤니티 단추 */
+.hm-sts{ display:grid; grid-template-columns: repeat(3, 1fr) auto; gap:12px; align-items:stretch; }
+.hm-sts > *{ min-width:0; }
+.hm-st, .hm-fl{ display:flex; align-items:center; gap:12px; min-height:72px; padding:12px 16px;
+                border:1px solid var(--line); border-radius:12px; background:#fff;
+                color: var(--ink); text-decoration:none; }
+.hm-st:hover, .hm-fl:hover{ border-color: var(--pt); }
+.hm-st-ic, .hm-fl-ic{ flex:none; color: var(--grn-text); }
+.hm-st-t, .hm-fl-t{ display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
+.hm-st-t b, .hm-fl-t b{ font-size:16px; }
+.hm-st-t span, .hm-fl-t span{ font-size:14px; color: var(--ink3); }
+.hm-st-go{ flex:none; color: var(--ink3); }
+.hm-st-all{ align-self:center; }
+
+/* ⑧ 찾고 · 비교 · 연결 */
+.hm-fls{ display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; }
+.hm-fls > *{ min-width:0; }
+
+@media (max-width: 900px){
+  .hm-row{ grid-template-columns: 1fr 1fr; }
+  .hm-go{ grid-column: 1 / -1; }
+  .hm-sts{ grid-template-columns: 1fr; }
+  .hm-st-all{ justify-self:center; }
+}
+@media (max-width: 760px){
+  .hm-s{ padding-block: 18px; }
+  .hm-hero-in{ padding-block: 22px 26px; }
+  .hm-find{ padding: 12px 12px 12px; margin-top:16px; }
+  .hm-tab{ flex-direction:column; gap:2px; font-size:13px; min-height:56px; }
+  .hm-day{ padding: 4px 8px; font-size:13px; }
+  .hm-row{ grid-template-columns: 1fr; }
+  .hm-band, .hm-biz{ padding: 22px 20px; }
+  .hm-band-bg, .hm-biz-bg{ width:70%; opacity:.6; }
+  .hm-cats{ grid-template-columns: repeat(5, 1fr); gap:6px; }
+  .hm-cat{ min-height:76px; padding:8px 2px; gap:4px; }
+  .hm-cat-n{ font-size:12px; }
+  .hm-cat .ic{ width:24px; height:24px; }
+  .hm-needs{ grid-template-columns: 1fr; grid-template-rows:none; }
+  .hm-need-big{ grid-row:auto; min-height:150px; }
+  .hm-need{ min-height:96px; }
+  .hm-rgs{ grid-template-columns: repeat(2, 1fr); }
+  .hm-rg{ min-height:100px; }
+  .hm-fls{ grid-template-columns: 1fr; }
+  .hm-hd .hm-all{ margin-left:0; }
+}
+/* 날짜 줄 — PC 는 한 줄(칩이 나눠 가짐) · 폰은 네 칸 격자 (시안) */
+@media (min-width: 901px){
+  .hm-days{ flex-wrap:nowrap; }
+  .hm-day{ flex:1 1 0; min-width:0; padding:6px 4px; }
+  .hm-date{ flex:none; }
+  .hm-date input{ width:128px; }
+}
+@media (max-width: 760px){
+  .hm-days{ display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; }
+  .hm-days > *{ min-width:0; }
+  .hm-date{ padding:4px 6px; font-size:12px; gap:4px; overflow:hidden; }
+  .hm-date span{ display:none; }
+  .hm-date input{ width:100%; font-size:12px; }
+}

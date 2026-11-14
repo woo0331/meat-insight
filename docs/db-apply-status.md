@@ -17,8 +17,8 @@
 | 9 | `0074_range_facility.sql` | ✅ 적용 | 09:32 적용 · 확인 | 판 74 · `provider.range_opts` 있음 |
 | 10 | `0075_cq_thumb.sql` | ✅ 적용 | 09:33 적용 · 확인 | 판 75 · `v_cq_public.thumb` · anon 읽기 유지 |
 | 11 | `0076_fitting.sql` | ✅ 적용 | 09:34 적용 · 확인 | 판 76 · `provider.fit_ways` 있음 |
-| 12 | `0077_trip_depart.sql` | ⏳ 다음 | | 판 77 ⚠️ 트랜잭션 없음 |
-| 13 | `0078_job_fav.sql` | 대기 | | 판 78 |
+| 12 | `0077_trip_depart.sql` | ✅ 적용 | 09:35 적용 · 09:36 확인 | 판 77 · `tripdate` · 출발일 보기 있음 |
+| 13 | `0078_job_fav.sql` | ⏳ 다음 | | 판 78 |
 | 14 | `0079_fitting_terms.sql` | 대기 | | 판 79 |
 | 15 | `0080_join_level_listing_spec.sql` | 대기 | | 판 80 ⚠️ 트랜잭션 없음 |
 | 16 | `0081_course_photo.sql` | 대기 | | 판 81 ⚠️ 트랜잭션 없음 |

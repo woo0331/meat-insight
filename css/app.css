@@ -5027,3 +5027,13 @@ picture{ display: contents; }
 }
 /* 긴 골프장 · 업체 · 상품 이름이 카드를 밀지 않게 (2026-11-14 점검) */
 .tfc-n, .tfc-pv, .tfc-note, .tpc-t{ overflow-wrap:anywhere; word-break:keep-all; min-width:0; }
+
+/* ⚠️⚠️ 메인 날짜 칩 자리를 **미리** 잡아 둡니다 (2026-11-14 · 재서 찾았습니다) —
+   칩은 오늘 날짜를 알아야 해서 js/homefind.js 가 그린 뒤에 들어오고, 그 사이
+   찾는 칸 아래가 통째로 밀렸습니다(폰 50px → 109px). `html.js` 는 머리말 뒤의
+   작은 스크립트가 붙입니다 — 자바스크립트가 꺼진 분은 칩이 없으므로 안 잡습니다.
+   ⚠️ 값은 재 본 높이에서 **조금 낮게** 둡니다(높게 두면 빈 띠가 남습니다).
+   칩 크기 · 칸 수를 바꾸는 날 이 세 값도 같이 보세요. */
+.js .hm-days{ min-height:101px; }
+@media (min-width: 901px){ .js .hm-days{ min-height:63px; } }
+@media (max-width: 760px){ .js .hm-days{ min-height:108px; } }

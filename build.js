@@ -42,6 +42,10 @@ global.window = {};
     먼저** 싣습니다: 거기서 상품 카드가 하위 이름을 읽습니다. 안 실으면
     `amMkItems` 가 없어 **빌드가 그 자리에서 멈춥니다**. */
  "js/data/market.js",
+ /* 티오프 시간대(AM_TEE_BAND) — ⚠️ 메인 찾는 칸의 시간대 고르개를 **빌드가
+    찍게** 실습니다(2026-11-14). 전에는 js/homefind.js 가 그려진 뒤에 끼워 넣어
+    폰에서 찾는 칸이 한 줄 늘며 아래가 통째로 밀렸습니다(layout shift). */
+ "js/data/deal.js",
  "js/data/lesson.js","js/card.js",
  "js/data/legal-terms.js","js/data/legal-privacy.js"]
   .forEach(function(f){ require("./" + f); });
@@ -258,7 +262,21 @@ function header(){
       '<a class="btn btn-gold btn-sm" href="/join">' + icon("store", 18) + '업체 입점하기</a>' +
     '</div>' +
   '</div>' +
-  '</header>';
+  '</header>' +
+  /* ⚠️⚠️⚠️ **폰에서 화면 전체가 한 번 튀던 자리 (2026-11-14 · 재서 찾았습니다).**
+     접는 표(`nav-js`)를 `js/hdmenu.js` 가 body 끝에서 붙이므로, 그 전에 한 번
+     그려진 머리말이 폰에서 **260px → 116px** 로 줄며 본문이 통째로 올라갔습니다
+     (layout shift 0.144 · 모든 화면). 그래서 머리말 **바로 뒤에서** 표를 먼저
+     붙입니다(CSP 가 'unsafe-inline' 을 허락합니다).
+     ⚠️⚠️ **여는 길이 없는 채로 접어 두지 않습니다** — `js/hdmenu.js` 가 끝내
+     안 켜지면(못 받았을 때) load 뒤에 표를 떼고 햄버거를 다시 숨깁니다. 그러면
+     자바스크립트가 꺼진 분과 똑같이 메뉴 일곱이 그대로 보입니다(절대 규칙 5).
+     켜졌다는 표는 `hd.dataset.menu` 하나입니다. */
+  '<script>(function(){document.documentElement.classList.add("js");' +
+  'var h=document.querySelector(".hd");if(!h)return;' +
+  'var b=h.querySelector(".hd-burger");h.classList.add("nav-js");if(b)b.removeAttribute("hidden");' +
+  'addEventListener("load",function(){if(h.dataset.menu!=="on"){h.classList.remove("nav-js");' +
+  'if(b)b.setAttribute("hidden","");}});})();</script>';
 }
 
 /* ⚠️⚠️ 전자상거래법 제20조 제1항 — **중개한다는 사실을 미리 알립니다.**

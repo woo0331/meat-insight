@@ -45,6 +45,9 @@
   /* 이 파일이 켜졌다는 표 — CSS 가 이 표를 보고 좁은 폭에서 접습니다 */
   hd.classList.add("nav-js");
   if(burger) burger.removeAttribute("hidden");
+  /* ⚠️ 켜졌다는 표 — 머리말 뒤의 작은 스크립트(build.js)가 load 때 이것을 봅니다.
+     없으면 그 스크립트가 접은 메뉴를 다시 폅니다(여는 길이 없는 접힘을 남기지 않습니다). */
+  hd.dataset.menu = "on";
 
   function items(){
     return [].slice.call(gnb.querySelectorAll(".gnb-i"));

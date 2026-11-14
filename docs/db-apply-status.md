@@ -21,9 +21,12 @@
 | 13 | `0078_job_fav.sql` | ✅ 적용 | 09:37 적용 · 확인 | 판 78 · `jobfav` · `v_job_fav` · anon 표 접근 없음 |
 | 14 | `0079_fitting_terms.sql` | ✅ 적용 | 09:38 적용 · 확인 | 판 79 · `v_provider_card` anon 읽기 유지 |
 | 15 | `0080_join_level_listing_spec.sql` | ✅ 적용 | 09:39 적용 · 09:40 확인 | 판 80 · `joinroom.level` · `listing.flex·hand` |
-| 16 | `0081_course_photo.sql` | ⏳ 다음 | | 판 81 ⚠️ 트랜잭션 없음 |
-| 17 | `db/post-apply.sql` | 대기 | | 기본 권한 지문 = 4b42f19c… |
-| 18 | 최종 검증 | 대기 | | verify · list-check · 16표 지문 · 백업 |
+| 16 | `0081_course_photo.sql` | ✅ 적용 | 09:40 적용 · 09:41 확인 | 판 81 · `course.photo` 있음 |
+| 17 | 기본 권한 복원 (post-apply ①) | ✅ 완료 | 09:42 | 지문 4b42f19c… = 적용 전과 같음 · 내부 함수 31개 전부 닫힘 · 칸 자물쇠 11개 유지 · 공개 보기 21개 anon 읽기 |
+| 18 | 최종 검증 | ✅ 완료 | 09:44 | 판 1~81 빠짐없음 · verify 14/14 ✅ · list-check 8/8 ✅ · 16표 지문 fea1f0a0… / 290e637f… 그대로 · 백업 표 17개 유지 · anon 목록 조회 10개 보기 정상(0건) · anon 표 직접 읽기 막힘 |
 
 ⚠️ 트랜잭션 없음 = 중간 오류 시 앞부분이 남습니다. **다시 돌리지 말고** 오류 문장을 알려 주세요.
 ⚠️ 오늘 멈추면 `db/restore-defacl.sql` 로 기본 권한만 복원 → 재개 전 `db/pre-apply.sql` 다시.
+
+
+**결과 (2026-11-14 09:44 UTC):** 운영 DB 적용 끝. 기존 16개 표 변화 없음. 백업 `golf_backup_20261114` 은 지우지 않았습니다.

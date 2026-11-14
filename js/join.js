@@ -32,6 +32,8 @@
   /* ⚠️⚠️ **못 찾은 키를 그대로 찍지 않습니다**(지시 6번 · 2026-11-12).
      중립 문구를 내고 누락은 `console.warn` 으로 운영자에게만 갑니다. */
   function rgName(k){
+    /* 권역 키(capital …)는 권역 이름으로 — 메인 찾는 칸이 보내는 값입니다 */
+    if(window.amZone && window.amZone(k) && window.amZoneLong) return window.amZoneLong(k);
     return window.amKeyName ? window.amKeyName(REG, k, "지역") : "";
   }
 
@@ -112,7 +114,12 @@
       var t = e.target;
       if(!t || !t.id) return;
       if(t.id === "jf-rg")      F.rg = t.value;
-      else if(t.id === "jf-wh") F.wh = whenOf(t.value).key;
+      /* ⚠️ 메인에서 고르신 **그 날짜**(`d:YYYY-MM-DD`)는 그대로 두고,
+         다른 묶음을 고르시면 날짜를 풉니다 */
+      else if(t.id === "jf-wh"){
+        if(String(t.value).indexOf("d:") === 0) F.d = String(t.value).slice(2);
+        else { F.d = ""; F.wh = whenOf(t.value).key; }
+      }
       else if(t.id === "jf-bk") F.bk = !!t.checked;
       else if(t.id === "jf-lv") F.lv = levelKey(t.value);
       else if(t.id === "jf-pp") F.pp = t.value;
@@ -323,7 +330,7 @@
      "오늘 · 내일" 이 하루씩 밀립니다. `play_at` 은 여신 분이 **제 달력
      에서** 고른 날이므로 **그 자리의 날짜**로 셉니다.
      ════════════════════════════════════════════════════════════════ */
-  var F = { rg:"", wh:"", bk:false, lv:"", pp:"", q:"" };
+  var F = { rg:"", wh:"", d:"", bk:false, lv:"", pp:"", q:"" };
   /* ⚠️ 0058 — 로그인한 분에게만 "조건 저장" 길을 냅니다. 로그인 전에
      그리면 눌러서 로그인 화면으로 갔다가 돌아와도 **저장된 것이 없는**
      꼴이 됩니다 (절대 규칙 5). */
@@ -349,6 +356,11 @@
     { key:"d7",  name:"이번 주 안",  days:7  },
     { key:"d14", name:"2주 안",      days:14 }
   ];
+  /* 날짜 글자 — ⚠️ 한국 날짜 그대로(Z 로 읽고 getUTC* 로 꺼냅니다) */
+  function dayName(iso){
+    var d = new Date(iso + "T00:00:00Z"), W = ["일","월","화","수","목","금","토"];
+    return (d.getUTCMonth() + 1) + "월 " + d.getUTCDate() + "일 (" + W[d.getUTCDay()] + ")";
+  }
   function whenOf(k){
     for(var i = 0; i < WHEN.length; i++) if(WHEN[i].key === k) return WHEN[i];
     return WHEN[0];
@@ -377,13 +389,22 @@
       var pp = (u.get("pp") || "").trim();
       F.pp = (pp === "1" || pp === "2" || pp === "3") ? pp : "";
       F.q  = (u.get("q") || "").trim().slice(0, 30);
+      /* ⚠️⚠️ 2026-11-14 — 메인 찾는 칸이 `?d=YYYY-MM-DD` 로 보내는데 여기서
+         안 읽어 **고르신 날짜가 버려지고** 모든 날짜가 나왔습니다. 꼴만
+         받습니다(지난 날짜는 보기가 어차피 안 냅니다). */
+      var d = (u.get("d") || "").trim();
+      F.d = /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : "";
+      /* ⚠️ 지역은 낱 지역(seoul …)과 **권역**(capital …) 둘 다 받습니다 —
+         메인은 권역으로 보냅니다. 모르는 값은 버립니다(영원히 0건 방지). */
+      if(F.rg && !REG[F.rg] && !(window.amZone && window.amZone(F.rg))) F.rg = "";
     }catch(e){}
   }
   function writeUrl(){
     try{
       var qs = [];
       if(F.rg) qs.push("rg=" + encodeURIComponent(F.rg));
-      if(F.wh) qs.push("when=" + encodeURIComponent(F.wh));
+      if(F.d)  qs.push("d=" + encodeURIComponent(F.d));
+      else if(F.wh) qs.push("when=" + encodeURIComponent(F.wh));
       if(F.bk) qs.push("bk=1");
       if(F.lv) qs.push("lv=" + encodeURIComponent(F.lv));
       if(F.pp) qs.push("pp=" + encodeURIComponent(F.pp));
@@ -419,14 +440,24 @@
       return '<option value="' + esc(r.key) + '"' +
         (F.rg === r.key ? " selected" : "") + '>' + esc(r.name) + '</option>';
     }).join("");
+    /* 권역(메인 찾는 칸이 보내는 값)도 고를 수 있게 — 이름은 `amZoneLong()` 한 곳 */
+    var zn = (window.AM_REGION_ZONES || []).map(function(z){
+      return '<option value="' + esc(z.key) + '"' +
+        (F.rg === z.key ? " selected" : "") + '>' +
+        esc(window.amZoneLong ? window.amZoneLong(z.key) : z.name) + '</option>';
+    }).join("");
     return tabs() +
       '<form class="jform jnf-f" id="jnfil">' +
       '<div class="jrow"><label for="jf-rg">지역</label>' +
-        '<select id="jf-rg"><option value="">전국</option>' + rg + '</select></div>' +
+        '<select id="jf-rg"><option value="">전국</option>' +
+        (zn ? '<optgroup label="권역">' + zn + '</optgroup><optgroup label="지역">' + rg + '</optgroup>' : rg) +
+        '</select></div>' +
       '<div class="jrow"><label for="jf-wh">날짜</label>' +
-        '<select id="jf-wh">' + WHEN.map(function(w){
+        '<select id="jf-wh">' +
+        (F.d ? '<option value="d:' + esc(F.d) + '" selected>' + esc(dayName(F.d)) + '</option>' : '') +
+        WHEN.map(function(w){
           return '<option value="' + esc(w.key) + '"' +
-            (F.wh === w.key ? " selected" : "") + '>' + esc(w.name) + '</option>';
+            (!F.d && F.wh === w.key ? " selected" : "") + '>' + esc(w.name) + '</option>';
         }).join("") + '</select></div>' +
       /* ⚠️⚠️ **찾는 말** (확정 시안 ②) — 제목과 골프장 이름을 같이
          봅니다. 찾기도 **서버**가 합니다(쉰 줄만 받아 화면에서 찾으면
@@ -474,7 +505,14 @@
     var qs = ["select=id,title,body,region,play_at,course,booked,tee,need,budget," +
               "left_n,level",
               "order=play_at.asc", "limit=50"];
-    if(F.rg) qs.push("region=eq." + encodeURIComponent(F.rg));
+    /* ⚠️⚠️ 권역이면 그 안의 지역을 **모두** 묻습니다(`/cat/booking` 과 같은 규칙 ·
+       `amZoneRegions` 한 곳). 전에는 `region=eq.capital` 로 물어 늘 0건이었습니다. */
+    if(F.rg){
+      var zr = (window.amZone && window.amZone(F.rg) && window.amZoneRegions)
+        ? window.amZoneRegions(F.rg) : [];
+      qs.push(zr.length ? "region=in.(" + zr.map(encodeURIComponent).join(",") + ")"
+                        : "region=eq." + encodeURIComponent(F.rg));
+    }
     if(F.bk) qs.push("booked=is.true");
     /* ⚠️⚠️ 0080 — 실력. **안 고르신 자리는 빠집니다**(null 과 견주는
        순간 빠집니다) — 0건 안내가 그 사실을 적습니다. */
@@ -491,8 +529,10 @@
         "(title.ilike.*" + w + "*,course.ilike.*" + w + "*)"));
     }
     var w = whenOf(F.wh);
+    /* ⚠️ 고르신 날짜가 있으면 **그 날만** — 묶음(`when`)보다 앞섭니다 */
+    if(F.d) qs.push("play_at=eq." + encodeURIComponent(F.d));
     /* ⚠️ 보기가 이미 지난 날짜를 빼므로 아래쪽만 겁니다 (`play_at >= 오늘`) */
-    if(w.days !== null) qs.push("play_at=lte." + plusDays(w.days));
+    else if(w.days !== null) qs.push("play_at=lte." + plusDays(w.days));
     /* ⚠️⚠️⚠️ **정상 0건과 조회 실패를 가립니다** — 전에는
        거절당한 것도 보기가 없는 것도 모두 번 배열이 되어 「아직 열린
        자리가 없습니다」로 보였습니다(절대 규칙 1 — 0 은 세어 본
@@ -511,7 +551,8 @@
   function nowBits(){
     var b = [];
     if(F.rg) b.push(rgName(F.rg));
-    if(F.wh) b.push(whenOf(F.wh).name);
+    if(F.d) b.push(dayName(F.d));
+    else if(F.wh) b.push(whenOf(F.wh).name);
     if(F.bk) b.push("부킹이 잡힌 자리");
     if(F.lv) b.push(window.amJoinLevel ? window.amJoinLevel(F.lv) : "");
     if(F.pp) b.push(F.pp + "명 이상 남은 자리");
@@ -541,6 +582,9 @@
     return '<div class="none">' +
       '<h3>아직 열린 조인이 없습니다.</h3>' +
       '<p>첫 조인을 열어 보세요. 날짜와 지역만 정하시면 됩니다.</p>' +
+      /* ⚠️ 여는 양식(#joinbox)은 이 목록 **아래**에 있어 보이지 않았습니다 —
+         그 자리로 가는 길을 냅니다(로그인 안내도 그 상자가 말합니다). */
+      '<p class="none-go"><a class="btn btn-pt" href="#joinbox">조인 모집하기</a></p>' +
     '</div>';
   }
 
@@ -567,7 +611,7 @@
       list.innerHTML = missNote(miss) + noneHtml();
       var allb = document.getElementById("jf-all");
       if(allb) allb.addEventListener("click", function(){
-        F.rg = ""; F.wh = ""; F.bk = false; F.lv = ""; F.pp = ""; F.q = "";
+        F.rg = ""; F.wh = ""; F.d = ""; F.bk = false; F.lv = ""; F.pp = ""; F.q = "";
         writeUrl(); mountBar(); reload(a);
       });
       return;
@@ -577,7 +621,7 @@
     Array.prototype.forEach.call(list.querySelectorAll(".jnc-go"), function(b){
       b.addEventListener("click", function(){
         if(!a.signedIn){ window.location.href = window.amLoginUrl
-          ? window.amLoginUrl(window.location.pathname) : "/login"; return; }
+          ? window.amLoginUrl(window.location.pathname + window.location.search) : "/login"; return; }
         var li = b.closest(".jnc");
         var old = li.querySelector("#jaf");
         if(old){ old.remove(); return; }
@@ -648,13 +692,14 @@
       : '<div class="none"><h3>조인을 열려면 로그인하셔야 합니다.</h3>' +
         '<p>여신 분과 신청하신 분을 잇는 자리라, 누가 여셨는지 알아야 합니다.</p>' +
         '<a class="btn btn-pt" href="' +
-          (window.amLoginUrl ? esc(window.amLoginUrl(window.location.pathname)) : "/login") +
+          (window.amLoginUrl ? esc(window.amLoginUrl(window.location.pathname + window.location.search)) : "/login") +
         '">로그인하기</a></div>';
     if(!a.signedIn) return;
 
     /* 오늘보다 이전은 못 고르게 — 문도 막지만 화면이 먼저 말해 줍니다 */
     var d = document.getElementById("j-date");
-    if(d) d.min = new Date().toISOString().slice(0, 10);
+    /* ⚠️ 한국 날짜로 — UTC 로 지으면 한국 아침 9시 전에 어제를 고를 수 있었습니다 */
+    if(d) d.min = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
 
     document.getElementById("jnf").addEventListener("submit", function(e){
       e.preventDefault();
@@ -673,7 +718,9 @@
           '<p>목록에 바로 보입니다. 신청이 들어오면 내 정보에서 ' +
           '수락하실 수 있습니다.</p>' +
           '<a class="btn btn-pt" href="/my">내 정보에서 보기</a>';
-        load(a).then(function(rows){ paint(a, rows); });
+        /* ⚠️ `load()` 는 `{rows, miss}` 를 돌려줍니다 — 배열로 받아 그리면
+           방금 연 자리가 있어도 「아직 열린 조인이 없습니다」가 됐습니다. */
+        reload(a);
       }).catch(function(err){
         btn.disabled = false;
         msg.textContent = String((err && err.message) || "열지 못했습니다.");

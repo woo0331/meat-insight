@@ -5025,3 +5025,5 @@ picture{ display: contents; }
   .tf-bar .tf-q{ grid-column: 1 / -1; }
   .tf-bar .tf-go .btn{ width:100%; }
 }
+/* 긴 골프장 · 업체 · 상품 이름이 카드를 밀지 않게 (2026-11-14 점검) */
+.tfc-n, .tfc-pv, .tfc-note, .tpc-t{ overflow-wrap:anywhere; word-break:keep-all; min-width:0; }

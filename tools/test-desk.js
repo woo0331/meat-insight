@@ -5546,6 +5546,88 @@ function boardsOf(){
     await g.p.close();
   }
 
+  /* ②-4 **찾는 조건이 다음 화면까지 그대로 가는가** (2026-11-14)
+     ⚠️⚠️⚠️ 메인 찾는 칸은 /cat/matchup?rg=<묶음>&d=<날짜> 로 보냅니다. 받는 쪽이
+     묶음 키(capital)를 몰라 지역을 버리고 · d 를 안 읽어 날짜를 버려서,
+     고른 조건과 다른 목록(또는 엉뚱한 0건)이 나왔습니다.
+     ⚠️ 흉내 장치는 걸러 주지 않으므로 **보내는 질의를 뜯어** 봅니다. */
+  {
+    const g = await open("/cat/matchup?rg=capital&d=" + TKST(2),
+                         { role:"customer", name:"손님", signedIn:true },
+                         { v_join_open: JROOM }, {}, true);
+    await g.p.waitForTimeout(400);
+    const q = g.sent.filter(function(x){
+      return x.name === "GET" && String(x.body).indexOf("v_join_open") >= 0;
+    }).map(function(x){ return String(x.body); }).join(" | ");
+    ok("⚠️⚠️ 조인 — 묶음 키(capital)를 **그 묶음의 지역들**로 묻는다",
+       /region=in\.\(seoul,gyeonggi,incheon\)/.test(decodeURIComponent(q)), q.slice(0, 240));
+    ok("⚠️⚠️ 조인 — 주소의 날짜(d)를 **play_at=eq.<그 날>** 로 묻는다",
+       q.indexOf("play_at=eq." + TKST(2)) >= 0, q.slice(0, 240));
+    const v = await g.p.evaluate(function(){
+      var a = document.getElementById("jf-rg"), b = document.getElementById("jf-wh");
+      return { rg: a ? a.value : null, wh: b ? b.value : null,
+               now: (document.getElementById("jfnow") || {}).textContent || "" };
+    });
+    ok("  고르개도 **같은 조건**을 보인다 (묶음 · 그 날짜)",
+       v.rg === "capital" && v.wh === "d:" + TKST(2), JSON.stringify(v).slice(0, 160));
+    /* ⚠️ 새로고침해도 같은 질의 */
+    const n0 = g.sent.length;
+    await g.p.reload(); await g.p.waitForTimeout(500);
+    const q2 = g.sent.slice(n0).map(function(x){ return String(x.body); }).join(" | ");
+    ok("  새로고침해도 **같은 조건**으로 묻는다",
+       q2.indexOf("play_at=eq." + TKST(2)) >= 0 &&
+       /region=in\.\(seoul,gyeonggi,incheon\)/.test(decodeURIComponent(q2)), q2.slice(0, 200));
+    await g.p.close();
+  }
+  {
+    const g = await open("/cat/matchup?rg=nowhere", { role:"customer", name:"손님", signedIn:true },
+                         { v_join_open: JROOM }, {}, true);
+    await g.p.waitForTimeout(400);
+    const q = g.sent.map(function(x){ return String(x.body); }).join(" | ");
+    ok("  ⚠️ 모르는 지역 키는 **버리고** 묻는다 (거짓 0건을 안 만듭니다)",
+       q.indexOf("v_join_open") >= 0 && q.indexOf("region=") < 0, q.slice(0, 200));
+    await g.p.close();
+  }
+  {
+    const g = await open("/cat/matchup", { role:"customer", name:"손님", signedIn:true },
+                         { v_join_open: [] }, {}, true);
+    const n = await g.p.locator('.none a[href="#joinbox"]').count();
+    ok("  조인 0건이면 **조인 모집하기** 길을 낸다 (여는 양식으로)", n >= 1, "링크 " + n);
+    await g.p.close();
+  }
+  /* 부킹 — 거르개를 바꾸면 **주소가 따라가고** 뒤로 가기에 **조건이 돌아온다** */
+  {
+    const g = await open("/cat/booking?d=" + TKST(1), { role:"customer", name:"손님", signedIn:true },
+                         { v_teetime_open: TEE }, {}, true);
+    await g.p.waitForTimeout(400);
+    await g.p.click('#ttlist .tfd [data-tfd="' + TKST(2) + '"]');
+    await g.p.waitForTimeout(500);
+    const n0 = g.sent.length;
+    await g.p.goBack(); await g.p.waitForTimeout(600);
+    const q = g.sent.slice(n0).filter(function(x){ return x.name === "GET"; })
+                .map(function(x){ return x.body || ""; }).join(" ");
+    const on = await g.p.evaluate(function(){
+      const a = document.querySelector("#ttlist .tfd .tfd-on");
+      return a ? a.getAttribute("data-tfd") : null; });
+    ok("⚠️⚠️ 부킹 — 뒤로 가기를 누르면 **앞 날짜로** 다시 묻는다",
+       q.indexOf("play_at=eq." + TKST(1)) >= 0, q.slice(0, 220));
+    ok("  뒤로 간 뒤 켜진 칸도 **앞 날짜**다", on === TKST(1), String(on));
+    await g.p.close();
+  }
+  {
+    /* ⚠️⚠️ 시간대를 골라도 **찾는 기간의 끝(teeSearch)** 은 그대로 걸린다 —
+       전에는 시간대가 그 줄을 건너뛰게 해 90일 뒤 자리까지 섞였습니다. */
+    const g = await open("/cat/booking?t=" + "dawn",
+                         { role:"customer", name:"손님", signedIn:true },
+                         { v_teetime_open: TEE }, {}, true);
+    await g.p.waitForTimeout(400);
+    const q = g.sent.filter(function(x){ return x.name === "GET"; })
+                .map(function(x){ return x.body || ""; }).join(" ");
+    ok("  부킹 — 시간대만 골라도 **찾는 기간 끝(play_at=lte.)** 이 실린다",
+       q.indexOf("v_teetime_open") >= 0 && q.indexOf("play_at=lte.") >= 0, q.slice(0, 240));
+    await g.p.close();
+  }
+
   /* ③ 예약 신청 — ⚠️⚠️⚠️ 동의 없이는 안 보냅니다 */
   {
     const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },

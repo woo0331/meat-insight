@@ -150,7 +150,15 @@
       box.innerHTML = '<div class="none"><h2>접수됐습니다.</h2>' +
         '<p>신청번호 <b>' + esc(String(no).replace(/^"|"$/g, "")) + '</b> 입니다. ' +
         '확인한 뒤 적어 주신 연락처로 연락드립니다.</p>' +
-        '<a class="btn btn-line" href="/guide">이용안내 보기</a></div>';
+        /* ⚠️ 다음 걸음을 그 자리에서 — 이 화면의 「신청하신 뒤」 구간과 같은 말입니다.
+           ⚠️ 「접수」 이지 「승인」 이 아닙니다 — 손님 화면에는 아직 아무것도 안 나갑니다. */
+        '<p>지금은 <b>접수</b>된 상태이고 손님 화면에는 아직 아무것도 나가지 않습니다. ' +
+        '승인되면 업체 작업실에서 정보 · 가격 · 사진을 직접 관리하십니다' +
+        (window.amAuthToken && window.amAuthToken()
+          ? ' — 승인할 때 운영자가 지금 로그인하신 계정을 담당자로 잇습니다.'
+          : ' — 로그인 없이 신청하셨으니 운영자가 드리는 담당자 초대 코드를 업체 작업실에 넣으시면 됩니다.') +
+        '</p>' +
+        '<a class="btn btn-line" href="#joinafter">신청하신 뒤 과정 보기</a></div>';
       box.className = "";
       try{ box.scrollIntoView({ behavior:"smooth", block:"center" }); }catch(_){}
     }).catch(function(err){
@@ -177,8 +185,12 @@
        화면 위아래가 서로 다른 말을 하지 않게 합니다. */
     var lead = document.getElementById("joinlead");
     if(lead){
-      lead.innerHTML = '골프 관련 사업자라면 입점하실 수 있습니다. 입점은 ' +
-        '무료입니다. 등록하신 분야와 지역에 맞는 손님 문의가 넘어갑니다.';
+      /* ⚠️ 「사업자라면」 으로 적지 않습니다 — 사업자등록이 없는 프로도
+         신청하십니다(make_apply 의 brn 은 필수가 아닙니다 · 바로 아래
+         #joinwho 가 그렇게 말합니다). 한 화면이 두 말을 하지 않게. */
+      lead.innerHTML = '골프 관련 업체와 프로라면 신청하실 수 있습니다. 입점은 ' +
+        '무료입니다. 운영자가 확인하고 승인한 뒤에 손님 화면에 공개되고, ' +
+        '등록하신 분야와 지역에 맞는 요청을 배정받습니다.';
     }
     box.className = "jbox";
     box.innerHTML = form();

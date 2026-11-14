@@ -129,6 +129,30 @@
      눌러도 아무 일이 안 나는 칸이 됩니다(절대 규칙 5). 링크로 두고 눌림을
      가로채서 주소만 바꿉니다 — 그래야 주소를 복사해 보내도 같은 화면입니다.
      ⚠️ `teeBoard` 가 비면 띠를 **안 냅니다**(우리가 날 수를 지어내지 않습니다). */
+  /* 주소에서 조건을 읽습니다 — 처음 열 때와 뒤로 가기 때 **같은 함수** */
+  function readUrl(){
+    S.rg = ""; S.d = ""; S.course = ""; S.t = ""; S.p = "";
+    try{
+      var u = new URLSearchParams(window.location.search);
+      var rg = (u.get("rg") || "").trim();
+      var d  = (u.get("d")  || "").trim();
+      if(rg && window.amZone && window.amZone(rg)) S.rg = rg;
+      if(/^\d{4}-\d{2}-\d{2}$/.test(d)) S.d = d;
+      /* ⚠️ 골프장은 **글자 그대로** 받습니다 (목록이 DB 에서 오므로
+         여기서 맞는 값인지 가릴 길이 없습니다 — 틀리면 0건입니다). */
+      var cs = u.get("course");
+      if(cs) S.course = String(cs).slice(0, 80);
+      /* ⚠️ 시간대는 **아는 값만** 받습니다 — 모르는 값을 그대로 쓰면
+         영원히 0건인 화면이 됩니다(절대 규칙 1). */
+      var tb = (u.get("t") || "").trim();
+      if(tb && window.amTeeBand && window.amTeeBand(tb)) S.t = tb;
+      /* ⚠️ 가격대도 **아는 값만** 받습니다 — 모르는 값을 그대로 쓰면
+         영원히 0건인 화면이 됩니다(절대 규칙 1). */
+      var pv = (u.get("p") || "").trim();
+      if(pv && window.amTeePriceBand && window.amTeePriceBand(pv)) S.p = pv;
+    }catch(e){ }
+  }
+
   function myUrl(d){
     var q = [];
     if(S.rg) q.push("rg=" + encodeURIComponent(S.rg));
@@ -500,8 +524,10 @@
       qs.push("tee_at=gte." + encodeURIComponent(bd.from));
       if(bd.to) qs.push("tee_at=lt." + encodeURIComponent(bd.to));
     }
-    /* ⚠️ 달력으로 찾을 수 있는 끝 — 지시서 §5 (61~90일은 사전 상담만) */
-    else if(SEARCH) qs.push("play_at=lte." + encodeURIComponent(kstISO(SEARCH)));
+    /* ⚠️ 달력으로 찾을 수 있는 끝 — 지시서 §5 (61~90일은 사전 상담만)
+       ⚠️⚠️ 2026-11-14 — 전에는 `else if` 라 **시간대를 고르면 이 끝이 풀렸습니다**
+       (사전 상담으로 가야 할 날짜까지 목록에 나왔습니다). 시간대와 상관없이 겁니다. */
+    if(SEARCH) qs.push("play_at=lte." + encodeURIComponent(kstISO(SEARCH)));
     pastCut(qs);
     /* ⚠️⚠️⚠️ **정상 0건과 조회 실패를 가립니다** — 여기는 전부터
        갈려 있었고(`get` 이 null 을 돌린다), 이번에 더한 것은 **확인된
@@ -589,6 +615,8 @@
     if(f.id === "ttf-find"){
       S.d = val("d"); S.rg = val("rg"); S.course = val("course");
       S.t = val("t"); S.p = val("p");
+      /* ⚠️ 고른 조건을 **주소에도** 남깁니다 — 새로고침 · 주소 복사에도 같은 화면 */
+      try{ window.history.pushState(null, "", myUrl(S.d)); }catch(_){}
       load();
       return;
     }
@@ -623,6 +651,7 @@
     if(!t || !t.closest) return;
     if(t.closest(".tf-all")){
       S.rg = ""; S.d = ""; S.course = ""; S.t = ""; S.p = "";
+      try{ window.history.pushState(null, "", myUrl("")); }catch(_){}
       return void load();
     }
     /* 날짜 띠 — ⚠️ 주소를 **같이 바꿉니다**(뒤로 가기도 됩니다) */
@@ -666,25 +695,10 @@
     /* ⚠️⚠️ 메인 현황표의 칸이 `?rg=<묶음>&d=<날짜>` 로 보냅니다 —
        그 조건으로 **열린 채** 시작해야 숫자와 목록이 맞습니다.
        ⚠️ 모르는 값은 버립니다 (영원히 0건인 화면을 내지 않습니다). */
-    try{
-      var u = new URLSearchParams(window.location.search);
-      var rg = (u.get("rg") || "").trim();
-      var d  = (u.get("d")  || "").trim();
-      if(rg && window.amZone && window.amZone(rg)) S.rg = rg;
-      if(/^\d{4}-\d{2}-\d{2}$/.test(d)) S.d = d;
-      /* ⚠️ 골프장은 **글자 그대로** 받습니다 (목록이 DB 에서 오므로
-         여기서 맞는 값인지 가릴 길이 없습니다 — 틀리면 0건입니다). */
-      var cs = u.get("course");
-      if(cs) S.course = String(cs).slice(0, 80);
-      /* ⚠️ 시간대는 **아는 값만** 받습니다 — 모르는 값을 그대로 쓰면
-         영원히 0건인 화면이 됩니다(절대 규칙 1). */
-      var tb = (u.get("t") || "").trim();
-      if(tb && window.amTeeBand && window.amTeeBand(tb)) S.t = tb;
-      /* ⚠️ 가격대도 **아는 값만** 받습니다 — 모르는 값을 그대로 쓰면
-         영원히 0건인 화면이 됩니다(절대 규칙 1). */
-      var pv = (u.get("p") || "").trim();
-      if(pv && window.amTeePriceBand && window.amTeePriceBand(pv)) S.p = pv;
-    }catch(e){ }
+    readUrl();
+    /* ⚠️ 뒤로 가기 · 앞으로 가기 — 날짜 띠 · 찾는 칸이 pushState 를 쓰므로
+       이 줄이 없으면 주소만 바뀌고 목록은 그대로였습니다(2026-11-14) */
+    window.addEventListener("popstate", function(){ readUrl(); load(); });
     watchDay();
     return load();
   }).catch(function(){});

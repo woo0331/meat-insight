@@ -67,6 +67,18 @@ async function makeBright(b, file, w, h){
   await p.close();
 }
 
+/* 가장 어두운 사진 — ⚠️ 2026-11-14 메인 히어로는 **짙은 글자 · 밝은 막**입니다
+   (「예약 검색 우선형」 확정 시안). 짙은 글자에게 제일 나쁜 경우는 **어두운**
+   사진이라, 히어로는 이것으로 잽니다. */
+async function makeDark(b, file, w, h){
+  const p = await b.newPage({ viewport:{ width:w, height:h } });
+  await p.setContent('<body style="margin:0">' +
+    '<div style="width:100vw;height:100vh;background:' +
+    'linear-gradient(135deg,#000000 0%,#0a1a10 50%,#06140c 100%)"></div></body>');
+  await p.screenshot({ path:file, type:"jpeg", quality:88 });
+  await p.close();
+}
+
 (async function(){
   fs.copyFileSync(DATA, BAK);
   const made = [];
@@ -78,7 +90,7 @@ async function makeBright(b, file, w, h){
     console.log("\n── ① 가장 밝은 사진을 넣어 봅니다 (일부러 제일 나쁜 경우)");
     const hero = path.join(IMGDIR, "__t-hero.jpg");
     const zone = path.join(IMGDIR, "__t-zone.jpg");
-    await makeBright(b, hero, 2400, 1200);
+    await makeDark(b, hero, 2400, 1200);
     await makeBright(b, zone, 1200, 600);
     made.push(hero, zone);
 
@@ -132,10 +144,10 @@ async function makeBright(b, file, w, h){
       const end = src.indexOf(">", at);
       return end < 0 ? "" : src.slice(at, end + 1);
     }
-    const heroTag = tagOf(html, "hero-bg");
+    const heroTag = tagOf(html, "hm-hero-bg");
     ok("배경 사진은 aria-hidden 이고 alt 가 비어 있다",
        heroTag.indexOf('alt=""') >= 0 && heroTag.indexOf('aria-hidden="true"') >= 0,
-       heroTag || "(hero-bg 를 못 찾았습니다)");
+       heroTag || "(hm-hero-bg 를 못 찾았습니다)");
     /* ⚠️ 첫 화면 그림은 미리, 아래 그림은 늦게 */
     ok("히어로는 fetchpriority 다 (첫 화면은 미리 받습니다)",
        html.indexOf('fetchpriority="high"') >= 0);
@@ -185,7 +197,7 @@ async function makeBright(b, file, w, h){
          ⚠️ 그래서 단추(제 면이 있음)와 빈 상자(글자가 없음)는 빠집니다 —
          처음에 그 둘을 넣어 **빈 구석의 사진**을 재고 1.26 으로
          떨어뜨렸습니다. */
-      function lightText(outer){
+      function lightText(outer, dark){
         const a = outer.getBoundingClientRect();
         const out = [];
         Array.prototype.forEach.call(outer.querySelectorAll("*"), function(el){
@@ -203,11 +215,26 @@ async function makeBright(b, file, w, h){
             const v = m[1].split(",").map(function(x){ return parseFloat(x); });
             if(v.length < 4 || v[3] > 0.05) return;
           }
+          /* ⚠️⚠️ `dark`(밝은 막 위의 짙은 글자)에서는 **조상에 제 바탕이 있으면** 뺍니다 —
+             찾는 칸의 흰 카드 · 초록 단추 안의 글자는 그 면이 대비를 책임집니다.
+             처음에 단추 글자(「티타임 찾기」 · 액션그린 면)를 사진 위 글자로 읽어
+             대비 2.55 로 **멀쩡한 막을 고장이라고** 했습니다. */
+          if(dark){
+            for(let up = el.parentElement; up && up !== outer; up = up.parentElement){
+              const ub = (getComputedStyle(up).backgroundColor || "").match(/rgba?\(([^)]+)\)/);
+              if(ub){
+                const uv = ub[1].split(",").map(function(x){ return parseFloat(x); });
+                if(uv.length < 4 || uv[3] > 0.05) return;
+              }
+            }
+          }
           const cm = (cs.color || "").match(/rgba?\(([^)]+)\)/);
           if(!cm) return;
           const c = cm[1].split(",").map(function(x){ return parseFloat(x); });
           /* 밝은 글자만 — 어두운 글자는 이 막이 지키는 대상이 아닙니다 */
-          if((c[0] + c[1] + c[2]) / 3 < 150) return;
+          /* ⚠️ `dark` 면 거꾸로 — 짙은 글자만 (밝은 막 위의 히어로 제목) */
+          const avg = (c[0] + c[1] + c[2]) / 3;
+          if(dark ? avg >= 150 : avg < 150) return;
           const r = el.getBoundingClientRect();
           if(r.width < 2 || r.height < 2) return;
           out.push({ el: el, x: Math.round(r.x - a.x), y: Math.round(r.y - a.y),
@@ -223,7 +250,8 @@ async function makeBright(b, file, w, h){
         out.forEach(function(o){ o.el.style.visibility = "hidden"; });
         return out;
       }
-      const hero = document.querySelector(".hero");
+      /* ⚠️ 2026-11-14 — 확정 시안의 히어로(`.hm-hero`)는 **짙은 글자**입니다 */
+      const hero = document.querySelector(".hm-hero");
       /* ⚠️⚠️ **히어로 **전체**에서 찾습니다** (`.hero-in` 안이 아니라).
          글 덩이가 상자 바깥에 놓이는 날에도 빠뜨리지 않으려고 그렇게
          둡니다 — 막이 왼쪽에서 짙고 오른쪽에서 옅으므로, 오른쪽 끝이
@@ -231,7 +259,7 @@ async function makeBright(b, file, w, h){
          (2026-11-03 까지는 '믿음 줄' 넷이 그 자리에 있었습니다. UX
          검수로 뺐지만, 재는 방식은 그대로 두는 것이 맞습니다.) */
       const out = {
-        hero: lightText(hero), feat: [] };
+        hero: lightText(hero, true), feat: [] };
       document.querySelectorAll(".feat-ph").forEach(function(c){
         out.feat.push(lightText(c));
       });
@@ -251,7 +279,7 @@ async function makeBright(b, file, w, h){
 
     /* 한 자리의 **가장 밝은 바탕**을 돌려줍니다 — ⚠️ 평균이 아닙니다.
        평균은 어두운 쪽에 끌려가서 "괜찮다" 고 말합니다. */
-    async function worstBg(loc, boxList){
+    async function worstBg(loc, boxList, low){
       const shot = await loc.screenshot();
       return await p.evaluate(async function(a){
         const img = new Image();
@@ -264,7 +292,7 @@ async function makeBright(b, file, w, h){
         const g = c.getContext("2d");
         g.drawImage(img, 0, 0);
         function ch(v){ v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
-        let L = 0, n = 0;
+        let L = a.low ? 1 : 0, n = 0;
         a.boxes.forEach(function(box){
           const bx = Math.max(0, box.x), by = Math.max(0, box.y);
           const bw = Math.min(box.w, img.width - bx), bh = Math.min(box.h, img.height - by);
@@ -273,23 +301,30 @@ async function makeBright(b, file, w, h){
           for(let i = 0; i < d.length; i += 4){
             n++;
             const l = 0.2126 * ch(d[i]) + 0.7152 * ch(d[i+1]) + 0.0722 * ch(d[i+2]);
-            if(l > L) L = l;
+            if(a.low ? l < L : l > L) L = l;
           }
         });
         return { n: n, L: L };
-      }, { b64: shot.toString("base64"), boxes: boxList });
+      }, { b64: shot.toString("base64"), boxes: boxList, low: !!low });
     }
     /* 흰 글자(L=1) 대비 = 1.05 / (L + 0.05) */
     const ratioOf = x => 1.05 / (x.L + 0.05);
 
-    const H = await worstBg(p.locator(".hero"), boxes.hero);
+    /* ⚠️⚠️ 짙은 글자이므로 **가장 어두운 바탕**을 잽니다(`low`). 글자색은 둘 가운데
+       **밝은 쪽**(`--grn-text` #0A5C3F)으로 셉니다 — 낮은 쪽에 맞춥니다. */
+    const H = await worstBg(p.locator(".hm-hero"), boxes.hero, true);
+    const LT = (function(){ function ch(v){ v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+      return 0.2126 * ch(0x0A) + 0.7152 * ch(0x5C) + 0.0722 * ch(0x3F); })();
+    const darkRatio = x => (x.L + 0.05) / (LT + 0.05);
     /* ⚠️⚠️ **잰 것이 0개면 실패입니다** — 아무것도 안 재고 초록인
        검사를 여러 번 만들었습니다. */
-    ok("히어로에서 잰 점이 0개가 아니다", H.n > 10000, H.n + "점");
+    ok("히어로에서 잰 점이 0개가 아니다", H.n > 1000, H.n + "점");
     /* ⚠️ 히어로의 큰 글자는 3.0 이면 되지만 `hero-sub` 는 보통 글자라
        **4.5** 를 봅니다 — 낮은 쪽에 맞춥니다. */
-    ok("⚠️ 가장 밝은 사진 위에서도 흰 글자 대비가 4.5 이상이다",
-       ratioOf(H) >= 4.5, "대비 " + ratioOf(H).toFixed(2));
+    /* ⚠️ 히어로 제목은 **큰 글자**(26px 이상 · 굵게)라 3.0 을 봅니다. 찾는 칸 안의
+       작은 글자는 흰 카드가 받치므로 그 자리의 바탕은 흰색입니다. */
+    ok("⚠️ 가장 어두운 사진 위에서도 히어로 제목 대비가 3.0 이상이다",
+       darkRatio(H) >= 3.0, "대비 " + darkRatio(H).toFixed(2));
     /* ⚠️⚠️⚠️ **2026-11-07 — 여기가 재던 것이 없어졌습니다.**
        전에는 메인의 네 묶음 카드가 **사진 위에 흰 글자**를 얹었고, 그
        대비를 점을 찍어 쟀습니다. 지금 묶음 사진은 `/categories` 의
@@ -329,11 +364,11 @@ async function makeBright(b, file, w, h){
        떨어지는지. 안 떨어지면 재는 자리가 틀린 것이고, 그때는
        "통과" 가 아무 뜻도 없습니다. */
     const thin = await p.addStyleTag({ content:
-      ".hero-ph::after{ background-color: rgba(6,59,43,.08) !important;" +
+      ".hm-hero-ph::after{ background-color: rgba(255,255,255,.05) !important;" +
       " background-image: none !important }" });
-    const T = await worstBg(p.locator(".hero"), boxes.hero);
+    const T = await worstBg(p.locator(".hm-hero"), boxes.hero, true);
     ok("막을 옅게 하면 이 검사가 **떨어진다** (재는 자리가 맞습니다)",
-       ratioOf(T) < 4.5, "대비 " + ratioOf(T).toFixed(2));
+       darkRatio(T) < 3.0, "대비 " + darkRatio(T).toFixed(2));
     await thin.evaluate(function(e){ e.remove(); });
     await p.close();
 

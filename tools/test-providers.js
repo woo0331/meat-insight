@@ -219,24 +219,12 @@ function nowServe(){ return serve(0); }
          redrawn.indexOf("업체를 기다리지 않고") >= 0,
          redrawn.slice(0, 300));
 
-      /* 메인의 0곳 상자도 같은 줄을 읽는가 */
+      /* ⚠️⚠️ 2026-11-14 — 메인이 「예약 검색 우선형」 확정 시안(docs/spec/00-main.webp)으로
+         바뀌며 **입점업체 0곳 상자가 메인에서 빠졌습니다**(시안에 없습니다). 그 줄을 재던
+         두 검사를 지웠습니다 — 남겨 두면 없는 상자를 찾다 늘 떨어지거나, 빈 글자를 보고
+         **엉뚱한 까닭으로 통과**합니다. 같은 줄(`amOpenNow()`)은 업체찾기 · 분류 화면이
+         그대로 읽고, 위에서 잽니다. 메인에서는 0곳 상자 대신 **분류 열 칸**이 길을 냅니다. */
       await p0.goto("http://127.0.0.1:" + h0.port + "/", { waitUntil:"networkidle" });
-      const homeTxt = (await p0.textContent("main")) || "";
-      ok("메인의 0곳 상자에도 지금 되는 것이 전부 있다",
-         want.every(function(x){ return homeTxt.indexOf(x.label) >= 0; }),
-         homeTxt.slice(0, 200));
-      /* ⚠️ 이 구간을 읽는 사람은 **업체를 찾는 손님**입니다 — 입점
-         권유를 여기 두면 자리가 어긋납니다 (같은 단추가 두 번). */
-      const zeroBox = await p0.evaluate(function(){
-        const b2 = document.querySelectorAll(".none");
-        for(const x of b2)
-          if((x.textContent || "").indexOf("아직 입점한 업체가 없습니다") >= 0)
-            return x.innerHTML;
-        return "";
-      });
-      ok("⚠️ 메인 0곳 상자 **안에는 입점 단추를 안 둔다** (바로 아래 띠가 " +
-         "같은 말을 합니다)", zeroBox.indexOf('href="/join"') < 0,
-         zeroBox.slice(0, 200));
       /* ⚠️⚠️⚠️ **2026-11-07 — 메인의 분류 열 장 격자가 빠졌습니다.**
          최종 작업지시서 A-3 은 "10개 카테고리 **아이콘**(기존 유지)" 이고,
          A 는 "기존 10개 **이미지** 카테고리 반복 영역은 서비스 카드 /
@@ -268,17 +256,18 @@ function nowServe(){ return serve(0); }
          — 칸 수를 박지 않고 **분류 수가 고르게 나뉘는지**를 봅니다.
          ⚠️ 안 나뉘면 마지막 줄에 한 장만 덩그러니 남습니다. */
       const qn = await p0.evaluate(function(){
-        const g = document.querySelector(".qnav-in");
+        /* ⚠️ 2026-11-14 — 확정 시안의 「어떤 골프를 찾으세요?」 칸(`.hm-cats`) */
+        const g = document.querySelector(".hm-cats");
         if(!g) return { on:false };
         return { on:true,
           col: getComputedStyle(g).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
-          n: g.querySelectorAll("a.qn").length,
+          n: g.querySelectorAll("a.hm-cat").length,
           /* ⚠️ 전부 분류 주소로 가야 합니다 — 하나라도 빠지면 그 분류는
              첫 화면에서 가는 길이 없습니다 */
-          hrefs: Array.prototype.map.call(g.querySelectorAll("a.qn"),
+          hrefs: Array.prototype.map.call(g.querySelectorAll("a.hm-cat"),
             function(a){ return a.getAttribute("href"); }) };
       });
-      ok("⚠️ 히어로 아래 **분류로 바로 가는 띠**가 있다", qn.on,
+      ok("⚠️ 메인에 **분류로 바로 가는 칸**이 있다 (어떤 골프를 찾으세요?)", qn.on,
          JSON.stringify(qn).slice(0, 140));
       /* ⚠️⚠️ **분류 수를 `AM_CATS` 에서 읽어 맞춥니다** — 전에는 메인의
          `.cat-grid` 에서 셌는데, 그 격자가 메인에서 빠지자 **0 과 비교**
@@ -646,7 +635,9 @@ function nowServe(){ return serve(0); }
     /* 메인 */
     await p.goto("http://127.0.0.1:" + h.port + "/", { waitUntil:"networkidle" });
     t = (await p.textContent("main")) || "";
-    ok("메인에 입점업체 구간이 생긴다", (await p.locator(".pv").count()) === 2);
+    /* ⚠️ 2026-11-14 — 확정 시안의 메인에는 입점업체 구간이 없습니다(업체는 분류 ·
+       업체찾기 화면에서 나옵니다). 그래서 「구간이 생긴다」 검사를 지웠고,
+       「0곳이라고 더 안 말한다」만 남깁니다. */
     ok("메인이 '아직 입점한 업체가 없습니다' 를 더 안 말한다",
        t.indexOf("아직 입점한 업체가 없습니다") < 0);
 

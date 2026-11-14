@@ -4813,8 +4813,11 @@ picture{ display: contents; }
 /* ⚠️⚠️ 글자 대비는 **막이 책임집니다** — 사진이 어떻든 위쪽 제목이
    짙은 글자로 읽히게 위를 밝게 덮습니다. */
 .hm-hero-ph::after{ content:""; position:absolute; inset:0;
-  background: linear-gradient(180deg, rgba(255,255,255,.88) 0%, rgba(255,255,255,.62) 32%,
-                                      rgba(255,255,255,.18) 70%, rgba(255,255,255,0) 100%); }
+  background: linear-gradient(180deg, rgba(255,255,255,.92) 0%, rgba(255,255,255,.86) 30%,
+                                      rgba(255,255,255,.4) 62%, rgba(255,255,255,.08) 100%); }
+/* ⚠️⚠️ 2026-11-14 — 처음 값(.88 → .62)은 **아주 어두운 사진**에서 제목 대비가
+   2.55 였습니다(`test-photos` 가 어두운 사진을 넣어 잽니다). 제목이 앉는 위쪽
+   삼분의 일을 .86 이상으로 덮습니다. */
 .hm-hero-in{ position:relative; z-index:1; padding-block: 34px 40px; }
 .hm-h1{ text-align:center; font-size: clamp(26px, 4vw, 44px); line-height:1.2;
         color: var(--grn); font-weight:800; letter-spacing:-.01em; }

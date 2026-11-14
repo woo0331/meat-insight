@@ -5708,9 +5708,12 @@ function boardsOf(){
     await g.p.close();
   }
 
-  /* ⑧ 메인 현황표 — ⚠️⚠️ 묶음으로 세고 그 칸이 같은 조건으로 보냅니다 */
+  /* ⑧ 현황표 — ⚠️⚠️ 묶음으로 세고 그 칸이 같은 조건으로 보냅니다
+     ⚠️⚠️ 2026-11-14 — 메인이 「예약 검색 우선형」 확정 시안으로 바뀌며 현황표는
+     메인에서 빠졌고 **`/cat/booking` 에 그대로** 있습니다. 그래서 여는 주소만
+     옮겼습니다(재는 뜻은 그대로입니다). 메인의 찾는 칸은 아래 ⑧-9 가 잽니다. */
   {
-    const g = await open("/", { role:"customer", name:"손님", signedIn:true },
+    const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },
       { v_teetime_count: TCNT, v_join_count: [] }, {}, true);
     const r = await g.p.evaluate(function(){
       const b = document.getElementById("teeboard");
@@ -5743,7 +5746,7 @@ function boardsOf(){
   }
   {
     /* ⚠️⚠️⚠️ **0 을 포장하지 않습니다** — 왜 0 인지와 지금 되는 길 */
-    const g = await open("/", { role:"customer", name:"손님", signedIn:true },
+    const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },
       { v_teetime_count: [], v_join_count: [] }, {}, true);
     const r = await g.p.evaluate(function(){
       const b = document.getElementById("teeboard");
@@ -5767,7 +5770,7 @@ function boardsOf(){
      ⚠⚠ **가는 주소를 재야 합니다** — 고르개가 보내는 열쇠와 받는 쪽이
      다르면 고르는 순간 아무 일이 안 나고 **에러도 안 납니다**. */
   {
-    const g = await open("/", { role:"customer", name:"손님", signedIn:true },
+    const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },
       { v_teetime_count: TCNT, v_join_count: [], v_teetime_open: TEE }, {}, true);
     await g.p.waitForTimeout(400);
     const r = await g.p.evaluate(function(){
@@ -5814,7 +5817,7 @@ function boardsOf(){
   {
     /* 조인 탭 — ⚠ 조인에는 **골프장 칸을 안 냅니다**(회원이 여는
        자리라 골프장으로 좁힐 자료가 없습니다 · 절대 규칙 5). */
-    const g = await open("/", { role:"customer", name:"손님", signedIn:true },
+    const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },
       { v_teetime_count: TCNT, v_join_count: TCNT, v_teetime_open: TEE }, {}, true);
     await g.p.waitForTimeout(400);
     await g.p.click('#teeboard [data-teetab="join"]');
@@ -5878,7 +5881,7 @@ function boardsOf(){
       return r.fulfill({ status:200, contentType:"application/json",
         body: JSON.stringify({ auth:false, signedIn:false, conf:null }) });
     });
-    await p0.goto(base + "/", { waitUntil:"networkidle" });
+    await p0.goto(base + "/cat/booking", { waitUntil:"networkidle" });
     await p0.waitForTimeout(400);
     const r = await p0.evaluate(function(){
       const bx = document.getElementById("teeboard");
@@ -5908,7 +5911,7 @@ function boardsOf(){
      줄 수로 재면 시간대를 통째로 떼어도 **영원히 초록**입니다.
      ⚠️ 갯수를 박지 않습니다 — 고르개의 수를 `AM_TEE_BAND` 에서 셉니다. */
   {
-    const g = await open("/", { role:"customer", name:"손님", signedIn:true },
+    const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },
       { v_teetime_count: TCNT, v_join_count: [], v_teetime_open: TEE }, {}, true);
     await g.p.waitForTimeout(400);
     const r = await g.p.evaluate(function(){
@@ -5961,6 +5964,76 @@ function boardsOf(){
     ok("조인에는 **시간대 칸을 안 낸다** (견줄 자료가 없습니다)",
        r.board === false && r.list === false, JSON.stringify(r));
     await g.p.close();
+  }
+
+  /* ⑧-9 **메인의 찾는 칸** — 「예약 검색 우선형」 확정 시안 (2026-11-14 · docs/spec/00-main.webp)
+     ⚠️⚠️ **설정(Supabase)이 없어도 돕니다** — 주소만 짓고 DB 를 안 부릅니다.
+     ⚠️⚠️ **보내는 주소를 재야 합니다** — 받는 쪽(`/cat/booking` 의 rg · d · t ·
+     `/cat/matchup` 의 rg · d · 골프장 정보 탭의 tab · q)과 열쇠가 다르면
+     눌러도 아무 일이 안 나고 에러도 안 납니다. */
+  {
+    const g = await open("/", { auth:false, signedIn:false }, {}, {}, true);
+    const r = await g.p.evaluate(function(){
+      const f = document.getElementById("hmfind");
+      const tabs = f ? Array.prototype.map.call(f.querySelectorAll("[data-hmtab]"),
+        function(a){ return a.getAttribute("data-hmtab") + "|" + a.getAttribute("href"); }) : [];
+      const days = f ? f.querySelectorAll(".hm-day") : [];
+      return { on: !!f, tabs: tabs, n: days.length,
+               first: days.length ? days[0].getAttribute("data-hmday") : "",
+               firstOn: days.length ? days[0].classList.contains("on") : false,
+               t: !!document.getElementById("hm-t"),
+               rg: !!document.getElementById("hm-rg") };
+    });
+    ok("메인에 **찾는 칸**이 그려진다 (설정이 없어도)", r.on, JSON.stringify(r).slice(0, 200));
+    ok("  탭 셋이 **링크**다 (자바스크립트가 꺼져도 갈 곳이 있다)",
+       r.tabs.length === 3 && r.tabs.every(function(x){ return x.split("|")[1]; }),
+       r.tabs.join(" · "));
+    ok("  ⚠️ 날짜 칩이 **펼친 날 수**만큼 · 첫 칩이 **한국 기준 오늘**이고 켜져 있다",
+       r.n === keepNum("teeBoard") && r.first === TKST(0) && r.firstOn,
+       JSON.stringify(r));
+    ok("  지역 · 시간대 칸이 있다", r.rg && r.t, JSON.stringify(r));
+
+    await g.p.click('[data-hmday="' + TKST(2) + '"]');
+    await g.p.selectOption("#hm-rg", "capital");
+    await g.p.selectOption("#hm-t", "am");
+    await g.p.click(".hm-go");
+    await g.p.waitForTimeout(500);
+    let u = new URL(g.p.url());
+    ok("⚠️⚠️ 부킹은 **그 날짜 · 그 지역 · 그 시간대**로 /cat/booking 에 보낸다",
+       u.pathname.replace(/\/$/, "") === "/cat/booking" && u.searchParams.get("d") === TKST(2) &&
+       u.searchParams.get("rg") === "capital" && u.searchParams.get("t") === "am" &&
+       !u.searchParams.get("tab"), g.p.url());
+    await g.p.close();
+
+    const g2 = await open("/", { auth:false, signedIn:false }, {}, {}, true);
+    await g2.p.click('[data-hmtab="join"]');
+    const j = await g2.p.evaluate(function(){
+      const t = document.getElementById("hm-t");
+      return { action: document.getElementById("hmfind").getAttribute("action"),
+               tHidden: !t || t.closest(".hm-sel").hidden,
+               go: document.getElementById("hm-go-t").textContent };
+    });
+    ok("  조인 탭은 /cat/matchup 으로 보내고 **시간대 칸을 안 낸다** (조인 시각은 자유 글자)",
+       j.action === "/cat/matchup" && j.tHidden, JSON.stringify(j));
+    await g2.p.click(".hm-go");
+    await g2.p.waitForTimeout(500);
+    u = new URL(g2.p.url());
+    ok("  조인은 시간대를 **안 보낸다** (받는 쪽이 모릅니다)",
+       u.pathname.replace(/\/$/, "") === "/cat/matchup" && !u.searchParams.has("t") &&
+       u.searchParams.get("d") === TKST(0), g2.p.url());
+    await g2.p.close();
+
+    const g3 = await open("/", { auth:false, signedIn:false }, {}, {}, true);
+    await g3.p.click('[data-hmtab="course"]');
+    await g3.p.fill("#hm-q", "그린");
+    await g3.p.click(".hm-go");
+    await g3.p.waitForTimeout(500);
+    u = new URL(g3.p.url());
+    ok("⚠️⚠️ 골프장 정보 탭은 **골프장 찾기 화면**(?tab=course)으로 보낸다 · 날짜를 안 보낸다",
+       u.pathname.replace(/\/$/, "") === "/cat/booking" && u.searchParams.get("tab") === "course" &&
+       u.searchParams.get("q") === "그린" && !u.searchParams.has("d") && !u.searchParams.has("t"),
+       g3.p.url());
+    await g3.p.close();
   }
 
   /* ⑨ 폰 폭 셋 */

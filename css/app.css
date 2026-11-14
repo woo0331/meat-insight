@@ -5037,3 +5037,9 @@ picture{ display: contents; }
 .js .hm-days{ min-height:101px; }
 @media (min-width: 901px){ .js .hm-days{ min-height:63px; } }
 @media (max-width: 760px){ .js .hm-days{ min-height:108px; } }
+/* ⚠️ 폰에서 조인 카드 제목 · 딱지가 **가운데로** 몰리던 자리 (2026-11-14 · 찍어 보고 찾았습니다) —
+   `.jnc-mid .jnc-h`(0,2,0)의 align-items:center 가 폰 규칙 `.jnc-h`(0,1,0)를 이겨,
+   세로로 쌓인 칸에서 짧은 제목만 가운데에 섰습니다(긴 제목은 폭을 다 채워 안 보였습니다). */
+@media (max-width: 620px){
+  .jnc-mid .jnc-h{ align-items:flex-start; }
+}

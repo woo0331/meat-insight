@@ -1,5 +1,4 @@
 -- 0073_trip · 운영 DB 판이 72 일 때만 실행합니다
-select max(n) from schema_version;
 create table if not exists trip (
   id          uuid primary key default gen_random_uuid(),
   provider_id text not null references provider(id) on delete cascade,

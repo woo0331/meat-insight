@@ -1,5 +1,4 @@
 -- 0077_trip_depart · 운영 DB 판이 76 일 때만 실행합니다
-select max(n) from schema_version;
 begin;
 alter table trip add column if not exists depart_kind text not null default 'none';
 alter table trip add column if not exists depart_from date;

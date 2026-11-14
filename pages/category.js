@@ -1723,7 +1723,9 @@ exports.build = function(c){
       /* ⚠️ 0060 — 업체가 내놓은 조인 자리도 같은 화면에 섭니다 */
       /* ⚠️⚠️ teeboard.js — 찾는 칸 + 날짜 · 지역별 현황입니다(2026-11-07).
          안 실으면 그 상자가 `hidden` 인 채로 남고 **에러도 안 납니다.** */
-      ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
+      /* ⚠️ korean.js — 빈 목록 문구의 조사(「조인 자리가」)를 `koWith()` 로
+         붙입니다(2026-11-14). 안 실으면 조사 없이 찍힙니다. */
+      ? ["/js/data/korean.js", "/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
          "/js/teeboard.js", "/js/join.js", "/js/booking.js"]
       /* ⚠️⚠️ 0060 — `/cat/booking` 은 **값을 읽는 파일 셋**이 있어야
          합니다: site.js(보유 기간 · 찾을 수 있는 날 수 — 비면 신청
@@ -1736,7 +1738,7 @@ exports.build = function(c){
          ⚠️ `courses.js` 는 `courses.generated.js` **뒤**라야 합니다
          (앞은 목록 · 뒤는 그 목록을 읽는 함수입니다). */
       : (c.key === "booking"
-          ? ["/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
+          ? ["/js/data/korean.js", "/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
              "/js/data/courses.generated.js", "/js/data/courses.js",
              "/js/teeboard.js", "/js/booking.js", "/js/courselist.js"]
       /* ⚠️ 게시판 글 사진도 **공개 버킷**으로 가므로 `imgprep.js` 가

@@ -4356,6 +4356,10 @@ function boardsOf(){
     await g.p.fill("#j-date", "2099-05-05");
     await g.p.selectOption("#j-rg", "seoul");
     await g.p.fill("#j-contact", "010-0000-0000");
+    /* ⚠️⚠️ 0080 의 실력 — 여는 양식에 칸이 없어 목록의 실력 거르개가 늘 0건이었습니다 */
+    const hasLv = (await g.p.locator("#j-level").count()) === 1;
+    ok("  ⚠️⚠️ 여는 양식에 **실력** 칸이 있다 (0080 · 2026-11-14)", hasLv);
+    if(hasLv) await g.p.selectOption("#j-level", "beginner");
     /* ⚠️ 동의 칸에는 **id 가 없습니다** — 이 상자는 여는 양식과 신청
        양식에 둘 다 들어가므로, id 를 달면 같은 id 가 둘이 됩니다
        (이름표는 label 이 감싸서 붙습니다). 그래서 양식으로 좁혀 집습니다. */
@@ -4370,6 +4374,7 @@ function boardsOf(){
       ok("  제목 · 설명 · 지역 · 연락처를 그대로 보낸다",
          sentP.title === "검사용 조인" && sentP.region === "seoul" &&
          sentP.contact === "010-0000-0000", JSON.stringify(sentP));
+      ok("  고른 실력을 **level** 로 보낸다", sentP.level === "beginner", JSON.stringify(sentP.level));
       /* ⚠️ 동의 시각은 **누른 그 순간**입니다 (화면을 연 시각이 아닙니다) */
       ok("  ⚠️ 동의 시각을 같이 보낸다", !!sentP.agree_at &&
          Math.abs(Date.now() - new Date(sentP.agree_at).getTime()) < 60000,
@@ -5593,6 +5598,24 @@ function boardsOf(){
                          { v_join_open: [] }, {}, true);
     const n = await g.p.locator('.none a[href="#joinbox"]').count();
     ok("  조인 0건이면 **조인 모집하기** 길을 낸다 (여는 양식으로)", n >= 1, "링크 " + n);
+    await g.p.close();
+  }
+  /* ⚠️⚠️ 한 화면의 두 목록이 **주소를 서로 지우지 않는다** (2026-11-14) —
+     /cat/matchup 의 업체 조인(booking.js)이 날짜 띠를 누르면 회원 조인(join.js)의
+     lv 가 주소에서 사라졌습니다(새로고침하면 조건이 풀렸습니다). */
+  {
+    const TJ = TEE.map(function(r){ return Object.assign({}, r, { kind:"join" }); });
+    const g = await open("/cat/matchup?lv=beginner", { role:"customer", name:"손님", signedIn:true },
+                         { v_teetime_open: TJ, v_join_open: JROOM }, {}, true);
+    await g.p.waitForTimeout(500);
+    const strip = await g.p.locator('#ttlist .tfd [data-tfd="' + TKST(2) + '"]').count();
+    if(strip){
+      await g.p.click('#ttlist .tfd [data-tfd="' + TKST(2) + '"]');
+      await g.p.waitForTimeout(500);
+    }
+    const u = g.p.url();
+    ok("⚠️⚠️ 업체 조인 날짜를 바꿔도 **회원 조인 조건(lv)** 이 주소에 남는다",
+       strip > 0 && u.indexOf("lv=beginner") >= 0 && u.indexOf("d=" + TKST(2)) >= 0, u);
     await g.p.close();
   }
   /* 부킹 — 거르개를 바꾸면 **주소가 따라가고** 뒤로 가기에 **조건이 돌아온다** */
@@ -7597,6 +7620,41 @@ function boardsOf(){
       ok("  주소에 쪽이 **1 부터** 남는다",
          (await g.p.evaluate(function(){ return location.search; })).indexOf("pg=2") >= 0,
          await g.p.evaluate(function(){ return location.search; }));
+      await g.p.close();
+    }
+
+    /* ── 상세 — **조회 실패**를 「팔린 매물」로 단정하지 않는다 (2026-11-14) ──
+       ⚠️⚠️ 전에는 5xx · 403 이 0줄로 바뀌어 「지금은 볼 수 없는 매물입니다 ·
+       팔렸거나 내렸을 수 있습니다」가 나왔습니다(다시 시도도 없었습니다). */
+    {
+      const g = await open("/cat/used?v=" + UID1, { role:"customer", name:"손님", signedIn:true },
+        { v_listing_open: { amErr:{ status:503, code:"PGRST000", message:"upstream down" } },
+          v_listing_photo_public: [] }, {}, true);
+      await g.p.waitForTimeout(500);
+      const t = await g.p.evaluate(function(){
+        const e = document.getElementById("lslist");
+        return { txt: e ? e.innerText.replace(/\s+/g, " ") : "",
+                 retry: e ? e.querySelectorAll("[data-amretry]").length : 0,
+                 back: e ? e.querySelectorAll("[data-back]").length : 0 }; });
+      ok("⚠️⚠️ 상세 조회 실패를 **「팔린 매물」로 단정하지 않는다**",
+         t.txt.indexOf("볼 수 없는 매물") < 0 && t.txt.indexOf("불러오지 못했습니다") >= 0, t.txt.slice(0, 160));
+      ok("  상세 실패에 **다시 시도**와 **목록으로**가 있다", t.retry === 1 && t.back >= 1, JSON.stringify(t).slice(0, 160));
+      const n0 = g.sent.length;
+      await g.p.click("#lslist [data-amretry]"); await g.p.waitForTimeout(500);
+      const q = g.sent.slice(n0).map(function(x){ return String(x.body || ""); }).join(" ");
+      ok("  다시 시도는 **그 매물**을 다시 묻는다 (목록이 아니라)",
+         q.indexOf("id=eq." + UID1) >= 0, q.slice(0, 200));
+      await g.p.close();
+    }
+    /* 목록 복귀 · 쪽 주소에 **플렉스 · 좌우타**까지 실린다 (2026-11-14 — 전에는 빠졌습니다) */
+    {
+      const ONE1 = Object.assign({}, LST[0], { id: UID1 });
+      const g = await open("/cat/used?fx=s&hd=right&v=" + UID1, { role:"customer", name:"손님", signedIn:true },
+        { v_listing_open: [ONE1], v_listing_photo_public: [] }, {}, true);
+      await g.p.waitForTimeout(500);
+      const href = await g.p.evaluate(function(){
+        const a = document.querySelector("#lslist [data-back]"); return a ? a.getAttribute("href") : ""; });
+      ok("  「매물 목록으로」 주소에 **fx · hd** 가 남는다", /fx=s/.test(href) && /hd=right/.test(href), href);
       await g.p.close();
     }
 

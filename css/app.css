@@ -4966,3 +4966,11 @@ picture{ display: contents; }
   .hm-date span{ display:none; }
   .hm-date input{ width:100%; font-size:12px; }
 }
+/* ⑤ 지역 타일 — ⚠️ 사진 없이 딥그린 면입니다(그 지역 사진이 없습니다 · 2026-11-14).
+   골드 선 하나로 절제된 강조만 둡니다. */
+.hm-rg{ flex-direction:column; align-items:flex-start; justify-content:flex-end; gap:4px;
+        background: linear-gradient(150deg, #0A5C3F 0%, var(--grn) 70%);
+        border-bottom:3px solid var(--gold); }
+.hm-rg:hover{ background: linear-gradient(150deg, #0d6b4a 0%, #0b3a2b 70%); }
+.hm-rg-ic{ color: var(--gold-soft); margin-bottom:auto; }
+.hm-rg-l{ color: var(--on-dark-2); font-size:13px; }

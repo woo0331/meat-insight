@@ -163,13 +163,15 @@ function needs(){
    좁혀져 열립니다 — 합의한 골프장 찾기 화면입니다.
    ⚠️⚠️ 지역이 둘 이상인 칸은 **쉼표**로 보냅니다(경기 · 인천 · 충청) —
    받는 쪽(`amCoursePickCards`)이 쉼표를 갈라 읽습니다.
-   ⚠️ 사진은 **그 지역 사진이 아닙니다** — 분위기를 위한 골프장 풍경이라
-   `alt` 를 비우고(장식) 이름표가 지역을 말합니다. */
+   ⚠️⚠️⚠️ **사진을 깔지 않습니다**(2026-11-14 · 사장님 지시). 저장소에는 그
+   지역에서 찍은 사진이 없고, 다른 곳 풍경을 「제주」 이름표 위에 깔면 그
+   지역 사진인 것처럼 읽힙니다(표시광고법 제3조). 지역 사진을 받으시는 날
+   `ph` 칸을 더하세요 — 그 전까지는 딥그린 타일입니다. */
 var RG = [
-  { name:"경기 · 인천", rg:"gyeonggi,incheon", ph:"cat-booking" },
-  { name:"강원",        rg:"gangwon",          ph:"zone-play" },
-  { name:"충청",        rg:"chungbuk,chungnam", ph:"cat-matchup" },
-  { name:"제주",        rg:"jeju",             ph:"cat-travel" }
+  { name:"경기 · 인천", rg:"gyeonggi,incheon" },
+  { name:"강원",        rg:"gangwon" },
+  { name:"충청",        rg:"chungbuk,chungnam" },
+  { name:"제주",        rg:"jeju" }
 ];
 function where(){
   return '<section class="sec hm-s" aria-labelledby="hm-rg-h"><div class="wrap">' +
@@ -178,10 +180,10 @@ function where(){
       '<a class="btn btn-sm btn-line hm-all" href="' + esc(courseUrl("")) + '">전국 골프장 보기' +
         icon("arrow", 16) + '</a></div>' +
     '<div class="hm-rgs">' + RG.map(function(r){
-      var has = W.amPhoto ? W.amPhoto(r.ph) : null;
-      return '<a class="hm-rg' + (has ? " hm-rg-ph" : "") + '" href="' + esc(courseUrl(r.rg)) + '">' +
-        (has ? W.amPhotoImg(r.ph, { cls:"hm-rg-bg", alt:"" }) : "") +
-        '<span class="hm-rg-n">' + esc(r.name) + icon("arrow", 16) + '</span></a>';
+      return '<a class="hm-rg" href="' + esc(courseUrl(r.rg)) + '">' +
+        '<span class="hm-rg-ic">' + icon("pin", 22) + '</span>' +
+        '<span class="hm-rg-n">' + esc(r.name) + icon("arrow", 16) + '</span>' +
+        '<span class="hm-rg-l">골프장 정보 보기</span></a>';
     }).join("") + '</div>' +
   '</div></section>';
 }

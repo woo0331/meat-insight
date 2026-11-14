@@ -1,5 +1,4 @@
 -- 0071_pro_self · 운영 DB 판이 70 일 때만 실행합니다
-select max(n) from schema_version;
 alter table provider_apply
   add column if not exists by_user uuid references auth.users(id) on delete set null;
 create index if not exists provider_apply_byuser_idx

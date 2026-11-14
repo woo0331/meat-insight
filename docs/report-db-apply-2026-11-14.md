@@ -171,3 +171,29 @@ AI 쪽에서 보이는 값: `addr = 2406:da12:557:f802:9546:5e28:30fd:a12a/128`,
 | `db/fingerprint.sql` | 기존 16표 지문 |
 | `db/resume.sql` | 중간에 멈췄을 때 어디까지 됐는지 보는 조회 |
 | `docs/backup-2026-11-14.md` | 백업 기록과 실행 계획 |
+
+---
+
+## 8. 추가 기록 (같은 날 · 사장님 지시 반영)
+
+- **같은 SQL 을 반복 실행하거나 다른 세션으로 옮겨 안전 필터를 우회하지 않습니다.**
+- **안전 필터가 거부한 이유는 알 수 없습니다.** 필터는 거부했다는 사실만 알려 주고
+  까닭을 돌려주지 않습니다. 거부된 응답은 0068~0070 을 한 번에 담은 약 4만 자 묶음이었고,
+  그 호출은 실행되지 않았습니다(판 67 · `listing.brand` 칸 0개로 확인).
+- **0068 한 파일의 변경 대상** (`db/apply-0068-0081/0068_listing_photo.sql` ·
+  리허설에서 돈 묶음과 글자 단위로 같음을 비교):
+  - 지우는 것: 보기 6개 — `v_listing_count` · `v_job_count` · `v_wanted_count` ·
+    `v_cq_count`(0067 이 만든 것) · `v_listing_open` · `v_listing_photo_public`
+    (바로 다시 만듭니다). **표 · 데이터는 지우지 않습니다.**
+  - 더하는 것: `listing.brand` 칸 · 제약 1 · 색인 2 · 표 `listingphoto`(RLS · 정책 1)
+  - 바꾸는 함수: `claim_listing_photo` · `drop_listing_photo` · `open_listing` · `edit_listing`
+  - 권한: `listing.brand` 칸 읽기 · `listingphoto` 읽기(회원) · 공개 보기 2개(anon · 회원)
+  - `schema_version` 에 68 한 줄
+  - **기존 16개 표의 이름은 이 파일에 한 번도 나오지 않습니다**(grep 0건).
+  - ⚠️ `drop view` 가 있어 SQL 편집기가 **「destructive operation」 경고 창**을
+    띄울 수 있습니다. 거기서 취소하면 아무것도 실행되지 않습니다.
+- **한 파일의 반영을 DB 에서 확인하기 전에는 다음 파일로 넘어가지 않습니다.**
+- **기본 권한만 되돌리는 파일**: `db/restore-defacl.sql` (post-apply ① 세 줄 + 지문 확인).
+  ⚠️⚠️ **이것을 돌렸다면, 재개 전에 반드시 `db/pre-apply.sql` 을 먼저 다시 돌립니다.**
+  재개 순서: pre-apply → 0068 … 0081(한 파일씩 반영 확인) → post-apply → 검증.
+- 기존 데이터와 백업(`golf_backup_20261114`)은 유지합니다. 추가 기능 작업은 보류합니다.

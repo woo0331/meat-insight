@@ -1036,7 +1036,7 @@
     }).catch(function(){
       if(F.v !== id) return;
       /* ⚠️ 못 읽은 것을 "없다" 로 적지 않습니다 */
-      list.innerHTML = '<div class="none">' +
+      list.innerHTML = '<div class="none none-fail">' +
         '<h3>매물을 불러오지 못했습니다.</h3>' +
         '<p>잠시 뒤에 다시 열어 보세요. 0건이라는 뜻이 아닙니다.</p>' +
         '<div class="none-b"><a class="btn btn-pt" href="' + esc(backUrl()) +

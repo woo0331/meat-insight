@@ -310,7 +310,7 @@
       '</div></div>';
   }
   function failBox(){
-    return '<div class="none tp-fail">' +
+    return '<div class="none none-fail tp-fail">' +
       '<p class="tp-none-i">' + (W.icon ? W.icon("info", 34) : "") + '</p>' +
       '<h3>지금 여행 상품을 불러오지 못했습니다</h3>' +
       '<p>상품이 없다는 뜻이 <b>아닙니다.</b> 잠시 뒤에 다시 눌러 주세요. ' +

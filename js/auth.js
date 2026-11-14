@@ -547,7 +547,7 @@ window.amFailHtml = function(what){
      ("프로을" 이 나갑니다). 붙이는 자리는 js/data/korean.js 한 곳이고,
      그 파일이 안 실린 화면에서는 「…를」 없이 적습니다. */
   var jo = window.josa ? window.josa(w, "을를") : "";
-  return '<div class="none"><h3>지금 ' + window.esc(w) + window.esc(jo) +
+  return '<div class="none none-fail"><h3>지금 ' + window.esc(w) + window.esc(jo) +
     ' 불러오지 못했습니다</h3>' +
     '<p>잠시 뒤에 다시 시도해 주세요. <b>0건이라는 뜻이 아닙니다.</b></p>' +
     '<button class="btn btn-pt" type="button" data-amretry="1">다시 시도</button></div>';

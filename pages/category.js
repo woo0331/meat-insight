@@ -1516,6 +1516,8 @@ exports.build = function(c){
       (c.key === "booking" ? coursePane(c) : '') +
       '</div></section>'
     : '';
+  /* 부킹은 위에서 이미 냈습니다 — 두 번 그리지 않습니다 */
+  var teeLater = (c.key === "booking") ? "" : teeSec;
 
   /* ── 구합니다 (0061) — 업체가 입점하는 분류 다섯 ────────────────
      ⚠️⚠️⚠️ **서는 분류는 `amWantCats()` 한 곳이 정합니다** (레슨 ·
@@ -1819,7 +1821,9 @@ exports.build = function(c){
     /* ⚠️ 안전거래 가이드는 **중고장터에만** 섭니다 — 히어로의 그 링크가
        갈 자리이고(절대 규칙 5), 회원끼리 돈이 오가는 자리가 여기입니다. */
     body: head + (c.key === "used" ? usedTabs() : "") +
-          adTop + teeFind + lsnTop +
+          /* ⚠️ 2026-11-14 — 부킹은 확정 시안 ①처럼 **목록(티타임 · 골프장 정보 탭)이
+             맨 위**이고 날짜 · 지역별 현황표가 그 아래입니다. 다른 분류는 그대로입니다. */
+          adTop + (c.key === "booking" ? teeSec + teeFind : teeFind) + lsnTop +
           /* ⚠️⚠️ 레슨은 **프로 목록이 알맹이**라 프로가 0분이어도
              맨 앞입니다 — 그 자리가 §13 의 「등록된 프로가 없습니다」와
              입점 신청을 냅니다. 뒤로 미루면 시안에서 가장 중요한 구간이
@@ -1838,8 +1842,8 @@ exports.build = function(c){
                '<div id="lspro">'  + pvSec  + '</div>')
             : (list.length || c.key === "lesson" || c.key === "range" ||
                c.key === "fitting" || c.key === "travel" || c.key === "market")
-                       ? (pvSec + teeSec + ownSec)
-                       : (ownSec + teeSec + pvSec)) +
+                       ? (pvSec + teeLater + ownSec)
+                       : (ownSec + teeLater + pvSec)) +
           (c.key === "used" ? safeGuide() : "") +
           related(c)
   };

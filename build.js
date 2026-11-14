@@ -480,7 +480,9 @@ function page(o){
        하위 메뉴가 손가락으로는 안 펼쳐집니다(PC 의 `:hover` 는 CSS 라
        그 화면도 됩니다 — 그래서 빠뜨려도 **에러가 한 줄도 안 납니다**). */
     ['/js/components/base.js','/js/auth.js','/js/hdauth.js','/js/hdmenu.js']
-      .concat(o.js ? ['/js/data/brand.js','/js/data/catalog.js'] : [])
+      /* ⚠️ korean.js — 조사(을/를 · 이/가)를 붙이는 한 곳입니다. 안 실린 화면은
+         「지금 티타임 목록 불러오지 못했습니다」처럼 조사가 빠졌습니다(2026-11-14). */
+      .concat(o.js ? ['/js/data/korean.js','/js/data/brand.js','/js/data/catalog.js'] : [])
       .concat(o.js ? (Array.isArray(o.js) ? o.js : [o.js]) : [])
       .filter(function(f, i, L){ return L.indexOf(f) === i; })
       .map(function(f){ return '<script src="' + f + ver(f.replace(/^\//,"")) + '"></script>\n'; })

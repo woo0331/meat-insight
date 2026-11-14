@@ -19,8 +19,8 @@
 | 11 | `0076_fitting.sql` | ✅ 적용 | 09:34 적용 · 확인 | 판 76 · `provider.fit_ways` 있음 |
 | 12 | `0077_trip_depart.sql` | ✅ 적용 | 09:35 적용 · 09:36 확인 | 판 77 · `tripdate` · 출발일 보기 있음 |
 | 13 | `0078_job_fav.sql` | ✅ 적용 | 09:37 적용 · 확인 | 판 78 · `jobfav` · `v_job_fav` · anon 표 접근 없음 |
-| 14 | `0079_fitting_terms.sql` | ⏳ 다음 | | 판 79 |
-| 15 | `0080_join_level_listing_spec.sql` | 대기 | | 판 80 ⚠️ 트랜잭션 없음 |
+| 14 | `0079_fitting_terms.sql` | ✅ 적용 | 09:38 적용 · 확인 | 판 79 · `v_provider_card` anon 읽기 유지 |
+| 15 | `0080_join_level_listing_spec.sql` | ⏳ 다음 | | 판 80 ⚠️ 트랜잭션 없음 |
 | 16 | `0081_course_photo.sql` | 대기 | | 판 81 ⚠️ 트랜잭션 없음 |
 | 17 | `db/post-apply.sql` | 대기 | | 기본 권한 지문 = 4b42f19c… |
 | 18 | 최종 검증 | 대기 | | verify · list-check · 16표 지문 · 백업 |

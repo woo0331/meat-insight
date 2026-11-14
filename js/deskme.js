@@ -423,7 +423,7 @@
       .then(function(){
         var m2 = box.querySelector(".me-m");
         if(m2){ m2.hidden = false;
-          m2.textContent = "저장했습니다. 손님 화면에는 자료를 다시 올린 뒤에 보입니다."; }
+          m2.textContent = "저장했습니다. 손님 화면에는 운영자가 자료를 다시 올리는 날 반영되고, 그 전까지는 이전 내용이 보입니다."; }
       })
       .catch(function(err){
         bt.disabled = false;

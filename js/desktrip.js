@@ -24,7 +24,7 @@
   if(!box || !window.amAuthAsk) return;
 
   var esc = window.esc, icon = window.icon;
-  var A = null, ROWS = null, PV = null, UP = false;
+  var A = null, ROWS = null, PV = null, UP = false, PVST = "", MSG = "";
   /* 사진은 상품 id 로 묶어 둡니다 — ⚠️ 공개 보기는 **승인된 상품의
      live 사진만** 내므로 여기서는 `v_trip_photo_mine` 을 읽습니다
      (심사 중인 사진의 id 를 알 길이 그것뿐입니다). */
@@ -382,6 +382,18 @@
   /* ⚠️ 새 양식이 열려 있는지는 **여기 한 곳**이 들고 있습니다 — 다시
      그릴 때마다 닫히면 적다 만 글이 사라집니다. */
   var NEW = false;
+  /* 보낸 결과 — ⚠️ 다시 그리면 양식 안의 안내가 지워지므로 **상자 맨 위**에 한 번 적습니다.
+     전에는 「올렸습니다」가 곧바로 지워져 안 올라간 줄 알고 다시 눌렀습니다. */
+  function noteHtml(){
+    return MSG ? '<p class="tpr-msg" role="status">' + esc(MSG) + '</p>' : "";
+  }
+  function waitHtml(){
+    return '<p class="myhint">상품을 올리시려면 <b>업체 승인</b>이 먼저 필요합니다. ' +
+      '심사가 끝나면 여기에 올리는 양식이 열립니다.</p>' +
+      '<a class="btn btn-sm btn-line" href="/help">고객센터에 물어보기</a>';
+  }
+  /* 승인 전이면 올리는 양식 대신 안내 */
+  function tailHtml(){ return (PVST && PVST !== "approved") ? waitHtml() : newHtml(); }
   function draw(){
     if(!PV){
       box.hidden = false;
@@ -401,11 +413,12 @@
       box.innerHTML = head + failHtml();
       return;
     }
-    box.innerHTML = head +
+    box.innerHTML = head + noteHtml() +
       (ROWS.length
         ? '<ul class="tpr-l">' + ROWS.map(row).join("") + '</ul>'
         : emptyHtml()) +
-      newHtml();
+      tailHtml();
+    MSG = "";
   }
 
   /* ── 보내는 값 한 곳 ───────────────────────────────────────────
@@ -462,12 +475,19 @@
     var li = f.closest(".tpr-r");
     var p = fields(f);
     if(li) p.id = li.getAttribute("data-id");
+    /* ⚠️ 보내는 동안 단추를 막습니다 — 같은 상품이 두 번 올라가지 않게 */
+    var sb = f.querySelector('button[type="submit"], button:not([type])');
+    if(sb){ if(sb.disabled) return; sb.disabled = true; }
     msg(f, "보내는 중입니다…");
     call(li ? "edit_trip" : "open_trip", p).then(function(){
-      msg(f, li ? "수정본을 보냈습니다. 확인을 거쳐 갈아 끼웁니다."
-                : "올렸습니다. 운영자 확인을 기다립니다.");
+      MSG = li ? "수정본을 보냈습니다. 운영자 확인을 거쳐 갈아 끼웁니다."
+               : "올렸습니다. 운영자 확인을 기다립니다 — 확인 전에는 손님 화면에 나오지 않습니다.";
+      if(!li) NEW = false;
       load();
-    }, function(e){ msg(f, String(e.message || e), true); });
+    }, function(e){
+      if(sb) sb.disabled = false;
+      msg(f, window.amErrText(e), true);
+    });
   });
 
   /* ⚠️ 갈래를 바꾸면 **목적지 목록 자체가 바뀝니다** — 안 갈아 끼우면
@@ -596,7 +616,7 @@
         }, function(e){
           /* ⚠️ 문이 거절한 **그 말을 그대로** 적습니다 — 우리가 지어
              적으면 어느 자물쇠에 걸렸는지 알 수가 없습니다. */
-          if(dnote) dnote.textContent = String(e.message || e);
+          if(dnote) dnote.textContent = window.amErrText(e);
         });
         return;
       }
@@ -604,13 +624,13 @@
     }
     if(t.closest(".tpr-cl")){
       call("close_trip", { id:id }).then(load, function(e){
-        try{ alert(String(e.message || e)); }catch(_){}
+        try{ alert(window.amErrText(e)); }catch(_){}
       });
       return;
     }
     if(t.closest(".tpr-re")){
       call("reopen_trip", { id:id }).then(load, function(e){
-        try{ alert(String(e.message || e)); }catch(_){}
+        try{ alert(window.amErrText(e)); }catch(_){}
       });
       return;
     }
@@ -625,7 +645,7 @@
         if(!go) return;
         if(note) note.textContent = "보내는 중입니다…";
         call("drop_trip_photo", { id:pid }).then(load, function(e){
-          if(note) note.textContent = String(e.message || e);
+          if(note) note.textContent = window.amErrText(e);
         });
         return;
       }
@@ -637,7 +657,7 @@
         ids = [pid].concat(ids.filter(function(x){ return x !== pid; }));
         if(note) note.textContent = "보내는 중입니다…";
         call("order_trip_photo", { trip:id, ids:ids }).then(load, function(e){
-          if(note) note.textContent = String(e.message || e);
+          if(note) note.textContent = window.amErrText(e);
         });
         return;
       }
@@ -711,6 +731,13 @@
           .then(function(r){ return r.ok ? r.json() : null; })
           .then(function(d){ UP = !!(d && d.tripPhoto); }, function(){ UP = false; })
       : Promise.resolve());
-    ready.then(load);
+    /* ⚠️⚠️ 승인 전 업체에게는 **양식을 열지 않습니다** (2026-11-14) — open_trip 이
+       「승인된 업체만」으로 거절하므로, 긴 양식을 다 채운 뒤에야 거절을 받았습니다.
+       티타임 상자(js/deskteetime.js)와 같은 규칙입니다. 못 읽으면 막지 않습니다
+       (문이 다시 봅니다). */
+    ready.then(function(){
+      return get("provider?select=state&id=eq." + encodeURIComponent(PV) + "&limit=1")
+        .then(function(rows){ PVST = (rows && rows[0] && rows[0].state) || ""; });
+    }).then(load, load);
   });
 })();

@@ -260,6 +260,17 @@
     if(m){ m.hidden = false; m.textContent = t; }
   }
 
+  /* ⚠️ 줄 안의 일이 실패하면 **그 줄에** 적습니다 (2026-11-14) — 전에는 새 자리를
+     올리는 양식 맨 아래(.tt-m2)에 찍혀, 누른 줄에서는 아무 반응이 없어 보였습니다. */
+  function sayIn(el, t){
+    if(!el) return say(".tt-m2", t);
+    var m = el.querySelector(":scope > .tt-rowmsg");
+    if(!m){ el.insertAdjacentHTML("beforeend", '<p class="lmsg tt-rowmsg" role="alert"></p>');
+            m = el.querySelector(":scope > .tt-rowmsg"); }
+    if(m) m.textContent = t;
+  }
+  function busy(b, on){ if(b) b.disabled = !!on; }
+
   function reload(){
     return Promise.all([
       get("teetime?select=id,kind,region,course,play_at,tee_at,holes,slots," +
@@ -284,16 +295,20 @@
       return;
     }
     if(t.closest(".tt-close") && li){
+      /* ⚠️⚠️ 닫은 자리는 **되돌릴 문이 없습니다** — 한 번 여쭙습니다 */
+      if(!window.confirm("이 자리를 닫으면 다시 열 수 없습니다. 닫을까요?")) return;
+      var cb = t.closest(".tt-close"); busy(cb, true);
       call("close_teetime", { id: li.getAttribute("data-tee") })
         .then(reload)
-        .catch(function(err){ say(".tt-m2", String(err.message || err)); });
+        .catch(function(err){ busy(cb, false); sayIn(li, window.amErrText(err)); });
       return;
     }
     var bl = t.closest("li[data-bk]");
     if(t.closest(".tb-ok") && bl){
+      var ob = t.closest(".tb-ok"); busy(ob, true);
       call("move_teebook", { id: bl.getAttribute("data-bk"), state:"confirmed" })
         .then(reload)
-        .catch(function(err){ say(".tt-m2", String(err.message || err)); });
+        .catch(function(err){ busy(ob, false); sayIn(bl, window.amErrText(err)); });
       return;
     }
     if(t.closest(".tb-no") && bl){
@@ -321,7 +336,7 @@
       }).then(reload)
         .catch(function(err){
           if(bt) bt.disabled = false;
-          say(".tt-m2", String(err.message || err));
+          say(".tt-m2", window.amErrText(err));
         });
       return;
     }
@@ -334,7 +349,7 @@
         teeAt: val("teeAt"), slots: val("slots"), greenFee: val("greenFee"),
         tel: val("tel"), note: val("note")
       }).then(reload)
-        .catch(function(err){ say(".tt-m2", String(err.message || err)); });
+        .catch(function(err){ say(".tt-m2", window.amErrText(err)); });
       return;
     }
     var bl = f.closest("li[data-bk]");
@@ -342,7 +357,7 @@
       call("move_teebook", { id: bl.getAttribute("data-bk"),
                              state:"rejected", why: val("why") })
         .then(reload)
-        .catch(function(err){ say(".tt-m2", String(err.message || err)); });
+        .catch(function(err){ say(".tt-m2", window.amErrText(err)); });
     }
   });
 

@@ -121,7 +121,20 @@
     return rpc({ p_provider: PV, p_data: data, p_why: note })
       .then(load)
       .then(function(){ MSG = note; paint(); })
-      .catch(function(err){ MSG = why(err); paint(); });
+      /* ⚠️⚠️ 실패하면 **다시 그리지 않습니다** (2026-11-14) — paint() 는 서버에서
+         읽은 값(ROW)으로 양식을 다시 찍어, 방금 적으신 담당자 · 직통 번호가
+         날아갔습니다. 알림 줄만 고치고 단추를 풉니다. */
+      .catch(function(err){
+        MSG = "";
+        if(b) b.disabled = false;
+        var m = box.querySelector(".pvct-fail");
+        if(!m){
+          var f = box.querySelector("#pvct-f");
+          if(f) f.insertAdjacentHTML("beforebegin", '<p class="lmsg pvct-fail" role="alert"></p>');
+          m = box.querySelector(".pvct-fail");
+        }
+        if(m) m.textContent = why(err);
+      });
   }
 
   box.addEventListener("submit", function(e){

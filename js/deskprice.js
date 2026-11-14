@@ -200,8 +200,8 @@
     var dn = e.target.closest ? e.target.closest("button[data-pdown]") : null;
     if(dn){
       /* ⚠️ 내리는 것은 지우는 것이 아니라고 그 자리에서 말합니다 */
-      if(!confirm("이 가격을 내리시겠습니까? 손님 화면에서 빠집니다 " +
-                  "(기록은 남습니다).")) return;
+      if(!confirm("이 가격을 내리시겠습니까? 운영자가 자료를 다시 올리는 날 손님 화면에서 " +
+                  "빠집니다 (기록은 남습니다).")) return;
       dn.disabled = true; say("내리는 중입니다…");
       rpc("drop_provider_price", { p: { id: dn.getAttribute("data-pdown") } })
         .then(function(){ return paint(); })
@@ -234,7 +234,7 @@
         OPEN = false; EDIT = null;
         return paint();
       })
-      .then(function(){ say("올렸습니다. 손님 화면에는 자료를 다시 올린 뒤에 보입니다."); })
+      .then(function(){ say("올렸습니다. 손님 화면에는 운영자가 자료를 다시 올리는 날 반영되고, 그 전까지는 이전 내용이 보입니다."); })
       .catch(function(err){
         bt.disabled = false;
         if(m) m.textContent = why(err);

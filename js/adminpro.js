@@ -458,7 +458,10 @@
     var cats = (window.amCatsForProvider ? amCatsForProvider() : []).map(function(c){
       return '<fieldset class="svc"><legend>' + esc(c.name) + '</legend>' +
         amCatItemsForProvider(c).map(function(it){
-          return cbRow("sb", it.key, it.name, false);
+          /* ⚠️ 신청서에서 고르신 하는 일을 미리 켭니다 (2026-11-14) — 전에는 전부 꺼져
+             있어 다시 골라야 했고, 빠뜨리면 그 업체가 배정 · 목록에 안 떴습니다. */
+          var picked = PRE && Array.isArray(PRE.services) && PRE.services.indexOf(it.key) >= 0;
+          return cbRow("sb", it.key, it.name, picked);
         }).join("") + '</fieldset>';
     }).join("");
     /* ⚠️ 고를 것이 없으면 양식을 내지 않습니다 (빈 칸만 보입니다) */

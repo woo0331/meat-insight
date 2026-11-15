@@ -49,6 +49,23 @@
     });
   }
 
+  /* ⚠️ 첫 가입 뒤 모셔 온 자리(?welcome=1) — 머리말(js/hdauth.js)이 보냅니다.
+     ⚠️ 돌아갈 자리(back)는 amSafeNext 로 **걸러서** 씁니다(바깥 주소로 안 튕깁니다). */
+  var WEL = false, BACK = "";
+  try{
+    var u0 = new URLSearchParams(window.location.search);
+    WEL = u0.get("welcome") === "1";
+    BACK = (window.amSafeNext && window.amSafeNext(u0.get("back") || "")) || "";
+  }catch(e){}
+  function welcomeHtml(){
+    if(!WEL) return "";
+    return '<div class="nk-wel" role="status"><p><b>가입을 환영합니다.</b> ' +
+      (NICK ? '닉네임을 정하셨습니다.' :
+       '사이트에서 쓰실 닉네임을 정해 주세요. 정하지 않으시면 글쓴이 자리에 가린 이름이 나갑니다.') +
+      '</p>' +
+      '<a class="btn btn-sm btn-line" href="' + esc(BACK || "/") + '">' +
+        (NICK ? '보시던 화면으로 돌아가기' : '나중에 정하기') + '</a></div>';
+  }
   function paint(){
     box.hidden = false; box.className = "deskbox";
     /* ⚠️ 못 읽은 것과 "안 정하셨다" 는 다릅니다 — 못 읽었으면 다시
@@ -61,6 +78,7 @@
       return;
     }
     box.innerHTML = '<h2 class="adm-h">' + icon("user", 19) + '공개 닉네임</h2>' +
+      welcomeHtml() +
       '<p class="myhint">커뮤니티 게시판에 글 · 댓글을 올리시면 ' +
       '글쓴이 자리에 이 이름이 나갑니다. ' +
       (NICK

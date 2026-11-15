@@ -89,6 +89,9 @@ function amAuthTakeHash(){
     window.history.replaceState({}, "",
       window.location.pathname + window.location.search);
   }catch(e){}
+  /* ⚠️ 방금 들어오셨다는 표 — 머리말(js/hdauth.js)이 보고 **닉네임을 아직 안
+     정하셨으면** 정하는 자리로 한 번 모십니다(2026-11-15 · 첫 가입 뒤 닉네임). */
+  try{ sessionStorage.setItem("am.fresh", "1"); }catch(e){}
   return true;
 }
 
@@ -320,7 +323,9 @@ var AM_SSO_FLY = null;
 window.amAuthProviders = function(){
   if(AM_SSO_FLY) return AM_SSO_FLY;
   var c = AM_AUTH.conf;
-  var keys = (window.AM_SOCIAL || []).map(function(s){ return s.key; });
+  /* ⚠️ 화면에서 내린 공급자(`off`)는 묻지도 않습니다 (2026-11-15) */
+  var keys = (window.AM_SOCIAL || []).filter(function(s){ return s && !s.off; })
+    .map(function(s){ return s.key; });
   if(!c || !keys.length) return Promise.resolve([]);
   AM_SSO_FLY = fetch(c.url + "/auth/v1/settings", { headers:{ apikey: c.anonKey } })
     .then(function(r){ return r.ok ? r.json() : null; })

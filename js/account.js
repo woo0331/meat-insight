@@ -75,7 +75,7 @@
     var ready = {}, rows = "", n = 0, off = 0;
     (on || []).forEach(function(k){ ready[k] = true; });
     (window.AM_SOCIAL || []).forEach(function(s){
-      if(!s || !s.key) return;
+      if(!s || !s.key || s.off) return;
       n++;
       var ok = !!ready[s.key];
       if(!ok) off++;
@@ -92,7 +92,7 @@
        운영자에게는 아래 paintLogin 이 console.warn 으로 말합니다. */
     return '<h2 class="sso-h">간편 로그인</h2>' + rows +
       (off ? '<p class="sso-note">「준비 중」 으로 보이는 것은 아직 연결 전입니다. ' +
-             '아래 메일 링크로는 지금 바로 들어오실 수 있습니다.</p>' : "");
+             '지금은 로그인하실 수 없습니다 — 급한 일은 고객센터로 알려 주세요.</p>' : "");
   }
 
   /* ⚠️⚠️ 눌림은 **감싼 자리 한 곳**에서 받습니다 — 단추마다 달면
@@ -120,6 +120,9 @@
   }
 
   /* ── /login ──────────────────────────────────────────────────── */
+  /* 기존 메일 회원 길 — /login?mail=1 일 때만 메일 양식을 그립니다 */
+  var MAILOK = false;
+  try{ MAILOK = new URLSearchParams(window.location.search).get("mail") === "1"; }catch(e){}
   function paintLogin(a){
     var box = el("loginbox"); if(!box) return;
     if(!a.on) return say(box, offNote("로그인"));
@@ -147,17 +150,23 @@
          `check-screens` 가 이 상자를 영원히 못 보는 까닭이고, 재는
          자리는 `test-desk` 입니다. */
       '<div id="ssobox" class="sso" hidden></div>' +
-      '<div id="ssoor" class="sso-or" hidden><span>또는</span></div>' +
-      "<h2>메일로 받은 링크로도 들어오실 수 있습니다.</h2>" +
-      "<p>비밀번호를 받지 않습니다. 적으신 주소로 한 번 쓰는 링크를 보내 드립니다." +
-      /* ⚠️ 어디로 돌아오는지 **미리 말합니다** — 메일을 열고 한참 뒤에
-         눌러도 어디로 가는지 알고 계시게 합니다. */
-      (next ? " 링크를 누르시면 <b>보시던 화면(" + esc(next) + ")</b>으로 돌아옵니다." : "") +
-      "</p>" +
-      '<form id="lf" class="lform"><label class="sr" for="le">이메일</label>' +
-      '<input id="le" type="email" name="email" required autocomplete="email" ' +
-      'placeholder="메일 주소"><button class="btn btn-pri" type="submit">링크 받기</button>' +
-      '</form><p id="lmsg" class="lmsg" hidden></p>');
+      /* ⚠️⚠️ 2026-11-15 — 신규 로그인은 **카카오 하나**입니다(사장님 지시). 메일 링크
+         양식은 **기존 메일 회원**을 위해 `/login?mail=1` 에서만 그립니다(어디에도
+         잇지 않습니다). ⚠️ 서버는 그 길로도 새 계정을 만들 수 있습니다 — 막으려면
+         Supabase 의 메일 공급자 설정을 바꿔야 하고, 그건 사장님이 정합니다. */
+      (MAILOK
+        ? '<div id="ssoor" class="sso-or"><span>또는</span></div>' +
+          "<h2>이전에 메일로 가입하신 분</h2>" +
+          "<p>적으신 주소로 한 번 쓰는 링크를 보내 드립니다. 비밀번호는 받지 않습니다." +
+          (next ? " 링크를 누르시면 <b>보시던 화면(" + esc(next) + ")</b>으로 돌아옵니다." : "") +
+          "</p>" +
+          '<form id="lf" class="lform"><label class="sr" for="le">이메일</label>' +
+          '<input id="le" type="email" name="email" required autocomplete="email" ' +
+          'placeholder="메일 주소"><button class="btn btn-pri" type="submit">링크 받기</button>' +
+          '</form><p id="lmsg" class="lmsg" hidden></p>'
+        : '<div id="ssoor" hidden></div>' +
+          '<p class="myhint">카카오 계정으로 바로 가입 · 로그인됩니다. ' +
+          '이메일은 받지 않습니다.</p>'));
 
     /* ⚠️⚠️⚠️ **무엇이 켜졌는지는 Supabase 에게 물어봅니다**
        (`amAuthProviders()`) — 목록을 화면에 박아 두면 켜시는 날 두 곳이
@@ -179,11 +188,10 @@
       if(!sb || !h) return;
       sb.innerHTML = h;
       sb.hidden = false;
-      if(so) so.hidden = false;
       if(!SSO_BOUND){ SSO_BOUND = true; sb.addEventListener("click", onSso); }
     }).catch(function(){});
 
-    el("lf").addEventListener("submit", function(e){
+    if(el("lf")) el("lf").addEventListener("submit", function(e){
       e.preventDefault();
       var m = el("lmsg"), v = (el("le").value || "").trim();
       if(!v) return;
@@ -219,7 +227,7 @@
     if(!a.on)       return say(box, offNote("내 정보"));
     if(!a.signedIn) return say(box,
       "<h2>로그인하시면 내 정보가 보입니다.</h2>" +
-      "<p>메일로 받은 링크 한 번이면 됩니다. 로그인하시면 <b>이 화면으로 바로</b> 돌아옵니다.</p>" +
+      "<p>카카오 계정으로 바로 들어오실 수 있습니다. 로그인하시면 <b>이 화면으로 바로</b> 돌아옵니다.</p>" +
       '<a class="btn btn-pri" href="' + esc(window.amLoginUrl()) + '">로그인하기</a>');
 
     var hats = a.hats || [];

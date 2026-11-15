@@ -698,7 +698,7 @@
     }
     if(!a.signedIn)
       return say("<h2>로그인하시면 배정받은 요청이 보입니다.</h2>" +
-        "<p>메일로 받은 링크 한 번이면 됩니다.</p>" +
+        "<p>카카오 계정으로 바로 들어오실 수 있습니다.</p>" +
         '<a class="btn btn-pri" href="' + esc(window.amLoginUrl()) + '">로그인하기</a>');
     if(a.role !== "provider" || !a.provider)
       /* ⚠️ 왜 안 되는지 자세히 적지 않습니다 — 권한 구조를 알려 주는

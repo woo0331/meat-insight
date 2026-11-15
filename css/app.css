@@ -5060,3 +5060,7 @@ picture{ display: contents; }
 /* /my 계정 칸의 로그아웃 (2026-11-15) */
 .mycard-out{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:14px; }
 .mycard-outm{ flex-basis:100%; margin:0; }
+/* 첫 가입 뒤 닉네임 안내 (2026-11-15) */
+.nk-wel{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:12px 14px; margin:0 0 12px;
+         border:1px solid var(--line); border-radius:12px; background: var(--grn-soft); }
+.nk-wel p{ margin:0; flex:1 1 260px; }

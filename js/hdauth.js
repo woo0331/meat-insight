@@ -57,5 +57,34 @@
            (절대 규칙 5). 하는 일을 그대로 적습니다. */
         '<span class="lbl">로그인 · 회원가입</span></a>';
     slot.insertBefore(wrap, slot.firstChild);
+    welcome(a);
   });
+
+  /* ⚠️⚠️ **첫 가입 뒤 닉네임** (2026-11-15) — 방금 들어오셨고(amAuthTakeHash 가 남긴 표)
+     사이트 닉네임을 아직 안 정하셨으면 /my 의 닉네임 자리로 **한 번** 모십니다.
+     보시던 화면은 `back` 으로 달고 가서 정한 뒤 돌아가실 수 있게 합니다.
+     ⚠️ 못 읽으면 아무 데도 안 보냅니다(보시던 화면 그대로). 표는 **읽기 전에** 지웁니다 —
+     두 번 모시지 않습니다. */
+  function welcome(a){
+    var fresh = false;
+    try{ fresh = sessionStorage.getItem("am.fresh") === "1"; }catch(e){}
+    if(!fresh) return;
+    /* ⚠️ 표는 **답을 받은 뒤** 지웁니다 — 로그인 화면이 보시던 자리로 곧장 넘기는(replace)
+       사이에 이 물음이 끊기면, 다음 화면에서 한 번 더 묻게 둡니다. */
+    function done(){ try{ sessionStorage.removeItem("am.fresh"); }catch(e){} }
+    if(!a.signedIn || !a.conf || !a.conf.url) return done();
+    fetch(a.conf.url + "/rest/v1/account?select=nick&limit=1", {
+      headers: Object.assign({ apikey:a.conf.anonKey },
+                             window.amAuthHeaders ? window.amAuthHeaders() : {})
+    }).then(function(r){ return r.ok ? r.json() : null; }).then(function(rows){
+      done();
+      if(!rows || !rows.length || rows[0].nick) return;
+      var here = window.location.pathname + window.location.search;
+      var back = (window.amSafeNext && window.amSafeNext(here)) || "";
+      if(window.location.pathname === "/my" && /[?&]welcome=1/.test(window.location.search)) return;
+      window.location.replace("/my?welcome=1" +
+        (back && back !== "/my" && back.indexOf("/login") !== 0 ? "&back=" + encodeURIComponent(back) : "") +
+        "#nickbox");
+    }).catch(done);
+  }
 })();

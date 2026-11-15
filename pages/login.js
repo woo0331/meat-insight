@@ -34,7 +34,11 @@ exports.build = function(){
   body += '<section class="sec"><div class="wrap">' +
     '<div id="loginbox" class="none" hidden></div>' +
     '<ul class="notes" style="margin-top:22px">' +
-      '<li>가입과 로그인이 같습니다. 처음 들어오시면 그대로 회원이 됩니다.</li>' +
+      '<li>카카오 로그인 하나로 가입과 로그인이 같이 됩니다. 처음 들어오시면 그대로 회원이 되고, ' +
+      '사이트에서 쓰실 <b>닉네임</b>을 정하시는 자리로 한 번 안내합니다.</li>' +
+      /* ⚠️ 카카오에서 받는 항목을 「번호 · 닉네임뿐」으로 적지 않습니다 — 2026-11-15 운영에서
+         프로필 사진 주소도 같이 들어온 것을 확인했습니다(카카오 콘솔의 동의항목에 따라 달라짐). */
+      '<li>이메일과 비밀번호는 받지 않습니다.</li>' +
       '<li>로그인 뒤에 <b>하는 일</b>(개인 판매자 · 골프 프로)을 직접 켜실 수 있습니다. ' +
       '사업자 회원은 입점 신청이 승인될 때 붙습니다.</li>' +
       '<li>이 브라우저에만 로그인 기록이 남습니다. 성함과 연락처는 담지 않습니다.' +
@@ -43,7 +47,7 @@ exports.build = function(){
 
   return {
     route: "/login", title: "로그인", noindex: true, unlinked: true,
-    desc: "골프올인원 로그인 — 메일로 받은 링크 한 번으로 들어옵니다. 비밀번호를 만들지 않습니다.",
+    desc: "골프올인원 로그인 — 카카오 계정으로 바로 가입 · 로그인합니다. 비밀번호를 만들지 않습니다.",
     body: body, /* ⚠️⚠️ `social.js` 를 안 실으면 `window.AM_SOCIAL` 이 없어
        `amAuthProviders()` 가 **빈 배열**을 돌려주고 소셜 단추가
        조용히 안 그려집니다 (에러 0줄). `/help` 가 `site.js` 를

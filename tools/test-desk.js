@@ -360,7 +360,14 @@ function boardsOf(){
 
     ok("js/data/social.js 가 공급자를 내놓는다 (0개면 읽은 적이 없는 것입니다)",
        Array.isArray(SOC) && SOC.length > 0, "공급자 " + (SOC || []).length + "개");
-    const KEYS = (SOC || []).map(x => x.key);
+    /* ⚠️⚠️ 2026-11-15 명세 변경 — 신규 로그인은 **카카오 하나**입니다. 화면에서 내린
+       공급자(`off`)는 그리지 않으므로, 재는 대상은 **보이는 공급자**입니다. */
+    const KEYS = (SOC || []).filter(x => !x.off).map(x => x.key);
+    const OFFK = (SOC || []).filter(x => x.off).map(x => x.key);
+    /* site.js 의 ssoCustom 을 **비운 채로** 여는 init — 「설정(settings)이 켜졌나」만으로
+       단추가 갈리는 자리를 재려면 Custom Provider 값을 걷어야 합니다(④-2 와 같은 수). */
+    const CLEAR = "(function(){var o;Object.defineProperty(window,'WOW_BIZ',{configurable:true," +
+      "get:function(){return o;},set:function(x){o=x;if(o)o.ssoCustom={};}});})();";
 
     /* ① 전부 켜진 경우 — 차례도 social.js 가 정합니다 */
     {
@@ -376,11 +383,13 @@ function boardsOf(){
           svg: e.querySelectorAll("svg").length })));
       ok("켜진 공급자는 **전부** 단추가 선다 (" + KEYS.join(" · ") + ")",
          got.length === KEYS.length, JSON.stringify(got.map(x => x.key)));
+      ok("  ⚠️ 화면에서 내린 공급자(" + (OFFK.join(" · ") || "없음") + ")는 settings 가 켜져 있어도 **안 그린다**",
+         got.every(x => OFFK.indexOf(x.key) < 0), JSON.stringify(got.map(x => x.key)));
       ok("  차례는 social.js 가 정한다 (Supabase 가 주는 차례가 아닙니다)",
          got.map(x => x.key).join(",") === KEYS.join(","),
          got.map(x => x.key).join(",") + " ← " + KEYS.join(","));
       ok("  이름도 social.js 한 곳에서 온다",
-         got.every((x, i) => x.txt === SOC[i].name),
+         got.every((x, i) => x.txt === SOC.filter(y => !y.off)[i].name),
          JSON.stringify(got.map(x => x.txt)));
       ok("  셋 다 **공식 마크(SVG)** 가 붙는다 (이모지 · 글자가 아닙니다)",
          got.length > 0 && got.every(x => x.svg === 1),
@@ -404,8 +413,8 @@ function boardsOf(){
                   Math.round(i.left - r.left),
                   Math.round((t.left + t.right) / 2 - (r.left + r.right) / 2)];
         }).map(a => a.join("/")));
-      ok("  높이 · 폭 · 모서리 · 마크 크기 · 글자 자리가 **셋이 똑같다**",
-         m.length > 1 && m.every(x => x === m[0]), m.join("  |  "));
+      ok("  높이 · 폭 · 모서리 · 마크 크기 · 글자 자리가 **보이는 단추끼리 똑같다**",
+         m.length >= 1 && m.every(x => x === m[0]), m.join("  |  "));
       ok("  누르는 높이가 40px 을 넘는다",
          m.length > 0 && m.every(x => Number(x.split("/")[1]) >= 40), m[0]);
       await g.p.close();
@@ -418,10 +427,11 @@ function boardsOf(){
        **안 켠 것을 눌러도 아무 데도 안 가고 오류가 안 나는지** 셋을
        갈라서 봅니다(한 자리에서 재면 "안 갔다" 와 "못 눌렀다" 가 섞입니다). */
     {
-      const some = KEYS.slice(0, 1);
-      const offk = KEYS.slice(1);
+      /* ⚠️ 보이는 공급자가 하나면 켜진 것 없이(some=[]) 「안 켠 것」만 잽니다 */
+      const some = KEYS.length > 1 ? KEYS.slice(0, 1) : [];
+      const offk = KEYS.filter(k => some.indexOf(k) < 0);
       const g = await open("/login",
-        { role:"customer", name:"", signedIn:false, sso:some }, {});
+        { role:"customer", name:"", signedIn:false, sso:some }, {}, {}, false, CLEAR);
       const errs = [];
       g.p.on("pageerror", e => errs.push(String(e.message || e)));
       const got = await g.p.evaluate(() =>
@@ -429,7 +439,7 @@ function boardsOf(){
           key: e.dataset.sso, on: e.dataset.on, dis: e.disabled,
           aria: e.getAttribute("aria-disabled") || "",
           badge: !!e.querySelector(".sso-badge") })));
-      ok("안 켠 공급자도 **단추는 섭니다** (셋이 다 보입니다)",
+      ok("안 켠 공급자도 **단추는 섭니다** (보이는 공급자가 다 보입니다)",
          got.length === KEYS.length, JSON.stringify(got.map(x => x.key)));
       ok("  켜진 것만 **눌릴 수 있다** (" + some.join(" · ") + ")",
          got.filter(x => x.on === "1").map(x => x.key).join(",") === some.join(",") &&
@@ -467,7 +477,7 @@ function boardsOf(){
        전에는 이 자리에서 단추를 한 줄도 안 그렸고, 그러면 손님에게도 ·
        사장님에게도 화면이 메일 양식 하나로만 보였습니다. */
     {
-      const g = await open("/login", { role:"customer", name:"", signedIn:false }, {});
+      const g = await open("/login", { role:"customer", name:"", signedIn:false }, {}, {}, false, CLEAR);
       const r = await g.p.evaluate(() => {
         const sb = document.getElementById("ssobox");
         const so = document.getElementById("ssoor");
@@ -486,7 +496,8 @@ function boardsOf(){
          r.n === KEYS.length && r.boxOn, JSON.stringify(r));
       /* ⚠️ Custom Provider 로 돌린 공급자(site.js 의 ssoCustom)는 settings 에 안 나와도
          **켜진 것**입니다 — 나머지만 「준비 중」이어야 합니다. */
-      const CUS = Object.keys(ssoCustomOf()).filter(k => KEYS.indexOf(k) >= 0).length;
+      /* CLEAR 로 Custom Provider 를 걷었으므로 켜진 것은 0 입니다 */
+      const CUS = 0;
       ok("  켜지 않은 것은 눌리지 않고 **「준비 중」** 이 붙는다 (Custom Provider " + CUS + "개는 켜짐)",
          r.on === CUS && r.dis === KEYS.length - CUS && r.badge === KEYS.length - CUS,
          JSON.stringify(r));
@@ -498,8 +509,17 @@ function boardsOf(){
          ["Supabase","SUPABASE","환경변수","Provider","Authentication"]
            .every(w => r.txt.indexOf(w) < 0 && r.note.indexOf(w) < 0),
          r.txt.slice(0, 90));
-      ok("  그래도 **메일 링크는 그대로 열린다** (들어올 길이 사라지지 않습니다)",
-         r.mail, JSON.stringify(r));
+      /* ⚠️⚠️ 2026-11-15 명세 변경 — 메일 링크는 **기존 메일 회원 길**(/login?mail=1)에서만
+         그립니다. 기본 화면에서 내렸으므로, 막다른 길이 아니게 고객센터를 말하는지 봅니다. */
+      ok("  기본 화면에는 **메일 양식이 없다** (신규 로그인은 카카오 하나) · 고객센터를 말한다",
+         !r.mail && r.note.indexOf("고객센터") >= 0, JSON.stringify(r));
+      await g.p.close();
+    }
+    {
+      const g = await open("/login?mail=1", { role:"customer", name:"", signedIn:false }, {});
+      const has = await g.p.evaluate(() => !!document.getElementById("lf") &&
+        (document.getElementById("loginbox") || {}).textContent.indexOf("이전에 메일로 가입하신 분") >= 0);
+      ok("  기존 메일 회원 길(/login?mail=1)에는 메일 양식이 **그대로 있다**", has);
       await g.p.close();
     }
 
@@ -650,6 +670,31 @@ function boardsOf(){
         await g.p.waitForTimeout(500);
         const st3 = await g.p.evaluate(function(){ return { path: location.pathname, tk: localStorage.getItem("am.auth.v1") }; });
         ok("  그것을 고르면 이 기기의 토큰을 지우고 메인으로 간다", st3.path === "/" && st3.tk === null, JSON.stringify(st3));
+      }
+      await g.p.close();
+    }
+
+    /* ④-4 첫 가입 뒤 닉네임 (2026-11-15) — 방금 들어오셨고(am.fresh) 닉네임이 비었으면
+       /my 의 닉네임 자리로 한 번 모시고, 보시던 화면(back)으로 돌아갈 길을 냅니다. */
+    for(const nick of [null, "골퍼"]){
+      const SEED = "(function(){try{if(!sessionStorage.getItem('s4')){sessionStorage.setItem('s4','1');" +
+        "sessionStorage.setItem('am.fresh','1');" +
+        "localStorage.setItem('am.auth.v1',JSON.stringify({access_token:'tk.test',at:Date.now()+3600e3}));}}catch(e){}})();";
+      const g = await open("/cat/used?s=us-iron", { role:"customer", name:"카카오이름", signedIn:true },
+                           { account:[{ nick:nick }] }, {}, false, SEED);
+      await g.p.waitForTimeout(1200);
+      const r = await g.p.evaluate(function(){
+        const a = document.querySelector("#nickbox .nk-wel a");
+        return { path: location.pathname, q: location.search, hash: location.hash,
+                 back: a ? a.getAttribute("href") : null, fresh: sessionStorage.getItem("am.fresh") }; });
+      if(!nick){
+        ok("⚠️⚠️ 첫 가입이고 닉네임이 없으면 **/my 닉네임 자리로** 모신다",
+           r.path === "/my" && r.q.indexOf("welcome=1") >= 0 && r.hash === "#nickbox", JSON.stringify(r));
+        ok("  「나중에 정하기」가 **보시던 화면**(조건 그대로)으로 간다 · 표는 지운다",
+           r.back === "/cat/used?s=us-iron" && r.fresh === null, JSON.stringify(r));
+      } else {
+        ok("  닉네임이 이미 있으면 **아무 데도 안 보낸다** (보시던 화면 그대로)",
+           r.path === "/cat/used" && r.fresh === null, JSON.stringify(r));
       }
       await g.p.close();
     }

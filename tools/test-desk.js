@@ -106,6 +106,26 @@ const QUOTE = {
    ⚠️ `window` 를 빌려 쓰고 **그대로 돌려놓습니다** — check-deal 이
    `global.window` 를 덮어써 빌드를 통째로 깨뜨린 자리입니다.
    ⚠️ 읽은 값이 비면 **실패**로 둡니다 (잴 것이 0개면 실패입니다). */
+/* site.js 의 ssoCustom — ⚠️ 검사에 값을 박지 않고 **설정 파일을 읽습니다**
+   (2026-11-15 · custom:kakao 를 넣는 날 「설정이 비어 있다」를 전제로 쓴 검사
+   둘이 멀쩡한 화면을 실패로 잡았습니다). 꼴 규칙은 js/auth.js 의 amSsoCustom 과 같습니다. */
+function ssoCustomOf(){
+  const had = Object.prototype.hasOwnProperty.call(global, "window");
+  const old = global.window;
+  global.window = {};
+  try{
+    delete require.cache[require.resolve("../js/data/site.js")];
+    require("../js/data/site.js");
+    const m = (global.window.WOW_BIZ || {}).ssoCustom || {};
+    const out = {};
+    Object.keys(m).forEach(function(k){
+      const v = String(m[k] == null ? "" : m[k]).trim();
+      if(/^custom:[a-z0-9:-]{1,43}$/.test(v)) out[k] = v;
+    });
+    return out;
+  }catch(e){ return {}; }
+  finally{ if(had) global.window = old; else delete global.window; }
+}
 function keepOf(name){
   const had = Object.prototype.hasOwnProperty.call(global, "window");
   const old = global.window;
@@ -464,8 +484,11 @@ function boardsOf(){
       });
       ok("하나도 안 켜졌어도 **단추 셋은 보입니다** (빈 화면을 내지 않습니다)",
          r.n === KEYS.length && r.boxOn, JSON.stringify(r));
-      ok("  셋 다 눌리지 않고 **「준비 중」** 이 붙는다",
-         r.on === 0 && r.dis === KEYS.length && r.badge === KEYS.length,
+      /* ⚠️ Custom Provider 로 돌린 공급자(site.js 의 ssoCustom)는 settings 에 안 나와도
+         **켜진 것**입니다 — 나머지만 「준비 중」이어야 합니다. */
+      const CUS = Object.keys(ssoCustomOf()).filter(k => KEYS.indexOf(k) >= 0).length;
+      ok("  켜지 않은 것은 눌리지 않고 **「준비 중」** 이 붙는다 (Custom Provider " + CUS + "개는 켜짐)",
+         r.on === CUS && r.dis === KEYS.length - CUS && r.badge === KEYS.length - CUS,
          JSON.stringify(r));
       ok("  **연결 전이라고 그 자리에서 말한다** (지시서 §4)",
          r.note.length > 0, r.note || "(한 글자도 없습니다)");
@@ -495,8 +518,10 @@ function boardsOf(){
       await g.p.waitForTimeout(600);
       ok("단추를 누르면 **실제로 Supabase 로 간다** (그려 놓기만 한 것이 아닙니다)",
          went.indexOf("/auth/v1/authorize") > 0, went || "(아무 데도 안 갔습니다)");
-      ok("  어느 공급자인지 싣는다",
-         went.indexOf("provider=" + encodeURIComponent(KEYS[0])) > 0, went);
+      /* ⚠️ Custom Provider 로 돌렸으면 **그 식별자**로 갑니다 (site.js 의 ssoCustom) */
+      const PV0 = ssoCustomOf()[KEYS[0]] || KEYS[0];
+      ok("  어느 공급자인지 싣는다 (" + PV0 + ")",
+         went.indexOf("provider=" + encodeURIComponent(PV0)) > 0, went);
       /* ⚠️⚠️ 돌아올 자리는 매직링크와 **같은 함수**(amAfterLogin)입니다 —
          두 곳에 적으면 소셜로 들어오신 분만 홈으로 떨어집니다. */
       ok("  돌아올 자리가 **보시던 화면**이다 (매직링크와 같은 규칙)",
@@ -538,7 +563,7 @@ function boardsOf(){
        켜졌는지를 그 값으로 정합니다. */
     for(const [val, on] of [["custom:kakao", true], ["kakao!", false]]){
       const g = await open("/login?next=/my",
-        { role:"customer", name:"", signedIn:false, sso:[] }, {}, false,
+        { role:"customer", name:"", signedIn:false, sso:[] }, {}, {}, false,
         /* site.js 가 WOW_BIZ 를 세우는 순간 ssoCustom 만 갈아 끼웁니다(나머지 값은 그대로) */
         "(function(){var v=" + JSON.stringify(val) + ",o;" +
         "Object.defineProperty(window,'WOW_BIZ',{configurable:true,get:function(){return o;}," +

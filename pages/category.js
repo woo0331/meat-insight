@@ -261,6 +261,15 @@ function usedTabs(){
   '</div></section>';
 }
 
+/* 비교견적 진입 (0082 · 2026-11-15) — ⚠️⚠️ 스위치(site.js 의 compareOn)가 꺼져
+   있으면 **옛 단추를 그대로** 냅니다. 0082 가 운영 DB 에 없는데 비교 단추를 내면
+   눌러서 적고 보낸 뒤에야 거절당합니다(절대 규칙 5). 켜지면 「조건 남기기 ·
+   맞춤 요청」 단추가 **비교견적 하나로** 바뀝니다(중복 단추를 두지 않습니다). */
+function cmpOn(){ return !!(W.amCmpOn && W.amCmpOn()); }
+function cmpBtn(cat, label, cls, old){
+  if(!cmpOn()) return old;
+  return '<a class="btn ' + cls + '" href="' + esc(W.amCmpUrl(cat)) + '">' + esc(label) + '</a>';
+}
 function usedHead(c){
   var ph = W.amPhoto ? W.amPhoto("hero") : null;
   return '<section class="hero hero-sm' + (ph ? " hero-ph" : "") + '">' +
@@ -286,6 +295,8 @@ function usedHead(c){
     '<nav class="lshd-q" aria-label="중고장터 빠른 이동">' +
       '<a href="/my#favbox">' + icon("heart", 17) + '찜한 상품</a>' +
       '<a href="/my#lsmine">' + icon("store", 17) + '내 판매글</a>' +
+      (cmpOn() ? '<a href="' + esc(W.amCmpUrl("used")) + '">' + icon("store", 17) +
+        '내 클럽 매입견적 받기</a>' : '') +
       '<a class="btn btn-pt lshd-new" href="#lsbox">' +
         icon("check", 17) + '판매글 등록</a>' +
     '</nav>' +
@@ -488,7 +499,8 @@ function lessonSec(c, list){
       '운영자가 확인한 뒤 이 자리에 올려 드립니다.</p>' +
       '<div class="none-b"><a class="btn btn-pri" href="/join">' +
       icon("store", 20) + '프로 입점 신청</a>' +
-      '<a class="btn btn-line" href="/match?cat=lesson">레슨 조건 남기기</a>' +
+      cmpBtn("lesson", "내 조건으로 레슨 비교하기", "btn-line",
+        '<a class="btn btn-line" href="/match?cat=lesson">레슨 조건 남기기</a>') +
       '</div>' + nowOpen(c) + '</div>';
 
   return '<section class="sec sec-alt lsn-sec"><div class="wrap lsn-w">' +
@@ -551,8 +563,9 @@ function lessonSec(c, list){
           '<p>지역 · 예산 · 레슨 목적을 남기시면 조건에 맞는 프로를 ' +
           '찾아 이어 드립니다. 업체에 넘길 때는 상호를 알려 드리고 ' +
           '다시 여쭙습니다.</p>' +
-          '<a class="btn btn-line" href="/match?cat=lesson">맞춤 레슨 요청하기' +
-            icon("arrow", 15) + '</a>' +
+          cmpBtn("lesson", "내 조건으로 레슨 비교하기", "btn-line",
+            '<a class="btn btn-line" href="/match?cat=lesson">맞춤 레슨 요청하기' +
+            icon("arrow", 15) + '</a>') +
         '</div>') : '') +
         '<div class="lsn-box">' +
           '<p class="lsn-box-h">' + icon("info", 20) + '이용 가이드</p>' +
@@ -831,8 +844,8 @@ function fitHead(c){
          말하는 꼴입니다(절대 규칙 5). 빌드는 켜졌는지 알 수 없으므로
          (서버만 압니다) 여기서는 「상담 요청」으로 찍고, `js/fitting.js`
          가 서버에 물어본 뒤 켜져 있을 때만 시안의 이름으로 올립니다. */
-      '<a class="btn btn-deep fit-cta" id="fit-cta" href="/match?cat=' +
-        esc(c.key) + '">' + icon("camera", 19) +
+      '<a class="btn btn-deep fit-cta" id="fit-cta" href="' +
+        esc(cmpOn() ? W.amCmpUrl("fitting") : "/match?cat=" + c.key) + '">' + icon("camera", 19) +
         '<span class="fit-cta-t">클럽 상태 적고 상담 요청</span>' +
         icon("arrow", 16) + '</a>' +
     '</div>' +
@@ -950,7 +963,8 @@ function fitNone(){
     '<p>내 업체를 등록하거나, 원하는 상담 조건을 남겨보세요.</p>' +
     '<div class="none-b">' +
       '<a class="btn btn-pri" href="/join">' + icon("store", 18) + '업체 등록 신청</a>' +
-      '<a class="btn btn-line" href="/match?cat=fitting">상담 조건 남기기</a>' +
+      cmpBtn("fitting", "클럽 상태로 견적받기", "btn-line",
+        '<a class="btn btn-line" href="/match?cat=fitting">상담 조건 남기기</a>') +
     '</div>' +
   '</div>';
 }

@@ -746,6 +746,107 @@ const FAKE = "https://sb-test.supabase.co";
     console.log("   그림을 " + dir + " 에 찍었습니다");
   }
 
+  /* ── 비교견적 양식 (0082 · 2026-11-15) ────────────────────────────────
+     ⚠️⚠️ 스위치(site.js 의 compareOn)를 **이 검사 안에서만** 켭니다 — 저장소의 값은
+     false 이고, 꺼져 있을 때는 평소 양식이 그대로여야 합니다. */
+  {
+    console.log("\n── 비교견적 양식 (compareOn)");
+    const CMPURL = URL.replace(/\/match.*$/, "") + "/match?compare=1&cat=lesson";
+    const jwt = "x." + Buffer.from(JSON.stringify({ sub:"11111111-2222-3333-4444-555555555555" }))
+      .toString("base64").replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_") + ".y";
+    async function cmpPage(on, signed){
+      const pg = await b.newPage({ viewport:{ width:390, height:900 } });
+      const errs = watch(pg);
+      await pg.route("**/api/session", function(r){
+        return r.fulfill({ status:200, contentType:"application/json",
+          body: JSON.stringify({ auth:true, signedIn:!!signed, conf:{ url:FAKE, anonKey:"anon-test-key" } }) });
+      });
+      if(on) await pg.route("**/js/data/site.js*", async function(r){
+        const res = await r.fetch(); const t = await res.text();
+        return r.fulfill({ response:res, body: t + "\n;window.WOW_BIZ.compareOn = true;" });
+      });
+      if(signed) await pg.addInitScript("try{localStorage.setItem('am.auth.v1',JSON.stringify({access_token:'" + jwt + "',at:Date.now()+3600e3}));}catch(e){}");
+      return { pg, errs };
+    }
+    /* 스위치가 꺼져 있으면 평소 양식 */
+    let t0 = await cmpPage(false, true);
+    await t0.pg.goto(CMPURL, { waitUntil:"networkidle" }); await t0.pg.waitForTimeout(250);
+    ok("스위치가 꺼져 있으면 비교 양식이 **안** 나오고 평소 양식이 나온다",
+       (await t0.pg.locator("#cf").count()) === 0 && (await t0.pg.locator("#mf").count()) === 1);
+    await t0.pg.close();
+
+    /* 로그인 전 — 적고 「로그인하고 요청하기」 → 로그인 화면 · 조건은 남는다 */
+    let t1 = await cmpPage(true, false);
+    await t1.pg.goto(CMPURL, { waitUntil:"networkidle" }); await t1.pg.waitForTimeout(250);
+    ok("스위치를 켜면 비교 양식이 열린다", (await t1.pg.locator("#cf").count()) === 1);
+    const sv = await t1.pg.evaluate(function(){
+      return Array.prototype.map.call(document.querySelectorAll('#cf input[name="svc"]'), function(e){ return e.value; });
+    });
+    ok("  레슨 하위만 고를 수 있다", sv.length > 0 && sv.every(function(v){ return v.indexOf("ls-") === 0; }), sv.join(","));
+    ok("  분류마다 여쭙는 조건 칸이 있다 (compare.js 에서)",
+       (await t1.pg.locator("#c-goal").count()) === 1 && (await t1.pg.locator("#c-when").count()) === 1);
+    const lb = await t1.pg.locator('#cf button[type="submit"]').innerText();
+    ok("  로그인 전에는 단추가 「로그인하고 요청하기」", lb.indexOf("로그인") >= 0, lb);
+    await t1.pg.selectOption("#c-goal", { index:1 });
+    await t1.pg.fill("#c-when", "평일 저녁");
+    await t1.pg.fill("#c-name", "홍길동"); await t1.pg.fill("#c-tel", "010-1234-5678");
+    await Promise.all([ t1.pg.waitForURL(/\/login/), t1.pg.click('#cf button[type="submit"]') ]);
+    const lu = t1.pg.url();
+    ok("  누르면 로그인 화면으로 가고 돌아올 자리를 들고 간다",
+       lu.indexOf("/login?next=") >= 0 && decodeURIComponent(lu).indexOf("compare=1") >= 0, lu);
+    const dr = await t1.pg.evaluate(function(){ return sessionStorage.getItem("cmpDraft:lesson") || ""; });
+    ok("  적던 조건이 담겼다", dr.indexOf("평일 저녁") >= 0, dr.slice(0, 80));
+    ok("  ⚠️ 성함 · 연락처는 담지 않는다", dr.indexOf("010-1234") < 0 && dr.indexOf("홍길동") < 0, "");
+    /* 로그인하고 돌아온다 (같은 탭 · sessionStorage 유지) */
+    await t1.pg.evaluate(function(j){ localStorage.setItem("am.auth.v1", JSON.stringify({ access_token:j, at:Date.now()+3600e3 })); }, jwt);
+    let sent = [];
+    await t1.pg.route(FAKE + "/rest/v1/rpc/make_compare_request", function(r){
+      sent.push(JSON.parse(r.request().postData() || "{}"));
+      return new Promise(function(res){ setTimeout(function(){
+        res(r.fulfill({ status:200, contentType:"application/json", body:'"SW-CMP1-TEST"' })); }, 400); });
+    });
+    let oldCalls = 0;
+    await t1.pg.route(FAKE + "/rest/v1/rpc/make_request", function(r){ oldCalls++; return r.fulfill({ status:500, body:"{}" }); });
+    await t1.pg.goto(CMPURL, { waitUntil:"networkidle" }); await t1.pg.waitForTimeout(250);
+    ok("돌아오면 적던 조건이 그대로 있다", (await t1.pg.inputValue("#c-when")) === "평일 저녁");
+    await t1.pg.check('#cf input[name="svc"] >> nth=0');
+    await t1.pg.selectOption("#c-style", { index:1 });
+    await t1.pg.selectOption("#c-region", "seoul");
+    await t1.pg.fill("#c-name", "홍길동"); await t1.pg.fill("#c-tel", "010-1234-5678");
+    await t1.pg.check("#c-agree");
+    await t1.pg.click('#cf button[type="submit"]');
+    await t1.pg.click('#cf button[type="submit"]', { force:true }).catch(function(){});
+    await t1.pg.waitForTimeout(900);
+    ok("두 번 눌러도 **한 번만** 보낸다", sent.length === 1, sent.length);
+    const p0 = (sent[0] || {}).p || {};
+    ok("  비교 문(make_compare_request)으로 · 옛 문은 안 부른다", sent.length === 1 && oldCalls === 0, oldCalls);
+    ok("  분류 · 서비스 · 조건 꾸러미를 보낸다",
+       p0.cat === "lesson" && (p0.services || []).length === 1 && (p0.detail || {}).when === "평일 저녁" &&
+       !!(p0.detail || {}).goal, JSON.stringify(p0.detail));
+    ok("  ⚠️ 조건 꾸러미에 성함 · 연락처를 섞지 않는다",
+       JSON.stringify(p0.detail || {}).indexOf("010") < 0, "");
+    const done = await t1.pg.evaluate(function(){ return document.getElementById("matchbox").innerText; });
+    ok("  접수번호 · 내 정보로 가는 길 · 「업체에 아직 연락처가 가지 않았다」를 말한다",
+       done.indexOf("SW-CMP1-TEST") >= 0 && done.indexOf("아직 성함") >= 0, done.slice(0, 60));
+    ok("  ⚠️ 보내지 않은 문자 · 카톡을 보냈다고 하지 않는다",
+       done.indexOf("보냈습니다") < 0 && done.indexOf("알림톡") < 0, "");
+    ok("  조건을 다 보냈으면 담아 둔 것을 지운다",
+       (await t1.pg.evaluate(function(){ return sessionStorage.getItem("cmpDraft:lesson"); })) === null);
+    ok("  오류 0건", t1.errs.length === 0, t1.errs.join(" | "));
+    await t1.pg.close();
+
+    /* 중고 매입 — 서비스는 매입 견적 하나뿐 */
+    let t2 = await cmpPage(true, true);
+    await t2.pg.goto(CMPURL.replace("cat=lesson", "cat=used"), { waitUntil:"networkidle" }); await t2.pg.waitForTimeout(250);
+    const us = await t2.pg.evaluate(function(){
+      return Array.prototype.map.call(document.querySelectorAll('#cf input[name="svc"]'), function(e){ return e.type + ":" + e.value; });
+    });
+    ok("중고 매입은 매입 견적 하나만 (개인 매물 · 위탁과 섞지 않는다)", us.join(",") === "hidden:us-buyquote", us.join(","));
+    const sw = await t2.pg.evaluate(function(){ return document.documentElement.scrollWidth <= document.documentElement.clientWidth; });
+    ok("  폰 390px 에서 가로로 밀리지 않는다", sw);
+    await t2.pg.close();
+  }
+
   await b.close(); h.srv.close();
   console.log("\n" + ran + "건 중 " + (ran - bad) + "건 통과 · " + bad + "건 실패");
   process.exit(bad ? 1 : 0);

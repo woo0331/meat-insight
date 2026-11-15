@@ -19,6 +19,9 @@
 (function(){
   var box = document.getElementById("matchbox");
   if(!box || !window.amAuthAsk) return;
+  /* ⚠️ 비교견적(/match?compare=1 · 0082)은 js/compareform.js 가 맡습니다 —
+     스위치(site.js 의 compareOn)가 꺼져 있으면 amCompareMode 가 null 이라 평소대로 돕니다 */
+  if(window.amCompareMode && window.amCompareMode()) return;
 
   var KEEP = (window.WOW_BIZ || {}).applyKeep || "";
 

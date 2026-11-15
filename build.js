@@ -46,6 +46,8 @@ global.window = {};
     찍게** 실습니다(2026-11-14). 전에는 js/homefind.js 가 그려진 뒤에 끼워 넣어
     폰에서 찾는 칸이 한 줄 늘며 아래가 통째로 밀렸습니다(layout shift). */
  "js/data/deal.js",
+ /* 비교견적 (0082) — 분류 화면이 진입 단추를 찍을지 compareOn 을 봅니다 */
+ "js/data/compare.js",
  "js/data/lesson.js","js/card.js",
  "js/data/legal-terms.js","js/data/legal-privacy.js"]
   .forEach(function(f){ require("./" + f); });

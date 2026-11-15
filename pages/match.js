@@ -75,6 +75,7 @@ exports.build = function(){
        버킷이 설정되기 전에는 아무것도 안 그립니다. */
     js: ["/js/data/site.js", "/js/data/regions.js",
          "/js/data/providers.generated.js", "/js/data/providers.js",
-         "/js/auth.js", "/js/photo.js", "/js/matchform.js"]
+         "/js/auth.js", "/js/photo.js", "/js/data/compare.js",
+         "/js/matchform.js", "/js/compareform.js"]
   };
 };

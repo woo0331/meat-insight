@@ -149,13 +149,19 @@ module.exports = function(T){
   ok("  그때 제3자 제공 동의 시각이 적힌다",
      psql("select (agree3rd_at is not null)::text from assignment " +
           "where request_id='" + RID + "'") === "true");
-  /* ⚠️ 그제야 업체가 손님 성함 · 연락처를 봅니다 */
-  ok("  ⚠️ 그제야 업체가 손님 성함 · 연락처를 본다",
-     psql(as(BIZ) + "select name from request where id='" + RID + "'") === "흐름손님");
+  /* ⚠️⚠️ 0082 부터 성함 · 연락처는 **표에서 아무도 못 읽고**(칸 권한) 보기
+     `v_request_contact` 로만 읽습니다 — 업체는 **수락한 뒤에** 봅니다
+     (전에는 배정만 되면 화면이 가려도 API 로 읽을 수 있었습니다). */
+  ok("  ⚠️ 업체도 **표에서는** 성함을 못 읽는다 (칸 권한 · 0082)",
+     denied(as(BIZ) + "select name from request where id='" + RID + "'").no);
+  ok("  ⚠️ 수락 전에는 보기로도 0줄",
+     psql(as(BIZ) + "select count(*) from v_request_contact where id='" + RID + "'") === "0");
 
   /* B-4 업체가 수락하고 견적을 냅니다 */
   ok("B-4 업체가 수락한다",
      allowed(as(BIZ) + "select answer_assignment('" + RID + "', true)").yes);
+  ok("  ⚠️ 그제야 업체가 손님 성함 · 연락처를 본다 (보기로)",
+     psql(as(BIZ) + "select name from v_request_contact where id='" + RID + "'") === "흐름손님");
   ok("  상담을 시작한다",
      allowed(as(BIZ) + "select move_state('" + RID + "','consult','{}'::jsonb)").yes);
   ok("  견적을 낸다",

@@ -472,7 +472,11 @@
             ",tee_at.is.null))");
   }
 
+  /* ⚠️⚠️ 늦게 온 **옛 응답**이 새 조건의 목록을 덮지 않게 (2026-11-15) — 날짜 띠 ·
+     거르개를 빨리 바꾸면 앞 질의의 답이 뒤에 도착해 다른 조건의 목록이 섰습니다. */
+  var SEQ = 0;
   function load(){
+    var my = ++SEQ;
     LOADED = Date.now();
     TODAY  = kstISO(0);
     box.innerHTML = bar() + '<p class="myhint">불러오는 중입니다…</p>';
@@ -557,9 +561,11 @@
       if(window.amAuthHeaders) h = Object.assign(h, window.amAuthHeaders());
       return fetch(A.conf.url + "/rest/v1/v_teetime_open?" + q.join("&"), { headers:h });
     }).then(function(x){
+      if(my !== SEQ) return;
       if(x.miss && x.miss.length) tookOut(x.miss);
       paint(x.rows, MISS);
     }).catch(function(e){
+      if(my !== SEQ) return;
       /* ⚠️ 까닭은 **개발 기록에만** 적습니다 (절대 규칙 3) */
       window.amFailLog("booking/v_teetime_open", e);
       box.innerHTML = bar() + window.amFailHtml("티타임 목록");

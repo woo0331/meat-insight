@@ -5043,3 +5043,14 @@ picture{ display: contents; }
 @media (max-width: 620px){
   .jnc-mid .jnc-h{ align-items:flex-start; }
 }
+/* 여행 상품 사진 고르기 — ⚠️ 파일 칸을 단추 위에 **투명하게** 깔아 키보드로도 고릅니다 (2026-11-15) */
+.tpr-ph-l{ position:relative; overflow:hidden; }
+.tpr-ph-l .tpr-ph-i{ position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
+.tpr-ph-l:focus-within{ outline:3px solid var(--grn); outline-offset:2px; }
+.tpr-ph-lim{ margin:4px 0 0; font-size:13px; color: var(--ink2); }
+/* ⚠️⚠️ **잠긴 단추가 눌리는 단추와 똑같아 보였습니다** (2026-11-15 · 찾았습니다) —
+   사이트 전체에 `:disabled` 모양이 한 줄도 없어서, 보내는 중이라 잠긴 단추를
+   손님이 계속 눌렀습니다. 색을 흐리게(opacity) 하지 않습니다 — 글자 대비가
+   떨어집니다. 대신 **채도를 빼고 손가락 모양을 바꿉니다.** */
+.btn:disabled, .btn[aria-disabled="true"]{ cursor:not-allowed; filter: grayscale(.85); box-shadow:none; }
+.btn:disabled:hover{ transform:none; }

@@ -108,23 +108,26 @@
             '<button type="button" class="btn btn-sm btn-bad tt-close">이 자리 닫기</button>' +
           '</div>'
         : '') +
+      /* ⚠️ 이 양식은 자리마다 하나씩 그려지므로 id 를 안 답니다 — 칸 이름은
+         aria-label 로 붙입니다(2026-11-15 · 이름표가 칸과 안 이어져 화면 읽는
+         기계가 칸 이름을 못 읽었습니다). */
       '<form class="jform tt-ef" hidden>' +
         /* ⚠️⚠️ 날짜 · 지역 · 골프장 · 갈래 칸을 **안 냅니다** — 문이
            무시하므로 그리면 눌러도 안 바뀌는 칸이 됩니다. */
         '<div class="jrow"><label>티오프 시각</label>' +
-        '<input name="teeAt" type="time" value="' + esc(hhmm(t.tee_at)) + '"></div>' +
+        '<input name="teeAt" type="time" aria-label="티오프 시각" value="' + esc(hhmm(t.tee_at)) + '"></div>' +
         '<div class="jrow"><label>자리 수</label>' +
-        '<input name="slots" inputmode="numeric" maxlength="1" value="' +
+        '<input name="slots" aria-label="자리 수" inputmode="numeric" maxlength="1" value="' +
           esc(String(t.slots)) + '"></div>' +
         '<div class="jrow"><label>1인 그린피 (원)</label>' +
-        '<input name="greenFee" inputmode="numeric" maxlength="9" value="' +
+        '<input name="greenFee" aria-label="1인 그린피 (원)" inputmode="numeric" maxlength="9" value="' +
           esc(t.green_fee === null || t.green_fee === undefined ? "" : String(t.green_fee)) +
           '" placeholder="비우면 안 적습니다 · 0 은 무료"></div>' +
         '<div class="jrow"><label>예약 문의 번호</label>' +
-        '<input name="tel" maxlength="20" value="' + esc(t.tel || "") +
+        '<input name="tel" aria-label="예약 문의 번호" maxlength="20" value="' + esc(t.tel || "") +
           '" placeholder="비우면 사업자 전화번호를 냅니다"></div>' +
         '<div class="jrow jrow-full"><label>안내</label>' +
-        '<textarea name="note" rows="2" maxlength="500">' + esc(t.note || "") +
+        '<textarea name="note" aria-label="안내" rows="2" maxlength="500">' + esc(t.note || "") +
           '</textarea></div>' +
         '<div class="jrow jrow-full">' +
         '<button type="submit" class="btn btn-pt">이대로 고치기</button></div>' +
@@ -148,7 +151,7 @@
             '</div>' +
             '<form class="jform tb-nf" hidden>' +
               '<div class="jrow jrow-full"><label>거절하시는 까닭 <b>*</b></label>' +
-              '<input name="why" required maxlength="200" ' +
+              '<input name="why" aria-label="거절하시는 까닭" required maxlength="200" ' +
               'placeholder="보기: 그 시간 자리가 찼습니다"></div>' +
               '<div class="jrow jrow-full">' +
               '<button type="submit" class="btn btn-pt">이 까닭으로 거절</button></div>' +

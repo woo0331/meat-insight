@@ -178,7 +178,8 @@
 
   /* 고르기 · 빼기를 답니다 — 돌려주는 것으로 양식이 고른 것을 읽습니다 */
   function pickBind(el){
-    var none = { items: function(){ return []; }, clear: function(){} };
+    var none = { items: function(){ return []; }, clear: function(){}, busy: function(){ return false; } };
+    var WORK = 0;
     if(!el || !ON) return none;
     var inp = el.querySelector(".lspk-i");
     var ul  = el.querySelector(".lspk-l");
@@ -263,6 +264,7 @@
         say("한 장이 너무 큽니다 — 32MB 까지 고르실 수 있습니다."); return;
       }
       say("사진을 읽는 중입니다…");
+      WORK += 1;
       /* ⚠️⚠️ **한 장씩 차례로** 읽습니다 — 열 장을 한꺼번에 canvas 에
          올리면 느린 기기에서 그 탭이 멈춥니다.
          ⚠️ 한 장이 사진이 아니어도 **나머지는 그대로 갑니다** — 한 장
@@ -281,6 +283,7 @@
           });
         });
       }, Promise.resolve()).then(function(){
+        WORK -= 1;
         paint();
         /* ⚠️ 몇 장이 **안 들어갔는지** 말합니다 — 조용히 빼면 올리신
            뒤에야 모자란 것을 아십니다. */
@@ -291,6 +294,9 @@
     paint();
     return {
       items: function(){ return list.slice(); },
+      /* ⚠️ 아직 읽는 중인 사진이 있나 (2026-11-15) — 그동안 보내면 다 읽은 것만
+         가고 나머지는 **말없이** 빠졌습니다. 부르는 쪽이 그때 보내기를 막습니다. */
+      busy: function(){ return WORK > 0; },
       clear: function(){
         for(var i = 0; i < list.length; i++)
           try{ URL.revokeObjectURL(list[i].url); }catch(_){}

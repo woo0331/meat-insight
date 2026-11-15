@@ -427,8 +427,12 @@
     });
   }
 
+  /* ⚠️ 늦게 온 옛 응답이 새 조건의 목록을 덮지 않게 (2026-11-15) */
+  var SEQ = 0;
   function reload(){
+    var my = ++SEQ;
     return load().then(function(rows){
+      if(my !== SEQ) return;
       /* ⚠️⚠️ 못 읽었으면 **0건이라고 말하지 않습니다** — 그리고 센 수도
          안 적습니다(못 읽은 것과 0건은 다릅니다 · 절대 규칙 1). */
       if(!rows){

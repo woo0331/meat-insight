@@ -1694,6 +1694,12 @@
       e.preventDefault();
       var f = e.target, msg = document.getElementById("lsmsg");
       var btn = f.querySelector('button[type="submit"]');
+      /* ⚠️ 사진을 아직 읽는 중이면 기다려 달라고 합니다 — 그대로 보내면 그 사진이
+         말없이 빠집니다 (2026-11-15). */
+      if(PICKED && PICKED.busy && PICKED.busy()){
+        msg.hidden = false; msg.textContent = "사진을 아직 준비하고 있습니다 — 끝난 뒤 다시 눌러 주세요.";
+        return;
+      }
       btn.disabled = true;
       msg.hidden = false; msg.textContent = "올리는 중입니다…";
       call(a, "open_listing", {

@@ -206,12 +206,16 @@
           '장)</i>' : "") +
         (r.photo_drop_n ? ' <i>(빼는 중 ' + esc(String(r.photo_drop_n)) +
           '장)</i>' : "") + '</p>' +
+      /* ⚠️ 파일 칸을 hidden 으로 두면 **키보드로는 고를 수 없습니다** (2026-11-15) —
+         투명하게 단추 위에 깔아 둡니다(js/lstphoto.js 의 .lspk-i 와 같은 수).
+         한도는 0073 의 claim_trip_photo 와 같은 값을 그 자리에서 적습니다. */
       '<p class="tpr-ph-b">' +
-        '<label class="btn btn-line btn-sm">' + icon("camera", 16) +
+        '<label class="btn btn-line btn-sm tpr-ph-l">' + icon("camera", 16) +
           '사진 고르기' +
-          '<input type="file" class="tpr-ph-i" accept="image/*" multiple hidden>' +
+          '<input type="file" class="tpr-ph-i" accept="image/jpeg,image/png,image/webp" multiple>' +
         '</label>' +
       '</p>' +
+      '<p class="tpr-ph-lim">JPG · PNG · WEBP · 상품마다 10장까지 · 위치정보(EXIF)는 지우고 올립니다.</p>' +
       ((PH[r.id] || []).length
         ? '<ul class="tpr-sl">' + PH[r.id].map(function(x, i){
             return shotLine(x, i === 0);
@@ -679,7 +683,7 @@
     inp.value = "";
     if(!files.length || !trip) return;
     if(note) note.textContent = "사진을 준비하는 중입니다…";
-    var done = 0, fail = 0;
+    var done = 0, fail = 0, whys = [];
     var step = files.reduce(function(chain, file){
       return chain.then(function(){
         if(!window.amImgPrep) throw new Error("사진을 다시 그릴 수 없습니다");
@@ -708,14 +712,25 @@
           }).then(function(r){
             if(!r || !r.ok) throw new Error("올리지 못했습니다");
           });
-        }).then(function(){ done++; }, function(){ fail++; });
+        }).then(function(){ done++; }, function(e){
+          fail++;
+          /* ⚠️ 까닭을 버리지 않습니다 — 「0 / 1장만」으로는 왜인지 알 수 없었습니다 */
+          var m = window.amErrText ? window.amErrText(e, "") : String((e && e.message) || "");
+          if(m && whys.indexOf(m) < 0) whys.push(m);
+        });
       });
     }, Promise.resolve());
     step.then(function(){
-      if(note) note.textContent = fail
-        ? (done + " / " + files.length + "장만 올라갔습니다. 다시 눌러 주세요.")
+      /* ⚠️ 결과는 다시 그린 **뒤에** 적습니다 — 먼저 적으면 load() 가 상자를 다시
+         그리며 지웠습니다(2026-11-15). */
+      var say = fail
+        ? (done + " / " + files.length + "장만 올라갔습니다" +
+           (whys.length ? " — " + whys.join(" · ") : "") + ". 다시 골라 주세요.")
         : (done + "장 올렸습니다. 운영자 확인을 거쳐 손님에게 보입니다.");
-      load();
+      Promise.resolve(load()).then(function(){
+        var w2 = box.querySelector('.tpr-ph[data-trip="' + trip + '"] .tpr-ph-m');
+        if(w2) w2.textContent = say; else if(note) note.textContent = say;
+      });
     });
   });
 

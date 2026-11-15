@@ -123,6 +123,9 @@ exports.build = function(){
             site.js 를 안 실어 문의 양식이 안 열렸던 그 자리). */
          "/js/data/providers.js",
          "/js/data/review.js", "/js/auth.js", "/js/photo.js",
+         /* 비교견적 (0082) — 스위치 compareOn 이 site.js 에 있어 같이 싣습니다.
+            안 실으면 꺼진 것으로 읽혀 비교 업체 더하기가 조용히 안 그려집니다. */
+         "/js/data/site.js", "/js/data/compare.js",
          "/js/account.js", "/js/review.js", "/js/assign.js",
          "/js/adminpro.js", "/js/adminrep.js", "/js/admininq.js",
          "/js/adminlog.js", "/js/metrics.js", "/js/adminbiz.js",

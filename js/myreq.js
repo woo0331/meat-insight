@@ -46,15 +46,35 @@
       .catch(function(){ return null; });
   }
 
+  /* ── 비교견적 (0082) ──────────────────────────────────────────
+     ⚠️⚠️⚠️ 스위치(compareOn)가 꺼져 있으면 오늘과 똑같이 묻습니다 — 0082 가
+     없는 DB 에 compare · kind · terms · blind 를 물으면 질의가 통째로 거절됩니다.
+     ⚠️⚠️ 「상담 선택」은 예약 · 계약 · 결제가 **아닙니다.** 고르시는 그 자리에서
+     상호를 보여 드리고 그 업체에만 연락처를 넘기는 동의를 받습니다
+     (개인정보보호법 제17조 제2항). 동의 단추를 눌러야만 pick_quote 가 갑니다. */
+  function cmpOn(){ return !!(window.amCmpOn && window.amCmpOn()); }
+  function cmpCfg(cat){ return window.amCmp ? window.amCmp(cat) : null; }
+  function kstToday(){
+    var k = new Date(Date.now() + 9 * 3600 * 1000);
+    function p2(n){ return String(n).padStart(2, "0"); }
+    return k.getUTCFullYear() + "-" + p2(k.getUTCMonth() + 1) + "-" + p2(k.getUTCDate());
+  }
+  function errText(err){
+    return window.amErrText ? window.amErrText({ message: why(err) }) : why(err);
+  }
+  var PICKING = false;   /* 상담 선택을 보내는 중 — 두 번 안 보냅니다 */
+
   function load(){
+    var on = cmpOn();
     return Promise.all([
       /* ⚠️ RLS 가 **내 요청만** 내줍니다 (request_mine) — 여기서 또
          좁히지 않습니다. 사용자 id 를 화면이 들고 있으면 그것을 고쳐
          남의 것을 부르려는 시도가 생깁니다. */
       get("request?select=id,no,state,cat,region,gu,want_at,created_at" +
+          (on ? ",compare,detail" : "") +
           "&order=created_at.desc&limit=30"),
       get("quote?select=id,request_id,provider_id,amount,vat,scope,excludes,days," +
-          "start_on,warranty,valid_to,note,state,created_at" +
+          "start_on,warranty,valid_to,note,state,created_at" + (on ? ",kind,terms" : "") +
           "&order=created_at.asc&limit=200"),
       get("request_item?select=request_id,service_id&limit=500"),
       /* ⚠️ 일정은 RLS 가 **내 요청 것만** 내줍니다 (0034 의 appt_mine) */
@@ -64,7 +84,8 @@
          내줍니다 (0005 의 assign_requester). 철회한 것도 옵니다:
          **넘어간 적이 있다는 사실**을 손님이 볼 수 있어야 합니다. */
       get("assignment?select=id,request_id,provider_id,state,agree3rd_at," +
-          "revoked_at,revoked_why,created_at&order=created_at.asc&limit=200")
+          "revoked_at,revoked_why,created_at" + (on ? ",blind" : "") +
+          "&order=created_at.asc&limit=200")
     ]).then(function(got){
       /* ⚠️ 올리신 파일 (§5-4) — 손님은 **자기 요청의 것만** 봅니다
          (0011 의 photo_mine). */
@@ -238,7 +259,179 @@
       }).join("") + '</div>';
   }
 
+  function detailRows(r){
+    var d = (r && r.detail && typeof r.detail === "object") ? r.detail : {};
+    var cfg = cmpCfg(r.cat), seen = {}, h = "";
+    ((cfg && cfg.ask) || []).forEach(function(f){
+      seen[f.k] = 1;
+      var v = d[f.k];
+      if(v !== null && v !== undefined && String(v).trim() !== "")
+        h += '<dt>' + esc(f.label) + '</dt><dd>' + esc(String(v)) + '</dd>';
+    });
+    Object.keys(d).forEach(function(k){
+      if(seen[k]) return;
+      var v = d[k];
+      if(v !== null && v !== undefined && String(v).trim() !== "")
+        h += '<dt>' + esc(k) + '</dt><dd>' + esc(String(v)) + '</dd>';
+    });
+    return h;
+  }
+
+  /* 비교표 — ⚠️⚠️ **낸 차례대로** 놓습니다(싼 순서가 아닙니다). 「최저가」 ·
+     「최고가」 딱지를 안 붙입니다 — 포함되는 것이 다르면 금액만으로 못 견줍니다.
+     ⚠️ 칸 이름은 AM_CMP[분류].terms 한 곳에서(업체 양식이 같은 줄을 읽습니다). */
+  function cmpTable(r, qs, today, ended){
+    var cfg = cmpCfg(r.cat) || { terms:[], amount:"금액" };
+    var kinds = window.AM_CMP_KIND || {};
+    var chosen = qs.some(function(q){ return q.state === "chosen"; });
+    function T(q){ return (q.terms && typeof q.terms === "object") ? q.terms : {}; }
+    function cell(v){
+      return (v === null || v === undefined || String(v).trim() === "")
+        ? '<td class="cmp-sm">적지 않음</td>' : '<td>' + esc(String(v)) + '</td>';
+    }
+    var rows = [];
+    rows.push('<tr><th scope="row">견적 종류</th>' + qs.map(function(q){
+      return cell(q.kind && window.amKeyName ? window.amKeyName(kinds, q.kind, "견적 종류") : null); }).join("") + '</tr>');
+    rows.push('<tr><th scope="row">' + esc(cfg.amount || "금액") + '</th>' + qs.map(function(q){
+      return cell(window.amQuoteAmount(q)); }).join("") + '</tr>');
+    (cfg.terms || []).forEach(function(f){
+      rows.push('<tr><th scope="row">' + esc(f.label) + '</th>' + qs.map(function(q){
+        return cell(T(q)[f.k]); }).join("") + '</tr>');
+    });
+    rows.push('<tr><th scope="row">포함</th>' + qs.map(function(q){
+      return cell(q.scope); }).join("") + '</tr>');
+    rows.push('<tr><th scope="row">별도 비용</th>' + qs.map(function(q){
+      return cell(q.excludes); }).join("") + '</tr>');
+    rows.push('<tr><th scope="row">유효기간</th>' + qs.map(function(q){
+      if(!q.valid_to) return '<td class="cmp-sm">적지 않음</td>';
+      var ex = q.state === "open" && window.amCmpExpired && window.amCmpExpired(q, today);
+      return '<td>' + esc(q.valid_to) + '까지' +
+        (ex ? ' <span class="dk-st dk-bad cmp-exp">만료</span>' : "") + '</td>';
+    }).join("") + '</tr>');
+    rows.push('<tr><th scope="row">업체 말씀</th>' + qs.map(function(q){
+      return cell(q.note); }).join("") + '</tr>');
+    rows.push('<tr><th scope="row">상태</th>' + qs.map(function(q){
+      var st = window.amQuoteSt(q.state) || { name:q.state, tone:"ink" };
+      var name = q.state === "chosen" ? "상담 선택" : st.name;
+      return '<td>' + badge(name, st.tone) + '</td>';
+    }).join("") + '</tr>');
+    rows.push('<tr><th scope="row">고르기</th>' + qs.map(function(q){
+      var ex = window.amCmpExpired && window.amCmpExpired(q, today);
+      if(q.state === "open" && !ex && !chosen && !ended)
+        return '<td><button type="button" class="btn btn-sm btn-pt" data-cpick="' +
+          esc(q.provider_id) + '" data-pname="' + esc(q.pname || "") + '">' +
+          '이 업체와 상담하기</button></td>';
+      if(q.state === "chosen")
+        return '<td class="cmp-sm">고르신 업체입니다</td>';
+      if(q.state === "open" && ex)
+        return '<td class="cmp-sm">유효기간이 지나 고를 수 없습니다</td>';
+      return '<td class="cmp-sm">—</td>';
+    }).join("") + '</tr>');
+    return '<div class="cmp-s"><table class="cmp-t cmpq">' +
+      '<caption class="sr-only">받은 비교 견적</caption>' +
+      '<thead><tr><th scope="col">항목</th>' + qs.map(function(q){
+        return '<th scope="col">' + (q.pname ? esc(q.pname)
+          : '<span class="rq-q-no">업체 상호를 읽지 못했습니다</span>') + '</th>';
+      }).join("") + '</tr></thead>' +
+      '<tbody>' + rows.join("") + '</tbody></table></div>';
+  }
+
+  /* 상담 선택 동의 상자 — ⚠️ 보유 기간이 비면 동의를 받지 않습니다
+     (무엇을 얼마나 두는지 안 보여 드리고 받을 수 없습니다 · 제15조 제2항). */
+  function consentHtml(pid, pname){
+    var keep = String(((window.WOW_BIZ || {}).applyKeep) || "").trim();
+    var who = pname ? '<b>' + esc(pname) + '</b>' : "고르신 업체";
+    if(!keep)
+      return '<p class="dk-hint">지금은 상담할 업체를 고르실 수 없습니다. ' +
+        '고객센터로 문의해 주세요.</p>';
+    return '<div class="agree cmp-ag" data-cpv="' + esc(pid) + '">' +
+      '<h3>연락처 제공 동의 (개인정보보호법 제17조 제2항)</h3>' +
+      '<dl>' +
+        '<dt>제공받는 자</dt><dd>' + who + '</dd>' +
+        '<dt>넘기는 항목</dt><dd>성함 · 연락처 (적으셨으면 이메일)</dd>' +
+        '<dt>목적</dt><dd>상담 연락</dd>' +
+        '<dt>보유 기간</dt><dd>' + esc(keep) + '</dd>' +
+      '</dl>' +
+      '<p class="agree-no">이 업체 <b>한 곳에만</b> 넘어갑니다. 예약 · 계약 · 결제가 아닙니다 — ' +
+      '고르시면 다른 업체의 견적은 「고르지 않음」으로 바뀝니다.</p>' +
+      '<div class="dk-b">' +
+        '<button type="button" class="btn btn-sm btn-pt" data-cgo="' + esc(pid) + '">' +
+        '동의하고 이 업체 선택</button>' +
+        '<button type="button" class="btn btn-sm btn-line" data-cno="1">그만두기</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function cmpCard(r, qs, items, pics, appts, revs, pnames, asgs){
+    var today = kstToday();
+    var stg = window.amCmpStage ? window.amCmpStage(r, qs, today) : { name:"" };
+    var ended = ["lost","done","signed","fee_wait","fee_done"].indexOf(r.state) >= 0;
+    var svcs = items.filter(function(x){ return x.request_id === r.id; })
+      .map(function(x){
+        var f = window.amSub ? amSub(x.service_id) : null;
+        return f ? (f.cat.name + " · " + f.item.name) : x.service_id;
+      });
+    var chosen = qs.filter(function(q){ return q.state === "chosen"; })[0] || null;
+    var h = '<div class="dk-r" data-req="' + esc(r.id) + '">';
+    h += '<div class="dk-h"><b>' + esc(r.no) + '</b>' + badge("비교견적", "info") +
+         (stg.name ? badge(stg.name, "grn") : "") + '</div>';
+    h += '<dl class="dk-d">';
+    if(svcs.length) h += '<dt>요청</dt><dd>' + esc(svcs.join(" / ")) + '</dd>';
+    if(r.region)    h += '<dt>지역</dt><dd>' + esc(r.region + (r.gu ? " " + r.gu : "")) + '</dd>';
+    if(r.want_at)   h += '<dt>희망 일정</dt><dd>' + esc(r.want_at) + '</dd>';
+    h += detailRows(r);
+    h += '</dl>';
+    (appts || []).forEach(function(ap){
+      var ast = window.amApptSt(ap.state) || { name:ap.state, tone:"ink" };
+      h += '<div class="ap"><div class="ap-h">' + icon("cal", 15) +
+           '<b>' + esc(window.amWhen(ap.at)) + '</b>' +
+           badge(window.amApptKindName(ap.kind), "ink") +
+           badge(ast.name, ast.tone) + '</div>';
+      if(ap.place) h += '<p class="ap-d">' + esc(ap.place) + '</p>';
+      if(ap.note)  h += '<p class="ap-d">' + esc(ap.note) + '</p>';
+      if(ap.state === "set")
+        h += '<div class="dk-b"><button class="btn btn-sm btn-line" ' +
+             'data-apcancel="' + esc(ap.id) + '">못 가게 되었습니다</button></div>';
+      h += '</div>';
+    });
+    if(window.amPhotoBlock) h += window.amPhotoBlock(pics, true);
+
+    if(qs.length){
+      h += '<h3 class="rq-h">받은 비교 견적 ' + won(qs.length) + '건</h3>' +
+        '<p class="dk-hint">낸 차례대로 놓았습니다. ' +
+        '<b>싼 순서가 아닙니다</b> — 포함되는 것이 다르면 금액만으로는 견줄 수 없습니다. ' +
+        '「예상 견적」은 실물을 확인한 뒤 달라질 수 있습니다.</p>' +
+        cmpTable(r, qs, today, ended) +
+        '<div class="cmp-agw" hidden></div>';
+    }else{
+      h += '<p class="dk-hint">아직 받은 견적이 없습니다. 업체가 낸 견적만 여기에 뜹니다 — ' +
+           '견적이 오지 않으면 아무것도 지어 보여 드리지 않습니다.</p>';
+    }
+    if(chosen)
+      h += '<p class="dk-hint"><b>상담 선택 — 예약 · 계약 · 결제가 아닙니다. 업체가 연락드립니다.</b> ' +
+           '조건을 맞추신 뒤 바꿀 일이 있으면 고객센터로 알려 주세요.</p>';
+    /* ⚠️ 연락처가 실제로 넘어간 배정만 「전달한 업체」입니다(비교 배정은 안 넘깁니다) */
+    h += giveBlock(r, (asgs || []).filter(function(a){
+      return a.agree3rd_at && !a.blind;
+    }), pnames || {});
+    h += reviewBlock(r, qs, appts, revs, pnames || {});
+    if(!ended)
+      h += '<div class="dk-b"><button class="btn btn-sm btn-line" ' +
+           'data-cancel="' + esc(r.id) + '">이 요청 취소하기</button></div>';
+    else if(r.state !== "lost")
+      h += '<p class="dk-hint">이미 진행 중인 건이라 혼자 취소하실 수 없습니다 — ' +
+           '고객센터로 알려 주세요.</p>';
+    if(r.state !== "lost")
+      h += '<div class="dk-b"><button class="btn btn-sm btn-line" ' +
+           'data-report="' + esc(r.id) + '">이 건에 문제가 있습니다</button></div>';
+    h += '<p class="dk-m lmsg" hidden></p></div>';
+    return h;
+  }
+
   function card(r, quotes, items, pics, appts, revs, pnames, asgs){
+    if(r.compare)
+      return cmpCard(r, quotes.filter(function(q){ return q.request_id === r.id; }),
+                     items, pics, appts, revs, pnames, asgs);
     var st = window.amDealSt(r.state) || { name:r.state, tone:"ink" };
     var svcs = items.filter(function(x){ return x.request_id === r.id; })
       .map(function(x){
@@ -496,6 +689,42 @@
                                    why: w4.trim() } })
         .then(paint)
         .catch(function(err){ cxb.disabled = false; if(m4) m4.textContent = why(err); });
+      return;
+    }
+    /* 비교견적 — 「이 업체와 상담하기」는 동의 상자만 엽니다(아직 안 보냅니다) */
+    var cp = e.target.closest ? e.target.closest("button[data-cpick]") : null;
+    if(cp){
+      var rc = cp.closest(".dk-r"), aw = rc ? rc.querySelector(".cmp-agw") : null;
+      if(!aw) return;
+      aw.innerHTML = consentHtml(cp.getAttribute("data-cpick"), cp.getAttribute("data-pname"));
+      aw.hidden = false;
+      var gb = aw.querySelector("button[data-cgo]");
+      if(gb && gb.focus) gb.focus();
+      return;
+    }
+    var cn = e.target.closest ? e.target.closest("button[data-cno]") : null;
+    if(cn){
+      var aw2 = cn.closest(".cmp-agw");
+      if(aw2){ aw2.innerHTML = ""; aw2.hidden = true; }
+      return;
+    }
+    var cg = e.target.closest ? e.target.closest("button[data-cgo]") : null;
+    if(cg){
+      if(PICKING) return;
+      var rg = cg.closest(".dk-r"), mg = rg ? rg.querySelector(".dk-m") : null;
+      var ridg = rg ? rg.getAttribute("data-req") : null;
+      if(!ridg) return;
+      PICKING = true;
+      cg.disabled = true;
+      if(mg){ mg.hidden = false; mg.textContent = "보내는 중입니다…"; }
+      rpc("pick_quote", { p: { request: ridg, provider: cg.getAttribute("data-cgo"),
+                               share: true } })
+        .then(function(){ PICKING = false; paint(); })
+        .catch(function(err){
+          PICKING = false;
+          cg.disabled = false;
+          if(mg) mg.textContent = errText(err);
+        });
       return;
     }
     var b = e.target.closest ? e.target.closest("button[data-pick]") : null;

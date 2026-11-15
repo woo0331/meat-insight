@@ -12218,6 +12218,362 @@ function boardsOf(){
     }
   }
 
+  /* ══ 비교견적 (0082) — 스위치가 켜졌을 때만 ═════════════════════════
+     ⚠️⚠️⚠️ 운영 DB 에는 0082 가 없습니다. 그래서 스위치(compareOn)가 꺼져
+     있으면 **오늘과 똑같이** 물어야 합니다 — 새 칸 하나만 select 에 섞여도
+     0082 가 없는 DB 는 질의를 통째로 거절합니다. 꺼진 화면을 먼저 잽니다.
+     ⚠️ 켜는 법은 site.js 가 WOW_BIZ 를 담는 순간을 가로채는 것입니다
+     (그냥 넣어 두면 site.js 가 나중에 덮습니다). */
+  console.log("\n── 비교견적 (0082) — 스위치가 꺼져 있으면 오늘과 같습니다");
+  {
+    const CMPON = "(function(){var o;Object.defineProperty(window,'WOW_BIZ',{configurable:true," +
+      "get:function(){return o;},set:function(x){o=x;if(o)o.compareOn=true;}});})();";
+    /* 한국 날짜 — ⚠️ 기계의 시간대로 꺼내지 않습니다 */
+    function kday(plus){
+      const k = new Date(Date.now() + 9 * 3600 * 1000 + (plus || 0) * 86400000);
+      const p2 = n => String(n).padStart(2, "0");
+      return k.getUTCFullYear() + "-" + p2(k.getUTCMonth() + 1) + "-" + p2(k.getUTCDate());
+    }
+    function selOf(sent, table){
+      return sent.filter(x => x.name === "GET" && x.body.indexOf("/rest/v1/" + table + "?") >= 0)
+        .map(x => decodeURIComponent((x.body.split("select=")[1] || "").split("&")[0]));
+    }
+    const PRO2 = { role:"provider", name:"업체사람", provider:"t-range" };
+
+    /* ① 꺼진 화면 — 세 화면 모두 */
+    {
+      const g = await open("/desk", PRO2,
+        { assignment:[asg(REQ, "accepted")], request:[REQ], quote:[QUOTE], request_item:ITEMS });
+      const rs = selOf(g.sent, "request"), qs2 = selOf(g.sent, "quote");
+      ok("꺼져 있으면 /desk 가 v_request_contact 를 **안 부른다**",
+         g.sent.every(x => x.body.indexOf("v_request_contact") < 0),
+         g.sent.map(x => x.body).join(" | ").slice(0, 300));
+      ok("  요청 select 에 compare · detail 이 없고 name · tel 은 그대로다",
+         rs.length > 0 && rs.every(x => x.indexOf("compare") < 0 && x.indexOf("detail") < 0 &&
+                                        x.indexOf("name,tel") >= 0), rs.join(" | "));
+      ok("  견적 select 에 kind · terms 가 없다",
+         qs2.length > 0 && qs2.every(x => x.indexOf("kind") < 0 && x.indexOf("terms") < 0),
+         qs2.join(" | "));
+      ok("  비교견적 표시가 한 곳도 없다",
+         ((await g.p.textContent("#deskbox")) || "").indexOf("비교견적") < 0);
+      await g.p.close();
+    }
+    {
+      const g = await open("/my", { role:"customer", name:"홍길동" },
+        { request:[REQ], quote:[QUOTE], request_item:ITEMS,
+          provider:[{ id:"t-range", name:"남서울" }] });
+      const all = g.sent.filter(x => x.name === "GET").map(x => decodeURIComponent(x.body));
+      ok("꺼져 있으면 /my 가 compare · kind · terms · blind 를 **안 묻는다**",
+         all.every(x => !/compare|,kind|terms|blind|v_request_contact/.test(x)),
+         all.join(" | ").slice(0, 400));
+      await g.p.close();
+    }
+    {
+      const g = await open("/admin", { role:"admin", name:"관리자" },
+        { request:[Object.assign({}, REQ, { state:"check" })], provider:[], request_item:ITEMS,
+          assignment:[] });
+      const all = g.sent.filter(x => x.name === "GET").map(x => decodeURIComponent(x.body));
+      ok("꺼져 있으면 /admin 배정 자리가 compare · blind · v_request_contact 를 **안 묻는다**",
+         all.every(x => !/compare|blind|v_request_contact/.test(x)) &&
+         selOf(g.sent, "request").some(x => x.indexOf("name,tel") >= 0),
+         all.join(" | ").slice(0, 400));
+      ok("  비교 업체 더하기 단추가 없다",
+         (await g.p.locator('#assignbox button[data-do="more"]').count()) === 0);
+      await g.p.close();
+    }
+
+    console.log("\n── 비교견적 — /desk 업체 작업실");
+    const CREQ = { id:"aaaaaaaa-0000-0000-0000-0000000000c1", no:"SW-CMP1-0001",
+      state:"assigned", cat:"lesson", region:"서울", gu:"관악구",
+      budget_min:null, budget_max:null, want_at:null, body:null,
+      compare:true, detail:{ goal:"자세 교정", style:"개인", when:"<b>평일</b> 저녁" },
+      created_at:"2026-11-14T01:00:00Z" };
+    const CITEMS = [{ request_id:CREQ.id, service_id:"ls-solo", state:"new" }];
+    const casg = st => ({ id:"bbbb-c1", state:st, created_at:CREQ.created_at,
+                          agree3rd_at:null, request_id:CREQ.id });
+    /* 참여 전 */
+    {
+      const g = await open("/desk", PRO2,
+        { assignment:[casg("sent")], request:[CREQ], quote:[], request_item:CITEMS,
+          v_request_contact:[] }, {}, false, CMPON);
+      ok("화면 에러 · CSP 거절이 0건이다", g.errs.length === 0, g.errs.join(" | "));
+      const rs = selOf(g.sent, "request");
+      ok("켜지면 요청 select 에서 name · tel · email 을 **뺀다** (0082 가 그 칸을 거두었습니다)",
+         rs.length > 0 && rs.every(x => !/(^|,)(name|tel|email)(,|$)/.test(x) &&
+                                        x.indexOf("compare") >= 0 && x.indexOf("detail") >= 0),
+         rs.join(" | "));
+      ok("  연락처는 v_request_contact 로 **따로** 묻는다",
+         g.sent.some(x => x.body.indexOf("/rest/v1/v_request_contact?") >= 0 &&
+                          x.body.indexOf("id=in.") >= 0),
+         g.sent.map(x => x.body).join(" | ").slice(0, 300));
+      const tx = (await g.p.textContent("#deskbox")) || "";
+      ok("손님 조건을 AM_CMP 의 이름으로 보여 준다",
+         tx.indexOf("목표") >= 0 && tx.indexOf("자세 교정") >= 0 && tx.indexOf("개인 · 그룹") >= 0, tx);
+      const h0 = await g.p.innerHTML("#deskbox");
+      ok("  ⚠️ 조건 글도 esc() 를 지난다", h0.indexOf("<b>평일</b>") < 0 &&
+         h0.indexOf("&lt;b&gt;평일") >= 0);
+      ok("⚠️ 고르기 전에는 연락처가 안 보이고 그 까닭을 말한다",
+         /손님이 상담할 업체로 고르시면 성함 · 연락처가 보입니다/.test(tx), tx);
+      await g.p.click('#deskbox button[data-do="yes"]');
+      await g.p.waitForTimeout(300);
+      const c1 = g.sent.filter(x => x.name === "answer_compare")[0];
+      const b1 = c1 ? JSON.parse(c1.body) : {};
+      ok("참여하면 answer_compare 를 부른다 (answer_assignment 가 아니다)",
+         !!c1 && g.sent.every(x => x.name !== "answer_assignment"), JSON.stringify(g.sent.map(x => x.name)));
+      ok("  꾸러미가 p 하나에 request · yes", !!b1.p && b1.p.request === CREQ.id && b1.p.yes === true,
+         c1 && c1.body);
+      await g.p.close();
+    }
+    /* 참여 뒤 — 상담 시작 없이 바로 견적 */
+    {
+      const g = await open("/desk", PRO2,
+        { assignment:[casg("accepted")], request:[Object.assign({}, CREQ, { state:"accepted" })],
+          quote:[], request_item:CITEMS, v_request_contact:[] }, {}, false, CMPON);
+      ok("참여한 뒤에는 상담 시작 단추가 **없다**",
+         (await g.p.locator('#deskbox button[data-do="consult"]').count()) === 0);
+      ok("  바로 견적 내기 단추가 있다",
+         (await g.p.locator('#deskbox button[data-do="quote"]').count()) === 1);
+      const tx = (await g.p.textContent("#deskbox")) || "";
+      ok("  ⚠️ 참여해도 고르기 전이면 연락처가 안 보인다",
+         /손님이 상담할 업체로 고르시면/.test(tx) && tx.indexOf("undefined") < 0, tx);
+      await g.p.click('#deskbox button[data-do="quote"]');
+      await g.p.waitForTimeout(300);
+      ok("비교 견적 양식이 열린다", (await g.p.locator("#deskbox form.cmp-f").count()) === 1);
+      const labs = await g.p.locator("#deskbox form.cmp-f label").allTextContents();
+      ok("  금액 이름이 AM_CMP 의 amount(총비용)이다", labs.some(x => x.indexOf("총비용") >= 0), labs.join("|"));
+      ok("  비교 항목 칸이 그려진다 (담당 프로 · 레슨 횟수)",
+         labs.some(x => x.indexOf("담당 프로") >= 0) && labs.some(x => x.indexOf("레슨 횟수") >= 0),
+         labs.join("|"));
+      ok("  견적 종류 라디오가 둘이다",
+         (await g.p.locator('#deskbox form.cmp-f input[type="radio"][name="kind"]').count()) === 2);
+      ok("  유효기간이 필수다",
+         (await g.p.locator('#deskbox form.cmp-f input[name="validTo"][required]').count()) === 1);
+      const F = "#deskbox form.cmp-f ";
+      await g.p.check(F + 'input[name="kind"][value="estimate"]');
+      await g.p.fill(F + '[name="amount"]', "480,000");
+      await g.p.fill(F + '[name="scope"]', "50분 8회 · 영상 분석");
+      await g.p.fill(F + '[name="validTo"]', kday(10));
+      for(const [k, v] of [["pro","김프로"],["count","8회"],["mins","50분"],["style","개인"],
+                           ["facility","포함"],["when","화 · 목 저녁"]])
+        await g.p.fill(F + '[name="t_' + k + '"]', v);
+      /* 필수 한 칸을 비우고 required 를 지운 채 보내 봅니다 — 브라우저에 기대지 않습니다 */
+      await g.p.fill(F + '[name="t_pro"]', "");
+      await g.p.evaluate(() => document.querySelector('#deskbox form.cmp-f [name="t_pro"]').removeAttribute("required"));
+      await g.p.click(F + "button[type='submit']");
+      await g.p.waitForTimeout(250);
+      ok("  ⚠️ 필수 비교 항목이 비면 **안 보낸다**",
+         g.sent.filter(x => x.name === "submit_compare_quote").length === 0);
+      await g.p.fill(F + '[name="t_pro"]', "김프로");
+      await g.p.click(F + "button[type='submit']");
+      await g.p.waitForTimeout(350);
+      const c2 = g.sent.filter(x => x.name === "submit_compare_quote")[0];
+      const b2 = c2 ? (JSON.parse(c2.body).p || {}) : {};
+      ok("견적을 내면 submit_compare_quote 를 부른다 (submit_quote 가 아니다)",
+         !!c2 && g.sent.every(x => x.name !== "submit_quote"), JSON.stringify(g.sent.map(x => x.name)));
+      ok("  kind · 금액(숫자) · 유효기간 · 요청이 간다",
+         b2.kind === "estimate" && b2.amount === 480000 && b2.validTo === kday(10) &&
+         b2.request === CREQ.id, c2 && c2.body);
+      ok("  terms 는 **글자만 담은 객체**다",
+         !!b2.terms && typeof b2.terms === "object" && b2.terms.pro === "김프로" &&
+         b2.terms.count === "8회" &&
+         Object.keys(b2.terms).every(k => typeof b2.terms[k] === "string"), JSON.stringify(b2.terms));
+      ok("  비운 칸(별도 비용)은 terms 에 안 넣는다", !("extra" in (b2.terms || {})), JSON.stringify(b2.terms));
+      ok("누르는 것이 전부 40px 이상이다", (await tapsOk(g.p, "#deskbox")) === 0, await tapsOk(g.p, "#deskbox"));
+      await g.p.close();
+    }
+    /* 고른 뒤 · 다른 업체를 고른 뒤 · 만료 */
+    {
+      const CQ = { id:"cccc-c1", request_id:CREQ.id, amount:480000, vat:"incl", scope:"8회",
+        excludes:null, days:null, start_on:null, warranty:null, valid_to:kday(5), note:null,
+        state:"chosen", updated_at:null, kind:"fixed", terms:{ pro:"김프로" } };
+      const g = await open("/desk", PRO2,
+        { assignment:[casg("accepted")], request:[Object.assign({}, CREQ, { state:"quoted" })],
+          quote:[CQ], request_item:CITEMS,
+          v_request_contact:[{ id:CREQ.id, name:"이손님", tel:"010-2222-3333", email:null }] },
+        {}, false, CMPON);
+      const tx = (await g.p.textContent("#deskbox")) || "";
+      ok("손님이 고르셨으면 (보기에 줄이 있으면) 성함 · 연락처가 보인다",
+         tx.indexOf("이손님") >= 0 && tx.indexOf("010-2222-3333") >= 0, tx);
+      ok("  예약 · 계약 · 결제가 아니라고 말한다", /예약 · 계약 · 결제가 아닙니다/.test(tx), tx);
+      ok("  「예약 완료」라고 적지 않는다", tx.indexOf("예약 완료") < 0);
+      await g.p.close();
+
+      const g2 = await open("/desk", PRO2,
+        { assignment:[casg("accepted")], request:[Object.assign({}, CREQ, { state:"quoted" })],
+          quote:[Object.assign({}, CQ, { state:"passed" })], request_item:CITEMS,
+          v_request_contact:[] }, {}, false, CMPON);
+      const t2 = (await g2.p.textContent("#deskbox")) || "";
+      ok("다른 업체를 고르셨으면 그렇게 말한다", /손님이 다른 업체를 고르셨습니다/.test(t2), t2);
+      ok("  다시 내기 단추를 안 낸다",
+         (await g2.p.locator('#deskbox button[data-do="quote"]').count()) === 0);
+      await g2.p.close();
+
+      const g3 = await open("/desk", PRO2,
+        { assignment:[casg("accepted")], request:[Object.assign({}, CREQ, { state:"quoted" })],
+          quote:[Object.assign({}, CQ, { state:"open", valid_to:kday(-2) })], request_item:CITEMS,
+          v_request_contact:[] }, {}, false, CMPON);
+      const t3 = (await g3.p.textContent("#deskbox")) || "";
+      ok("유효기간이 지난 견적에는 「유효기간 지남」을 붙인다 (한국 날짜로)", /유효기간 지남/.test(t3), t3);
+      ok("  거두기 단추는 그대로 있다 (withdraw_quote)",
+         (await g3.p.locator('#deskbox button[data-do="pull"]').count()) === 1);
+      await g3.p.close();
+    }
+
+    console.log("\n── 비교견적 — /my 손님 비교표");
+    const MQ1 = { id:"cccc-m1", request_id:CREQ.id, provider_id:"p-a", amount:400000, vat:"incl",
+      scope:"50분 8회", excludes:null, days:null, start_on:null, warranty:null,
+      valid_to:kday(-3), note:null, state:"open", created_at:"2026-11-14T02:00:00Z",
+      kind:"fixed", terms:{ pro:"<i>박</i>프로", count:"8회" } };
+    const MQ2 = Object.assign({}, MQ1, { id:"cccc-m2", provider_id:"p-b", amount:520000,
+      valid_to:kday(7), kind:"estimate", terms:{ pro:"최프로", count:"10회" },
+      created_at:"2026-11-14T03:00:00Z" });
+    const MYC = { request:[Object.assign({}, CREQ, { state:"quoted" })], quote:[MQ1, MQ2],
+      request_item:CITEMS, assignment:[],
+      provider:[{ id:"p-a", name:"에이골프" }, { id:"p-b", name:"비레슨" }] };
+    {
+      const g = await open("/my", { role:"customer", name:"이손님" }, MYC, {}, false, CMPON);
+      ok("화면 에러 · CSP 거절이 0건이다", g.errs.length === 0, g.errs.join(" | "));
+      const all = g.sent.filter(x => x.name === "GET").map(x => decodeURIComponent(x.body));
+      ok("켜지면 compare · detail · kind · terms 를 묻는다",
+         all.some(x => x.indexOf("/request?") >= 0 && x.indexOf("compare,detail") >= 0) &&
+         all.some(x => x.indexOf("/quote?") >= 0 && x.indexOf("kind,terms") >= 0), all.join(" | ").slice(0, 400));
+      ok("비교표가 그려지고 업체가 열 둘이다",
+         (await g.p.locator("#reqbox table.cmpq").count()) === 1 &&
+         (await g.p.locator("#reqbox table.cmpq thead th").count()) === 3);
+      const tx = (await g.p.textContent("#reqbox")) || "";
+      ok("  상호가 열 머리에 나온다", tx.indexOf("에이골프") >= 0 && tx.indexOf("비레슨") >= 0);
+      ok("  진행 단계를 amCmpStage 로 보여 준다 (견적 도착)", tx.indexOf("견적 도착") >= 0, tx.slice(0, 200));
+      ok("  손님 조건을 보여 준다", tx.indexOf("자세 교정") >= 0);
+      ok("  금액 줄 이름이 총비용이고 부가세를 붙인다",
+         tx.indexOf("총비용") >= 0 && tx.indexOf("400,000원 · 부가세 포함") >= 0, tx);
+      ok("  비교 항목 줄이 AM_CMP 의 이름이다", tx.indexOf("담당 프로") >= 0 && tx.indexOf("최프로") >= 0);
+      ok("  견적 종류를 사람 말로 적는다", tx.indexOf("확정 견적") >= 0 && tx.indexOf("예상 견적") >= 0);
+      const hh = await g.p.innerHTML("#reqbox");
+      ok("  ⚠️ 업체가 적은 칸도 esc() 를 지난다", hh.indexOf("<i>박</i>") < 0 && hh.indexOf("&lt;i&gt;") >= 0);
+      ok("⚠️ 유효기간이 지난 견적에 「만료」를 붙인다 (하나만)",
+         (await g.p.locator("#reqbox .cmp-exp").count()) === 1);
+      ok("⚠️ 싼 순서가 아니라고 적고 최저가 · 최고가 딱지가 없다",
+         /싼 순서가 아닙니다/.test(tx) && !/최저가|최고가|가장 싼/.test(tx));
+      ok("  낸 차례대로 놓는다 (금액으로 줄 세우지 않는다)",
+         (await g.p.locator("#reqbox table.cmpq thead th").allTextContents()).slice(1).join(",") === "에이골프,비레슨");
+      ok("  견적이 오지 않으면 지어내지 않는다는 말은 0건일 때만 (지금은 2건)",
+         tx.indexOf("지어 보여 드리지") < 0);
+      ok("만료되지 않은 열린 견적에만 「이 업체와 상담하기」",
+         (await g.p.locator("#reqbox button[data-cpick]").count()) === 1 &&
+         (await g.p.locator('#reqbox button[data-cpick="p-b"]').count()) === 1);
+      ok("「예약 완료」 · 「계약 완료」 · 「결제」라는 말이 없다",
+         !/예약 완료|계약 완료|결제 완료/.test(tx));
+      await g.p.click('#reqbox button[data-cpick="p-b"]');
+      await g.p.waitForTimeout(250);
+      ok("⚠️ 「상담하기」만으로는 pick_quote 를 **안 보낸다**",
+         g.sent.filter(x => x.name === "pick_quote").length === 0);
+      const at = (await g.p.textContent("#reqbox .cmp-ag")) || "";
+      const KEEP = keepOf("applyKeep");
+      ok("  동의 상자가 상호 · 항목 · 목적 · 보유 기간을 보여 준다",
+         at.indexOf("비레슨") >= 0 && /성함 · 연락처/.test(at) && /상담 연락/.test(at) &&
+         !!KEEP && at.indexOf(KEEP) >= 0, at);
+      ok("누르는 것이 전부 40px 이상이다", (await tapsOk(g.p, "#reqbox")) === 0, await tapsOk(g.p, "#reqbox"));
+      /* 두 번 눌러도 한 번만 */
+      await g.p.evaluate(() => { const b = document.querySelector("#reqbox button[data-cgo]"); b.click(); b.click(); });
+      await g.p.waitForTimeout(400);
+      const picks = g.sent.filter(x => x.name === "pick_quote");
+      const pb = picks[0] ? (JSON.parse(picks[0].body).p || {}) : {};
+      ok("동의 단추를 누르면 pick_quote 를 **한 번만** 보낸다", picks.length === 1, picks.length);
+      ok("  share:true · 고른 업체 · 요청", pb.share === true && pb.provider === "p-b" &&
+         pb.request === CREQ.id, picks[0] && picks[0].body);
+      ok("  choose_quote 는 안 부른다", g.sent.every(x => x.name !== "choose_quote"));
+      await g.p.close();
+    }
+    {
+      /* 고른 뒤 */
+      const g = await open("/my", { role:"customer", name:"이손님" },
+        Object.assign({}, MYC, { quote:[MQ1, Object.assign({}, MQ2, { state:"chosen" })] }),
+        {}, false, CMPON);
+      const tx = (await g.p.textContent("#reqbox")) || "";
+      ok("고른 뒤에는 「상담 선택 — 예약 · 계약 · 결제가 아닙니다」를 말한다",
+         /상담 선택 — 예약 · 계약 · 결제가 아닙니다/.test(tx) && /업체가 연락드립니다/.test(tx), tx);
+      ok("  더 고르는 단추가 없다", (await g.p.locator("#reqbox button[data-cpick]").count()) === 0);
+      ok("  「예약 완료」라고 적지 않는다", tx.indexOf("예약 완료") < 0);
+      ok("  취소 단추는 그대로 cancel_request 쪽이다",
+         (await g.p.locator("#reqbox button[data-cancel]").count()) === 1);
+      await g.p.close();
+    }
+    {
+      /* 실패하면 단추가 다시 눌린다 */
+      const g = await open("/my", { role:"customer", name:"이손님" }, MYC,
+        { pick_quote: null }, false, CMPON);
+      await g.p.click('#reqbox button[data-cpick="p-b"]');
+      await g.p.waitForTimeout(200);
+      await g.p.click("#reqbox button[data-cgo]");
+      await g.p.waitForTimeout(400);
+      const dis = await g.p.evaluate(() => { const b = document.querySelector("#reqbox button[data-cgo]"); return b ? b.disabled : null; });
+      ok("서버가 거절하면 동의 단추를 다시 살리고 까닭을 적는다",
+         dis === false && /못 읽었습니다/.test((await g.p.textContent("#reqbox .dk-m")) || ""), dis);
+      await g.p.close();
+    }
+    {
+      /* 0건 */
+      const g = await open("/my", { role:"customer", name:"이손님" },
+        Object.assign({}, MYC, { quote:[] }), {}, false, CMPON);
+      const tx = (await g.p.textContent("#reqbox")) || "";
+      ok("견적이 0건이면 지어내지 않는다고 말한다", /지어 보여 드리지 않습니다/.test(tx), tx.slice(0, 300));
+      await g.p.close();
+    }
+
+    console.log("\n── 비교견적 — /admin 비교 업체 더하기");
+    const CPROVS = [
+      { id:"fit-a", name:"레슨에이", assignable:true, is_test:false, listed:true, state:"approved",
+        subs:["ls-solo"], regions:["seoul"] },
+      { id:"fit-b", name:"레슨비", assignable:true, is_test:false, listed:true, state:"approved",
+        subs:["ls-solo"], regions:["seoul"] },
+      { id:"nofit", name:"부산피팅", assignable:true, is_test:false, listed:true, state:"approved",
+        subs:["ft-grip"], regions:["busan"] }
+    ];
+    {
+      const g = await open("/admin", { role:"admin", name:"관리자" },
+        { request:[Object.assign({}, CREQ, { state:"check" })], provider:CPROVS, request_item:CITEMS,
+          assignment:[{ request_id:CREQ.id, provider_id:"fit-b", state:"sent", blind:true }],
+          quote:[], v_request_contact:[{ id:CREQ.id, name:"이손님", tel:"010-2222-3333", email:null }] },
+        { assign_more: null }, false, CMPON);
+      ok("화면 에러 · CSP 거절이 0건이다", g.errs.length === 0, g.errs.join(" | "));
+      const tx = (await g.p.textContent("#assignbox")) || "";
+      ok("비교 요청에는 「업체에 넘기기」(제3자 재동의)를 안 낸다",
+         (await g.p.locator('#assignbox button[data-do="pick"]').count()) === 0);
+      ok("  배정된 업체와 상태 · 연락처 안 넘김을 보여 준다",
+         tx.indexOf("레슨비") >= 0 && tx.indexOf("연락처 안 넘김") >= 0, tx.slice(0, 400));
+      ok("  운영자는 보기로 연락처를 본다", tx.indexOf("010-2222-3333") >= 0);
+      await g.p.click('#assignbox button[data-do="more"]');
+      await g.p.waitForTimeout(300);
+      const names = await g.p.locator("#assignbox form.mo-f label.chk").allTextContents();
+      ok("조건에 맞고 아직 안 배정한 업체만 고르게 한다",
+         names.length === 1 && names[0].indexOf("레슨에이") >= 0, names.join("|"));
+      ok("  동의 체크 칸이 없다 (연락처를 안 넘깁니다)",
+         (await g.p.locator('#assignbox form.mo-f input[name="ok"]').count()) === 0);
+      await g.p.check('#assignbox form.mo-f input[value="fit-a"]');
+      await g.p.click("#assignbox form.mo-f button[type='submit']");
+      await g.p.waitForTimeout(400);
+      const c = g.sent.filter(x => x.name === "assign_more")[0];
+      const bb = c ? (JSON.parse(c.body).p || {}) : {};
+      ok("assign_more 를 부르고 꾸러미가 p 하나에 request · provider",
+         !!c && bb.request === CREQ.id && bb.provider === "fit-a", c && c.body);
+      ok("  move_state 는 안 부른다", g.sent.every(x => x.name !== "move_state"));
+      ok("  서버가 거절하면 상호와 까닭을 적는다",
+         /배정하지 못한 곳/.test((await g.p.textContent("#assignbox")) || "") &&
+         /못 읽었습니다/.test((await g.p.textContent("#assignbox")) || ""));
+      await g.p.close();
+    }
+    {
+      const g = await open("/admin", { role:"admin", name:"관리자" },
+        { request:[Object.assign({}, CREQ, { state:"quoted" })], provider:CPROVS, request_item:CITEMS,
+          assignment:[], quote:[{ request_id:CREQ.id, provider_id:"fit-a", state:"chosen" }],
+          v_request_contact:[] }, {}, false, CMPON);
+      ok("손님이 고르셨으면 비교 업체 더하기를 안 낸다",
+         (await g.p.locator('#assignbox button[data-do="more"]').count()) === 0 &&
+         /더 더할 수 없습니다/.test((await g.p.textContent("#assignbox")) || ""));
+      await g.p.close();
+    }
+  }
+
   await b.close(); srv.close();
   console.log("\n" + ran + "건 중 " + (ran - bad) + "건 통과 · " + bad + "건 실패");
   process.exit(bad ? 1 : 0);

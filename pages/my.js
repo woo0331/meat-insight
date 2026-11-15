@@ -121,6 +121,8 @@ exports.build = function(){
             양식이 조용히 안 열립니다 (`/help` 가 이 파일을 안 실어서
             문의 양식이 안 열렸던 그 자리입니다). */
          "/js/data/site.js",
+         /* 비교견적 (0082) — 스위치 compareOn 은 site.js 에 있습니다 */
+         "/js/data/compare.js",
          "/js/auth.js", "/js/photo.js", "/js/account.js",
          "/js/review.js", "/js/myreq.js",
          "/js/data/regions.js", "/js/myjoin.js", "/js/mycq.js",

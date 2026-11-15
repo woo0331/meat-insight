@@ -113,6 +113,8 @@ exports.build = function(){
             0060 의 `teeAhead`(며칠 뒤까지 올리실 수 있나)가 site.js 에
             있습니다. 안 실으면 날짜 칸의 최대값이 조용히 안 걸립니다. */
          "/js/data/site.js",
+         /* 비교견적 (0082) — 스위치 compareOn 은 site.js 에 있습니다 */
+         "/js/data/compare.js",
          "/js/photo.js", "/js/auth.js", "/js/review.js",
          "/js/desk.js", "/js/deskme.js", "/js/deskprice.js",
          /* ⚠️ 시설 사진도 **공개 버킷**으로 가므로 `imgprep.js` 가 먼저

@@ -29,6 +29,21 @@
 
   var A = null;
   var PICK = {};         /* 어느 요청을 펼쳤나 */
+  var MORE = {};         /* 비교견적 — 어느 요청의 「비교 업체 더하기」를 펼쳤나 */
+
+  /* ── 비교견적 (0082) ──────────────────────────────────────────
+     ⚠️⚠️⚠️ 스위치(compareOn)가 꺼져 있으면 오늘과 똑같이 묻습니다 — 0082 가
+     없는 DB 에 compare · v_request_contact 를 물으면 질의가 통째로 거절됩니다.
+     ⚠️⚠️ 켜져 있으면 성함 · 연락처를 표에서 안 읽습니다(0082 가 그 칸을
+     거두었습니다) — 보기 하나로 따로 읽습니다.
+     ⚠️⚠️ 비교 요청에는 「업체에 넘기기」(제3자 제공 재동의)를 안 냅니다 —
+     비교 배정은 연락처를 넘기지 않고(blind), 손님이 상담할 업체를 고르시는
+     자리에서 그 업체에만 동의를 받습니다(제17조 제2항). */
+  function cmpOn(){ return !!(window.amCmpOn && window.amCmpOn()); }
+  var MORE_ST = ["new","check","assigned","accepted","consult","quoted","nego"];
+  function errText(err){
+    return window.amErrText ? window.amErrText({ message: why(err) }) : why(err);
+  }
 
   function say(html, cls){
     box.hidden = false; box.className = cls || "none"; box.innerHTML = html;
@@ -61,26 +76,48 @@
   var WATCH = ["new","check","assigned","accepted","consult","quoted","nego"];
 
   function load(){
+    var on = cmpOn();
     return Promise.all([
       get("request?select=id,no,state,cat,region,gu,budget_min,budget_max," +
           /* ⚠️ 담당 직원 (0012 의 owner_id) — "누가 바꿨나"(audit_log)와
              다른 것입니다. 이것은 **지금 누가 맡고 있나** 입니다. */
-          "want_at,body,name,tel,agree3rd_at,created_at,want_provider,owner_id" +
+          "want_at,body," + (on ? "compare,detail" : "name,tel") +
+          ",agree3rd_at,created_at,want_provider,owner_id" +
           "&state=in.(" + WATCH.join(",") + ")&order=created_at.desc&limit=50"),
       /* ⚠️ 하는 일 · 지역 · 상태까지 읽습니다 — 조건에 맞는 업체만
          고르게 하려면 그 셋이 필요합니다 (4차 지시서 §4). */
       get("provider?select=id,name,assignable,is_test,listed,state,subs,regions" +
           "&order=name.asc&limit=200"),
       get("request_item?select=request_id,service_id&limit=500"),
-      get("assignment?select=request_id,provider_id,state&limit=500"),
+      get("assignment?select=request_id,provider_id,state" + (on ? ",blind" : "") +
+          "&limit=500"),
       /* ⚠️⚠️ **0012 가 이 길을 일부러 열어 두었습니다** — `account` 의
          정책이 "내 줄" 과 "관리자 전부" 둘뿐이라 직원은 담당자 고르개에
          **아무것도 못 채웠습니다**(uuid 만 보입니다). 0012 의
          `account_staff` 정책이 **직원 · 관리자 줄만** 엽니다 — 고객
          계정의 성함은 그대로 안 보입니다. */
       get("account?select=id,name,role&role=in.(staff,admin)" +
-          "&order=name.asc&limit=100")
+          "&order=name.asc&limit=100"),
+      /* 비교견적 — 고른 견적이 있으면 업체를 더 못 더합니다(0082 가 막습니다) */
+      on ? get("quote?select=request_id,provider_id,state&limit=500")
+         : Promise.resolve([])
     ]).then(function(got){
+      /* ⚠️ 연락처는 보기에서 따로 (켜져 있을 때만) */
+      var rs = got[0];
+      if(!on || !rs || !rs.length) return got;
+      return get("v_request_contact?select=id,name,tel,email&id=in.(" +
+                 rs.map(function(r){ return encodeURIComponent(r.id); }).join(",") +
+                 ")").then(function(ct){
+        var by = {};
+        (ct || []).forEach(function(c){ by[c.id] = c; });
+        rs.forEach(function(r){
+          var c = by[r.id];
+          r._ct = !!c;
+          if(c){ r.name = c.name; r.tel = c.tel; r.email = c.email; }
+        });
+        return got;
+      });
+    }).then(function(got){
       /* ⚠️ 손님이 붙이신 사진 · 서류 (§5-4) — 운영자는 전부 봅니다
          (0011 의 photo_staff). 넘기기 전에 무엇이 왔는지 봐야 조건에
          맞는 업체를 고를 수 있습니다. */
@@ -195,7 +232,56 @@
     '</form>';
   }
 
-  function card(r, provs, items, asgs, pics, staff){
+  /* 비교 업체 더하기 — ⚠️ 조건(분야 · 지역)에 맞는 승인 업체만 냅니다.
+     0082 의 assign_more 가 그 둘을 다시 보므로, 맞지 않는 곳을 고르게 두면
+     눌러도 거절되는 칸이 됩니다(절대 규칙 5). */
+  function moreForm(r, provs, mine){
+    var can = provs.filter(function(p){ return p.assignable === true; })
+                   .filter(function(p){ return mine.indexOf(p.id) < 0; })
+                   .filter(function(p){ return p.state !== "suspended"; })
+                   .filter(function(p){ return fits(p, r); });
+    if(!can.length)
+      return '<p class="dk-hint">조건(분야 · 지역)에 맞는 업체가 더 없습니다. ' +
+        '업체를 승인하고 <b>배정 가능</b>으로 켜 두셔야 고를 수 있습니다.</p>';
+    return '<form class="jform dk-f mo-f" data-req="' + esc(r.id) + '">' +
+      '<fieldset class="svc jrow-full"><legend>비교할 업체 (여럿 고르실 수 있습니다)</legend>' +
+        can.map(function(p){
+          return '<label class="chk"><input type="checkbox" name="pv" value="' +
+            esc(p.id) + '"><span>' + esc(p.name) +
+            (p.id === r.want_provider ? " — 손님이 보고 오신 곳" : "") +
+            (p.is_test ? " — 검사용" : "") + '</span></label>';
+        }).join("") +
+      '</fieldset>' +
+      '<div class="jrow jrow-full">' +
+        '<label for="mo-w-' + esc(r.id) + '">메모 (기록에 남습니다)</label>' +
+        '<input id="mo-w-' + esc(r.id) + '" name="whyText" maxlength="200" ' +
+        'placeholder="성함 · 연락처는 적지 마십니다">' +
+      '</div>' +
+      '<p class="dk-hint">비교 배정은 <b>연락처를 넘기지 않습니다.</b> 업체는 조건만 보고 ' +
+      '견적을 내고, 손님이 상담할 업체를 고르시는 자리에서 그 업체에만 동의를 받습니다.</p>' +
+      '<button class="btn btn-pt" type="submit">고른 업체에 배정하기</button>' +
+    '</form>';
+  }
+
+  function detailRows(r){
+    var d = (r && r.detail && typeof r.detail === "object") ? r.detail : {};
+    var cfg = window.amCmp ? window.amCmp(r.cat) : null, seen = {}, h = "";
+    ((cfg && cfg.ask) || []).forEach(function(f){
+      seen[f.k] = 1;
+      var v = d[f.k];
+      if(v !== null && v !== undefined && String(v).trim() !== "")
+        h += '<dt>' + esc(f.label) + '</dt><dd>' + esc(String(v)) + '</dd>';
+    });
+    Object.keys(d).forEach(function(k){
+      if(seen[k]) return;
+      var v = d[k];
+      if(v !== null && v !== undefined && String(v).trim() !== "")
+        h += '<dt>' + esc(k) + '</dt><dd>' + esc(String(v)) + '</dd>';
+    });
+    return h;
+  }
+
+  function card(r, provs, items, asgs, pics, staff, quotes){
     var st = window.amDealSt(r.state) || { name:r.state, tone:"ink" };
     var svcs = items.filter(function(x){ return x.request_id === r.id; })
       .map(function(x){
@@ -211,6 +297,7 @@
 
     var h = '<div class="dk-r" data-req="' + esc(r.id) + '">';
     h += '<div class="dk-h"><b>' + esc(r.no) + '</b>' + badge(st.name, st.tone) +
+         (r.compare ? badge("비교견적", "info") : "") +
          (r.agree3rd_at ? badge("제3자 동의 받음", "grn") : "") + '</div>';
 
     h += '<dl class="dk-d">';
@@ -220,8 +307,13 @@
     if(r.body)      h += '<dt>하신 말씀</dt><dd>' + esc(r.body) + '</dd>';
     /* ⚠️ 운영자 화면입니다 — 연락처가 보입니다. 넘기기 전에 전화로
        상호를 알리고 동의를 받아야 하므로 여기서는 보여야 합니다. */
-    h += '<dt>성함</dt><dd>' + esc(r.name) + '</dd>';
-    h += '<dt>연락처</dt><dd>' + esc(r.tel) + '</dd>';
+    if(r.compare) h += detailRows(r);
+    if(r._ct === false){
+      h += '<dt>연락처</dt><dd>읽지 못했습니다</dd>';
+    }else{
+      h += '<dt>성함</dt><dd>' + esc(r.name) + '</dd>';
+      h += '<dt>연락처</dt><dd>' + esc(r.tel) + '</dd>';
+    }
     /* ⚠️⚠️ **바라시는 업체는 배정이 아닙니다** (0035). 손님이 그 업체
        화면을 보고 오셨다는 뜻이고, 넘길지는 운영자가 정합니다 —
        여기 뜬다고 저절로 넘어가지 않습니다. */
@@ -270,22 +362,34 @@
         var ast = window.amAssignSt(a.state) || { name:a.state, tone:"ink" };
         return '<li>' + esc(p ? p.name : a.provider_id) +
           (p && p.is_test ? ' <span class="as-t">검사용</span>' : "") +
-          " " + badge(ast.name, ast.tone) + '</li>';
+          " " + badge(ast.name, ast.tone) +
+          (r.compare && a.blind ? " " + badge("연락처 안 넘김", "ink") : "") + '</li>';
       }).join("") + '</ul>';
     }
 
     var btn = [];
+    var chosen = (quotes || []).some(function(q){
+      return q.request_id === r.id && q.state === "chosen";
+    });
+    var canMore = r.compare && MORE_ST.indexOf(r.state) >= 0 && !chosen;
     if(r.state === "new")
       btn.push('<button class="btn btn-sm btn-pri" data-do="check">확인 시작</button>');
-    if(r.state === "check")
+    if(r.state === "check" && !r.compare)
       btn.push('<button class="btn btn-sm btn-pt" data-do="pick">' +
                (PICK[r.id] ? "접기" : "업체에 넘기기") + '</button>');
+    if(canMore)
+      btn.push('<button class="btn btn-sm btn-pt" data-do="more">' +
+               (MORE[r.id] ? "접기" : "비교 업체 더하기") + '</button>');
     if(["new","check","assigned","accepted","consult","quoted","nego"].indexOf(r.state) >= 0)
       btn.push('<button class="btn btn-sm btn-line" data-do="hold">보류</button>');
     if(btn.length) h += '<div class="dk-b">' + btn.join("") + '</div>';
 
-    if(r.state === "check" && PICK[r.id])
+    if(r.state === "check" && PICK[r.id] && !r.compare)
       h += pickForm(r, provs, mine.map(function(a){ return a.provider_id; }));
+    if(canMore && MORE[r.id])
+      h += moreForm(r, provs, mine.map(function(a){ return a.provider_id; }));
+    if(r.compare && chosen)
+      h += '<p class="dk-hint">손님이 상담할 업체를 고르셨습니다 — 업체를 더 더할 수 없습니다.</p>';
 
     h += '<p class="dk-m lmsg" hidden></p></div>';
     return h;
@@ -303,7 +407,7 @@
          (검사가 잡았습니다 — "인덱스로 자르면 어긋난다" 의 작은 판).
          ⚠️ 자리를 세지 말고 **맨 뒤**로 집습니다. */
       var rs = got[0], provs = got[1], items = got[2], asgs = got[3];
-      var staff = got[4] || [], pics = got[got.length - 1];
+      var staff = got[4] || [], quotes = got[5] || [], pics = got[got.length - 1];
       if(rs === null || provs === null || items === null || asgs === null){
         box.innerHTML = '<h2 class="adm-h">상담 요청 · 배정</h2>' +
           '<p class="lmsg">읽지 못했습니다. ' +
@@ -323,7 +427,7 @@
               '곳</b>이 섞여 있습니다. 손님 화면 · 분류 화면 · 사이트맵에는 ' +
               '나가지 않습니다 — 지우실 때는 db/seed/test-providers.sql 의 ④ 를 보십니다.</p>' : "") +
         rs.map(function(r){
-          return card(r, provs, items, asgs, (pics || {})[r.id], staff);
+          return card(r, provs, items, asgs, (pics || {})[r.id], staff, quotes);
         }).join("");
     });
   }
@@ -380,6 +484,7 @@
     var row = b.closest(".dk-r");
     var rid = row ? row.getAttribute("data-req") : null;
     if(what === "pick"){ PICK[rid] = !PICK[rid]; return paint(); }
+    if(what === "more"){ MORE[rid] = !MORE[rid]; return paint(); }
     if(!rid) return;
 
     var m = msgOf(b), args = null;
@@ -395,6 +500,39 @@
     rpc("move_state", args).then(paint).catch(function(err){
       b.disabled = false;
       if(m) m.textContent = why(err);
+    });
+  });
+
+  /* 비교 업체 더하기 — ⚠️ 한 곳씩 차례로 부릅니다(한 곳이 거절돼도 나머지는
+     갑니다). 거절한 곳은 상호와 까닭을 그 자리에 적습니다. */
+  box.addEventListener("submit", function(e){
+    var f = e.target.closest ? e.target.closest("form.mo-f") : null;
+    if(!f) return;
+    e.preventDefault();
+    var rid = f.getAttribute("data-req"), m = msgOf(f);
+    var btn = f.querySelector('button[type="submit"]');
+    var picks = Array.prototype.map.call(
+      f.querySelectorAll('input[name="pv"]:checked'), function(x){ return x.value; });
+    if(!picks.length){ if(m){ m.hidden = false; m.textContent = "비교할 업체를 골라 주세요."; } return; }
+    var note = String(f.whyText.value || "").trim() || null;
+    btn.disabled = true;
+    if(m){ m.hidden = false; m.textContent = "배정하는 중입니다…"; }
+    var fails = [];
+    picks.reduce(function(pr, pv){
+      return pr.then(function(){
+        return rpc("assign_more", { p: { request: rid, provider: pv, why: note } })
+          .catch(function(err){
+            var lab = f.querySelector('input[name="pv"][value="' + pv.replace(/"/g, "") + '"]');
+            var nm = lab && lab.parentNode ? lab.parentNode.textContent : pv;
+            fails.push(nm + " — " + errText(err));
+          });
+      });
+    }, Promise.resolve()).then(function(){
+      if(!fails.length){ MORE[rid] = false; return paint(); }
+      btn.disabled = false;
+      var done = picks.length - fails.length;
+      if(m) m.textContent = (done ? done + "곳은 배정했습니다. " : "") +
+        "배정하지 못한 곳: " + fails.join(" / ");
     });
   });
 

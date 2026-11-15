@@ -8,6 +8,9 @@
      move_state         상담 시작              (0004 · 길 표를 봅니다)
      submit_quote       견적 내기 · 고치기      (0008)
      withdraw_quote     견적 거두기            (0008)
+   비교견적 요청(0082 · 스위치 compareOn 이 켜졌을 때만)은 —
+     answer_compare        참여 · 거절 (상담 시작 단계가 없습니다)
+     submit_compare_quote  비교 견적 내기 · 다시 내기
    화면은 **단추를 누르고, DB 가 거절한 말을 그대로** 보여 줍니다.
    화면이 제 길 표를 들고 있으면 "단추는 있는데 DB 가 거절하는" 자리가
    생깁니다 (같은 규칙을 두 곳에 적는 자리).
@@ -71,8 +74,29 @@
     }).catch(function(){ return null; });
   }
 
+  /* ── 비교견적 (0082) ──────────────────────────────────────────
+     ⚠️⚠️⚠️ **스위치(compareOn)가 꺼져 있으면 오늘과 똑같이 묻습니다.**
+     0082 가 없는 DB 에 compare · kind · v_request_contact 를 물으면
+     질의가 통째로 거절되어 작업실이 빈 채로 남습니다.
+     ⚠️⚠️ 켜져 있으면 성함 · 연락처를 **표에서 안 읽습니다** — 0082 가 그 칸을
+     거두었으므로 부르면 질의가 거절됩니다. 보기 하나로 따로 읽고, 그 보기는
+     **수락했고 · 손님이 고른(blind 가 아닌)** 배정에만 줄을 냅니다. */
+  function cmpOn(){ return !!(window.amCmpOn && window.amCmpOn()); }
+  function cmpCfg(cat){ return window.amCmp ? window.amCmp(cat) : null; }
+  /* 한국 날짜 — ⚠️ 기계의 시간대로 꺼내지 않습니다(한국 밖에서 하루 밀립니다) */
+  function kstToday(){
+    var k = new Date(Date.now() + 9 * 3600 * 1000);
+    function p2(n){ return String(n).padStart(2, "0"); }
+    return k.getUTCFullYear() + "-" + p2(k.getUTCMonth() + 1) + "-" + p2(k.getUTCDate());
+  }
+  function errText(err){
+    return window.amErrText ? window.amErrText({ message: why(err) }) : why(err);
+  }
+  var REQS = {};         /* 요청 id 로 줄 찾기 (누를 때 비교 요청인지 봅니다) */
+
   /* ── 자료 ───────────────────────────────────────────────────── */
   function load(){
+    var on = cmpOn();
     /* ⚠️⚠️ **묶음 읽기(embed)를 쓰지 않습니다.** `request:request_id(...)`
        처럼 한 번에 꺼내면 편하지만, 그 꼴은 PostgREST 판에 따라 받는
        법이 다릅니다 — 여기서는 눌러 볼 수가 없고, 틀리면 **첫 손님이
@@ -86,11 +110,13 @@
           "&provider_id=eq." + encodeURIComponent(PV) +
           "&order=created_at.desc&limit=50"),
       get("quote?select=id,request_id,amount,vat,scope,excludes,days,start_on," +
-          "warranty,valid_to,note,state,updated_at&provider_id=eq." +
+          "warranty,valid_to,note,state,updated_at" + (on ? ",kind,terms" : "") +
+          "&provider_id=eq." +
           encodeURIComponent(PV) + "&limit=200"),
       get("request_item?select=request_id,service_id,state&limit=500"),
       get("request?select=id,no,state,cat,region,gu,budget_min,budget_max," +
-          "want_at,body,name,tel,email,created_at&limit=50"),
+          "want_at,body," + (on ? "compare,detail" : "name,tel,email") +
+          ",created_at&limit=50"),
       /* ⚠️ 일정은 RLS 가 **내 업체 것만** 내줍니다 (0034 의 appt_provider) */
       get("appointment?select=id,request_id,at,kind,place,note,state,why" +
           "&provider_id=eq." + encodeURIComponent(PV) + "&limit=200"),
@@ -113,6 +139,22 @@
         reqs.map(function(r){ return r.id; })).then(function(by){
           return got.concat([by]);
         });
+    }).then(function(got){
+      /* ⚠️ 연락처는 보기에서 따로 — 줄이 없으면 **못 보는 것**이 맞습니다 */
+      var reqs = got[3];
+      if(!on || !reqs || !reqs.length) return got;
+      return get("v_request_contact?select=id,name,tel,email&id=in.(" +
+                 reqs.map(function(r){ return encodeURIComponent(r.id); }).join(",") +
+                 ")").then(function(ct){
+        var by = {};
+        (ct || []).forEach(function(c){ by[c.id] = c; });
+        reqs.forEach(function(r){
+          var c = by[r.id];
+          r._ct = !!c;
+          if(c){ r.name = c.name; r.tel = c.tel; r.email = c.email; }
+        });
+        return got;
+      });
     });
   }
 
@@ -261,11 +303,198 @@
     '</form>';
   }
 
+  /* 손님이 적으신 조건 (request.detail) — ⚠️ 이름은 AM_CMP 한 곳에서.
+     모르는 키는 키 그대로(조용히 빠지면 어긋난 것을 아무도 모릅니다). */
+  function detailRows(r){
+    var d = (r && r.detail && typeof r.detail === "object") ? r.detail : {};
+    var cfg = cmpCfg(r.cat), seen = {}, h = "";
+    ((cfg && cfg.ask) || []).forEach(function(f){
+      seen[f.k] = 1;
+      var v = d[f.k];
+      if(v !== null && v !== undefined && String(v).trim() !== "")
+        h += '<dt>' + esc(f.label) + '</dt><dd>' + esc(String(v)) + '</dd>';
+    });
+    Object.keys(d).forEach(function(k){
+      if(seen[k]) return;
+      var v = d[k];
+      if(v !== null && v !== undefined && String(v).trim() !== "")
+        h += '<dt>' + esc(k) + '</dt><dd>' + esc(String(v)) + '</dd>';
+    });
+    return h;
+  }
+
+  /* 비교 견적 양식 — ⚠️ 칸 목록은 AM_CMP[분류].terms 한 곳에서 읽습니다
+     (손님 비교표가 같은 줄을 읽습니다 — 두 곳에 적으면 업체가 적은 칸을
+     손님 표가 못 읽습니다). 고치기는 **다시 내기**입니다. */
+  function cmpQuoteForm(r, q){
+    var v = q || {}, rid = r.id, cfg = cmpCfg(r.cat) || { terms:[], amount:"금액" };
+    var T = (v.terms && typeof v.terms === "object") ? v.terms : {};
+    function val(k){
+      return (v[k] === null || v[k] === undefined) ? "" : String(v[k]);
+    }
+    var kinds = window.AM_CMP_KIND || {};
+    return '<form class="jform dk-f cmp-f" data-req="' + esc(rid) + '">' +
+      '<fieldset class="svc jrow-full"><legend>견적 종류 *</legend>' +
+        Object.keys(kinds).map(function(k){
+          return '<label class="chk"><input type="radio" name="kind" required value="' +
+            esc(k) + '"' + (val("kind") === k ? " checked" : "") + '><span>' +
+            esc(kinds[k]) + '</span></label>';
+        }).join("") +
+      '</fieldset>' +
+      '<div class="jrow">' +
+        '<label for="c-amt-' + esc(rid) + '">' + esc(cfg.amount || "금액") + ' <b>*</b></label>' +
+        '<input id="c-amt-' + esc(rid) + '" name="amount" inputmode="numeric" required ' +
+        'value="' + esc(val("amount")) + '" placeholder="원">' +
+      '</div>' +
+      '<div class="jrow">' +
+        '<label for="c-vat-' + esc(rid) + '">부가세</label>' +
+        '<select id="c-vat-' + esc(rid) + '" name="vat">' +
+          (window.AM_VAT || []).map(function(x){
+            return '<option value="' + esc(x.key) + '"' +
+              (val("vat") === x.key || (!val("vat") && x.key === "incl") ? " selected" : "") +
+              '>' + esc(x.name) + '</option>';
+          }).join("") +
+        '</select>' +
+      '</div>' +
+      (cfg.terms || []).map(function(f){
+        return '<div class="jrow">' +
+          '<label for="c-t-' + esc(f.k) + '-' + esc(rid) + '">' + esc(f.label) +
+          (f.req ? ' <b>*</b>' : '') + '</label>' +
+          '<input id="c-t-' + esc(f.k) + '-' + esc(rid) + '" name="t_' + esc(f.k) + '" ' +
+          'data-term="' + esc(f.k) + '" data-label="' + esc(f.label) + '" maxlength="300"' +
+          (f.req ? ' required data-req="1"' : '') +
+          (f.ph ? ' placeholder="' + esc(f.ph) + '"' : '') +
+          ' value="' + esc(T[f.k] === undefined || T[f.k] === null ? "" : String(T[f.k])) + '">' +
+        '</div>';
+      }).join("") +
+      '<div class="jrow jrow-full">' +
+        '<label for="c-sc-' + esc(rid) + '">이 금액에 무엇이 포함됩니까 <b>*</b></label>' +
+        '<textarea id="c-sc-' + esc(rid) + '" name="scope" rows="3" required maxlength="1000">' +
+        esc(val("scope")) + '</textarea>' +
+      '</div>' +
+      '<div class="jrow jrow-full">' +
+        '<label for="c-ex-' + esc(rid) + '">포함되지 않는 것 (별도 비용)</label>' +
+        '<textarea id="c-ex-' + esc(rid) + '" name="excludes" rows="2" maxlength="1000">' +
+        esc(val("excludes")) + '</textarea>' +
+      '</div>' +
+      '<div class="jrow">' +
+        '<label for="c-vt-' + esc(rid) + '">이 견적이 유효한 날까지 <b>*</b></label>' +
+        '<input id="c-vt-' + esc(rid) + '" name="validTo" type="date" required ' +
+        'min="' + esc(kstToday()) + '" value="' + esc(val("valid_to")) + '">' +
+      '</div>' +
+      '<div class="jrow jrow-full">' +
+        '<label for="c-nt-' + esc(rid) + '">더 하실 말씀</label>' +
+        '<textarea id="c-nt-' + esc(rid) + '" name="note" rows="2" maxlength="1000">' +
+        esc(val("note")) + '</textarea>' +
+      '</div>' +
+      '<p class="dk-hint">손님은 이 견적을 다른 업체 견적과 <b>같은 칸으로 나란히</b> 보십니다. ' +
+      '실물을 봐야 정해지는 금액이면 「예상 견적」을 고르세요. ' +
+      '고치시면 <b>새로 낸 것으로</b> 바뀝니다.</p>' +
+      '<button class="btn btn-pt" type="submit">' +
+      (q ? "견적 다시 내기" : "견적 내기") + '</button>' +
+    '</form>';
+  }
+
+  /* 비교 요청의 카드 — ⚠️ 상담 시작 단계가 없습니다(수락하면 바로 견적).
+     ⚠️⚠️ 연락처는 **보기가 줄을 낼 때만** — 손님이 이 업체를 고르시기 전에는
+     보기가 줄을 안 냅니다(0082 · 제17조 제2항). */
+  function cmpCard(a, r, q, items, pics, ap){
+    var ast = window.amAssignSt(a.state) || { name:a.state, tone:"ink" };
+    var accepted = a.state === "accepted";
+    var svcs = svcNames(items, r.id);
+    var bud = money(r);
+    var today = kstToday();
+    var h = '<div class="dk-r" data-req="' + esc(r.id) + '">';
+    h += '<div class="dk-h"><b>' + esc(r.no) + '</b>' + badge("비교견적", "info") +
+         badge(ast.name, ast.tone) + '</div>';
+    h += '<dl class="dk-d">';
+    if(svcs.length) h += '<dt>요청</dt><dd>' + esc(svcs.join(" / ")) + '</dd>';
+    if(r.region)    h += '<dt>지역</dt><dd>' + esc(r.region + (r.gu ? " " + r.gu : "")) + '</dd>';
+    if(bud)         h += '<dt>예산</dt><dd>' + esc(bud) + '</dd>';
+    if(r.want_at)   h += '<dt>희망 일정</dt><dd>' + esc(r.want_at) + '</dd>';
+    h += detailRows(r);
+    if(r.body)      h += '<dt>하신 말씀</dt><dd>' + esc(r.body) + '</dd>';
+    if(r._ct){
+      if(r.name)  h += '<dt>성함</dt><dd>' + esc(r.name) + '</dd>';
+      if(r.tel)   h += '<dt>연락처</dt><dd>' + esc(r.tel) + '</dd>';
+      if(r.email) h += '<dt>이메일</dt><dd>' + esc(r.email) + '</dd>';
+    }
+    h += '</dl>';
+    if(!r._ct)
+      h += '<p class="dk-hint">손님이 상담할 업체로 고르시면 성함 · 연락처가 보입니다.</p>';
+    if(window.amPhotoBlock) h += window.amPhotoBlock(pics);
+
+    if(q){
+      var qst = window.amQuoteSt(q.state) || { name:q.state, tone:"ink" };
+      var expired = q.state === "open" && window.amCmpExpired && window.amCmpExpired(q, today);
+      var kinds = window.AM_CMP_KIND || {};
+      var cfg = cmpCfg(r.cat) || { terms:[] };
+      var T = (q.terms && typeof q.terms === "object") ? q.terms : {};
+      h += '<div class="dk-q"><div class="dk-qh">' +
+           '<b>' + esc(window.amQuoteAmount(q) || "") + '</b>' +
+           badge(qst.name, qst.tone) +
+           (expired ? badge("유효기간 지남", "bad") : "") + '</div>';
+      if(q.kind && kinds[q.kind]) h += '<p class="dk-qx">' + esc(kinds[q.kind]) + '</p>';
+      h += '<p class="dk-qs">' + esc(q.scope) + '</p>';
+      if(q.excludes) h += '<p class="dk-qx">별도 — ' + esc(q.excludes) + '</p>';
+      var tl = (cfg.terms || []).filter(function(f){
+        return T[f.k] !== undefined && T[f.k] !== null && String(T[f.k]) !== "";
+      });
+      if(tl.length)
+        h += '<dl class="dk-d">' + tl.map(function(f){
+          return '<dt>' + esc(f.label) + '</dt><dd>' + esc(String(T[f.k])) + '</dd>';
+        }).join("") + '</dl>';
+      if(q.valid_to) h += '<p class="dk-qx">유효기간 — ' + esc(q.valid_to) + '까지</p>';
+      h += '</div>';
+      if(expired)
+        h += '<p class="dk-hint">유효기간이 지나 손님이 이 견적을 고르실 수 없습니다. ' +
+             '다시 내시면 새 유효기간으로 바뀝니다.</p>';
+      if(q.state === "chosen")
+        h += '<p class="dk-hint"><b>손님이 상담할 업체로 이 업체를 고르셨습니다.</b> ' +
+             '예약 · 계약 · 결제가 아닙니다 — 위의 연락처로 연락드려 조건을 맞춰 주세요.</p>';
+      if(q.state === "passed")
+        h += '<p class="dk-hint"><b>손님이 다른 업체를 고르셨습니다.</b> ' +
+             '이 견적은 더 고칠 수 없습니다.</p>';
+    }
+
+    var btn = [];
+    if(a.state === "sent"){
+      btn.push('<button class="btn btn-sm btn-pt" data-do="yes">참여하기</button>');
+      btn.push('<button class="btn btn-sm btn-line" data-do="no">거절하기</button>');
+    }
+    /* ⚠️ 0082 의 submit_compare_quote 가 받는 상태와 같아야 합니다 */
+    var canQuote = accepted &&
+      ["assigned","accepted","consult","quoted","nego"].indexOf(r.state) >= 0 &&
+      (!q || (q.state !== "chosen" && q.state !== "passed"));
+    if(canQuote)
+      btn.push('<button class="btn btn-sm ' + (q ? "btn-line" : "btn-pt") + '" ' +
+               'data-do="quote">' + (q ? "견적 다시 내기" : "견적 내기") + '</button>');
+    if(q && q.state === "open")
+      btn.push('<button class="btn btn-sm btn-line" data-do="pull">견적 거두기</button>');
+    /* 일정은 손님이 이 업체를 고르신 뒤에만 (연락처가 있어야 정할 수 있습니다) */
+    var canAppt = accepted && r._ct && q && q.state === "chosen" &&
+      ["lost","hold"].indexOf(r.state) < 0;
+    if(canAppt)
+      btn.push('<button class="btn btn-sm btn-line" data-do="appt">' +
+               (ap && ap.state === "set" ? "일정 바꾸기" : "일정 잡기") + '</button>');
+    if(accepted)
+      btn.push('<button class="btn btn-sm btn-line" data-do="report">문제 신고</button>');
+    if(btn.length) h += '<div class="dk-b">' + btn.join("") + '</div>';
+    if(a.state === "sent")
+      h += '<p class="dk-hint">참여하시면 바로 견적을 내실 수 있습니다. ' +
+           '손님은 여러 업체의 견적을 나란히 보고 상담할 곳을 고르십니다.</p>';
+    if(OPEN[r.id] && canQuote) h += cmpQuoteForm(r, q);
+    if(APOPEN[r.id] && canAppt) h += apptForm(r.id, ap);
+    h += '<p class="dk-m lmsg" hidden></p></div>';
+    return h;
+  }
+
   function card(a, r, q, items, pics, ap){
     /* ⚠️ RLS 가 가린 줄은 짝이 안 맞아 비어 옵니다 — 조용히 빈 카드를
        그리지 않고 그 사실을 말합니다. */
     if(!r) return '<div class="dk-r"><p class="dk-no">이 배정의 요청을 읽지 못했습니다. ' +
       '담당자에게 알려 주세요.</p></div>';
+    if(r.compare) return cmpCard(a, r, q, items, pics, ap);
 
     var ast = window.amAssignSt(a.state) || { name:a.state, tone:"ink" };
     var rst = window.amDealSt(r.state)   || { name:r.state, tone:"ink" };
@@ -286,12 +515,17 @@
     if(r.want_at)   h += '<dt>희망 일정</dt><dd>' + esc(r.want_at) + '</dd>';
     if(r.body)      h += '<dt>하신 말씀</dt><dd>' + esc(r.body) + '</dd>';
     /* ⚠️⚠️ 연락처는 수락한 뒤에 (머리말 참고) */
-    if(accepted){
+    /* ⚠️ 스위치가 켜져 있으면 연락처는 보기에서 옵니다 — 줄이 없으면 안 찍습니다 */
+    var ctOk = accepted && (r._ct === undefined || r._ct);
+    if(ctOk){
       h += '<dt>성함</dt><dd>' + esc(r.name) + '</dd>';
       h += '<dt>연락처</dt><dd>' + esc(r.tel) + '</dd>';
       if(r.email) h += '<dt>이메일</dt><dd>' + esc(r.email) + '</dd>';
     }
     h += '</dl>';
+    if(accepted && !ctOk)
+      h += '<p class="dk-hint">성함 · 연락처를 읽지 못했습니다. ' +
+           '<button class="btn btn-sm btn-line" data-do="again">다시 읽기</button></p>';
     if(!accepted)
       h += '<p class="dk-hint">성함 · 연락처는 <b>수락하신 뒤에</b> 보입니다. ' +
            '거절하시면 보시지 않은 채로 끝납니다.</p>';
@@ -441,6 +675,7 @@
       var byReq = {}, byId = {}, byAppt = {};
       qs.forEach(function(q){ byReq[q.request_id] = q; });
       reqs.forEach(function(r){ byId[r.id] = r; });
+      REQS = byId;
       appts.forEach(function(x){ byAppt[x.request_id] = x; });
       APPT = byAppt;
       box.innerHTML =
@@ -477,12 +712,17 @@
     if(!rid) return;
 
     var call = null, args = null;
-    if(what === "yes"){ call = "answer_assignment"; args = { p_request: rid, p_yes: true }; }
+    var isCmp = !!(REQS[rid] && REQS[rid].compare);
+    if(what === "yes"){
+      if(isCmp){ call = "answer_compare"; args = { p: { request: rid, yes: true } }; }
+      else { call = "answer_assignment"; args = { p_request: rid, p_yes: true }; }
+    }
     if(what === "no"){
       /* ⚠️ 취소를 누르면 null 입니다 — 빈 글자와 다릅니다. */
       var w1 = prompt("거절하시는 까닭을 적어 주세요 (기록에 남고 운영자가 봅니다)");
       if(!(w1 && w1.trim())) return;
-      call = "answer_assignment"; args = { p_request: rid, p_yes: false, p_why: w1.trim() };
+      if(isCmp){ call = "answer_compare"; args = { p: { request: rid, yes: false, why: w1.trim() } }; }
+      else { call = "answer_assignment"; args = { p_request: rid, p_yes: false, p_why: w1.trim() }; }
     }
     if(what === "consult"){
       call = "move_state";
@@ -532,7 +772,7 @@
       paint();
     }).catch(function(err){
       b.disabled = false;
-      if(m) m.textContent = why(err);
+      if(m) m.textContent = isCmp ? errText(err) : why(err);
     });
   }
 
@@ -589,6 +829,46 @@
     }).catch(function(err){
       btn.disabled = false;
       if(m) m.textContent = why(err);
+    });
+  }
+
+  /* 비교 견적 내기 · 다시 내기 (0082 의 submit_compare_quote) —
+     ⚠️ 비교 항목은 **글자**로 보냅니다(DB 가 글자만 받습니다).
+     ⚠️ 0 은 값입니다 — 안 적은 것만 막습니다. */
+  function submitCmpQuote(f){
+    var rid = f.getAttribute("data-req");
+    var m = msgOf(f);
+    var btn = f.querySelector('button[type="submit"]');
+    function say2(t){ if(m){ m.hidden = false; m.textContent = t; } }
+    var kindEl = f.querySelector('input[name="kind"]:checked');
+    if(!kindEl) return say2("예상 견적인지 확정 견적인지 골라 주세요.");
+    var raw = String(f.amount.value || "").replace(/[^0-9]/g, "");
+    if(raw === "") return say2("금액을 적어 주세요.");
+    var scope = String(f.scope.value || "").trim();
+    if(!scope) return say2("이 금액에 무엇이 포함되는지 적어 주세요.");
+    var vt = String(f.validTo.value || "").trim();
+    if(!vt) return say2("견적 유효기간을 적어 주세요.");
+    var terms = {}, miss = null;
+    Array.prototype.forEach.call(f.querySelectorAll("input[data-term]"), function(el){
+      var v = String(el.value || "").trim();
+      if(v !== "") terms[el.getAttribute("data-term")] = v;
+      else if(el.getAttribute("data-req") === "1" && !miss) miss = el.getAttribute("data-label");
+    });
+    if(miss) return say2("「" + miss + "」 칸을 적어 주세요.");
+    var ex = String(f.excludes.value || "").trim();
+    var nt = String(f.note.value || "").trim();
+    btn.disabled = true;
+    say2("보내는 중입니다…");
+    rpc("submit_compare_quote", { p: {
+      request: rid, kind: kindEl.value, amount: Number(raw), vat: f.vat.value,
+      scope: scope, excludes: ex || null, validTo: vt, note: nt || null,
+      terms: terms
+    }}).then(function(){
+      OPEN[rid] = false;
+      paint();
+    }).catch(function(err){
+      btn.disabled = false;
+      say2(errText(err));
     });
   }
 
@@ -650,6 +930,8 @@
       });
       return;
     }
+    var fc = e.target.closest ? e.target.closest("form.cmp-f") : null;
+    if(fc){ e.preventDefault(); return submitCmpQuote(fc); }
     var f = e.target.closest ? e.target.closest("form.dk-f") : null;
     if(!f) return;
     e.preventDefault();

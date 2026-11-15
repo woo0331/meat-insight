@@ -5069,3 +5069,4 @@ picture{ display: contents; }
 .js .gate-load{ display:block; }
 .js .gate-off{ display:none; }
 .js .gate-done .gate-off{ display:block; }
+.iq-reach .req{ color: var(--bad-text); }

@@ -149,6 +149,9 @@
     say("저장하는 중입니다…");
     call("set_my_nick", { nick: f.nick.value })
       .then(load)
+      /* ⚠️ 2026-11-15 — 첫 가입 뒤 모셔 온 자리(?welcome=1)에서 **저장에 성공하면** 원래
+         가시려던 화면(back)으로 바로 보냅니다. 저장이 실패하면 아래 catch 로 가고 머뭅니다. */
+      .then(function(){ if(WEL && NICK && BACK) window.location.href = BACK; })
       /* ⚠️ DB 가 거절한 **그 말**을 그대로 보여 줍니다 — 자물쇠마다
          다른 말이라 어느 쪽이 막았는지 손님이 알 수 있습니다. */
       .catch(function(err){

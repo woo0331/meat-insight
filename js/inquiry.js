@@ -64,12 +64,14 @@
         'placeholder="무엇이 궁금하신지 적어 주세요. 다섯 글자 이상."></textarea>' +
       '</div>' +
       '<div class="jrow">' +
-        '<label for="i-tel">연락처' + (signedIn ? '' : ' <b>*</b>') + '</label>' +
+        /* ⚠️ 2026-11-15 — 둘 다 필수(*)로 찍어 놓고 실제로는 **하나만** 받았습니다.
+           별표는 아래 안내 줄에 **한 번** 찍고, 칸마다 찍지 않습니다. */
+        '<label for="i-tel">전화번호</label>' +
         '<input id="i-tel" name="tel" inputmode="tel" autocomplete="tel" ' +
         'maxlength="20" placeholder="010-0000-0000">' +
       '</div>' +
       '<div class="jrow">' +
-        '<label for="i-email">이메일' + (signedIn ? '' : ' <b>*</b>') + '</label>' +
+        '<label for="i-email">이메일</label>' +
         '<input id="i-email" name="email" type="email" autocomplete="email" ' +
         'maxlength="120">' +
       '</div>' +
@@ -78,7 +80,7 @@
       '<p class="jrow jrow-full iq-reach">' +
         (signedIn
           ? '로그인하셨으므로 연락처를 안 적으셔도 됩니다 — 계정으로 답해 드립니다.'
-          : '답을 보내 드려야 해서 <b>전화번호나 이메일 가운데 하나</b>는 적어 주세요.') +
+          : '<b class="req">*</b> 답을 보내 드려야 해서 <b>전화번호나 이메일 가운데 하나</b>는 적어 주세요.') +
       '</p>' +
       '<div class="agree">' +
         '<h3>개인정보 수집 · 이용 동의</h3>' +
@@ -138,8 +140,13 @@
       if(!a.signedIn && !tel && !mail){
         msg.hidden = false;
         msg.textContent = "답을 보내 드릴 전화번호나 메일 주소를 적어 주세요.";
+        /* 오류 자리로 — 첫 칸에 초점, 두 칸 모두 비었다고 표시 */
+        f.tel.setAttribute("aria-invalid", "true");
+        f.email.setAttribute("aria-invalid", "true");
+        try{ f.tel.focus(); }catch(_){}
         return;
       }
+      f.tel.removeAttribute("aria-invalid"); f.email.removeAttribute("aria-invalid");
 
       var btn = f.querySelector('button[type="submit"]');
       btn.disabled = true;

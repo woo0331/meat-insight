@@ -6077,7 +6077,8 @@ function boardsOf(){
     const u = g.p.url();
     ok("  ⚠️⚠️ 찾는 단추가 **그 날짜 · 그 지역 · 그 골프장**을 주소에 남긴다",
        u.indexOf("rg=capital") >= 0 && u.indexOf("d=" + TKST(3)) >= 0 &&
-       decodeURIComponent(u).indexOf("course=" + TEE[0].course) >= 0, u);
+       /* ⚠️ 띄어쓰기는 주소에서 + 로 갑니다 — 글자를 비교하지 않고 **값을 읽어** 봅니다 */
+       new URL(u).searchParams.get("course") === TEE[0].course, u);
     const q = g.sent.slice(n0).map(function(x){ return decodeURIComponent(String(x.body || "")); }).join(" ");
     ok("  ⚠️⚠️ 같은 조건으로 **서버에** 묻는다 (화면에서 거르지 않습니다)",
        q.indexOf("play_at=eq." + TKST(3)) >= 0 && q.indexOf("region=in.(") >= 0 &&

@@ -4204,8 +4204,8 @@ function boardsOf(){
     /* ⚠️ 주소를 복사해 보내도 같은 화면이어야 합니다 */
     const u = await g.p.evaluate(function(){ return location.search; });
     ok("  조건이 주소에 남는다 (복사해 보낼 수 있게)",
-       u.indexOf("rg=seoul") >= 0 && u.indexOf("bk=1") >= 0 &&
-       u.indexOf("when=d1") >= 0, u);
+       /* ⚠️ 2026-11-15 명세 변경 — bk 거르개를 걷었으므로 남는 조건은 지역 · 날짜입니다 */
+       u.indexOf("rg=seoul") >= 0 && u.indexOf("when=d1") >= 0 && u.indexOf("bk=") < 0, u);
     /* ⚠️⚠️ 확정 시안 ② — 실력(0080) · 모집 인원 · 찾는 말 · 탭 둘.
        ⚠️ 흉내 장치는 걸러 주지 않으므로 **보내는 질의를 뜯어** 봅니다. */
     {

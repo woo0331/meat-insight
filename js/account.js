@@ -236,13 +236,25 @@
       (a.role === "provider" && a.provider
         ? '<a class="btn btn-pri mycard-b" href="/desk">업체 작업실로 가기</a>'
         : "") +
+      /* ⚠️⚠️ 로그아웃 (2026-11-15) — `amAuthOut()` 은 있었는데 **단추가 어디에도
+         없었습니다.** 계정 칸 안에 둡니다. */
+      '<div class="mycard-out">' +
+        '<button type="button" class="btn btn-line btn-sm" data-logout="1">로그아웃</button>' +
+        '<p class="lmsg mycard-outm" role="alert" hidden></p>' +
+      '</div>' +
       '</div>' +
       '<div class="hats">' + Object.keys(HAT_NAME).map(function(k){
         return hatRow(k, hats.indexOf(k) >= 0, false);
       }).join("") + '</div>' +
       '<p id="mymsg" class="lmsg" hidden></p>';
 
+    /* ⚠️ 이 화면은 하는 일을 켜고 끌 때마다 다시 그려집니다 — 그때마다 귀를 달면
+       한 번 누를 때 요청이 여러 번 갑니다. **한 번만** 답니다 (2026-11-15). */
+    if(box.getAttribute("data-bound") === "1") return;
+    box.setAttribute("data-bound", "1");
     box.addEventListener("click", function(e){
+      var lo = e.target.closest ? e.target.closest("button[data-logout]") : null;
+      if(lo){ logout(lo); return; }
       var b = e.target.closest ? e.target.closest("button[data-hat]") : null;
       if(!b) return;
       var key = b.getAttribute("data-hat"), on = b.getAttribute("data-on") === "1";
@@ -260,6 +272,26 @@
           try{ why = JSON.parse(why).message || why; }catch(_){}
           m.textContent = why || "바꾸지 못했습니다.";
         });
+    });
+  }
+
+  /* 로그아웃 — ⚠️ **성공했을 때만** 메인으로 갑니다(새로 열면 머리말도 비로그인으로
+     다시 그려집니다). 실패하면 그 자리에서 말하고 고르게 합니다. */
+  function logout(btn){
+    var m = btn.parentNode.querySelector(".mycard-outm");
+    var force = btn.getAttribute("data-logout") === "force";
+    btn.disabled = true;
+    if(m){ m.hidden = false; m.textContent = "로그아웃하는 중입니다…"; }
+    window.amAuthOut(force).then(function(){
+      window.location.href = "/";
+    }).catch(function(err){
+      try{ console.warn("[logout] 서버에 알리지 못했습니다:", err && err.message); }catch(_){}
+      btn.disabled = false;
+      if(m) m.textContent = "로그아웃하지 못했습니다 — 연결이 잠깐 끊겼을 수 있습니다. " +
+        "다시 눌러 주시거나, 이 기기에서만 로그아웃하실 수 있습니다.";
+      if(!btn.parentNode.querySelector('[data-logout="force"]'))
+        btn.insertAdjacentHTML("afterend",
+          ' <button type="button" class="btn btn-bad btn-sm" data-logout="force">이 기기에서만 로그아웃</button>');
     });
   }
 

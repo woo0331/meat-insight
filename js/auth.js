@@ -390,20 +390,30 @@ window.amAuthGo = function(key){
 };
 
 /* ── 나가기 ──────────────────────────────────────────────────────
-   ⚠️ 서버에 알리는 것이 실패해도 **이 브라우저에서는 지웁니다** —
-   지우지 않으면 "나갔다" 고 해 놓고 토큰이 남습니다 (절대 규칙 5). */
-window.amAuthOut = function(){
+   ⚠️⚠️ 2026-11-15 — 이 함수는 있었는데 **부르는 단추가 어디에도 없었습니다**
+   (/my 에 「로그아웃」을 냈습니다). 그리고 서버 알림이 실패해도 **말없이**
+   끝나서, 화면이 실패를 알 길이 없었습니다.
+   ⚠️ 지금은 — 서버가 받았거나(2xx) 세션이 이미 없으면(401 · 403) **이 브라우저의
+   토큰을 지우고** 성공입니다. 그물이 끊기거나 서버가 5xx 면 **지우지 않고 거절**합니다
+   (화면이 「다시 시도」 · 「이 기기에서만 로그아웃」을 고르게 합니다 — 말없이 지우면
+   서버 쪽 세션이 남은 것을 손님이 모릅니다).
+   ⚠️ `force` 면 서버를 묻지 않고 이 브라우저에서만 지웁니다. */
+window.amAuthOut = function(force){
   var c = AM_AUTH.conf, tk = amAuthToken();
   var done = function(){
     amAuthClear();
     AM_AUTH.signedIn = false; AM_AUTH.role = ""; AM_AUTH.name = "";
     AM_AUTH.provider = null;
+    return { ok:true };
   };
-  if(!c || !tk){ done(); return Promise.resolve(); }
+  if(force || !c || !tk) return Promise.resolve(done());
   return fetch(c.url + "/auth/v1/logout", {
     method:"POST",
     headers:{ apikey:c.anonKey, authorization:"Bearer " + tk }
-  }).catch(function(){}).then(done);
+  }).then(function(r){
+    if(r.ok || r.status === 401 || r.status === 403) return done();
+    throw new Error("logout " + r.status);
+  });
 };
 
 /* ── 아직 열지 않았을 때 **그 자리에 적습니다** ───────────────────

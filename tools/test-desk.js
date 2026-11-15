@@ -591,6 +591,69 @@ function boardsOf(){
       await g.p.close();
     }
 
+    /* ④-3 로그아웃 (2026-11-15) — amAuthOut() 은 있었는데 **단추가 어디에도 없었습니다.**
+       ⚠️ 흉내 /api/session 은 늘 signedIn:true 라, 여기서만 **토큰이 실렸을 때만**
+       로그인으로 답하게 바꿉니다(진짜 서버와 같은 규칙) — 그래야 새로고침 뒤에도
+       비로그인인지 잴 수 있습니다. */
+    for(const fail of [false, true]){
+      const SEED = "(function(){try{if(!sessionStorage.getItem('seed')){sessionStorage.setItem('seed','1');" +
+        "localStorage.setItem('am.auth.v1',JSON.stringify({access_token:'tk.test',at:Date.now()+3600e3}));}}catch(e){}})();";
+      const g = await open("/my", { role:"customer", name:"", signedIn:true }, {}, {}, false, SEED);
+      await g.p.route("**/api/session", function(r){
+        const has = !!r.request().headers()["authorization"];
+        return r.fulfill({ status:200, contentType:"application/json",
+          body: JSON.stringify({ auth:true, signedIn:has, role: has ? "customer" : "", hats:[],
+                                 conf:{ url:"https://sb-test.supabase.co", anonKey:"k" } }) });
+      });
+      let outN = 0;
+      await g.p.route("**/auth/v1/logout*", function(r){
+        outN++;
+        return fail ? r.fulfill({ status:500, contentType:"application/json", body:'{"msg":"down"}' })
+                    : r.fulfill({ status:204, body:"" });
+      });
+      const vis = await g.p.evaluate(function(){
+        const b = document.querySelector('#mybox button[data-logout="1"]');
+        return !!(b && b.getClientRects().length && b.getBoundingClientRect().height >= 40); });
+      await g.p.setViewportSize({ width:390, height:844 });
+      const visM = await g.p.evaluate(function(){
+        const b = document.querySelector('#mybox button[data-logout="1"]'); if(!b) return false;
+        const r = b.getBoundingClientRect();
+        return !!(b.getClientRects().length && r.height >= 40 && r.right <= innerWidth); });
+      if(!fail){
+        ok("⚠️⚠️ /my 계정 칸에 **로그아웃** 단추가 있다 (PC · 폰 390 · 누름 40px)", vis && visM,
+           JSON.stringify({ vis:vis, visM:visM }));
+        await Promise.all([ g.p.waitForURL(function(u){ return new URL(u).pathname === "/"; }, { timeout:8000 }).catch(function(){}),
+                            g.p.click('#mybox button[data-logout="1"]') ]);
+        await g.p.waitForTimeout(600);
+        const st = await g.p.evaluate(function(){
+          return { path: location.pathname, tk: localStorage.getItem("am.auth.v1"),
+                   my: document.querySelectorAll('.hd a[href="/my"]').length }; });
+        ok("  누르면 서버에 알리고(" + outN + "번) **메인으로** 가며 토큰을 지운다 · 머리말에 내 정보가 없다",
+           outN === 1 && st.path === "/" && st.tk === null && st.my === 0, JSON.stringify(st));
+        await g.p.reload({ waitUntil:"networkidle" }); await g.p.waitForTimeout(500);
+        const st2 = await g.p.evaluate(function(){
+          return { tk: localStorage.getItem("am.auth.v1"), my: document.querySelectorAll('.hd a[href="/my"]').length }; });
+        ok("  새로고침해도 **비로그인**이다", st2.tk === null && st2.my === 0, JSON.stringify(st2));
+      } else {
+        await g.p.click('#mybox button[data-logout="1"]');
+        await g.p.waitForTimeout(800);
+        const st = await g.p.evaluate(function(){
+          const m = document.querySelector("#mybox .mycard-outm");
+          return { path: location.pathname, tk: !!localStorage.getItem("am.auth.v1"),
+                   msg: m && !m.hidden ? m.textContent : "",
+                   force: !!document.querySelector('#mybox [data-logout="force"]') }; });
+        ok("⚠️⚠️ 서버가 실패하면 **성공한 것처럼 이동하지 않고** 그 자리에서 말한다",
+           st.path === "/my" && st.tk && st.msg.indexOf("로그아웃하지 못했습니다") >= 0, JSON.stringify(st));
+        ok("  「이 기기에서만 로그아웃」을 고를 수 있다", st.force, JSON.stringify(st));
+        await Promise.all([ g.p.waitForURL(function(u){ return new URL(u).pathname === "/"; }, { timeout:8000 }).catch(function(){}),
+                            g.p.click('#mybox [data-logout="force"]') ]);
+        await g.p.waitForTimeout(500);
+        const st3 = await g.p.evaluate(function(){ return { path: location.pathname, tk: localStorage.getItem("am.auth.v1") }; });
+        ok("  그것을 고르면 이 기기의 토큰을 지우고 메인으로 간다", st3.path === "/" && st3.tk === null, JSON.stringify(st3));
+      }
+      await g.p.close();
+    }
+
     /* ⑤ 이미 들어와 계시면 단추를 안 냅니다 */
     {
       const g = await open("/login", { role:"customer", name:"김손님", sso:KEYS }, {});

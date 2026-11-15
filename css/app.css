@@ -5054,3 +5054,9 @@ picture{ display: contents; }
    떨어집니다. 대신 **채도를 빼고 손가락 모양을 바꿉니다.** */
 .btn:disabled, .btn[aria-disabled="true"]{ cursor:not-allowed; filter: grayscale(.85); box-shadow:none; }
 .btn:disabled:hover{ transform:none; }
+/* /my 계정 칸의 로그아웃 (2026-11-15) */
+.mycard-out{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:14px; }
+.mycard-outm{ flex-basis:100%; margin:0; }
+/* /my 계정 칸의 로그아웃 (2026-11-15) */
+.mycard-out{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:14px; }
+.mycard-outm{ flex-basis:100%; margin:0; }

@@ -43,6 +43,11 @@
      않습니다 · 0068 이 매물 카드에서 세운 규칙). */
   var CONF = null;
   if(!list || !window.amAuthAsk) return;
+  /* ⚠️ 하단 「모든 게시판 바로가기」(.cqall)는 **빌드가 찍는 길**입니다 — 크롤러 ·
+     자바스크립트가 꺼진 분이 탭에 없는 게시판 넷까지 가는 길이라 HTML 에는 남깁니다.
+     이 파일이 도는 화면에서는 위 탭과 「전체 게시판」이 같은 길을 내므로 **접습니다**
+     (2026-11-15 · 같은 목록이 위아래로 두 번 서던 자리). 지우지 않고 가립니다. */
+  (function(){ var ca = document.querySelector(".cqall"); if(ca) ca.hidden = true; })();
 
   var esc = window.esc;
   var PER = 20;                     /* 한 쪽에 스무 줄 */

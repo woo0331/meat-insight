@@ -4259,6 +4259,32 @@ function boardsOf(){
     await p0.close();
   }
 
+  /* ①-b 업체 조인 자리가 조건 없이 0건이면 **찾는 칸을 또 세우지 않는다**(2026-11-15) —
+     회원 조인 찾는 칸이 바로 위에 있어 두 번째 칸이 겹쳐 보였습니다.
+     조건이 걸려 있으면 그 칸을 남깁니다(지우는 길이 그 칸에 있습니다). */
+  {
+    const g = await open("/cat/matchup", { role:"customer", name:"", signedIn:false },
+                         { v_join_open: JROOM, v_teetime_open: [] }, {}, true);
+    await g.p.waitForTimeout(500);
+    const r = await g.p.evaluate(function(){
+      const t = document.getElementById("ttlist");
+      return { bar: !!(t && t.querySelector("#tf-course")), zero: !!(t && t.querySelector(".none")),
+               join: !!document.getElementById("jf-q") };
+    });
+    ok("⚠️ 업체 조인 자리가 0건이면 **두 번째 찾는 칸을 안 세운다** (회원 조인 찾는 칸은 그대로)",
+       !r.bar && r.zero && r.join, JSON.stringify(r));
+    await g.p.close();
+    const g2 = await open("/cat/matchup?rg=capital", { role:"customer", name:"", signedIn:false },
+                          { v_join_open: JROOM, v_teetime_open: [] }, {}, true);
+    await g2.p.waitForTimeout(500);
+    const r2 = await g2.p.evaluate(function(){
+      const t = document.getElementById("ttlist");
+      return { bar: !!(t && t.querySelector("#tf-course")), clear: !!(t && t.querySelector(".tf-all")) };
+    });
+    ok("  조건이 걸린 0건이면 찾는 칸 · 조건 지우기를 **남긴다**", r2.bar && r2.clear, JSON.stringify(r2));
+    await g2.p.close();
+  }
+
   /* ② 로그인 전 — 목록은 보이고, 여는 것은 로그인으로 보냅니다 */
   {
     const g = await open("/cat/matchup", { role:"customer", name:"", signedIn:false },

@@ -5084,3 +5084,13 @@ picture{ display: contents; }
   padding:10px 12px; border:1px solid var(--line); border-radius:10px;
   background:var(--surface); font-size:14px; line-height:1.55; color:var(--ink2); }
 .cs-srcnote .ic{ flex:none; margin-top:2px; }
+.cqall[hidden]{ display:none; }
+
+/* 조건 레일 접기 (js/railfold.js · 2026-11-15) — ⚠️ 폭을 가르는 곳은 여기 한 곳 */
+.rail-fold-b{ display:none; }
+@media (max-width:760px){
+  .rail-fold-b{ display:inline-flex; width:100%; justify-content:center; margin:0 0 4px; }
+  .fit-rail.rail-foldable:not(.rail-open){ display:none; }
+}
+/* 피팅 찾는 칸의 「검색」 단추가 폰에서 두 줄로 꺾이던 자리 */
+.fitf-q .btn{ flex:none; white-space:nowrap; }

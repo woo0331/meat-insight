@@ -1797,7 +1797,7 @@ exports.build = function(c){
        셉니다(별이 조용히 빠집니다). */
     .concat(c.key === "lesson"
       ? ["/js/data/reviews.generated.js", "/js/data/review.js",
-         "/js/data/lesson.js", "/js/card.js", "/js/lesson.js"]
+         "/js/data/lesson.js", "/js/card.js", "/js/lesson.js", "/js/railfold.js"]
       : [])
     /* ⚠️⚠️ 연습장도 **카드를 브라우저가 다시 그립니다** — `js/card.js`
        를 안 실으면 `amRangeCard` 가 없어 거르개를 누르는 순간 목록이
@@ -1812,7 +1812,7 @@ exports.build = function(c){
        (`/help` 가 `site.js` 를 안 실어 문의 양식이 조용히 안 열린 그 자리). */
     .concat(c.key === "fitting"
       ? ["/js/data/reviews.generated.js", "/js/data/review.js",
-         "/js/photo.js", "/js/card.js", "/js/fitting.js"]
+         "/js/photo.js", "/js/card.js", "/js/fitting.js", "/js/railfold.js"]
       : [])
     /* ⚠️⚠️ 여행도 **말을 읽는 파일을 싣는 것까지가 기능**입니다 —
        `data/trip.js`(값 · 일정 말)가 안 실리면 값이 **조용히 빈 글자**가
@@ -1822,7 +1822,7 @@ exports.build = function(c){
        비어 버립니다(에러 0줄). `data/market.js` 는 탭 · 차례 · 상품을
        펴 놓는 자리라 **그것까지 싣는 것이 기능**입니다. */
     .concat(c.key === "market"
-      ? ["/js/data/market.js", "/js/card.js", "/js/market.js"]
+      ? ["/js/data/market.js", "/js/card.js", "/js/market.js", "/js/railfold.js"]
       : [])
     .concat(c.key === "travel"
       ? ["/js/data/trip.js", "/js/trip.js"]

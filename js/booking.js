@@ -439,6 +439,13 @@
   }
 
   function paint(rows){
+    /* ⚠️⚠️ /cat/matchup 의 **업체 조인 자리**가 조건 없이 0건이면 찾는 칸 ·
+       날짜 띠를 **안 그립니다**(2026-11-15) — 바로 위 회원 조인에도 찾는 칸이
+       있어, 빈 목록 위에 두 번째 찾는 칸이 서면 어느 쪽을 써야 할지 헷갈립니다.
+       조건이 걸려 있으면(조건에 맞는 것이 없을 때) 그 칸을 그대로 둡니다 —
+       지우는 길이 그 칸에 있습니다. 부킹 화면은 그대로입니다. */
+    var bare = !rows.length && KIND === "join" && !(S.rg || S.d || S.t || S.course || S.p);
+    if(bare){ box.innerHTML = zero(); return; }
     box.innerHTML = bar() +
       (rows.length
         ? '<ul class="tf-l">' + rows.map(row).join("") + '</ul>'

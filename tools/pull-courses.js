@@ -48,53 +48,76 @@ function write(rows, at){
 }
 
 (async function(){
+  /* ⚠️⚠️ --from-json=<파일> (2026-11-15) — 이 도구가 **공개 보기를 직접 못
+     읽는 자리**(네트워크가 supabase 주소를 막은 세션)에서, 같은 공개 보기
+     (v_course_public · 같은 칸)를 **읽기 전용 질의로 받은 JSON** 을 넣습니다.
+     ⚠️ 그 뒤의 길(사진 주소 · slug 검사 · 파일 쓰기)은 **이 파일 그대로**
+     지납니다 — 두 벌로 적으면 한쪽만 고치는 날 둘이 다른 파일을 찍습니다.
+     ⚠️ 표(course)가 아니라 **공개 보기**에서 받은 것이어야 합니다(가려진 곳이
+     섞이면 안 됩니다). 칸 목록은 COLS 와 같아야 합니다. */
+  const FROM = (process.argv.find(function(x){ return x.indexOf("--from-json=") === 0; }) || "").slice(12);
   const url = process.env.SUPABASE_URL || "";
-  const key = process.env.SUPABASE_ANON_KEY || "";
-  if(!url || !key){
-    console.log("⚠️ SUPABASE_URL · SUPABASE_ANON_KEY 가 없습니다 — " +
-                "지금 파일을 그대로 둡니다.");
-    console.log("   (골프장을 0곳으로 덮어쓰지 않습니다)");
-    process.exit(0);
-  }
-  /* ⚠️⚠️⚠️ **0081 이 아직 안 올라간 DB 에서는 `photo` 가 없습니다** —
-     PostgREST 가 그 칸 하나 때문에 **400** 을 내고, 그러면 이 도구가
-     통째로 멈춰 골프장을 **한 곳도 못 가져옵니다**. 저장소의 화면들이
-     `amRowsSoft` 로 하는 것과 같게, **확인된 선택 칸만** 빼고 한 번
-     다시 묻습니다(사진은 아이콘 타일로 돌아갑니다).
-     ⚠️ 보기 부재(404) · 권한(403) 은 **덮지 않습니다** — 그건 0066 을
-     아직 안 올리신 것이고 사진과 상관이 없습니다. */
-  const BASE = url.replace(/\/+$/, "");
-  const HEAD = { apikey: key, authorization: "Bearer " + key };
-  const OPT  = ["photo"];
-  let r = await fetch(BASE + "/rest/v1/" + VIEW + "?select=" + COLS +
-                      "&order=name.asc", { headers: HEAD });
   let dropped = [];
-  if(r.status === 400){
-    const why0 = await r.clone().text().catch(function(){ return ""; });
-    const gone = OPT.filter(function(c){ return why0.indexOf(c) >= 0; });
-    if(gone.length){
-      const cols2 = COLS.split(",").filter(function(c){
-        return gone.indexOf(c) < 0; }).join(",");
-      const r2 = await fetch(BASE + "/rest/v1/" + VIEW + "?select=" + cols2 +
-                             "&order=name.asc", { headers: HEAD });
-      if(r2.ok){
-        r = r2; dropped = gone;
-        console.warn("⚠️ 운영 DB 에 아직 없는 칸을 빼고 다시 물었습니다 — " +
-                     gone.join(" · ") + "\n   (0081 을 올리시면 사진이 같이 옵니다)");
+  let rows;
+  if(FROM){
+    rows = JSON.parse(fs.readFileSync(FROM, "utf8"));
+    /* ⚠️ id 는 화면이 안 씁니다(주소는 slug) — 받은 JSON 에 없으면 비워 둡니다 */
+    const need = COLS.split(",").filter(function(k){ return k !== "photo" && k !== "id"; });
+    const miss = rows.length ? need.filter(function(k){ return !(k in rows[0]); }) : [];
+    if(miss.length){
+      console.error("❌ 받은 JSON 에 칸이 빠졌습니다 — " + miss.join(" · ") + "\n   ⚠️ 지금 파일을 그대로 둡니다.");
+      process.exit(1);
+    }
+    console.log("· " + FROM + " 에서 " + rows.length + "줄을 읽었습니다 (공개 보기 " + VIEW + " 의 읽기 전용 결과)");
+  }else{
+    const url = process.env.SUPABASE_URL || "";
+    const key = process.env.SUPABASE_ANON_KEY || "";
+    if(!url || !key){
+      console.log("⚠️ SUPABASE_URL · SUPABASE_ANON_KEY 가 없습니다 — " +
+                  "지금 파일을 그대로 둡니다.");
+      console.log("   (골프장을 0곳으로 덮어쓰지 않습니다)");
+      process.exit(0);
+    }
+    /* ⚠️⚠️⚠️ **0081 이 아직 안 올라간 DB 에서는 `photo` 가 없습니다** —
+       PostgREST 가 그 칸 하나 때문에 **400** 을 내고, 그러면 이 도구가
+       통째로 멈춰 골프장을 **한 곳도 못 가져옵니다**. 저장소의 화면들이
+       `amRowsSoft` 로 하는 것과 같게, **확인된 선택 칸만** 빼고 한 번
+       다시 묻습니다(사진은 아이콘 타일로 돌아갑니다).
+       ⚠️ 보기 부재(404) · 권한(403) 은 **덮지 않습니다** — 그건 0066 을
+       아직 안 올리신 것이고 사진과 상관이 없습니다. */
+    const BASE = url.replace(/\/+$/, "");
+    const HEAD = { apikey: key, authorization: "Bearer " + key };
+    const OPT  = ["photo"];
+    let r = await fetch(BASE + "/rest/v1/" + VIEW + "?select=" + COLS +
+                        "&order=name.asc", { headers: HEAD });
+    if(r.status === 400){
+      const why0 = await r.clone().text().catch(function(){ return ""; });
+      const gone = OPT.filter(function(c){ return why0.indexOf(c) >= 0; });
+      if(gone.length){
+        const cols2 = COLS.split(",").filter(function(c){
+          return gone.indexOf(c) < 0; }).join(",");
+        const r2 = await fetch(BASE + "/rest/v1/" + VIEW + "?select=" + cols2 +
+                               "&order=name.asc", { headers: HEAD });
+        if(r2.ok){
+          r = r2; dropped = gone;
+          console.warn("⚠️ 운영 DB 에 아직 없는 칸을 빼고 다시 물었습니다 — " +
+                       gone.join(" · ") + "\n   (0081 을 올리시면 사진이 같이 옵니다)");
+        }
       }
     }
+    if(!r.ok){
+      const why = await r.text().catch(function(){ return ""; });
+      console.error("❌ 골프장을 못 읽었습니다 — HTTP " + r.status +
+                    "\n   ⚠️ 지금 파일을 그대로 둡니다.");
+      if(why.indexOf(VIEW) >= 0 || r.status === 404)
+        console.error("   ⚠️⚠️ 공개 보기(" + VIEW + ")가 없습니다 — " +
+                      "db/migrations/0066 을 아직 올리지 않으셨습니다.");
+      else if(why) console.error("   " + why.slice(0, 200));
+      process.exit(1);
+    }
+
+    rows = await r.json();
   }
-  if(!r.ok){
-    const why = await r.text().catch(function(){ return ""; });
-    console.error("❌ 골프장을 못 읽었습니다 — HTTP " + r.status +
-                  "\n   ⚠️ 지금 파일을 그대로 둡니다.");
-    if(why.indexOf(VIEW) >= 0 || r.status === 404)
-      console.error("   ⚠️⚠️ 공개 보기(" + VIEW + ")가 없습니다 — " +
-                    "db/migrations/0066 을 아직 올리지 않으셨습니다.");
-    else if(why) console.error("   " + why.slice(0, 200));
-    process.exit(1);
-  }
-  const rows = await r.json();
   if(!Array.isArray(rows)){
     console.error("❌ 목록이 아닙니다 — 파일을 그대로 둡니다.");
     process.exit(1);

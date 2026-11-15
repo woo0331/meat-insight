@@ -55,6 +55,10 @@ const SEED = [
 
 console.log("\n── 골프장이 있을 때 (/course)");
 if(!fs.existsSync(GEN)){ console.log("  ❌ courses.generated.js 가 없습니다"); process.exit(1); }
+/* ⚠️ 검사 **전의** course 폴더 목록 — 진짜 골프장이 들어온 뒤(2026-11-15)에는
+   「폴더가 비었다」가 아니라 「검사 전과 같다」가 뜻입니다 */
+const DIR0 = (function(){ var d = path.join(ROOT, "course");
+  return fs.existsSync(d) ? fs.readdirSync(d).sort().join("\n") : ""; })();
 fs.copyFileSync(GEN, BAK);
 let okAll = true;
 try{
@@ -148,9 +152,9 @@ const left = SEED.map(function(s){ return s.slug; })
 ok("⑧ ⚠️⚠️ 되돌린 뒤 **검사용 화면 파일이 하나도 안 남았다**",
    left.length === 0, left.join(" · "));
 const dir = path.join(ROOT, "course");
-ok("  빈 폴더도 안 남았다",
-   !fs.existsSync(dir) || fs.readdirSync(dir).length === 0,
-   fs.existsSync(dir) ? fs.readdirSync(dir).join(" · ") : "");
+const DIR1 = fs.existsSync(dir) ? fs.readdirSync(dir).sort().join("\n") : "";
+ok("  남은 폴더가 **검사 전과 같다** (검사용 폴더 · 빈 폴더가 안 남았다)",
+   DIR1 === DIR0, DIR1.split("\n").filter(function(x){ return DIR0.split("\n").indexOf(x) < 0; }).join(" · "));
 
 console.log("\n" + ran + "건 중 " + (ran - bad) + "건 통과 · " + bad + "건 실패");
 process.exit(bad === 0 && okAll ? 0 : 1);

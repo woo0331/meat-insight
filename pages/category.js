@@ -29,7 +29,7 @@ var KIND = {
     subs: "업체가 등록되면 아래 항목으로 걸러 볼 수 있게 됩니다. 요청하실 때도 여기서 고르십니다.",
     pvOn: "항목을 누르시면 그 일을 하는 업체만 모아 보여 드립니다.",
     zeroT:"아직 등록된 업체가 없습니다.",
-    zeroD:"문을 열기 전이라 보여 드릴 업체가 없습니다. 없는 업체를 지어내 보여 드리지 않습니다.",
+    zeroD:"아직 등록된 업체가 없습니다. 원하시는 조건을 남겨 두시거나, 회원끼리 바로 되는 것을 이용해 보세요.",
     /* ⚠️ 전에는 "이 분야 업체로 입점하기" 였습니다. 이 구간을 읽는 사람은
        **그 서비스를 찾는 손님**이라 자리가 어긋났고, 머리말 금색 단추 ·
        푸터와 합쳐 한 화면에 입점 권유가 세 번 나왔습니다 (지시서 §2).
@@ -242,8 +242,7 @@ function coursePane(c){
 function courseZero(){
   return '<div class="none"><h3>아직 등록된 골프장이 없습니다.</h3>' +
     '<p>전국 골프장 정보는 <b>공식 · 공공 출처에서 확인한 것만</b> 싣습니다 — ' +
-    '지어낸 시설을 한 줄도 넣지 않기 때문에, 확인이 끝난 곳부터 차례로 ' +
-    '올라옵니다.</p>' +
+    '확인이 끝난 곳부터 차례로 올라옵니다.</p>' +
     '<p class="none-go">' +
     '<a class="btn btn-pt" href="/match?cat=booking">부킹 상담 요청하기</a>' +
     '<a class="btn btn-line" href="/join">골프장 · 부킹업체 입점 신청</a>' +
@@ -533,10 +532,12 @@ function lessonSec(c, list){
       '</div>' +
       '<div id="lsnlist">' + grid + '</div>' +
       '<p class="jnote">⚠️ 가격대 · 레슨 목표로 좁히면 <b>그 값을 아직 ' +
-      '등록하지 않은 프로</b>는 빠집니다. 값을 모르는 분을 아무 칸에나 ' +
-      '넣으면 그건 저희가 지어낸 값입니다.</p>' +
+      '등록하지 않은 프로</b>는 빠집니다.</p>' +
       asksBlock(c) +
-      '<div class="lsn-foot">' +
+      /* ⚠️ 2026-11-15 — 프로가 0명이면 위 0명 상자가 이미 「입점」 · 「조건 남기기」를
+         냅니다. 아래 상자 둘이 같은 단추를 한 번 더 내지 않게 **이용 가이드만** 남깁니다. */
+      '<div class="lsn-foot' + (list.length ? '' : ' lsn-foot-1') + '">' +
+        (list.length ? (
         '<div class="lsn-box lsn-box-dark">' +
           '<p class="lsn-box-h">' + icon("user", 20) + '골프 프로로 입점하세요</p>' +
           '<p>내 프로필과 레슨 상품을 등록하고 더 많은 골퍼를 만나 보세요. ' +
@@ -551,7 +552,7 @@ function lessonSec(c, list){
           '다시 여쭙습니다.</p>' +
           '<a class="btn btn-line" href="/match?cat=lesson">맞춤 레슨 요청하기' +
             icon("arrow", 15) + '</a>' +
-        '</div>' +
+        '</div>') : '') +
         '<div class="lsn-box">' +
           '<p class="lsn-box-h">' + icon("info", 20) + '이용 가이드</p>' +
           '<ul class="lsn-gd">' +
@@ -762,8 +763,9 @@ function rangeNone(){
     '<p>아직 등록된 골프 연습장이 없습니다. ' +
     '내 연습장을 등록하고 골퍼들에게 소개해 보세요.</p>' +
     '<div class="none-b">' +
-      '<a class="btn btn-pri" href="/join">' + icon("store", 18) + '시설 등록</a>' +
-      '<a class="btn btn-line" href="/cat/range">다른 지역 보기</a>' +
+      /* ⚠️ js/range.js 의 noneEmpty() 와 같은 단추 — 두 곳이 같은 말을 해야 합니다 */
+      '<a class="btn btn-pt" href="/match?cat=range">원하는 연습장 조건 남기기</a>' +
+      '<a class="btn btn-line" href="/join">' + icon("store", 18) + '시설 등록</a>' +
     '</div>' +
   '</div>';
 }
@@ -974,7 +976,9 @@ function marketHead(c){
       /* ⚠️ 「상품 · 스토어 등록」은 **입점 신청**으로 갑니다 — 상품을
          올리는 자리는 입점한 업체의 `/desk` 안이라, 입점 전에 상품
          양식으로 보내면 빈 곳으로 보내는 것입니다(절대 규칙 2). */
-      '<a class="btn btn-deep mk-cta" href="/join">' + icon("store", 19) +
+      /* ⚠️ 2026-11-15 — 용품 마켓은 **상품 탐색이 우선**입니다. 판매업체 입점은 보조 행동이라
+         진한 단추(btn-deep)에서 선 단추로 낮췄습니다. */
+      '<a class="btn btn-line mk-cta" href="/join">' + icon("store", 19) +
         '상품 · 스토어 등록</a>' +
     '</div>' +
   '</div></section>';
@@ -1122,7 +1126,7 @@ function tripHead(c){
          새 양식을 만들면 받는 자리가 둘이 되고 한쪽만 고치는 날
          어긋납니다. */
       '<a class="btn btn-goldline tp-cta" href="/match?cat=' + esc(c.key) + '">' +
-        icon("chat", 19) + '맞춤 여행 견적</a>' +
+        icon("chat", 19) + '맞춤 여행 견적 요청</a>' +
     '</div>' +
   '</div></section>';
 }
@@ -1473,12 +1477,13 @@ exports.build = function(c){
      두 곳이 됩니다(`#ttlist` 와 같은 꼴). */
   var teeFind = (c.key === "booking" || c.kind === "match")
     ? '<section class="sec sec-alt" aria-labelledby="tbd-h"><div class="wrap">' +
-      '<div class="sec-hd"><h2 id="tbd-h">원하는 날짜와 지역의 자리 찾기</h2>' +
+      /* ⚠️ 2026-11-15 — 찾는 칸은 목록 위 한 곳입니다. 여기는 **현황표(보조)** 만 둡니다. */
+      '<div class="sec-hd"><h2 id="tbd-h">날짜 · 지역별 현황</h2>' +
       '<p>제휴 골프장이 올린 <b>티타임</b>과 회원이 연 <b>조인</b>을 ' +
-      '날짜 · 지역으로 나눠 보여 드립니다. ' +
+      '날짜 · 지역으로 세어 보여 드립니다. 칸을 누르시면 그 날짜 · 지역 목록이 열립니다. ' +
       '골프올인원은 거래 당사자가 아니며 <b>결제를 받지 않습니다.</b></p></div>' +
       /* ⚠️ 알맹이는 브라우저가 그립니다 — 자리는 날마다 바뀝니다 */
-      '<div id="teeboard" data-teekind="' +
+      '<div id="teeboard" data-nofind="1" data-teekind="' +
         (c.key === "booking" ? "booking" : "join") + '" hidden></div>' +
       '</div></section>'
     : '';

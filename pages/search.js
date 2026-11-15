@@ -158,8 +158,7 @@ exports.build = function(){
     '<div id="csres">' + (cs.length
       ? W.amCourseGrid(cs)
       : '<div class="none"><h2>아직 불러온 골프장이 없습니다.</h2>' +
-        '<p>공식 공공데이터에서 받아 넣기 전이라 보여 드릴 시설이 없습니다. ' +
-        '없는 골프장을 지어내 보여 드리지 않습니다.</p>' +
+        '<p>공식 공공데이터에서 받아 넣기 전이라 보여 드릴 시설이 없습니다.</p>' +
         '<p class="none-or">지금 하실 수 있는 것</p><div class="none-b">' +
         '<a class="btn btn-line" href="/match?cat=booking">' + icon("arrow",18) +
         '부킹 요청 남기기</a>' +
@@ -202,7 +201,6 @@ function zero(){
   return '<div class="none">' +
     '<h3>아직 등록된 업체가 없습니다.</h3>' +
     '<p>문을 열기 전이라 보여 드릴 업체가 없습니다. ' +
-    '없는 업체를 지어내 보여 드리지 않습니다. ' +
     '원하시는 조건을 남겨 두시면 업체가 등록되는 대로 운영자가 맞춰 봅니다.</p>' +
     '<div class="none-b">' +
       /* ⚠️ 입점 권유를 여기서 뺐습니다 (지시서 §2) — 이 구간을 읽는

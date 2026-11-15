@@ -105,8 +105,10 @@
       '<p>아직 등록된 골프 연습장이 없습니다. ' +
       '내 연습장을 등록하고 골퍼들에게 소개해 보세요.</p>' +
       '<div class="none-b">' +
-      '<a class="btn btn-pri" href="/join">시설 등록</a>' +
-      '<a class="btn btn-line" href="/cat/range">다른 지역 보기</a>' +
+      /* ⚠️ 2026-11-15 — 「다른 지역 보기」는 조건이 없을 때 **같은 화면으로 돌아오는** 단추였습니다.
+         손님의 다음 행동(조건 남기기)을 앞에, 시설 등록은 보조로 둡니다. */
+      '<a class="btn btn-pt" href="/match?cat=range">원하는 연습장 조건 남기기</a>' +
+      '<a class="btn btn-line" href="/join">시설 등록</a>' +
       '</div></div>';
   }
 

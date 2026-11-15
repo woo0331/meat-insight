@@ -5070,3 +5070,7 @@ picture{ display: contents; }
 .js .gate-off{ display:none; }
 .js .gate-done .gate-off{ display:block; }
 .iq-reach .req{ color: var(--bad-text); }
+/* 부킹 · 조인 화면의 현황표만 (찾는 칸은 목록 위 한 곳 · 2026-11-15) */
+.tbw.tbw-only{ grid-template-columns: minmax(0, 1fr); }
+/* 프로 0명일 때 아래 상자는 이용 가이드 하나 (2026-11-15) */
+.lsn-foot.lsn-foot-1{ grid-template-columns: minmax(0, 1fr); }

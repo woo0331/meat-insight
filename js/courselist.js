@@ -126,6 +126,11 @@
     var onCourse = (S.tab === "course");
     tee.hidden  = onCourse;
     pane.hidden = !onCourse;
+    /* ⚠️ 2026-11-15 — 골프장 정보 탭에서는 **부킹 현황표 구간**도 가립니다. 정보를 찾는
+       자리에 티타임 현황 · 설명이 길게 반복되지 않게(지우지 않고 가립니다 — 탭을 돌리면 다시 섭니다). */
+    var tb = document.getElementById("teeboard");
+    var tbs = tb && tb.closest ? tb.closest("section") : null;
+    if(tbs) tbs.hidden = onCourse;
     tabs.querySelectorAll("[data-cstab]").forEach(function(a){
       var on = (a.getAttribute("data-cstab") === S.tab);
       a.classList.toggle("on", on);

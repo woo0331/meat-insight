@@ -297,7 +297,7 @@
       '<p>골프 여행 상품을 판매하고 싶다면 여행사 입점을 신청해 주세요.</p>' +
       '<div class="none-b">' +
       '<a class="btn btn-pri" href="/join">여행사 입점 신청</a>' +
-      '<a class="btn btn-line" href="/match?cat=travel">희망 일정 남기기</a>' +
+      '<a class="btn btn-line" href="/match?cat=travel">맞춤 여행 견적 요청</a>' +
       '</div></div>';
   }
   function noneNarrow(){
@@ -306,7 +306,7 @@
       '상품을 찾아 이어 드립니다.</p>' +
       '<div class="none-b">' +
       '<a class="btn btn-line" href="/cat/travel">조건 모두 지우기</a>' +
-      '<a class="btn btn-pri" href="/match?cat=travel">희망 일정 남기기</a>' +
+      '<a class="btn btn-pri" href="/match?cat=travel">맞춤 여행 견적 요청</a>' +
       '</div></div>';
   }
   function failBox(){
@@ -402,7 +402,7 @@
          상품 · 판매사가 실리지 않습니다(담을 칸이 없습니다). 하는 일대로 적고,
          상품 이름을 적어 달라고 그 자리에서 말합니다. */
       '<p class="tpd-go"><a class="btn btn-pri" href="/match?cat=travel">' +
-        '희망 일정 남기기</a></p>' +
+        '맞춤 여행 견적 요청</a></p>' +
       '<p class="tpd-note">요청 양식의 「더 하실 말씀」에 이 상품 이름을 적어 주시면 ' +
         '운영자가 확인할 때 참고합니다.</p>' +
     '</div>';

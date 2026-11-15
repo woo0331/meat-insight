@@ -6050,90 +6050,54 @@ function boardsOf(){
     await g.p.close();
   }
 
-  /* ⑧-2 **메인의 찾는 칸** — 시안의 왼쪽 반쪽입니다 (2026-11-07).
-     ⚠⚠⚠ 2026-11-07 까지 **현황표만** 있었습니다 — "원하는 날짜와
-     지역의 자리 찾기" 라는 **제목만 달아 놓고 찾는 칸을 안 만들었습니다**
-     (제목이 코드와 다른 자리 · 절대 규칙 5).
-     ⚠⚠ **가는 주소를 재야 합니다** — 고르개가 보내는 열쇠와 받는 쪽이
-     다르면 고르는 순간 아무 일이 안 나고 **에러도 안 납니다**. */
+  /* ⑧-2 ~ ⑧-5 — ⚠️⚠️ 2026-11-15 명세 변경: **찾는 칸은 목록 위 한 곳**입니다.
+     부킹 · 조인 화면에는 현황표 옆에 찾는 칸(.tbf)이 한 번 더 서서 같은 조건을 두 번
+     물었습니다(사장님 지시 — 「아래 반복되는 별도 검색창은 통합, 현황표는 보조」).
+     그래서 그 찾는 칸이 하던 검사(날짜 · 지역 · 골프장 · 시간대가 주소와 질의로 가는지)를
+     **목록 위 찾는 칸(#ttf-find)** 으로 옮겨 잽니다. 현황표 검사는 그대로입니다. */
   {
     const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },
       { v_teetime_count: TCNT, v_join_count: [], v_teetime_open: TEE }, {}, true);
-    await g.p.waitForTimeout(400);
+    await g.p.waitForTimeout(500);
     const r = await g.p.evaluate(function(){
-      const n = document.querySelector("#teeboard .tbf");
-      const cs = n ? n.querySelector('[data-tbf="course"]') : null;
-      return { on: !!n,
-        d:  !!(n && n.querySelector('[data-tbf="d"]')),
-        rg: !!(n && n.querySelector('[data-tbf="rg"]')),
-        course: !!cs,
-        courses: cs ? Array.prototype.map.call(cs.options,
-                   function(o){ return o.value; }).filter(Boolean) : [],
-        go: !!(n && n.querySelector(".tbf-go")) };
+      const f = document.querySelector("#ttlist #ttf-find");
+      return { boardFind: !!document.querySelector("#teeboard .tbf"),
+        d: !!(f && f.querySelector("#tf-d")), rg: !!(f && f.querySelector("#tf-rg")),
+        course: !!(f && f.querySelector("#tf-course")),
+        go: !!(f && f.querySelector('button[type="submit"]')) };
     });
-    ok("메인에 **찾는 칸**이 그려진다 (시안의 왼쪽)", r.on,
-       JSON.stringify(r).slice(0, 160));
-    ok("  라운드 날짜 · 지역 · **골프장** 칸과 찾는 단추가 있다",
-       r.d && r.rg && r.course && r.go, JSON.stringify(r).slice(0, 160));
-    /* ⚠⚠ 골프장 목록은 **DB 에서** 옵니다 — 글자로 박지 않습니다 */
-    ok("  골프장 목록을 **올라온 자리에서** 끌어온다 (지어내지 않습니다)",
-       r.courses.length > 0 && r.courses.every(function(c){
-         return TEE.some(function(t){ return t.course === c; }); }),
-       r.courses.join(" / "));
-
-    await g.p.fill("#tbf-d", TKST(3));
-    await g.p.selectOption('#teeboard [data-tbf="rg"]', "capital");
-    await g.p.selectOption('#teeboard [data-tbf="course"]', TEE[0].course);
-    await g.p.click("#teeboard .tbf-go");
+    ok("⚠️⚠️ 부킹 화면의 찾는 칸은 **목록 위 한 곳**이다 (현황표 옆에 또 안 선다)",
+       !r.boardFind && r.d && r.rg && r.course && r.go, JSON.stringify(r));
+    await g.p.fill("#ttlist #tf-d", TKST(3));
+    await g.p.selectOption("#ttlist #tf-rg", "capital");
+    await g.p.fill("#ttlist #tf-course", TEE[0].course);
+    const n0 = g.sent.length;
+    await g.p.click('#ttlist #ttf-find button[type="submit"]');
     await g.p.waitForTimeout(700);
     const u = g.p.url();
-    ok("⚠⚠ 찾는 단추가 **그 날짜 · 그 지역 · 그 골프장**으로 보낸다",
-       u.indexOf("/cat/booking") >= 0 && u.indexOf("rg=capital") >= 0 &&
-       u.indexOf("d=" + TKST(3)) >= 0 &&
-       u.indexOf("course=" + encodeURIComponent(TEE[0].course)) >= 0, u);
-    /* ⚠⚠ 받는 쪽이 없으면 고르는 순간 아무 일이 안 납니다 */
-    await g.p.waitForTimeout(500);
-    const got = await g.p.evaluate(function(){
-      const el = document.querySelector("#ttlist #tf-rg");
-      const d  = document.querySelector("#ttlist #tf-d");
-      return { rg: el ? el.value : null, d: d ? d.value : null }; });
-    ok("  ⚠⚠ **받는 쪽이 그 조건으로 열린다** (보내는 열쇠와 받는 쪽이 같다)",
-       got.rg === "capital" && got.d === TKST(3), JSON.stringify(got));
+    ok("  ⚠️⚠️ 찾는 단추가 **그 날짜 · 그 지역 · 그 골프장**을 주소에 남긴다",
+       u.indexOf("rg=capital") >= 0 && u.indexOf("d=" + TKST(3)) >= 0 &&
+       decodeURIComponent(u).indexOf("course=" + TEE[0].course) >= 0, u);
+    const q = g.sent.slice(n0).map(function(x){ return decodeURIComponent(String(x.body || "")); }).join(" ");
+    ok("  ⚠️⚠️ 같은 조건으로 **서버에** 묻는다 (화면에서 거르지 않습니다)",
+       q.indexOf("play_at=eq." + TKST(3)) >= 0 && q.indexOf("region=in.(") >= 0 &&
+       q.indexOf("course=ilike.*" + TEE[0].course + "*") >= 0, q.slice(0, 240));
     await g.p.close();
   }
   {
-    /* 조인 탭 — ⚠ 조인에는 **골프장 칸을 안 냅니다**(회원이 여는
-       자리라 골프장으로 좁힐 자료가 없습니다 · 절대 규칙 5). */
+    /* 현황표의 조인 탭 — 칸을 누르면 조인 화면(cat/matchup)으로 그 날짜 · 지역이 갑니다 */
     const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },
       { v_teetime_count: TCNT, v_join_count: TCNT, v_teetime_open: TEE }, {}, true);
     await g.p.waitForTimeout(400);
     await g.p.click('#teeboard [data-teetab="join"]');
     await g.p.waitForTimeout(600);
-    const r = await g.p.evaluate(function(){
-      const n = document.querySelector("#teeboard .tbf");
-      return { course: !!(n && n.querySelector('[data-tbf="course"]')),
-               go: n ? (n.querySelector(".tbf-go") || {}).textContent : "" };
-    });
-    ok("조인 탭에서는 **골프장 칸을 안 낸다** (좁힐 자료가 없습니다)",
-       r.course === false, String(r.go));
-    await g.p.selectOption('#teeboard [data-tbf="rg"]', "jeju");
-    await g.p.click("#teeboard .tbf-go");
-    await g.p.waitForTimeout(700);
-    const u = g.p.url();
-    ok("  조인은 **/cat/matchup** 으로 보낸다 (부킹과 갈라서 냅니다)",
-       u.indexOf("/cat/matchup") >= 0 && u.indexOf("rg=jeju") >= 0, u);
+    const href = await g.p.evaluate(function(){
+      const a = document.querySelector("#teeboard .tbd-t tbody a[href]");
+      return a ? a.getAttribute("href") : ""; });
+    ok("현황표 조인 탭의 칸은 **/cat/matchup** 으로 그 날짜 · 지역을 보낸다",
+       href.indexOf("/cat/matchup?rg=") === 0 && href.indexOf("&d=") > 0, href);
     await g.p.close();
   }
-
-  /* ⑧-3 **부킹 · 조인 화면에도 같은 띠가 섭니다** (2026-11-07 · 시안).
-     ⚠️⚠️⚠️ 전에는 **메인에만** 있어서, 머리말에서 골프장 부킹을 누르고
-     들어오신 분은 **목록부터** 보셨습니다 — 어느 날짜 · 어느 지역에 자리가
-     있는지를 보는 자리가 그 화면에 없었습니다.
-     ⚠️⚠️⚠️ 그리고 **`/cat/matchup` 에 `#ttlist` 가 한 줄도 안 찍혔습니다** —
-     0곳 가지가 `ownSec || (sideSec + zero)` 라 조인 화면에서는 sideSec 이
-     통째로 사라졌고, 그래서 0060 의 "업체가 내놓은 조인 자리" 가
-     **처음부터 죽은 코드**였습니다(`js/booking.js` 는 그 상자가 없으면
-     그자리에서 나갑니다 · 에러 0줄). */
   for(const pg of [["/cat/booking", "booking"], ["/cat/matchup", "join"]]){
     const g = await open(pg[0], { role:"customer", name:"손님", signedIn:true },
       { v_teetime_count: TCNT, v_join_count: TCNT, v_teetime_open: TEE }, {}, true);
@@ -6141,27 +6105,17 @@ function boardsOf(){
     const r = await g.p.evaluate(function(){
       const b = document.getElementById("teeboard");
       const on = b ? b.querySelector(".tbd-b.tbd-on") : null;
-      return { board: !!b && !b.hidden,
+      return { board: !!b && !b.hidden && !!b.querySelector(".tbd-t"),
                find: !!(b && b.querySelector(".tbf-go")),
                tab: on ? on.getAttribute("data-teetab") : null,
-               /* ⚠️ 자리 목록 상자도 **실제로** 있어야 합니다 */
                list: !!document.getElementById("ttlist") };
     });
-    ok(pg[0] + " 에 **찾는 칸 + 현황표**가 그려진다", r.board && r.find,
-       JSON.stringify(r));
-    /* ⚠️ 주소로 다시 판단하지 않고 **빌드가 적어 준 값**을 씨니다 */
+    ok(pg[0] + " 에 **현황표(보조)** 가 그려지고 찾는 칸은 **한 번만** 선다",
+       r.board && !r.find, JSON.stringify(r));
     ok("  먼저 열리는 탭이 **" + pg[1] + "** 이다", r.tab === pg[1], String(r.tab));
     ok("  ⚠️⚠️ 자리 목록 상자(#ttlist)도 **실제로** 있다", r.list, "없습니다");
     await g.p.close();
   }
-
-  /* ⑧-4 ⚠️⚠️⚠️ **설정이 없어도 표의 뼈대를 그립니다** (2026-11-08).
-     전에는 그 자리에 한 줄짜리 안내만 남아서, 시안의 오른쪽 절반이
-     손님에게는 **빈 글**이었습니다 — 사장님이 폰에서 보시고 "현황표도
-     만들어 달라" 고 하신 자리입니다.
-     ⚠️⚠️ 다만 칸에 **0 을 적으면 안 됩니다** — 세어 본 것이 아니라 못
-     읽은 것입니다. 그래서 **둘을 갈라서** 잽니다: 뼈대가 섰는가 ·
-     그리고 그 칸이 0 이 아닌가 (절대 규칙 1). */
   {
     const p0 = await b.newPage({ viewport: view });
     await p0.route("**/api/session", function(r){
@@ -6177,7 +6131,6 @@ function boardsOf(){
                cells: rows.length ? rows[0].querySelectorAll("td").length : 0,
                unknown: bx ? bx.querySelectorAll(".tbd-x").length : -1,
                zeros: bx ? bx.querySelectorAll(".tbd-0").length : -1,
-               find: !!(bx && bx.querySelector(".tbf-go")),
                body: bx ? bx.innerText : "" };
     });
     ok("⚠️⚠️ 설정이 없어도 현황표의 **뼈대가 그려진다** (날짜 열 · 지역 줄)",
@@ -6188,59 +6141,39 @@ function boardsOf(){
     ok("  ⚠️ '0건' 이라고 말하지 않는다 (못 읽은 것과 0 은 다릅니다)",
        r.body.indexOf("0건이라는 뜻이 아닙니다") >= 0 &&
        r.body.indexOf("아직 숫자를 읽지 못한") >= 0, r.body.slice(0, 220));
-    ok("  ⚠️ 찾는 칸은 그대로 돈다", r.find, "없습니다");
     await p0.close();
   }
-
-  /* ⑧-5 **티오프 시간대** (2026-11-08) — 사장님이 "날짜 시간 다 정해서"
-     라고 하신 자리입니다.
-     ⚠️⚠️ **보내는 질의를 뜯어 봅니다** — 흉내 장치는 걸러 주지 않으므로
-     줄 수로 재면 시간대를 통째로 떼어도 **영원히 초록**입니다.
-     ⚠️ 갯수를 박지 않습니다 — 고르개의 수를 `AM_TEE_BAND` 에서 셉니다. */
+  /* 시간대 — 목록 위 찾는 칸으로 옮겨 잽니다 (AM_TEE_BAND 한 곳 · 서버가 거름) */
   {
     const g = await open("/cat/booking", { role:"customer", name:"손님", signedIn:true },
       { v_teetime_count: TCNT, v_join_count: [], v_teetime_open: TEE }, {}, true);
     await g.p.waitForTimeout(400);
     const r = await g.p.evaluate(function(){
-      const sel = document.querySelector('#teeboard [data-tbf="t"]');
+      const sel = document.querySelector("#ttlist #tf-t");
       return { on: !!sel,
                opts: sel ? Array.prototype.map.call(sel.options,
                  function(o){ return o.value; }).filter(Boolean) : [],
                keys: (window.AM_TEE_BAND || []).map(function(x){ return x.key; }) };
     });
-    ok("메인 찾는 칸에 **시간대**가 있다 (부킹)", r.on,
-       JSON.stringify(r).slice(0, 160));
+    ok("찾는 칸에 **시간대**가 있다 (부킹)", r.on, JSON.stringify(r).slice(0, 160));
     ok("  고르개가 **AM_TEE_BAND 한 곳**에서 온다 (글자로 안 박습니다)",
        r.keys.length > 0 && r.opts.join(",") === r.keys.join(","),
        r.opts.join(",") + " / " + r.keys.join(","));
-
-    await g.p.selectOption('#teeboard [data-tbf="t"]', "am");
-    await g.p.click("#teeboard .tbf-go");
+    const n0 = g.sent.length;
+    await g.p.selectOption("#ttlist #tf-t", "am");
+    await g.p.click('#ttlist #ttf-find button[type="submit"]');
     await g.p.waitForTimeout(800);
-    const u = g.p.url();
-    ok("⚠️ 찾는 단추가 **그 시간대**로 보낸다", u.indexOf("t=am") >= 0, u);
-    const got = await g.p.evaluate(function(){
-      const el = document.querySelector("#ttlist #tf-t");
-      return el ? el.value : null;
-    });
-    ok("  ⚠️⚠️ **받는 쪽이 그 시간대로 열린다**", got === "am", String(got));
-    /* ⚠️⚠️⚠️ **거르는 것은 서버입니다** — 백 줄만 받아 화면에서 거르면
-       맞는 자리가 그 백 줄 밖에 있을 때 0건으로 보입니다.
-       ⚠️ 아래를 열고 위를 닫습니다(gte · lt) — 둘 다 닫으면 12:00 이
-       오전에도 오후에도 걸립니다. */
-    const q = g.sent.filter(function(x){
+    ok("⚠️ 찾는 단추가 **그 시간대**를 주소에 남긴다", g.p.url().indexOf("t=am") >= 0, g.p.url());
+    const q = g.sent.slice(n0).filter(function(x){
       return x.name === "GET" && String(x.body).indexOf("v_teetime_open") >= 0;
     }).map(function(x){ return decodeURIComponent(String(x.body)); });
-    ok("  ⚠️⚠️ 시간대를 **서버에 보내서** 거른다 (화면에서 거르지 않습니다)",
+    ok("  ⚠️⚠️ 시간대를 **서버에 보내서** 거른다 (gte · lt)",
        q.some(function(x){ return x.indexOf("tee_at=gte.08:00") >= 0 &&
-         x.indexOf("tee_at=lt.12:00") >= 0; }),
-       q.slice(-2).join(" / ").slice(0, 240));
+         x.indexOf("tee_at=lt.12:00") >= 0; }), q.slice(-2).join(" / ").slice(0, 240));
     await g.p.close();
   }
   {
-    /* ⚠️ 조인에는 **시간대 칸을 안 냅니다** — `joinroom.tee` 가 자유
-       글자라 숫자로 견줄 수가 없습니다 (고르게 두고 안 걸러 주면
-       눌러도 아무 일이 안 나는 칸입니다 · 절대 규칙 5). */
+    /* ⚠️ 조인에는 **시간대 칸을 안 냅니다** — joinroom.tee 가 자유 글자입니다 */
     const g = await open("/cat/matchup", { role:"customer", name:"손님", signedIn:true },
       { v_teetime_count: TCNT, v_join_count: TCNT, v_teetime_open: TEE }, {}, true);
     await g.p.waitForTimeout(700);

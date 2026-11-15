@@ -150,7 +150,7 @@
         ? '<p class="tbd-note">숫자는 <b>지금 열려 있는 조인</b>을 센 것입니다. ' +
           '누르시면 그 날짜 · 지역으로 좁힌 목록이 열립니다.</p>'
         : '<p class="tbd-note">아직 열린 조인이 <b>0건</b>입니다. ' +
-          '지어낸 숫자를 채우지 않습니다. ' +
+
           '<a class="btn btn-sm btn-line" href="/cat/matchup">조인 자리 보기</a></p>';
     }
     /* ⚠️⚠️ 0 을 포장하지 않습니다 — 왜 0 인지와 지금 되는 길을 적습니다 */
@@ -280,8 +280,13 @@
      ⚠⚠ **그리는 자리를 한 함수로** 두었습니다 — 감싸는 것과 찍는 것을
      나눔면 `innerHTML` 줄이 esc() 없는 껍데기 함수를 부르게 되어
      check-safe 가 따라갈 자리를 잃습니다. */
+  /* ⚠️⚠️ 2026-11-15 — 부킹 · 조인 화면에서는 **찾는 칸을 안 그립니다**(data-nofind).
+     그 화면의 주 검색은 목록 위 한 곳(js/booking.js 의 #ttf-find · js/join.js 의 거르개)이고,
+     여기 찾는 칸이 아래에 한 번 더 서면 같은 조건을 두 번 묻습니다. 현황표는 보조로 남고,
+     칸을 누르면 그 날짜 · 지역으로 좁힌 목록으로 갑니다(cellUrl). */
+  var NOFIND = box.getAttribute("data-nofind") === "1";
   function paintBox(inner){
-    box.innerHTML = '<div class="tbw">' + findBox() +
+    box.innerHTML = '<div class="tbw' + (NOFIND ? ' tbw-only' : '') + '">' + (NOFIND ? '' : findBox()) +
       '<div class="tbd-stat"><div class="tbd-h">' +
         '<h2 class="tbd-t2">날짜 · 지역별 현황</h2>' + tabs() +
       '</div>' + inner + '</div></div>';

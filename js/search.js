@@ -109,8 +109,7 @@
     if(!all.length)
       return '<div class="none">' +
         '<h3>아직 등록된 업체가 없습니다.</h3>' +
-        '<p>문을 열기 전이라 보여 드릴 업체가 없습니다. ' +
-        '없는 업체를 지어내 보여 드리지 않습니다.</p>' +
+        '<p>문을 열기 전이라 보여 드릴 업체가 없습니다.</p>' +
         '<div class="none-b">' +
           '<a class="btn btn-pt" href="/match">매칭 요청 남기기</a>' +
         '</div>' + nowOpen() + '</div>';

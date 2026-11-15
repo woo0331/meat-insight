@@ -6,7 +6,7 @@
      ② 띠 「골프의 모든 순간을, 한곳에서.」
      ③ 어떤 골프를 찾으세요? (분류 열 칸)
      ④ 지금, 나에게 필요한 골프 (사진 카드 셋)
-     ⑤ 어디에서 라운드할까요? (지역별 골프장 정보로 가는 길)
+     ⑤ 전국 골프장 정보 (지역 타일 · 이름 · 지역 찾기 · 일부 목록 · 전체 보기)
      ⑥ 골프 이야기가 모이는 곳 (커뮤니티 · 조인)
      ⑦ 띠 「골프 사업의 다음 기회」 (입점)
      ⑧ 찾고, 비교하고, 연결하세요
@@ -158,33 +158,79 @@ function needs(){
   '</div></section>';
 }
 
-/* ── ⑤ 어디에서 라운드할까요? ───────────────────────────────────────
-   ⚠️⚠️ 누르면 **골프장 정보 탭**(`/cat/booking?tab=course`)이 그 지역으로
-   좁혀져 열립니다 — 합의한 골프장 찾기 화면입니다.
-   ⚠️⚠️ 지역이 둘 이상인 칸은 **쉼표**로 보냅니다(경기 · 인천 · 충청) —
-   받는 쪽(`amCoursePickCards`)이 쉼표를 갈라 읽습니다.
-   ⚠️⚠️⚠️ **사진을 깔지 않습니다**(2026-11-14 · 사장님 지시). 저장소에는 그
-   지역에서 찍은 사진이 없고, 다른 곳 풍경을 「제주」 이름표 위에 깔면 그
-   지역 사진인 것처럼 읽힙니다(표시광고법 제3조). 지역 사진을 받으시는 날
-   `ph` 칸을 더하세요 — 그 전까지는 딥그린 타일입니다. */
+/* ── ⑤ 전국 골프장 정보 (2026-11-15) ──────────────────────────────
+   ⚠️⚠️⚠️ **수를 글자로 박지 않습니다** — 빌드가 찍어 둔 `AM_COURSES` 에서
+   **세어서** 냅니다(`amCourseList`). 자료를 다시 받는 날 저절로 따라옵니다.
+   ⚠️⚠️ **첫 화면에는 일부만** 그립니다(`HM_CS_PAGE` 곳). 508장을 한꺼번에
+   그리면 폰에서 메인이 무거워집니다 — 나머지는 「더 보기」(`js/homecourse.js`)
+   와 「전체 골프장 보기」(`/cat/booking?tab=course`)로 갑니다.
+   ⚠️⚠️ **주소 규칙은 골프장 정보 탭과 같습니다**(`tab=course` · `rg` · `q`) —
+   양식이라 자바스크립트가 꺼져도 GET 으로 그 화면에 갑니다. 권역 키
+   (capital)는 받는 쪽(`js/courselist.js` 의 `rgKeys()`)이 시·도로 풉니다.
+   ⚠️⚠️ **수도권과 「경기 · 인천」 타일은 다른 묶음입니다** — 수도권은 서울 ·
+   경기 · 인천, 타일은 경기 · 인천뿐이라 서울(공공 자료에 1곳)만큼 다릅니다.
+   그래서 타일에도 **센 수**를 같이 적습니다(어느 쪽을 맞추지 않습니다).
+   ⚠️ 「전국 모든 골프장」 · 「제휴」 · 「예약 가능」 을 적지 않습니다 — 공공
+   자료로 만든 안내이고 저희가 맺은 것이 없습니다.
+   ⚠️⚠️⚠️ **사진을 깔지 않습니다**(2026-11-14 · 사장님 지시) — 그 지역에서
+   찍은 사진이 저장소에 없습니다. */
 var RG = [
   { name:"경기 · 인천", rg:"gyeonggi,incheon" },
   { name:"강원",        rg:"gangwon" },
   { name:"충청",        rg:"chungbuk,chungnam" },
   { name:"제주",        rg:"jeju" }
 ];
+W.HM_CS_PAGE = 12;
+function csAll(){ return W.amCourseList ? W.amCourseList("golf") : []; }
+function csPick(rg){
+  return W.amCoursePickCards ? W.amCoursePickCards({ rg:rg }, "golf").length : 0;
+}
+function csSelect(){
+  var Z = W.amCourseZones ? W.amCourseZones("golf") : [];
+  var R = W.amCourseRegions ? W.amCourseRegions("golf") : [];
+  var opt = function(k, name, n){
+    return '<option value="' + esc(k) + '">' + esc(name) + ' (' + esc(String(n)) + '곳)</option>';
+  };
+  return '<select id="hmcs-rg" name="rg">' +
+    '<option value="">전체 지역</option>' +
+    (Z.length ? '<optgroup label="권역">' + Z.map(function(z){ return opt(z.key, z.name, z.n); }).join("") + '</optgroup>' : "") +
+    '<optgroup label="시 · 도">' + R.map(function(r){ return opt(r.key, r.name, r.n); }).join("") + '</optgroup>' +
+  '</select>';
+}
 function where(){
-  return '<section class="sec hm-s" aria-labelledby="hm-rg-h"><div class="wrap">' +
-    '<div class="hm-hd"><h2 class="hm-h2" id="hm-rg-h">어디에서 라운드할까요?</h2>' +
-      '<p class="hm-sub">지역별 골프장 정보와 공식 홈페이지를 확인하세요.</p>' +
-      '<a class="btn btn-sm btn-line hm-all" href="' + esc(courseUrl("")) + '">전국 골프장 보기' +
-        icon("arrow", 16) + '</a></div>' +
-    '<div class="hm-rgs">' + RG.map(function(r){
+  var all = csAll();
+  var head = '<div class="hm-hd"><h2 class="hm-h2" id="hm-rg-h">전국 골프장 정보</h2>' +
+      '<p class="hm-sub">공공 자료로 만든 골프장 안내입니다 — 이름 · 지역으로 찾아보세요.</p>' +
+      '<a class="btn btn-sm btn-line hm-all" href="' + esc(courseUrl("")) + '">전체 골프장 보기' +
+        icon("arrow", 16) + '</a></div>';
+  var tiles = '<div class="hm-rgs">' + RG.map(function(r){
+      var n = csPick(r.rg);
       return '<a class="hm-rg" href="' + esc(courseUrl(r.rg)) + '">' +
         '<span class="hm-rg-ic">' + icon("pin", 22) + '</span>' +
         '<span class="hm-rg-n">' + esc(r.name) + icon("arrow", 16) + '</span>' +
-        '<span class="hm-rg-l">골프장 정보 보기</span></a>';
-    }).join("") + '</div>' +
+        '<span class="hm-rg-l">골프장 정보' + (n ? ' ' + esc(String(n)) + '곳' : '') + ' 보기</span></a>';
+    }).join("") + '</div>';
+  if(!all.length){
+    return '<section class="sec hm-s" aria-labelledby="hm-rg-h"><div class="wrap">' +
+      head + tiles + '</div></section>';
+  }
+  return '<section class="sec hm-s" aria-labelledby="hm-rg-h"><div class="wrap">' +
+    head + tiles +
+    '<form class="hmcs-f" id="hmcs" action="' + esc(catUrl("booking")) + '" method="get" role="search" aria-label="골프장 찾기">' +
+      '<input type="hidden" name="tab" value="course">' +
+      '<label class="hmcs-q"><span class="sr-only">골프장 이름</span>' + icon("search", 18) +
+        '<input id="hmcs-q" type="search" name="q" maxlength="40" placeholder="골프장 이름 · 지역으로 찾기"></label>' +
+      '<label class="hmcs-r"><span class="sr-only">지역</span>' + csSelect() + '</label>' +
+      '<button class="btn btn-pt" type="submit">찾기</button>' +
+      '<button class="btn btn-line hmcs-reset" type="reset" hidden>조건 초기화</button>' +
+    '</form>' +
+    '<p class="hmcs-n" id="hmcs-n" aria-live="polite">공개 자료 전체 <b>' + esc(String(all.length)) + '곳</b></p>' +
+    '<div id="hmcs-l">' + W.amCourseGrid(all.slice(0, W.HM_CS_PAGE)) + '</div>' +
+    '<p class="hmcs-go">' +
+      '<button class="btn btn-line hmcs-more" type="button" hidden>더 보기</button>' +
+      '<a class="btn btn-deep hmcs-full" href="' + esc(courseUrl("")) + '">전체 골프장 보기' + icon("arrow", 16) + '</a>' +
+    '</p>' +
+    (W.amCourseSrcNote ? W.amCourseSrcNote() : "") +
   '</div></section>';
 }
 
@@ -294,6 +340,7 @@ exports.build = function(){
        광고 자리는 업체 자료를 읽습니다. */
     js: ["/js/data/providers.generated.js", "/js/data/providers.js",
          "/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
-         "/js/adslot.js", "/js/homefind.js"]
+         "/js/adslot.js", "/js/homefind.js",
+         "/js/data/courses.generated.js", "/js/data/courses.js", "/js/homecourse.js"]
   };
 };

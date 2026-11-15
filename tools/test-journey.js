@@ -962,6 +962,74 @@ const MY_BOXES = ["mybox", "reqbox", "joinmine", "lsmine", "mycq", "jobmine",
        r.hrefs.filter(function(h){ return h === "/help" || h === "/terms"; }).join(" "));
   }
 
+  /* ── 메인 「전국 골프장 정보」 (2026-11-15) ──────────────────────────
+     ⚠️⚠️ 수를 **박지 않습니다** — 화면이 쓰는 `AM_COURSES` 에서 세어 맞춰 봅니다.
+     ⚠️⚠️ 첫 화면에 **일부만** 그리는가 · 더 보기 · 지역 · 이름 · 초기화 ·
+     「전체 보기」가 **같은 주소 규칙**(tab=course · rg · q)으로 가는가. */
+  {
+    console.log("\n── 메인 「전국 골프장 정보」");
+    for(const w of [360, 1440]){
+      const p = await b.newPage({ viewport:{ width:w, height:900 } });
+      const errs = watch(p);
+      await p.goto(base + "/", { waitUntil:"networkidle" });
+      const r = await p.evaluate(function(){
+        const all = window.amCourseList ? window.amCourseList("golf").length : -1;
+        const cap = window.amCoursePickCards
+          ? window.amCoursePickCards({ rg:window.amZoneRegions("capital").join(",") }, "golf").length : -1;
+        const n = document.getElementById("hmcs-n");
+        return { all:all, cap:cap, n:n ? n.innerText : "",
+          rows:document.querySelectorAll("#hmcs-l .csg-i").length,
+          more:document.querySelector(".hmcs-more") && !document.querySelector(".hmcs-more").hidden,
+          full:(document.querySelector(".hmcs-full") || {}).getAttribute
+               ? document.querySelector(".hmcs-full").getAttribute("href") : "",
+          sw:document.documentElement.scrollWidth, cw:document.documentElement.clientWidth,
+          txt:(document.querySelector('section[aria-labelledby="hm-rg-h"]') || document.body).innerText };
+      });
+      ok(w + "px — 자료가 있다 (잴 것이 0개면 실패)", r.all > 0, r.all);
+      ok(w + "px — 기본 상태는 **공개 자료 전체**를 센 수를 적는다",
+         r.n.indexOf("전체 " + r.all + "곳") >= 0, r.n);
+      ok(w + "px — 첫 화면에는 **일부만** 그린다 (전부를 한꺼번에 그리지 않는다)",
+         r.rows > 0 && r.rows < r.all && r.more, r.rows + "/" + r.all);
+      ok(w + "px — 「전체 골프장 보기」는 골프장 정보 탭으로 간다",
+         r.full === "/cat/booking?tab=course", r.full);
+      ok(w + "px — 가로로 밀리지 않는다", r.sw <= r.cw, r.sw + " > " + r.cw);
+      ok(w + "px — 「전국 모든」 · 「제휴」 · 「예약 가능」을 적지 않는다",
+         !/전국 모든|제휴|예약 가능/.test(r.txt), "");
+      ok(w + "px — 출처 · 기준일 이후 운영 상태 미확인 안내가 있다",
+         r.txt.indexOf("운영 상태는 확인하지 않았습니다") >= 0, "");
+      if(w === 1440){
+        const before = r.rows;
+        await p.click(".hmcs-more");
+        const after = await p.evaluate(function(){ return document.querySelectorAll("#hmcs-l .csg-i").length; });
+        ok("더 보기를 누르면 늘어난다", after > before, before + " → " + after);
+        await p.selectOption("#hmcs-rg", "capital");
+        const z = await p.evaluate(function(){
+          return { n:document.getElementById("hmcs-n").innerText,
+                   full:document.querySelector(".hmcs-full").getAttribute("href"),
+                   reset:!document.querySelector(".hmcs-reset").hidden };
+        });
+        ok("권역을 고르면 **결과 수와 전체 수를 갈라** 적는다",
+           z.n.indexOf(r.cap + "곳") >= 0 && z.n.indexOf("전체 " + r.all + "곳") >= 0, z.n);
+        ok("  그 조건을 **같은 주소 규칙**으로 넘긴다", z.full === "/cat/booking?tab=course&rg=capital", z.full);
+        ok("  조건 초기화가 보인다", z.reset, "");
+        await p.fill("#hmcs-q", "없는골프장이름zz");
+        await p.press("#hmcs-q", "Enter");
+        const zz = await p.evaluate(function(){ return document.getElementById("hmcs-l").innerText; });
+        ok("0건이면 0건이라고 말한다", zz.indexOf("조건에 맞는 골프장이 없습니다") >= 0, zz.slice(0, 40));
+        await p.click(".hmcs-reset");
+        await p.waitForTimeout(100);
+        const back = await p.evaluate(function(){
+          return { n:document.getElementById("hmcs-n").innerText, rg:document.getElementById("hmcs-rg").value,
+                   q:document.getElementById("hmcs-q").value };
+        });
+        ok("조건 초기화를 누르면 전체로 돌아온다",
+           back.rg === "" && back.q === "" && back.n.indexOf("전체 " + r.all + "곳") >= 0, JSON.stringify(back));
+      }
+      ok(w + "px — 오류 0건", errs.length === 0, errs.join(" | "));
+      await p.close();
+    }
+  }
+
   if(prove){
     console.log("\n── ⚠️ 일부러 깨뜨려 봅니다");
     ok("없는 주소를 **안 열린다고** 말한다", !resolves("/이런주소는없습니다"));

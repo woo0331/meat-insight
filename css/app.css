@@ -5094,3 +5094,16 @@ picture{ display: contents; }
 }
 /* 피팅 찾는 칸의 「검색」 단추가 폰에서 두 줄로 꺾이던 자리 */
 .fitf-q .btn{ flex:none; white-space:nowrap; }
+
+/* 메인 「전국 골프장 정보」 찾는 칸 (2026-11-15 · pages/home.js 의 where() · js/homecourse.js) */
+.hmcs-f{ display:flex; flex-wrap:wrap; gap:10px; margin:20px 0 10px; align-items:stretch; }
+.hmcs-q{ position:relative; flex:1 1 260px; min-width:0; }
+.hmcs-q svg{ position:absolute; left:12px; top:50%; transform:translateY(-50%); color: var(--ink3); pointer-events:none; }
+.hmcs-q input{ width:100%; min-height:46px; padding:0 12px 0 38px; }
+.hmcs-r{ flex:0 1 220px; min-width:0; }
+.hmcs-r select{ width:100%; min-height:46px; }
+.hmcs-f .btn{ flex:none; min-height:46px; }
+.hmcs-f .hmcs-reset[hidden]{ display:none; }
+.hmcs-n{ font-size:14px; color: var(--ink2); margin:4px 0 12px; }
+.hmcs-go{ display:flex; flex-wrap:wrap; gap:10px; margin:14px 0 6px; }
+.hmcs-go .hmcs-more[hidden]{ display:none; }

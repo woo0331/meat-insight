@@ -194,14 +194,24 @@ module.exports = function(T){
      됩니다(2026-11-15 에 실제로 지웠습니다 · 위 CID 는 티타임이 걸려 있어
      그 고장을 못 봤습니다). */
   psql("insert into course (slug, kind, name, region) values ('cs-bare', 'golf', '출처 없는 손 골프장', 'seoul')");
-  const before3 = Number(before) + 1;
-  T.psqlFile(path.join(tmp, "rollback_courses.sql"));
+  /* ⚠️⚠️⚠️ 운영자가 한 번 가렸다 되돌린 골프장은 **고친 자료**입니다 —
+     되돌리기가 지우지 않고 **멈추며 그 이름을 말해야** 합니다(2026-11-15 ·
+     운영 반영 승인 조건 4). 전에는 그대로 지웠습니다. */
+  let stopped = "";
+  try{ T.psqlFile(path.join(tmp, "rollback_courses.sql")); }
+  catch(e){ stopped = String(e.stderr || e.message); }
+  ok("⚠️⚠️⚠️ 운영자가 손댄 골프장이 있으면 되돌리기가 **멈추고 까닭을 말한다**",
+     stopped.indexOf("되돌리기를 멈춥니다") >= 0 && stopped.indexOf("운영자 수정") >= 0, stopped.slice(0, 200));
+  ok("  멈추면 **한 줄도 안 지운다**",
+     psql("select count(*) from course") === String(Number(after2) + 1));
   ok("⚠️⚠️ 되돌리기가 **출처 줄 없는 골프장은 안 지운다**",
      psql("select count(*) from course where slug = 'cs-bare'") === "1");
   psql("delete from course where slug = 'cs-bare'");
-  void before3;
+  /* 그 묶음은 검사가 직접 치웁니다(되돌리기가 멈춘 것이 맞으므로) */
+  psql("delete from course where id = '" + IMPID + "'");
+  psql("delete from import_batch where source_id = 'cs-src'");
   const after3 = psql("select count(*) from course");
-  ok("되돌리기 SQL 이 그 묶음만 지운다 (" + after2 + " → " + after3 + ")",
+  ok("검사가 넣은 묶음을 치웠다 (" + after2 + " → " + after3 + ")",
      Number(after3) === Number(before), before + " / " + after3);
   ok("  ⚠️ 손으로 만든 골프장은 **안 지운다**",
      psql("select count(*) from course where id = '" + CID + "'") === "1");
@@ -224,10 +234,15 @@ module.exports = function(T){
   execFileSync("node", [path.join(ROOT, "tools", "make-import-sql.js"), "--stage=" + tmp2,
                 "--review=" + path.join(tmp2, "none.csv")], { stdio:["ignore","pipe","pipe"] });
   const fsql = fs.readFileSync(path.join(tmp2, "import_courses.sql"), "utf8");
-  ok("⚠️⚠️ 검토 대기 시설은 SQL 에 **안 들어간다**", fsql.indexOf("검토 대기 골프장") < 0);
+  void fsql;
   const fb = Number(psql("select count(*) from course"));
   T.psqlFile(path.join(tmp2, "import_courses.sql"));
   T.psqlFile(path.join(tmp2, "import_courses.sql"));
+  /* ⚠️ 검토 대기 시설은 **골프장으로는 안 들어가고** 뺀 까닭만 검수 기록에 남습니다 */
+  ok("⚠️⚠️ 검토 대기 시설은 골프장으로 **안 들어간다**",
+     psql("select count(*) from course where name = '검토 대기 골프장'") === "0");
+  ok("  뺀 까닭은 검수 기록에 **한 번만** 남는다 (두 번 넣어도)",
+     psql("select count(*) from import_row_issue where kind = 'held' and detail like '검토 대기 골프장%'") === "1");
   ok("두 줄이 **골프장 하나**로 들어간다 · 두 번 넣어도 하나",
      Number(psql("select count(*) from course")) === fb + 1);
   ok("  출처 줄은 **둘**(회원제 · 대중제 등록 각각)",

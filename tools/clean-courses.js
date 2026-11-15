@@ -453,7 +453,11 @@ function facilities(rows){
       evidence: groups[t].reduce(function(acc, i){
         (why[i] || []).forEach(function(w){ if(acc.indexOf(w) < 0) acc.push(w); }); return acc; }, []).join(" · "),
       addr_conflict: conflict[t] ? "1" : "",
-      hold: hold[t] ? "1" : "", hold_why: hold[t] || ""
+      /* ⚠️⚠️ 두 공식 출처의 주소가 **글자 그대로 같지 않으면** 이번 반영에서
+         뺍니다(2026-11-15 · 운영 반영 승인 조건) — 어느 쪽이 맞는지 공식
+         자료로 확인하기 전에는 한쪽 주소를 골라 싣지 않습니다. */
+      hold: (hold[t] || conflict[t]) ? "1" : "",
+      hold_why: hold[t] || (conflict[t] ? "두 공식 출처의 주소가 서로 다릅니다 — 공식 자료로 확인하기 전에는 넣지 않습니다" : "")
     });
   });
   facs.sort(function(a, b){ return (a.region + a.name).localeCompare(b.region + b.name, "ko"); });

@@ -221,6 +221,7 @@ function coursePane(c){
        브라우저가 같은 것을 부릅니다(두 벌로 적으면 거르개를 누르는 순간
        칩이 조용히 달라집니다). */
     W.amCourseChipRow(W.amCatUrl(c), kind, "") +
+    (W.amCourseSrcNote ? W.amCourseSrcNote() : "") +
     '<p class="csf-n" id="csf-n">' +
       (L.length ? '골프장 ' + esc(String(L.length)) + '곳' : "") + '</p>' +
     '<div id="cslist">' +

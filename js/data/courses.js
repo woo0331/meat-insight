@@ -182,6 +182,25 @@
     '</article>';
   };
 
+  /* 목록 머리의 출처 · 기준일 안내 (2026-11-15 · 운영 반영 승인 조건 1)
+     ⚠️⚠️ 「전국 골프장 정보」 라고만 적습니다 — 「전국 모든 골프장」 ·
+     「영업 중 확인」 을 적지 않습니다(출처 목록에 없는 곳이 있을 수 있고,
+     기준일 뒤의 운영 상태는 확인하지 않았습니다).
+     ⚠️ 출처 이름 · 기준일은 AM_COURSE_SRC(도구가 찍은 값)에서 읽습니다 —
+     글자로 박으면 다시 받는 날 썩습니다. 없으면 한 줄도 안 냅니다. */
+  W.amCourseSrcNote = function(){
+    var esc = W.esc, S = W.AM_COURSE_SRC || {};
+    var parts = Object.keys(S).map(function(k){
+      var x = S[k] || {};
+      return x.name ? x.name + (x.as_of ? "(자료 기준일 " + x.as_of + ")" : "") : "";
+    }).filter(Boolean);
+    if(!parts.length) return "";
+    return '<p class="cs-srcnote">' + W.icon("info", 16) + '<span>' +
+      '<b>전국 골프장 정보</b>는 ' + esc(parts.join(" · ")) + ' 등 공공 자료로 만든 안내입니다. ' +
+      '<b>자료 기준일 이후의 휴업 · 폐업 · 이름 변경 등 운영 상태는 확인하지 않았습니다</b> — ' +
+      '방문 · 예약 전에 골프장에 직접 확인해 주세요.</span></p>';
+  };
+
   W.amCourseCards = function(list){
     if(!list || !list.length) return "";
     return '<ul class="csc-l">' + list.map(function(c){

@@ -155,6 +155,7 @@ exports.build = function(){
       '</h2>' +
       '<p>공공 자료에서 가져온 <b>시설 정보</b>입니다. ' +
       '저희 입점업체가 아니며, <b>예약을 보장하지 않습니다.</b></p></div>' +
+    (W.amCourseSrcNote ? W.amCourseSrcNote() : "") +
     '<div id="csres">' + (cs.length
       ? W.amCourseGrid(cs)
       : '<div class="none"><h2>아직 불러온 골프장이 없습니다.</h2>' +

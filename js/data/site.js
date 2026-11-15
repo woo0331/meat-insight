@@ -87,10 +87,13 @@ window.WOW_BIZ = {
      그래서 카카오 앱에 이메일 항목이 없으면 KOE205 입니다. Custom Provider(OIDC)는
      적어 준 scope 만 보냅니다.
      ⚠️ 값은 Supabase 대시보드에서 만든 **식별자 그대로**(`custom:` 으로 시작).
-     ⚠️ **비어 있으면 지금과 똑같이** 기본 공급자를 씁니다. Custom Provider 를
-     만들고 로그인까지 확인하기 **전에는 채우지 마세요** — 채우는 순간 단추가 켜집니다
-     (Custom Provider 는 /auth/v1/settings 에 안 나와서, 켜졌는지를 여기서 정합니다). */
-  ssoCustom: { kakao: "" },
+     ⚠️ **비어 있으면** 기본 공급자를 씁니다. 채우는 순간 단추가 켜집니다
+     (Custom Provider 는 /auth/v1/settings 에 안 나와서, 켜졌는지를 여기서 정합니다).
+     ⚠️ 2026-11-15 — 사장님이 Supabase 에 custom:kakao 를 만들고 켜셨습니다
+     (Auto-discovery · issuer https://kauth.kakao.com · scopes openid, profile_nickname ·
+     이메일 없는 사용자 허용). Supabase 에서 그 공급자를 끄시는 날 **이 값도 같이 비우세요**
+     — 안 비우면 단추는 켜져 있고 누르면 거절됩니다. */
+  ssoCustom: { kakao: "custom:kakao" },
 
   naverVerify:    "",
   googleVerify:   "",

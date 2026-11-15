@@ -85,9 +85,38 @@ function slugOf(r){
      상태가 없으면 거절). 두 길을 따로 거르면 한쪽만 느슨해집니다. */
   var REVIEW = (ARG.find(function(a){ return a.indexOf("--review=") === 0; }) || "").slice(9)
                || path.join(ROOT, "data", "review", "courses_review.csv");
-  var rows = readTable(path.join(STAGE, "courses_clean.csv"))
-    .concat(readTable(path.join(STAGE, "ranges_clean.csv")))
-    .concat(readTable(REVIEW));
+  /* ⚠️⚠️ **시설 단위로 넣습니다** (2026-11-15) — 문체부 현황은 한 골프장이
+     회원제 · 대중제로 두 번 등록돼 있으면 두 줄입니다. 정제 도구가 그것을
+     courses_facility.csv 로 묶어 두었고(증거가 둘 이상일 때만), 여기서는
+     **한 시설 = course 한 줄 + 출처 줄 여럿**(course_source)입니다.
+     검토 대기(courses_hold.csv)는 **넣지 않습니다.**
+     ⚠️ 그 파일이 없으면(검사 · 옛 꼴) 줄 하나를 시설 하나로 봅니다. */
+  var clean = readTable(path.join(STAGE, "courses_clean.csv"));
+  var facT  = readTable(path.join(STAGE, "courses_facility.csv"));
+  var held  = readTable(path.join(STAGE, "courses_hold.csv"));
+  function single(r){ r.members = [r]; return r; }
+  var rows;
+  if(facT.length){
+    var byFac = {};
+    clean.forEach(function(r){ if(r.fac_id) (byFac[r.fac_id] = byFac[r.fac_id] || []).push(r); });
+    rows = facT.map(function(f){
+      var m = byFac[f.fac_id] || [];
+      /* 대표 줄을 맨 앞에 — 공개 보기는 **먼저 들어간 출처**를 출처로 냅니다 */
+      m.sort(function(a, b){
+        var pa = (a.source_id + ":" + a.src_key) === f.fac_id ? 0 : 1;
+        var pb = (b.source_id + ":" + b.src_key) === f.fac_id ? 0 : 1;
+        return pa - pb;
+      });
+      f.members = m;
+      f.src_key = m.length ? m[0].src_key : "";
+      f.status_raw = m.length ? m[0].status_raw : "";
+      return f;
+    });
+  }else{
+    rows = clean.map(single);
+  }
+  rows = rows.concat(readTable(path.join(STAGE, "ranges_clean.csv")).map(single))
+             .concat(readTable(REVIEW).map(single));
 
   var refused = [];
   var good = rows.filter(function(r){
@@ -109,7 +138,9 @@ function slugOf(r){
 
   if(DRY){
     console.log("── dry-run");
-    console.log("   staging 줄 " + rows.length + " · 넣을 줄 " + good.length + " · 거절 " + refused.length);
+    console.log("   시설 " + rows.length + " · 넣을 것 " + good.length + " · 거절 " + refused.length +
+                " · 검토 대기(안 넣음) " + held.length + " · 출처 줄 " +
+                good.reduce(function(n, r){ return n + r.members.length; }, 0));
     refused.slice(0, 10).forEach(function(x){ console.log("   거절: " + x.join(" / ")); });
     return;
   }
@@ -119,7 +150,8 @@ function slugOf(r){
   L.push("-- ════════════════════════════════════════════════════════════════");
   L.push("-- 골프장 · 연습장 들여오기 — " + new Date().toISOString());
   L.push("-- 만든 도구: tools/make-import-sql.js  (손으로 고치지 마세요)");
-  L.push("-- 줄 수: " + good.length + "  (거절 " + refused.length + "줄 — data/staging/import_row_issue.csv)");
+  L.push("-- 시설 수: " + good.length + "  (거절 " + refused.length + " · 검토 대기로 안 넣은 것 " + held.length + " — data/staging/courses_hold.csv)");
+  L.push("-- 출처 줄 수: " + good.reduce(function(n, r){ return n + r.members.length; }, 0));
   L.push("--");
   L.push("-- ⚠️⚠️ **두 번 붙여 넣어도 안전합니다** (on conflict 로 덮습니다).");
   L.push("-- ⚠️⚠️ 되돌리려면 data/staging/rollback_courses.sql 을 쓰세요.");
@@ -162,7 +194,11 @@ function slugOf(r){
     L.push("    updated_at = now()");
     L.push("  returning id)");
     L.push("insert into course_source (course_id, source_id, src_key, status_raw, as_of)");
-    L.push("select up.id, " + [q(r.source_id), q(r.src_key), q(r.status_raw), q(r.as_of)].join(", ") + " from up");
+    L.push("select up.id, v.source_id, v.src_key, v.status_raw, v.as_of::date from up, (values");
+    L.push(r.members.map(function(m){
+      return "    (" + [q(m.source_id), q(m.src_key), q(m.status_raw), q(m.as_of)].join(", ") + ")";
+    }).join(",\n"));
+    L.push("  ) v(source_id, src_key, status_raw, as_of)");
     L.push("on conflict (source_id, src_key) where src_key is not null do update set");
     L.push("  status_raw = excluded.status_raw, as_of = excluded.as_of;");
     L.push("");
@@ -179,17 +215,29 @@ function slugOf(r){
   R.push("-- ⚠️ 운영자가 손으로 고친 줄 · 다른 출처로도 확인된 줄은 남깁니다");
   R.push("--   (course_source 가 둘 이상이면 그 골프장은 다른 출처에도 있습니다).");
   R.push("begin;");
+  /* ⚠️⚠️⚠️ **이 출처에서 온 골프장만** 지웁니다 (2026-11-15) — 전에는
+     「출처 줄이 하나도 없는 골프장」 을 전부 지워서, 운영자가 손으로
+     만든(출처 줄이 없는) 골프장까지 같이 지워졌습니다. 되돌려 보니
+     잡혔습니다. 지금은 먼저 **이 출처에 걸린 골프장 id 를 적어 두고**
+     그 가운데 남은 출처가 없는 것만 지웁니다. */
+  var SRCS = Array.from(new Set(good.reduce(function(a, r){
+    /* ⚠️ 대표 출처만 적으면 **두 번째 출처로도 확인된 시설**이 안 지워집니다 */
+    return a.concat(r.members.map(function(m){ return m.source_id; }));
+  }, []))).map(q).join(", ");
+  R.push("create temp table _rb on commit drop as");
+  R.push("  select distinct course_id from course_source where source_id in (" + SRCS + ");");
   R.push("delete from course_source s");
-  R.push(" where s.source_id in (" + [].concat(new Set ? Array.from(new Set(good.map(function(r){ return r.source_id; }))) : []).map(q).join(", ") + ");");
-  R.push("delete from course c");
-  R.push(" where not exists (select 1 from course_source s where s.course_id = c.id)");
+  R.push(" where s.source_id in (" + SRCS + ");");
+  R.push("delete from course c using _rb");
+  R.push(" where c.id = _rb.course_id");
+  R.push("   and not exists (select 1 from course_source s where s.course_id = c.id)");
   R.push("   and not exists (select 1 from teetime t where t.course_id = c.id)");
   R.push("   and not exists (select 1 from course_alias a where a.course_id = c.id);");
   R.push("commit;");
   fs.writeFileSync(path.join(STAGE, "rollback_courses.sql"), R.join("\n"), "utf8");
 
   console.log("── 들여오기 SQL 을 만들었습니다");
-  console.log("   넣을 줄 " + good.length + " · 거절 " + refused.length);
+  console.log("   넣을 시설 " + good.length + " · 거절 " + refused.length + " · 검토 대기(안 넣음) " + held.length);
   refused.slice(0, 5).forEach(function(x){ console.log("   거절: " + x.join(" / ")); });
   console.log("   data/staging/import_courses.sql");
   console.log("   data/staging/rollback_courses.sql");

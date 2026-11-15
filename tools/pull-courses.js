@@ -42,6 +42,8 @@ function write(rows, at){
     "   가져온 때: " + at + " */\n";
   fs.writeFileSync(OUT,
     head + "window.AM_COURSES = " + JSON.stringify(rows, null, 1) + ";\n" +
+    /* 출처 안내 — 이름 · 원본 주소 · 이용 조건 · 기준일 · 수집일(tools/_course-src.js) */
+    "window.AM_COURSE_SRC = " + JSON.stringify(require("./_course-src.js")(), null, 1) + ";\n" +
     "window.AM_COURSES_AT = " + JSON.stringify(at) + ";\n", "utf8");
 }
 

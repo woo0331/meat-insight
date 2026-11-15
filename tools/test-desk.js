@@ -5399,11 +5399,15 @@ function boardsOf(){
                  document.querySelectorAll(".chips-csrg [data-csrg]"),
                  function(a){ return a.getAttribute("data-csrg"); }),
                want: (window.amCourseRegions ? window.amCourseRegions("golf") : [])
-                 .map(function(r){ return r.key; }) };
+                 .map(function(r){ return r.key; }),
+               zones: (window.amCourseZones ? window.amCourseZones("golf") : [])
+                 .map(function(z){ return z.key; }) };
     });
-    ok("  지역 칩이 **있는 지역만** 선다 (갯수를 박지 않습니다)",
+    /* ⚠️ 2026-11-15 부터 권역 칩(수도권 · 충청권 …)이 시·도 칩 **앞에**
+       섭니다 — 권역도 **골프장이 있는 것만**(amCourseZones 가 셉니다). */
+    ok("  지역 칩이 **있는 지역만** 선다 (권역 → 시·도 · 갯수를 박지 않습니다)",
        ch.want.length > 0 &&
-       ch.keys.join(",") === ([""].concat(ch.want)).join(","),
+       ch.keys.join(",") === ([""].concat(ch.zones, ch.want)).join(","),
        JSON.stringify(ch));
 
     await g.p.click('.chips-csrg [data-csrg="incheon"]');

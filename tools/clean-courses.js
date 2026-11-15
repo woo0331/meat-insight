@@ -42,9 +42,15 @@ const REGIONS = global.window.AM_REGIONS || [];
    맞는 이름이 하나도 없으면 **짐작하지 않고 그 출처를 건너뜁니다.** */
 const COL = {
   src_key:  ["관리번호", "인허가번호", "개방서비스아이디", "번호", "id"],
-  name:     ["사업장명", "업소명", "영업소명칭", "시설명", "골프장명", "업체명", "명칭", "name"],
+  name:     ["사업장명", "업소명", "영업소명칭", "시설명", "골프장명", "업체명", "명칭", "이름", "name"],
+  /* 시도 · 시군구가 **주소와 따로** 오는 자료(문체부 현황) — 주소가
+     「춘천시 …」 처럼 시도 없이 시작해 주소만으로는 지역을 못 읽습니다.
+     ⚠️ 「지역」(옛 약칭)을 먼저 봅니다 — 현행 이름은 「전남광주통합특별시」
+     처럼 우리 지역 열일곱과 안 맞는 꼴이 있습니다. */
+  sido:     ["지역", "시도", "시도명", "행정구역_시도명(현행)"],
+  sgg:      ["행정구역_시군구명", "시군구명", "시군구"],
   addr:     ["소재지전체주소", "지번주소", "소재지주소", "소재지", "주소"],
-  addr_road:["도로명전체주소", "도로명주소", "도로명"],
+  addr_road:["도로명전체주소", "도로명주소", "소재지도로명주소", "도로명"],
   tel:      ["소재지전화", "전화번호", "연락처", "대표전화"],
   status:   ["영업상태명", "영업상태구분명", "상태", "영업상태"],
   status2:  ["상세영업상태명", "상세영업상태"],
@@ -122,9 +128,19 @@ function regionOf(addr){
   }
   return "";
 }
+/* 시군구 — 주소 앞머리의 시도 조각은 건너뛰고 **시 · 군 · 구로 끝나는
+   첫 조각**을 씁니다. ⚠️ 전에는 둘째 조각을 그냥 썼는데, 시도 없이
+   「춘천시 신동면 …」 으로 시작하는 주소에서는 「신동면」 이 나왔습니다. */
 function guOf(addr){
   var p = normAddr(addr).split(" ");
-  return (p.length >= 2) ? p[1] : "";
+  for(var i = 0; i < p.length && i < 3; i++){
+    var t = p[i];
+    if(/(특별시|광역시|특별자치시|특별자치도|도)$/.test(t) && i === 0 && t.length > 2) continue;
+    if(REGIONS.some(function(r){ return r.name === t; }) && i === 0) continue;
+    if(/(시|군|구)$/.test(t) && t.length >= 2) return t;
+    return "";
+  }
+  return "";
 }
 /* 영업 상태 — ⚠️ **모르는 값을 open 으로 넘기지 않습니다** */
 function stateOf(s1, s2){
@@ -151,7 +167,8 @@ function findCol(head, names){
   return -1;
 }
 
-function cleanOne(srcId, kind, head, body, issues){
+function cleanOne(srcId, kind, head, body, issues, src){
+  src = src || {};
   var ix = {};
   Object.keys(COL).forEach(function(k){ ix[k] = findCol(head, COL[k]); });
 
@@ -174,11 +191,18 @@ function cleanOne(srcId, kind, head, body, issues){
       return;
     }
     var addr  = at("addr") || at("addr_road");
-    var st    = stateOf(at("status"), at("status2"));
+    /* ⚠️⚠️ 영업상태 칸이 **아예 없는** 자료는 줄마다 짐작하지 않고
+       출처가 스스로 밝힌 성격을 씁니다 — sources.json 의 listed_state ·
+       listed_why(예: "운영 중 골프장 현황" 으로 공표된 목록). 그 성격을
+       적어 두지 않은 출처는 지금처럼 "모름" 으로 남아 들여오지 않습니다. */
+    var noStateCol = ix.status < 0 && ix.status2 < 0;
+    var st = (noStateCol && src.listed_state)
+      ? { state:src.listed_state, why:"" }
+      : stateOf(at("status"), at("status2"));
     if(!st.state){
       issues.push({ source_id:srcId, row_no:rowNo, kind:"unknown_state", detail:st.why, payload:name });
     }
-    var region = regionOf(addr);
+    var region = regionOf(addr) || regionOf(at("sido")) || regionOf(src.scope || "");
     if(!region && addr){
       issues.push({ source_id:srcId, row_no:rowNo, kind:"region_unmatched", detail:"시도를 못 읽었습니다 — " + addr.slice(0,60), payload:name });
     }
@@ -195,24 +219,42 @@ function cleanOne(srcId, kind, head, body, issues){
         detail:"원본 좌표계를 확인하기 전에는 비워 둡니다 (EPSG:5174 · 2097 등)", payload:name });
     }
 
+    /* 홀 수 — ⚠️ DB 는 1~72 만 받습니다(0066). 넘으면 **비우고 issue 로**
+       (지어내 줄이지 않습니다). */
+    var holes = intOrNull(at("holes"));
+    if(holes !== null && (holes < 1 || holes > 72)){
+      issues.push({ source_id:srcId, row_no:rowNo, kind:"holes_out_of_range",
+        detail:"홀 수 " + holes + " — DB 가 받는 범위(1~72) 밖이라 비웁니다", payload:name });
+      holes = null;
+    }
+    /* 열쇠 — ⚠️ 관리번호가 없는 자료(문체부 현황)는 **줄의 내용**으로
+       짓습니다(이름 · 주소 · 홀 · 구분). 같은 줄을 다시 받으면 같은
+       열쇠라 두 번 넣어도 하나이고, 출처가 내용을 고치면 새 줄이 됩니다
+       (그 차이는 change_log 가 말합니다). */
+    var key = at("src_key");
+    if(!key){
+      key = "h" + require("crypto").createHash("sha1")
+        .update([srcId, name, addr, at("holes"), at("biz_kind")].join("|")).digest("hex").slice(0, 12);
+    }
     out.push({
       source_id: srcId,
-      src_key:   at("src_key"),
+      src_key:   key,
       kind:      kind,
       name:      name,
       name_norm: normName(name),
       region:    region,
-      gu:        guOf(addr),
+      gu:        at("sgg") || guOf(addr),
       addr:      normAddr(at("addr")),
       addr_road: normAddr(at("addr_road")),
       tel:       at("tel"),
-      holes:     intOrNull(at("holes")),
+      holes:     holes,
       biz_kind:  at("biz_kind"),
       lat:       lat,
       lng:       lng,
       state:     st.state,
-      status_raw:(at("status") + (at("status2") ? " / " + at("status2") : "")).trim(),
-      as_of:     at("as_of")
+      status_raw:(noStateCol && src.listed_state) ? (src.listed_why || "")
+                 : (at("status") + (at("status2") ? " / " + at("status2") : "")).trim(),
+      as_of:     at("as_of") || src.as_of || ""
     });
   });
   return out;
@@ -261,6 +303,163 @@ function dupCandidates(rows){
   return out;
 }
 
+/* ── 시설 단위로 묶기 ──────────────────────────────────────────
+   (2026-11-15) 문체부 현황은 **등록 갈래마다 한 줄**입니다 — 한 골프장이
+   회원제 18홀 · 대중제 9홀로 두 번 등록돼 있으면 두 줄입니다. 그대로
+   들여오면 같은 골프장 카드가 둘 섭니다.
+   ⚠️⚠️⚠️ **증거가 둘 이상일 때만 묶습니다** — 정규화한 이름이 같고
+   **주소 글자까지 같을 때**(같은 출처 안이든 두 출처 사이든). 이름만
+   같은 것은 묶지 않습니다:
+     · 시군구가 **다르면** 같은 브랜드의 다른 지점입니다(플라자CC 용인 ·
+       제주처럼) — 그대로 둘입니다.
+     · 시군구가 **같은데 주소가 다르면** 사람이 봐야 합니다 — 둘 다
+       **검토 대기**(hold)로 빼고 들여오지 않습니다.
+   ⚠️ 두 출처 가운데 **이름도 주소도 안 맞는** 줄은 이름이 바뀌었을 수
+   있으므로 역시 검토 대기입니다(더 최근 출처의 줄만 — 오래된 쪽 하나로
+   카드가 둘 서지 않게). */
+function addrKey(s){
+  var p = normAddr(s).replace(/\([^)]*\)/g, " ").split(" ").filter(Boolean);
+  while(p.length && (REGIONS.some(function(r){ return r.name === p[0]; }) ||
+        /(특별시|광역시|특별자치시|특별자치도|^경기도|^충청북도|^충청남도|^전라남도|^경상북도|^경상남도|^전라북도|^강원도|^인천시)$/.test(p[0]))) p.shift();
+  return p.join("").replace(/번지|일원/g, "");
+}
+var RANK = {};
+function facilities(rows){
+  var parent = rows.map(function(_, i){ return i; });
+  function top(i){ while(parent[i] !== i){ parent[i] = parent[parent[i]]; i = parent[i]; } return i; }
+  function join(a, b){ a = top(a); b = top(b); if(a !== b) parent[b] = a; }
+  var why = {}, hold = {};
+  function note(i, w){ (why[i] = why[i] || []).indexOf(w) < 0 && why[i].push(w); }
+
+  var byNA = {};
+  rows.forEach(function(r, i){
+    [addrKey(r.addr), addrKey(r.addr_road)].filter(Boolean).forEach(function(ak){
+      var k = r.kind + "|" + r.region + "|" + r.name_norm + "|" + ak;
+      (byNA[k] = byNA[k] || []).push(i);
+    });
+  });
+  Object.keys(byNA).forEach(function(k){
+    var g = byNA[k];
+    for(var j = 1; j < g.length; j++){
+      join(g[0], g[j]);
+      var cross = rows[g[0]].source_id !== rows[g[j]].source_id;
+      [g[0], g[j]].forEach(function(i){
+        note(i, cross ? "두 출처 · 같은 이름 · 같은 주소" : "같은 출처 · 같은 이름 · 같은 주소(등록 갈래가 둘)");
+      });
+    }
+  });
+
+  /* 두 출처가 **같은 이름 · 같은 시군구**를 각자 **하나씩만** 적었으면
+     같은 곳으로 잇습니다 — 두 공식 출처가 따로 같은 말을 한 것입니다.
+     ⚠️ 주소 글자는 다를 수 있습니다(출처의 오탈자 · 지번/도로명 차이) —
+     그 사실을 addr_conflict 로 남기고 보고합니다(지우지 않습니다).
+     ⚠️ 한 출처 안에 그 이름이 **둘 이상**이면 잇지 않습니다(어느 쪽인지
+     모릅니다 — 아래에서 검토 대기로 갑니다). */
+  var conflict = {};
+  function city(r){ return String(r.gu || "").split(" ")[0]; }
+  var byNC = {};
+  rows.forEach(function(r, i){
+    if(!city(r)) return;
+    var k = r.kind + "|" + r.region + "|" + r.name_norm + "|" + city(r);
+    var bySrc = (byNC[k] = byNC[k] || {});
+    (bySrc[r.source_id] = bySrc[r.source_id] || []).push(i);
+  });
+  Object.keys(byNC).forEach(function(k){
+    var bySrc = byNC[k], ss = Object.keys(bySrc);
+    if(ss.length < 2) return;
+    var one = ss.every(function(s){
+      var t = bySrc[s].map(top);
+      return t.every(function(x){ return x === t[0]; });
+    });
+    if(!one) return;
+    var first = bySrc[ss[0]][0];
+    ss.slice(1).forEach(function(s){
+      var j = bySrc[s][0];
+      if(top(first) === top(j)) return;
+      join(first, j);
+      conflict[top(first)] = 1;
+      [first, j].forEach(function(i){ note(i, "두 출처 · 같은 이름 · 같은 시군구 (주소 글자는 서로 다름 — 확인 필요)"); });
+    });
+  });
+
+  /* 이름은 같은데 묶이지 않은 것 — 시군구로 가릅니다 */
+  var byName = {};
+  rows.forEach(function(r, i){
+    var k = r.kind + "|" + r.region + "|" + r.name_norm;
+    (byName[k] = byName[k] || []).push(i);
+  });
+  Object.keys(byName).forEach(function(k){
+    var g = byName[k];
+    for(var a = 0; a < g.length; a++) for(var b = a + 1; b < g.length; b++){
+      var x = g[a], y = g[b];
+      if(top(x) === top(y)) continue;
+      var gx = String(rows[x].gu || "").split(" ")[0], gy = String(rows[y].gu || "").split(" ")[0];
+      if(gx && gx === gy){
+        hold[top(x)] = hold[top(y)] = "같은 이름 · 같은 시군구인데 주소가 다릅니다 — 같은 곳인지 사람이 봅니다";
+      }
+    }
+  });
+
+  /* 두 출처 사이 — 더 최근 출처의 줄이 짝이 없으면 검토 대기 */
+  var srcs = {}; rows.forEach(function(r){ srcs[r.source_id] = r.as_of || ""; });
+  var ids = Object.keys(srcs);
+  if(ids.length > 1){
+    rows.forEach(function(r, i){
+      var others = ids.filter(function(s){ return s !== r.source_id && srcs[s] < srcs[r.source_id]; });
+      if(!others.length) return;
+      var mates = rows.filter(function(o, j){ return top(j) === top(i) && o.source_id !== r.source_id; });
+      var coverd = others.some(function(s){
+        return rows.some(function(o){ return o.source_id === s && o.region === r.region; });
+      });
+      if(!mates.length && coverd){
+        var sameAddr = rows.some(function(o){
+          return o.source_id !== r.source_id && o.region === r.region &&
+                 addrKey(o.addr || o.addr_road) && addrKey(o.addr || o.addr_road) === addrKey(r.addr || r.addr_road);
+        });
+        hold[top(i)] = sameAddr
+          ? "주소는 다른 출처와 같은데 이름이 다릅니다 — 이름이 바뀌었는지 사람이 봅니다"
+          : "더 최근 출처에만 있는 이름입니다 — 새로 생긴 곳인지 이름이 바뀐 곳인지 사람이 봅니다";
+      }
+    });
+  }
+
+  var groups = {};
+  rows.forEach(function(r, i){ (groups[top(i)] = groups[top(i)] || []).push(i); });
+  var facs = [];
+  Object.keys(groups).forEach(function(t){
+    var m = groups[t].map(function(i){ return rows[i]; });
+    /* 대표 줄 — sources.json 의 rank 가 **가장 앞선 출처**의 첫 줄(문체부
+       전국 「정비」 자료가 1 — 주소 · 이름을 한 꼴로 다듬은 자료입니다).
+       rank 가 같으면 기준일이 최근인 쪽. */
+    var prim = m.slice().sort(function(a, b){
+      return (RANK[a.source_id] || 9) - (RANK[b.source_id] || 9) ||
+             String(b.as_of).localeCompare(String(a.as_of));
+    })[0];
+    var same = m.filter(function(r){ return r.source_id === prim.source_id; });
+    var holes = same.every(function(r){ return r.holes !== null && r.holes !== ""; })
+      ? same.reduce(function(n, r){ return n + Number(r.holes); }, 0) : null;
+    if(holes !== null && holes > 72) holes = null;
+    var kinds = [];
+    same.forEach(function(r){ if(r.biz_kind && kinds.indexOf(r.biz_kind) < 0) kinds.push(r.biz_kind); });
+    var fid = prim.source_id + ":" + prim.src_key;
+    m.forEach(function(r){ r.fac_id = fid; });
+    facs.push({
+      fac_id: fid, kind: prim.kind, name: prim.name, name_norm: prim.name_norm,
+      region: prim.region, gu: prim.gu, addr: prim.addr, addr_road: prim.addr_road,
+      tel: prim.tel, holes: holes, biz_kind: kinds.join(" · "),
+      lat: prim.lat, lng: prim.lng, state: prim.state,
+      source_id: prim.source_id, as_of: prim.as_of, members: m.length,
+      sources: m.map(function(r){ return r.source_id; }).filter(function(v, i, a){ return a.indexOf(v) === i; }).join(" "),
+      evidence: groups[t].reduce(function(acc, i){
+        (why[i] || []).forEach(function(w){ if(acc.indexOf(w) < 0) acc.push(w); }); return acc; }, []).join(" · "),
+      addr_conflict: conflict[t] ? "1" : "",
+      hold: hold[t] ? "1" : "", hold_why: hold[t] || ""
+    });
+  });
+  facs.sort(function(a, b){ return (a.region + a.name).localeCompare(b.region + b.name, "ko"); });
+  return facs;
+}
+
 /* ── 원본 파일 모으기 ─────────────────────────────────────────── */
 function rawFiles(){
   var out = [];
@@ -268,11 +467,16 @@ function rawFiles(){
   fs.readdirSync(RAW).forEach(function(srcId){
     var d1 = path.join(RAW, srcId);
     if(!fs.statSync(d1).isDirectory()) return;
-    fs.readdirSync(d1).forEach(function(stampDir){
+    /* ⚠️ **가장 최근에 받은 것 하나만** 읽습니다 — 날마다 다시 받으면
+       폴더가 쌓이는데, 다 읽으면 같은 골프장이 받은 횟수만큼 늘어납니다. */
+    var stamps = fs.readdirSync(d1).filter(function(d){
+      return fs.statSync(path.join(d1, d)).isDirectory();
+    }).sort();
+    stamps.slice(-1).forEach(function(stampDir){
       var d2 = path.join(d1, stampDir);
       if(!fs.statSync(d2).isDirectory()) return;
       fs.readdirSync(d2).forEach(function(f){
-        if(/\.csv$/i.test(f)) out.push({ srcId:srcId, file:path.join(d2, f) });
+        if(/\.csv$/i.test(f)) out.push({ srcId:srcId, file:path.join(d2, f), stamp:stampDir });
       });
     });
   });
@@ -282,8 +486,20 @@ function rawFiles(){
 (function(){
   fs.mkdirSync(STAGE, { recursive:true });
   var cfg  = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "sources.json"), "utf8"));
-  var kindOf = {};
-  cfg.sources.forEach(function(s){ kindOf[s.id] = s.kind; });
+  var kindOf = {}, srcOf = {};
+  cfg.sources.forEach(function(s){ kindOf[s.id] = s.kind; srcOf[s.id] = s; RANK[s.id] = s.rank || 9; });
+  /* 자료 기준일 · 이용 조건 — 받는 도구가 manifest 에 적어 둔 것(포털 메타) */
+  var asOf = {}, licOf = {};
+  var MAN = path.join(STAGE, "source_manifest.csv");
+  if(fs.existsSync(MAN)){
+    var mr = parseCsv(fs.readFileSync(MAN, "utf8"));
+    var mh = mr[0] || [];
+    mr.slice(1).forEach(function(r){
+      var o = {}; mh.forEach(function(h, i){ o[h] = r[i]; });
+      if(o.data_as_of) asOf[o.source_id] = o.data_as_of;
+      if(o.license)    licOf[o.source_id] = o.license;
+    });
+  }
 
   var files = PROVE
     ? [{ srcId:"FIXTURE", file:path.join(__dirname, "fixtures", "sample-permit.csv") }]
@@ -298,7 +514,8 @@ function rawFiles(){
       return;
     }
     var kind = PROVE ? "range" : (kindOf[f.srcId] || "golf");
-    all = all.concat(cleanOne(f.srcId, kind, rows[0], rows.slice(1), issues));
+    var src = Object.assign({}, srcOf[f.srcId] || {}, { as_of: asOf[f.srcId] || "" });
+    all = all.concat(cleanOne(f.srcId, kind, rows[0], rows.slice(1), issues, src));
   });
 
   var dups = dupCandidates(all);
@@ -333,7 +550,48 @@ function rawFiles(){
   var HEAD = ["source_id","src_key","kind","name","name_norm","region","gu","addr","addr_road",
               "tel","holes","biz_kind","lat","lng","state","status_raw","as_of"];
 
+  var facs = facilities(courses);
+  HEAD = HEAD.concat(["fac_id"]);
   writeCsv(path.join(STAGE, "courses_clean.csv"), HEAD, courses);
+  /* ⚠️ 들여오기는 **이 파일**을 읽습니다 — 한 시설에 한 줄 · 검토 대기는
+     따로(courses_hold.csv). 줄 단위(courses_clean.csv)는 원본과 맞춰 보는
+     자리이고, 시설 단위가 손님 화면에 서는 자리입니다. */
+  var FHEAD = ["fac_id","kind","name","name_norm","region","gu","addr","addr_road","tel",
+               "holes","biz_kind","lat","lng","state","source_id","as_of","members","sources","evidence","addr_conflict","hold","hold_why"];
+  /* ── 바뀐 것 — 지난번 정제와 견줘 **더해진 · 빠진 · 바뀐** 시설을
+     change_log.csv 에 덧붙입니다(지우지 않고 쌓습니다). 같은 원본으로 다시
+     돌리면 0건입니다 — 그래서 "두 번 돌려도 안 늘어난다" 를 눈으로도
+     확인할 수 있습니다. */
+  var FFILE = path.join(STAGE, "courses_facility.csv");
+  var HFILE = path.join(STAGE, "courses_hold.csv");
+  function readFac(f){
+    if(!fs.existsSync(f)) return [];
+    var t = parseCsv(fs.readFileSync(f, "utf8")); var h = t[0] || [];
+    return t.slice(1).map(function(r){ var o = {}; h.forEach(function(k, i){ o[k] = r[i]; }); return o; });
+  }
+  var prev = {}; readFac(FFILE).concat(readFac(HFILE)).forEach(function(o){ prev[o.fac_id] = o; });
+  var WATCH = ["name","region","gu","addr","addr_road","holes","biz_kind","state","hold"];
+  var runAt = new Date().toISOString(), changes = [];
+  facs.forEach(function(f){
+    var o = prev[f.fac_id];
+    if(!o){ changes.push({ at:runAt, change:"added", fac_id:f.fac_id, name:f.name, region:f.region, fields:"", hold:f.hold }); return; }
+    var d = WATCH.filter(function(k){ return String(o[k] === undefined ? "" : o[k]) !== String(f[k] === null || f[k] === undefined ? "" : f[k]); });
+    if(d.length) changes.push({ at:runAt, change:"changed", fac_id:f.fac_id, name:f.name, region:f.region,
+      fields:d.map(function(k){ return k + ": " + (o[k] || "") + " → " + (f[k] === null ? "" : f[k]); }).join(" | "), hold:f.hold });
+    delete prev[f.fac_id];
+  });
+  Object.keys(prev).forEach(function(k){
+    changes.push({ at:runAt, change:"removed", fac_id:k, name:prev[k].name, region:prev[k].region, fields:"", hold:prev[k].hold });
+  });
+  var CL = path.join(STAGE, "change_log.csv"), CH = ["at","change","fac_id","name","region","fields","hold"];
+  if(!fs.existsSync(CL)) fs.writeFileSync(CL, CH.join(",") + "\n", "utf8");
+  changes.forEach(function(c){ fs.appendFileSync(CL, CH.map(function(h){ return csvCell(c[h]); }).join(",") + "\n", "utf8"); });
+
+  writeCsv(FFILE, FHEAD, facs.filter(function(f){ return !f.hold; }));
+  writeCsv(HFILE, FHEAD, facs.filter(function(f){ return f.hold; }));
+  console.log("   바뀐 것 " + changes.length + " (더함 " + changes.filter(function(c){ return c.change === "added"; }).length +
+              " · 바뀜 " + changes.filter(function(c){ return c.change === "changed"; }).length +
+              " · 빠짐 " + changes.filter(function(c){ return c.change === "removed"; }).length + ") — data/staging/change_log.csv");
   writeCsv(path.join(STAGE, "ranges_clean.csv"),  HEAD, ranges);
   writeCsv(path.join(STAGE, "duplicate_review.csv"),
     ["evidence","a_source","a_key","a_name","a_addr","b_source","b_key","b_name","b_addr","decision"], dups);
@@ -342,7 +600,9 @@ function rawFiles(){
 
   console.log("── 정제했습니다");
   console.log("   원본 파일 " + files.length + "개 · 읽은 줄 " + all.length);
-  console.log("   골프장 " + courses.length + " · 연습장 " + ranges.length);
+  console.log("   골프장 " + courses.length + "줄 → 시설 " + facs.length +
+              " (들여올 것 " + facs.filter(function(f){ return !f.hold; }).length +
+              " · 검토 대기 " + facs.filter(function(f){ return f.hold; }).length + ") · 연습장 " + ranges.length);
   console.log("   중복 후보 " + dups.length + " (⚠️ 합치지 않았습니다 — 사람이 봅니다)");
   console.log("   issue " + issues.length);
   if(all.length === 0){

@@ -1,1 +1,2 @@
 "source_id","row_no","kind","detail","payload"
+"mcst-golf-nationwide","406","holes_out_of_range","홀 수 81 — DB 가 받는 범위(1~72) 밖이라 비웁니다","군산CC"

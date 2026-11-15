@@ -8,8 +8,12 @@
       "scope": "전국",
       "page": "https://www.data.go.kr/data/15118920/fileData.do",
       "meta": "https://www.data.go.kr/catalog/15118920/fileData.json",
-      "license": "확인 필요 — 포털 상세의 이용허락범위를 받은 뒤 적습니다",
-      "use": true
+      "license": "이용허락범위 제한 없음 (포털 메타 · 2026-11-15 확인)",
+      "use": true,
+      "portal": "datagokr-file",
+      "listed_state": "open",
+      "listed_why": "현황 등재 — 문체부가 「운영 중인 골프장」 현황으로 공표한 목록 (영업상태 칸 없음 · 기준일 이후 폐업 여부는 미확인)",
+      "rank": 1
     },
     {
       "id": "seoul-range-permit",
@@ -19,7 +23,8 @@
       "page": "https://www.data.go.kr/data/15071392/fileData.do",
       "meta": "https://www.data.go.kr/catalog/15071392/fileData.json",
       "license": "확인 필요",
-      "use": true
+      "use": true,
+      "portal": "datagokr-file"
     },
     {
       "id": "chungbuk-golf",
@@ -28,8 +33,12 @@
       "scope": "충북",
       "page": "https://www.data.go.kr/data/15071058/fileData.do",
       "meta": "https://www.data.go.kr/catalog/15071058/fileData.json",
-      "license": "확인 필요",
-      "use": true
+      "license": "이용허락범위 제한 없음 (포털 메타 · 2026-11-15 확인)",
+      "use": true,
+      "portal": "datagokr-file",
+      "listed_state": "open",
+      "listed_why": "현황 등재 — 충청북도 골프장 현황 목록 (영업상태 칸 없음 · 기준일 이후 폐업 여부는 미확인)",
+      "rank": 2
     },
     {
       "id": "songpa-range",
@@ -39,7 +48,8 @@
       "page": "https://www.data.go.kr/data/15115231/fileData.do",
       "meta": "https://www.data.go.kr/catalog/15115231/fileData.json",
       "license": "확인 필요",
-      "use": true
+      "use": true,
+      "portal": "datagokr-file"
     },
     {
       "id": "dongjak-range",
@@ -49,7 +59,8 @@
       "page": "https://www.data.go.kr/data/15149068/fileData.do",
       "meta": "https://www.data.go.kr/catalog/15149068/fileData.json",
       "license": "확인 필요",
-      "use": true
+      "use": true,
+      "portal": "datagokr-file"
     },
     {
       "id": "gangnam-range",
@@ -59,7 +70,8 @@
       "page": "https://www.data.go.kr/data/15115387/fileData.do",
       "meta": "https://www.data.go.kr/catalog/15115387/fileData.json",
       "license": "확인 필요",
-      "use": true
+      "use": true,
+      "portal": "datagokr-file"
     },
     {
       "id": "kgba",

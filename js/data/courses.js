@@ -209,6 +209,21 @@
      였습니다(카드를 `js/card.js` 한 곳에 모은 그 까닭과 같습니다).
      ⚠️ 칩은 **링크**입니다 — 단추로만 만들면 자바스크립트가 꺼진 분 ·
      크롤러에게 눌러도 아무 일이 안 나는 칸이 됩니다(절대 규칙 5). */
+  /* 권역 칩 (2026-11-15) — 수도권 · 충청권 · 호남권 · 영남권처럼 **시·도가
+     둘 이상 묶인 권역**만 냅니다(강원 · 제주는 시·도 칩과 같은 말이라 두
+     번 내지 않습니다). ⚠️ 수는 그 권역 시·도들의 수를 **더해서** 냅니다.
+     ⚠️ 0곳인 권역은 안 냅니다 — 눌러도 0건인 칸이 됩니다(절대 규칙 5).
+     거르는 쪽은 `js/courselist.js` 의 rgKeys() 가 권역 키를 시·도로 풉니다. */
+  W.amCourseZones = function(kind){
+    var Z = W.AM_REGION_ZONES || [], n = {};
+    W.amCourseRegions(kind).forEach(function(r){ n[r.key] = r.n; });
+    return Z.map(function(z){
+      var keys = W.amZoneRegions ? W.amZoneRegions(z.key) : [];
+      var sum = keys.reduce(function(a, k){ return a + (n[k] || 0); }, 0);
+      return { key:z.key, name:z.name, n:sum, multi:keys.length > 1 };
+    }).filter(function(z){ return z.multi && z.n > 0; });
+  };
+
   W.amCourseChipRow = function(base, kind, now){
     var esc = W.esc;
     var R = W.amCourseRegions(kind);
@@ -224,6 +239,8 @@
     }
     return '<nav class="chips chips-csrg" aria-label="지역으로 추리기">' +
       one("", "전체", 0) +
+      W.amCourseZones(kind).map(function(z){ return one(z.key, z.name, z.n); }).join("") +
+      '<span class="chips-br" aria-hidden="true"></span>' +
       R.map(function(r){ return one(r.key, r.name, r.n); }).join("") +
       '</nav>';
   };

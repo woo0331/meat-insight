@@ -190,13 +190,54 @@ module.exports = function(T){
      psql("select state from course where id = '" + IMPID + "'") === "hidden");
   psql(as(ADM) + "select move_course('" + J({ id:IMPID, to:"open", why:"" }) + "')");
 
+  /* ⚠️⚠️ **출처 줄이 하나도 없는** 골프장 — 되돌리기가 이것을 지우면 안
+     됩니다(2026-11-15 에 실제로 지웠습니다 · 위 CID 는 티타임이 걸려 있어
+     그 고장을 못 봤습니다). */
+  psql("insert into course (slug, kind, name, region) values ('cs-bare', 'golf', '출처 없는 손 골프장', 'seoul')");
+  const before3 = Number(before) + 1;
   T.psqlFile(path.join(tmp, "rollback_courses.sql"));
+  ok("⚠️⚠️ 되돌리기가 **출처 줄 없는 골프장은 안 지운다**",
+     psql("select count(*) from course where slug = 'cs-bare'") === "1");
+  psql("delete from course where slug = 'cs-bare'");
+  void before3;
   const after3 = psql("select count(*) from course");
   ok("되돌리기 SQL 이 그 묶음만 지운다 (" + after2 + " → " + after3 + ")",
      Number(after3) === Number(before), before + " / " + after3);
   ok("  ⚠️ 손으로 만든 골프장은 **안 지운다**",
      psql("select count(*) from course where id = '" + CID + "'") === "1");
   try{ fs.rmSync(tmp, { recursive:true, force:true }); }catch(e){}
+
+  /* ── ⑦-2 시설 단위 — 두 줄(회원제 · 대중제)이 **한 골프장 + 출처 둘** ── */
+  console.log("\n── 들여오기 SQL (시설 단위 · 검토 대기는 안 넣음)");
+  const tmp2 = fs.mkdtempSync(path.join(os.tmpdir(), "csfac-"));
+  fs.writeFileSync(path.join(tmp2, "courses_clean.csv"),
+    HEAD + ",fac_id\n" +
+    '"cs-fac","A1","golf","묶음 골프장","","jeju","제주시","제주시 1","","","18","회원제","","","open","현황 등재","2024-12-31","cs-fac:A1"\n' +
+    '"cs-fac","A2","golf","묶음 골프장","","jeju","제주시","제주시 1","","","9","대중제","","","open","현황 등재","2024-12-31","cs-fac:A1"\n' +
+    '"cs-fac","B1","golf","검토 대기 골프장","","jeju","제주시","제주시 2","","","9","","","","open","현황 등재","2024-12-31","cs-fac:B1"\n', "utf8");
+  const FH = "fac_id,kind,name,name_norm,region,gu,addr,addr_road,tel,holes,biz_kind,lat,lng,state,source_id,as_of,members,sources,evidence,addr_conflict,hold,hold_why";
+  fs.writeFileSync(path.join(tmp2, "courses_facility.csv"), FH + "\n" +
+    '"cs-fac:A1","golf","묶음 골프장","","jeju","제주시","제주시 1","","","27","회원제 · 대중제","","","open","cs-fac","2024-12-31","2","cs-fac","같은 주소","","",""\n', "utf8");
+  fs.writeFileSync(path.join(tmp2, "courses_hold.csv"), FH + "\n" +
+    '"cs-fac:B1","golf","검토 대기 골프장","","jeju","제주시","제주시 2","","","9","","","","open","cs-fac","2024-12-31","1","cs-fac","","","1","사람이 봅니다"\n', "utf8");
+  fs.writeFileSync(path.join(tmp2, "ranges_clean.csv"), HEAD + "\n", "utf8");
+  execFileSync("node", [path.join(ROOT, "tools", "make-import-sql.js"), "--stage=" + tmp2,
+                "--review=" + path.join(tmp2, "none.csv")], { stdio:["ignore","pipe","pipe"] });
+  const fsql = fs.readFileSync(path.join(tmp2, "import_courses.sql"), "utf8");
+  ok("⚠️⚠️ 검토 대기 시설은 SQL 에 **안 들어간다**", fsql.indexOf("검토 대기 골프장") < 0);
+  const fb = Number(psql("select count(*) from course"));
+  T.psqlFile(path.join(tmp2, "import_courses.sql"));
+  T.psqlFile(path.join(tmp2, "import_courses.sql"));
+  ok("두 줄이 **골프장 하나**로 들어간다 · 두 번 넣어도 하나",
+     Number(psql("select count(*) from course")) === fb + 1);
+  ok("  출처 줄은 **둘**(회원제 · 대중제 등록 각각)",
+     psql("select count(*) from course_source where source_id = 'cs-fac'") === "2");
+  ok("  홀 수는 시설 합계(27)",
+     psql("select holes from course where name = '묶음 골프장'") === "27");
+  T.psqlFile(path.join(tmp2, "rollback_courses.sql"));
+  ok("  되돌리면 그 골프장만 빠진다",
+     Number(psql("select count(*) from course")) === fb);
+  try{ fs.rmSync(tmp2, { recursive:true, force:true }); }catch(e){}
 
   /* ── ⑧ 안쪽 함수를 직접 못 부릅니다 ──────────────────────── */
   console.log("\n── 안쪽 도움함수");

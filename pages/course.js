@@ -19,6 +19,39 @@
    ════════════════════════════════════════════════════════════════════ */
 var W = global.window, esc = W.esc, icon = W.icon;
 
+/* 출처 한 줄 — ⚠️⚠️ **출처 이름 · 기준일 · 수집일 · 이용 조건을 그 자리에서**
+   적습니다(열쇠를 날것으로 찍지 않습니다). 운영 상태는 출처가 「운영 중
+   목록」 이라는 것뿐이라 **그 뒤의 변동은 모른다**고 같이 말합니다.
+   ⚠️ 틀린 곳을 알려 주시는 길은 이미 있는 고객센터 문의입니다(새 양식을
+   만들지 않습니다). */
+function srcLine(c){
+  var S = (W.AM_COURSE_SRC || {})[c.source_id] || null;
+  var parts = [];
+  if(S && S.as_of) parts.push("자료 기준일 " + S.as_of);
+  else if(c.as_of) parts.push("자료 기준일 " + c.as_of);
+  if(S && S.got)   parts.push("수집일 " + S.got);
+  if(S && S.license) parts.push("이용 조건 " + S.license.replace(/\s*\(.*$/, ""));
+  /* ⚠️ `.cs-src` 는 flex 라 글 조각이 각각 칸이 됩니다 — 글을 **한 덩이
+     (span)** 로 감쌉니다(안 감싸면 굵은 글씨가 따로 세로 칸이 됩니다). */
+  return '<p class="cs-src">' + icon("info", 16) + '<span>' +
+      '공공 자료에서 가져온 정보입니다' +
+      /* ⚠️ 출처 안내에 없는 출처(손으로 확인한 묶음 등)는 그 이름을 그대로 —
+         출처를 빼면 「어디서 왔는지 모르는 시설」 이 됩니다 */
+      (S ? ' — 출처 ' + esc(S.name) : (c.source_id ? ' (출처 ' + esc(c.source_id) + ')' : '')) +
+      (parts.length ? ' · ' + esc(parts.join(" · ")) : '') +
+      '. <b>저희가 직접 확인한 값이 아닙니다.</b>' +
+      (c.state === "open"
+        ? ' 출처의 목록에 운영 중으로 올라 있던 곳이며, 그 뒤의 휴업 · 폐업 · 이름 변경은 확인하지 않았습니다.'
+        : '') + '</span></p>' +
+    /* ⚠️ 원본 자료 링크는 **문장 밖 단추로** 둡니다(문장 한가운데 링크는
+       높이가 16px 라 손가락에 안 닿습니다). */
+    '<p class="cs-fix">' +
+      (S && S.page ? '<a class="btn btn-sm btn-line" href="' + esc(S.page) +
+        '" target="_blank" rel="nofollow noopener noreferrer">' + icon("info", 16) + '원본 자료 보기</a>' : '') +
+      '<a class="btn btn-sm btn-line" href="/help">' + icon("arrow", 16) +
+      '정보가 틀렸다면 알려 주세요</a></p>';
+}
+
 exports.build = function(c){
   var kindName = W.amCourseKind(c.kind);
   var regName  = (function(){
@@ -32,8 +65,16 @@ exports.build = function(c){
   var facts = [];
   if(c.holes)     facts.push(["홀 수",   String(c.holes) + "홀"]);
   if(c.biz_kind)  facts.push(["구분",     c.biz_kind]);
-  if(c.addr_road) facts.push(["도로명 주소", c.addr_road]);
-  if(c.addr)      facts.push(["지번 주소",   c.addr]);
+  /* ⚠️ 출처마다 주소 칸의 뜻이 다릅니다 — 인허가 자료는 지번 · 도로명을
+     갈라 주지만 문체부 현황의 「소재지」 는 둘이 섞여 있습니다. 둘 다 있을
+     때만 갈라 적고, 하나뿐이면 그냥 「주소」 입니다(지번이 아닌 것을
+     지번이라고 적지 않습니다). */
+  if(c.addr_road && c.addr){
+    facts.push(["도로명 주소", c.addr_road]);
+    facts.push(["지번 주소",   c.addr]);
+  }else if(c.addr_road || c.addr){
+    facts.push(["주소", c.addr_road || c.addr]);
+  }
   if(c.tel)       facts.push(["전화",     c.tel]);
 
   var body = '<section class="pghd"><div class="wrap">' +
@@ -74,11 +115,7 @@ exports.build = function(c){
           }).join("") + '</dl>'
         : '') +
       /* ⚠️⚠️ **출처를 그 자리에서** 적습니다 */
-      '<p class="cs-src">' + icon("info", 16) +
-        '공공 자료에서 가져온 정보입니다' +
-        (c.source_id ? ' (출처 ' + esc(c.source_id) + ')' : '') +
-        (c.as_of ? ' · 자료 기준일 ' + esc(c.as_of) : '') +
-        '. <b>저희가 직접 확인한 값이 아닙니다.</b></p>' +
+      srcLine(c) +
       /* 좌표가 있을 때만 — ⚠️ 없으면 줄째 뺍니다 */
       /* ⚠️⚠️⚠️ **공식 홈페이지는 바깥 주소**입니다 — `https://` 로
          시작하는 것만 내고(`javascript:` 가 섞이면 거기가 구멍입니다 ·
@@ -116,7 +153,11 @@ exports.build = function(c){
 
   return {
     route: W.amCourseUrl(c),
-    title: c.name,
+    /* ⚠️ 같은 이름의 다른 곳(같은 브랜드의 다른 지점)이 있으면 제목에
+       지역을 붙입니다 — 안 붙이면 두 화면의 제목이 같아 검색에서 둘 다
+       흐려지고, 빌드가 「제목이 겹칩니다」 로 멈춥니다. */
+    title: (W.AM_COURSES || []).some(function(o){ return o.slug !== c.slug && o.name === c.name; })
+      ? c.name + " (" + where + ")" : c.name,
     crumbs: [["골프장 찾기", "/search#courses"], [c.name, W.amCourseUrl(c)]],
     desc: c.name + " — " + where + " " + kindName +
           (c.holes ? " · " + c.holes + "홀" : "") +

@@ -531,6 +531,41 @@ function boardsOf(){
       await g.p.close();
     }
 
+    /* ④-2 카카오를 **Supabase Custom Provider** 로 돌렸을 때 (2026-11-15) —
+       기본 카카오 공급자는 동의항목에 account_email 을 늘 붙여(supabase/auth kakao.go
+       의 고정 목록) KOE205 가 납니다. site.js 의 ssoCustom 에 식별자를 적으면 그
+       식별자로 보냅니다. ⚠️ Custom Provider 는 /auth/v1/settings 에 안 나오므로
+       켜졌는지를 그 값으로 정합니다. */
+    for(const [val, on] of [["custom:kakao", true], ["kakao!", false]]){
+      const g = await open("/login?next=/my",
+        { role:"customer", name:"", signedIn:false, sso:[] }, {}, false,
+        /* site.js 가 WOW_BIZ 를 세우는 순간 ssoCustom 만 갈아 끼웁니다(나머지 값은 그대로) */
+        "(function(){var v=" + JSON.stringify(val) + ",o;" +
+        "Object.defineProperty(window,'WOW_BIZ',{configurable:true,get:function(){return o;}," +
+        "set:function(x){o=x;if(o)o.ssoCustom={kakao:v};}});})();");
+      let went = "";
+      await g.p.route("**/auth/v1/authorize*", function(r){
+        went = r.request().url();
+        return r.fulfill({ status:200, contentType:"text/html", body:"<p>ok</p>" });
+      });
+      const st = await g.p.evaluate(function(){
+        const b = document.querySelector('.sso-b[data-sso="kakao"]');
+        return b ? { on: b.getAttribute("data-on"), dis: b.disabled } : null; });
+      if(on){
+        ok("⚠️⚠️ ssoCustom 이 있으면 settings 에 없어도 카카오 단추가 **켜진다**",
+           !!st && st.on === "1" && !st.dis, JSON.stringify(st));
+        if(st && !st.dis) await g.p.click('.sso-b[data-sso="kakao"]');
+        await g.p.waitForTimeout(600);
+        ok("  누르면 **그 식별자**(custom:kakao)로 보낸다 · scope 는 싣지 않는다",
+           went.indexOf("provider=" + encodeURIComponent("custom:kakao")) > 0 &&
+           went.indexOf("scopes=") < 0, went || "(아무 데도 안 갔습니다)");
+      } else {
+        ok("  ⚠️ 꼴이 틀린 값은 **없는 것**으로 본다 (단추는 「준비 중」 그대로)",
+           !!st && st.on !== "1" && st.dis, JSON.stringify(st));
+      }
+      await g.p.close();
+    }
+
     /* ⑤ 이미 들어와 계시면 단추를 안 냅니다 */
     {
       const g = await open("/login", { role:"customer", name:"김손님", sso:KEYS }, {});

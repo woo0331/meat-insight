@@ -81,6 +81,17 @@ window.WOW_BIZ = {
      여기에 붙여 넣으세요. 비어 있으면 그 메타 줄이 **통째로 빠집니다** —
      빈 값으로 넣으면 확인이 실패합니다.
      ⚠️ 확인용 값이지 비밀이 아닙니다 (어차피 화면 소스에 나갑니다). */
+  /* ⚠️⚠️ **간편 로그인을 Supabase Custom Provider 로 돌릴 때만** 적습니다 (2026-11-15).
+     Supabase 기본 카카오 공급자는 동의항목에 `account_email` 을 **늘** 붙입니다
+     (supabase/auth `internal/api/provider/kakao.go` — 고정 목록이고, 설정으로 못 뺍니다).
+     그래서 카카오 앱에 이메일 항목이 없으면 KOE205 입니다. Custom Provider(OIDC)는
+     적어 준 scope 만 보냅니다.
+     ⚠️ 값은 Supabase 대시보드에서 만든 **식별자 그대로**(`custom:` 으로 시작).
+     ⚠️ **비어 있으면 지금과 똑같이** 기본 공급자를 씁니다. Custom Provider 를
+     만들고 로그인까지 확인하기 **전에는 채우지 마세요** — 채우는 순간 단추가 켜집니다
+     (Custom Provider 는 /auth/v1/settings 에 안 나와서, 켜졌는지를 여기서 정합니다). */
+  ssoCustom: { kakao: "" },
+
   naverVerify:    "",
   googleVerify:   "",
 

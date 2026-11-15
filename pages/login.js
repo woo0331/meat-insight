@@ -48,7 +48,10 @@ exports.build = function(){
        `amAuthProviders()` 가 **빈 배열**을 돌려주고 소셜 단추가
        조용히 안 그려집니다 (에러 0줄). `/help` 가 `site.js` 를
        안 실어 문의 양식이 조용히 안 열렸던 그 자리입니다. */
-    js: ["/js/data/korean.js", "/js/data/social.js", "/js/auth.js",
+    /* ⚠️ site.js 를 auth.js **앞에** 싣습니다 — 간편 로그인을 Custom Provider 로
+       돌린 값(ssoCustom)이 거기 있습니다. 안 실으면 그 값이 조용히 안 읽힙니다
+       (/help 가 site.js 를 안 실어 문의 양식이 안 열린 그 자리). */
+    js: ["/js/data/site.js", "/js/data/korean.js", "/js/data/social.js", "/js/auth.js",
          "/js/account.js"]
   };
 };

@@ -326,12 +326,20 @@ window.amAuthProviders = function(){
     .then(function(r){ return r.ok ? r.json() : null; })
     .then(function(d){
       var ex = d && d.external ? d.external : null;
-      if(!ex) return [];
-      return keys.filter(function(k){ return ex[k] === true; });
+      /* ⚠️ Custom Provider 는 settings 에 **안 나옵니다** (supabase/auth settings.go 가
+         기본 공급자만 적습니다) — site.js 의 ssoCustom 에 적힌 것은 켜진 것으로 봅니다. */
+      return keys.filter(function(k){ return !!amSsoCustom(k) || (!!ex && ex[k] === true); });
     })
-    .catch(function(){ return []; });
+    .catch(function(){ return keys.filter(function(k){ return !!amSsoCustom(k); }); });
   return AM_SSO_FLY;
 };
+/* site.js 의 ssoCustom — ⚠️ 꼴이 맞을 때만(`custom:` + 소문자 · 숫자 · 하이픈 · 콜론,
+   Supabase 의 식별자 규칙) 씁니다. 틀린 값은 **없는 것**으로 보고 기본 공급자로 둡니다. */
+function amSsoCustom(k){
+  var m = ((window.WOW_BIZ || {}).ssoCustom || {})[k];
+  m = String(m == null ? "" : m).trim();
+  return /^custom:[a-z0-9:-]{1,43}$/.test(m) ? m : "";
+}
 
 /* ── 소셜 로그인으로 보냅니다 ─────────────────────────────────────
    ⚠️⚠️ **fetch 가 아니라 주소를 바꿉니다.** 그쪽 회사 화면에서
@@ -373,7 +381,8 @@ window.amAuthGo = function(key){
        ⚠️⚠️⚠️ **다시 실으시려면 먼저 더하는지 덮는지를 재세요** — 최종
        카카오 요청의 scope 를 눈으로 보는 것 말고는 아는 길이 없습니다. */
     window.location.href = c.url + "/auth/v1/authorize?provider=" +
-      encodeURIComponent(key) +
+      /* ⚠️ Custom Provider 로 돌렸으면 그 식별자로 보냅니다 (site.js 의 ssoCustom) */
+      encodeURIComponent(amSsoCustom(key) || key) +
       "&redirect_to=" +
       encodeURIComponent(window.location.origin + window.amAfterLogin());
     return true;

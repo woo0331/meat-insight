@@ -12244,7 +12244,9 @@ function boardsOf(){
     {
       const g = await open("/desk", PRO2,
         { assignment:[asg(REQ, "accepted")], request:[REQ], quote:[QUOTE], request_item:ITEMS });
-      const rs = selOf(g.sent, "request"), qs2 = selOf(g.sent, "quote");
+      /* ⚠️ 이 화면의 다른 상자(수수료)도 request 를 묻습니다 — 작업실의 줄(budget_min)만 봅니다 */
+      const rs = selOf(g.sent, "request").filter(x => x.indexOf("budget_min") >= 0),
+            qs2 = selOf(g.sent, "quote");
       ok("꺼져 있으면 /desk 가 v_request_contact 를 **안 부른다**",
          g.sent.every(x => x.body.indexOf("v_request_contact") < 0),
          g.sent.map(x => x.body).join(" | ").slice(0, 300));
@@ -12262,9 +12264,11 @@ function boardsOf(){
       const g = await open("/my", { role:"customer", name:"홍길동" },
         { request:[REQ], quote:[QUOTE], request_item:ITEMS,
           provider:[{ id:"t-range", name:"남서울" }] });
-      const all = g.sent.filter(x => x.name === "GET").map(x => decodeURIComponent(x.body));
+      /* ⚠️ 일정(appointment)도 kind 를 묻습니다 — 요청 · 견적 · 배정의 select 만 봅니다 */
+      const all = ["request","quote","assignment"].reduce((L, t) => L.concat(selOf(g.sent, t)), []);
       ok("꺼져 있으면 /my 가 compare · kind · terms · blind 를 **안 묻는다**",
-         all.every(x => !/compare|,kind|terms|blind|v_request_contact/.test(x)),
+         all.length >= 3 && all.every(x => !/compare|kind|terms|blind/.test(x)) &&
+         g.sent.every(x => x.body.indexOf("v_request_contact") < 0),
          all.join(" | ").slice(0, 400));
       await g.p.close();
     }
@@ -12297,7 +12301,7 @@ function boardsOf(){
         { assignment:[casg("sent")], request:[CREQ], quote:[], request_item:CITEMS,
           v_request_contact:[] }, {}, false, CMPON);
       ok("화면 에러 · CSP 거절이 0건이다", g.errs.length === 0, g.errs.join(" | "));
-      const rs = selOf(g.sent, "request");
+      const rs = selOf(g.sent, "request").filter(x => x.indexOf("budget_min") >= 0);
       ok("켜지면 요청 select 에서 name · tel · email 을 **뺀다** (0082 가 그 칸을 거두었습니다)",
          rs.length > 0 && rs.every(x => !/(^|,)(name|tel|email)(,|$)/.test(x) &&
                                         x.indexOf("compare") >= 0 && x.indexOf("detail") >= 0),

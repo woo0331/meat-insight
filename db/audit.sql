@@ -2,7 +2,7 @@
 -- db/audit.sql — **운영 DB 가 정말 올라갔는지** 대조합니다
 --
 -- ⚠️⚠️⚠️ **빌드가 만드는 파일입니다 — 손으로 고치지 마세요.**
---   (node tools/make-audit.js · 마이그레이션 81개에서 읽었습니다)
+--   (node tools/make-audit.js · 마이그레이션 82개에서 읽었습니다)
 --
 -- ⚠️⚠️ **`select max(n) from schema_version` 하나로 판정하지 않습니다.**
 --   그 표는 마이그레이션 파일이 **스스로 적는** 줄입니다 — 중간에서
@@ -16,13 +16,13 @@
 -- ① 판 번호와 **빠진 번호** ─────────────────────────────────────────
 select '① 판 번호' as 항목,
        coalesce(max(n), 0)::text as 값,
-       case when coalesce(max(n), 0) >= 81 then '✅' else '❌ 81 보다 낮습니다' end as 결과
+       case when coalesce(max(n), 0) >= 82 then '✅' else '❌ 82 보다 낮습니다' end as 결과
   from schema_version;
 
 select '① 빠진 번호' as 항목,
        coalesce(string_agg(g::text, ', ' order by g), '(없음)') as 값,
        case when count(*) = 0 then '✅' else '❌ 그 번호를 따로 돌리세요' end as 결과
-  from generate_series(1, 81) g
+  from generate_series(1, 82) g
  where not exists (select 1 from schema_version v where v.n = g);
 
 -- ② 표가 다 있나 ─────────────────────────────────────────────────
@@ -119,6 +119,7 @@ with want(v) as (values
     ('v_provider_photo_public'),
     ('v_provider_price_public'),
     ('v_provider_staff'),
+    ('v_request_contact'),
     ('v_review_public'),
     ('v_teebook_mine'),
     ('v_teebook_pv'),
@@ -146,6 +147,7 @@ select '③ 빠진 보기' as 항목,
 with want(f) as (values
     ('add_my_hat'),
     ('answer_assignment'),
+    ('answer_compare'),
     ('answer_cq'),
     ('apply_jobpost'),
     ('apply_joinroom'),
@@ -155,6 +157,7 @@ with want(f) as (values
     ('ask_cq_guest'),
     ('ask_listing'),
     ('assign_item'),
+    ('assign_more'),
     ('biz_metrics'),
     ('book_teetime'),
     ('build_settlement'),
@@ -210,6 +213,7 @@ with want(f) as (values
     ('link_course_alias'),
     ('linked_providers'),
     ('make_apply'),
+    ('make_compare_request'),
     ('make_provider_invite'),
     ('make_request'),
     ('mark_paid'),
@@ -244,6 +248,7 @@ with want(f) as (values
     ('open_wanted'),
     ('order_listing_photo'),
     ('order_trip_photo'),
+    ('pick_quote'),
     ('provider_counts'),
     ('provider_linked'),
     ('provider_told_to_me'),
@@ -283,6 +288,7 @@ with want(f) as (values
     ('share_joincontact'),
     ('share_listingcontact'),
     ('share_wantedcontact'),
+    ('submit_compare_quote'),
     ('submit_quote'),
     ('trip_months'),
     ('trip_next_depart'),
@@ -305,6 +311,7 @@ select '④ 문을 부를 권한' as 항목,
   from (values
     ('add_my_hat'),
     ('answer_assignment'),
+    ('answer_compare'),
     ('answer_cq'),
     ('apply_jobpost'),
     ('apply_joinroom'),
@@ -314,6 +321,7 @@ select '④ 문을 부를 권한' as 항목,
     ('ask_cq_guest'),
     ('ask_listing'),
     ('assign_item'),
+    ('assign_more'),
     ('biz_metrics'),
     ('book_teetime'),
     ('build_settlement'),
@@ -369,6 +377,7 @@ select '④ 문을 부를 권한' as 항목,
     ('link_course_alias'),
     ('linked_providers'),
     ('make_apply'),
+    ('make_compare_request'),
     ('make_provider_invite'),
     ('make_request'),
     ('mark_paid'),
@@ -403,6 +412,7 @@ select '④ 문을 부를 권한' as 항목,
     ('open_wanted'),
     ('order_listing_photo'),
     ('order_trip_photo'),
+    ('pick_quote'),
     ('provider_counts'),
     ('provider_linked'),
     ('provider_told_to_me'),
@@ -442,6 +452,7 @@ select '④ 문을 부를 권한' as 항목,
     ('share_joincontact'),
     ('share_listingcontact'),
     ('share_wantedcontact'),
+    ('submit_compare_quote'),
     ('submit_quote'),
     ('trip_months'),
     ('trip_next_depart'),

@@ -167,19 +167,20 @@
     });
   }
 
-  amAuthAsk().then(function(a){
+  /* ⚠️ 불러오는 중 · 준비됨 · 접수 중단 · 조회 실패 — amGate 한 곳 */
+  window.amGate(box, "입점 신청", function(a){
     /* 설정이 없으면 **양식을 열지 않습니다** — 기본 안내 그대로 둡니다. */
     if(!a.on || !a.conf || !a.conf.url || !a.conf.anonKey){
       try{ console.warn("[join] Supabase 설정이 없어 입점 신청 양식을 열지 않았습니다 — " +
         "Vercel 의 SUPABASE_URL · SUPABASE_ANON_KEY 를 넣고 다시 배포하세요."); }catch(e){}
-      return;
+      return false;
     }
     if(!KEEP){
       /* ⚠️⚠️ 보유 기간을 못 적으면 제15조 제2항을 못 지킵니다 — 법이
          요구하는 것을 안 보여 주고 동의를 받을 수는 없습니다. */
       try{ console.warn("[join] js/data/site.js 의 applyKeep(보유 기간)이 비어 " +
         "양식을 열지 않았습니다 — 개인정보보호법 제15조 제2항."); }catch(e){}
-      return;
+      return false;
     }
     /* ⚠️ 양식을 여는 **그 자리에서** 머리말도 같이 바꿉니다 (지시서 §8).
        화면 위아래가 서로 다른 말을 하지 않게 합니다. */

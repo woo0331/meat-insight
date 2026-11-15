@@ -57,6 +57,40 @@ const FAKE = "https://sb-test.supabase.co";
   ok("양식이 없다", (await p.locator("#mf").count()) === 0);
   ok("받지 못한다고 말한다", /받지 못합니다/.test((await p.textContent("#matchbox")) || ""));
   ok("본문에 누를 단추가 없다", (await p.locator("main button").count()) === 0);
+  /* ⚠️ textContent 는 숨긴 글도 읽습니다 — **눈에 보이는지**를 따로 봅니다 */
+  ok("  ⚠️ 그 글이 **실제로 보인다** (확인이 끝난 뒤)",
+     await p.evaluate(() => { const o = document.querySelector("#matchbox .gate-off");
+       return !!(o && o.getClientRects().length); }));
+  await p.close();
+
+  /* ⚠️⚠️ 2026-11-15 — **확인하지 못한 것을 「받지 못합니다」로 단정하지 않습니다.**
+     운영에서 진입 직후 「받지 못합니다」가 보였다가 양식이 나타났습니다(확인 전에 빌드의
+     닫힌 글이 보였습니다). 지금은 확인 전 「불러오는 중」 · 실패면 「다시 시도」입니다. */
+  console.log("\n── 확인 전 · 조회 실패 · 다시 시도");
+  p = await b.newPage({ viewport:{ width:1280, height:900 } });
+  let fail = true, slow = true;
+  await p.route("**/api/session", async function(r){
+    if(slow){ slow = false; await new Promise(z => setTimeout(z, 1200)); }
+    if(fail) return r.fulfill({ status:503, contentType:"text/plain", body:"down" });
+    return r.fulfill({ status:200, contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:false, conf:{ url:FAKE, anonKey:"k" } }) });
+  });
+  await p.goto(URL, { waitUntil:"domcontentloaded" });
+  await p.waitForTimeout(300);
+  const early = await p.evaluate(() => {
+    const vis = s => { const e = document.querySelector(s); return !!(e && e.getClientRects().length); };
+    return { load: vis("#matchbox .gate-load"), off: vis("#matchbox .gate-off") }; });
+  ok("확인 전에는 **불러오는 중**만 보이고 「받지 못합니다」는 안 보인다",
+     early.load && !early.off, JSON.stringify(early));
+  await p.waitForTimeout(1500);
+  const t1 = await p.evaluate(() => (document.querySelector("#matchbox") || {}).innerText || "");
+  ok("조회 실패면 **확인하지 못했다**고 말하고 「받지 못합니다」로 단정하지 않는다",
+     /확인하지 못했습니다/.test(t1) && !/받지 못합니다/.test(t1), t1.slice(0, 120));
+  ok("  다시 시도 단추가 있다", (await p.locator("#matchbox [data-gate-retry]").count()) === 1);
+  fail = false;
+  await p.click("#matchbox [data-gate-retry]");
+  await p.waitForTimeout(800);
+  ok("  다시 시도하면 **양식이 열린다**", (await p.locator("#mf").count()) === 1);
   await p.close();
 
   console.log("\n── 설정이 있으면 양식이 열리고 실제로 보냅니다");

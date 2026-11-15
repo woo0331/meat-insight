@@ -5064,3 +5064,8 @@ picture{ display: contents; }
 .nk-wel{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:12px 14px; margin:0 0 12px;
          border:1px solid var(--line); border-radius:12px; background: var(--grn-soft); }
 .nk-wel p{ margin:0; flex:1 1 260px; }
+/* 양식 문 — 확인 전에는 「불러오는 중」만 (2026-11-15) · 자바스크립트가 꺼진 화면은 접수 중단 글 */
+.gate-load{ display:none; margin:0; color: var(--ink2); }
+.js .gate-load{ display:block; }
+.js .gate-off{ display:none; }
+.js .gate-done .gate-off{ display:block; }

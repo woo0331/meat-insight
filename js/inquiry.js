@@ -103,24 +103,25 @@
     '</form>';
   }
 
-  window.amAuthAsk().then(function(a){
+  /* ⚠️ 불러오는 중 · 준비됨 · 접수 중단 · 조회 실패 — amGate 한 곳 */
+  window.amGate(box, "문의", function(a){
     if(!a || !a.on){
       try{ console.warn("[help] 로그인 · 접수가 설정되지 않아 문의 양식을 " +
         "열지 않았습니다 (Vercel 의 SUPABASE_URL · SUPABASE_ANON_KEY)."); }catch(e){}
-      return;                       /* 빌드가 찍어 둔 닫힌 글 그대로 */
+      return false;                 /* 접수 중단 글 */
     }
     /* ⚠️ 고를 것이 없으면 양식을 열지 않습니다 (위 머리말) */
     if(!KINDS.length){
       try{ console.warn("[help] js/data/deal.js 를 싣지 않아 문의 갈래가 " +
         "비어 양식을 열지 않았습니다 (pages/help.js 의 js 목록)."); }catch(e){}
-      return;
+      return false;
     }
     if(!KEEP){
       /* ⚠️⚠️ 보유 기간을 못 보여 주면 동의를 받을 수 없습니다 (제15조
          제2항). 운영자에게만 말하고 양식은 안 엽니다. */
       try{ console.warn("[help] js/data/site.js 의 inquiryKeep(보유 기간)이 " +
         "비어 양식을 열지 않았습니다 — 개인정보보호법 제15조 제2항."); }catch(e){}
-      return;
+      return false;
     }
 
     box.className = "jbox";
@@ -183,5 +184,5 @@
           : String((err && err.message) || "보내지 못했습니다.");
       });
     });
-  }).catch(function(){ /* 못 물어봤으면 닫힌 글 그대로 둡니다 */ });
+  });
 })();

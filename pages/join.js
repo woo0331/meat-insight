@@ -146,10 +146,16 @@ exports.build = function(){
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div class="sec-hd"><h2>입점 신청</h2></div>' +
     '<div id="joinbox" class="none">' +
+      /* ⚠️ 2026-11-15 — 자바스크립트가 켜진 화면은 확인이 끝날 때까지 「불러오는 중」만
+         보입니다(.gate-load). 「받지 못합니다」(.gate-off)는 확인 결과가 정말 그럴 때와
+         자바스크립트가 꺼진 화면에서만 보입니다 — 확인 전에 접수 불가라고 단정하지 않습니다. */
+      '<p class="gate-load" role="status">입점 신청 양식을 불러오는 중입니다…</p>' +
+      '<div class="gate-off">' +
       '<h2>지금은 입점 신청을 받지 못합니다.</h2>' +
       '<p>받을 자리를 준비하고 있습니다. 다 적으신 뒤에 실패하는 일이 없도록, ' +
       '준비가 끝나기 전에는 양식을 열지 않습니다.</p>' +
       '<a class="btn btn-line" href="/guide">이용안내 먼저 보기</a>' +
+      '</div>' +
     '</div></div></section>';
 
   return {

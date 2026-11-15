@@ -233,10 +233,20 @@ window.amAuthAsk = function(force){
   /* ⚠️ 이미 묻고 있으면 **그 물음을 그대로** 돌려줍니다 (요청 하나) */
   if(AM_AUTH_FLY && !force) return AM_AUTH_FLY;
   amAuthTakeHash();
+  /* ⚠️⚠️ **못 물어본 것과 「설정이 꺼져 있다」를 가릅니다** (2026-11-15) — 전에는 그물이
+     끊기거나 서버가 5xx 여도 `on:false` 가 되어, 양식 화면이 「지금은 받지 못합니다」로
+     **단정**했습니다. 이제 그때는 `failed` 를 세우고, 화면이 「다시 시도」를 냅니다.
+     ⚠️ 15초 안에 답이 없으면 실패로 봅니다(끝없는 「불러오는 중」을 남기지 않습니다). */
   function ask(){
+    var ctl = (typeof AbortController === "function") ? new AbortController() : null;
+    var t = ctl ? setTimeout(function(){ try{ ctl.abort(); }catch(_){} }, 15000) : null;
     return fetch("/api/session", { headers: Object.assign(
-      { accept:"application/json" }, window.amAuthHeaders()) })
-      .then(function(r){ return r.ok ? r.json() : null; });
+      { accept:"application/json" }, window.amAuthHeaders()), signal: ctl ? ctl.signal : undefined })
+      .then(function(r){
+        if(t) clearTimeout(t);
+        if(!r.ok) throw new Error("session " + r.status);
+        return r.json();
+      }, function(e){ if(t) clearTimeout(t); throw e; });
   }
   AM_AUTH_FLY = ask().then(function(d){
     /* 토큰이 만료되어 떨어졌으면 한 번만 새로 받아 다시 묻습니다 */
@@ -247,6 +257,7 @@ window.amAuthAsk = function(force){
     return d;
   }).then(function(d){
     AM_AUTH.asked = true;
+    AM_AUTH.failed = false;
     if(!d){ AM_AUTH.on = false; AM_AUTH.hats = []; return AM_AUTH; }
     AM_AUTH.on       = !!d.auth;
     AM_AUTH.signedIn = !!d.signedIn;
@@ -261,6 +272,9 @@ window.amAuthAsk = function(force){
        (절대 규칙 3). */
     try{ console.warn("[auth] /api/session — " + e); }catch(_){}
     AM_AUTH.asked = true; AM_AUTH.on = false; AM_AUTH.hats = [];
+    AM_AUTH.failed = true;
+    /* ⚠️ 다음 물음은 **새로** 묻게 둡니다(실패를 담아 두지 않습니다) */
+    AM_AUTH_FLY = null; AM_AUTH.asked = false;
     return AM_AUTH;
   });
   /* ⚠️ 답이 오면 놓습니다 — `force` 로 다시 물을 수 있어야 합니다
@@ -662,4 +676,40 @@ window.amErrText = function(err, fall){
   if(m && /[가-힣]/.test(m) && m.length <= 300 && m.indexOf("<") < 0) return m;
   try{ console.warn("[form] 보내기 실패 원문:", m); }catch(_){ }
   return (fall || "지금 처리하지 못했습니다.") + " 연결이 잠깐 끊겼을 수 있습니다 — 잠시 뒤 다시 눌러 주세요.";
+};
+
+/* ⚠️⚠️ **양식 문 — 불러오는 중 · 준비됨 · 접수 중단 · 조회 실패** (2026-11-15)
+   빌드는 상자 안에 `.gate-load`(불러오는 중)와 `.gate-off`(접수 중단 글)를 같이 찍고,
+   CSS 가 자바스크립트가 켜진 화면에서는 `.gate-load` 만 보입니다. 확인이 끝나면 —
+     · 준비됨       → open(a) 가 양식을 그립니다
+     · 접수 중단    → `.gate-off` 를 보입니다(설정이 꺼졌거나 보유 기간이 빔)
+     · 조회 실패    → 「확인하지 못했습니다」 + 「다시 시도」(양식이 아직 안 그려졌으니
+                      잃을 입력이 없습니다)
+   ⚠️ open(a) 가 false 를 돌려주면 「접수 중단」입니다. */
+window.amGate = function(box, label, open){
+  if(!box) return;
+  var OFF = (box.querySelector(".gate-off") || {}).innerHTML || "";
+  function off(){
+    box.className = "none gate-done";
+    if(OFF) box.innerHTML = '<div class="gate-off">' + OFF + '</div>';
+  }
+  function run(force){
+    window.amAuthAsk(force).then(function(a){
+      if(a && a.failed){
+        box.className = "none none-fail";
+        box.innerHTML = "<h2>" + window.esc(label) + " 양식을 확인하지 못했습니다.</h2>" +
+          "<p>연결이 잠깐 끊겼을 수 있습니다. 접수가 중단됐다는 뜻이 아닙니다.</p>" +
+          '<div class="none-b"><button type="button" class="btn btn-pt" data-gate-retry="1">다시 시도</button></div>';
+        var b = box.querySelector("[data-gate-retry]");
+        if(b) b.addEventListener("click", function(){
+          box.className = "none";
+          box.innerHTML = '<p class="gate-load">' + window.esc(label) + " 양식을 불러오는 중입니다…</p>";
+          run(true);
+        });
+        return;
+      }
+      if(open(a) === false) off();
+    });
+  }
+  run(false);
 };

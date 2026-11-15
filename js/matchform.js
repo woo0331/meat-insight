@@ -367,16 +367,17 @@
     });
   }
 
-  amAuthAsk().then(function(a){
+  /* ⚠️ 불러오는 중 · 준비됨 · 접수 중단 · 조회 실패를 가르는 것은 amGate 한 곳입니다 */
+  window.amGate(box, "요청", function(a){
     if(!a.on || !a.conf || !a.conf.url || !a.conf.anonKey){
       try{ console.warn("[match] Supabase 설정이 없어 요청 양식을 열지 않았습니다 — " +
         "Vercel 의 SUPABASE_URL · SUPABASE_ANON_KEY 를 넣고 다시 배포하세요."); }catch(e){}
-      return;
+      return false;
     }
     if(!KEEP){
       try{ console.warn("[match] js/data/site.js 의 applyKeep(보유 기간)이 비어 " +
         "양식을 열지 않았습니다 — 개인정보보호법 제15조 제2항."); }catch(e){}
-      return;
+      return false;
     }
     box.className = "jbox";
     box.innerHTML = form();

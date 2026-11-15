@@ -1684,8 +1684,10 @@ function boardsOf(){
   await s.p.waitForTimeout(200);
   ok("⚠️⚠️ 조인으로 바꾸면 **하위분류 칸이 사라진다** (조인 글에 그 칸이 없습니다)",
      (await s.p.locator("#wchbox #w-sub").count()) === 0);
-  ok("  부킹 칸이 생기고 택배 칸은 없다",
-     (await s.p.locator('#wchbox [name="booked"]').count()) === 1 &&
+  /* ⚠️⚠️ 2026-11-15 명세 변경 — 조인의 booked 를 적는 길이 서버에 없어, 그 조건으로
+     저장하면 알림이 **영원히 안 옵니다**. 그래서 조인에서도 부킹 칸을 안 냅니다. */
+  ok("  ⚠️ 조인에도 **부킹 칸이 없다** (적는 길이 없어 알림이 영원히 안 옵니다) · 택배 칸도 없다",
+     (await s.p.locator('#wchbox [name="booked"]').count()) === 0 &&
      (await s.p.locator('#wchbox [name="ship"]').count()) === 0);
   await s.p.selectOption("#wchbox #w-kind", "job");
   await s.p.waitForTimeout(200);
@@ -4110,8 +4112,10 @@ function boardsOf(){
     ok("⚠️ 로그인 전에는 **조건 저장 단추를 안 낸다**",
        (await g.p.locator('a[href^="/my?w="]').count()) === 0,
        await g.p.locator('a[href^="/my?w="]').count());
-    ok("  ⚠️ 부킹이 잡힌 것처럼 말하지 않는다 (§2.A — 부킹 보장 금지)",
-       r.body.indexOf("부킹은 아직입니다") >= 0, "");
+    /* ⚠️⚠️ 2026-11-15 명세 변경 — booked 를 적는 길이 없어 「부킹은 아직입니다」는
+       우리가 **모르는 사실을 단정**하는 말이었습니다. 어느 쪽도 단정하지 않습니다. */
+    ok("  ⚠️ 부킹이 잡혔다 · 안 잡혔다를 **단정하지 않는다** (§2.A · 적는 길이 없습니다)",
+       r.body.indexOf("티타임 확정") < 0 && r.body.indexOf("부킹은 아직입니다") < 0, "");
     ok("  로그인 전에는 여는 양식 대신 로그인 길을 낸다", r.login && !r.form,
        JSON.stringify({ login:r.login, form:r.form }));
     /* ⚠️⚠️⚠️ 연락처는 목록 어디에도 없어야 합니다 */
@@ -4156,18 +4160,17 @@ function boardsOf(){
     ok("⚠️⚠️ 로그인하면 **조건 저장 길**이 생긴다 (0058)",
        (await g.p.locator('a[href="/my?w=join"]').count()) === 1,
        await g.p.locator('a[href="/my?w=join"]').count());
-    ok("조인 목록에 거르개가 있다 (지역 · 날짜 · 부킹)",
-       bar.rg && bar.wh && bar.bk, JSON.stringify(bar).slice(0, 120));
+    ok("조인 목록에 거르개가 있다 (지역 · 날짜)", bar.rg && bar.wh, JSON.stringify(bar).slice(0, 120));
+    /* ⚠️⚠️ 2026-11-15 명세 변경 — 「부킹이 잡힌 자리만」은 늘 0건이라 걷었습니다 */
+    ok("  ⚠️⚠️ 늘 0건이던 「부킹이 잡힌 자리만」 칸이 **없다**", !bar.bk, JSON.stringify(bar).slice(0, 120));
     /* ⚠️ 갯수를 박지 않습니다 — 센 수가 찍히기만 하면 됩니다 */
     ok("  센 수를 적는다", /열린 자리 \d+곳/.test(bar.now), bar.now);
-    ok("  ⚠️⚠️ **티타임이 잡힌 자리**라고 적는다 (거르개의 뜻이 보이게)",
-       /* ⚠️ 확정 시안 ② 로 바뀜 뒤 딸지 글자가 「티타임 확정」입니다 —
-          재려는 뜻은 「거르개의 뜻이 화면에 보이나」 하나입니다. */
-       bar.body.indexOf("티타임 확정") >= 0, "");
-    ok("  ⚠️ 골프장이 비어 있어도 '부킹은 아직' 줄이 안 빠진다",
-       bar.body.indexOf("부킹은 아직입니다") >= 0, "");
+    /* ⚠️ 자료에 booked:true 인 자리가 있어도(옛 자료) 「티타임 확정」을 안 찍습니다 —
+       그 값을 적는 길이 없으므로 믿을 수 없는 값입니다. */
+    ok("  ⚠️ booked 값이 있어도 「티타임 확정」 · 「부킹은 아직」을 **안 찍는다**",
+       bar.body.indexOf("티타임 확정") < 0 && bar.body.indexOf("부킹은 아직입니다") < 0, "");
     ok("  ⚠️ 우리가 예약을 잡아 준다고 **적지 않는다** (절대 규칙 5)",
-       bar.body.indexOf("예약을 잡아 드리는 것은 아닙니다") >= 0, "");
+       bar.body.indexOf("예약을 잡아 드립니다") < 0, "");
 
     /* 지역을 고릅니다 → 질의에 region=eq. 가 실려야 합니다 */
     const n0 = g.sent.length;
@@ -4179,13 +4182,9 @@ function boardsOf(){
     ok("  지역을 고르면 **서버에** 조건을 보낸다",
        q1.indexOf("region=eq.seoul") >= 0, q1.slice(0, 200));
 
-    /* 부킹 잡힌 자리만 */
-    const n1 = g.sent.length;
-    await g.p.check("#jf-bk");
-    await g.p.waitForTimeout(350);
-    const q2 = g.sent.slice(n1).map(function(x){ return String(x.body); }).join(" | ");
-    ok("  부킹 잡힌 자리만 → booked=is.true 를 보낸다",
-       q2.indexOf("booked=is.true") >= 0, q2.slice(0, 200));
+    /* ⚠️⚠️ 2026-11-15 — 어떤 거르개를 눌러도 booked 조건은 **안 보냅니다** */
+    const q2 = g.sent.map(function(x){ return String(x.body); }).join(" | ");
+    ok("  ⚠️ 어떤 질의에도 booked=is.true 가 **없다**", q2.indexOf("booked=") < 0, "");
 
     /* 날짜 — ⚠️⚠️ **그 자리의 날짜**로 보내야 합니다. toISOString() 은
        UTC 라 한국에서 아침 9시 전에 하루 밀립니다. */
@@ -4292,6 +4291,21 @@ function boardsOf(){
          c.lvText.indexOf("초보") >= 0, c.lvText);
     }
 
+    await g.p.close();
+  }
+
+  /* ⚠️⚠️ 옛 주소의 bk=1 이 결과를 **잘못 좁히지 않는다** (2026-11-15) —
+     걷은 거르개가 주소에 남아 있어도 늘 0건이 되면 안 됩니다. */
+  {
+    const g = await open("/cat/matchup?bk=1&rg=seoul", { role:"customer", name:"손님", signedIn:true },
+                         { v_join_open: JROOM }, {}, true);
+    await g.p.waitForTimeout(400);
+    const q = g.sent.filter(function(x){ return String(x.body).indexOf("v_join_open") >= 0; })
+                .map(function(x){ return String(x.body); }).join(" | ");
+    ok("⚠️⚠️ 옛 주소의 bk=1 은 **무시한다** (booked 조건을 안 보낸다) · 다른 조건은 그대로",
+       q.indexOf("booked=") < 0 && q.indexOf("region=eq.seoul") >= 0, q.slice(0, 200));
+    const u = await g.p.evaluate(function(){ return location.search; });
+    ok("  주소에서도 bk 를 지운다 (복사해 보내도 같은 화면)", u.indexOf("bk=") < 0 && u.indexOf("rg=seoul") >= 0, u);
     await g.p.close();
   }
 

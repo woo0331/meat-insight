@@ -961,7 +961,9 @@ window.amLstPrice = function(n){
    ════════════════════════════════════════════════════════════════════ */
 window.AM_WATCH = [
   { key:"join",    name:"골프 조인",        where:"/cat/matchup",
-    sub:false, price:true,  ship:false, booked:true },
+    /* ⚠️ booked 를 끕니다 (2026-11-15) — 조인의 booked 를 적는 길이 서버에 없어
+       그 조건으로 저장하면 **알림이 영원히 안 옵니다**. 문(save_watch)은 그대로 받습니다. */
+    sub:false, price:true,  ship:false, booked:false },
   { key:"listing", name:"중고 직거래",      where:"/cat/used",
     sub:true,  price:true,  ship:true,  booked:false },
   { key:"job",     name:"인력 · 비즈니스",  where:"/cat/career",

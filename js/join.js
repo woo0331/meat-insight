@@ -63,9 +63,12 @@
           /* ⚠️⚠️ 골프장이 적혀 있어도 **부킹이 잡혔다는 뜻이 아닙니다**
              (지시서 §2.A — 부킹 보장 금지). 두 딱지를 **따로** 냅니다 —
              골프장 이름이 비어 있어도 `booked` 는 켜질 수 있습니다. */
-          (r.booked
-            ? '<span class="jnc-ok">티타임 확정</span>'
-            : '<span class="jnc-w">부킹은 아직입니다</span>') +
+          /* ⚠️⚠️⚠️ 「티타임 확정 · 부킹은 아직입니다」 딱지를 걷었습니다 (2026-11-15) —
+             `booked` 를 적는 길이 서버에 **하나도 없습니다**(open_joinroom · edit_joinroom
+             이 그 칸을 안 받고 0046 의 기본값 false 만 남습니다). 그래서 모든 카드가
+             「부킹은 아직입니다」였는데, 그건 우리가 **모르는 사실을 단정**한 것입니다
+             (여신 분이 이미 잡아 두셨을 수 있습니다 · 절대 규칙 1). 적는 길이 생기는 날
+             되살립니다. */
           /* ⚠️ 0080 — 실력. **안 고르신 자리는 딱지를 안 냅니다**
              (「무관」을 우리가 지어 적지 않습니다 · 절대 규칙 1). */
           (lv ? '<span class="jnc-lv">' + esc(lv) + '</span>' : '') +
@@ -136,11 +139,16 @@
   var OPTCOL = ["level"];
   var MISS = [];
 
+  /* ⚠️ 늦게 온 옛 응답이 새 조건의 목록을 덮지 않게 (2026-11-15) */
+  var SEQ = 0;
   function reload(a){
+    var my = ++SEQ;
     return load(a).then(function(x){
+      if(my !== SEQ) return;
       if(x.miss && x.miss.length) tookOut(x.miss);
       paint(a, x.rows, MISS);
     }).catch(function(e){
+      if(my !== SEQ) return;
       window.amFailLog("join/v_join_open", e);
       list.innerHTML = window.amFailHtml("조인 목록");
       bindRetry(a);
@@ -279,17 +287,21 @@
     '</div>';
   }
 
+  /* ⚠️ 카드 여럿에서 양식을 같이 열 수 있으므로 **id 에 그 카드의 꼬리표**를
+     붙입니다 (2026-11-15) — 같은 id 가 둘이면 둘째 양식의 이름표가 첫째 칸을
+     가리켰습니다. 양식 자체는 class(.jaf)로 집습니다. */
   function applyForm(id, title){
-    return '<form id="jaf" class="jform" data-id="' + esc(id) + '">' +
+    var q = String(id).replace(/[^A-Za-z0-9_-]/g, "").slice(0, 40);
+    return '<form class="jform jaf" data-id="' + esc(id) + '">' +
       '<p class="jafh">참가 신청 — <b>' + esc(title) + '</b></p>' +
       '<div class="jrow jrow-full">' +
-        '<label for="a-msg">남기실 말</label>' +
-        '<textarea id="a-msg" name="msg" rows="3" maxlength="300" ' +
+        '<label for="a-msg-' + q + '">남기실 말</label>' +
+        '<textarea id="a-msg-' + q + '" name="msg" rows="3" maxlength="300" ' +
         'placeholder="구력 · 가능한 시간 등을 적어 주세요."></textarea>' +
       '</div>' +
       '<div class="jrow jrow-full">' +
-        '<label for="a-contact">연락처 <b>*</b></label>' +
-        '<input id="a-contact" name="contact" required maxlength="100" ' +
+        '<label for="a-contact-' + q + '">연락처 <b>*</b></label>' +
+        '<input id="a-contact-' + q + '" name="contact" required maxlength="100" ' +
         'autocomplete="tel" placeholder="전화번호 또는 메신저 아이디">' +
         '<span class="jhint">⚠️ 여신 분에게 <b>바로 가지 않습니다.</b> ' +
         '수락된 뒤 <b>다시 한 번 고르셔야</b> 보입니다.</span>' +
@@ -298,7 +310,7 @@
       '<div class="jrow jrow-full">' +
         '<button type="submit" class="btn btn-pt">신청 보내기</button>' +
         '<button type="button" class="btn btn-line jaf-x">그만두기</button>' +
-        '<p id="jmsg2" class="jmsg" hidden></p>' +
+        '<p class="jmsg jmsg2" hidden></p>' +
       '</div>' +
     '</form>';
   }
@@ -393,7 +405,9 @@
       var u = new URLSearchParams(location.search);
       F.rg = (u.get("rg") || "").trim();
       F.wh = whenOf((u.get("when") || "").trim()).key;
-      F.bk = u.get("bk") === "1";
+      /* ⚠️ 옛 주소의 bk=1 은 **읽지 않습니다** — 읽으면 결과가 늘 0건으로
+         좁혀집니다(위 체크칸을 걷은 까닭). writeUrl 이 주소에서도 지웁니다. */
+      F.bk = false;
       /* ⚠️ 모르는 키는 **버립니다** — 주소를 손으로 고쳐 오시면
          아무것도 안 걸리는 화면이 되는데 「자리가 없다」로 읽힙니다. */
       var lv = (u.get("lv") || "").trim();
@@ -497,14 +511,9 @@
           return '<option value="' + n + '"' +
             (F.pp === String(n) ? " selected" : "") + '>' + n + '명 이상 남은 자리</option>';
         }).join("") + '</select></div>' +
-      '<div class="jrow jrow-full">' +
-        '<label class="chk"><input type="checkbox" id="jf-bk"' +
-          (F.bk ? " checked" : "") + '><span>부킹이 잡힌 자리만</span></label>' +
-        /* ⚠️ 하지 않는 일을 적지 않습니다 — 우리가 티타임을 파는 것도,
-           자리를 보장하는 것도 아닙니다. 여신 분이 적은 사실뿐입니다. */
-        '<p class="jhint">여신 분이 티타임을 이미 잡아 두고 사람만 ' +
-        '구하는 자리입니다. 골프올인원이 예약을 잡아 드리는 것은 아닙니다.</p>' +
-      '</div>' +
+      /* ⚠️⚠️⚠️ 「부킹이 잡힌 자리만」 체크칸을 걷었습니다 (2026-11-15) — 그 값을
+         적는 길이 서버에 없어 **늘 0건**이었습니다(눌러도 아무것도 못 찾는 칸 ·
+         절대 규칙 5). 위 딱지와 같은 까닭입니다. */
     '</form>' +
     /* ⚠️⚠️ 0058 — 글과 주소는 `js/data/deal.js` 의 amWatchLink() 한
        곳입니다 (분류 화면 셋이 같은 말을 해야 합니다). */
@@ -528,7 +537,7 @@
       qs.push(zr.length ? "region=in.(" + zr.map(encodeURIComponent).join(",") + ")"
                         : "region=eq." + encodeURIComponent(F.rg));
     }
-    if(F.bk) qs.push("booked=is.true");
+    /* booked 거르개는 걷었습니다 — F.bk 는 늘 거짓입니다(위 readUrl) */
     /* ⚠️⚠️ 0080 — 실력. **안 고르신 자리는 빠집니다**(null 과 견주는
        순간 빠집니다) — 0건 안내가 그 사실을 적습니다. */
     if(F.lv) qs.push("level=eq." + encodeURIComponent(F.lv));
@@ -649,16 +658,16 @@
             '">로그인하기</a></div>');
           return;
         }
-        var old = li.querySelector("#jaf");
+        var old = li.querySelector(".jaf");
         if(old){ old.remove(); return; }
         li.insertAdjacentHTML("beforeend",
           applyForm(b.getAttribute("data-id"), li.querySelector("h3").textContent));
         li.querySelector(".jaf-x").addEventListener("click", function(){
-          li.querySelector("#jaf").remove();
+          li.querySelector(".jaf").remove();
         });
-        li.querySelector("#jaf").addEventListener("submit", function(e){
+        li.querySelector(".jaf").addEventListener("submit", function(e){
           e.preventDefault();
-          var f = e.target, msg = li.querySelector("#jmsg2");
+          var f = e.target, msg = li.querySelector(".jmsg2");
           var btn = f.querySelector('button[type="submit"]');
           btn.disabled = true;
           msg.hidden = false; msg.textContent = "보내는 중입니다…";
@@ -706,6 +715,9 @@
        빌드가 찍을 자리가 아닙니다 (위 머리말). */
     SIGNED = !!a.signedIn;
     readUrl();
+    /* ⚠️ 읽으면서 버린 조건(옛 bk=1 · 모르는 지역)을 주소에서도 지웁니다 —
+       그대로 두면 복사해 보낸 주소가 다른 화면을 약속합니다. */
+    writeUrl();
     mountBar();
     bindBar(a);
     reload(a);

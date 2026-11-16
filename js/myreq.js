@@ -52,6 +52,11 @@
      ⚠️⚠️ 「상담 선택」은 예약 · 계약 · 결제가 **아닙니다.** 고르시는 그 자리에서
      상호를 보여 드리고 그 업체에만 연락처를 넘기는 동의를 받습니다
      (개인정보보호법 제17조 제2항). 동의 단추를 눌러야만 pick_quote 가 갑니다. */
+  /* 지역 키를 사람 말로 — ⚠️ 못 찾으면 키 그대로 두지 않고 amKeyName 이 말합니다 */
+  function regName(k){
+    var x = window.amRegion ? window.amRegion(k) : null;
+    return x && x.name ? x.name : (window.amKeyName ? window.amKeyName({}, k, "지역") : "");
+  }
   function cmpOn(){ return !!(window.amCmpOn && window.amCmpOn()); }
   function cmpCfg(cat){ return window.amCmp ? window.amCmp(cat) : null; }
   function kstToday(){
@@ -280,60 +285,78 @@
   /* 비교표 — ⚠️⚠️ **낸 차례대로** 놓습니다(싼 순서가 아닙니다). 「최저가」 ·
      「최고가」 딱지를 안 붙입니다 — 포함되는 것이 다르면 금액만으로 못 견줍니다.
      ⚠️ 칸 이름은 AM_CMP[분류].terms 한 곳에서(업체 양식이 같은 줄을 읽습니다). */
-  function cmpTable(r, qs, today, ended){
+  /* ⚠️⚠️ 줄(항목)을 **한 번만** 짓고, 넓은 화면은 표 · 폰은 업체마다 카드로 그립니다
+     (2026-11-16 — 폰에서 표의 열이 겹치고 줄 이름이 잘렸습니다). 같은 줄을 읽으므로
+     두 모양이 다른 말을 할 수 없습니다. 단추(data-cpick)는 **한 벌만** 그립니다. */
+  function cmpRows(r, qs, today, ended){
     var cfg = cmpCfg(r.cat) || { terms:[], amount:"금액" };
     var kinds = window.AM_CMP_KIND || {};
     var chosen = qs.some(function(q){ return q.state === "chosen"; });
     function T(q){ return (q.terms && typeof q.terms === "object") ? q.terms : {}; }
     function cell(v){
       return (v === null || v === undefined || String(v).trim() === "")
-        ? '<td class="cmp-sm">적지 않음</td>' : '<td>' + esc(String(v)) + '</td>';
+        ? { cls:"cmp-sm", html:"적지 않음" } : { cls:"", html:esc(String(v)) };
     }
     var rows = [];
-    rows.push('<tr><th scope="row">견적 종류</th>' + qs.map(function(q){
-      return cell(q.kind && window.amKeyName ? window.amKeyName(kinds, q.kind, "견적 종류") : null); }).join("") + '</tr>');
-    rows.push('<tr><th scope="row">' + esc(cfg.amount || "금액") + '</th>' + qs.map(function(q){
-      return cell(window.amQuoteAmount(q)); }).join("") + '</tr>');
+    function row(label, fn){ rows.push({ label:label, cells:qs.map(fn) }); }
+    row("견적 종류", function(q){
+      return cell(q.kind && window.amKeyName ? window.amKeyName(kinds, q.kind, "견적 종류") : null); });
+    row(cfg.amount || "금액", function(q){ return cell(window.amQuoteAmount(q)); });
     (cfg.terms || []).forEach(function(f){
-      rows.push('<tr><th scope="row">' + esc(f.label) + '</th>' + qs.map(function(q){
-        return cell(T(q)[f.k]); }).join("") + '</tr>');
+      row(f.label, function(q){ return cell(T(q)[f.k]); });
     });
-    rows.push('<tr><th scope="row">포함</th>' + qs.map(function(q){
-      return cell(q.scope); }).join("") + '</tr>');
-    rows.push('<tr><th scope="row">별도 비용</th>' + qs.map(function(q){
-      return cell(q.excludes); }).join("") + '</tr>');
-    rows.push('<tr><th scope="row">유효기간</th>' + qs.map(function(q){
-      if(!q.valid_to) return '<td class="cmp-sm">적지 않음</td>';
+    row("포함", function(q){ return cell(q.scope); });
+    /* ⚠️ 비교 항목에 「별도 비용」이 있는 분류가 있어 이 줄은 이름을 갈랐습니다 */
+    row("포함되지 않는 것", function(q){ return cell(q.excludes); });
+    row("유효기간", function(q){
+      if(!q.valid_to) return { cls:"cmp-sm", html:"적지 않음" };
       var ex = q.state === "open" && window.amCmpExpired && window.amCmpExpired(q, today);
-      return '<td>' + esc(q.valid_to) + '까지' +
-        (ex ? ' <span class="dk-st dk-bad cmp-exp">만료</span>' : "") + '</td>';
-    }).join("") + '</tr>');
-    rows.push('<tr><th scope="row">업체 말씀</th>' + qs.map(function(q){
-      return cell(q.note); }).join("") + '</tr>');
-    rows.push('<tr><th scope="row">상태</th>' + qs.map(function(q){
+      return { cls:"", html: esc(q.valid_to) + '까지' +
+        (ex ? ' <span class="dk-st dk-bad cmp-exp">만료</span>' : "") };
+    });
+    row("업체 말씀", function(q){ return cell(q.note); });
+    row("상태", function(q){
       var st = window.amQuoteSt(q.state) || { name:q.state, tone:"ink" };
-      var name = q.state === "chosen" ? "상담 선택" : st.name;
-      return '<td>' + badge(name, st.tone) + '</td>';
-    }).join("") + '</tr>');
-    rows.push('<tr><th scope="row">고르기</th>' + qs.map(function(q){
+      return { cls:"", html: badge(q.state === "chosen" ? "상담 선택" : st.name, st.tone) };
+    });
+    row("고르기", function(q){
       var ex = window.amCmpExpired && window.amCmpExpired(q, today);
       if(q.state === "open" && !ex && !chosen && !ended)
-        return '<td><button type="button" class="btn btn-sm btn-pt" data-cpick="' +
-          esc(q.provider_id) + '" data-pname="' + esc(q.pname || "") + '">' +
-          '이 업체와 상담하기</button></td>';
-      if(q.state === "chosen")
-        return '<td class="cmp-sm">고르신 업체입니다</td>';
-      if(q.state === "open" && ex)
-        return '<td class="cmp-sm">유효기간이 지나 고를 수 없습니다</td>';
-      return '<td class="cmp-sm">—</td>';
-    }).join("") + '</tr>');
+        return { cls:"", html:'<button type="button" class="btn btn-sm btn-pt" data-cpick="' +
+          esc(q.provider_id) + '" data-pname="' + esc(q.pname || "") + '">이 업체와 상담하기</button>' };
+      if(q.state === "chosen") return { cls:"cmp-sm", html:"고르신 업체입니다" };
+      if(q.state === "open" && ex) return { cls:"cmp-sm", html:"유효기간이 지나 고를 수 없습니다" };
+      return { cls:"cmp-sm", html:"—" };
+    });
+    return rows;
+  }
+  function pnameHtml(q){
+    return q.pname ? esc(q.pname) : '<span class="rq-q-no">업체 상호를 읽지 못했습니다</span>';
+  }
+  function cmpNarrow(){
+    try{ return window.matchMedia && window.matchMedia("(max-width: 760px)").matches; }catch(e){ return false; }
+  }
+  function cmpTable(r, qs, today, ended){
+    var rows = cmpRows(r, qs, today, ended);
+    if(cmpNarrow()){
+      return '<div class="cmpq-cs">' + qs.map(function(q, i){
+        return '<article class="cmpq-c"><h4>' + pnameHtml(q) + '</h4><dl>' +
+          rows.map(function(rw){
+            var c = rw.cells[i];
+            return '<dt>' + esc(rw.label) + '</dt><dd' + (c.cls ? ' class="' + c.cls + '"' : "") + '>' + c.html + '</dd>';
+          }).join("") + '</dl></article>';
+      }).join("") + '</div>';
+    }
     return '<div class="cmp-s"><table class="cmp-t cmpq">' +
       '<caption class="sr-only">받은 비교 견적</caption>' +
       '<thead><tr><th scope="col">항목</th>' + qs.map(function(q){
-        return '<th scope="col">' + (q.pname ? esc(q.pname)
-          : '<span class="rq-q-no">업체 상호를 읽지 못했습니다</span>') + '</th>';
+        return '<th scope="col">' + pnameHtml(q) + '</th>';
       }).join("") + '</tr></thead>' +
-      '<tbody>' + rows.join("") + '</tbody></table></div>';
+      '<tbody>' + rows.map(function(rw){
+        return '<tr><th scope="row">' + esc(rw.label) + '</th>' + rw.cells.map(function(c){
+          return '<td' + (c.cls ? ' class="' + c.cls + '"' : "") + '>' + c.html + '</td>';
+        }).join("") + '</tr>';
+      }).join("") + '</tbody></table></div>';
   }
 
   /* 상담 선택 동의 상자 — ⚠️ 보유 기간이 비면 동의를 받지 않습니다
@@ -377,7 +400,7 @@
          (stg.name ? badge(stg.name, "grn") : "") + '</div>';
     h += '<dl class="dk-d">';
     if(svcs.length) h += '<dt>요청</dt><dd>' + esc(svcs.join(" / ")) + '</dd>';
-    if(r.region)    h += '<dt>지역</dt><dd>' + esc(r.region + (r.gu ? " " + r.gu : "")) + '</dd>';
+    if(r.region)    h += '<dt>지역</dt><dd>' + esc(regName(r.region) + (r.gu ? " " + r.gu : "")) + '</dd>';
     if(r.want_at)   h += '<dt>희망 일정</dt><dd>' + esc(r.want_at) + '</dd>';
     h += detailRows(r);
     h += '</dl>';
@@ -414,7 +437,13 @@
     h += giveBlock(r, (asgs || []).filter(function(a){
       return a.agree3rd_at && !a.blind;
     }), pnames || {});
-    h += reviewBlock(r, qs, appts, revs, pnames || {});
+    /* ⚠️⚠️ 비교견적의 「상담 선택」은 아직 **이용 전**입니다 — 후기 칸은 최종 조건이
+       확정된 뒤(signed · done · 정산)에만 엽니다. 이미 쓰신 후기는 그대로 보입니다.
+       ⚠️ 이것은 화면의 판단이고 DB(0037)는 고른 견적이 있으면 후기를 받습니다 —
+       서버에서도 막으려면 다음 번호에서 0037 의 자격을 고칩니다(보고에 적었습니다). */
+    if(["signed","done","fee_wait","fee_done"].indexOf(r.state) >= 0 ||
+       (revs || []).some(function(v){ return v.request_id === r.id; }))
+      h += reviewBlock(r, qs, appts, revs, pnames || {});
     if(!ended)
       h += '<div class="dk-b"><button class="btn btn-sm btn-line" ' +
            'data-cancel="' + esc(r.id) + '">이 요청 취소하기</button></div>';
@@ -446,7 +475,7 @@
     h += steps(r.state);
     h += '<dl class="dk-d">';
     if(svcs.length) h += '<dt>요청</dt><dd>' + esc(svcs.join(" / ")) + '</dd>';
-    if(r.region)    h += '<dt>지역</dt><dd>' + esc(r.region + (r.gu ? " " + r.gu : "")) + '</dd>';
+    if(r.region)    h += '<dt>지역</dt><dd>' + esc(regName(r.region) + (r.gu ? " " + r.gu : "")) + '</dd>';
     if(r.want_at)   h += '<dt>희망 일정</dt><dd>' + esc(r.want_at) + '</dd>';
     h += '</dl>';
 
@@ -700,6 +729,8 @@
       aw.hidden = false;
       var gb = aw.querySelector("button[data-cgo]");
       if(gb && gb.focus) gb.focus();
+      /* ⚠️ 폰에서는 업체 카드가 세로로 쌓여 동의 상자가 화면 밖에 열립니다 — 그리로 내려갑니다 */
+      try{ aw.scrollIntoView({ behavior:"smooth", block:"center" }); }catch(_){}
       return;
     }
     var cn = e.target.closest ? e.target.closest("button[data-cno]") : null;

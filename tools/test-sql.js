@@ -138,6 +138,7 @@ try{
      없었습니다** — 배정이 없으면 첫 줄에서 거절하기 때문입니다. */
   require("./sql/quote.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/compare.js")({ ok, psql, psqlFile, denied, allowed });
+  require("./sql/stage.js")({ ok, psql, psqlFile, denied, allowed });
   /* ⚠️⚠️ 사장님이 붙여 넣으실 **안내문**은 아무 검사도 안 봅니다 —
      그래서 그 파일을 실제로 붙여 넣어 봅니다. */
   require("./sql/seed.js")({ ok, psql, psqlFile, denied, allowed });

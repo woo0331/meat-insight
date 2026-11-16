@@ -1,9 +1,9 @@
 /* ==================================================================
-   0008 ~ 0082 를 한 번에 —
+   0008 ~ 0083 를 한 번에 —
    Supabase SQL 편집기에 **이 파일을 통째로** 붙여 넣고 Run 하세요.
    ==================================================================
    WARN 빌드가 만드는 파일입니다 — 손으로 고치지 마세요.
-   db/migrations 의 75개를 번호 차례로 이어 붙인 것이고
+   db/migrations 의 76개를 번호 차례로 이어 붙인 것이고
    한 글자도 바꾸지 않았습니다. (node tools/make-apply.js)
 
    이미 0007 까지 돌려 두신 DB 에 쓰는 것입니다.
@@ -21165,13 +21165,9 @@ on conflict (n) do nothing;
 --   ⑤ `pick_quote` — 손님이 **상담할 업체 하나**를 고르면서 **그 업체에만**
 --      연락처를 넘기는 데 동의합니다(상호를 보여 주고 받습니다 — 제17조 제2항)
 --
--- ⚠️⚠️⚠️ **연락처를 칸 단위로 막습니다** — 0001 은 `request` 의 select 를 표째로
---   주었고 RLS 는 줄만 좁힙니다. 즉 배정된 업체는 그 줄의 성함 · 연락처를
---   **화면이 가려도 API 로** 읽을 수 있었습니다. 이제 name · tel · email ·
---   tel_key 는 표에서 못 읽고 `v_request_contact` 하나로만 읽습니다:
---   운영자 · 직원 / 그 요청을 낸 본인 / **수락한 · 거두지 않은 · blind 가 아닌**
---   배정의 업체. 한 업체 흐름에서는 전에도 수락 뒤에만 화면이 보여 줬으므로
---   보이는 것은 같고, **수락 전에 API 로 읽던 길만** 닫힙니다.
+-- ⚠️⚠️⚠️ **연락처를 읽는 보기(`v_request_contact`)를 세웁니다** — 운영자 · 직원 /
+--   그 요청을 낸 본인 / **수락한 · 거두지 않은 · blind 가 아닌** 배정의 업체만.
+--   표에서 칸을 거두는 일은 **0083** 입니다(차례는 docs/compare-0082.md).
 --
 -- 되돌리기 — 맨 아래 주석. 기존 회원 · 요청 · 견적 줄은 **한 줄도 안 바뀝니다**
 --   (칸을 더하고 · 기본값 false · 표 권한만 좁힙니다).
@@ -21204,21 +21200,14 @@ do $$ begin
   end if;
 end $$;
 
--- ── 연락처 칸을 표에서 거둡니다 ─────────────────────────────────────
--- ⚠️ 칸 목록을 글자로 박지 않습니다 — 지금 있는 칸에서 넷을 빼고 줍니다
---   (칸이 늘어난 날 그 칸만 빠지는 일이 없게).
-revoke select on request from authenticated;
-do $$
-declare v_cols text;
-begin
-  select string_agg(quote_ident(column_name), ', ' order by ordinal_position)
-    into v_cols
-    from information_schema.columns
-   where table_schema = 'public' and table_name = 'request'
-     and column_name not in ('name','tel','email','tel_key');
-  execute format('grant select (%s) on request to authenticated', v_cols);
-end $$;
-
+-- ── 연락처를 읽는 보기 ─────────────────────────────────────────────
+-- ⚠️⚠️⚠️ **표의 연락처 칸을 거두는 일은 0083 이 합니다(이 파일이 아닙니다).**
+--   0082 를 올린 뒤에도 스위치(compareOn)가 꺼진 지금 화면은 `request` 에서
+--   name · tel · email 을 그대로 묻습니다 — 여기서 거두면 그 순간 업체 작업실 ·
+--   운영자 배정이 빈 채로 남습니다. 그래서 차례가 이렇습니다:
+--     0082(더하기만) → 스위치 켠 화면 배포(보기로 읽음) → 0083(표에서 거둠)
+--   ⚠️ 0083 전에는 비교 배정을 **서버가 거절**합니다(`assign_more` 첫 줄) —
+--   그 사이에 배정되면 연락처를 안 넘기는 배정인데도 업체가 표에서 읽을 수 있습니다.
 drop view if exists v_request_contact;
 create view v_request_contact as
   select r.id, r.name, r.tel, r.email
@@ -21232,6 +21221,7 @@ create view v_request_contact as
                     and a.revoked_at is null
                     and a.blind = false);
 revoke all on v_request_contact from public, anon;
+-- ⚠️ Supabase 의 기본 권한(pre-apply 를 안 거친 경우)이 anon 에게 준 것도 위 줄이 거둡니다
 grant select on v_request_contact to authenticated;
 
 -- ── 분류마다 받는 서비스 ─────────────────────────────────────────────
@@ -21246,7 +21236,7 @@ create or replace function compare_cat_ok(p_cat text, p_svc text) returns boolea
     when 'used'    then p_svc = 'us-buyquote'
     else false end;
 $$;
-revoke all on function compare_cat_ok(text, text) from public;
+revoke all on function compare_cat_ok(text, text) from public, anon, authenticated;
 
 -- 조건 · 비교 항목 꾸러미 — 글자만 · 키 꼴 · 크기를 봅니다
 create or replace function compare_bag_ok(p jsonb, p_max int) returns boolean
@@ -21258,7 +21248,7 @@ create or replace function compare_bag_ok(p jsonb, p_max int) returns boolean
                          or jsonb_typeof(e.value) <> 'string'
                          or length(e.value #>> '{}') > p_max);
 $$;
-revoke all on function compare_bag_ok(jsonb, int) from public;
+revoke all on function compare_bag_ok(jsonb, int) from public, anon, authenticated;
 
 -- ── ① 비교 요청 넣기 ─────────────────────────────────────────────────
 create or replace function make_compare_request(p jsonb)
@@ -21313,6 +21303,10 @@ begin
   perform set_config('app.compare_door', '1', true);
   if not coalesce(v_role in ('staff','admin'), false) then
     raise exception '배정은 운영자만 합니다';
+  end if;
+  /* ⚠️⚠️ 0083(연락처 칸 잠금)이 올라가기 전에는 비교 배정을 하지 않습니다 */
+  if has_column_privilege('authenticated', 'public.request', 'tel', 'select') then
+    raise exception '연락처 칸 잠금(0083)이 아직 적용되지 않아 비교 배정을 할 수 없습니다';
   end if;
   begin v_rid := (p->>'request')::uuid;
   exception when others then raise exception '요청을 다시 골라 주세요'; end;
@@ -21568,13 +21562,52 @@ begin
   end if;
   return new;
 end $$;
-revoke all on function compare_door_guard() from public;
+revoke all on function compare_door_guard() from public, anon, authenticated;
 drop trigger if exists compare_door_quote_t on quote;
 create trigger compare_door_quote_t before insert or update on quote
   for each row execute function compare_door_guard();
 drop trigger if exists compare_door_assign_t on assignment;
 create trigger compare_door_assign_t before insert or update on assignment
   for each row execute function compare_door_guard();
+
+-- ── 고른 업체만 다음 단계로 ─────────────────────────────────────────
+-- ⚠️⚠️⚠️ 비교 요청에는 업체가 여럿 배정됩니다. 옛 문(`move_state` · 0019 의
+--   `request_scope_check`)은 **배정된 업체면 누구나** 상태를 옮기게 두므로, 손님이
+--   고르지 않은 업체가 「조율 · 계약 · 완료」로 옮기거나 계약(deal)을 제 이름으로
+--   만들 수 있었습니다. 표에서 막습니다 — 업체가 옮길 때는 **손님이 고른 견적의
+--   업체**여야 하고, 계약 줄의 업체도 그 업체여야 합니다(운영자 · 직원은 그대로).
+create or replace function compare_state_guard() returns trigger
+  language plpgsql set search_path = public as $$
+begin
+  if not coalesce(new.compare, false) then return new; end if;
+  if new.state is not distinct from old.state then return new; end if;
+  if coalesce(current_setting('app.compare_door', true), '') = '1' then return new; end if;
+  if coalesce(my_role() = 'provider', false) and not exists (
+       select 1 from quote where request_id = new.id
+          and provider_id = my_provider() and state = 'chosen') then
+    raise exception '손님이 상담할 업체로 고른 업체만 다음 단계로 옮길 수 있습니다';
+  end if;
+  return new;
+end $$;
+revoke all on function compare_state_guard() from public, anon, authenticated;
+drop trigger if exists compare_state_t on request;
+create trigger compare_state_t before update of state on request
+  for each row execute function compare_state_guard();
+
+create or replace function compare_deal_guard() returns trigger
+  language plpgsql set search_path = public as $$
+begin
+  if not exists (select 1 from request where id = new.request_id and compare) then return new; end if;
+  if not exists (select 1 from quote where request_id = new.request_id
+                    and provider_id = new.provider_id and state = 'chosen') then
+    raise exception '비교견적의 계약은 손님이 고른 업체와만 맺습니다';
+  end if;
+  return new;
+end $$;
+revoke all on function compare_deal_guard() from public, anon, authenticated;
+drop trigger if exists compare_deal_t on deal;
+create trigger compare_deal_t before insert or update of provider_id on deal
+  for each row execute function compare_deal_guard();
 
 insert into schema_version (n, name) values (82, '0082_compare_quote')
 on conflict (n) do nothing;
@@ -21590,9 +21623,69 @@ commit;
 --   drop trigger if exists compare_door_quote_t on quote;
 --   drop trigger if exists compare_door_assign_t on assignment;
 --   drop function if exists compare_door_guard();
+--   drop trigger if exists compare_state_t on request;
+--   drop trigger if exists compare_deal_t on deal;
+--   drop function if exists compare_state_guard(), compare_deal_guard();
 --   drop view if exists v_request_contact;
---   grant select on request to authenticated;          -- 0001 의 표 단위 권한으로
 --   -- (blind 배정이 남아 있으면 아래 not null 이 실패합니다 — 그 줄을 먼저 정리)
 --   -- alter table assignment alter column agree3rd_at set not null;
 --   delete from schema_version where n = 82;
+-- commit;
+
+/* ---------------------------- 0083_request_contact_lock.sql ---------------------------- */
+-- 0083 — 요청의 연락처 칸을 표에서 거둡니다 (2026-11-16 · 비교견적 마무리)
+-- ════════════════════════════════════════════════════════════════════
+-- ⚠️⚠️⚠️ **차례가 중요합니다 — 0082 → 스위치 켠 화면 배포 → 이 파일.**
+--   이 파일을 올리면 `authenticated` 가 `request` 에서 name · tel · email ·
+--   tel_key 를 **못 읽습니다**. 스위치(compareOn)가 꺼진 화면은 그 칸을 표에서
+--   묻기 때문에, 켠 화면이 운영에 나가기 **전에** 올리면 업체 작업실 · 운영자
+--   배정이 빈 채로 남습니다. 켠 화면은 `v_request_contact`(0082)로 읽습니다.
+--
+-- 왜 — 0001 은 `request` 의 select 를 **표째로** 주었고 RLS 는 줄만 좁힙니다.
+--   그래서 배정된 업체는 수락 전에도 그 줄의 성함 · 연락처를 **화면이 가려도
+--   API 로** 읽을 수 있었고, 비교견적(연락처를 안 넘기는 배정)에서는 그 길이
+--   그대로 연락처를 흘립니다. 0082 의 `assign_more` 는 이 파일이 올라가기 전에는
+--   비교 배정을 거절합니다.
+--
+-- 기존 회원 · 자료 — **한 줄도 안 바뀝니다**(권한만 좁힙니다). 손님은 제 요청의
+--   연락처를 보기로 그대로 읽고, 운영자 · 직원도 그렇습니다. 한 업체 흐름의 업체는
+--   **수락한 뒤에** 읽습니다(화면은 전에도 수락 뒤에만 보여 줬습니다).
+--
+-- 되돌리기 — 맨 아래 주석 한 줄(표 단위 select 복원). ⚠️ 스위치를 끈 화면으로
+--   되돌릴 때는 **이 되돌리기를 먼저** 해야 그 화면이 다시 읽힙니다.
+-- ════════════════════════════════════════════════════════════════════
+begin;
+
+-- ⚠️ 칸 목록을 글자로 박지 않습니다 — 지금 있는 칸에서 넷을 빼고 줍니다
+--   (칸이 늘어난 날 그 칸만 빠지는 일이 없게).
+revoke select on request from authenticated;
+do $$
+declare v_cols text;
+begin
+  select string_agg(quote_ident(column_name), ', ' order by ordinal_position)
+    into v_cols
+    from information_schema.columns
+   where table_schema = 'public' and table_name = 'request'
+     and column_name not in ('name','tel','email','tel_key');
+  execute format('grant select (%s) on request to authenticated', v_cols);
+end $$;
+
+-- ⚠️ 막혔는지 그 자리에서 확인합니다 — 안 막혔으면 통째로 되돌아갑니다
+do $$ begin
+  if has_column_privilege('authenticated', 'public.request', 'tel', 'select') then
+    raise exception '연락처 칸이 아직 열려 있습니다 — 0083 을 멈춥니다';
+  end if;
+  if not has_column_privilege('authenticated', 'public.request', 'state', 'select') then
+    raise exception '연락처 아닌 칸까지 막혔습니다 — 0083 을 멈춥니다';
+  end if;
+end $$;
+
+insert into schema_version (n, name) values (83, '0083_request_contact_lock')
+on conflict (n) do nothing;
+commit;
+
+-- ── 되돌리기 ──────────────────────────────────────────────────────────
+-- begin;
+--   grant select on request to authenticated;
+--   delete from schema_version where n = 83;
 -- commit;

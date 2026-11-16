@@ -15,7 +15,7 @@
    를 **자물쇠마다 다른 말로** 잽니다.
    ⚠️ 문으로 넣고 문으로 잽니다 — 표에 바로 넣으면 자물쇠를 통째로 지나칩니다. */
 module.exports = function(T){
-  const { ok, psql, denied, allowed } = T;
+  const { ok, psql, psqlFile, denied, allowed } = T;
   console.log("\n════ 비교견적 (0082) ════");
 
   const U = e => psql("insert into auth.users (email) values ('" + e + "@x.test') returning id");
@@ -219,4 +219,48 @@ module.exports = function(T){
   /* 옛 흐름은 비교 요청을 안 받는다 */
   const oldWay = denied(as(PB) + "select submit_quote('" + RID + "'::uuid, '{\"amount\":1,\"scope\":\"x\"}'::jsonb, null);" + back);
   ok("비교 요청에 옛 견적 문을 부르면 막힌다 (뒤섞이지 않게)", oldWay.no, why(oldWay));
+  /* ── 상담 선택 뒤 — 고른 업체만 다음 단계로 · 계약도 그 업체와만 ──────── */
+  console.log("\n── 상담 선택 뒤 (고른 업체만 · 계약 · 완료 · 후기 자격)");
+  const no4 = last(psql(req(CUS, "010-7000-0404")));
+  const R4 = psql("select id from request where no = '" + no4 + "'");
+  ["cq-a","cq-b"].forEach(pv => psql(as(STF) + "select assign_more(jsonb_build_object('request','" + R4 + "','provider','" + pv + "'));" + back));
+  [PA, PB].forEach(u => psql(as(u) + "select answer_compare(jsonb_build_object('request','" + R4 + "','yes',true));" + back));
+  [PA, PB].forEach(u => psql(as(u) + "select submit_compare_quote(jsonb_build_object('request','" + R4 +
+    "','kind','fixed','amount',300000,'scope','8회','validTo','" + plus7 + "'));" + back));
+  psql(as(CUS) + "select pick_quote(jsonb_build_object('request','" + R4 + "','provider','cq-b','share',true));" + back);
+  const pass1 = denied(as(PA) + "select move_state('" + R4 + "','nego','{}'::jsonb);" + back);
+  ok("⚠️⚠️ 고르지 않은 업체는 상태를 못 옮긴다", pass1.no && /고른 업체만/.test(why(pass1)), why(pass1));
+  const fakeDeal = denied(as(PA) + "select move_state('" + R4 + "','signed', jsonb_build_object('amount','300000','providerId','cq-a'));" + back);
+  ok("  고르지 않은 업체가 제 이름으로 계약을 못 만든다", fakeDeal.no, why(fakeDeal));
+  ok("고른 업체는 조율로 옮긴다", allowed(as(PB) + "select move_state('" + R4 + "','nego','{}'::jsonb);" + back).yes);
+  const wrongPv = denied(as(PB) + "select move_state('" + R4 + "','signed', jsonb_build_object('amount','300000','providerId','cq-a'));" + back);
+  ok("  ctx 에 다른 업체를 적어도 계약은 고른 업체와만", wrongPv.no && /고른 업체와만/.test(why(wrongPv)), why(wrongPv));
+  const sg = allowed(as(PB) + "select move_state('" + R4 + "','signed', jsonb_build_object('amount','300000','providerId','cq-b'));" + back);
+  ok("고른 업체와 최종 조건 확정(계약)", sg.yes, why(sg));
+  ok("  계약 줄의 업체가 고른 업체다", psql("select provider_id from deal where request_id = '" + R4 + "'") === "cq-b");
+  const dn = allowed(as(PB) + "select move_state('" + R4 + "','done','{}'::jsonb);" + back);
+  ok("이용 완료로 옮긴다", dn.yes && psql("select state from request where id = '" + R4 + "'") === "done", why(dn));
+  ok("  다른 업체는 그동안 연락처를 한 번도 못 읽었다",
+     last(psql(as(PA) + "select count(*) from v_request_contact where id = '" + R4 + "';" + back)) === "0");
+
+  /* ── 단계 사이 — 0082 만 올라가고 0083 은 아직인 운영 ─────────────────
+     ⚠️⚠️ 그 사이에도 **스위치가 꺼진 지금 화면**이 그대로 돌아야 하고(표에서
+     연락처를 묻습니다), 비교 배정은 서버가 막아야 합니다. 0083 전 상태를 표 단위
+     권한을 잠깐 되돌려 만들고, 끝나면 **0083 을 다시 올려** 닫습니다. */
+  console.log("\n── 단계 사이 (0082 만 · 0083 전)");
+  psql("grant select on request to authenticated");
+  const oldScreen = allowed(as(STF) + "select tel from request where id = '" + RID + "';" + back);
+  ok("0083 전에는 꺼진 화면의 질의(표에서 연락처)가 그대로 된다", oldScreen.yes, why(oldScreen));
+  const noR3 = last(psql(req(CUS, "010-7000-0303")));
+  const R3 = psql("select id from request where no = '" + noR3 + "'");
+  const pre = denied(as(STF) + "select assign_more(jsonb_build_object('request','" + R3 + "','provider','cq-a'));" + back);
+  ok("⚠️⚠️ 0083 전에는 비교 배정을 **서버가 거절**한다 (연락처가 표로 샐 수 있으니까)",
+     pre.no && /0083/.test(why(pre)), why(pre));
+  psqlFile("db/migrations/0083_request_contact_lock.sql");
+  ok("0083 을 다시 올리면 표의 연락처 칸이 닫힌다",
+     denied(as(STF) + "select tel from request where id = '" + RID + "';" + back).no);
+  ok("  그 뒤에는 비교 배정이 된다",
+     allowed(as(STF) + "select assign_more(jsonb_build_object('request','" + R3 + "','provider','cq-a'));" + back).yes);
+  ok("  0083 은 두 번 돌려도 끝까지 간다 (붙여넣기를 다시 하셔도 됩니다)",
+     allowed("select 1").yes && psql("select count(*) from schema_version where n = 83") === "1");
 };

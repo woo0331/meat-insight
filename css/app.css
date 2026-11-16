@@ -5107,3 +5107,18 @@ picture{ display: contents; }
 .hmcs-n{ font-size:14px; color: var(--ink2); margin:4px 0 12px; }
 .hmcs-go{ display:flex; flex-wrap:wrap; gap:10px; margin:14px 0 6px; }
 .hmcs-go .hmcs-more[hidden]{ display:none; }
+
+/* 비교견적 비교표 (0082 · 2026-11-16 · js/myreq.js 의 cmpTable)
+   ⚠️ 넓은 화면은 업체 열의 폭을 **같게** 둡니다 — 긴 견적 하나가 열을 넓히면
+   다른 업체가 좁아져 그 업체가 덜 중요해 보입니다(나란히 비교하는 자리입니다).
+   ⚠️ 폰(760px 아래)에서는 표 대신 업체마다 카드입니다 — 줄 이름이 같은 차례로 나옵니다. */
+.cmp-t.cmpq{ table-layout:fixed; }
+.cmp-t.cmpq th[scope="row"]{ width:170px; white-space:normal; }
+.cmpq-cs{ display:grid; gap:12px; margin-top:12px; }
+.cmpq-cs > *{ min-width:0; }
+.cmpq-c{ border:1.5px solid var(--grn-line); border-radius: var(--r); padding:14px 16px; background:#fff; }
+.cmpq-c h4{ font-size:16px; color: var(--grn-text); margin-bottom:8px; }
+.cmpq-c dl{ display:grid; grid-template-columns: 112px minmax(0,1fr); gap:8px 12px; margin:0; }
+.cmpq-c dt{ color: var(--ink2); font-size:13.5px; font-weight:600; }
+.cmpq-c dd{ margin:0; font-size:14.5px; word-break: keep-all; overflow-wrap:anywhere; }
+.cmpq-c dd.cmp-sm{ font-size:13px; }

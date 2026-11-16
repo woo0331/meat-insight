@@ -9,7 +9,7 @@
 --
 --  ⚠️⚠️ 기대값은 전부 **저장소에서 센 값**입니다 (눈대중이 아닙니다) —
 --     판 75 · 표 57 · 상태 13 · 역할 4 · 길 70 · 함수 43.
---     ⚠️ 2026-11-15 — 0082(비교견적) 로 판이 82 가 됩니다. 운영에 0082 를 안 올렸으면 81 이 맞습니다.
+--     ⚠️ 2026-11-15 — 0082 · 0083(비교견적) 으로 판이 83 이 됩니다. 0082 만 올렸으면 82 · 아무것도 안 올렸으면 81 이 맞습니다.
 --     ⚠️⚠️⚠️ **2026-11-13 — 판만 79 → 81 로 올렸습니다.** 0080 · 0081 은
 --       **칸만** 더해서 표 · 상태 · 길은 그대로입니다(함수는 0081 의
 --       `save_course_photo` 가 늘었지만 이 검사가 세는 **목록**에는 없어
@@ -237,7 +237,7 @@ v_cust as (
      and pg_get_functiondef(p.oid) like '%''customer''%'
 ),
 rows as (
-  select 1 i, '판 번호 (0001~0082)'            t, v_ver.n::text   got, '82' want from v_ver
+  select 1 i, '판 번호 (0001~0083)'            t, v_ver.n::text   got, '83' want from v_ver
   union all select  1, '다른 서비스의 표 (세는 데서 뺍니다)',
        (select count(*)::text from information_schema.tables
          where table_schema = 'public' and table_type = 'BASE TABLE'

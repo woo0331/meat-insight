@@ -885,6 +885,11 @@ git show 4563539:CLAUDE.md          앞 서비스의 작업 기억 (6,215줄)
   `open_joinroom`(0046→**0080**) ·
   `open_listing`(0056→0068→0069→**0080**) ·
   `order_listing_photo`(0069→**0084**) ·
+  `open_teetime`(0060→**0085**) ·
+  `edit_teetime`(0060→**0085**) ·
+  `close_teetime`(0060→**0085**) ·
+  `book_teetime`(0060→**0085**) ·
+  `move_teebook`(0060→**0085**) ·
   `open_report`(0040→0046→0047→0048→0056→0060→**0061**) ·
   `provider_guard`(0001→0021→0024→**0030**) ·
   `save_ad`(0036→**0064**) ·
@@ -899,9 +904,11 @@ git show 4563539:CLAUDE.md          앞 서비스의 작업 기억 (6,215줄)
   `v_listing_open` 보기(0056→0068→0069→0080→**0084**) ·
   `v_listing_photo_public` 보기(0068→0069→**0084**) ·
   `v_job_open` 보기(0048→0067→**0072**) ·
-  `v_teetime_open` 보기(0060→0066→**0081**) ·
+  `v_teetime_open` 보기(0060→0066→0081→**0085**) ·
   `v_course_public` 보기(0066→**0081**) ·
   `v_trip_open` 보기(0073→**0077**) ·
+  `v_teebook_pv` 보기(0060→**0085**) ·
+  `v_teebook_mine` 보기(0060→**0085**) ·
   `v_trip_mine` 보기(0073→**0077**) ·
   `v_teetime_count` 보기(0060→**0066**) ·
   `ad_public` 정책(0026→**0064**) ·

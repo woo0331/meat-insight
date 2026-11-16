@@ -924,7 +924,9 @@ window.AM_TEE_BAND = [
 ];
 window.AM_TEE_ST = [
   { key:"open",   name:"받는 중", tone:"ok" },
-  { key:"closed", name:"닫음",    tone:"ink" },
+  /* 0085 — 접수 중지: 새 신청만 막고 이미 들어온 신청은 그대로 처리합니다 */
+  { key:"paused", name:"접수 중지", tone:"warn" },
+  { key:"closed", name:"마감",    tone:"ink" },
   { key:"hidden", name:"가려짐",  tone:"bad" }
 ];
 window.AM_TEEBOOK_ST = [
@@ -932,8 +934,34 @@ window.AM_TEEBOOK_ST = [
   { key:"applied",   name:"새 신청",   mine:"신청했습니다 — 업체 확인을 기다립니다", tone:"info" },
   { key:"confirmed", name:"확정함",    mine:"업체가 확정했습니다",                 tone:"ok"   },
   { key:"rejected",  name:"거절함",    mine:"업체가 받지 못했습니다",               tone:"bad"  },
-  { key:"canceled",  name:"손님이 취소", mine:"취소하셨습니다",                      tone:"ink"  }
+  { key:"canceled",  name:"손님이 취소", mine:"취소하셨습니다",                      tone:"ink"  },
+  /* 0085 — 업체가 확정한 예약을 취소함(까닭을 같이 봅니다) */
+  { key:"pcanceled", name:"업체가 취소", mine:"업체가 예약을 취소했습니다",           tone:"bad"  }
 ];
+/* 0085 — 가격 단위 · 비용(포함 · 별도 · 모름) · 이용 결과. ⚠️ 모름을 0원으로 적지 않습니다. */
+window.AM_TEE_UNIT = [
+  { key:"person", name:"1인" },
+  { key:"team",   name:"팀 전체" }
+];
+window.AM_TEE_COST = [
+  { key:"incl",  name:"포함" },
+  { key:"extra", name:"별도" }
+];
+window.AM_TEE_OUTCOME = [
+  { key:"used",     name:"양쪽 모두 이용으로 표시",   tone:"ok"   },
+  { key:"noshow",   name:"양쪽 모두 이용 안 함으로 표시", tone:"ink" },
+  { key:"disputed", name:"표시가 서로 다름 — 확인 필요", tone:"warn" },
+  { key:"unknown",  name:"결과 미확인",              tone:"info" }
+];
+window.amTeeUnit = function(k){ var x = amTeePick(window.AM_TEE_UNIT, k); return x ? x.name : "1인"; };
+/* 비용 한 줄 — 규칙이 없으면 「업체에 확인」, 별도인데 금액을 모르면 「별도(금액 업체 확인)」 */
+window.amTeeCost = function(rule, fee){
+  if(rule === "incl") return "포함";
+  if(rule === "extra")
+    return (fee === null || fee === undefined || fee === "") ? "별도 (금액은 업체에 확인)" : ("별도 " + window.won(Number(fee)) + "원");
+  return "업체에 확인";
+};
+window.amTeeOutcome = function(k){ return amTeePick(window.AM_TEE_OUTCOME, k); };
 function amTeePick(L, k){
   for(var i = 0; i < (L || []).length; i++) if(L[i].key === k) return L[i];
   return null;

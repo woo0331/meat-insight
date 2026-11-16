@@ -5228,3 +5228,14 @@ picture{ display: contents; }
 /* 사진을 끝내 못 열었을 때 (2026-11-17 · js/data/deal.js) — 깨진 그림 대신 말로 */
 .ph-fail{ display:flex; align-items:center; justify-content:center; width:100%; height:100%; min-height:60px;
   padding:8px; text-align:center; font-size:12.5px; color: var(--ink2); background: var(--bg-2); }
+/* 티타임 관리 (0085 · js/deskteetime.js · js/booking.js) */
+.tt-fh{ margin:8px 0 0; font-size:17px; font-weight:800; color:var(--ink); }
+.tt-fb{ display:flex; flex-wrap:wrap; gap:10px; margin:0 0 12px; }
+.tt-fb select, .tt-fb input{ min-height:44px; font-size:15px; padding:8px 12px; border:1.5px solid var(--line); border-radius: var(--r-sm); }
+.tt-fb input{ flex:1 1 200px; min-width:0; }
+.tt-pv[hidden]{ display:none; }
+.tt-pvb{ border:1.5px solid var(--grn-line); border-radius: var(--r); padding:14px 16px; background: var(--surface); }
+.tt-pvb h4{ margin:0 0 8px; font-size:16px; color:var(--ink); }
+.tt-pvl{ margin:0 0 8px; padding-left:18px; color:var(--ink); }
+.tt-res{ margin:10px 0 0; padding-left:18px; font-size:14px; color:var(--ink2); }
+.tfc-sub{ font-size:14px; font-weight:600; color:var(--ink2); }

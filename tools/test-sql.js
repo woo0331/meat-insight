@@ -166,7 +166,16 @@ try{
   require("./sql/community.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/board.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/guest.js")({ ok, psql, psqlFile, denied, allowed });
-  require("./sql/teetime.js")({ ok, psql, psqlFile, denied, allowed });
+  /* 동시 요청 — 서로 다른 SQL 여럿을 **한꺼번에** 띄웁니다(0085 의 동시 확정) */
+  function psqlPar(sqls){
+    const q = function(a){ return "'" + String(a).replace(/'/g, "'\\''") + "'"; };
+    const sh = sqls.map(function(sql){
+      return [path.join(BIN,"psql"),"-h",DIR,"-p",String(PORT),"-U","postgres","-d","golftest","-q","-c",sql]
+        .map(q).join(" ") + " >/dev/null 2>&1 & ";
+    }).join("");
+    execFileSync("bash", ["-c", sh + "wait"], { stdio:"ignore" });
+  }
+  require("./sql/teetime.js")({ ok, psql, psqlFile, denied, allowed, psqlPar });
   require("./sql/career.js")({ ok, psql, psqlFile, denied, allowed });
   /* ⚠️ 2026-11-17 — 동시 요청을 재려고 **psql 여럿을 한꺼번에** 띄웁니다(listing.js 의 0084 묶음) */
   function psqlMany(sql, n){

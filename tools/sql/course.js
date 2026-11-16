@@ -119,7 +119,8 @@ module.exports = function(T){
      제 검사가 틀린 자리입니다. */
   const DAY = psql("select (kst_today() + 3)::text");
   const tee = o => psql(as(PRV) + "select open_teetime('" + J(Object.assign({
-    kind:"booking", region:"gyeonggi", playAt: DAY,
+    kind:"booking", region:"gyeonggi", playAt: DAY, teeAt:"09:00",
+    priceUnit:"person", cancelTerms:"검사용 취소 조건",
     slots:"4", holes:"18" }, o)) + "')");
 
   const t1 = tee({ course:"검사용 남서울 C.C" });

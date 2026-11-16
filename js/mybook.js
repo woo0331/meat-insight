@@ -70,9 +70,34 @@
     return m ? (m[1] + ":" + m[2]) : "";
   }
 
+  function kstToday(){ return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); }
+  /* 0085 — 신청하신 때의 조건(snap)이 있으면 **그것을** 보여 드립니다. 업체가 나중에 값을 바꿔도
+     이 신청의 조건은 안 바뀝니다. 칸이 없는 DB(0085 전)면 지금 게시 값 그대로입니다. */
+  function snapHtml(b){
+    var s = b.snap;
+    if(!s || typeof s !== "object" || !Object.keys(s).length) return "";
+    var unit = window.amTeeUnit ? window.amTeeUnit(s.price_unit) : "1인";
+    var fee = window.amTeeFee(s.green_fee);
+    return '<p class="mb-w">신청하신 때 조건 — ' +
+      (fee ? '그린피 ' + esc(fee) + ' (' + esc(unit) + ' 기준) · ' : '') +
+      '카트 ' + esc(window.amTeeCost(s.cart_rule, s.cart_fee)) + ' · 캐디 ' + esc(window.amTeeCost(s.caddie_rule, s.caddie_fee)) +
+      '</p>' + (s.cancel_terms ? '<p class="mb-w">취소 · 변경 — ' + esc(s.cancel_terms) + '</p>' : '');
+  }
+  function resultHtml(b){
+    if(b.state !== "confirmed" || b.outcome === undefined) return "";
+    if(String(b.play_at) > kstToday()) return "";
+    var oc = window.amTeeOutcome ? window.amTeeOutcome(b.outcome) : null;
+    return '<p class="mb-w">이용 결과 — ' + esc(oc ? oc.name : "") +
+      (b.cus_result ? ' (내 표시: ' + esc(b.cus_result === "used" ? "이용함" : "이용 안 함") + ')' : '') + '</p>' +
+      (b.cus_result ? '' :
+        '<div class="dk-b"><button type="button" class="btn btn-sm btn-line mb-mk" data-r="used">이용했습니다</button>' +
+        '<button type="button" class="btn btn-sm btn-line mb-mk" data-r="notused">이용하지 않았습니다</button></div>');
+  }
   function row(b){
     var st = window.amTeeBookSt(b.state);
     var fee = window.amTeeFee(b.green_fee);
+    /* 라운드 날짜가 지나면 취소로 바꾸지 않습니다(서버도 막습니다 · 결과가 사라지지 않게) */
+    var canCancel = (b.state === "applied" || b.state === "confirmed") && String(b.play_at) >= kstToday();
     return '<li data-bk="' + esc(b.id) + '">' +
       '<p class="mb-h"><b>' + esc(day(b.play_at)) + '</b>' +
         (hhmm(b.tee_at) ? ' ' + esc(hhmm(b.tee_at)) : '') +
@@ -85,16 +110,19 @@
         (b.tel ? '<a href="tel:' + esc(b.tel) + '">' + esc(b.tel) + '</a>' : '') +
         '<span>' + esc(rgName(b.region)) + '</span>' +
         '<span>' + esc(String(b.people)) + '명</span>' +
-        (fee ? '<span>' + esc(fee) + '</span>' : '') +
+        (fee && !(b.snap && b.snap.green_fee !== undefined) ? '<span>' + esc(fee) + '</span>' : '') +
       '</p>' +
+      snapHtml(b) +
       /* ⚠️ 업체가 적은 거절 까닭을 **보여 줍니다** — 안 보여 주면 왜
          안 됐는지 알 수 없습니다 (0047 에서 가린 까닭을 낸 그 까닭). */
       (b.why ? '<p class="mb-w">업체가 적은 까닭 — ' + esc(b.why) + '</p>' : '') +
-      (b.state === "applied" || b.state === "confirmed"
+      (canCancel
         ? '<div class="dk-b">' +
-          '<button type="button" class="btn btn-sm btn-bad mb-x">신청 취소</button>' +
+          '<button type="button" class="btn btn-sm btn-bad mb-x">' + (b.state === "confirmed" ? "예약 취소" : "신청 취소") + '</button>' +
           '</div>'
-        : '') +
+        : ((b.state === "applied" || b.state === "confirmed")
+            ? '<p class="mb-w">라운드 날짜가 지나 여기서 취소할 수 없습니다 — 바꿀 일이 있으면 업체에 직접 알려 주세요.</p>' : '')) +
+      resultHtml(b) +
     '</li>';
   }
 
@@ -110,22 +138,38 @@
       '<p class="mb-msg lmsg" hidden></p>';
   }
 
+  /* ⚠️ 0085 의 칸(신청 당시 조건 · 결과)을 먼저 묻고, 그 DB 가 아직 0085 전이면 예전 칸으로 다시 묻습니다 */
+  var COLS0 = "id,tee_id,people,memo,state,why,created_at,kind,region,course,play_at,tee_at,holes,green_fee," +
+              "provider_id,provider_name,tel";
   function reload(){
-    return get("v_teebook_mine?select=id,tee_id,people,memo,state,why," +
-               "created_at,kind,region,course,play_at,tee_at,holes,green_fee," +
-               "provider_id,provider_name,tel&order=play_at.asc&limit=100")
+    var q = "&order=play_at.asc&limit=100";
+    return get("v_teebook_mine?select=" + COLS0 + ",snap,pv_result,cus_result,outcome" + q)
+      .then(function(rows){ return rows ? rows : get("v_teebook_mine?select=" + COLS0 + q); })
       .then(function(rows){ ROWS = rows || []; paint(); });
   }
 
   box.addEventListener("click", function(e){
     var t = e.target;
     if(!t || !t.closest || !A) return;
+    var mk = t.closest(".mb-mk");
+    if(mk){
+      var ml = mk.closest("li[data-bk]"); if(!ml) return;
+      mk.disabled = true;
+      call("mark_teebook", { id: ml.getAttribute("data-bk"), result: mk.getAttribute("data-r") })
+        .then(reload)
+        .catch(function(err){
+          mk.disabled = false;
+          var m0 = box.querySelector(".mb-msg");
+          if(m0){ m0.hidden = false; m0.textContent = window.amErrText ? window.amErrText(err) : String(err.message || err); }
+        });
+      return;
+    }
     var b = t.closest(".mb-x");
     if(!b) return;
     var li = b.closest("li[data-bk]");
     if(!li) return;
     /* ⚠️ 되돌릴 수 없는 일이라 한 번 여쭙습니다 */
-    if(!window.confirm("이 예약 신청을 취소할까요?")) return;
+    if(!window.confirm("이 예약 신청을 취소할까요? 취소 · 변경 조건은 신청하신 때의 조건을 따릅니다.")) return;
     b.disabled = true;
     call("move_teebook", { id: li.getAttribute("data-bk"), state:"canceled" })
       .then(reload)

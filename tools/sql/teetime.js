@@ -67,38 +67,38 @@ module.exports = function(T){
   const o0 = denied(anon + "select open_teetime(jsonb_build_object('kind','booking'));" + back);
   ok("비로그인은 거절당한다", o0.no, "막지 않았습니다");
   const o1 = denied(as(CUS) +
-    "select open_teetime(jsonb_build_object('kind','booking','region','gyeonggi'," +
+    "select open_teetime(jsonb_build_object('kind','booking','region','gyeonggi','teeAt','09:00','priceUnit','person','cancelTerms','검사용 취소 조건 — 전날까지'," +
     "'course','그린CC','playAt'," + DAY + ",'slots','4'));" + back);
   ok("손님은 자리를 못 올린다", o1.no, "막지 않았습니다");
   /* ⚠️⚠️ **승인 전 업체**는 거절해야 합니다 — 그 업체는 `/pro/<id>` 화면이
      빌드에 없어 손님이 눌러도 404 입니다 (0055 에서 광고에 적용한 자리). */
   const o2 = denied(as(OTH) +
-    "select open_teetime(jsonb_build_object('kind','booking','region','gyeonggi'," +
+    "select open_teetime(jsonb_build_object('kind','booking','region','gyeonggi','teeAt','09:00','priceUnit','person','cancelTerms','검사용 취소 조건 — 전날까지'," +
     "'course','심사중CC','playAt'," + DAY + ",'slots','4'));" + back);
   ok("⚠️⚠️ **승인 전 업체는 거절한다**", o2.no, "막지 않았습니다");
   ok("  까닭을 말로 적는다", o2.no && /승인된 업체/.test(o2.why), o2.why);
 
   const bad1 = denied(as(OWN) +
-    "select open_teetime(jsonb_build_object('kind','booking','region','gyeonggi'," +
+    "select open_teetime(jsonb_build_object('kind','booking','region','gyeonggi','teeAt','09:00','priceUnit','person','cancelTerms','검사용 취소 조건 — 전날까지'," +
     "'course','그린CC','playAt','2000-01-01','slots','4'));" + back);
   ok("지난 날짜는 거절한다", bad1.no, "막지 않았습니다");
   const bad2 = denied(as(OWN) +
-    "select open_teetime(jsonb_build_object('kind','booking','region','gyeonggi'," +
+    "select open_teetime(jsonb_build_object('kind','booking','region','gyeonggi','teeAt','09:00','priceUnit','person','cancelTerms','검사용 취소 조건 — 전날까지'," +
     "'course','그린CC','playAt',(select (kst_today() + 120)::text),'slots','4'));" + back);
   ok("90일 뒤는 거절한다", bad2.no, "막지 않았습니다");
   const bad3 = denied(as(OWN) +
-    "select open_teetime(jsonb_build_object('kind','booking','region','gyeonggi'," +
+    "select open_teetime(jsonb_build_object('kind','booking','region','gyeonggi','teeAt','09:00','priceUnit','person','cancelTerms','검사용 취소 조건 — 전날까지'," +
     "'course','그린CC','playAt'," + DAY + ",'slots','4','greenFee','십오만원'));" + back);
   ok("그린피가 숫자가 아니면 거절한다", bad3.no, "막지 않았습니다");
 
   const TEE = psql(as(OWN) +
-    "select open_teetime(jsonb_build_object('kind','booking','region','gyeonggi'," +
+    "select open_teetime(jsonb_build_object('kind','booking','region','gyeonggi','teeAt','09:00','priceUnit','person','cancelTerms','검사용 취소 조건 — 전날까지'," +
     "'course','그린CC 신코스','playAt'," + DAY + ",'teeAt','07:10','holes','18'," +
     "'slots','4','greenFee','150000','note','카트비 별도'));" + back);
   ok("승인된 업체는 자리를 올린다", /^[0-9a-f-]{36}$/.test(TEE), TEE);
   /* ⚠️⚠️ **0 은 무료입니다** — 빈 값과 뜻이 다릅니다 */
   const FREE = psql(as(OWN) +
-    "select open_teetime(jsonb_build_object('kind','join','region','gyeonggi'," +
+    "select open_teetime(jsonb_build_object('kind','join','region','gyeonggi','teeAt','09:00','priceUnit','person','cancelTerms','검사용 취소 조건 — 전날까지'," +
     "'course','무료 나눔 코스','playAt'," + DAY + ",'slots','2','greenFee','0'));" + back);
   ok("⚠️ 그린피 **0 이 0 으로 들어간다** (안 적음과 다릅니다)",
      psql("select coalesce(green_fee::text,'(없음)') from teetime where id = '" + FREE + "'") === "0",
@@ -381,7 +381,7 @@ module.exports = function(T){
      와 `play_at` · `seats` · `price` 로 적었다가 문에 거절당했습니다
      (이 저장소가 다섯 번째로 밟은 자리). 위의 ① 과 **같은 꼴**로 적습니다. */
   const TEE2 = psql(as(OWN) +
-    "select open_teetime(jsonb_build_object('kind','booking','region','gyeonggi'," +
+    "select open_teetime(jsonb_build_object('kind','booking','region','gyeonggi','teeAt','09:00','priceUnit','person','cancelTerms','검사용 취소 조건 — 전날까지'," +
     "'course','신고될 골프장','playAt'," + DAY + ",'teeAt','07:00'," +
     "'slots','4','greenFee','120000'));" + back);
   const rp = allowed(as(CUS) + "select open_report(jsonb_build_object(" +
@@ -398,4 +398,124 @@ module.exports = function(T){
     : "(앞 줄이 떨어져서 못 쟀습니다)";
   ok("  그 칸에 **값이 실제로 들어간다** (운영자 화면이 그 칸을 읽습니다)",
      got === TEE2, got);
+
+  /* ══ 0085 — 업체가 직접 관리하는 티타임 · 예약 ═══════════════════════════════ */
+  console.log("\n── 0085 티타임 관리 — 분야 · 필수 칸 · 중복 · 신청 당시 조건 · 상태 · 업체 취소 · 결과 · 집계");
+  const NOBK = psql("insert into auth.users (email) values ('tt-nobk@x.test') returning id");
+  psql("insert into provider (id, name, listed, is_test, state, tel, regions, subs) values " +
+       "('tt-nobk','레슨만 하는 업체', true, false, 'approved','031-333-3333', array['gyeonggi'], array['ls-solo'])");
+  psql("insert into account (id, role, name, provider_id) values ('" + NOBK + "','provider','레슨담당','tt-nobk') " +
+       "on conflict (id) do update set role = excluded.role, provider_id = excluded.provider_id");
+  const BASE = "'kind','booking','region','gyeonggi','playAt'," + DAY + ",'teeAt','10:20','slots','4'," +
+               "'priceUnit','team','greenFee','600000','cartRule','extra','cartFee','100000','caddieRule','incl'," +
+               "'cancelTerms','3일 전까지 무료 취소'";
+  const put = (who, extra) => as(who) + "select open_teetime(jsonb_build_object(" + BASE + (extra ? "," + extra : "") + "));" + back;
+
+  const n1 = denied(put(NOBK, "'course','레슨업체CC'"));
+  ok("⚠️⚠️ 부킹 분야(bk-)가 아닌 승인 업체는 **서버가 거절한다** (골프장 자료가 있다고 판매 권한이 아닙니다)",
+     n1.no && /부킹 분야/.test(n1.why), n1.why);
+  const n2 = denied(as(OWN) + "select open_teetime(jsonb_build_object('kind','booking','region','gyeonggi','course','시각없음CC','playAt'," + DAY +
+                    ",'slots','4','priceUnit','person','cancelTerms','조건'));" + back);
+  ok("  티오프 시각이 없으면 거절", n2.no && /티오프/.test(n2.why), n2.why);
+  const n3 = denied(put(OWN, "'course','단위없음CC','priceUnit',''"));
+  ok("  가격 단위(1인 · 팀)가 없으면 거절", n3.no && /1인 기준/.test(n3.why), n3.why);
+  const n4 = denied(put(OWN, "'course','조건없음CC','cancelTerms',''"));
+  ok("  취소 · 변경 조건이 없으면 거절", n4.no && /취소/.test(n4.why), n4.why);
+  const n5 = denied(put(OWN, "'course','포함인데금액CC','caddieRule','incl','caddieFee','150000'"));
+  ok("  ⚠️ 「포함」인데 금액을 적으면 거절 (두 번 내는 줄 압니다)", n5.no && /포함이면/.test(n5.why), n5.why);
+  const n6 = denied(put(OWN, "'course','지난시각CC','playAt',(select kst_today()::text),'teeAt',(select (kst_now_time() - interval '1 minute')::time::text)"));
+  ok("  ⚠️ 오늘 이미 지난 티오프는 거절 (서버 시각 · 한국)", n6.no && /지난 시각/.test(n6.why), n6.why);
+  const n7 = denied(put(OWN, "'course','없는골프장','courseId','" + "00000000-0000-0000-0000-000000000000" + "'"));
+  ok("  없는 골프장 id 는 거절", n7.no && /골프장을 찾을 수 없습니다/.test(n7.why), n7.why);
+  const n8 = denied(put(OWN, "'course','마감뒤CC','applyUntil',(select (now() - interval '1 hour')::text)"));
+  ok("  지난 신청 마감 시각은 거절", n8.no && /신청 마감/.test(n8.why), n8.why);
+
+  /* 골프장을 **주소 이름(slug)으로** 고르면 이름 · 지역을 서버가 골프장 자료에서 가져옵니다 */
+  psql("insert into course (slug, kind, name, region) values ('tt-master', 'golf', '검사용 마스터CC', 'gangwon') on conflict do nothing");
+  const TS = psql(put(OWN, "'course','화면이 보낸 엉뚱한 이름','region','','courseSlug','tt-master'"));
+  ok("⚠️ 골프장을 slug 로 고르면 **이름 · 지역을 서버가 골프장 자료에서** 가져온다 (화면이 보낸 이름을 안 믿습니다)",
+     psql("select course || '/' || region || '/' || (course_id is not null)::text from teetime where id = '" + TS + "'") ===
+     "검사용 마스터CC/gangwon/true",
+     psql("select course || '/' || region from teetime where id = '" + TS + "'"));
+  const badSlug = denied(put(OWN, "'course','x','courseSlug','없는-골프장-주소'"));
+  ok("  없는 slug 는 거절", badSlug.no && /골프장을 찾을 수 없습니다/.test(badSlug.why), badSlug.why);
+  const T1 = psql(put(OWN, "'course','관리검사CC','courseSub','동코스','minPlayers','2'"));
+  ok("필수 칸을 다 채우면 올라간다", /^[0-9a-f-]{36}$/.test(T1), T1);
+  ok("  ⚠️ 모르는 비용(캐디 포함 · 카트 금액)이 0 으로 바뀌지 않는다",
+     psql("select coalesce(caddie_fee::text,'모름') || '/' || coalesce(cart_fee::text,'모름') from teetime where id = '" + T1 + "'") === "모름/100000");
+  const dup = denied(put(OWN, "'course','관리검사CC','courseSub','동코스'"));
+  ok("⚠️⚠️ 같은 업체 · 골프장 · 코스 · 날짜 · 시각은 **두 번 못 올린다**", dup.no && /이미 올리셨습니다/.test(dup.why), dup.why);
+  const okOther = psql(put(OWN, "'course','관리검사CC','courseSub','서코스'"));
+  ok("  코스가 다르면 올라간다", /^[0-9a-f-]{36}$/.test(okOther), okOther);
+  const pub1 = psql(anon + "select price_unit || '/' || coalesce(cart_rule,'-') || '/' || coalesce(caddie_rule,'-') || '/' || cancel_terms from v_teetime_open where id = '" + T1 + "';" + back);
+  ok("  공개 보기가 가격 단위 · 비용 · 취소 조건을 낸다", pub1 === "team/extra/incl/3일 전까지 무료 취소", pub1);
+
+  /* 신청 — 최소 인원 · 신청 당시 조건 */
+  const lowP = denied(as(CUS) + "select book_teetime(jsonb_build_object('tee','" + T1 + "','name','손님','tel','010-1111-2222','people','1','agree3rd',true));" + back);
+  ok("최소 인원보다 적으면 거절", lowP.no && /2명부터/.test(lowP.why), lowP.why);
+  const B1 = psql(as(CUS) + "select book_teetime(jsonb_build_object('tee','" + T1 + "','name','손님','tel','010-1111-2222','people','2','agree3rd',true));" + back);
+  ok("신청이 들어간다", /^[0-9a-f-]{36}$/.test(B1), B1);
+  const again = denied(as(CUS) + "select book_teetime(jsonb_build_object('tee','" + T1 + "','name','손님','tel','010-1111-2222','people','2','agree3rd',true));" + back);
+  ok("  ⚠️ 같은 분이 다시 눌러도(재시도) **두 번 안 들어간다**", again.no && /이미 신청/.test(again.why), again.why);
+  psql(as(OWN) + "select edit_teetime(jsonb_build_object('id','" + T1 + "','greenFee','900000','cancelTerms','취소 불가'));" + back);
+  const snap = psql(as(CUS) + "select (snap->>'green_fee') || '/' || (snap->>'cancel_terms') from v_teebook_mine where id = '" + B1 + "';" + back);
+  ok("⚠️⚠️ 업체가 값 · 조건을 바꿔도 **신청 당시 조건이 그대로** 남는다", snap === "600000/3일 전까지 무료 취소", snap);
+  const live = psql(anon + "select green_fee from v_teetime_open where id = '" + T1 + "';" + back);
+  ok("  게시 값은 바뀐다 (새 신청부터)", live === "900000", live);
+
+  /* 접수 중지 · 마감 · 다시 열기 */
+  const ps = allowed(as(OWN) + "select set_teetime_state(jsonb_build_object('id','" + T1 + "','to','paused'))::text;" + back);
+  ok("접수 중지가 된다 · 남은 신청 수를 돌려준다", ps.yes && /"applied": 1/.test(ps.out), ps.out || ps.why);
+  ok("  접수 중지 자리는 공개 목록에서 빠진다",
+     psql(anon + "select count(*) from v_teetime_open where id = '" + T1 + "';" + back) === "0");
+  const pb = denied(as(CU2) + "select book_teetime(jsonb_build_object('tee','" + T1 + "','name','둘째손님','tel','010-3333-4444','people','2','agree3rd',true));" + back);
+  ok("  접수 중지 자리는 서버가 신청을 거절", pb.no && /받지 않는/.test(pb.why), pb.why);
+  const cf = allowed(as(OWN) + "select move_teebook(jsonb_build_object('id','" + B1 + "','state','confirmed'));" + back);
+  ok("  ⚠️ 접수 중지 중에도 **이미 들어온 신청은 확정할 수 있다**", cf.yes, cf.why);
+  allowed(as(OWN) + "select set_teetime_state(jsonb_build_object('id','" + T1 + "','to','closed'));" + back);
+  ok("⚠️⚠️ 마감해도 **확정된 예약은 말없이 취소되지 않는다**",
+     psql("select state from teebook where id = '" + B1 + "'") === "confirmed");
+  const ro = allowed(as(OWN) + "select set_teetime_state(jsonb_build_object('id','" + T1 + "','to','open'))::text;" + back);
+  ok("  마감한 자리를 다시 열 수 있다", ro.yes, ro.why);
+  const othSt = denied(as(OTH) + "select set_teetime_state(jsonb_build_object('id','" + T1 + "','to','closed'));" + back);
+  ok("  남의 업체는 상태를 못 바꾼다", othSt.no, othSt.why);
+
+  /* 업체 취소 · 손님 취소 */
+  const pc0 = denied(as(OWN) + "select move_teebook(jsonb_build_object('id','" + B1 + "','state','pcanceled'));" + back);
+  ok("업체 취소는 까닭 없이 안 된다", pc0.no && /까닭/.test(pc0.why), pc0.why);
+  const pcC = denied(as(CUS) + "select move_teebook(jsonb_build_object('id','" + B1 + "','state','pcanceled','why','손님이 해 봄'));" + back);
+  ok("  손님은 업체 취소를 못 한다", pcC.no, pcC.why);
+
+  /* 이용 결과 — 라운드 날짜부터 · 각자 제 칸 · 다르면 분쟁 */
+  const early = denied(as(OWN) + "select mark_teebook(jsonb_build_object('id','" + B1 + "','result','used'));" + back);
+  ok("라운드 날짜 전에는 결과를 못 적는다", early.no && /라운드 날짜부터/.test(early.why), early.why);
+  psql("update teetime set play_at = kst_today() - 1 where id = '" + T1 + "'");
+  allowed(as(OWN) + "select mark_teebook(jsonb_build_object('id','" + B1 + "','result','noshow'));" + back);
+  ok("  업체만 적으면 **미확인**이다 (업체 표시 = 확인이 아닙니다)",
+     psql(as(OWN) + "select outcome from v_teebook_pv where id = '" + B1 + "';" + back) === "unknown");
+  allowed(as(CUS) + "select mark_teebook(jsonb_build_object('id','" + B1 + "','result','used'));" + back);
+  ok("⚠️⚠️ 업체 「노쇼」 · 손님 「이용」이면 **분쟁**으로 남는다 (자동 제재 없음)",
+     psql(as(CUS) + "select outcome from v_teebook_mine where id = '" + B1 + "';" + back) === "disputed");
+  const xMark = denied(as(CU2) + "select mark_teebook(jsonb_build_object('id','" + B1 + "','result','used'));" + back);
+  ok("  남은 결과를 못 적는다", xMark.no, xMark.why);
+  const lateCancel = denied(as(CUS) + "select move_teebook(jsonb_build_object('id','" + B1 + "','state','canceled'));" + back);
+  ok("  라운드 날짜가 지나면 손님이 취소로 바꿀 수 없다 (결과가 사라지지 않게)", lateCancel.no, lateCancel.why);
+
+  /* 운영자 집계 — 운영자만 · 돈 칸 없음 */
+  const st = psql(as(ADM) + "select disputed_n || '/' || confirmed_n from v_teetime_pv_stats where provider_id = 'tt-ok';" + back);
+  ok("⚠️ 운영자 집계가 업체별 확정 · 분쟁 건수를 센다", /^1\/[1-9]/.test(st), st);
+  ok("  손님 · 업체에게는 집계가 **0줄**", psql(as(CUS) + "select count(*) from v_teetime_pv_stats;" + back) === "0" &&
+     psql(as(OWN) + "select count(*) from v_teetime_pv_stats;" + back) === "0");
+  ok("  집계에 금액 칸이 없다 (그린피를 매출로 세지 않습니다)",
+     psql("select count(*) from information_schema.columns where table_name = 'v_teetime_pv_stats' and (column_name like '%fee%' or column_name like '%amount%' or column_name like '%price%')") === "0");
+
+  /* ⚠️⚠️ 동시 확정 — 한 팀(4자리)에 4명짜리 신청 둘 · 동시에 확정해도 하나만 */
+  const T3 = psql(put(OWN, "'course','동시확정CC'"));
+  const C1 = psql(as(CUS) + "select book_teetime(jsonb_build_object('tee','" + T3 + "','name','하나','tel','010-1111-0000','people','2','agree3rd',true));" + back);
+  const C2 = psql(as(CU2) + "select book_teetime(jsonb_build_object('tee','" + T3 + "','name','둘째손님','tel','010-2222-0000','people','2','agree3rd',true));" + back);
+  psql(as(OWN) + "select edit_teetime(jsonb_build_object('id','" + T3 + "','slots','2'));" + back);
+  T.psqlPar([as(OWN) + "select move_teebook(jsonb_build_object('id','" + C1 + "','state','confirmed'));",
+             as(OWN) + "select move_teebook(jsonb_build_object('id','" + C2 + "','state','confirmed'));"]);
+  const both = psql("select count(*) from teebook where tee_id = '" + T3 + "' and state = 'confirmed'");
+  ok("⚠️⚠️ 두 신청을 **동시에** 확정해도 자리 수를 넘지 않는다 (한 건만)", both === "1", both);
 };

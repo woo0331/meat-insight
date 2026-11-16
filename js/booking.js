@@ -320,6 +320,26 @@
            '" loading="lazy" decoding="async"></span>';
   }
 
+  /* 0085 — 카트 · 캐디 · 신청 마감 · 취소 조건. ⚠️ 칸이 없는 DB(0085 전)면 예전 문장 그대로입니다.
+     ⚠️ 모르는 비용은 「업체에 확인」 — 0원으로 적거나 「총액」이라고 하지 않습니다. */
+  function costHtml(t){
+    if(t.cart_rule === undefined)
+      return '<p class="tfc-fee-x">카트 · 캐디 비용이 포함되는지는 업체에 확인해 주세요.</p>';
+    return '<p class="tfc-fee-x">카트 ' + esc(window.amTeeCost(t.cart_rule, t.cart_fee)) +
+      ' · 캐디 ' + esc(window.amTeeCost(t.caddie_rule, t.caddie_fee)) + '</p>';
+  }
+  function untilText(iso){
+    var d = new Date(new Date(iso).getTime() + 9 * 3600 * 1000);
+    if(isNaN(d.getTime())) return "";
+    var v = d.toISOString();
+    return day(v.slice(0, 10)) + " " + v.slice(11, 16);
+  }
+  function terms(t){
+    var h = "";
+    if(t.apply_until) h += '<p class="tfc-note">신청 마감 ' + esc(untilText(t.apply_until)) + '</p>';
+    if(t.cancel_terms) h += '<p class="tfc-note">취소 · 변경 — ' + esc(t.cancel_terms) + '</p>';
+    return h;
+  }
   function row(t){
     var fee = window.amTeeFee(t.green_fee);
     var left = Number(t.left_n);
@@ -328,7 +348,7 @@
     return '<li class="tf-i tfc" data-tee="' + esc(t.id) + '">' +
       phHtml(t) +
       '<div class="tfc-b">' +
-        '<p class="tfc-n">' + esc(t.course) + '</p>' +
+        '<p class="tfc-n">' + esc(t.course) + (t.course_sub ? ' <span class="tfc-sub">' + esc(t.course_sub) + '</span>' : '') + '</p>' +
         '<p class="tfc-rg">' + window.icon("pin", 14) + esc(rgName(t.region)) + '</p>' +
         '<p class="tfc-when">' + window.icon("cal", 14) +
           '<b>' + esc(day(t.play_at)) + '</b>' +
@@ -348,14 +368,15 @@
           '<span>' + (left > 0 ? '남은 자리 ' + esc(String(left)) : '자리 찼습니다') +
           '</span>' +
         '</p>' +
+        (t.min_players ? '<p class="tfc-note">' + esc(String(t.min_players)) + '명부터 신청하실 수 있습니다</p>' : '') +
         (t.note ? '<p class="tfc-note">' + esc(t.note) + '</p>' : '') +
+        terms(t) +
       '</div>' +
       '<div class="tfc-r">' +
         '<span class="tfc-badge">업체 확인 후 확정</span>' +
         (fee
-          ? '<p class="tfc-fee"><i>1인</i> ' + esc(fee) + '</p>' +
-            '<p class="tfc-fee-x">카트 · 캐디 비용이 포함되는지는 ' +
-            '업체에 확인해 주세요.</p>'
+          ? '<p class="tfc-fee"><i>' + esc(window.amTeeUnit ? window.amTeeUnit(t.price_unit) : "1인") + '</i> ' + esc(fee) + '</p>' +
+            costHtml(t)
           /* ⚠️ 값을 안 올린 자리는 **"문의" 를 지어 적지 않습니다** */
           : '<p class="tfc-fee0">그린피가 아직 안 올라왔습니다</p>') +
         (left > 0
@@ -385,8 +406,10 @@
       return '<p class="myhint">예약 신청은 지금 열려 있지 않습니다.</p>';
     }
     var max = Math.max(1, Math.min(4, Number(t.left_n) || 1));
+    /* 0085 — 최소 인원이 있으면 그 수부터만 고르게 둡니다(서버도 다시 봅니다) */
+    var min = Math.max(1, Math.min(max, Number(t.min_players) || 1));
     var opt = "";
-    for(var i = 1; i <= max; i++) opt += '<option>' + i + '</option>';
+    for(var i = min; i <= max; i++) opt += '<option>' + i + '</option>';
     return '<form class="jform tf-f">' +
       '<div class="jrow"><label>성함 <b>*</b></label>' +
       '<input name="name" required minlength="2" maxlength="30"></div>' +
@@ -410,7 +433,8 @@
       '신청하실 수 없습니다.</span></label></div>' +
       /* ⚠️⚠️ 하지 않는 일을 적지 않습니다 */
       '<div class="jrow jrow-full"><p class="agree-no">' +
-      '⚠️ 이것은 <b>예약 신청</b>입니다 — 업체가 확정해야 자리가 잡힙니다. ' +
+      '⚠️ 이것은 <b>예약 신청</b>입니다 — <b>신청 후 업체 확인을 거쳐 확정</b>되고, 업체가 확정해야 자리가 잡힙니다. ' +
+      (t.cancel_terms ? '취소 · 변경 조건은 위에 적힌 그대로이며 <b>신청하신 때의 조건</b>이 그대로 적용됩니다. ' : '') +
       '골프올인원은 거래 당사자가 아니고 <b>결제를 받지 않습니다.</b></p></div>' +
       '<div class="jrow jrow-full">' +
       '<button type="submit" class="btn btn-pt">이대로 신청하기</button>' +
@@ -471,7 +495,12 @@
     '</div>';
   }
 
+  /* 그린 줄을 id 로 들고 있습니다 — 신청 양식이 최소 인원 · 남은 자리 · 조건을 **카드 글자에서 다시 읽지 않게**
+     (글자에서 읽다가 최소 인원이 빠졌습니다 · 2026-11-17 검사가 잡았습니다) */
+  var BYID = {};
   function paint(rows){
+    BYID = {};
+    (rows || []).forEach(function(t){ BYID[t.id] = t; });
     /* ⚠️⚠️ /cat/matchup 의 **업체 조인 자리**가 조건 없이 0건이면 찾는 칸 ·
        날짜 띠를 **안 그립니다**(2026-11-15) — 바로 위 회원 조인에도 찾는 칸이
        있어, 빈 목록 위에 두 번째 찾는 칸이 서면 어느 쪽을 써야 할지 헷갈립니다.
@@ -546,7 +575,8 @@
     }
 
     var qs = ["select=id,provider_id,provider_name,kind,region,course,play_at," +
-              "tee_at,holes,slots,green_fee,tel,note,left_n,photo",
+              "tee_at,holes,slots,green_fee,tel,note,left_n,photo," +
+              "course_sub,min_players,price_unit,cart_rule,cart_fee,caddie_rule,caddie_fee,apply_until,cancel_terms",
               "kind=eq." + encodeURIComponent(KIND),
               "order=play_at.asc,tee_at.asc", "limit=100"];
     /* ⚠️⚠️ 묶음을 **지역 여럿**으로 풀어 서버에 보냅니다 (`in.(…)`).
@@ -623,7 +653,10 @@
      더한 `photo` 하나입니다. ⚠️ 이것은 거르개가 아니라 **그림**이므로
      가릴 거르개가 없습니다 — 사진이 없으면 `phHtml` 이 아이콘 타일로
      돌아가므로 화면은 그대로 서고, 달리 안내할 것도 없습니다. */
-  var OPTCOL = ["photo"];
+  /* ⚠️ 0085 의 칸(가격 단위 · 비용 · 신청 마감 · 취소 조건 · 코스 · 최소 인원)도 운영 DB 에 아직 없을 수
+     있습니다 — 없으면 그 칸들을 빼고 다시 묻고, 카드는 예전 꼴(「1인」 · 「업체에 확인」)로 돌아갑니다. */
+  var OPTCOL = ["photo", "course_sub", "min_players", "price_unit", "cart_rule", "cart_fee",
+                "caddie_rule", "caddie_fee", "apply_until", "cancel_terms"];
   var MISS = [];
   function tookOut(gone){
     gone.forEach(function(c){ if(MISS.indexOf(c) < 0) MISS.push(c); });
@@ -756,9 +789,11 @@
        적힐 동의**입니다(제17조 제2항). 검사가 잡았습니다. */
     var name = li.querySelector(".tfc-pv");
     var left = /남은 자리 (\d+)/.exec(li.textContent || "");
+    var src = BYID[li.getAttribute("data-tee")] || {};
     bx.innerHTML = bookForm({
-      provider_name: name ? name.textContent : "",
-      left_n: left ? Number(left[1]) : 1
+      provider_name: src.provider_name || (name ? name.textContent : ""),
+      left_n: src.left_n !== undefined ? src.left_n : (left ? Number(left[1]) : 1),
+      min_players: src.min_players, cancel_terms: src.cancel_terms
     });
   });
 

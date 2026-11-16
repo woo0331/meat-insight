@@ -2,7 +2,7 @@
 -- db/audit.sql — **운영 DB 가 정말 올라갔는지** 대조합니다
 --
 -- ⚠️⚠️⚠️ **빌드가 만드는 파일입니다 — 손으로 고치지 마세요.**
---   (node tools/make-audit.js · 마이그레이션 84개에서 읽었습니다)
+--   (node tools/make-audit.js · 마이그레이션 85개에서 읽었습니다)
 --
 -- ⚠️⚠️ **`select max(n) from schema_version` 하나로 판정하지 않습니다.**
 --   그 표는 마이그레이션 파일이 **스스로 적는** 줄입니다 — 중간에서
@@ -16,13 +16,13 @@
 -- ① 판 번호와 **빠진 번호** ─────────────────────────────────────────
 select '① 판 번호' as 항목,
        coalesce(max(n), 0)::text as 값,
-       case when coalesce(max(n), 0) >= 84 then '✅' else '❌ 84 보다 낮습니다' end as 결과
+       case when coalesce(max(n), 0) >= 85 then '✅' else '❌ 85 보다 낮습니다' end as 결과
   from schema_version;
 
 select '① 빠진 번호' as 항목,
        coalesce(string_agg(g::text, ', ' order by g), '(없음)') as 값,
        case when count(*) = 0 then '✅' else '❌ 그 번호를 따로 돌리세요' end as 결과
-  from generate_series(1, 84) g
+  from generate_series(1, 85) g
  where not exists (select 1 from schema_version v where v.n = g);
 
 -- ② 표가 다 있나 ─────────────────────────────────────────────────
@@ -125,6 +125,7 @@ with want(v) as (values
     ('v_teebook_pv'),
     ('v_teetime_count'),
     ('v_teetime_open'),
+    ('v_teetime_pv_stats'),
     ('v_trip_date_mine'),
     ('v_trip_date_public'),
     ('v_trip_mine'),
@@ -208,6 +209,7 @@ with want(f) as (values
     ('hold_settlement'),
     ('is_my_item'),
     ('is_my_request'),
+    ('kst_now_time'),
     ('kst_today'),
     ('link_apply_account'),
     ('link_course_alias'),
@@ -217,6 +219,7 @@ with want(f) as (values
     ('make_provider_invite'),
     ('make_request'),
     ('mark_paid'),
+    ('mark_teebook'),
     ('move_appointment'),
     ('move_ca'),
     ('move_course'),
@@ -283,6 +286,7 @@ with want(f) as (values
     ('set_provider_ident'),
     ('set_provider_kind'),
     ('set_provider_state'),
+    ('set_teetime_state'),
     ('set_trip_depart'),
     ('share_jobcontact'),
     ('share_joincontact'),
@@ -373,6 +377,7 @@ select '④ 문을 부를 권한' as 항목,
     ('hold_settlement'),
     ('is_my_item'),
     ('is_my_request'),
+    ('kst_now_time'),
     ('kst_today'),
     ('link_apply_account'),
     ('link_course_alias'),
@@ -382,6 +387,7 @@ select '④ 문을 부를 권한' as 항목,
     ('make_provider_invite'),
     ('make_request'),
     ('mark_paid'),
+    ('mark_teebook'),
     ('move_appointment'),
     ('move_ca'),
     ('move_course'),
@@ -448,6 +454,7 @@ select '④ 문을 부를 권한' as 항목,
     ('set_provider_ident'),
     ('set_provider_kind'),
     ('set_provider_state'),
+    ('set_teetime_state'),
     ('set_trip_depart'),
     ('share_jobcontact'),
     ('share_joincontact'),

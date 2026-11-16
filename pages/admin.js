@@ -65,6 +65,10 @@ exports.build = function(){
   body += '<section class="sec sec-alt"><div class="wrap">' +
     '<div id="repbox" class="none" hidden></div></div></section>';
 
+  /* 티타임 · 예약 집계 (0085) — 업체별 건수만. ⚠️ 돈은 안 셉니다(그린피는 플랫폼 매출이 아닙니다). */
+  body += '<section class="sec"><div class="wrap">' +
+    '<div id="teestatbox" class="none" hidden></div></div></section>';
+
   /* ⚠️⚠️⚠️ **중고 매물 관리** (0056 · 0070 · 중고장터 개편 지시서 §7).
      `move_listing` 은 0056 부터 있었지만 부르는 자리가 **신고 처리
      하나**라, 신고가 아직 안 들어온 사기 매물 · 금지 품목은 운영자가
@@ -127,7 +131,7 @@ exports.build = function(){
             안 실으면 꺼진 것으로 읽혀 비교 업체 더하기가 조용히 안 그려집니다. */
          "/js/data/site.js", "/js/data/compare.js",
          "/js/account.js", "/js/review.js", "/js/assign.js",
-         "/js/adminpro.js", "/js/adminrep.js", "/js/admininq.js",
+         "/js/adminpro.js", "/js/adminrep.js", "/js/adminteestat.js", "/js/admininq.js",
          "/js/adminlog.js", "/js/metrics.js", "/js/adminbiz.js",
          "/js/adminstaff.js", "/js/adminfee.js",
          /* ⚠️ 중고 매물 관리 — `AM_LST_ST`(상태 말) · `amLstPrice` ·

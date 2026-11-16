@@ -115,6 +115,9 @@ exports.build = function(){
          "/js/data/site.js",
          /* 비교견적 (0082) — 스위치 compareOn 은 site.js 에 있습니다 */
          "/js/data/compare.js",
+         /* ⚠️ 0085 — 티타임을 올릴 때 **공개 골프장 목록**에서 고릅니다(slug). 안 실으면 목록이 비어
+            지역도 안 채워지고, 필수 칸이 빈 채로 올리기가 조용히 막힙니다(검사가 잡았습니다). */
+         "/js/data/courses.generated.js",
          "/js/photo.js", "/js/auth.js", "/js/review.js",
          "/js/desk.js", "/js/deskme.js", "/js/deskprice.js",
          /* ⚠️ 시설 사진도 **공개 버킷**으로 가므로 `imgprep.js` 가 먼저

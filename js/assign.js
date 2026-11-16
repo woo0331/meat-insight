@@ -81,8 +81,8 @@
       get("request?select=id,no,state,cat,region,gu,budget_min,budget_max," +
           /* ⚠️ 담당 직원 (0012 의 owner_id) — "누가 바꿨나"(audit_log)와
              다른 것입니다. 이것은 **지금 누가 맡고 있나** 입니다. */
-          "want_at,body," + (on ? "compare,detail" : "name,tel") +
-          ",agree3rd_at,created_at,want_provider,owner_id" +
+          "want_at,body," + (on ? "compare,detail," : "") +
+          "agree3rd_at,created_at,want_provider,owner_id" +
           "&state=in.(" + WATCH.join(",") + ")&order=created_at.desc&limit=50"),
       /* ⚠️ 하는 일 · 지역 · 상태까지 읽습니다 — 조건에 맞는 업체만
          고르게 하려면 그 셋이 필요합니다 (4차 지시서 §4). */
@@ -104,10 +104,16 @@
     ]).then(function(got){
       /* ⚠️ 연락처는 보기에서 따로 (켜져 있을 때만) */
       var rs = got[0];
-      if(!on || !rs || !rs.length) return got;
-      return get("v_request_contact?select=id,name,tel,email&id=in.(" +
-                 rs.map(function(r){ return encodeURIComponent(r.id); }).join(",") +
-                 ")").then(function(ct){
+      if(!rs || !rs.length) return got;
+      /* ⚠️⚠️ 2026-11-17 — 연락처는 스위치와 **상관없이** 보기(v_request_contact · 0082)로
+         먼저 읽습니다. 그래야 0083(표의 연락처 칸 잠금)을 비교견적을 켜기 **전에** 올려도
+         이 화면이 안 깨집니다. 보기가 아직 없는 DB(0082 전)에서만 예전처럼 표에서 읽습니다
+         — 그 DB 는 표 권한이 그대로라 읽힙니다. */
+      var ids = rs.map(function(r){ return encodeURIComponent(r.id); }).join(",");
+      return get("v_request_contact?select=id,name,tel,email&id=in.(" + ids + ")").then(function(ct){
+        if(ct === null && !on) return get("request?select=id,name,tel,email&id=in.(" + ids + ")");
+        return ct;
+      }).then(function(ct){
         var by = {};
         (ct || []).forEach(function(c){ by[c.id] = c; });
         rs.forEach(function(r){

@@ -12390,12 +12390,14 @@ function boardsOf(){
       /* ⚠️ 이 화면의 다른 상자(수수료)도 request 를 묻습니다 — 작업실의 줄(budget_min)만 봅니다 */
       const rs = selOf(g.sent, "request").filter(x => x.indexOf("budget_min") >= 0),
             qs2 = selOf(g.sent, "quote");
-      ok("꺼져 있으면 /desk 가 v_request_contact 를 **안 부른다**",
-         g.sent.every(x => x.body.indexOf("v_request_contact") < 0),
+      /* ⚠️⚠️ 2026-11-17 — 연락처는 스위치와 상관없이 **보기로 먼저** 읽습니다(0083 을
+         비교견적보다 먼저 올릴 수 있게). 작업실 줄의 select 에는 연락처 칸이 없어야 합니다. */
+      ok("꺼져 있어도 /desk 는 연락처를 v_request_contact 로 **먼저** 묻는다",
+         g.sent.some(x => x.body.indexOf("/rest/v1/v_request_contact?") >= 0),
          g.sent.map(x => x.body).join(" | ").slice(0, 300));
-      ok("  요청 select 에 compare · detail 이 없고 name · tel 은 그대로다",
+      ok("  요청 select 에 compare · detail 도 · name · tel 도 없다 (표에서 연락처를 안 묻는다)",
          rs.length > 0 && rs.every(x => x.indexOf("compare") < 0 && x.indexOf("detail") < 0 &&
-                                        x.indexOf("name,tel") >= 0), rs.join(" | "));
+                                        x.indexOf("tel") < 0), rs.join(" | "));
       ok("  견적 select 에 kind · terms 가 없다",
          qs2.length > 0 && qs2.every(x => x.indexOf("kind") < 0 && x.indexOf("terms") < 0),
          qs2.join(" | "));
@@ -12420,12 +12422,34 @@ function boardsOf(){
         { request:[Object.assign({}, REQ, { state:"check" })], provider:[], request_item:ITEMS,
           assignment:[] });
       const all = g.sent.filter(x => x.name === "GET").map(x => decodeURIComponent(x.body));
-      ok("꺼져 있으면 /admin 배정 자리가 compare · blind · v_request_contact 를 **안 묻는다**",
-         all.every(x => !/compare|blind|v_request_contact/.test(x)) &&
-         selOf(g.sent, "request").some(x => x.indexOf("name,tel") >= 0),
+      ok("꺼져 있으면 /admin 배정 자리가 compare · blind 를 **안 묻고** 연락처는 보기로 묻는다",
+         all.every(x => !/compare|blind/.test(x)) &&
+         all.some(x => x.indexOf("/rest/v1/v_request_contact?") >= 0) &&
+         selOf(g.sent, "request").every(x => x.indexOf("tel") < 0 || x === "id,name,tel,email"),
          all.join(" | ").slice(0, 400));
       ok("  비교 업체 더하기 단추가 없다",
          (await g.p.locator('#assignbox button[data-do="more"]').count()) === 0);
+      await g.p.close();
+    }
+    /* ⚠️⚠️ 0082 전 DB(보기가 아직 없음) — 예전처럼 **표에서** 연락처를 읽어야 합니다 */
+    {
+      const g = await open("/desk", PRO2,
+        { assignment:[asg(REQ, "accepted")], request:[REQ], quote:[QUOTE], request_item:ITEMS,
+          v_request_contact:null });
+      ok("보기가 없는 DB 면 /desk 가 표에서 연락처를 다시 읽는다 (0082 전 운영)",
+         selOf(g.sent, "request").some(x => x === "id,name,tel,email"),
+         selOf(g.sent, "request").join(" | "));
+      ok("  그리고 연락처가 화면에 그대로 나온다",
+         ((await g.p.textContent("#deskbox")) || "").indexOf(REQ.tel) >= 0);
+      await g.p.close();
+    }
+    {
+      const g = await open("/admin", { role:"admin", name:"관리자" },
+        { request:[Object.assign({}, REQ, { state:"check" })], provider:[], request_item:ITEMS,
+          assignment:[], v_request_contact:null });
+      ok("보기가 없는 DB 면 /admin 도 표에서 연락처를 다시 읽는다",
+         selOf(g.sent, "request").some(x => x === "id,name,tel,email"),
+         selOf(g.sent, "request").join(" | "));
       await g.p.close();
     }
 

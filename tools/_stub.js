@@ -161,6 +161,17 @@ function stub(p, who, tables, rpcs, up){
                            body: JSON.stringify(v === undefined ? null : v) });
       }
       sent.push({ name:"GET", body:u });
+      /* ⚠️⚠️ 2026-11-17 — 화면이 연락처를 **보기(v_request_contact)로 먼저** 묻습니다.
+         그 자리를 따로 주지 않은 장면은 진짜 DB 처럼 **요청 줄의 성함 · 연락처**를 냅니다
+         (직원 · 수락한 업체 · 본인이 보는 그 값). 연락처가 **안 보여야** 하는 장면은
+         `v_request_contact: []` 를, 보기가 없는 DB 는 `null` 을 직접 줍니다. */
+      if(u.indexOf("/rest/v1/v_request_contact?") >= 0 && !("v_request_contact" in tables) &&
+         Array.isArray(tables.request)){
+        return r.fulfill({ status:200, contentType:"application/json",
+          headers:{ "access-control-expose-headers":"content-range" },
+          body: JSON.stringify(tables.request.map(function(x){
+            return { id:x.id, name:x.name, tel:x.tel, email:x.email || null }; })) });
+      }
       /* 어느 표를 묻는지는 주소 앞머리로 가릅니다 */
       const key = Object.keys(tables).filter(function(k){
         return u.indexOf("/rest/v1/" + k) >= 0;

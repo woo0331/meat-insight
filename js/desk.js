@@ -115,8 +115,8 @@
           encodeURIComponent(PV) + "&limit=200"),
       get("request_item?select=request_id,service_id,state&limit=500"),
       get("request?select=id,no,state,cat,region,gu,budget_min,budget_max," +
-          "want_at,body," + (on ? "compare,detail" : "name,tel,email") +
-          ",created_at&limit=50"),
+          "want_at,body," + (on ? "compare,detail," : "") +
+          "created_at&limit=50"),
       /* ⚠️ 일정은 RLS 가 **내 업체 것만** 내줍니다 (0034 의 appt_provider) */
       get("appointment?select=id,request_id,at,kind,place,note,state,why" +
           "&provider_id=eq." + encodeURIComponent(PV) + "&limit=200"),
@@ -142,10 +142,16 @@
     }).then(function(got){
       /* ⚠️ 연락처는 보기에서 따로 — 줄이 없으면 **못 보는 것**이 맞습니다 */
       var reqs = got[3];
-      if(!on || !reqs || !reqs.length) return got;
-      return get("v_request_contact?select=id,name,tel,email&id=in.(" +
-                 reqs.map(function(r){ return encodeURIComponent(r.id); }).join(",") +
-                 ")").then(function(ct){
+      if(!reqs || !reqs.length) return got;
+      /* ⚠️⚠️ 2026-11-17 — 연락처는 스위치와 **상관없이** 보기(v_request_contact · 0082)로
+         먼저 읽습니다. 그래야 0083(표의 연락처 칸 잠금)을 비교견적을 켜기 **전에** 올려도
+         이 화면이 안 깨집니다. 보기가 아직 없는 DB(0082 전)에서만 예전처럼 표에서 읽습니다
+         — 그 DB 는 표 권한이 그대로라 읽힙니다. */
+      var ids = reqs.map(function(r){ return encodeURIComponent(r.id); }).join(",");
+      return get("v_request_contact?select=id,name,tel,email&id=in.(" + ids + ")").then(function(ct){
+        if(ct === null && !on) return get("request?select=id,name,tel,email&id=in.(" + ids + ")");
+        return ct;
+      }).then(function(ct){
         var by = {};
         (ct || []).forEach(function(c){ by[c.id] = c; });
         reqs.forEach(function(r){

@@ -89,6 +89,12 @@ module.exports = function(T){
   ok("  비로그인이 실행할 수 있는 비교 함수가 0개다",
      P("select count(*) from pg_proc p where p.proname in ('make_compare_request','assign_more','answer_compare','submit_compare_quote','pick_quote','compare_cat_ok','compare_bag_ok','compare_door_guard','compare_state_guard','compare_deal_guard') and has_function_privilege('anon', p.oid, 'execute')") === "0");
   oldScreens("0082", R0, true);
+  /* ⚠️⚠️ 2026-11-17 — 화면은 이제 스위치와 상관없이 **보기로 먼저** 연락처를 읽습니다.
+     0082 뒤부터 그 보기가 직원 · 수락한 업체에게 맞게 내주는지 — 그래야 0083 을
+     비교견적보다 **먼저** 올려도 작업실 · 배정이 안 깨집니다. */
+  ok("0082 — 바뀐 화면의 질의(보기)로 직원 · 수락한 업체가 연락처를 읽는다",
+     last(P(as(STF) + "select count(*) from v_request_contact where id = '" + R0 + "';" + back)) === "1" &&
+     last(P(as(PA) + "select count(*) from v_request_contact where id = '" + R0 + "';" + back)) === "1");
   oldFlow("0082");
   const again = (() => { try{ psqlFile("db/migrations/" + upto(82).pop(), DB); return true; }catch(e){ return false; } })();
   ok("0082 를 두 번 붙여 넣어도 끝까지 간다", again);

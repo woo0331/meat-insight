@@ -1,15 +1,14 @@
 /* ════════════════════════════════════════════════════════════════════
-   메인 화면 — 「예약 검색 우선형」 확정 시안 (docs/spec/00-main.webp · 2026-11-14)
+   메인 화면 — 최종 시안 (2026-11-16 · 이전: docs/spec/00-main.webp · 2026-11-14)
 
-   차례는 시안 그대로입니다 —
-     ① 히어로 + 찾는 칸(골프장 부킹 · 골프 조인 · 골프장 정보)
-     ② 띠 「골프의 모든 순간을, 한곳에서.」
-     ③ 어떤 골프를 찾으세요? (분류 열 칸)
-     ④ 지금, 나에게 필요한 골프 (사진 카드 셋)
-     ⑤ 전국 골프장 정보 (지역 타일 · 이름 · 지역 찾기 · 일부 목록 · 전체 보기)
-     ⑥ 골프 이야기가 모이는 곳 (커뮤니티 · 조인)
-     ⑦ 띠 「골프 사업의 다음 기회」 (입점)
-     ⑧ 찾고, 비교하고, 연결하세요
+   차례는 최종 시안(2026-11-16) 그대로입니다 —
+     ① 히어로 + 찾는 칸(골프장 부킹 · 골프 조인 · 골프장 정보 · 지역 → 골프장 → 시간대)
+     ② 분류 열 칸 (한 번만)
+     ③ 나에게 맞는 골프를 찾아보세요 (레슨 큰 카드 · 피팅 · 여행)
+     ④ 새로 올라온 골프장터 (중고 / 새상품 · 실제 자료만)
+     ⑤ 함께 라운드해요 · 골퍼들의 질문 (실제 공개 자료만)
+     ⑥ 「골프장 정보는 부킹존에서」 한 줄
+     ⑦ 업체 · 프로 입점 안내
      → 푸터 · 폰 바닥 메뉴
 
    ⚠️⚠️ **여기 적는 글이 곧 구글에 나가는 글입니다** — 지킬 수 없는 말을
@@ -76,6 +75,13 @@ function hero(){
               return '<option value="' + esc(z.key) + '">' +
                 esc(W.amZoneLong ? W.amZoneLong(z.key) : z.name) + '</option>';
             }).join("") + '</select></div>' +
+          /* ⚠️⚠️ 골프장 — 지역을 고르면 js/homefind.js 가 **그 지역의 공개 자료**로
+             채웁니다(이름이 아니라 고유 주소 slug 를 보냅니다 · 같은 이름이 있습니다).
+             빌드는 비워 두고 꺼 둡니다 — 자바스크립트가 꺼진 분은 지역 전체로 찾습니다. */
+          '<div class="hm-sel hm-cs" data-hmhide="join course">' + icon("flag", 18) +
+            '<label class="sr" for="hm-cs">골프장</label>' +
+            '<select id="hm-cs" name="cs" disabled>' +
+            '<option value="">지역을 먼저 고르세요</option></select></div>' +
           (B.length
             ? '<div class="hm-sel" data-hmhide="join course">' + icon("clock", 18) +
               '<label class="sr" for="hm-t">시간대</label>' +
@@ -91,29 +97,10 @@ function hero(){
         /* ⚠️⚠️ 시안의 이 한 줄은 **우리 코드의 참**입니다 — 신청은 `applied`
            로 들어가고 확정은 업체만 합니다(0060). 탭마다 맞는 말로 바꿉니다. */
         '<p class="hm-note" id="hm-note">' + icon("info", 16) +
-          '<span>예약 신청 후 업체 확인을 거쳐 확정됩니다</span></p>' +
+          '<span>지역을 고르면 그 지역 골프장을 고를 수 있습니다 · 예약은 업체 확인 뒤 확정됩니다</span></p>' +
       '</form>' +
     '</div>' +
   '</section>';
-}
-
-/* ── ② 띠 — 골프의 모든 순간을, 한곳에서. ─────────────────────────── */
-function band(){
-  var bp = W.amPhoto ? W.amPhoto("match-banner") : null;
-  return '<section class="sec hm-s"><div class="wrap">' +
-    '<div class="hm-band' + (bp ? " hm-band-ph" : "") + '">' +
-      (bp ? W.amPhotoImg("match-banner", { cls:"hm-band-bg" }) : "") +
-      '<div class="hm-band-t">' +
-        '<p class="hm-kick">YOUR GOLF, ALL IN ONE</p>' +
-        '<h2>골프의 모든 순간을, <b>한곳에서.</b></h2>' +
-        '<p>라운드부터 장비, 레슨과 여행까지. 나에게 맞는 골프를 찾아보세요.</p>' +
-        '<p class="hm-band-go">' +
-          '<a class="btn btn-pt" href="/categories">골프 서비스 찾기' + icon("arrow", 18) + '</a>' +
-          '<a class="hm-link" href="' + esc(courseUrl("")) + '">골프장 둘러보기' + icon("arrow", 18) + '</a>' +
-        '</p>' +
-      '</div>' +
-    '</div>' +
-  '</div></section>';
 }
 
 /* ── ③ 어떤 골프를 찾으세요? ───────────────────────────────────────
@@ -121,7 +108,7 @@ function band(){
    분류를 고치는 날 한쪽만 바뀝니다. */
 function cats(){
   return '<section class="sec hm-s" aria-labelledby="hm-cat-h"><div class="wrap">' +
-    '<h2 class="hm-h2" id="hm-cat-h">어떤 골프를 찾으세요?</h2>' +
+    '<h2 class="sr" id="hm-cat-h">골프 서비스 바로가기</h2>' +
     '<div class="hm-cats">' + (W.AM_CATS || []).map(function(c){
       return '<a class="hm-cat" href="' + esc(W.amCatUrl(c)) + '">' +
         '<span class="hm-cat-ic">' + icon(c.icon, 30) + '</span>' +
@@ -130,129 +117,110 @@ function cats(){
   '</div></section>';
 }
 
-/* ── ④ 지금, 나에게 필요한 골프 ────────────────────────────────────
-   ⚠️⚠️ **개인화 추천이 아닙니다** — 모든 분께 같은 세 장이고, 누가 무엇을
-   보셨는지 세지 않습니다. 그래서 「추천」 이라는 말을 쓰지 않습니다
-   (절대 규칙 5 · 표시광고법 제3조). 제목은 시안 글자 그대로입니다. */
-function needs(){
-  var one = function(k, ph, cls, title, lead, cta){
+/* ── ④ 나에게 맞는 골프를 찾아보세요 (최종 시안 · 2026-11-16) ───────────
+   ⚠️⚠️ **개인화 추천이 아닙니다** — 모든 분께 같은 세 장입니다(「추천」을 쓰지 않습니다).
+   ⚠️⚠️ 카드 **전체가 링크 하나**입니다 — 안에 단추 모양(`span`)만 두고 링크를 또
+   넣지 않습니다(링크 안의 링크).
+   ⚠️⚠️ 사진은 **저장소에 이미 있는, 상표를 확인한 분류 사진**입니다(`cat-lesson` ·
+   `cat-fitting` · `cat-travel`). 시안의 인물 사진을 잘라 쓰지 않고, 사진 속 인물을
+   입점 프로로 소개하지 않습니다. */
+function services(){
+  var one = function(k, ph, cls, badge, title, lead, cta){
     var has = W.amPhoto ? W.amPhoto(ph) : null;
-    return '<a class="hm-need ' + cls + (has ? " hm-need-ph" : "") + '" href="' +
-      esc(catUrl(k)) + '">' +
-      (has ? W.amPhotoImg(ph, { cls:"hm-need-bg" }) : "") +
-      '<span class="hm-need-t"><b>' + title + '</b>' +
-        (lead ? '<span class="hm-need-l">' + esc(lead) + '</span>' : "") +
-        (cta ? '<span class="btn btn-sm btn-pt hm-need-c">' + esc(cta) + icon("arrow", 16) + '</span>' : "") +
-      '</span>' +
-      (cta ? "" : '<span class="hm-need-go" aria-hidden="true">' + icon("arrow", 18) + '</span>') +
-    '</a>';
+    return '<a class="hm-sv ' + cls + (has ? " hm-sv-ph" : "") + '" href="' + esc(catUrl(k)) + '">' +
+      (has ? W.amPhotoImg(ph, { cls:"hm-sv-bg" }) : "") +
+      '<span class="hm-sv-badge">' + esc(badge) + '</span>' +
+      '<span class="hm-sv-t"><b>' + esc(title) + '</b>' +
+        (lead ? '<span class="hm-sv-l">' + esc(lead) + '</span>' : "") +
+        '<span class="hm-sv-c">' + esc(cta) + icon("arrow", 16) + '</span>' +
+      '</span></a>';
   };
-  return '<section class="sec hm-s" aria-labelledby="hm-need-h"><div class="wrap">' +
-    '<h2 class="hm-h2" id="hm-need-h">지금, 나에게 필요한 골프</h2>' +
-    '<div class="hm-needs">' +
-      one("used", "cat-used", "hm-need-big", "장비를 바꾸는<br>더 좋은 방법",
-          "중고장터 · 매입 · 위탁", "중고장터 둘러보기") +
-      one("lesson", "cat-lesson", "", "나에게 맞는<br>레슨 찾기", "", "") +
-      one("travel", "cat-travel", "", "다음 여행은<br>골프로", "", "") +
+  return '<section class="sec hm-s" aria-labelledby="hm-sv-h"><div class="wrap">' +
+    '<h2 class="hm-h2" id="hm-sv-h">나에게 맞는 골프를 찾아보세요</h2>' +
+    '<div class="hm-svs">' +
+      one("lesson", "cat-lesson", "hm-sv-big", "골프 레슨 · 프로",
+          "나에게 맞는 프로를 만나보세요", "지역과 레슨 조건으로 찾아보세요", "레슨 · 프로 찾기") +
+      '<div class="hm-sv-side">' +
+        one("fitting", "cat-fitting", "", "피팅 · 수리",
+            "내 클럽에 맞는 점검과 수리", "", "피팅 · 수리 찾기") +
+        one("travel", "cat-travel", "", "골프 여행",
+            "다음 여행은 골프로", "", "골프여행 둘러보기") +
+      '</div>' +
     '</div>' +
   '</div></section>';
 }
 
-/* ── ⑤ 전국 골프장 정보 (2026-11-15) ──────────────────────────────
-   ⚠️⚠️⚠️ **수를 글자로 박지 않습니다** — 빌드가 찍어 둔 `AM_COURSES` 에서
-   **세어서** 냅니다(`amCourseList`). 자료를 다시 받는 날 저절로 따라옵니다.
-   ⚠️⚠️ **첫 화면에는 일부만** 그립니다(`HM_CS_PAGE` 곳). 508장을 한꺼번에
-   그리면 폰에서 메인이 무거워집니다 — 나머지는 「더 보기」(`js/homecourse.js`)
-   와 「전체 골프장 보기」(`/cat/booking?tab=course`)로 갑니다.
-   ⚠️⚠️ **주소 규칙은 골프장 정보 탭과 같습니다**(`tab=course` · `rg` · `q`) —
-   양식이라 자바스크립트가 꺼져도 GET 으로 그 화면에 갑니다. 권역 키
-   (capital)는 받는 쪽(`js/courselist.js` 의 `rgKeys()`)이 시·도로 풉니다.
-   ⚠️⚠️ **수도권과 「경기 · 인천」 타일은 다른 묶음입니다** — 수도권은 서울 ·
-   경기 · 인천, 타일은 경기 · 인천뿐이라 서울(공공 자료에 1곳)만큼 다릅니다.
-   그래서 타일에도 **센 수**를 같이 적습니다(어느 쪽을 맞추지 않습니다).
-   ⚠️ 「전국 모든 골프장」 · 「제휴」 · 「예약 가능」 을 적지 않습니다 — 공공
-   자료로 만든 안내이고 저희가 맺은 것이 없습니다.
-   ⚠️⚠️⚠️ **사진을 깔지 않습니다**(2026-11-14 · 사장님 지시) — 그 지역에서
-   찍은 사진이 저장소에 없습니다. */
-var RG = [
-  { name:"경기 · 인천", rg:"gyeonggi,incheon" },
-  { name:"강원",        rg:"gangwon" },
-  { name:"충청",        rg:"chungbuk,chungnam" },
-  { name:"제주",        rg:"jeju" }
-];
-W.HM_CS_PAGE = 12;
-function csAll(){ return W.amCourseList ? W.amCourseList("golf") : []; }
-function csPick(rg){
-  return W.amCoursePickCards ? W.amCoursePickCards({ rg:rg }, "golf").length : 0;
-}
-function csSelect(){
-  var Z = W.amCourseZones ? W.amCourseZones("golf") : [];
-  var R = W.amCourseRegions ? W.amCourseRegions("golf") : [];
-  var opt = function(k, name, n){
-    return '<option value="' + esc(k) + '">' + esc(name) + ' (' + esc(String(n)) + '곳)</option>';
+/* ── ⑤ 새로 올라온 골프장터 — 중고 / 새상품 ─────────────────────────
+   ⚠️⚠️⚠️ **상품을 지어내지 않습니다**(시안의 드라이버 · 아이언 · 가격은 예시입니다).
+   · 중고 — 회원 매물(0056 · `v_listing_open` 의 **판매중**)을 `js/homemix.js` 가 읽습니다.
+     빌드는 그 자리에 「불러오는 중」이 아니라 **갈 길**을 찍어 둡니다(자바스크립트가
+     꺼져도 막다른 길이 아니게).
+   · 새상품 — 「골프용품 마켓」에 **업체가 올린 상품**(`amMkItems` · 빌드가 실어 준
+     자료)입니다. ⚠️ 중고 매물의 「새것」 상태를 새상품으로 내지 않습니다 — 개인이
+     파는 물건이고 거래 책임이 다릅니다.
+   ⚠️ 탭은 **링크**입니다(자바스크립트가 꺼지면 그 목록 화면으로 갑니다). */
+function market(){
+  var items = (W.amMkItems && W.amProvidersOf) ? W.amMkItems(W.amProvidersOf("market")) : [];
+  var usedUrl = catUrl("used"), newUrl = catUrl("market");
+  var none = function(h, p, go){
+    return '<div class="hm-mk-none"><p><b>' + esc(h) + '</b> ' + esc(p) + '</p>' +
+      '<p class="hm-mk-none-go">' + go + '</p></div>';
   };
-  return '<select id="hmcs-rg" name="rg">' +
-    '<option value="">전체 지역</option>' +
-    (Z.length ? '<optgroup label="권역">' + Z.map(function(z){ return opt(z.key, z.name, z.n); }).join("") + '</optgroup>' : "") +
-    '<optgroup label="시 · 도">' + R.map(function(r){ return opt(r.key, r.name, r.n); }).join("") + '</optgroup>' +
-  '</select>';
-}
-function where(){
-  var all = csAll();
-  var head = '<div class="hm-hd"><h2 class="hm-h2" id="hm-rg-h">전국 골프장 정보</h2>' +
-      '<p class="hm-sub">공공 자료로 만든 골프장 안내입니다 — 이름 · 지역으로 찾아보세요.</p>' +
-      '<a class="btn btn-sm btn-line hm-all" href="' + esc(courseUrl("")) + '">전체 골프장 보기' +
-        icon("arrow", 16) + '</a></div>';
-  var tiles = '<div class="hm-rgs">' + RG.map(function(r){
-      var n = csPick(r.rg);
-      return '<a class="hm-rg" href="' + esc(courseUrl(r.rg)) + '">' +
-        '<span class="hm-rg-ic">' + icon("pin", 22) + '</span>' +
-        '<span class="hm-rg-n">' + esc(r.name) + icon("arrow", 16) + '</span>' +
-        '<span class="hm-rg-l">골프장 정보' + (n ? ' ' + esc(String(n)) + '곳' : '') + ' 보기</span></a>';
-    }).join("") + '</div>';
-  if(!all.length){
-    return '<section class="sec hm-s" aria-labelledby="hm-rg-h"><div class="wrap">' +
-      head + tiles + '</div></section>';
-  }
-  return '<section class="sec hm-s" aria-labelledby="hm-rg-h"><div class="wrap">' +
-    head + tiles +
-    '<form class="hmcs-f" id="hmcs" action="' + esc(catUrl("booking")) + '" method="get" role="search" aria-label="골프장 찾기">' +
-      '<input type="hidden" name="tab" value="course">' +
-      '<label class="hmcs-q"><span class="sr-only">골프장 이름</span>' + icon("search", 18) +
-        '<input id="hmcs-q" type="search" name="q" maxlength="40" placeholder="골프장 이름 · 지역으로 찾기"></label>' +
-      '<label class="hmcs-r"><span class="sr-only">지역</span>' + csSelect() + '</label>' +
-      '<button class="btn btn-pt" type="submit">찾기</button>' +
-      '<button class="btn btn-line hmcs-reset" type="reset" hidden>조건 초기화</button>' +
-    '</form>' +
-    '<p class="hmcs-n" id="hmcs-n" aria-live="polite">공개 자료 전체 <b>' + esc(String(all.length)) + '곳</b></p>' +
-    '<div id="hmcs-l">' + W.amCourseGrid(all.slice(0, W.HM_CS_PAGE)) + '</div>' +
-    '<p class="hmcs-go">' +
-      '<button class="btn btn-line hmcs-more" type="button" hidden>더 보기</button>' +
-      '<a class="btn btn-deep hmcs-full" href="' + esc(courseUrl("")) + '">전체 골프장 보기' + icon("arrow", 16) + '</a>' +
-    '</p>' +
-    (W.amCourseSrcNote ? W.amCourseSrcNote() : "") +
+  return '<section class="sec hm-s" aria-labelledby="hm-mk-h"><div class="wrap">' +
+    '<div class="hm-hd hm-mk-hd"><h2 class="hm-h2" id="hm-mk-h">새로 올라온 골프장터</h2>' +
+      '<nav class="hm-mk-tabs" aria-label="골프장터 갈래">' +
+        '<a class="hm-mk-tab on" data-mktab="used" href="' + esc(usedUrl) + '" aria-current="true">중고</a>' +
+        '<a class="hm-mk-tab" data-mktab="new" href="' + esc(newUrl) + '">새상품</a>' +
+      '</nav>' +
+      '<a class="hm-all hm-link hm-link-d" id="hm-mk-all" href="' + esc(usedUrl) + '">전체 보기' + icon("arrow", 16) + '</a>' +
+    '</div>' +
+    '<div class="hm-mk-p" id="hm-mk-used" data-mkpane="used">' +
+      none("중고 매물은 중고 골프장터에서 보실 수 있습니다.", "",
+        '<a class="btn btn-line btn-sm" href="' + esc(usedUrl) + '">중고 매물 보기</a>') +
+    '</div>' +
+    '<div class="hm-mk-p" id="hm-mk-new" data-mkpane="new" hidden>' +
+      (items.length
+        ? W.amMkGrid(items.slice(0, 4))
+        : none("아직 새상품을 올린 업체가 없습니다.", "골프용품 업체가 입점하면 여기에 보입니다.",
+            '<a class="btn btn-line btn-sm" href="' + esc(newUrl) + '">골프용품 마켓 보기</a>' +
+            '<a class="btn btn-line btn-sm" href="/join">업체 입점 신청</a>')) +
+    '</div>' +
+    '<p class="hm-mk-sell">' + icon("bag", 18) + '<span>내 장비도 판매하고 싶다면?</span>' +
+      '<a class="hm-link hm-link-d" href="' + esc(usedUrl) + '#lsbox">매물 등록하기' + icon("arrow", 16) + '</a></p>' +
   '</div></section>';
 }
 
-/* ── ⑥ 골프 이야기가 모이는 곳 ─────────────────────────────────────
-   ⚠️ 게시판 키는 `AM_CATS` 의 커뮤니티 하위입니다(`cm-ask` · `cm-course` ·
-   `cm-gear`) — 받는 쪽(`js/community.js`)이 쉼표를 갈라 읽습니다. */
-function story(){
-  var cu = catUrl("community");
-  var one = function(href, ic, t, l){
-    return '<a class="hm-st" href="' + esc(href) + '">' +
-      '<span class="hm-st-ic">' + icon(ic, 26) + '</span>' +
-      '<span class="hm-st-t"><b>' + esc(t) + '</b><span>' + esc(l) + '</span></span>' +
-      '<span class="hm-st-go" aria-hidden="true">' + icon("arrow", 16) + '</span></a>';
+/* ── ⑥ 함께 라운드해요 · 골퍼들의 질문 ──────────────────────────────
+   ⚠️⚠️ **실제 공개 자료만** — `js/homemix.js` 가 `v_join_open`(모집 중 · 오늘 이후)과
+   `v_cq_public`(질문 게시판 · 공개)을 읽습니다. 제목 · 인원 · 조회 수를 지어 넣지
+   않습니다. 빌드는 **갈 길**만 찍어 둡니다. */
+function together(){
+  var ju = catUrl("matchup"), cu = catUrl("community");
+  var col = function(id, hid, title, all, fallback){
+    return '<div class="hm-tg">' +
+      '<div class="hm-hd"><h2 class="hm-h2" id="' + hid + '">' + esc(title) + '</h2>' +
+        '<a class="hm-all hm-link hm-link-d" href="' + esc(all) + '">전체 보기' + icon("arrow", 16) + '</a></div>' +
+      '<div class="hm-tg-l" id="' + id + '">' + fallback + '</div>' +
+    '</div>';
   };
-  return '<section class="sec hm-s" aria-labelledby="hm-st-h"><div class="wrap">' +
-    '<h2 class="hm-h2" id="hm-st-h">골프 이야기가 모이는 곳</h2>' +
-    '<div class="hm-sts">' +
-      one(cu + "?s=cm-ask", "chat", "궁금한 건 물어보세요", "질문 · 답변") +
-      one(catUrl("matchup"), "people", "함께 라운드해요", "골프 조인") +
-      one(cu + "?s=cm-course,cm-gear", "swing", "경험을 나눠주세요", "라운드 · 장비 이야기") +
-      '<a class="btn btn-pt hm-st-all" href="' + esc(cu) + '">커뮤니티 가기' + icon("arrow", 18) + '</a>' +
-    '</div>' +
+  return '<section class="sec hm-s" aria-label="함께 라운드해요 · 골퍼들의 질문"><div class="wrap hm-tgs">' +
+    col("hm-jn", "hm-jn-h", "함께 라운드해요", ju,
+      '<p class="hm-tg-none">지금 모집 중인 조인은 골프 조인에서 보실 수 있습니다. ' +
+      '<a class="hm-link hm-link-d" href="' + esc(ju) + '">조인 보기 · 모집하기' + icon("arrow", 16) + '</a></p>') +
+    col("hm-qa", "hm-qa-h", "골퍼들의 질문", cu + "?s=cm-ask",
+      '<p class="hm-tg-none">궁금한 것은 커뮤니티 질문 게시판에 물어보세요. ' +
+      '<a class="hm-link hm-link-d" href="' + esc(cu + "?s=cm-ask") + '">질문 보기 · 쓰기' + icon("arrow", 16) + '</a></p>') +
+  '</div></section>';
+}
+
+/* ── ⑦ 골프장 정보는 부킹존에서 ─────────────────────────────────────
+   ⚠️ 메인에서 골프장 목록 · 지역 타일 · 찾는 칸을 걷었습니다(최종 시안). 자료 ·
+   상세 화면 · 부킹존의 「골프장 정보」 탭은 그대로이고, 여기는 그리로 가는 길 하나입니다. */
+function courseLink(){
+  return '<section class="sec hm-s hm-cl-s"><div class="wrap">' +
+    '<p class="hm-cl">' + icon("flag", 22) +
+      '<span>골프장 정보는 부킹존에서 지역별로 찾아보세요</span>' +
+      '<a class="hm-link hm-link-d" href="' + esc(courseUrl("")) + '">골프장 정보 보기' + icon("arrow", 16) + '</a></p>' +
   '</div></section>';
 }
 
@@ -270,27 +238,6 @@ function biz(){
         '<a class="btn btn-pt" href="/join">업체 · 프로 등록하기' + icon("arrow", 18) + '</a>' +
         '<a class="btn btn-ghost" href="/guide">입점 안내</a>' +
       '</p>' +
-    '</div>' +
-  '</div></section>';
-}
-
-/* ── ⑧ 찾고, 비교하고, 연결하세요 ──────────────────────────────────
-   ⚠️⚠️ 세 줄은 **지금 실제로 하는 일**입니다 — 찾기(분류 · 업체찾기) ·
-   비교(업체찾기의 나란히 보기 · 견적 비교) · 연결(상담 요청). 결제 ·
-   예약 확정을 대신 한다고 적지 않습니다(절대 규칙 5). */
-function flow(){
-  var one = function(href, ic, t, l){
-    return '<a class="hm-fl" href="' + esc(href) + '">' +
-      '<span class="hm-fl-ic">' + icon(ic, 26) + '</span>' +
-      '<span class="hm-fl-t"><b>' + esc(t) + '</b><span>' + esc(l) + '</span></span></a>';
-  };
-  return '<section class="sec hm-s" aria-labelledby="hm-fl-h"><div class="wrap">' +
-    '<div class="hm-hd"><h2 class="hm-h2" id="hm-fl-h">찾고, 비교하고, 연결하세요</h2>' +
-      '<p class="hm-sub">서비스 조건은 등록 업체와 직접 확인하세요.</p></div>' +
-    '<div class="hm-fls">' +
-      one("/categories", "search", "찾아보기", "원하는 골프 서비스를 쉽게 찾고") +
-      one("/search", "grid", "비교하기", "여러 업체를 같은 기준으로 비교하고") +
-      one("/match", "match", "연결하기", "원하는 업체 또는 전문가와 바로 연결하세요") +
     '</div>' +
   '</div></section>';
 }
@@ -333,14 +280,14 @@ exports.build = function(){
     desc: W.AM_BRAND.desc + " 골프장 부킹 · 조인 · 골프장 정보부터 레슨 · 중고 골프장터 · " +
           "용품 · 피팅 · 여행까지 골프 업체를 한곳에서 찾고 비교합니다.",
     botnav: botNav(),
-    body: hero() + adSlot("main_hero") + band() + cats() + needs() + sponsors() +
-          where() + story() + adSlot("home_bottom") + biz() + flow(),
+    body: hero() + adSlot("main_hero") + cats() + services() + sponsors() +
+          market() + together() + courseLink() + adSlot("home_bottom") + biz(),
     /* ⚠️⚠️ **값을 읽는 파일을 싣는 것까지가 기능입니다** — 찾는 칸은
        `site.js`(날 수) · `regions.js`(지역 묶음) · `deal.js`(시간대)를,
        광고 자리는 업체 자료를 읽습니다. */
     js: ["/js/data/providers.generated.js", "/js/data/providers.js",
          "/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
-         "/js/adslot.js", "/js/homefind.js",
-         "/js/data/courses.generated.js", "/js/data/courses.js", "/js/homecourse.js"]
+         "/js/data/courses.generated.js", "/js/data/courses.js",
+         "/js/adslot.js", "/js/homefind.js", "/js/auth.js", "/js/homemix.js"]
   };
 };

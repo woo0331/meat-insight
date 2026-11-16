@@ -131,9 +131,18 @@
      ⚠️ `teeBoard` 가 비면 띠를 **안 냅니다**(우리가 날 수를 지어내지 않습니다). */
   /* 주소에서 조건을 읽습니다 — 처음 열 때와 뒤로 가기 때 **같은 함수** */
   function readUrl(){
-    S.rg = ""; S.d = ""; S.course = ""; S.t = ""; S.p = "";
+    S.rg = ""; S.d = ""; S.course = ""; S.t = ""; S.p = ""; S.cs = ""; S.csBad = "";
     try{
       var u = new URLSearchParams(window.location.search);
+      /* ⚠️⚠️ 메인에서 고른 **골프장**(2026-11-16 · 최종 시안) — 이름이 아니라
+         **고유 주소(slug)** 로 받습니다(같은 이름의 골프장이 둘인 곳이 있습니다).
+         ⚠️ 공개 자료(AM_COURSES)에 있는 골프장만 받습니다 — 모르는 값을 그대로
+         거르면 영원히 0건인 화면이 되므로 빼고, 뺐다고 그 자리에서 말합니다. */
+      var cs2 = (u.get("cs") || "").trim();
+      if(cs2){
+        var c0 = /^[a-z0-9-]{1,80}$/.test(cs2) && window.amCourse ? window.amCourse(cs2) : null;
+        if(c0 && c0.kind === "golf") S.cs = cs2; else S.csBad = "1";
+      }
       var rg = (u.get("rg") || "").trim();
       var d  = (u.get("d")  || "").trim();
       if(rg && window.amZone && window.amZone(rg)) S.rg = rg;
@@ -162,7 +171,8 @@
     var u;
     try{ u = new URLSearchParams(window.location.search); }catch(e){ u = null; }
     if(!u) return window.location.pathname;
-    ["rg","d","course","t","p"].forEach(function(k){ u.delete(k); });
+    ["rg","d","course","t","p","cs"].forEach(function(k){ u.delete(k); });
+    if(S.cs) u.set("cs", S.cs);
     if(S.rg) u.set("rg", S.rg);
     if(d)    u.set("d", d);
     if(S.course) u.set("course", S.course);
@@ -192,6 +202,28 @@
   }
 
   /* ── 거르개 ─────────────────────────────────────────────────────── */
+  /* 고른 골프장 이름표 — ⚠️ 같은 이름이 둘이면 지역을 같이 적습니다 */
+  function csLabel(slug){
+    var c = window.amCourse ? window.amCourse(slug) : null;
+    if(!c) return "";
+    var reg = window.amRegion ? (window.amRegion(c.region) || {}).name : "";
+    var dup = (window.AM_COURSES || []).filter(function(x){ return x.name === c.name; }).length > 1;
+    return c.name + (dup ? " (" + [reg, c.gu].filter(Boolean).join(" ") + ")" : "");
+  }
+  function csInZone(slug, rg){
+    var c = window.amCourse ? window.amCourse(slug) : null;
+    if(!c) return false;
+    var keys = (window.amZone && window.amZone(rg) && window.amZoneRegions) ? window.amZoneRegions(rg) : [rg];
+    return keys.indexOf(c.region) >= 0;
+  }
+  function csChip(){
+    if(S.cs && KIND === "booking") return '<p class="jrow jrow-full tf-cs">' + window.icon("pin", 16) +
+      '<span>골프장: <b>' + esc(csLabel(S.cs)) + '</b></span>' +
+      '<button type="button" class="btn btn-sm btn-line tf-csx">골프장 조건 풀기</button></p>';
+    if(S.csBad) return '<p class="jrow jrow-full tf-cs tf-cs-bad">' + window.icon("info", 16) +
+      '<span>주소의 골프장 조건을 알아볼 수 없어 빼고 찾았습니다.</span></p>';
+    return "";
+  }
   function bar(){
     /* ⚠️⚠️⚠️ **지역 묶음으로 거릅니다** — 메인의 현황표가 묶음 단위로
        세고 그 칸이 `?rg=<묶음>` 으로 보냅니다. 여기서 지역 하나로 받으면
@@ -224,6 +256,7 @@
          치면 0건이었습니다. 지금은 서버가 `ilike` 로 찾습니다.
          ⚠️ 찾기도 **서버**가 합니다 — 백 줄만 받아 화면에서 찾으면 그
          백 줄 밖의 자리가 영영 안 나옵니다. */
+      csChip() +
       '<div class="jrow jrow-full tf-q"><label for="tf-course">골프장 이름</label>' +
       '<input id="tf-course" name="course" type="search" maxlength="40" ' +
         'value="' + esc(S.course) + '" placeholder="골프장 이름으로 찾기"></div>' +
@@ -250,7 +283,7 @@
         }).join("") + '</select></div>' +
       '<div class="jrow tf-go">' +
       '<button type="submit" class="btn btn-pri">자리 찾기</button>' +
-      (S.rg || S.d || S.t || S.course || S.p
+      (S.rg || S.d || S.t || S.course || S.p || S.cs
         ? '<button type="button" class="btn btn-line tf-all">조건 지우기</button>'
         : '') +
       '</div></form>';
@@ -531,6 +564,8 @@
     /* ⚠️⚠️ **`eq.` 에서 `ilike` 로 바꿨습니다**(확정 시안 ①) — 전에는
        이름이 **정확히 같을 때만** 걸려서 「남서울」만 치면 0건이었습니다.
        ⚠️ `*` 는 PostgREST 의 자리표이고 손님 글자는 그대로 갑니다. */
+    /* ⚠️⚠️ 고른 골프장 — 서버가 거릅니다(v_teetime_open 의 course_slug · 0081) */
+    if(S.cs && KIND === "booking") qs.push("course_slug=eq." + encodeURIComponent(S.cs));
     if(S.course) qs.push("course=ilike." +
       encodeURIComponent("*" + S.course + "*"));
     /* ⚠️⚠️ 가격(1인 그린피) — 아래를 닫고 위를 닫습니다(gte · lt).
@@ -647,6 +682,8 @@
     if(f.id === "ttf-find"){
       S.d = val("d"); S.rg = val("rg"); S.course = val("course");
       S.t = val("t"); S.p = val("p");
+      /* ⚠️ 지역을 바꿔 고른 골프장이 그 지역 밖이면 골프장 조건을 풉니다 */
+      if(S.cs && S.rg && !csInZone(S.cs, S.rg)) S.cs = "";
       /* ⚠️ 고른 조건을 **주소에도** 남깁니다 — 새로고침 · 주소 복사에도 같은 화면 */
       try{ window.history.pushState(null, "", myUrl(S.d)); }catch(_){}
       load();
@@ -687,11 +724,17 @@
     var t = e.target;
     if(!t || !t.closest) return;
     if(t.closest(".tf-all")){
-      S.rg = ""; S.d = ""; S.course = ""; S.t = ""; S.p = "";
+      S.rg = ""; S.d = ""; S.course = ""; S.t = ""; S.p = ""; S.cs = ""; S.csBad = "";
       try{ window.history.pushState(null, "", myUrl("")); }catch(_){}
       return void load();
     }
     /* 날짜 띠 — ⚠️ 주소를 **같이 바꿉니다**(뒤로 가기도 됩니다) */
+    /* 고른 골프장만 풉니다 — 다른 조건은 그대로 */
+    if(t.closest(".tf-csx")){
+      S.cs = ""; S.csBad = "";
+      try{ window.history.pushState(null, "", myUrl(S.d)); }catch(_){}
+      return void load();
+    }
     var dd = t.closest("[data-tfd]");
     if(dd){
       e.preventDefault();

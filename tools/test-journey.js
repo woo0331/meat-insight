@@ -962,68 +962,94 @@ const MY_BOXES = ["mybox", "reqbox", "joinmine", "lsmine", "mycq", "jobmine",
        r.hrefs.filter(function(h){ return h === "/help" || h === "/terms"; }).join(" "));
   }
 
-  /* ── 메인 「전국 골프장 정보」 (2026-11-15) ──────────────────────────
-     ⚠️⚠️ 수를 **박지 않습니다** — 화면이 쓰는 `AM_COURSES` 에서 세어 맞춰 봅니다.
-     ⚠️⚠️ 첫 화면에 **일부만** 그리는가 · 더 보기 · 지역 · 이름 · 초기화 ·
-     「전체 보기」가 **같은 주소 규칙**(tab=course · rg · q)으로 가는가. */
+  /* ── 메인 최종 시안 (2026-11-16) ─────────────────────────────────────
+     ⚠️⚠️ 메인의 골프장 목록 · 지역 타일 · 찾는 칸은 **걷었습니다**(시안) — 자료 · 상세 ·
+     부킹존 「골프장 정보」 탭은 그대로이고, 메인에는 그리로 가는 길 하나만 있어야 합니다.
+     ⚠️⚠️ 지역 → 골프장 고르개는 **그 지역의 공개 자료만** 내고, 지역을 바꾸면 골프장을
+     풀고, 보내는 값은 **고유 주소(slug)** 입니다. 수는 박지 않고 화면이 쓰는 자료에서 셉니다. */
   {
-    console.log("\n── 메인 「전국 골프장 정보」");
+    console.log("\n── 메인 최종 시안");
     for(const w of [360, 1440]){
       const p = await b.newPage({ viewport:{ width:w, height:900 } });
       const errs = watch(p);
       await p.goto(base + "/", { waitUntil:"networkidle" });
       const r = await p.evaluate(function(){
-        const all = window.amCourseList ? window.amCourseList("golf").length : -1;
-        const cap = window.amCoursePickCards
-          ? window.amCoursePickCards({ rg:window.amZoneRegions("capital").join(",") }, "golf").length : -1;
-        const n = document.getElementById("hmcs-n");
-        return { all:all, cap:cap, n:n ? n.innerText : "",
-          rows:document.querySelectorAll("#hmcs-l .csg-i").length,
-          more:document.querySelector(".hmcs-more") && !document.querySelector(".hmcs-more").hidden,
-          full:(document.querySelector(".hmcs-full") || {}).getAttribute
-               ? document.querySelector(".hmcs-full").getAttribute("href") : "",
+        const h2 = Array.prototype.map.call(document.querySelectorAll("main h2"), function(h){ return h.textContent.trim(); });
+        const sv = Array.prototype.map.call(document.querySelectorAll(".hm-sv"), function(a){ return a.getAttribute("href"); });
+        return { h2:h2, sv:sv, cats:document.querySelectorAll(".hm-cat").length, ncat:(window.AM_CATS || []).length,
+          nested:document.querySelectorAll("main a a").length,
+          old:document.querySelectorAll("#hmcs, .hm-rgs, #hmcs-l, .hmcs-more").length,
+          cl:Array.prototype.map.call(document.querySelectorAll(".hm-cl a"), function(a){ return a.getAttribute("href"); }),
           sw:document.documentElement.scrollWidth, cw:document.documentElement.clientWidth,
-          txt:(document.querySelector('section[aria-labelledby="hm-rg-h"]') || document.body).innerText };
+          txt:document.querySelector("main").innerText };
       });
-      ok(w + "px — 자료가 있다 (잴 것이 0개면 실패)", r.all > 0, r.all);
-      ok(w + "px — 기본 상태는 **공개 자료 전체**를 센 수를 적는다",
-         r.n.indexOf("전체 " + r.all + "곳") >= 0, r.n);
-      ok(w + "px — 첫 화면에는 **일부만** 그린다 (전부를 한꺼번에 그리지 않는다)",
-         r.rows > 0 && r.rows < r.all && r.more, r.rows + "/" + r.all);
-      ok(w + "px — 「전체 골프장 보기」는 골프장 정보 탭으로 간다",
-         r.full === "/cat/booking?tab=course", r.full);
+      ok(w + "px — 구간 제목이 시안 그대로다 「나에게 맞는 골프를 찾아보세요」", r.h2.indexOf("나에게 맞는 골프를 찾아보세요") >= 0, r.h2.join(" | "));
+      ok(w + "px — 서비스 카드 셋이 레슨 · 피팅 · 여행으로 간다",
+         r.sv.length === 3 && /lesson/.test(r.sv[0]) && /fitting/.test(r.sv[1]) && /travel/.test(r.sv[2]), r.sv.join(" "));
+      ok(w + "px — 분류 바로가기는 **한 번만** · 분류 수만큼", r.cats === r.ncat && r.ncat > 0, r.cats + "/" + r.ncat);
+      ok(w + "px — 링크 안의 링크가 없다", r.nested === 0, r.nested);
+      ok(w + "px — 메인의 골프장 목록 · 지역 타일 · 찾는 칸 · 더 보기를 걷었다", r.old === 0, r.old);
+      ok(w + "px — 골프장 정보로 가는 길 하나는 남는다 (부킹존 골프장 정보 탭)",
+         r.cl.length === 1 && r.cl[0] === "/cat/booking?tab=course", r.cl.join(" "));
       ok(w + "px — 가로로 밀리지 않는다", r.sw <= r.cw, r.sw + " > " + r.cw);
-      ok(w + "px — 「전국 모든」 · 「제휴」 · 「예약 가능」을 적지 않는다",
-         !/전국 모든|제휴|예약 가능/.test(r.txt), "");
-      ok(w + "px — 출처 · 기준일 이후 운영 상태 미확인 안내가 있다",
-         r.txt.indexOf("운영 상태는 확인하지 않았습니다") >= 0, "");
+      ok(w + "px — 「전국 모든」 · 「제휴」 · 「예약 가능」을 적지 않는다", !/전국 모든|제휴|예약 가능/.test(r.txt), "");
+      ok(w + "px — 시안의 예시 상품 · 가격을 옮겨 적지 않았다",
+         !/180,000원|350,000원|중고 드라이버|모집 예시|게시판 예시|상품 예시/.test(r.txt), "");
       if(w === 1440){
-        const before = r.rows;
-        await p.click(".hmcs-more");
-        const after = await p.evaluate(function(){ return document.querySelectorAll("#hmcs-l .csg-i").length; });
-        ok("더 보기를 누르면 늘어난다", after > before, before + " → " + after);
-        await p.selectOption("#hmcs-rg", "capital");
-        const z = await p.evaluate(function(){
-          return { n:document.getElementById("hmcs-n").innerText,
-                   full:document.querySelector(".hmcs-full").getAttribute("href"),
-                   reset:!document.querySelector(".hmcs-reset").hidden };
+        /* 지역 → 골프장 */
+        const z0 = await p.evaluate(function(){ return document.getElementById("hm-cs").disabled; });
+        ok("지역을 고르기 전에는 골프장 칸이 꺼져 있다", z0 === true);
+        await p.selectOption("#hm-rg", "capital");
+        const c1 = await p.evaluate(function(){
+          const keys = window.amZoneRegions("capital");
+          const want = window.amCourseList("golf").filter(function(c){ return c.state === "open" && keys.indexOf(c.region) >= 0; });
+          const s = document.getElementById("hm-cs");
+          const got = Array.prototype.slice.call(s.options, 1).map(function(o){ return o.value; });
+          const bad = got.filter(function(v){ const c = window.amCourse(v); return !c || keys.indexOf(c.region) < 0; });
+          return { want:want.length, got:got.length, bad:bad.length, dis:s.disabled };
         });
-        ok("권역을 고르면 **결과 수와 전체 수를 갈라** 적는다",
-           z.n.indexOf(r.cap + "곳") >= 0 && z.n.indexOf("전체 " + r.all + "곳") >= 0, z.n);
-        ok("  그 조건을 **같은 주소 규칙**으로 넘긴다", z.full === "/cat/booking?tab=course&rg=capital", z.full);
-        ok("  조건 초기화가 보인다", z.reset, "");
-        await p.fill("#hmcs-q", "없는골프장이름zz");
-        await p.press("#hmcs-q", "Enter");
-        const zz = await p.evaluate(function(){ return document.getElementById("hmcs-l").innerText; });
-        ok("0건이면 0건이라고 말한다", zz.indexOf("조건에 맞는 골프장이 없습니다") >= 0, zz.slice(0, 40));
-        await p.click(".hmcs-reset");
-        await p.waitForTimeout(100);
-        const back = await p.evaluate(function(){
-          return { n:document.getElementById("hmcs-n").innerText, rg:document.getElementById("hmcs-rg").value,
-                   q:document.getElementById("hmcs-q").value };
+        ok("권역을 고르면 **그 권역의 공개 골프장만** 고르개에 선다 (수는 자료에서)",
+           c1.want > 0 && c1.got === c1.want && c1.bad === 0 && !c1.dis, JSON.stringify(c1));
+        const dup = await p.evaluate(function(){
+          const cnt = {}; (window.AM_COURSES || []).forEach(function(c){ cnt[c.name] = (cnt[c.name] || 0) + 1; });
+          const name = Object.keys(cnt).filter(function(n){ return cnt[n] > 1; })[0];
+          if(!name) return { none:true };
+          const c = window.AM_COURSES.filter(function(x){ return x.name === name; })[0];
+          const z = (window.AM_REGION_ZONES || []).filter(function(z){ return window.amZoneRegions(z.key).indexOf(c.region) >= 0; })[0];
+          return { none:false, zone:z && z.key, slug:c.slug, name:name };
         });
-        ok("조건 초기화를 누르면 전체로 돌아온다",
-           back.rg === "" && back.q === "" && back.n.indexOf("전체 " + r.all + "곳") >= 0, JSON.stringify(back));
+        if(!dup.none && dup.zone){
+          await p.selectOption("#hm-rg", dup.zone);
+          const lab = await p.evaluate(function(s){
+            const o = document.querySelector('#hm-cs option[value="' + s + '"]'); return o ? o.textContent : ""; }, dup.slug);
+          ok("같은 이름의 골프장은 지역을 같이 적는다", lab.indexOf(dup.name + " (") === 0, lab);
+        }
+        await p.selectOption("#hm-rg", "capital");
+        await p.selectOption("#hm-cs", { index:1 });
+        const pick = await p.inputValue("#hm-cs");
+        await p.selectOption("#hm-rg", "jeju");
+        ok("지역을 바꾸면 새 지역에 없는 골프장 선택을 푼다", (await p.inputValue("#hm-cs")) === "");
+        await p.selectOption("#hm-cs", { index:1 });
+        const pj = await p.inputValue("#hm-cs");
+        await p.reload({ waitUntil:"networkidle" });
+        ok("새로고침해도 지역 · 골프장이 남는다",
+           (await p.inputValue("#hm-rg")) === "jeju" && (await p.inputValue("#hm-cs")) === pj, pick + " / " + pj);
+        await Promise.all([ p.waitForURL(/\/cat\/booking/), p.click(".hm-go") ]);
+        const u = new URL(p.url());
+        ok("티타임 찾기는 부킹 목록으로 **slug** 를 들고 간다 (이름이 아니라)",
+           u.searchParams.get("cs") === pj && u.searchParams.get("rg") === "jeju", p.url());
+        await p.goBack({ waitUntil:"networkidle" });
+        ok("뒤로 가기에도 조건이 남는다", (await p.inputValue("#hm-cs")) === pj);
+        /* 골프장터 탭 */
+        await p.click('[data-mktab="new"]');
+        const mk = await p.evaluate(function(){
+          return { nw:!document.getElementById("hm-mk-new").hidden, used:document.getElementById("hm-mk-used").hidden,
+                   all:document.getElementById("hm-mk-all").getAttribute("href") };
+        });
+        ok("새상품 탭을 누르면 새상품 칸과 **그 목록의 전체 보기**로 바뀐다",
+           mk.nw && mk.used && /\/cat\/market/.test(mk.all), JSON.stringify(mk));
+        ok("「매물 등록하기」는 기존 매물 등록 자리로 간다",
+           (await p.locator('.hm-mk-sell a[href$="/cat/used#lsbox"]').count()) === 1);
       }
       ok(w + "px — 오류 0건", errs.length === 0, errs.join(" | "));
       await p.close();

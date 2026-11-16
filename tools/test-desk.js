@@ -5221,6 +5221,54 @@ function boardsOf(){
     await g.p.close();
   }
 
+  /* ── 메인에서 고른 골프장(cs · 2026-11-16) — 실제 필터까지 이어지는가 ──────
+     ⚠️⚠️ 이름이 아니라 **고유 주소(slug)** 로 서버가 거릅니다(v_teetime_open 의
+     course_slug). 모르는 값은 빼고 그 자리에서 말합니다(영원히 0건인 화면 금지). */
+  {
+    const slug = await (async function(){
+      const p0 = await b.newPage(); await p0.goto(base + "/cat/booking", { waitUntil:"domcontentloaded" });
+      const s = await p0.evaluate(function(){
+        const c = (window.amCourseList ? window.amCourseList("golf") : []).filter(function(x){ return x.state === "open"; })[0];
+        return c ? { slug:c.slug, name:c.name, region:c.region } : null;
+      });
+      await p0.close(); return s;
+    })();
+    ok("골프장 자료가 있다 (잴 것이 0개면 실패)", !!slug);
+    if(slug){
+      const g = await open("/cat/booking?cs=" + slug.slug, { role:"customer", name:"손님", signedIn:true },
+                           { v_teetime_open: TEE }, {}, true);
+      const q = g.sent.filter(function(x){ return x.name === "GET" && String(x.body).indexOf("v_teetime_open") >= 0; })
+                 .map(function(x){ return String(x.body); }).join(" | ");
+      ok("⚠️⚠️ 메인에서 고른 골프장을 **course_slug=eq.** 로 서버에 보낸다",
+         q.indexOf("course_slug=eq." + slug.slug) >= 0, q.slice(0, 240));
+      const chip = await g.p.evaluate(function(){ return (document.querySelector(".tf-cs") || {}).textContent || ""; });
+      ok("  고른 골프장 이름표가 서고 이름이 맞다", chip.indexOf(slug.name) >= 0, chip);
+      const m0 = g.sent.length;
+      await g.p.click(".tf-csx");
+      await g.p.waitForTimeout(450);
+      const q2 = g.sent.slice(m0).filter(function(x){ return x.name === "GET"; }).map(function(x){ return String(x.body); }).join(" | ");
+      ok("  「골프장 조건 풀기」를 누르면 그 조건만 빠지고 주소에서도 빠진다",
+         q2.indexOf("course_slug") < 0 && g.p.url().indexOf("cs=") < 0, q2.slice(0, 200));
+      ok("  오류 0건", g.errs.length === 0, g.errs.join(" | "));
+      await g.p.close();
+
+      const h = await open("/cat/booking?cs=no-such-course&rg=capital", { role:"customer", name:"손님", signedIn:true },
+                           { v_teetime_open: TEE }, {}, true);
+      const qh = h.sent.filter(function(x){ return x.name === "GET" && String(x.body).indexOf("v_teetime_open") >= 0; })
+                  .map(function(x){ return String(x.body); }).join(" | ");
+      const note = await h.p.evaluate(function(){ return (document.querySelector(".tf-cs-bad") || {}).textContent || ""; });
+      ok("잘못된 골프장 주소는 **빼고** 찾고 그 사실을 말한다",
+         qh.indexOf("course_slug") < 0 && note.indexOf("알아볼 수 없어") >= 0, note + " | " + qh.slice(0, 120));
+      await h.p.close();
+
+      const j = await open("/cat/matchup?cs=" + slug.slug, { role:"customer", name:"손님", signedIn:true },
+                           { v_join_open: [] }, {}, true);
+      const qj = j.sent.filter(function(x){ return x.name === "GET"; }).map(function(x){ return String(x.body); }).join(" | ");
+      ok("조인 목록은 골프장 조건을 쓰지 않는다 (그 보기에 칸이 없습니다)", qj.indexOf("course_slug") < 0, qj.slice(0, 160));
+      await j.p.close();
+    }
+  }
+
   /* ⚠️⚠️ 확정 시안 ① — 골프장 이름 찾기 · 가격(1인 그린피) 거르개 ·
      카드 꼴. 흉내 장치는 걸러 주지 않으므로 **보내는 질의를 뜯어** 봅니다
      (줄 수로 재면 그 칸을 통째로 떼어도 영원히 초록입니다). */

@@ -8768,6 +8768,43 @@ function boardsOf(){
       await g.p.close();
     }
 
+    /* ⓘ 작은 사진 · 큰 사진 — 세 경우를 **따로** 잽니다 (2026-11-17)
+       ⚠️ 흉내 서버가 사진 주소에 그림이 아닌 것을 돌려주던 때, 카드가 먼저 큰 사진으로 바뀌어 검사가 바뀐 뒤의
+       값을 읽었습니다(재현해서 확인). 지금은 흉내가 참 그림을 주고, 실패는 `imgFail` 로 **골라서** 냅니다. */
+    {
+      async function cardImg(up){
+        const g = await open("/cat/used", { role:"customer", name:"손님", signedIn:true },
+                             { v_listing_open: [LST[0]] }, {}, up);
+        await g.p.waitForSelector(".lsc", { timeout: 15000 }).catch(function(){});
+        await g.p.evaluate(function(){ const c = document.querySelector(".lsc"); if(c) c.scrollIntoView({ block:"center" }); });
+        await g.p.waitForFunction(function(){
+          const c = document.querySelector(".lsc"); if(!c) return false;
+          const im = c.querySelector("img"); const f = c.querySelector(".ph-fail");
+          return !!f || (im && im.complete && im.getAttribute("src") && !im.hasAttribute("data-src"));
+        }, null, { timeout: 15000 }).catch(function(){});
+        const r = await g.p.evaluate(function(){
+          const c = document.querySelector(".lsc"); const im = c && c.querySelector("img");
+          const f = c && c.querySelector(".ph-fail");
+          return { src: im ? (im.getAttribute("src") || "").split("/").pop() : "",
+                   w: im ? im.naturalWidth : -1, fail: f ? f.textContent : "", img: !!im };
+        });
+        const got = g.sent.filter(function(x){ return x.name === "storage" && String(x.body).indexOf("GET") === 0 &&
+          String(x.body).indexOf("/object/public/") > 0; }).map(function(x){ return String(x.body).split("/").pop(); });
+        await g.p.close();
+        return { r: r, got: got };
+      }
+      const c1 = await cardImg(true);
+      ok("⚠️⚠️ 작은 사진이 열리면 **작은 사진만** 받는다 (큰 사진을 안 받습니다)",
+         c1.r.src === "a.t.jpg" && c1.r.w > 0 && c1.got.join() === "a.t.jpg", JSON.stringify(c1));
+      const c2 = await cardImg({ imgFail: ["\\.t\\.jpg$"] });
+      ok("⚠️⚠️ 작은 사진이 실패하면 큰 사진으로 **한 번만** 바꾼다",
+         c2.r.src === "a.jpg" && c2.r.w > 0 && c2.got.join() === "a.t.jpg,a.jpg", JSON.stringify(c2));
+      const c3 = await cardImg({ imgFail: ["\\.jpg$"] });
+      ok("⚠️⚠️ 둘 다 실패하면 **깨진 그림 대신** 「사진을 불러오지 못했습니다」 · 더 묻지 않는다",
+         !c3.r.img && c3.r.fail.indexOf("사진을 불러오지 못했습니다") >= 0 &&
+         c3.got.join() === "a.t.jpg,a.jpg", JSON.stringify(c3));
+    }
+
     /* ⑤ /my — 내 매물 · 받은 문의 · 연락처 */
     {
       const MINE = [{ id:"l1", title:"내 드라이버", body:"설명입니다",

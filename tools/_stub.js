@@ -158,6 +158,10 @@ function stub(p, who, tables, rpcs, up){
                   body: r.request().method() + " " + r.request().url() });
       /* ⚠️ 2026-11-17 — 공개 사진 주소를 **읽으면 참 그림**(1×1 PNG)을 돌려줍니다. JSON 을 돌려주면
          카드의 작은 사진이 "안 열림" 으로 읽혀 큰 사진으로 바뀌고, 검사가 바뀐 뒤의 주소를 읽습니다. */
+      /* `up.imgFail` 에 적은 꼴(정규식 글자)에 맞는 공개 사진은 404 — 작은 · 큰 사진 실패를 갈라서 잽니다 */
+      if(r.request().method() === "GET" && r.request().url().indexOf("/object/public/") > 0 &&
+         up && up.imgFail && up.imgFail.some(function(x){ return new RegExp(x).test(r.request().url()); }))
+        return r.fulfill({ status:404, contentType:"text/plain", body:"" });
       if(r.request().method() === "GET" && r.request().url().indexOf("/object/public/") > 0)
         return r.fulfill({ status:200, contentType:"image/png", body: Buffer.from(
           "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64") });

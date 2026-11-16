@@ -661,7 +661,18 @@ window.amLstThumb = function(conf, path){
     var im = e.target;
     if(!im || im.tagName !== "IMG") return;
     var f = im.getAttribute("data-full");
-    if(f && im.getAttribute("src") !== f){ im.removeAttribute("data-full"); im.src = f; }
+    if(f && im.getAttribute("src") !== f){
+      im.removeAttribute("data-full"); im.setAttribute("data-fell", "1"); im.src = f; return;
+    }
+    /* ⚠️ 큰 파일까지 못 열면 **깨진 그림을 남기지 않고** 그 자리에 말로 적습니다(한 번만 · 무한히 안 돕니다) */
+    if(im.getAttribute("data-fell") === "1" && im.parentNode){
+      var sp = document.createElement("span");
+      sp.className = "ph-fail";
+      sp.setAttribute("role", "img");
+      sp.setAttribute("aria-label", "사진을 불러오지 못했습니다");
+      sp.textContent = "사진을 불러오지 못했습니다";
+      im.parentNode.replaceChild(sp, im);
+    }
   }, true);
 })();
 /* ── 중고 가격대 (0056 · 2026-11-08) ────────────────────

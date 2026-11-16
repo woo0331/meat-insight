@@ -117,6 +117,116 @@ async function signed(kind, p, bk){
   }finally{ clearTimeout(timer); }
 }
 
+/* Storage 의 파일 하나를 읽고 · 지웁니다 (service key · 서버에서만) — 매물 사진의 저장 완료 검사 */
+async function storageReq(method, bk, p){
+  const ctl = new AbortController();
+  const timer = setTimeout(function(){ ctl.abort(); }, DB_TIMEOUT);
+  try{
+    if(!bk) return { ok:false, why:"버킷이 설정되지 않았습니다" };
+    const r = await fetch(origin() + "/storage/v1/object/" + bk + "/" + p, {
+      method: method, signal: ctl.signal,
+      headers:{ "authorization":"Bearer " + String(process.env.SUPABASE_SERVICE_KEY).trim() } });
+    if(!r.ok) return { ok:false, status:r.status, why:"storage " + r.status };
+    if(method !== "GET") return { ok:true };
+    const ab = await r.arrayBuffer();
+    return { ok:true, buf: Buffer.from(ab) };
+  }catch(e){
+    const aborted = e && e.name === "AbortError";
+    return { ok:false, timeout:aborted, why: aborted ? "storage timeout" : "storage " + (e && e.message) };
+  }finally{ clearTimeout(timer); }
+}
+function storageGet(bk, p){ return storageReq("GET", bk, p); }
+function storageDel(bk, p){ return storageReq("DELETE", bk, p); }
+
+/* 사진 파일 검사 — ⚠️ **머리만** 풉니다(그림 전체를 해석하지 않습니다). 손님에게 할 말(`say`)과
+   기록에 남길 말(`why`)을 가릅니다. tools/check-imgcheck 가 참 파일 · 가짜 파일로 눌러 봅니다. */
+const IMG_MAX_BYTES = 8388608, IMG_MAX_SIDE = 2048;
+function imgCheck(buf, mime, opt){
+  const bad = function(why, say){ return { ok:false, why: why, say: say || "사진 파일이 아닙니다." }; };
+  const maxSide = (opt && opt.maxSide) || IMG_MAX_SIDE, maxBytes = (opt && opt.maxBytes) || IMG_MAX_BYTES;
+  if(!buf || !buf.length) return bad("빈 파일", "파일이 올라가지 않았습니다. 다시 올려 주세요.");
+  if(buf.length > maxBytes) return bad("크기 초과 (" + buf.length + ")", "한 장에 8MB 까지 올리실 수 있습니다.");
+  let sos = false, eoi = false;
+  const has = function(s){ return buf.indexOf(Buffer.from(s, "latin1")) >= 0; };
+  let kind = "", w = 0, h = 0, meta = false;
+  if(buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF){
+    kind = "image/jpeg";
+    let i = 2;
+    while(i + 4 <= buf.length){
+      if(buf[i] !== 0xFF){ i++; continue; }
+      const m = buf[i + 1];
+      if(m === 0xD8 || m === 0x01 || (m >= 0xD0 && m <= 0xD7)){ i += 2; continue; }
+      if(m === 0xD9 || m === 0xDA){ sos = m === 0xDA; break; }
+      const len = buf.readUInt16BE(i + 2);
+      if(len < 2 || i + 2 + len > buf.length) break;
+      if(m === 0xE1){
+        const head = buf.slice(i + 4, i + 4 + 32).toString("latin1");
+        if(head.indexOf("Exif") === 0 || head.indexOf("http://ns.adobe.com/xap") === 0) meta = true;
+      }
+      if(m >= 0xC0 && m <= 0xCF && m !== 0xC4 && m !== 0xC8 && m !== 0xCC && i + 9 <= buf.length){
+        h = buf.readUInt16BE(i + 5); w = buf.readUInt16BE(i + 7);
+      }
+      i += 2 + len;
+    }
+  }else if(buf.length > 24 && buf.slice(0, 8).equals(Buffer.from([0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A]))){
+    kind = "image/png";
+    if(buf.slice(12, 16).toString("latin1") === "IHDR"){ w = buf.readUInt32BE(16); h = buf.readUInt32BE(20); }
+    let i = 8;
+    while(i + 8 <= buf.length){
+      const len = buf.readUInt32BE(i), t = buf.slice(i + 4, i + 8).toString("latin1");
+      if(t === "eXIf") meta = true;
+      if((t === "iTXt" || t === "tEXt") &&
+         buf.slice(i + 8, i + 8 + Math.min(len, 40)).toString("latin1").indexOf("XML:com.adobe.xmp") >= 0) meta = true;
+      if(t === "IEND") break;
+      i += 12 + len;
+    }
+  }else if(buf.length > 30 && buf.slice(0, 4).toString("latin1") === "RIFF" &&
+           buf.slice(8, 12).toString("latin1") === "WEBP"){
+    kind = "image/webp";
+    let i = 12;
+    while(i + 8 <= buf.length){
+      const t = buf.slice(i, i + 4).toString("latin1"), len = buf.readUInt32LE(i + 4), d = i + 8;
+      if(t === "EXIF" || t === "XMP ") meta = true;
+      if(t === "VP8X" && d + 10 <= buf.length){
+        if(buf[d] & 0x0C) meta = true;
+        w = 1 + buf.readUIntLE(d + 4, 3); h = 1 + buf.readUIntLE(d + 7, 3);
+      }
+      if(t === "VP8 " && !w && d + 10 <= buf.length){ w = buf.readUInt16LE(d + 6) & 0x3FFF; h = buf.readUInt16LE(d + 8) & 0x3FFF; }
+      if(t === "VP8L" && !w && d + 5 <= buf.length){
+        const b = buf.readUInt32LE(d + 1); w = (b & 0x3FFF) + 1; h = ((b >> 14) & 0x3FFF) + 1;
+      }
+      i = d + len + (len & 1);
+    }
+  }
+  if(kind === "image/jpeg"){
+    /* ⚠️ 구조 — 그림 자료(SOS)가 있고 끝 표시(EOI · FFD9)로 끝나야 합니다. 중간에 잘린 파일을 잡습니다.
+       (끝에 0 이 몇 바이트 붙는 기기가 있어 뒤의 0 은 건너뜁니다) */
+    let e = buf.length;
+    while(e > 2 && buf[e - 1] === 0) e--;
+    eoi = buf[e - 2] === 0xFF && buf[e - 1] === 0xD9;
+    if(!sos) return bad("JPEG 에 그림 자료(SOS)가 없음");
+    if(!eoi) return bad("JPEG 끝 표시(EOI)가 없음 — 잘린 파일", "사진이 다 올라가지 않았습니다. 다시 올려 주세요.");
+  }
+  if(!kind) return bad("첫 바이트가 JPG · PNG · WEBP 가 아님");
+  if(mime && kind !== mime) return bad("적어 보낸 종류(" + mime + ")와 실제(" + kind + ")가 다름");
+  if(!(w > 0 && h > 0)) return bad("머리에서 가로 · 세로를 못 읽음");
+  /* ⚠️ 픽셀 수 — 한 변만 보면 2048×2048 아래로 가늘고 긴 그림이 통과합니다. 넓이도 봅니다 */
+  if(w * h > maxSide * maxSide) return bad("픽셀 수 " + (w * h) + " 초과", "사진을 이 사이트의 사진 칸에서 다시 골라 주세요.");
+  if(w > maxSide || h > maxSide)
+    return bad("긴 변 " + Math.max(w, h) + "px > " + maxSide + " (브라우저 처리를 안 지난 원본)",
+               "사진을 이 사이트의 사진 칸에서 다시 골라 주세요.");
+  if(meta || has("Exif\0\0"))
+    return bad("위치정보 · 촬영 정보(EXIF/XMP)가 남아 있음", "사진을 이 사이트의 사진 칸에서 다시 골라 주세요.");
+  return { ok:true, kind: kind, w: w, h: h };
+}
+
+/* 매물 한 건의 사진 수 (2026-11-17) — ⚠️ js/lstphoto.js 의 MANY 와 같아야 합니다 */
+const LST_MANY = 5;
+/* 작은 사진 — 한 변(px) · 최대 크기. ⚠️ js/lstphoto.js 의 THUMB 와 같아야 합니다 */
+const LST_THUMB = 480, LST_THUMB_BYTES = 307200;
+/* 큰 사진 경로에서 작은 사진 경로를 **서버가** 짓습니다(화면이 못 고릅니다) — 같은 `/photo/` 아래라 공개 버킷입니다 */
+function thumbPath(p){ return String(p || "").replace(/\.(jpg|png|webp)$/, ".t.jpg"); }
+
 module.exports = async function handler(req, res){
   res.setHeader("cache-control", "no-store");
 
@@ -369,6 +479,129 @@ module.exports = async function handler(req, res){
      공개 버킷을 고릅니다. 화면이 보낸 값으로 고르면 거기가 구멍입니다.
      ⚠️ 매물 사진은 **공개 목록에 그려지므로 공개가 맞습니다**.
      ══════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════════════
+     매물 사진 — **저장 완료** 검사 (2026-11-17)
+     ⚠️⚠️⚠️ 자리를 청하는 것(위 claim)은 "이런 사진을 올리겠다" 일 뿐이고 파일은 그 뒤에
+     서명 주소로 바로 Storage 에 갑니다(우리 서버를 안 지납니다). 그래서 **파일이 간 뒤에**
+     서버가 그 파일을 실제로 읽어 봅니다 —
+       ① 그 사진 줄이 **이 사람 것**인가(그 사람의 토큰으로 읽습니다 · RLS)
+       ② 8MB 이하인가 · 첫 바이트가 적어 보낸 종류와 같은가
+       ③ 머리(JPEG SOF · PNG IHDR · WEBP VP8*)를 풀어 **가로 · 세로**가 나오는가 · 긴 변 2048 이하인가
+          (브라우저가 1600 으로 다시 그립니다 — 그보다 크면 그 길을 안 지난 파일입니다)
+       ④ **위치정보 · 촬영 정보(EXIF · XMP)가 없는가**
+     ⚠️ ③ 은 **머리를 푼 것**이지 그림 전체를 해석한 것이 아닙니다 — 전체 해석(디코딩)은 브라우저
+       canvas 가 한 것이고 서버는 하지 않습니다(그림 라이브러리가 없습니다).
+     통과하면 0084 의 store_listing_photo 로 "저장됨" 을 적고(그때부터 공개 보기에 나갑니다),
+     못 통과하면 파일과 줄을 **둘 다 지웁니다**.
+     ⚠️ 0084 전에는 "저장됨" 칸이 없어 줄이 claim 순간부터 공개입니다 — 이 검사는 그래도 돌고
+       나쁜 파일은 지우지만, 이 단계를 **건너뛰는** 직접 호출은 못 막습니다(0084 가 막습니다).
+     ══════════════════════════════════════════════════════════════ */
+  if(b0 && b0.lstDone){
+    if(!dbReady() || !authReady() || !pvBucket())
+      return res.status(503).json({ error:"지금은 사진을 올릴 수 없습니다" });
+    const fid = String(b0.lstDone || "").trim();
+    if(!/^[0-9a-fA-F-]{36}$/.test(fid)) return res.status(400).json({ error:"사진을 찾을 수 없습니다" });
+    if(!bearer(req)) return res.status(401).json({ error:"로그인이 필요합니다" });
+    const sd = await session(req);
+    if(!sd.ok){
+      if(sd.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      return res.status(401).json({ error:"로그인이 필요합니다" });
+    }
+    /* stored_at 은 0084 의 칸입니다 — 없으면(0084 전) 칸 없이 다시 읽습니다 */
+    let q = await dbSelectAs(sd.token, "listingphoto",
+      "?select=id,path,mime,stored_at&id=eq." + encodeURIComponent(fid));
+    if(!q.ok && !q.timeout)
+      q = await dbSelectAs(sd.token, "listingphoto",
+        "?select=id,path,mime&id=eq." + encodeURIComponent(fid));
+    if(!q.ok){
+      if(q.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      console.warn("[upload] listing done — " + dbWhy(q.why));
+      return res.status(502).json({ error:"지금 확인하지 못했습니다" });
+    }
+    const row = q.rows[0];
+    /* ⚠️ RLS 가 남의 줄을 안 보여 주므로 0줄 = 내 것이 아님 */
+    if(!row) return res.status(404).json({ error:"사진을 찾을 수 없습니다" });
+    /* ⚠️⚠️ **이미 저장된 사진은 다시 검사하지도 · 지우지도 않습니다** — 다시 올리기 · 두 번 누르기 ·
+       꾸며 보낸 요청이 멀쩡한 사진을 지우지 못하게. 정리는 **방금 청한(아직 저장 안 된) 그 줄**만 합니다. */
+    if(row.stored_at) return res.status(200).json({ ok:true, already:true });
+    const bk = bucketForPath(row.path);
+    const tpath = thumbPath(row.path);
+    async function reject(msg){
+      /* 지우는 경로는 **이 줄에서 지은 둘뿐**입니다 — 화면이 보낸 값이 아닙니다 */
+      await storageDel(bk, row.path);
+      await storageDel(bk, tpath);
+      await dbRpc(sd.token, "drop_listing_photo", { p: { id: fid } });
+      return res.status(400).json({ error: msg });
+    }
+    /* 화면이 "파일이 안 갔다" 고 알려 온 경우 — 줄과 (혹시 간) 파일을 치웁니다 */
+    if(b0.ok === false){ await reject("올리지 못했습니다"); return; }
+    /* ⚠️ 매물 사진은 **JPG 만** 받습니다 — 브라우저가 늘 JPG 로 다시 그려 보냅니다. 다른 종류가
+       왔다는 것은 그 길을 안 지났다는 뜻입니다. */
+    if(row.mime !== "image/jpeg") return reject("사진을 이 사이트의 사진 칸에서 다시 골라 주세요.");
+    const got = await storageGet(bk, row.path);
+    if(!got.ok){
+      if(got.status === 404 || got.status === 400) return reject("파일이 올라가지 않았습니다. 다시 올려 주세요.");
+      console.warn("[upload] storage get — " + got.why);
+      return res.status(502).json({ error:"지금 확인하지 못했습니다" });
+    }
+    const chk = imgCheck(got.buf, "image/jpeg");
+    if(!chk.ok){
+      console.warn("[upload] listing photo rejected — " + chk.why);
+      return reject(chk.say);
+    }
+    /* 작은 사진 — 같은 검사를 **더 좁은 크기로**. 못 통과하면 작은 사진만 지우고 큰 사진은 둡니다
+       (카드가 큰 사진으로 돌아갑니다 · js/data/deal.js 의 amLstThumb). */
+    let thumbOk = false;
+    if(b0.thumb){
+      const tg = await storageGet(bk, tpath);
+      const tc = tg.ok ? imgCheck(tg.buf, "image/jpeg", { maxSide: LST_THUMB + 32, maxBytes: LST_THUMB_BYTES }) : null;
+      if(tc && tc.ok) thumbOk = true;
+      else{
+        if(tc) console.warn("[upload] thumb rejected — " + tc.why);
+        await storageDel(bk, tpath);
+      }
+    }
+    const st = await dbCallService("store_listing_photo", { p: { id: fid } });
+    if(!st.ok) console.warn("[upload] store_listing_photo — " + dbWhy(st.why) + " (0084 전이면 정상입니다)");
+    return res.status(200).json({ ok:true, w: chk.w, h: chk.h, thumb: thumbOk });
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     매물 사진 빼기 (2026-11-17) — 그 사람 토큰으로 문(drop_listing_photo)을 부르고, 성공한 뒤에만
+     **그 줄의 경로에서 지은** 큰 사진 · 작은 사진 파일을 지웁니다. 문이 거절하면(남의 사진 · 내린 매물)
+     파일은 한 바이트도 안 건드립니다.
+     ══════════════════════════════════════════════════════════════ */
+  if(b0 && b0.lstDrop){
+    if(!dbReady() || !authReady()) return res.status(503).json({ error:"지금은 뺄 수 없습니다" });
+    const did = String(b0.lstDrop || "").trim();
+    if(!/^[0-9a-fA-F-]{36}$/.test(did)) return res.status(400).json({ error:"사진을 찾을 수 없습니다" });
+    if(!bearer(req)) return res.status(401).json({ error:"로그인이 필요합니다" });
+    const sx = await session(req);
+    if(!sx.ok){
+      if(sx.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      return res.status(401).json({ error:"로그인이 필요합니다" });
+    }
+    const qx = await dbSelectAs(sx.token, "listingphoto", "?select=id,path&id=eq." + encodeURIComponent(did));
+    if(!qx.ok){
+      if(qx.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      return res.status(502).json({ error:"지금 빼지 못했습니다" });
+    }
+    const rx = qx.rows[0];
+    if(!rx) return res.status(404).json({ error:"사진을 찾을 수 없습니다" });
+    const dd = await dbRpc(sx.token, "drop_listing_photo", { p: { id: did } });
+    if(!dd.ok){
+      if(dd.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      const mm = String(dd.why || "").match(/"message"\s*:\s*"([^"]{1,200})"/);
+      return res.status(400).json({ error: mm ? mm[1] : "지금 빼지 못했습니다" });
+    }
+    if(pvBucket()){
+      const bx = bucketForPath(rx.path);
+      await storageDel(bx, rx.path);
+      await storageDel(bx, thumbPath(rx.path));
+    }
+    return res.status(200).json({ ok:true });
+  }
+
   if(b0 && b0.lst === true){
     if(!dbReady() || !authReady()){
       console.warn("[upload] SUPABASE_* 가 없습니다");
@@ -383,6 +616,40 @@ module.exports = async function handler(req, res){
     if(!sl.ok){
       if(sl.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
       return res.status(401).json({ error:"로그인이 필요합니다" });
+    }
+    /* ⚠️⚠️ 2026-11-17 — 매물 한 건에 **다섯 장**까지입니다(화면 js/lstphoto.js 의 MANY 와 같은 값).
+       ⚠️ 세는 것은 **그 사람의 토큰**으로 합니다 — RLS(0068 의 listingphoto_mine)가 제 사진 줄만
+       보여 주므로, 남의 매물 id 를 보내면 0 장으로 읽히고 그 다음 문(claim)이 "붙일 수 없습니다" 로
+       거절합니다. service key 로 세면 남의 매물 사진 수를 알려 주는 길이 됩니다.
+       ⚠️ 동시 요청 · 두 탭은 여기서 못 막습니다(둘 다 같은 순간에 셉니다) — 그 자리는 0084 의
+       문이 매물 줄을 잠그고 셉니다. 0084 전에는 이 줄과 문(열 장)이 전부입니다.
+       ⚠️ 올리다 멈춘 줄(저장 완료가 안 적힌 지 15분 넘은 줄 · 0084)은 먼저 치웁니다 — 안 치우면
+       보이지도 않는 줄이 다섯 칸을 막습니다. */
+    const lidN = String(b0.listing || "").trim();
+    if(/^[0-9a-fA-F-]{36}$/.test(lidN)){
+      let cn = await dbSelectAs(sl.token, "listingphoto",
+        "?select=id,path,created_at,stored_at&listing_id=eq." + encodeURIComponent(lidN));
+      const has0084 = cn.ok;
+      if(!cn.ok)        /* 0084 전 — stored_at 칸이 없습니다 */
+        cn = await dbSelectAs(sl.token, "listingphoto",
+          "?select=id&listing_id=eq." + encodeURIComponent(lidN));
+      if(!cn.ok){
+        if(cn.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+        console.warn("[upload] listing photo count — " + dbWhy(cn.why));
+        return res.status(502).json({ error:"지금 올리지 못했습니다" });
+      }
+      let rows = cn.rows;
+      if(has0084){
+        const stale = rows.filter(function(f){
+          return !f.stored_at && (Date.now() - Date.parse(f.created_at)) > 15 * 60 * 1000; });
+        for(const f of stale){
+          await storageDel(bucketForPath(f.path), f.path);
+          await dbRpc(sl.token, "drop_listing_photo", { p: { id: f.id } });
+        }
+        rows = rows.filter(function(f){ return stale.indexOf(f) < 0; });
+      }
+      if(rows.length >= LST_MANY)
+        return res.status(400).json({ error:"사진은 매물 한 건에 " + LST_MANY + "장까지입니다. 먼저 빼 주세요." });
     }
     const rl = await dbRpc(sl.token, "claim_listing_photo", { p: {
       listing: String(b0.listing || "").trim(),
@@ -408,7 +675,15 @@ module.exports = async function handler(req, res){
       /* ⚠️ 자리는 이미 적혔습니다 — 올린 분이 제 화면에서 뺄 수 있습니다 */
       return res.status(502).json({ error:"지금 올리지 못했습니다. 잠시 뒤 다시 눌러 주세요" });
     }
-    return res.status(200).json({ ok:true, url:sgl.url, id:gl.id });
+    /* 작은 사진 자리도 같이 냅니다(있으면) — 큰 사진과 **같은 줄**에 묶여 있어 따로 셀 칸이 없습니다 */
+    const tb = Number(b0.tbytes) || 0;
+    let turl = "";
+    if(tb > 0 && tb <= LST_THUMB_BYTES){
+      const st2 = await signed("upload", thumbPath(pl), bucketForPath(pl));
+      if(st2.ok) turl = st2.url;
+      else console.warn("[upload] thumb sign — " + st2.why);
+    }
+    return res.status(200).json({ ok:true, url:sgl.url, id:gl.id, turl: turl });
   }
 
   /* ══════════════════════════════════════════════════════════════
@@ -664,3 +939,4 @@ module.exports.pvBucket  = pvBucket;
 /* ⚠️⚠️ **버킷을 고르는 규칙을 검사가 직접 눌러 봅니다** — 화면이 보낸
    값이 아니라 경로로 고르는지가 여기서 갈립니다. */
 module.exports.bucketForPath = bucketForPath;
+module.exports.imgCheck = imgCheck;

@@ -31,6 +31,14 @@ var NEED = [
   ["연락 받을 곳", "손님 문의가 넘어갈 전화 또는 이메일입니다."]
 ];
 
+var FIELD_NEED = [
+  ["골프장 부킹", "다루시는 골프장 이름 · 티타임 날짜와 시각 · 그린피"],
+  ["중고 매입 · 위탁", "받으시는 물건 종류와 매입 지역"],
+  ["레슨", "자격 · 경력과 레슨 장소, 레슨 상품별 가격"],
+  ["연습장 · 피팅 · 마켓", "시설 사진과 가격표"],
+  ["여행", "상품 일정 · 포함 사항 · 값 · 출발일 (상품은 운영자 확인 뒤 공개됩니다)"]
+];
+
 exports.build = function(){
   var body = '<section class="pghd"><div class="wrap">' +
     '<nav class="crumb" aria-label="현재 위치"><a href="/">홈</a>' + icon("arrow",14) +
@@ -86,7 +94,16 @@ exports.build = function(){
     '<ol class="flow">' + NEED.map(function(r, i){
       return '<li><span class="flow-n">' + (i+1) + '</span>' +
         '<div><h3>' + esc(r[0]) + '</h3><p>' + esc(r[1]) + '</p></div></li>';
-    }).join("") + '</ol></div></section>';
+    }).join("") + '</ol>' +
+    /* ⚠️ 2026-11-17 — 분야마다 **승인 뒤 작업실에서 바로 적게 되는 것**만 짧게 적습니다.
+       신청 양식이 받는 칸이 아니라(받지도 않는 것을 내라고 하지 않습니다) 미리 챙겨 두실 것입니다.
+       분야별 자세한 차례는 이용안내(#pro) 한 곳에 둡니다 — 두 곳에 적으면 둘이 다른 말을 합니다. */
+    '<h3 class="gd-fh">분야별로 미리 챙겨 두시면 좋은 것</h3>' +
+    '<ul class="notes">' + FIELD_NEED.map(function(r){
+      return '<li><b>' + esc(r[0]) + '</b> — ' + esc(r[1]) + '</li>';
+    }).join("") + '</ul>' +
+    '<p class="gd-go"><a class="btn btn-sm btn-line" href="/guide#pro">승인 뒤 분야별 사용 방법 보기</a></p>' +
+    '</div></section>';
 
   body += '<section class="sec"><div class="wrap">' +
     '<div class="sec-hd"><h2>비용</h2></div>' +

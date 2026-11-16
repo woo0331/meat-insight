@@ -421,11 +421,17 @@
      ⚠️ 버킷이 꺼져 있으면 `amPubUrl()` 이 **빈 글자**를 돌려주므로 역시
      아이콘 타일입니다 (주소를 지어내지 않습니다). */
   function card(r){
-    var u = window.amPubUrl ? window.amPubUrl(CONF, r.thumb) : "";
+    /* ⚠️ 2026-11-17 — 카드는 **작은 파일**(`….t.jpg`), 안 열리면 큰 파일로 한 번 바꿉니다(amLstThumb) */
+    var tt = window.amLstThumb ? window.amLstThumb(CONF, r.thumb) : { src: "", full: "" };
+    var u = tt.src;
     var n = Number(r.photo_n) || 0;
     var ph = u
-      ? '<img class="lsc-im" src="' + esc(u) + '" alt="' + esc(r.title) +
-        '" loading="lazy" decoding="async">' +
+      /* ⚠️ 2026-11-17 — **화면 가까이 올 때만** 받습니다(`data-src` · 아래 lazyImgs). 브라우저의
+         `loading="lazy"` 는 폰에서도 1~2 화면 앞까지 미리 받아, 잰 값으로 첫 화면에 16장
+         (6.5MB)을 받았습니다. 칸 크기는 CSS 가 1:1 로 잡고 있어 밀림이 없고, width · height 도
+         같이 적어 그 비율을 브라우저에게 미리 알립니다. */
+      ? '<img class="lsc-im" data-src="' + esc(u) + '" data-full="' + esc(tt.full) + '" alt="' + esc(r.title) +
+        '" width="400" height="400" loading="lazy" decoding="async">' +
         (n > 1 ? '<span class="lsc-n">' + esc(String(n)) + '장</span>' : "")
       : '<span class="lsc-no">' + window.icon("cart", 26) + '사진 없음</span>';
     /* ⚠️⚠️ **팔린 · 예약중은 사진 위 덮개**입니다 (시안) — 글자로만
@@ -792,6 +798,19 @@
     return b;
   }
 
+  /* 카드 사진을 화면 가까이(200px) 올 때 붙입니다. 관찰기가 없는 브라우저는 바로 붙입니다. */
+  var IO = null;
+  function lazyImgs(root){
+    var L = root ? root.querySelectorAll("img[data-src]") : [];
+    if(!L.length) return;
+    function put(im){ var u = im.getAttribute("data-src"); im.removeAttribute("data-src"); if(u) im.src = u; }
+    if(!("IntersectionObserver" in window)){ Array.prototype.forEach.call(L, put); return; }
+    if(!IO) IO = new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(e.isIntersecting){ IO.unobserve(e.target); put(e.target); } });
+    }, { rootMargin: "200px 0px" });
+    Array.prototype.forEach.call(L, function(im){ IO.observe(im); });
+  }
+
   function paint(a, rows, miss){
     /* ⚠️ 없는 칸이 있었으면 **그 자리에서** 무엇을 못 쓰는지 말합니다 —
        까닭(칸 이름 · 마이그레이션)은 적지 않습니다 (절대 규칙 3). */
@@ -826,6 +845,7 @@
     list.innerHTML = tabs() + missNote(miss) + '<ul class="lsc-g">' +
       rows.map(card).join("") + '</ul>' + pager(rows.length);
     bindList(a);
+    lazyImgs(list);
   }
   /* ⚠️⚠️ **고르는 것과 찍는 것을 갈라 둡니다** — 삼항으로 두 글 덩이 중
      하나를 골라 `innerHTML` 에 넣으면 `check-safe` 가 "esc() 없이 변수를
@@ -1576,6 +1596,45 @@
   }
 
   /* 올린 뒤 안내 — ⚠️ **글자만** 잇습니다 (사진 상자는 따로 이어 붙입니다) */
+  /* 못 간 사진 다시 올리기 (2026-11-17) — 같은 `sendPicked` 를 다시 부릅니다(두 벌로 안
+     적습니다). 누르는 동안 단추를 막아 두 번 보내지 않습니다. */
+  /* ⚠️ `clear` 는 부르는 쪽(양식)이 넘깁니다 — 고른 사진 목록(PICKED)은 **양식 함수 안의 변수**라
+     여기서 그 이름을 부르면 ReferenceError 로 멈춥니다(2026-11-17 검사가 잡았습니다 — 다시 올리기가
+     끝나도 화면이 「올리는 중… 4 / 4」에 멈춰 있었습니다). */
+  function bindRetry(box, lid, left, a, clear){
+    var row = box.querySelector(".lsretry");
+    if(!row) return;
+    var go = row.querySelector(".lsretry-go"), no = row.querySelector(".lsretry-x");
+    var note = box.querySelector(".jmsg");
+    function done(){ if(clear) clear(); row.parentNode && row.parentNode.removeChild(row);
+      var nt = box.querySelector(".lsretry-note"); if(nt && nt.parentNode) nt.parentNode.removeChild(nt); }
+    no.addEventListener("click", function(){
+      left = []; done();
+      if(note) note.textContent = "못 올린 사진을 버렸습니다. 아래에서 다시 고르실 수 있습니다.";
+    });
+    go.addEventListener("click", function(){
+      go.disabled = true; no.disabled = true;
+      if(note) note.textContent = "사진을 다시 올리는 중입니다…";
+      window.amLstPhoto.sendPicked(lid, left, function(i, n){
+        if(note) note.textContent = "사진을 다시 올리는 중입니다… " + i + " / " + n;
+      }).then(function(up){
+        var ph = box.querySelector(".lsp");
+        if(ph) window.amLstPhoto.draw(ph, lid);
+        reload(a);
+        if(!up.error){
+          done();
+          if(note) note.textContent = "못 올렸던 사진 " + up.total + "장을 올렸습니다.";
+          return;
+        }
+        left = up.left || [];
+        if(note) note.textContent = "사진은 " + up.done + " / " + up.total +
+          "장만 올라갔습니다 — " + up.error;
+        go.textContent = "못 올린 " + left.length + "장 다시 올리기";
+        go.disabled = false; no.disabled = false;
+      });
+    });
+  }
+
   function doneHtml(hasPhoto, up){
     /* ⚠️⚠️⚠️ **사진이 안 올라간 것을 "올렸습니다" 로 덮지 않습니다.**
        매물은 이미 올라가 있고 사진만 실패할 수 있습니다 — 몇 장이
@@ -1584,10 +1643,20 @@
        줄을 아예 안 찍습니다("0장 올렸습니다" 는 우리가 만든 말입니다). */
     var shot = "";
     if(up && up.total){
+      /* ⚠️ 2026-11-17 — 못 간 사진은 **버리지 않고** 「다시 올리기 · 버리기」를 냅니다
+         (다시 고르시게 하면 이미 간 사진과 두 벌이 됩니다). */
+      var left = (up.left && up.left.length) || 0;
       shot = up.error
         ? '<p class="jmsg">사진은 ' + up.done + ' / ' + up.total +
-          '장만 올라갔습니다 — ' + esc(up.error) +
-          ' 아래에서 다시 올리실 수 있습니다.</p>'
+          '장만 올라갔습니다 — ' + esc(up.error) + '</p>' +
+          (left ? '<p class="lsretry"><button type="button" class="btn btn-sm btn-pt lsretry-go">' +
+                  '못 올린 ' + left + '장 다시 올리기</button>' +
+                  '<button type="button" class="btn btn-sm btn-bad lsretry-x">못 올린 사진 버리기</button></p>' +
+                  /* ⚠️ 못 간 사진은 **이 화면에만** 들고 있습니다 — 새로고침하면 사라진다는 것과, 그때 어디서
+                     다시 붙이는지를 그 자리에서 말합니다(막다른 길로 두지 않습니다 · 절대 규칙 2). */
+                  '<p class="jhint lsretry-note">새로고침하거나 이 화면을 나가시면 못 올린 사진 목록은 사라집니다. ' +
+                  '매물은 그대로 올라가 있으니, 그때는 내 정보의 「내 판매글」에서 이 매물에 사진을 다시 붙이시면 됩니다.</p>'
+                : '')
         : '<p>사진 ' + up.total + '장을 같이 올렸습니다.</p>';
     }
     return '<h3>매물을 올렸습니다.</h3>' + shot +
@@ -1734,9 +1803,10 @@
         }).then(function(up){ return { lid: lid, up: up }; });
       }).then(function(r){
         var lid = r.lid;
-        /* ⚠️ 미리 보기 주소를 **거둡니다** — 안 거두면 그 탭이 사진을
-           계속 들고 있습니다(`URL.createObjectURL`). */
-        if(PICKED) PICKED.clear();
+        /* ⚠️ 못 간 사진은 화면에 **들고 있습니다**(다시 올리기 · 버리기) — 미리 보기 주소는
+           그 사진을 다 처리한 뒤에 거둡니다. */
+        var LEFT = (r.up && r.up.left) ? r.up.left.slice() : [];
+        if(PICKED && !LEFT.length) PICKED.clear();
         /* ⚠️ 올린 **뒤에** 붙이는 상자는 그대로 둡니다 — 사진을 안
            고르고 올리신 분 · 몇 장이 실패한 분이 여기서 붙이십니다
            (막다른 길로 두지 않습니다 · 절대 규칙 2). */
@@ -1754,6 +1824,7 @@
           window.amLstPhoto.bind(box.querySelector(".lsp"), lid, a.conf,
                                  function(){ reload(a); });
         }
+        if(LEFT.length) bindRetry(box, lid, LEFT, a, function(){ if(PICKED) PICKED.clear(); });
         reload(a);
       }).catch(function(err){
         btn.disabled = false;

@@ -168,7 +168,15 @@ try{
   require("./sql/guest.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/teetime.js")({ ok, psql, psqlFile, denied, allowed });
   require("./sql/career.js")({ ok, psql, psqlFile, denied, allowed });
-  require("./sql/listing.js")({ ok, psql, psqlFile, denied, allowed });
+  /* ⚠️ 2026-11-17 — 동시 요청을 재려고 **psql 여럿을 한꺼번에** 띄웁니다(listing.js 의 0084 묶음) */
+  function psqlMany(sql, n){
+    const one = [path.join(BIN,"psql"),"-h",DIR,"-p",String(PORT),"-U","postgres","-d","golftest",
+                 "-q","-c",sql].map(function(a){ return "'" + String(a).replace(/'/g, "'\\''") + "'"; }).join(" ");
+    let sh = "";
+    for(let i = 0; i < n; i++) sh += one + " >/dev/null 2>&1 & ";
+    execFileSync("bash", ["-c", sh + "wait"], { stdio:"ignore" });
+  }
+  require("./sql/listing.js")({ ok, psql, psqlFile, denied, allowed, psqlMany });
   /* 0061 — 구합니다. ⚠️⚠️⚠️ **받아들이기만으로는 연락처가 둘 다 비어
      있는지**가 여기서 가장 중요합니다 (제17조 제2항) — 0046 · 0056 의
      세 겹을 그대로 베꼈으니 그 셋을 **따로** 눌러 봅니다. */

@@ -871,7 +871,7 @@ git show 4563539:CLAUDE.md          앞 서비스의 작업 기억 (6,215줄)
   `ask_cq_guest`(0063→**0065**) ·
   `ask_listing`(0056→**0069**) ·
   `edit_listing`(0056→0068→0069→**0080**) ·
-  `claim_listing_photo`(0068→**0069**) ·
+  `claim_listing_photo`(0068→0069→**0084**) ·
   `close_listing`(0056→**0069**) ·
   `edit_jobpost`(0048→**0072**) ·
   `edit_joinroom`(0046→**0080**) ·
@@ -884,6 +884,7 @@ git show 4563539:CLAUDE.md          앞 서비스의 작업 기억 (6,215줄)
   `open_jobpost`(0048→**0072**) ·
   `open_joinroom`(0046→**0080**) ·
   `open_listing`(0056→0068→0069→**0080**) ·
+  `order_listing_photo`(0069→**0084**) ·
   `open_report`(0040→0046→0047→0048→0056→0060→**0061**) ·
   `provider_guard`(0001→0021→0024→**0030**) ·
   `save_ad`(0036→**0064**) ·
@@ -895,8 +896,8 @@ git show 4563539:CLAUDE.md          앞 서비스의 작업 기억 (6,215줄)
   `v_cq_public` 보기(0047→0059→0063→**0075**) ·
   `v_ca_public` 보기(0047→**0059**) ·
   `v_join_open` 보기(0046→0060→**0080**) ·
-  `v_listing_open` 보기(0056→0068→0069→**0080**) ·
-  `v_listing_photo_public` 보기(0068→**0069**) ·
+  `v_listing_open` 보기(0056→0068→0069→0080→**0084**) ·
+  `v_listing_photo_public` 보기(0068→0069→**0084**) ·
   `v_job_open` 보기(0048→0067→**0072**) ·
   `v_teetime_open` 보기(0060→0066→**0081**) ·
   `v_course_public` 보기(0066→**0081**) ·

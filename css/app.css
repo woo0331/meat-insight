@@ -5212,3 +5212,16 @@ picture{ display: contents; }
   .hm-sv-side{ grid-template-columns: 1fr; }
   .hm-mkg{ gap:10px; }
 }
+/* /desk 「처음 사용하시나요?」 (2026-11-17 · js/deskstart.js) */
+.dst-first{ margin-top:18px; padding-top:14px; border-top:1px solid var(--line); }
+.dst-first:first-child{ margin-top:0; padding-top:0; border-top:0; }
+/* 이용안내 · 입점 화면의 분야 제목 · 업체 작업실의 안내 단추 줄 (2026-11-17) */
+.gd-fh{ margin:22px 0 10px; font-size:17px; font-weight:800; color:var(--ink); }
+.dst-more{ display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+/* 매물 사진 — 올리기 전 · 뒤 모두 「대표로」 · 앞 · 뒤 단추 (2026-11-17)
+   ⚠️ 칸이 96~108px 이라 단추 셋이 한 줄에 안 들어갑니다 — 접어서 둘째 줄로 보냅니다
+   (안 접으면 사진 칸보다 넓어져 옆 사진을 밉니다). 누르는 높이는 40px 그대로입니다. */
+.lsp-mv, .lspk-mv{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; max-width:124px; }
+.lspk-mv .btn, .lsp-rep{ min-width:40px; min-height:40px; padding:0 10px; }
+.lsretry{ display:flex; flex-wrap:wrap; gap:10px; margin:8px 0; }
+.dst-again{ margin:0; }

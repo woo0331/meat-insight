@@ -66,6 +66,7 @@ const STEPS = [
      ⚠️ ship 묶음 가운데 api/ 핸들러를 **직접 부르는 첫 자리**입니다
      (tools/test-auth.js 는 ship 이 안 돌리고 지금 돌아가지도 않습니다). */
   ["빈 환경변수 이름을 말하나",    ["tools/check-authenv.js", "--prove"], false],
+  ["매물 사진 서버 검사가 막나",   ["tools/check-imgcheck.js"], false],
   /* ⚠️ `--prove` 를 붙입니다 — esc() 검사가 함수를 따라가게 고친 뒤로는
      되돌려 보지 않으면 **느슨해진 자리**를 알 수 없습니다. */
   ["키 · 헤더 · CSP",            ["tools/check-safe.js", "--prove"], false],

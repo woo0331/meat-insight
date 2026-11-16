@@ -79,21 +79,35 @@
     });
   }
 
-  function toBlob(cv){
+  function toBlob(cv, q){
     return new Promise(function(ok, no){
       if(!cv.toBlob){ no(new Error("이 브라우저에서는 사진을 준비하지 못합니다.")); return; }
       cv.toBlob(function(b){
         if(b) ok(b);
         else no(new Error("사진을 준비하지 못했습니다. 다른 사진으로 해 보세요."));
-      }, "image/jpeg", Q);
+      }, "image/jpeg", q || Q);
     });
+  }
+  /* 작은 사진 (2026-11-17) — 목록 · 메인 카드(정사각 · 165~292px)용. 가운데를 정사각으로 잘라
+     T×T 로 그립니다(카드가 object-fit:cover 라 보이는 자리가 같습니다). 큰 사진과 같은 원본에서
+     **같은 canvas 길**로 만들므로 위치정보가 없습니다. */
+  function thumbOf(im, T){
+    var w = im.width, h = im.height, s = Math.min(w, h);
+    var cv = document.createElement("canvas");
+    cv.width = T; cv.height = T;
+    var cx = cv.getContext("2d");
+    if(!cx) return Promise.resolve(null);
+    cx.fillStyle = "#ffffff"; cx.fillRect(0, 0, T, T);
+    cx.drawImage(im, (w - s) / 2, (h - s) / 2, s, s, 0, 0, T, T);
+    return toBlob(cv, 0.8).catch(function(){ return null; });
   }
 
   /* ⚠️⚠️ 돌려주는 종류는 **늘 image/jpeg** 입니다 — 보내는 쪽이
      `file.type` 을 그대로 쓰면 DB 가 받은 종류와 실제가 달라집니다.
      ⚠️ 투명한 PNG 를 그냥 JPEG 로 바꾸면 **검은 바탕**이 됩니다 —
      먼저 흰 바탕을 깔고 그립니다. */
-  W.amImgPrep = function(file){
+  W.amImgPrep = function(file, opt){
+    var T = opt && opt.thumb ? Number(opt.thumb) : 0;
     if(!file) return Promise.reject(new Error("올리실 사진을 골라 주세요."));
     return head(file, 16).then(function(b){
       var sig = sigOf(b);
@@ -111,9 +125,13 @@
       cx.fillStyle = "#ffffff";
       cx.fillRect(0, 0, cw, ch);
       cx.drawImage(im, 0, 0, cw, ch);
-      if(im.close) try{ im.close(); }catch(e){}
-      return toBlob(cv).then(function(bl){
-        return { blob: bl, mime: "image/jpeg", bytes: bl.size, w: cw, h: ch };
+      var tp = T ? thumbOf(im, T) : Promise.resolve(null);
+      return Promise.all([toBlob(cv), tp]).then(function(r){
+        if(im.close) try{ im.close(); }catch(e){}
+        var bl = r[0], tb = r[1];
+        return { blob: bl, mime: "image/jpeg", bytes: bl.size, w: cw, h: ch,
+                 /* ⚠️ 작은 사진을 못 만들어도 큰 사진은 그대로 갑니다 — 카드가 큰 사진으로 돌아갑니다 */
+                 thumb: tb ? { blob: tb, bytes: tb.size } : null };
       });
     });
   };

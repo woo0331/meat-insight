@@ -55,6 +55,12 @@ const PNG1 = Buffer.from(
   "DwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
 /* 사진이 아닌 파일 — ⚠️ 이름만 `.jpg` 입니다 */
 const NOTIMG = Buffer.from("이것은 사진이 아닙니다 ".repeat(40), "utf8");
+/* 매물 사진 수 — ⚠️ 글자로 박지 않고 **화면 파일에서 읽습니다** (늘리거나 줄이는 날
+   검사가 멀쩡한 화면을 떨어뜨리지 않게 · 2026-11-17). 서버 값과도 맞춰 봅니다. */
+const LSTMANY = Number((fs.readFileSync(path.join(__dirname, "..", "js/lstphoto.js"), "utf8")
+  .match(/var MANY = (\d+);/) || [])[1] || 0);
+const LSTMANY_API = Number((fs.readFileSync(path.join(__dirname, "..", "api/upload.js"), "utf8")
+  .match(/const LST_MANY = (\d+);/) || [])[1] || 0);
 
 /* ── 가짜 자료 ──────────────────────────────────────────────────────
    ⚠️⚠️ 손님이 적은 글에 태그를 넣어 둡니다 — 그대로 나가면 사고입니다
@@ -7418,7 +7424,8 @@ function boardsOf(){
         const L = Array.prototype.map.call(
           document.querySelectorAll(".lsc"), function(li){
           const im = li.querySelector(".lsc-im");
-          return { im: im ? im.getAttribute("src") : "",
+          return { im: im ? (im.getAttribute("src") || im.getAttribute("data-src") || "") : "",
+                   full: im ? (im.getAttribute("data-full") || "") : "",
                    no: !!li.querySelector(".lsc-no"),
                    n:  (li.querySelector(".lsc-n") || {}).textContent || "",
                    br: (li.querySelector(".lsc-br") || {}).textContent || "",
@@ -7431,8 +7438,34 @@ function boardsOf(){
       /* ⚠️ 주소는 `amPubUrl()` 한 곳에서 짓습니다 — 공개 버킷입니다 */
       ok("  사진이 있는 줄은 **그 사진**을 공개 버킷 주소로 낸다",
          !!ph.L[0] && ph.L[0].im.indexOf("/storage/v1/object/public/") > 0 &&
-         ph.L[0].im.indexOf("lst/l1/photo/a.jpg") > 0,
+         ph.L[0].full.indexOf("lst/l1/photo/a.jpg") > 0,
          JSON.stringify(ph.L[0] || null));
+      /* ⚠️⚠️ 2026-11-17 — 작은 카드는 **작은 파일**(….t.jpg) · 안 열리면 큰 파일(data-full) */
+      ok("  ⚠️⚠️ 카드는 **작은 파일**(a.t.jpg)을 쓰고 큰 파일을 대신할 자리(data-full)를 같이 단다",
+         !!ph.L[0] && ph.L[0].im.indexOf("lst/l1/photo/a.t.jpg") > 0 &&
+         /lst\/l1\/photo\/a\.jpg$/.test(ph.L[0].full), JSON.stringify(ph.L[0] || null));
+      /* ⚠️ 지연 로딩 때문에 **첫 화면 사진이 빈 채로** 남지 않는가 — 화면 안의 카드는 실제 주소가 붙는다 */
+      const fs0 = await g.p.evaluate(async function(){
+        await new Promise(function(r){ setTimeout(r, 400); });
+        const im = document.querySelector(".lsc .lsc-im");
+        if(!im) return { none:true };
+        im.scrollIntoView({ block:"center" });
+        await new Promise(function(r){ setTimeout(r, 400); });
+        return { src: im.getAttribute("src") || "", pending: im.hasAttribute("data-src") };
+      });
+      ok("  ⚠️ 화면에 들어온 카드 사진은 **실제 주소가 붙는다** (지연 로딩이 비워 두지 않는다)",
+         !fs0.none && fs0.src.indexOf("/storage/v1/object/public/") > 0 && !fs0.pending, JSON.stringify(fs0));
+      /* 작은 파일이 없으면(옛 사진 · 작은 파일만 실패) 큰 파일로 한 번 바꾼다 */
+      const fb = await g.p.evaluate(async function(){
+        const im = document.createElement("img");
+        im.setAttribute("data-full", "/img/hero.jpg");
+        document.body.appendChild(im);
+        im.src = "/img/__없는-작은사진.t.jpg";
+        await new Promise(function(r){ setTimeout(r, 800); });
+        return { src: im.getAttribute("src"), w: im.naturalWidth };
+      });
+      ok("  ⚠️⚠️ 작은 파일이 없으면 **큰 파일로 돌아간다** (빈 칸으로 안 남는다)",
+         fb.src === "/img/hero.jpg" && fb.w > 0, JSON.stringify(fb));
       ok("  두 장 넘으면 **몇 장인지** 적는다", /3/.test(ph.L[0] ? ph.L[0].n : ""),
          ph.L[0] ? ph.L[0].n : "");
       /* ⚠️⚠️ 0장이면 **아이콘 타일**입니다 — 남의 사진이나 분류 사진을
@@ -8251,8 +8284,8 @@ function boardsOf(){
          pk0.on === true, JSON.stringify(pk0));
       ok("  ⚠️ 그 칸이 **제목보다 위**다 (시안의 그 자리)",
          pk0.first === true, JSON.stringify(pk0));
-      ok("  ⚠️ 0장이면 **0/10** 이라고 적는다 (지어낸 숫자가 아닙니다)",
-         String(pk0.n).replace(/\s/g, "") === "0/10" && pk0.thumbs === 0,
+      ok("  ⚠️ 0장이면 **0/" + LSTMANY + "** 이라고 적는다 (지어낸 숫자가 아닙니다)",
+         String(pk0.n).replace(/\s/g, "") === "0/" + LSTMANY && pk0.thumbs === 0,
          JSON.stringify(pk0));
 
       /* ⚠️⚠️ **적어 보낸 종류를 안 믿습니다** — `file.type` 은 확장자만
@@ -8295,8 +8328,8 @@ function boardsOf(){
                  drawn: !!(im && im.complete && im.naturalWidth > 0),
                  badge: !!(t && t.querySelector(".lspk-b")) };
       });
-      ok("  ⚠️ 고른 사진이 **미리 보기로** 선다 (1/10 · 대표 딱지)",
-         pk2.thumbs === 1 && String(pk2.n).replace(/\s/g, "") === "1/10" &&
+      ok("  ⚠️ 고른 사진이 **미리 보기로** 선다 (1/" + LSTMANY + " · 대표 딱지)",
+         pk2.thumbs === 1 && String(pk2.n).replace(/\s/g, "") === "1/" + LSTMANY &&
          pk2.blob === true && pk2.badge === true, JSON.stringify(pk2));
       ok("  ⚠️⚠️⚠️ 그 미리 보기가 **실제로 그려진다** (CSP 가 blob: 을 막지 않는다)",
          pk2.drawn === true, JSON.stringify(pk2));
@@ -8366,12 +8399,32 @@ function boardsOf(){
       ok("  ⚠️ 차례가 **매물 먼저 · 사진 나중**이다 (경로를 id 로 짓습니다)",
          iOpen >= 0 && iUp > iOpen, JSON.stringify(seq10));
       const up10 = g.sent.slice(n10).filter(function(x){
-        return x.name === "upload" && String(x.body).indexOf("POST") === 0; })
+        return x.name === "upload" && String(x.body).indexOf("POST") === 0 && String(x.body).indexOf('"lst":true') >= 0; })
         .map(function(x){ return String(x.body); });
       /* ⚠️⚠️ **방법으로 가립니다** — 같은 주소 꼴로 사진을 내려받는 GET 도
          오므로 이름만 보면 올리지 않았는데도 "올렸다" 로 세어집니다. */
       const put10 = g.sent.slice(n10).filter(function(x){
-        return x.name === "storage" && String(x.body).indexOf("PUT") === 0; });
+        return x.name === "storage" && String(x.body).indexOf("PUT") === 0 && String(x.body).indexOf("/x-t") < 0; });
+      /* ⚠️⚠️ 2026-11-17 — PUT 뒤에 **저장 완료 검사**(lstDone)를 청해야 서버가 실제 파일을 읽어
+         봅니다. 안 청하면 0084 뒤에는 그 사진이 공개되지 않습니다. */
+      const dn10 = g.sent.slice(n10).filter(function(x){
+        return x.name === "upload" && String(x.body).indexOf('"lstDone":"f-new"') >= 0 &&
+               String(x.body).indexOf('"ok":true') >= 0; });
+      const iPut = g.sent.slice(n10).findIndex(function(x){
+        return x.name === "storage" && String(x.body).indexOf("PUT") === 0 && String(x.body).indexOf("/x-t") < 0; });
+      const iDone = g.sent.slice(n10).findIndex(function(x){
+        return String(x.body).indexOf('"lstDone"') >= 0; });
+      /* ⚠️⚠️ 2026-11-17 — **작은 사진**(목록 카드용)도 같이 간다 · 저장 완료 검사가 그 사실을 서버에 알린다 */
+      const tput = g.sent.slice(n10).filter(function(x){
+        return x.name === "storage" && String(x.body).indexOf("PUT") === 0 && String(x.body).indexOf("/x-t") >= 0; });
+      const tclaim = g.sent.slice(n10).filter(function(x){
+        return x.name === "upload" && /"tbytes":[1-9]/.test(String(x.body)); });
+      ok("  ⚠️⚠️ 작은 사진을 **같이 만들어 보낸다** (자리 청할 때 크기 · 큰 사진 뒤에 PUT · 확인에 thumb:true)",
+         tclaim.length === 1 && tput.length === 1 && dn10.length === 1 &&
+         String(dn10[0].body).indexOf('"thumb":true') >= 0,
+         JSON.stringify({ claim: tclaim.length, put: tput.length, done: dn10.map(function(x){ return String(x.body).slice(-60); }) }));
+      ok("  ⚠️⚠️ PUT **뒤에** 저장 완료 검사를 청한다 (서버가 실제 파일을 읽어 봅니다)",
+         dn10.length === 1 && iPut >= 0 && iDone > iPut, JSON.stringify({ n: dn10.length, iPut, iDone }));
       ok("  ⚠️⚠️⚠️ 미리 고른 사진이 **실제로 올라간다** (POST → PUT)",
          up10.length === 1 && put10.length === 1,
          JSON.stringify({ up:up10.length, put:put10.length, seq:seq10 }));
@@ -8424,7 +8477,7 @@ function boardsOf(){
       await g.p.click(".lsp-go");
       await g.p.waitForTimeout(600);
       const bad8 = g.sent.slice(n8).filter(function(x){
-        return x.name === "storage" && String(x.body).indexOf("PUT") === 0; });
+        return x.name === "storage" && String(x.body).indexOf("PUT") === 0 && String(x.body).indexOf("/x-t") < 0; });
       const say8 = await g.p.evaluate(function(){
         const m = document.querySelector("#lsbox .lsp-m");
         return m && !m.hidden ? m.textContent : ""; });
@@ -8445,7 +8498,7 @@ function boardsOf(){
          내려받는 GET 도 오므로, 이름만 보면 올리지 않았는데도 "올렸다"
          로 세어집니다 (처음에 둘로 세어 떨어졌습니다). */
       const put9 = g.sent.slice(n9).filter(function(x){
-        return x.name === "storage" && String(x.body).indexOf("PUT") === 0; });
+        return x.name === "storage" && String(x.body).indexOf("PUT") === 0 && String(x.body).indexOf("/x-t") < 0; });
       ok("  ⚠️ 올리기가 **자리를 청하고 파일을 올린다** (POST → PUT)",
          up9.some(function(b){ return b.indexOf("POST") === 0; }) &&
          put9.length === 1, JSON.stringify({ up:up9, put:put9.length }));
@@ -8462,6 +8515,256 @@ function boardsOf(){
          pb.indexOf('"mime":"image/jpeg"') >= 0, pb.slice(0, 200));
       ok("  ⚠️ 그리고 **줄여서** 보낸다 (보내는 bytes 가 0보다 크다)",
          /"bytes":[1-9]/.test(pb), pb.slice(0, 200));
+      await g.p.close();
+    }
+
+    /* 고른 사진이 **다 준비될 때까지** 기다립니다(고정 시간으로 기다리면 느린 날 제출이 「아직 준비 중」으로 막혀
+       멀쩡한 화면이 떨어집니다 — 2026-11-17 에 실제로 그랬습니다) */
+    async function picked(g, n){
+      await g.p.waitForFunction(function(n){
+        const pk = document.querySelector("#lsf .lspk");
+        if(!pk) return false;
+        const m = pk.querySelector(".lspk-m");
+        const busy = m && !m.hidden && m.textContent.indexOf("읽는 중") >= 0;
+        return pk.querySelectorAll(".lspk-t").length === n && !busy;
+      }, n, { timeout: 15000 }).catch(function(){});
+    }
+    /* ④-2 매물 사진 다섯 장 — 고르기 · 대표 · 차례 · 빼기 · 실패와 다시 올리기 (2026-11-17)
+       ⚠️⚠️ 흉내 장치는 걸러 주지 않으므로 **보내는 꾸러미 · 그려진 차례**를 봅니다. */
+    {
+      ok("⚠️⚠️ 매물 사진 수 — 화면과 서버가 같은 수다 (" + LSTMANY + ")",
+         LSTMANY === 5 && LSTMANY_API === LSTMANY,
+         JSON.stringify({ screen: LSTMANY, api: LSTMANY_API }));
+      async function fillForm(g){
+        await g.p.fill("#l-title", "검사용 아이언");
+        await g.p.selectOption("#l-brand", "핑");
+        await g.p.selectOption("#l-sub", "us-driver");
+        await g.p.selectOption("#l-cond", "like");
+        await g.p.selectOption("#l-rg", "seoul");
+        await g.p.fill("#l-price", "180000");
+        await g.p.fill("#l-body", "검사로 적은 설명입니다");
+        await g.p.fill("#l-contact", "010-5555-5555");
+        await g.p.check(".jconsent input[type=checkbox]");
+      }
+      const files = function(n, tag){
+        const a = [];
+        for(let i = 0; i < n; i++) a.push({ name: tag + i + ".png", mimeType:"image/png", buffer: PNG1 });
+        return a;
+      };
+      const state = function(g){ return g.p.evaluate(function(){
+        const pk = document.querySelector("#lsf .lspk");
+        const T = Array.prototype.slice.call(pk.querySelectorAll(".lspk-t"));
+        const add = pk.querySelector(".lspk-add");
+        return { n: (pk.querySelector(".lspk-n") || {}).textContent || "",
+                 srcs: T.map(function(t){ return t.querySelector("img").src; }),
+                 badge: T.map(function(t){ return !!t.querySelector(".lspk-b"); }),
+                 rep: T.map(function(t){ return !!t.querySelector(".lspk-rep"); }),
+                 up: T.map(function(t){ return !!t.querySelector(".lspk-up"); }),
+                 dn: T.map(function(t){ return !!t.querySelector(".lspk-dn"); }),
+                 addOn: !!(add && add.getClientRects().length),
+                 say: (function(m){ return m && !m.hidden ? m.textContent : ""; })(pk.querySelector(".lspk-m")),
+                 tapMin: Math.min.apply(null, Array.prototype.slice.call(
+                   pk.querySelectorAll(".lspk-t button")).map(function(b){
+                     return b.getBoundingClientRect().height; }).concat([99])) };
+      }); };
+
+      /* ⓐ 0장 · 1장 · 다섯 장 · 여섯째 — ⚠️ 목록의 첫 칸은 「고르기」 칸이라 `:nth-child` 로 집으면 한 칸씩 밀립니다(locator().nth 로 집습니다) */
+      const g = await open("/cat/used", { role:"customer", name:"손님", signedIn:true },
+                           { v_listing_open: LST }, { open_listing: "l-new" },
+                           { postFail: [1] });
+      await fillForm(g);
+      await g.p.setInputFiles("#lsf .lspk-i", files(3, "a"));
+      await picked(g, 3);
+      let s3 = await state(g);
+      ok("  세 장을 한 번에 고르면 미리 보기 셋 · 「3/" + LSTMANY + "」 · 첫 장만 대표",
+         s3.srcs.length === 3 && s3.n.replace(/\s/g, "") === "3/" + LSTMANY &&
+         s3.badge.join() === "true,false,false", JSON.stringify(s3));
+      ok("  ⚠️ 맨 앞에는 「대표로」 · 「앞으로」가 없고 맨 뒤에는 「뒤로」가 없다",
+         s3.rep.join() === "false,true,true" && s3.up.join() === "false,true,true" &&
+         s3.dn.join() === "true,true,false", JSON.stringify(s3));
+      ok("  ⚠️ 폰에서도 누를 수 있다 — 사진 칸 단추가 전부 40px 이상",
+         s3.tapMin >= 40, String(s3.tapMin));
+      await g.p.setInputFiles("#lsf .lspk-i", files(3, "b"));
+      await g.p.waitForTimeout(400);
+      const s6 = await state(g);
+      ok("  ⚠️⚠️ 여섯 장째가 되게 고르면 **한 장도 안 넣고** 몇 장까지 되는지 말한다",
+         s6.srcs.length === 3 && s6.say.indexOf("2장까지") >= 0, JSON.stringify(s6));
+
+      /* ⓑ 대표 · 차례 */
+      const third = s3.srcs[2];
+      await g.p.locator("#lsf .lspk-t").nth(2).locator(".lspk-rep").click();
+      let sr = await state(g);
+      ok("  ⚠️⚠️ 「대표로」를 누르면 그 사진이 **맨 앞**이 되고 대표 딱지가 옮겨 간다",
+         sr.srcs[0] === third && sr.badge.join() === "true,false,false" &&
+         sr.say.indexOf("대표 사진을 바꿨습니다") >= 0, JSON.stringify(sr));
+      const before = sr.srcs.slice();
+      await g.p.locator("#lsf .lspk-t").nth(1).locator(".lspk-dn").click();
+      let sd = await state(g);
+      ok("  「뒤로」를 누르면 둘째와 셋째가 바뀐다",
+         sd.srcs[1] === before[2] && sd.srcs[2] === before[1], JSON.stringify(sd));
+      await g.p.locator("#lsf .lspk-t").nth(2).locator(".lspk-up").click();
+      sd = await state(g);
+      ok("  「앞으로」로 되돌린다", sd.srcs.join() === before.join(), JSON.stringify(sd));
+
+      /* ⓒ 대표 빼기 → 다음 사진이 대표 · 알린다 */
+      await g.p.locator("#lsf .lspk-t").nth(0).locator(".lspk-x").click();
+      const sx = await state(g);
+      ok("  ⚠️⚠️ 대표를 빼면 **다음 사진이 대표**가 되고 그 사실을 말한다",
+         sx.srcs.length === 2 && sx.srcs[0] === before[1] && sx.badge[0] === true &&
+         sx.say.indexOf("다음 사진이 대표") >= 0, JSON.stringify(sx));
+
+      /* ⓓ 다섯 장 채우기 → 고르는 칸이 사라진다 */
+      await g.p.setInputFiles("#lsf .lspk-i", files(3, "c"));
+      await picked(g, 5);
+      const s5 = await state(g);
+      ok("  ⚠️ 다섯 장이 차면 「5/" + LSTMANY + "」 · 고르는 칸이 **안 그려진다**",
+         s5.srcs.length === LSTMANY && s5.n.replace(/\s/g, "") === LSTMANY + "/" + LSTMANY &&
+         s5.addOn === false, JSON.stringify(s5));
+
+      /* ⓔ 둘째 사진이 실패 → 매물은 올라가 있고 · 몇 장인지 · 다시 올리기 */
+      const n0 = g.sent.length;
+      await g.p.click("#lsf button[type=submit]");
+      await g.p.click("#lsf button[type=submit]", { timeout: 300 }).catch(function(){});
+      await g.p.waitForSelector("#lsbox .lsretry-go", { timeout: 15000 }).catch(function(){});
+      await g.p.waitForTimeout(300);
+      const opens = g.sent.slice(n0).filter(function(x){ return x.name === "open_listing"; });
+      ok("  ⚠️⚠️ 두 번 눌러도 매물은 **한 번만** 올라간다", opens.length === 1,
+         String(opens.length));
+      const posts = g.sent.slice(n0).filter(function(x){
+        return x.name === "upload" && String(x.body).indexOf("POST") === 0 && String(x.body).indexOf('"lst":true') >= 0; });
+      ok("  ⚠️ 둘째에서 멈춘다 — 실패 뒤의 사진을 몰래 건너뛰지 않는다 (POST 두 번)",
+         posts.length === 2, String(posts.length));
+      const fx = await g.p.evaluate(function(){
+        const bx = document.getElementById("lsbox");
+        const go = bx.querySelector(".lsretry-go");
+        const nt = bx.querySelector(".lsretry-note");
+        return { t: bx.innerText, go: go ? go.textContent : "", x: !!bx.querySelector(".lsretry-x"),
+                 note: nt ? nt.textContent : "", my: !!bx.querySelector('a[href^="/my"]') };
+      });
+      ok("  ⚠️⚠️ 새로고침하면 못 올린 목록이 **사라진다**는 것과 **내 정보에서 다시 붙인다**는 길을 그 자리에서 말한다",
+         fx.note.indexOf("새로고침") >= 0 && fx.note.indexOf("내 판매글") >= 0 && fx.my, JSON.stringify(fx).slice(0, 300));
+      ok("  ⚠️⚠️ 「매물을 올렸습니다」 + **1 / 5장만** + 못 올린 넷 「다시 올리기」 · 「버리기」",
+         fx.t.indexOf("매물을 올렸습니다") >= 0 && fx.t.indexOf("1 / " + LSTMANY + "장만") >= 0 &&
+         fx.go.indexOf("못 올린 " + (LSTMANY - 1) + "장") >= 0 && fx.x, JSON.stringify(fx).slice(0, 300));
+      const n1 = g.sent.length;
+      if(await g.p.locator("#lsbox .lsretry-go").count()) await g.p.click("#lsbox .lsretry-go");
+      await g.p.waitForFunction(function(){ return !document.querySelector("#lsbox .lsretry"); },
+                                null, { timeout: 15000 }).catch(function(){});
+      const rp = g.sent.slice(n1).filter(function(x){
+        return x.name === "upload" && String(x.body).indexOf("POST") === 0 && String(x.body).indexOf('"lst":true') >= 0; });
+      const rput = g.sent.slice(n1).filter(function(x){
+        return x.name === "storage" && String(x.body).indexOf("PUT") === 0 && String(x.body).indexOf("/x-t") < 0; });
+      const rx = await g.p.evaluate(function(){
+        const bx = document.getElementById("lsbox");
+        return { t: bx.innerText, row: !!bx.querySelector(".lsretry") };
+      });
+      ok("  ⚠️⚠️ 「다시 올리기」가 **못 간 넷만** 보낸다 (POST · PUT 넷 · 두 벌 없음)",
+         rp.length === LSTMANY - 1 && rput.length === LSTMANY - 1,
+         JSON.stringify({ post: rp.length, put: rput.length }));
+      ok("  ⚠️ 다 가면 그 줄을 치우고 몇 장을 올렸는지 말한다",
+         !rx.row && rx.t.indexOf("못 올렸던 사진 " + (LSTMANY - 1) + "장을 올렸습니다") >= 0,
+         rx.t.slice(0, 200));
+      await g.p.close();
+    }
+    /* ⓕ 매물 올리기 자체가 실패 → 적은 글 · 고른 사진이 **그대로** 남는다 */
+    {
+      const g = await open("/cat/used", { role:"customer", name:"손님", signedIn:true },
+                           { v_listing_open: LST }, { open_listing: null }, true);
+      await g.p.fill("#l-title", "남아야 할 제목");
+      await g.p.selectOption("#l-brand", "핑");
+      await g.p.selectOption("#l-sub", "us-driver");
+      await g.p.selectOption("#l-cond", "like");
+      await g.p.selectOption("#l-rg", "seoul");
+      await g.p.fill("#l-price", "180000");
+      await g.p.fill("#l-body", "남아야 할 설명");
+      await g.p.fill("#l-contact", "010-5555-5555");
+      await g.p.check(".jconsent input[type=checkbox]");
+      await g.p.setInputFiles("#lsf .lspk-i", [{ name:"k.png", mimeType:"image/png", buffer: PNG1 }]);
+      await picked(g, 1);
+      const n0 = g.sent.length;
+      await g.p.click("#lsf button[type=submit]");
+      await g.p.waitForTimeout(900);
+      const kp = await g.p.evaluate(function(){
+        return { title: (document.getElementById("l-title") || {}).value,
+                 body: (document.getElementById("l-body") || {}).value,
+                 price: (document.getElementById("l-price") || {}).value,
+                 thumbs: document.querySelectorAll("#lsf .lspk-t").length,
+                 btn: !document.querySelector("#lsf button[type=submit]").disabled,
+                 msg: (document.getElementById("lsmsg") || {}).textContent || "" };
+      });
+      const ups = g.sent.slice(n0).filter(function(x){ return x.name === "upload" &&
+        String(x.body).indexOf("POST") === 0; });
+      ok("⚠️⚠️ 매물 올리기가 실패하면 제목 · 설명 · 값 · 고른 사진이 **그대로** 남는다",
+         kp.title === "남아야 할 제목" && kp.body === "남아야 할 설명" &&
+         kp.price === "180000" && kp.thumbs === 1 && kp.btn, JSON.stringify(kp));
+      ok("  ⚠️ 그때 사진은 **한 장도 안 보낸다** (매물이 없으면 경로를 지을 수 없습니다)",
+         ups.length === 0, String(ups.length));
+      await g.p.close();
+    }
+
+    /* ⓖ 파일 전송(PUT)이 실패 → 자리를 치워 달라고 알리고(ok:false) · 다시 올리기는 새 자리 하나 */
+    {
+      const g = await open("/cat/used", { role:"customer", name:"손님", signedIn:true },
+                           { v_listing_open: LST }, { open_listing: "l-new" }, { putFail: [0] });
+      await g.p.fill("#l-title", "전송 실패 검사");
+      await g.p.selectOption("#l-brand", "핑");
+      await g.p.selectOption("#l-sub", "us-driver");
+      await g.p.selectOption("#l-cond", "like");
+      await g.p.selectOption("#l-rg", "seoul");
+      await g.p.fill("#l-price", "1000");
+      await g.p.fill("#l-body", "전송이 실패하는 길을 재는 설명입니다");
+      await g.p.fill("#l-contact", "010-5555-5555");
+      await g.p.check(".jconsent input[type=checkbox]");
+      await g.p.setInputFiles("#lsf .lspk-i", [{ name:"z.png", mimeType:"image/png", buffer: PNG1 }]);
+      await picked(g, 1);
+      const n0 = g.sent.length;
+      await g.p.click("#lsf button[type=submit]");
+      await g.p.waitForSelector("#lsbox .lsretry-go", { timeout: 15000 }).catch(function(){});
+      const off = g.sent.slice(n0).filter(function(x){
+        return String(x.body).indexOf('"lstDone"') >= 0 && String(x.body).indexOf('"ok":false') >= 0; });
+      const t0 = await g.p.evaluate(function(){ return document.getElementById("lsbox").innerText; });
+      ok("⚠️⚠️ 파일이 안 가면 **자리를 치워 달라고** 서버에 알린다 (보이지 않는 줄이 칸을 막지 않게)",
+         off.length === 1, String(off.length));
+      ok("  ⚠️ 「0 / 1장만」 · 다시 올리기를 낸다", t0.indexOf("0 / 1장만") >= 0 &&
+         t0.indexOf("다시 올리기") >= 0, t0.slice(0, 200));
+      const n1 = g.sent.length;
+      if(await g.p.locator("#lsbox .lsretry-go").count()) await g.p.click("#lsbox .lsretry-go");
+      await g.p.waitForFunction(function(){ return !document.querySelector("#lsbox .lsretry"); },
+                                null, { timeout: 15000 }).catch(function(){});
+      const cl = g.sent.slice(n1).filter(function(x){ return String(x.body).indexOf('"lst":true') >= 0; });
+      const okd = g.sent.slice(n1).filter(function(x){
+        return String(x.body).indexOf('"lstDone"') >= 0 && String(x.body).indexOf('"ok":true') >= 0; });
+      const op = g.sent.slice(n1).filter(function(x){ return x.name === "open_listing"; });
+      ok("  ⚠️⚠️ 다시 올리기는 **매물을 다시 안 만들고** 사진 자리 하나만 새로 청한다",
+         cl.length === 1 && okd.length === 1 && op.length === 0,
+         JSON.stringify({ claim: cl.length, done: okd.length, open: op.length }));
+      await g.p.close();
+    }
+    /* ⓗ 올린 뒤 대표 바꾸기가 실패 → 그려진 차례 그대로 · 까닭을 말한다 */
+    {
+      const PH = [{ id:"f1", url:"https://sb-test.supabase.co/a.jpg", ord:0 },
+                  { id:"f2", url:"https://sb-test.supabase.co/b.jpg", ord:1 }];
+      const g = await open("/my", { role:"customer", name:"손님", signedIn:true },
+        { listing: [{ id:"l1", title:"내 드라이버", body:"설명", price:1000, sub:"us-driver",
+                      region:"seoul", state:"open", cond:"like", brand:"핑", ship:false,
+                      created_at:"2026-11-08T00:00:00Z" }],
+          listingask: [], v_listing_contact: [], v_listing_fav: [] },
+        { order_listing_photo: null }, { lphotos: PH });
+      await g.p.waitForTimeout(500);
+      const opened = await g.p.locator(".mj-i:nth-child(1) .ls-ph").count();
+      if(opened) await g.p.click(".mj-i:nth-child(1) .ls-ph");
+      await g.p.waitForTimeout(600);
+      const has = await g.p.locator("#lsmine .lsp-rep").count();
+      if(has) await g.p.locator("#lsmine .lsp-rep").first().click();
+      await g.p.waitForTimeout(600);
+      const after = await g.p.evaluate(function(){
+        const t = Array.prototype.map.call(document.querySelectorAll("#lsmine .lsp-t"),
+          function(x){ return x.getAttribute("data-fid"); });
+        const m = document.querySelector("#lsmine .lsp-m");
+        return { ids: t, say: m && !m.hidden ? m.textContent : "" };
+      });
+      ok("⚠️⚠️ 대표 바꾸기가 실패하면 **차례가 그대로**이고 까닭을 말한다",
+         has > 0 && after.ids.join() === "f1,f2" && after.say.length > 0, JSON.stringify(after));
       await g.p.close();
     }
 
@@ -8581,10 +8884,13 @@ function boardsOf(){
         const n0 = g.sent.length;
         await g.p.click(".lsp-x");
         await g.p.waitForTimeout(500);
+        /* ⚠️ 2026-11-17 — 빼기는 **서버를 거칩니다**(그 사람 토큰으로 문을 부르고 파일도 지웁니다).
+           화면이 보내는 것은 **사진 id 하나**뿐이어야 합니다 — 경로를 보내면 남의 파일을 가리킬 수 있습니다. */
         const dr = g.sent.slice(n0).filter(function(x){
-          return x.name === "drop_listing_photo"; });
-        ok("  「빼기」가 **drop_listing_photo 를 그 사진 id 로** 부른다",
-           dr.length === 1 && String(dr[0].body).indexOf('"f1"') >= 0,
+          return x.name === "upload" && String(x.body).indexOf('"lstDrop":"f1"') >= 0; });
+        ok("  「빼기」가 **서버(lstDrop)에 그 사진 id 만** 보낸다 (경로 · 버킷을 안 보냅니다)",
+           dr.length === 1 && String(dr[0].body).indexOf("lst/") < 0 &&
+           String(dr[0].body).indexOf("bucket") < 0,
            JSON.stringify(dr).slice(0, 160));
         await g.p.close();
       }
@@ -8718,6 +9024,19 @@ function boardsOf(){
            return o.listing === "l1" && o.ids.length === 3 &&
                   o.ids[0] === "f2" && o.ids[1] === "f1" && o.ids[2] === "f3";
          })(), sq.length ? sq[0].body : "");
+      /* ⚠️⚠️ 2026-11-17 — 올린 뒤에도 「대표로」 — 따로 값이 아니라 **맨 앞으로** 보내는
+         차례 바꾸기입니다(대표와 ord 가 두 값이 되지 않습니다). */
+      const rp0 = await g.p.evaluate(function(){
+        const t = document.querySelectorAll("#lsmine .lsp-t");
+        return [!!t[0].querySelector(".lsp-rep"), !!t[2].querySelector(".lsp-rep")]; });
+      ok("  ⚠️ 「대표로」는 맨 앞 말고 나머지에만 있다", rp0.join() === "false,true", rp0.join());
+      const n3 = g.sent.length;
+      await g.p.click("#lsmine .lsp-t:nth-child(3) .lsp-rep");
+      await g.p.waitForTimeout(500);
+      const rq3 = g.sent.slice(n3).filter(function(x){ return x.name === "order_listing_photo"; });
+      ok("⚠️⚠️ 「대표로」가 그 사진을 **맨 앞**으로 보낸다 (f3 · f1 · f2)",
+         rq3.length === 1 && JSON.parse(rq3[0].body).p.ids.join() === "f3,f1,f2",
+         rq3.length ? rq3[0].body : "");
       await g.p.close();
     }
 
@@ -10375,14 +10694,45 @@ function boardsOf(){
     const r = await g.p.evaluate(function(){
       const b = document.getElementById("dstbox");
       const drawn = !!b && !b.hidden && b.children.length > 0;
-      const rows = b ? Array.prototype.map.call(b.querySelectorAll(".dst-r"),
+      const rows = b ? Array.prototype.map.call(b.querySelectorAll(".dst-r:not(.dst-fr)"),
         function(x){ const a = x.querySelector("a");
           return { t:(x.querySelector("b")||{}).textContent || "",
                    go: a ? a.getAttribute("href") : "" }; }) : [];
-      return { drawn: drawn, rows: rows, html: b ? b.innerHTML : "" };
+      const first = b ? Array.prototype.map.call(b.querySelectorAll(".dst-fr"),
+        function(x){ const a = x.querySelector("a");
+          return { t:(x.querySelector("b")||{}).textContent || "",
+                   go: a ? a.getAttribute("href") : "" }; }) : [];
+      const more = b ? Array.prototype.map.call(b.querySelectorAll(".dst-more a"),
+        function(a){ return a.getAttribute("href"); }) : [];
+      return { drawn: drawn, rows: rows, first: first, more: more, html: b ? b.innerHTML : "" };
     });
     return { g: g, r: r };
   }
+
+  /* ⚠️⚠️ 2026-11-17 — 「처음 사용하시나요?」는 **그 업체가 하는 일에 맞는** 차례만 냅니다.
+     부킹이 아닌 업체에게 「티타임 올리기」를 내면 없는 칸으로 보내는 꼴입니다. */
+  { const BK = { provider:[{ id:"t-range", subs:["bk-find"], regions:[] }],
+                 provider_contact:[], provider_price:[], provider_photo:[] };
+    const { g, r } = await dstOf(DS_PV, BK, true);
+    const gos = r.first.map(function(x){ return x.go; });
+    ok("⚠️⚠️ 부킹 업체에게 「처음 사용하시나요?」가 **티타임 차례**를 낸다 (#teebox)",
+       r.html.indexOf("처음 사용하시나요?") >= 0 && gos.indexOf("#teebox") >= 0 &&
+       gos.indexOf("#triprobox") < 0, gos.join(" · "));
+    const bad = await g.p.evaluate(function(h){
+      return h.filter(function(x){ return !document.querySelector(x); }); }, gos);
+    ok("  ⚠️ 그 줄들이 가는 자리가 **전부 이 화면에 있다**", gos.length >= 3 && bad.length === 0,
+       bad.join(" · "));
+    ok("  ⚠️ 분야별 자세한 안내(/guide#pro) · 고객센터로 가는 길을 낸다",
+       r.more.indexOf("/guide#pro") >= 0 && r.more.indexOf("/help") >= 0, r.more.join(" · "));
+    ok("  ⚠️ 수수료 · 무료 · 처리 시간을 약속하지 않는다",
+       !/무료|수수료|이내|시간 안에/.test(r.html.replace(/<[^>]+>/g, "")), "");
+    await g.p.close(); }
+  { const { g, r } = await dstOf(DS_PV, DS_NONE, true);
+    const gos = r.first.map(function(x){ return x.go; });
+    ok("  ⚠️ 부킹 · 여행이 아닌 업체에게는 티타임 · 여행 줄을 **안 낸다**",
+       gos.length >= 3 && gos.indexOf("#teebox") < 0 && gos.indexOf("#triprobox") < 0,
+       gos.join(" · "));
+    await g.p.close(); }
 
   { const { g, r } = await dstOf(DS_PV, DS_NONE, true);
     ok("아무것도 안 하신 업체에 **먼저 하실 것**이 나온다",
@@ -10403,8 +10753,37 @@ function boardsOf(){
   /* ⚠️⚠️⚠️ **다 하셨으면 한 줄도 안 그립니다** — 이 줄이 없으면 잔소리가
      영영 남습니다. 되돌려 보니(`todo.length` 검사를 빼 보니) 잡힙니다. */
   { const { g, r } = await dstOf(DS_PV, DS_ALL, true);
-    ok("⚠️⚠️ **다 하셨으면 한 줄도 안 그린다** (잔소리를 남기지 않습니다)",
-       !r.drawn, r.rows.length + "줄: " + r.rows.map(function(x){ return x.t; }).join(" · "));
+    /* ⚠️⚠️ 2026-11-17 — 다 하셨으면 「먼저 하실 것」은 **한 줄도** 안 그리고, 이용방법은 **접힌 단추
+       하나**만 남깁니다(잔소리가 아니라 다시 여는 길입니다). */
+    const btn = await g.p.locator("#dstbox .dst-open").count();
+    ok("⚠️⚠️ **다 하셨으면 할 일 줄은 한 줄도 없고** 「이용방법」 단추 하나만 남는다",
+       r.rows.length === 0 && r.first.length === 0 && btn === 1,
+       JSON.stringify({ rows: r.rows.length, first: r.first.length, btn }));
+    await g.p.click("#dstbox .dst-open");
+    const op = await g.p.evaluate(function(){
+      return { n: document.querySelectorAll("#dstbox .dst-fr").length,
+               fold: !!document.querySelector("#dstbox .dst-fold"),
+               ae: (document.querySelector("#dstbox .dst-fold") || {}).getAttribute
+                   ? document.querySelector("#dstbox .dst-fold").getAttribute("aria-expanded") : "" }; });
+    ok("  ⚠️ 「이용방법」을 누르면 **처음 사용 안내가 다시 열리고** 접는 단추가 선다",
+       op.n >= 3 && op.fold && op.ae === "true", JSON.stringify(op));
+    await g.p.click("#dstbox .dst-fold");
+    const cl = await g.p.evaluate(function(){
+      return { n: document.querySelectorAll("#dstbox .dst-fr").length,
+               open: !!document.querySelector("#dstbox .dst-open"),
+               mem: localStorage.getItem("dst.fold") }; });
+    ok("  ⚠️ 접으면 단추 하나로 돌아가고 그 선택을 이 브라우저에 기억한다",
+       cl.n === 0 && cl.open && cl.mem === "1", JSON.stringify(cl));
+    await g.p.close(); }
+  /* 할 일이 남은 업체가 안내를 접으면 — 할 일은 그대로 · 안내만 단추로 */
+  { const { g } = await dstOf(DS_PV, DS_NONE, true);
+    await g.p.click("#dstbox .dst-fold");
+    const f = await g.p.evaluate(function(){
+      return { todo: document.querySelectorAll("#dstbox .dst-r:not(.dst-fr)").length,
+               first: document.querySelectorAll("#dstbox .dst-fr").length,
+               open: !!document.querySelector("#dstbox .dst-open") }; });
+    ok("⚠️ 할 일이 남은 업체가 안내를 접어도 **할 일은 그대로** · 안내만 「이용방법」 단추로",
+       f.todo === 5 && f.first === 0 && f.open, JSON.stringify(f));
     await g.p.close(); }
 
   /* ⚠️ 버킷이 꺼져 있으면 사진 상자가 아예 안 그려집니다 — 그 자리로

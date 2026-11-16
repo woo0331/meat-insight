@@ -94,11 +94,12 @@
      안 내므로 "지금은 볼 수 없는 매물입니다" 가 뜨고, 그것이 맞는 말
      입니다). */
   function row(r){
-    var u = window.amPubUrl ? window.amPubUrl(CONF, r.thumb) : "";
+    var tt = window.amLstThumb ? window.amLstThumb(CONF, r.thumb) : { src: "", full: "" };
+    var u = tt.src;
     /* ⚠️⚠️ 사진이 0장이거나 버킷이 꺼져 있으면 **아이콘 타일**입니다 —
        남의 사진을 깔지 않습니다 (절대 규칙 1). */
     var ph = u
-      ? '<img class="mfv-im" src="' + esc(u) + '" alt="" loading="lazy" decoding="async">'
+      ? '<img class="mfv-im" src="' + esc(u) + '" data-full="' + esc(tt.full) + '" alt="" loading="lazy" decoding="async">'
       : '<span class="mfv-no">' + window.icon("cart", 20) + '</span>';
     /* ⚠️ `open` 이면 딱지를 **안 냅니다** — 「판매중」을 모든 줄에 붙이면
        그것만 보입니다. */

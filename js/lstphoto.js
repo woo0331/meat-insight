@@ -42,7 +42,7 @@
   /* ⚠️ **담기는 크기** — DB 가 다시 봅니다 (화면에서만 막으면 꾸러미를
      고쳐 지나갑니다). 다시 그린 뒤의 크기를 이 값과 견줍니다. */
   var MAX = 8388608;                 /* ⚠️ 0069 의 값과 같아야 합니다 */
-  var MANY = 10;                     /* ⚠️ **0069** 의 값과 같아야 합니다 */
+  var MANY = 5;                      /* ⚠️ api/upload.js 의 LST_MANY 와 같아야 합니다 (2026-11-17 — 열 장 → 다섯 장. DB 문 0069 는 아직 열 장이라 서버가 다섯 장을 셉니다) */
   /* ⚠️⚠️ **고르실 수 있는 크기 — 담기는 크기와 다릅니다.** 폰 사진은
      한 장이 6~12MB 인데 다시 그리면 1MB 아래로 떨어집니다. 원본을 8MB
      로 막으면 요즘 폰으로 찍은 사진을 **아예 못 올리십니다**(절대 규칙 2).
@@ -51,6 +51,8 @@
      ⚠️ 종류를 여기서 안 셉니다 — `js/imgprep.js` 가 **첫 바이트**로
      봅니다(적어 보낸 `file.type` 은 확장자만 보고 쓰는 값입니다). */
   var PICK = 33554432;
+  /* 목록 · 메인 카드용 작은 사진의 한 변(px) — ⚠️ api/upload.js 의 LST_THUMB 와 같아야 합니다 */
+  var THUMB = 480;
 
   /* 상자 — ⚠️ 버킷이 꺼졌으면 **빈 글자**입니다 */
   function box(){
@@ -75,7 +77,7 @@
          EXIF 뿐이고, 사진에 **찍혀 있는** 집 · 차 번호는 우리가 못 봅니다.
          ⚠️ 글은 `js/imgprep.js` 의 `amImgPrepNote()` **한 곳**입니다
          (세 화면이 같은 말을 해야 합니다). */
-      '<p class="jhint">열 장까지 · 한 장에 32MB 까지 · JPG · PNG · WEBP · ' +
+      '<p class="jhint">' + MANY + '장까지 · 한 장에 32MB 까지 · JPG · PNG · WEBP · ' +
       esc(window.amImgPrepNote ? window.amImgPrepNote() : "") + ' ' +
       /* ⚠️ 0069 부터 **차례를 바꿀 수 있습니다** — 그래서 "첫 장" 이
          아니라 **대표**라고 적습니다(바꿀 수 있는 것을 못 바꾸는 것처럼
@@ -102,24 +104,56 @@
       headers: Object.assign({ "content-type":"application/json" },
                              W.amAuthHeaders ? W.amAuthHeaders() : {}),
       /* ⚠️⚠️ lst:true 로 **매물 쪽 길**임을 말합니다. */
-      body: JSON.stringify({ lst:true, listing:id, mime:x.mime, bytes:x.bytes })
+      body: JSON.stringify({ lst:true, listing:id, mime:x.mime, bytes:x.bytes,
+                             /* 작은 사진(목록 카드용) — 있으면 서버가 둘째 서명 주소를 냅니다 */
+                             tbytes: x.thumb ? x.thumb.bytes : 0 })
     }).then(function(r){
       return r.json().then(function(j){ return { ok:r.ok, j:j }; });
     }).then(function(y){
       if(!y.ok || !y.j || !y.j.url)
         throw new Error((y.j && y.j.error) || "지금 올리지 못했습니다");
+      var fid = y.j.id, turl = y.j.turl;
       return fetch(y.j.url, { method:"PUT",
-        headers:{ "content-type":x.mime }, body:x.blob });
-    }).then(function(r){
-      if(!r || !r.ok) throw new Error("올리지 못했습니다");
+        headers:{ "content-type":x.mime }, body:x.blob })
+        .then(function(r){ return !!(r && r.ok); }, function(){ return false; })
+        .then(function(put){
+          /* ⚠️ 작은 사진은 **큰 사진이 간 뒤에만** 보냅니다. 못 가도 매물 사진은 그대로이고 카드가 큰
+             사진으로 돌아갑니다(아래 done 이 작은 사진이 있는지를 서버에 알립니다). */
+          if(!put || !turl || !x.thumb) return { put: put, tput: false };
+          return fetch(turl, { method:"PUT", headers:{ "content-type":"image/jpeg" }, body:x.thumb.blob })
+            .then(function(r){ return { put: put, tput: !!(r && r.ok) }; },
+                  function(){ return { put: put, tput: false }; });
+        })
+        .then(function(st){
+          var put = st.put;
+          /* ⚠️⚠️ 2026-11-17 — **파일이 간 뒤에 서버가 그 파일을 실제로 읽어 봅니다**(저장 완료 ·
+             api/upload.js 의 lstDone). 못 갔으면 자리만 치워 달라고 알립니다 — 안 알리면 보이지도
+             않는 줄이 다섯 칸을 막습니다(서버도 15분 뒤에 치웁니다). */
+          if(!fid) { if(!put) throw new Error("올리지 못했습니다"); return; }
+          return done(fid, put, st.tput).then(function(){
+            if(!put) throw new Error("올리지 못했습니다");
+          });
+        });
     });
+  }
+  function done(fid, put, tput){
+    return fetch("/api/upload", {
+      method:"POST",
+      headers: Object.assign({ "content-type":"application/json" },
+                             W.amAuthHeaders ? W.amAuthHeaders() : {}),
+      body: JSON.stringify({ lstDone: fid, ok: !!put, thumb: !!tput })
+    }).then(function(r){
+      return r.json().catch(function(){ return null; }).then(function(j){
+        if(put && !r.ok) throw new Error((j && j.error) || "올린 사진을 확인하지 못했습니다");
+      });
+    }, function(e){ if(put) throw new Error("올린 사진을 확인하지 못했습니다"); });
   }
 
   /* 파일 한 장을 **다시 그려서** 보냅니다 (올린 뒤에 붙이는 길) */
   function sendOne(id, f){
     if(!W.amImgPrep)
       return Promise.reject(new Error("사진을 준비하지 못했습니다."));
-    return W.amImgPrep(f).then(function(x){ return sendPrepped(id, x); });
+    return W.amImgPrep(f, { thumb: THUMB }).then(function(x){ return sendPrepped(id, x); });
   }
 
   /* ════════════════════════════════════════════════════════════════
@@ -169,7 +203,7 @@
         '</li>' +
       '</ul>' +
       /* ⚠️ 글은 `js/imgprep.js` 의 `amImgPrepNote()` **한 곳**입니다 */
-      '<p class="jhint">열 장까지 · 한 장에 32MB 까지 · JPG · PNG · WEBP · ' +
+      '<p class="jhint">' + MANY + '장까지 · 한 장에 32MB 까지 · JPG · PNG · WEBP · ' +
       esc(W.amImgPrepNote ? W.amImgPrepNote() : "") + ' ' +
       '<b>대표 사진</b>이 목록 카드에 보입니다.</p>' +
       '<p class="jmsg lspk-m" hidden></p>' +
@@ -192,6 +226,15 @@
     /* ⚠️⚠️ 그리는 것을 **DOM 으로** 짓습니다(innerHTML 이 아닙니다) —
        미리 보기 주소 · 장수는 변수이고, 글자로 이어 붙이면 `check-safe`
        가 "esc() 없이 변수를 넣었다" 로 잡습니다. 그 검사가 맞습니다. */
+    function mvBtn(cls, key, txt, label){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "btn btn-sm btn-line " + cls;
+      b.setAttribute("data-k", key);
+      b.setAttribute("aria-label", label);
+      b.textContent = txt;
+      return b;
+    }
     function paint(){
       var old = ul.querySelectorAll(".lspk-t");
       for(var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
@@ -210,6 +253,15 @@
           b.className = "lspk-b"; b.textContent = "대표";
           li.appendChild(b);
         }
+        /* ⚠️ 2026-11-17 — **올리기 전에도** 대표 · 차례를 고릅니다. 대표는 따로 값이 아니라
+           **맨 앞**입니다(「대표로」= 맨 앞으로 · 0069 와 같은 규칙). 맨 앞 · 맨 뒤에서는 그
+           단추를 안 냅니다(눌러도 아무 일이 안 나는 칸 · 절대 규칙 5). */
+        var mv = document.createElement("span");
+        mv.className = "lspk-mv";
+        if(at > 0) mv.appendChild(mvBtn("lspk-rep", it.key, "대표로", "대표 사진으로 정하기"));
+        if(at > 0) mv.appendChild(mvBtn("lspk-up", it.key, "←", "앞으로 옮기기"));
+        if(at < list.length - 1) mv.appendChild(mvBtn("lspk-dn", it.key, "→", "뒤로 옮기기"));
+        if(mv.firstChild) li.appendChild(mv);
         var x = document.createElement("button");
         x.type = "button";
         x.className = "btn btn-sm btn-bad lspk-x";
@@ -230,15 +282,33 @@
     ul.addEventListener("click", function(e){
       var t = e.target;
       if(!t || !t.closest) return;
+      var mvb = t.closest(".lspk-rep") || t.closest(".lspk-up") || t.closest(".lspk-dn");
+      if(mvb){
+        var km = mvb.getAttribute("data-k"), at = -1;
+        for(var j = 0; j < list.length; j++) if(list[j].key === km) at = j;
+        if(at < 0) return;
+        var to = mvb.classList.contains("lspk-rep") ? 0 :
+                 mvb.classList.contains("lspk-up") ? at - 1 : at + 1;
+        if(to < 0 || to >= list.length || to === at) return;
+        var one = list.splice(at, 1)[0];
+        list.splice(to, 0, one);
+        say(to === 0 ? "대표 사진을 바꿨습니다." : "");
+        paint();
+        return;
+      }
       var x = t.closest(".lspk-x");
       if(!x) return;
-      var k = x.getAttribute("data-k");
+      var k = x.getAttribute("data-k"), wasRep = false;
       for(var i = 0; i < list.length; i++) if(list[i].key === k){
         try{ URL.revokeObjectURL(list[i].url); }catch(_){}
+        wasRep = i === 0;
         list.splice(i, 1);
         break;
       }
-      say(""); paint();
+      /* ⚠️ 대표를 빼면 **다음 사진이 대표**가 됩니다 — 말없이 바뀌면 목록 카드에 엉뚱한
+         사진이 나가는 줄 모르십니다. */
+      say(wasRep && list.length ? "대표 사진을 뺐습니다 — 다음 사진이 대표가 됩니다." : "");
+      paint();
     });
 
     inp.addEventListener("change", function(){
@@ -272,10 +342,10 @@
       var bad = 0, says = [];
       fs.reduce(function(chain, f){
         return chain.then(function(){
-          return W.amImgPrep(f).then(function(x){
+          return W.amImgPrep(f, { thumb: THUMB }).then(function(x){
             if(x.bytes > MAX) throw new Error("줄여도 8MB 를 넘습니다.");
             list.push({ key: String(SEQ++), mime: x.mime, bytes: x.bytes,
-                        blob: x.blob, url: URL.createObjectURL(x.blob) });
+                        blob: x.blob, thumb: x.thumb, url: URL.createObjectURL(x.blob) });
           }).catch(function(err){
             bad += 1;
             var m = String((err && err.message) || "읽지 못했습니다.");
@@ -311,6 +381,9 @@
      자리에 올 때는 매물이 **이미 올라가 있습니다.** 실패를 그대로
      던지면 부르는 쪽이 "매물을 올리지 못했습니다" 를 적게 되고, 그건
      거짓말입니다. 몇 장이 올라갔는지를 **세어서** 돌려줍니다. */
+  /* ⚠️ 2026-11-17 — 못 간 사진을 **돌려줍니다**(`left`) — 버리면 다시 고르셔야 하고, 그
+     사이 앞의 것이 이미 올라가 있어 같은 사진이 두 벌이 됩니다. 화면이 「다시 올리기」로
+     그것만 다시 보냅니다. */
   function sendPicked(id, items, onStep){
     var done = 0, total = items.length;
     return items.reduce(function(chain, it){
@@ -319,9 +392,9 @@
         return sendPrepped(id, it);
       }).then(function(){ done += 1; });
     }, Promise.resolve()).then(function(){
-      return { done: done, total: total, error: "" };
+      return { done: done, total: total, error: "", left: [] };
     }).catch(function(e){
-      return { done: done, total: total,
+      return { done: done, total: total, left: items.slice(done),
                error: String((e && e.message) || "올리지 못했습니다.") };
     });
   }
@@ -358,6 +431,7 @@
             '<span class="lsp-mv">' +
               /* ⚠️ 맨 앞 · 맨 뒤에서는 그 단추를 **안 냅니다** — 그리면
                  눌러도 아무 일이 안 나는 칸입니다 (절대 규칙 5). */
+              (first ? "" : '<button type="button" class="btn btn-sm btn-line lsp-rep">대표로</button>') +
               (first ? "" : '<button type="button" class="lsp-up" ' +
                 'title="앞으로"><span class="sr-only">앞으로 옮기기</span>' +
                 window.icon("arrow", 14) + '</button>') +
@@ -405,7 +479,7 @@
       /* ⚠️⚠️ **몇 장이 남았는지 먼저 셉니다** — 다 올리고 나서 마지막
          몇 장만 거절되면 "올라간 줄 알았다" 가 됩니다. 넘치면 그 자리에서
          몇 장까지 되는지 말합니다. */
-      if(n >= MANY){ say("사진은 열 장까지입니다. 먼저 빼 주세요."); return; }
+      if(n >= MANY){ say("사진은 " + MANY + "장까지입니다. 먼저 빼 주세요."); return; }
       if(fs.length > MANY - n){
         say("지금 " + (MANY - n) + "장까지 더 올리실 수 있습니다. " +
             "고르신 것은 " + fs.length + "장입니다.");
@@ -456,14 +530,14 @@
     el.addEventListener("click", function(e){
       var t0 = e.target;
       if(!t0 || !t0.closest) return;
-      var mv = t0.closest(".lsp-up") || t0.closest(".lsp-dn");
+      var mv = t0.closest(".lsp-rep") || t0.closest(".lsp-up") || t0.closest(".lsp-dn");
       if(mv){
         var li0 = mv.closest(".lsp-t");
         var ul0 = el.querySelector(".lsp-l");
         if(!li0 || !ul0) return;
         var all = Array.prototype.slice.call(ul0.querySelectorAll(".lsp-t"));
         var at = all.indexOf(li0);
-        var to = t0.closest(".lsp-up") ? at - 1 : at + 1;
+        var to = t0.closest(".lsp-rep") ? 0 : t0.closest(".lsp-up") ? at - 1 : at + 1;
         if(at < 0 || to < 0 || to >= all.length) return;
         var ids = all.map(function(x2){ return x2.getAttribute("data-fid"); });
         var one = ids.splice(at, 1)[0];
@@ -484,7 +558,10 @@
           /* ⚠️ 차례가 바뀌면 **목록 카드의 대표 사진도** 바뀝니다 —
              `after()` 를 안 부르면 카드가 그대로여서 "안 바뀌었다" 로
              보입니다 (올리기 · 빼기와 같은 자리). */
-          return draw(el, id).then(function(){ if(after) after(); });
+          return draw(el, id).then(function(){
+            if(to === 0) say("대표 사진을 바꿨습니다.");
+            if(after) after();
+          });
         }).catch(function(err){
           mv.disabled = false;
           say(String((err && err.message) || "차례를 바꾸지 못했습니다."));
@@ -497,21 +574,29 @@
       var li = x.closest(".lsp-t");
       if(!li) return;
       /* ⚠️ 되돌릴 수 없는 일이라 한 번 여쭙습니다 */
-      if(!W.confirm("이 사진을 뺍니다. 되돌릴 수 없습니다.")) return;
+      var wasRep = li.classList.contains("lsp-1st") &&
+                   el.querySelectorAll(".lsp-t").length > 1;
+      if(!W.confirm(wasRep ? "대표 사진을 뺍니다. 다음 사진이 대표가 됩니다. 되돌릴 수 없습니다."
+                           : "이 사진을 뺍니다. 되돌릴 수 없습니다.")) return;
       x.disabled = true;
-      fetch(conf.url + "/rest/v1/rpc/drop_listing_photo", {
+      /* ⚠️⚠️ 2026-11-17 — 빼기는 **서버를 거칩니다**(api/upload.js 의 lstDrop). 서버가 그 사람 토큰으로
+         문(drop_listing_photo)을 부르고, 성공하면 **그 줄의 경로에서 지은** 큰 사진 · 작은 사진 파일을
+         지웁니다. 전에는 줄만 지워 공개 버킷에 파일이 남았습니다. 화면이 보내는 것은 사진 id 하나뿐이고,
+         지울 경로는 서버가 DB 에서 읽습니다(남의 매물 파일을 가리킬 수 없습니다). */
+      fetch("/api/upload", {
         method:"POST",
-        headers: Object.assign({ "content-type":"application/json",
-                                 apikey: conf.anonKey },
+        headers: Object.assign({ "content-type":"application/json" },
                                W.amAuthHeaders ? W.amAuthHeaders() : {}),
-        body: JSON.stringify({ p: { id: li.getAttribute("data-fid") } })
+        body: JSON.stringify({ lstDrop: li.getAttribute("data-fid") })
       }).then(function(r){
-        return r.text().then(function(t2){
-          if(!r.ok){ var m = t2; try{ m = JSON.parse(t2).message || t2; }catch(_){}
-                     throw new Error(m); }
+        return r.json().catch(function(){ return null; }).then(function(j){
+          if(!r.ok) throw new Error((j && j.error) || "빼지 못했습니다.");
         });
       }).then(function(){
-        return draw(el, id).then(function(){ if(after) after(); });
+        return draw(el, id).then(function(){
+          if(wasRep) say("대표 사진을 뺐습니다 — 다음 사진이 대표가 되었습니다.");
+          if(after) after();
+        });
       }).catch(function(err){
         x.disabled = false;
         say(String((err && err.message) || "빼지 못했습니다."));

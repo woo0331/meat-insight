@@ -643,6 +643,27 @@ window.amPubUrl = function(conf, path){
   if(!path || !conf || !conf.pubBucket || !conf.url) return "";
   return conf.url + "/storage/v1/object/public/" + conf.pubBucket + "/" + path;
 };
+/* ── 매물 사진의 **작은 파일** (2026-11-17) ───────────────────────────
+   ⚠️⚠️ 작은 카드(목록 · 메인 · 관심상품)는 작은 파일, 상세는 큰 파일입니다. 작은 파일의 경로는
+   **큰 파일 경로에서 짓습니다**(`….jpg` → `….t.jpg` · api/upload.js 의 thumbPath 와 같은 규칙).
+   ⚠️ 작은 파일이 없는 사진(이 기능 전에 올린 것 · 작은 파일만 실패한 것)도 있으므로 `<img>` 에
+   `data-full` 을 같이 달고, 그림이 안 열리면 **큰 파일로 한 번** 바꿉니다(아래 듣는 자리 하나).
+   빈 칸으로 남기지 않습니다. */
+window.amLstThumb = function(conf, path){
+  var full = window.amPubUrl(conf, path);
+  if(!full) return { src: "", full: "" };
+  return { src: full.replace(/\.(jpg|png|webp)$/, ".t.jpg"), full: full };
+};
+(function(){
+  if(typeof document === "undefined" || window.__amThumbFall) return;
+  window.__amThumbFall = true;
+  document.addEventListener("error", function(e){
+    var im = e.target;
+    if(!im || im.tagName !== "IMG") return;
+    var f = im.getAttribute("data-full");
+    if(f && im.getAttribute("src") !== f){ im.removeAttribute("data-full"); im.src = f; }
+  }, true);
+})();
 /* ── 중고 가격대 (0056 · 2026-11-08) ────────────────────
    ⚠️⚠️ **경계는 아래를 닫고 위를 엽니다** (gte · lt) — 둘 다 닫으면
    딱 10만원짜리 매물이 두 칸에 다 걸립니다 (AM_TEE_BAND 와 같은 규칙).

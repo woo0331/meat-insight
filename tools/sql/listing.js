@@ -418,6 +418,32 @@ module.exports = function(T){
   const cOver = denied(claim(SEL, {}));
   ok("  ⚠️ 한 장 더는 막힌다", cOver.no, cOver.why);
 
+  /* ⚠️⚠️⚠️ 0084 — 자리를 청한 줄은 **서버가 파일을 확인하기 전까지** 공개되지 않습니다.
+     파일이 안 갔거나 브라우저를 안 지난 원본(위치정보가 그대로)이 claim 순간 나가던 자리입니다. */
+  const preN = psql(anon + "select count(*) from v_listing_photo_public where listing_id = '" + BID + "'");
+  const preT = psql(anon + "select coalesce(thumb,'(없음)') || '/' || photo_n from v_listing_open where id = '" + BID + "'");
+  ok("⚠️⚠️ 0084 — 저장 완료 전 사진은 공개 보기 · 목록 카드에 **안 나간다**",
+     preN === "0" && preT === "(없음)/0", preN + " · " + preT);
+  const stAuth = denied(as(SEL) + "select store_listing_photo(jsonb_build_object('id', (select id from listingphoto where listing_id = '" + BID + "' limit 1)))");
+  ok("  ⚠️⚠️ 「저장됨」은 **로그인한 회원이 못 적는다** (서버만 · 파일을 보고 나서)",
+     stAuth.no, stAuth.why);
+  const stAnon = denied(anon + "select store_listing_photo('{}'::jsonb)");
+  ok("  ⚠️ 비로그인도 못 부른다", stAnon.no, stAnon.why);
+  const oneId = psql("select id from listingphoto where listing_id = '" + BID + "' and stored_at is null limit 1");
+  const stSvc = allowed("set role service_role; select store_listing_photo(jsonb_build_object('id', '" + oneId + "')); reset role;");
+  ok("  서버(service_role)는 적을 수 있다 · 한 줄", stSvc.yes && /(^|\n)1(\n|$)/.test(stSvc.out), stSvc.out || stSvc.why);
+  psql("select store_listing_photo(jsonb_build_object('id', id)) from listingphoto where stored_at is null");
+  /* ⚠️⚠️ 0084 — **동시에** 청해도 한도를 못 넘습니다(매물 줄 잠금). 새 매물에 psql 여섯을 한꺼번에 띄웁니다. */
+  {
+    const CID = allowed(put(SEL, { title:"동시 요청 매물" })).out;
+    const one = as(SEL) + "select claim_listing_photo('" +
+      J({ listing:CID, mime:"image/jpeg", bytes:"1000" }) + "'::jsonb)";
+    T.psqlMany(one, CAP + 3);
+    const cc = psql("select count(*) from listingphoto where listing_id = '" + CID + "'");
+    ok("⚠️⚠️ 0084 — " + (CAP + 3) + "개를 **동시에** 청해도 " + CAP + "장을 못 넘는다 (매물 줄 잠금)",
+       cc === String(CAP), cc);
+  }
+
   /* ⚠️⚠️ 공개 목록이 **첫 장과 장수**를 같이 냅니다 — 안 내면 카드마다
      사진을 따로 물어보게 되어 스무 장이면 호출이 스무 번 늘고, 그동안
      카드가 비어 있어 "사진 없는 장터" 로 보입니다. */
@@ -463,6 +489,7 @@ module.exports = function(T){
   const LID2 = allowed(put(SEL, { title:"내릴 매물입니다" })).out;
   allowed(as(SEL) + "select claim_listing_photo('" +
     J({ listing:LID2, mime:"image/png", bytes:"1000" }) + "'::jsonb)");
+  psql("select store_listing_photo(jsonb_build_object('id', id)) from listingphoto where stored_at is null");
   const phWas = psql(anon + "select count(*) from v_listing_photo_public " +
     "where listing_id = '" + LID2 + "'");
   allowed(as(SEL) + "select close_listing('" + J({ id:LID2 }) + "'::jsonb)");
@@ -519,6 +546,7 @@ module.exports = function(T){
   ok("⚠️⚠️⚠️ 예약중도 **공개 목록에 남고 상태를 낸다**", resSeen === "reserved", resSeen);
   const resPh = allowed(as(SEL) + "select claim_listing_photo('" +
     J({ listing:RID, mime:"image/png", bytes:"1000" }) + "'::jsonb)");
+  psql("select store_listing_photo(jsonb_build_object('id', id)) from listingphoto where stored_at is null");
   ok("  ⚠️ 예약중 매물에도 **사진을 더할 수 있다**", resPh.yes, resPh.out || resPh.why);
   const resPub = psql(anon + "select count(*) from v_listing_photo_public " +
     "where listing_id = '" + RID + "'");
@@ -567,6 +595,7 @@ module.exports = function(T){
     J({ listing:OID, mime:"image/png", bytes:"1000" }) + "'::jsonb)").out);
   const p3 = JSON.parse(allowed(as(SEL) + "select claim_listing_photo('" +
     J({ listing:OID, mime:"image/png", bytes:"1000" }) + "'::jsonb)").out);
+  psql("select store_listing_photo(jsonb_build_object('id', id)) from listingphoto where stored_at is null");
   ok("⚠️ 올릴 때 차례가 **뒤에 붙는다** (0 으로 두면 올릴 때마다 대표가 바뀝니다)",
      p1.ord === 0 && p2.ord === 1 && p3.ord === 2,
      p1.ord + "," + p2.ord + "," + p3.ord);

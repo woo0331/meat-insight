@@ -738,6 +738,8 @@ module.exports = function(T){
     j({ listing:JL, mime:"image/png", bytes:"1000" }) + "'::jsonb)->>'id'");
   const JP2 = psql(as(JS2) + "select claim_listing_photo('" +
     j({ listing:JL, mime:"image/png", bytes:"1000" }) + "'::jsonb)->>'id'");
+  /* 0084 — 서버가 파일을 확인한 뒤의 상태로 둡니다 */
+  psql("select store_listing_photo(jsonb_build_object('id', id)) from listingphoto where stored_at is null");
   ok("J-5 사진 두 장을 붙인다",
      /^[0-9a-f-]{36}$/.test(JP1) && /^[0-9a-f-]{36}$/.test(JP2), JP1 + " / " + JP2);
   const TH1 = psql(anon + "select thumb from v_listing_open where id='" + JL + "'");

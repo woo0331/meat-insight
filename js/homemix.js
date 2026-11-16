@@ -47,12 +47,14 @@
 
   /* ── 중고 카드 — ⚠️ 사진이 없으면 아이콘 타일(남의 사진을 깔지 않습니다) ── */
   function usedCard(conf, l){
-    var src = W.amPubUrl && l.thumb ? W.amPubUrl(conf, l.thumb) : "";
+    /* 작은 카드라 **작은 파일** — 안 열리면 큰 파일로 (js/data/deal.js 의 amLstThumb) */
+    var tt = W.amLstThumb && l.thumb ? W.amLstThumb(conf, l.thumb) : { src: "", full: "" };
+    var src = tt.src;
     var price = W.amLstPrice ? W.amLstPrice(l.price) : "";
     var cond = W.amLstCondName ? W.amLstCondName(l.cond) : "";
     return '<li class="hm-mkc"><a href="' + esc(catUrl("used") + "?v=" + encodeURIComponent(String(l.id))) + '">' +
       '<span class="hm-mkc-ph">' + (src
-        ? '<img src="' + esc(src) + '" alt="" width="320" height="320" loading="lazy" decoding="async">'
+        ? '<img src="' + esc(src) + '" data-full="' + esc(tt.full) + '" alt="" width="320" height="320" loading="lazy" decoding="async">'
         : icon("bag", 32)) + '</span>' +
       '<span class="hm-mkc-b"><span class="hm-mkc-n">' + esc(l.title) + '</span>' +
         (price ? '<b class="hm-mkc-p">' + esc(price) + '</b>' : "") +

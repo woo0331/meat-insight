@@ -28,6 +28,7 @@ const FAKE = "https://sb-test.supabase.co";
 /* ── 가짜 Supabase ────────────────────────────────────────────────── */
 function stub(p, who, tables, rpcs, up){
   const sent = [];
+  stub._post = 0; stub._put = 0;
   return Promise.all([
     /* ⚠️⚠️ **버킷이 설정되기 전에는 `{up:false}` 입니다** — 그때는
        사진 칸이 **아예 안 그려져야** 합니다 (단추도 · "준비 중" 도
@@ -80,10 +81,24 @@ function stub(p, who, tables, rpcs, up){
          올리는 길이 **한 번도 안 돌고**, 그래도 상자는 그려지므로
          "눌러 보는 검사가 있다" 로 읽힙니다 (0051 에서 흉내가 `pvPhoto`
          를 안 줘서 상자가 아예 안 그려졌던 자리의 거울상입니다). */
+      /* ⚠️ 2026-11-17 — `up.postFail` 에 적은 차례(0부터)의 **매물 사진 자리 청하기**(lst:true) 는 **거절**합니다 —
+         사진이 가운데서 실패하는 길(다시 올리기)을 잽니다. 진짜 서버의 거절 꼴
+         (`{error}` · 400)과 같습니다. */
+      if(r.request().method() === "POST" &&
+         String(r.request().postData() || "").indexOf('"lst":true') >= 0){
+        const at = (stub._post = (stub._post || 0) + 1) - 1;
+        if(up && up.postFail && up.postFail.indexOf(at) >= 0)
+          return r.fulfill({ status:400, contentType:"application/json",
+            body: JSON.stringify({ error:"검사용으로 거절했습니다." }) });
+      }
       if(r.request().method() === "POST")
         return r.fulfill({ status:200, contentType:"application/json",
           body: JSON.stringify({ ok:true, id:"f-new",
-                                 url: FAKE + "/storage/v1/upload/sign/x" }) });
+                                 url: FAKE + "/storage/v1/upload/sign/x",
+                                 /* ⚠️ 2026-11-17 — 작은 사진(목록 카드용) 자리도 진짜처럼 냅니다
+                                    (화면이 tbytes 를 보냈을 때만 · api/upload.js 의 turl 과 같은 꼴) */
+                                 turl: /"tbytes":[1-9]/.test(String(r.request().postData() || ""))
+                                   ? FAKE + "/storage/v1/upload/sign/x-t" : "" }) });
       return r.fulfill({ status:200, contentType:"application/json",
                          body: JSON.stringify({ up:true, pvPhoto:true, pvDoc:true,
                                                 cqPhoto:true,
@@ -141,6 +156,17 @@ function stub(p, who, tables, rpcs, up){
          재는 쪽이 가릅니다. */
       sent.push({ name:"storage",
                   body: r.request().method() + " " + r.request().url() });
+      /* ⚠️ 2026-11-17 — 공개 사진 주소를 **읽으면 참 그림**(1×1 PNG)을 돌려줍니다. JSON 을 돌려주면
+         카드의 작은 사진이 "안 열림" 으로 읽혀 큰 사진으로 바뀌고, 검사가 바뀐 뒤의 주소를 읽습니다. */
+      if(r.request().method() === "GET" && r.request().url().indexOf("/object/public/") > 0)
+        return r.fulfill({ status:200, contentType:"image/png", body: Buffer.from(
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64") });
+      /* ⚠️ 2026-11-17 — `up.putFail` 에 적은 차례(0부터)의 PUT 은 실패로 돌려줍니다(파일이 안 간 길) */
+      if(r.request().method() === "PUT"){
+        const at = (stub._put = (stub._put || 0) + 1) - 1;
+        if(up && up.putFail && up.putFail.indexOf(at) >= 0)
+          return r.fulfill({ status:500, contentType:"application/json", body:"{}" });
+      }
       return r.fulfill({ status:200, contentType:"application/json",
                          body: JSON.stringify({ Key:"ok" }) });
     }),

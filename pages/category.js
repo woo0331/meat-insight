@@ -281,7 +281,7 @@ function usedHead(c){
       '업체로 이어 드립니다.</p>' +
       '<ul class="lshd-b">' +
         '<li><a href="#safe">' + icon("shield", 17) + '안전거래 가이드</a></li>' +
-        '<li><a href="#lsbox">' + icon("camera", 17) + '사진 열 장까지</a></li>' +
+        '<li><a href="#lsbox">' + icon("camera", 17) + '사진 다섯 장까지</a></li>' +
         '<li>' + icon("info", 17) + '골프올인원은 거래 당사자가 아닙니다</li>' +
       '</ul>' +
     '</div>' +

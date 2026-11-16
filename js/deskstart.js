@@ -54,9 +54,74 @@
       .catch(function(){ return false; });
   }
 
+  /* ── 처음 사용하시나요? (2026-11-17) ─────────────────────────────────
+     ⚠️⚠️ **이 업체가 하는 일(subs)에 맞는 차례만** 냅니다 — 부킹이 아닌 업체에게 「티타임
+     올리기」를 안내하면 없는 칸으로 보내는 꼴입니다. 줄마다 **이 화면의 실제 구간**으로
+     갑니다(#teebox · #triprobox · #deskbox · #pricebox · #mebox). 그 구간이 화면에 없으면
+     (그 분야가 아니라 안 그려졌으면) 그 줄을 빼고 냅니다.
+     ⚠️ 무료 · 수수료 · 처리 기간을 약속하지 않습니다. */
+  function firstUse(subs){
+    var has = function(pre){ return (subs || []).some(function(k){ return String(k).indexOf(pre) === 0; }); };
+    var rows = [];
+    rows.push(["업체 정보 · 영업 지역", "소개와 영업 지역을 채우시면 그 지역 요청이 배정됩니다.", "#mebox"]);
+    if(has("bk-")) rows.push(["티타임 올리기 → 마감", "날짜 · 시각 · 그린피를 올리시면 손님이 예약을 신청합니다. 들어온 신청을 보고 가능하면 확정, 어려우면 거절하시고, 다 찬 자리는 닫으십니다.", "#teebox"]);
+    if(has("tr-")) rows.push(["여행 상품 올리기 → 마감", "상품을 올리시면 운영자가 확인한 뒤 공개됩니다. 출발일을 마감하거나 상품을 내리실 수 있습니다.", "#triprobox"]);
+    rows.push(["가격 올리기", "하시는 일마다 가격을 올리시면 손님 카드에 나옵니다. 안 올리시면 그 줄이 빠집니다.", "#pricebox"]);
+    rows.push(["받은 요청 → 견적", "운영자가 배정한 요청을 수락하시고 견적을 내십니다. 손님이 고르시면 상담 일정을 잡습니다.", "#deskbox"]);
+    return rows.filter(function(r){ return document.getElementById(r[2].slice(1)); });
+  }
+  function firstHtml(rows){
+    if(!rows.length) return "";
+    return '<div class="dst-first"><h2 class="adm-h">' + icon("info", 19) + '처음 사용하시나요?</h2>' +
+      '<ol class="dst-l">' + rows.map(function(r){
+        return '<li class="dst-r dst-fr"><span class="dst-t"><b>' + esc(r[0]) + '</b>' +
+          '<span class="dst-d">' + esc(r[1]) + '</span></span>' +
+          '<a class="btn btn-sm btn-line dst-go" href="' + esc(r[2]) + '">바로 가기</a></li>';
+      }).join("") + '</ol>' +
+      '<p class="myhint">분야별 자세한 차례는 이용안내에, 막히시면 고객센터에 적어 주세요.</p>' +
+      '<p class="dst-more"><a class="btn btn-sm btn-line" href="/guide#pro">이용안내 보기</a> ' +
+      '<a class="btn btn-sm btn-line" href="/help">고객센터</a></p></div>';
+  }
+  var FIRST = "";
+  /* ── 접고 다시 여는 길 (2026-11-17) ──────────────────────────────
+     ⚠️⚠️ 「처음 사용하시나요?」를 **접을 수 있고, 접힌 뒤에도 「이용방법」 단추로 다시 엽니다.**
+     할 일을 다 마치신 분께는 처음부터 접혀 있습니다(치우지 못하는 잔소리를 남기지 않습니다) —
+     그래도 단추 하나는 남겨 두어, 나중에 차례를 다시 보실 길이 끊기지 않게 합니다.
+     접은 것은 이 브라우저에만 기억합니다(localStorage · 서버에 안 보냅니다). */
+  var FOLD_KEY = "dst.fold";
+  function folded(){ try{ return localStorage.getItem(FOLD_KEY) === "1"; }catch(e){ return false; } }
+  function setFold(v){ try{ if(v) localStorage.setItem(FOLD_KEY, "1"); else localStorage.removeItem(FOLD_KEY); }catch(e){} }
+  function openBtn(){
+    return '<p class="dst-again"><button type="button" class="btn btn-sm btn-line dst-open" ' +
+      'aria-expanded="false">' + icon("info", 17) + '이용방법</button></p>';
+  }
+  function foldBtn(){
+    return '<p class="dst-more"><button type="button" class="btn btn-sm btn-line dst-fold" ' +
+      'aria-expanded="true">이 안내 접기</button></p>';
+  }
+  var LAST = [];
+  box.addEventListener("click", function(e){
+    var t = e.target && e.target.closest ? e.target : null;
+    if(!t) return;
+    if(t.closest(".dst-open")){ setFold(false); OPEN = true; paint(LAST); focusFirst(); return; }
+    if(t.closest(".dst-fold")){ setFold(true); OPEN = false; paint(LAST);
+      var b = box.querySelector(".dst-open"); if(b) b.focus(); }
+  });
+  function focusFirst(){ var h = box.querySelector(".dst-first h2"); if(h){ h.tabIndex = -1; h.focus(); } }
+  var OPEN = false;
+  function guide(todo){
+    if(!FIRST) return "";
+    /* 할 일이 남았으면 펼쳐 두는 것이 기본 · 다 하셨으면 접힌 것이 기본 · 손으로 고른 것이 이깁니다 */
+    var show = OPEN || (todo.length && !folded());
+    return show ? FIRST.slice(0, -6) + foldBtn() + '</div>' : openBtn();   /* FIRST 는 '</div>' 로 끝납니다 */
+  }
   function paint(todo){
-    /* ⚠️⚠️ 할 일이 없으면 **한 줄도** 안 그립니다 (위 머리말) */
-    if(!todo.length){ box.hidden = true; box.innerHTML = ""; return; }
+    LAST = todo;
+    /* ⚠️⚠️ 할 일이 없으면 「먼저 하실 것」은 안 그리고, 이용방법은 **접힌 단추 하나**만 남깁니다 */
+    if(!todo.length){
+      if(!FIRST){ box.hidden = true; box.innerHTML = ""; return; }
+      box.className = "deskbox dst"; box.hidden = false; box.innerHTML = guide(todo); return;
+    }
 
     box.className = "deskbox dst";
     box.hidden = false;
@@ -73,7 +138,7 @@
             '<span class="dst-d">' + esc(t.why) + '</span></span>' +
           '<a class="btn btn-sm btn-line dst-go" href="' + esc(t.go) + '">' +
             esc(t.cta) + '</a></li>';
-      }).join("") + '</ul>';
+      }).join("") + '</ul>' + guide(todo);
   }
 
   function load(){
@@ -85,6 +150,7 @@
       bucketOn()
     ]).then(function(r){
       var p = (r[0] && r[0][0]) || {};
+      FIRST = firstHtml(firstUse(p.subs));
       var hasContact = !!(r[1] && r[1].length);
       var hasPrice   = !!(r[2] && r[2].length);
       var photoOn    = r[3];

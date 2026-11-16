@@ -2,7 +2,7 @@
 -- db/audit.sql — **운영 DB 가 정말 올라갔는지** 대조합니다
 --
 -- ⚠️⚠️⚠️ **빌드가 만드는 파일입니다 — 손으로 고치지 마세요.**
---   (node tools/make-audit.js · 마이그레이션 82개에서 읽었습니다)
+--   (node tools/make-audit.js · 마이그레이션 83개에서 읽었습니다)
 --
 -- ⚠️⚠️ **`select max(n) from schema_version` 하나로 판정하지 않습니다.**
 --   그 표는 마이그레이션 파일이 **스스로 적는** 줄입니다 — 중간에서
@@ -16,13 +16,13 @@
 -- ① 판 번호와 **빠진 번호** ─────────────────────────────────────────
 select '① 판 번호' as 항목,
        coalesce(max(n), 0)::text as 값,
-       case when coalesce(max(n), 0) >= 82 then '✅' else '❌ 82 보다 낮습니다' end as 결과
+       case when coalesce(max(n), 0) >= 83 then '✅' else '❌ 83 보다 낮습니다' end as 결과
   from schema_version;
 
 select '① 빠진 번호' as 항목,
        coalesce(string_agg(g::text, ', ' order by g), '(없음)') as 값,
        case when count(*) = 0 then '✅' else '❌ 그 번호를 따로 돌리세요' end as 결과
-  from generate_series(1, 82) g
+  from generate_series(1, 83) g
  where not exists (select 1 from schema_version v where v.n = g);
 
 -- ② 표가 다 있나 ─────────────────────────────────────────────────

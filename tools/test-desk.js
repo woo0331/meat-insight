@@ -4450,6 +4450,18 @@ function boardsOf(){
          q5.indexOf("or=") >= 0 &&
          q5.indexOf(encodeURIComponent("title.ilike")) >= 0 &&
          q5.indexOf(encodeURIComponent("course.ilike")) >= 0, q5.slice(0, 240));
+      /* ⚠️⚠️ 2026-11-17 — 찾는 칸에서 **엔터**(폰의 「검색」 키)를 눌러도 화면이 새로
+         열리며 조건이 사라지지 않아야 합니다(전에는 양식이 그대로 보내져 전부 날아갔습니다) */
+      await g.p.selectOption("#jf-rg", "gangwon");
+      await g.p.waitForTimeout(250);
+      await g.p.fill("#jf-q", "남서울");
+      await g.p.press("#jf-q", "Enter");
+      await g.p.waitForTimeout(500);
+      const ent = { url: g.p.url(), rg: await g.p.inputValue("#jf-rg"), q: await g.p.inputValue("#jf-q") };
+      ok("  찾는 칸에서 엔터를 눌러도 지역 · 찾는 말이 **주소와 칸에 남는다**",
+         ent.rg === "gangwon" && ent.q === "남서울" &&
+         ent.url.indexOf("rg=gangwon") >= 0 && ent.url.indexOf("q=") >= 0, JSON.stringify(ent));
+      await g.p.selectOption("#jf-rg", "");
       /* 되돌려 놓습니다 — ⚠️ 앞 검사가 만든 상태를 뒤 검사가 물려받습니다 */
       await g.p.selectOption("#jf-lv", "");
       await g.p.selectOption("#jf-pp", "");

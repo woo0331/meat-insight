@@ -500,7 +500,9 @@
   }
 
   function go(f, push){
-    if(push){ try{ history.pushState({ trip:1 }, "", urlOf(f)); }catch(e){} }
+    /* ⚠️ 같은 주소면 기록을 늘리지 않습니다(2026-11-17) */
+    var nu = urlOf(f);
+    if(push && nu !== location.pathname + location.search){ try{ history.pushState({ trip:1 }, "", nu); }catch(e){} }
     paint();
   }
   function fromForm(){

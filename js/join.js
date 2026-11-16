@@ -113,6 +113,18 @@
   function bindBar(a){
     var box = document.getElementById("jnfilbox");
     if(!box) return;
+    /* ⚠️⚠️ 2026-11-17 — 찾는 칸에서 **엔터(폰의 「검색」 키)** 를 누르면 이 양식(#jnfil)이
+       그대로 보내져 주소가 `/cat/matchup?` 로 바뀌고 고른 지역 · 찾는 말이 **전부
+       사라졌습니다**(칸에 name 이 없어 아무것도 안 실립니다). 보내기를 가로채 지금 칸의
+       값으로 거릅니다 — 조건은 그대로 주소에 남습니다. */
+    box.addEventListener("submit", function(e){
+      if(!e.target || e.target.id !== "jnfil") return;
+      e.preventDefault();
+      var q = document.getElementById("jf-q");
+      F.q = String((q && q.value) || "").trim().slice(0, 30);
+      writeUrl();
+      reload(a);
+    });
     box.addEventListener("change", function(e){
       var t = e.target;
       if(!t || !t.id) return;

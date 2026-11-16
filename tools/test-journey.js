@@ -1056,6 +1056,26 @@ const MY_BOXES = ["mybox", "reqbox", "joinmine", "lsmine", "mycq", "jobmine",
     }
   }
 
+  /* ── 같은 조건을 두 번 보내도 「뒤로」 한 번에 처음 주소로 (2026-11-17) ───────
+     ⚠️ 전에는 같은 주소가 기록에 두 번 쌓여 「뒤로」를 눌러도 화면이 그대로였습니다. */
+  {
+    console.log("\n── 같은 조건 두 번 → 뒤로 한 번");
+    for(const pair of [["/cat/lesson","#lsn-o"],["/cat/range","#rng-rg"],["/cat/market","#mk-o"],["/cat/fitting","#fit-o"]]){
+      const p = await b.newPage({ viewport:{ width:390, height:900 } });
+      await p.goto(base + pair[0], { waitUntil:"networkidle" });
+      const v = await p.evaluate(function(s){ const el = document.querySelector(s); return el && el.options.length > 2 ? el.options[2].value : ""; }, pair[1]);
+      if(!v){ ok(pair[0] + " — 고르개가 있다 (잴 것이 0개면 실패)", false); await p.close(); continue; }
+      await p.selectOption(pair[1], v);
+      for(let i = 0; i < 2; i++){
+        await p.evaluate(function(s){ const f = document.querySelector(s).form; const bt = f && f.querySelector('button[type=submit]'); if(bt) bt.click(); }, pair[1]);
+        await p.waitForTimeout(300);
+      }
+      await p.goBack({ waitUntil:"networkidle" }).catch(function(){});
+      ok(pair[0] + " — 같은 조건을 두 번 보내도 「뒤로」 한 번에 처음 주소", new URL(p.url()).search === "", p.url());
+      await p.close();
+    }
+  }
+
   if(prove){
     console.log("\n── ⚠️ 일부러 깨뜨려 봅니다");
     ok("없는 주소를 **안 열린다고** 말한다", !resolves("/이런주소는없습니다"));

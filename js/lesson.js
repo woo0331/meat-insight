@@ -257,7 +257,9 @@
 
   function go(f, push){
     var u = urlOf(f);
-    if(push){ try{ history.pushState({ lsn:1 }, "", u); }catch(e){} }
+    /* ⚠️ 같은 주소면 기록을 늘리지 않습니다 — 같은 조건을 다시 보내면 「뒤로」를 눌러도
+       화면이 그대로인 것처럼 보였습니다(2026-11-17) */
+    if(push && u !== location.pathname + location.search){ try{ history.pushState({ lsn:1 }, "", u); }catch(e){} }
     paint();
     /* ⚠️ 목록 머리로 올립니다 — 안 올리면 거르개를 누른 자리에 그대로
        있어 "아무 일도 안 일어났다" 로 보입니다. */

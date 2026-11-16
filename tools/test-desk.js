@@ -5221,6 +5221,101 @@ function boardsOf(){
     await g.p.close();
   }
 
+  /* ── 메인 → 부킹 · 장터 · 조인 · 질문 (2026-11-17 · 실제 사용 흐름) ─────────
+     ⚠️⚠️ 흉내 서버로 **브라우저 동작**을 잽니다 — DB 조회가 된다는 것과 화면이 그것을
+     맞게 그리는 것은 다른 자물쇠입니다. 0건 · 조회 실패 · 자료 있음을 **갈라서** 봅니다. */
+  {
+    console.log("\n── 메인 → 부킹 목록 (지역 · 골프장 · 날짜 · 시간대가 실제 조건으로)");
+    const W0 = { role:"customer", name:"손님", signedIn:true };
+    const g = await open("/", W0, { v_listing_open:[], v_join_open:[], v_cq_public:[] }, {}, true);
+    const pick = await g.p.evaluate(function(){
+      const keys = window.amZoneRegions("jeju").length ? window.amZoneRegions("jeju") : ["jeju"];
+      const c = window.amCourseList("golf").filter(function(x){ return x.state === "open" && keys.indexOf(x.region) >= 0; })[0];
+      const b = (window.AM_TEE_BAND || [])[1];
+      return { slug: c && c.slug, band: b && b.key };
+    });
+    ok("제주 골프장 · 시간대 자료가 있다 (잴 것이 0개면 실패)", !!pick.slug && !!pick.band, JSON.stringify(pick));
+    await g.p.selectOption("#hm-rg", "jeju");
+    await g.p.selectOption("#hm-cs", pick.slug);
+    const day = await g.p.evaluate(function(){ const b = document.querySelectorAll("[data-hmday]")[2]; b.click(); return b.getAttribute("data-hmday"); });
+    await g.p.selectOption("#hm-t", pick.band);
+    await Promise.all([ g.p.waitForURL(/\/cat\/booking/), g.p.click(".hm-go") ]);
+    await g.p.waitForTimeout(600);
+    const q = g.sent.filter(function(x){ return x.name === "GET" && String(x.body).indexOf("v_teetime_open") >= 0; })
+               .map(function(x){ return decodeURIComponent(String(x.body)); }).join(" | ");
+    ok("⚠️⚠️ 골프장 · 날짜 · 시간대 · 지역이 **부킹 목록의 서버 질의**까지 간다",
+       q.indexOf("course_slug=eq." + pick.slug) >= 0 && q.indexOf("play_at=eq." + day) >= 0 &&
+       q.indexOf("tee_at=gte.") >= 0 && q.indexOf("region=in.") >= 0, q.slice(0, 300));
+    const lg = await g.p.evaluate(function(){
+      const a = Array.prototype.slice.call(document.querySelectorAll('a[href^="/login"]')).map(function(x){ return x.getAttribute("href"); });
+      return a;
+    });
+    ok("  로그인 길이 생기면 **지금 조건을 들고** 돌아온다 (next 에 cs · d)",
+       lg.length === 0 || lg.some(function(h){ const n = decodeURIComponent(h); return n.indexOf("cs=" + pick.slug) >= 0 && n.indexOf("d=" + day) >= 0; }),
+       lg.join(" "));
+    await g.p.goBack({ waitUntil:"networkidle" });
+    ok("뒤로 가기로 메인에 오면 조건이 그대로다",
+       (await g.p.inputValue("#hm-rg")) === "jeju" && (await g.p.inputValue("#hm-cs")) === pick.slug &&
+       (await g.p.inputValue("#hm-t")) === pick.band);
+    /* 골프장 안 고르면 지역 전체 */
+    await g.p.selectOption("#hm-cs", "");
+    await Promise.all([ g.p.waitForURL(/\/cat\/booking/), g.p.click(".hm-go") ]);
+    ok("골프장을 안 고르면 **지역 전체** (cs 를 안 보낸다)",
+       new URL(g.p.url()).searchParams.get("cs") === null && new URL(g.p.url()).searchParams.get("rg") === "jeju", g.p.url());
+    ok("  오류 0건", g.errs.length === 0, g.errs.join(" | "));
+    await g.p.close();
+
+    console.log("\n── 메인 미리보기 — 자료 있음 · 0건 · 조회 실패");
+    const L = [{ id:"11111111-aaaa-bbbb-cccc-000000000001", title:"<b>아이언</b> 세트", price:350000, cond:"good", thumb:null, state:"open" },
+               { id:"11111111-aaaa-bbbb-cccc-000000000002", title:"퍼터", price:0, cond:"like", thumb:null, state:"open" }];
+    const J = [{ id:"j1", title:"토요일 오전 한 분", region:"gyeonggi", play_at:"2026-11-21", course:"어느CC" }];
+    const Q = [{ id:"22222222-aaaa-bbbb-cccc-000000000001", title:"첫 클럽 무엇이 좋을까요", created_at:"2026-11-16T01:00:00Z" }];
+    const h = await open("/", W0, { v_listing_open:L, v_join_open:J, v_cq_public:Q }, {}, true);
+    await h.p.waitForTimeout(500);
+    const r = await h.p.evaluate(function(){
+      const used = document.getElementById("hm-mk-used");
+      return { n: used.querySelectorAll(".hm-mkc").length,
+               href: Array.prototype.map.call(used.querySelectorAll(".hm-mkc a"), function(a){ return a.getAttribute("href"); }),
+               html: used.innerHTML, txt: used.innerText,
+               jn: Array.prototype.map.call(document.querySelectorAll("#hm-jn a"), function(a){ return a.getAttribute("href"); }),
+               qa: Array.prototype.map.call(document.querySelectorAll("#hm-qa a"), function(a){ return a.getAttribute("href"); }) };
+    });
+    const sq = h.sent.filter(function(x){ return x.name === "GET"; }).map(function(x){ return decodeURIComponent(String(x.body)); });
+    ok("중고는 **판매중만** 묻는다 (state=eq.open)", sq.some(function(s){ return s.indexOf("v_listing_open") >= 0 && s.indexOf("state=eq.open") >= 0; }));
+    ok("질문은 **질문 게시판만** 묻는다 (cat=eq.cm-ask)", sq.some(function(s){ return s.indexOf("v_cq_public") >= 0 && s.indexOf("cat=eq.cm-ask") >= 0; }));
+    ok("중고 카드가 실제 상세로 간다 (?v=id)", r.n === 2 && r.href[0].indexOf("/cat/used?v=11111111-aaaa-bbbb-cccc-000000000001") === 0, r.href.join(" "));
+    ok("  매물 제목은 esc() 를 지난다", r.html.indexOf("<b>아이언</b>") < 0);
+    ok("  0원은 「무료로 나눔」이지 0원이 아니다 · 사진이 없으면 아이콘", r.txt.indexOf("0원") < 0 || r.txt.indexOf("나눔") >= 0, r.txt.slice(0, 120));
+    ok("조인은 그 지역 · 날짜의 목록으로 간다", r.jn.length === 1 && r.jn[0].indexOf("rg=gyeonggi") >= 0 && r.jn[0].indexOf("d=2026-11-21") >= 0, r.jn.join(" "));
+    ok("질문은 그 글로 간다 (?q=id)", r.qa.length === 1 && r.qa[0].indexOf("?q=22222222-aaaa-bbbb-cccc-000000000001") >= 0, r.qa.join(" "));
+    ok("  오류 0건", h.errs.length === 0, h.errs.join(" | "));
+    await h.p.close();
+
+    const z = await open("/", W0, { v_listing_open:[], v_join_open:[], v_cq_public:[] }, {}, true);
+    await z.p.waitForTimeout(500);
+    const zt = await z.p.evaluate(function(){ return [document.getElementById("hm-mk-used").innerText, document.getElementById("hm-jn").innerText, document.getElementById("hm-qa").innerText].join(" | "); });
+    ok("0건이면 「아직 … 없습니다」와 올리는 길을 낸다 (실패라고 하지 않는다)",
+       /아직 판매 중인 중고 매물이 없습니다/.test(zt) && /지금 모집 중인 조인이 없습니다/.test(zt) && /아직 올라온 질문이 없습니다/.test(zt) && zt.indexOf("불러오지 못했습니다") < 0, zt);
+    await z.p.close();
+
+    const f = await open("/", W0, { v_listing_open:null, v_join_open:null, v_cq_public:null }, {}, true);
+    await f.p.waitForTimeout(500);
+    const ft = await f.p.evaluate(function(){ return [document.getElementById("hm-mk-used").innerText, document.getElementById("hm-jn").innerText, document.getElementById("hm-qa").innerText].join(" | "); });
+    ok("조회 실패는 「불러오지 못했습니다 — 0건이라는 뜻이 아닙니다」 (0건이라고 하지 않는다)",
+       (ft.match(/불러오지 못했습니다/g) || []).length === 3 && ft.indexOf("없습니다.") < 0, ft);
+    await f.p.close();
+
+    const s = await open("/", W0, {}, {}, true);
+    const cards = await s.p.evaluate(function(){
+      return Array.prototype.map.call(document.querySelectorAll(".hm-sv"), function(a){ return a.getAttribute("href"); }).join(" ") +
+        " | " + document.querySelector('[data-mktab="used"]').getAttribute("href") + " " +
+        document.querySelector('[data-mktab="new"]').getAttribute("href");
+    });
+    ok("레슨 · 피팅 · 여행 카드와 중고 · 새상품 탭이 그 분류 화면으로 간다",
+       /\/cat\/lesson .*\/cat\/fitting .*\/cat\/travel \| \/cat\/used \/cat\/market/.test(cards), cards);
+    await s.p.close();
+  }
+
   /* ── 메인에서 고른 골프장(cs · 2026-11-16) — 실제 필터까지 이어지는가 ──────
      ⚠️⚠️ 이름이 아니라 **고유 주소(slug)** 로 서버가 거릅니다(v_teetime_open 의
      course_slug). 모르는 값은 빼고 그 자리에서 말합니다(영원히 0건인 화면 금지). */

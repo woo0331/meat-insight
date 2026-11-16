@@ -183,6 +183,18 @@
   form.addEventListener("change", save);
   form.addEventListener("input", save);
   form.addEventListener("submit", save);
+  /* ⚠️ 빈 칸은 **보내지 않습니다** — 「골프장 안 고름 · 전체 시간」이 주소에 `cs=` · `t=`
+     빈 값으로 남으면 받는 쪽은 무시하지만 주소를 복사해 보낼 때 뜻이 흐려집니다.
+     보내는 꾸러미는 이 처리기가 끝난 **뒤에** 만들어지므로 여기서 잠깐 끄고, 다음
+     차례에 되살립니다(뒤로 가기로 돌아오셨을 때 꺼진 채 남지 않게 pageshow 에서도). */
+  form.addEventListener("submit", function(){
+    var off = [];
+    form.querySelectorAll("select[name], input[name]").forEach(function(el){
+      if(!el.disabled && el.type !== "hidden" && !String(el.value || "").trim()){ el.disabled = true; off.push(el); }
+    });
+    setTimeout(function(){ off.forEach(function(el){ el.disabled = false; }); setMode(MODE); }, 0);
+  });
+  window.addEventListener("pageshow", function(){ setMode(MODE); });
 
   band();
   var start = restore();

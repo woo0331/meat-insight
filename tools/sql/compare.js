@@ -243,6 +243,32 @@ module.exports = function(T){
   ok("  다른 업체는 그동안 연락처를 한 번도 못 읽었다",
      last(psql(as(PA) + "select count(*) from v_request_contact where id = '" + R4 + "';" + back)) === "0");
 
+  /* ── 늦은 응답 · 선택 뒤 취소 (2026-11-17) ─────────────────────────── */
+  console.log("\n── 늦은 응답 · 선택 뒤 취소");
+  const no5 = last(psql(req(CUS, "010-7000-0505")));
+  const R5 = psql("select id from request where no = '" + no5 + "'");
+  ["cq-a","cq-b"].forEach(pv => psql(as(STF) + "select assign_more(jsonb_build_object('request','" + R5 + "','provider','" + pv + "'));" + back));
+  psql(as(PA) + "select answer_compare(jsonb_build_object('request','" + R5 + "','yes',true));" + back);
+  psql(as(PA) + "select submit_compare_quote(jsonb_build_object('request','" + R5 +
+    "','kind','estimate','amount',250000,'scope','6회','validTo','" + plus7 + "'));" + back);
+  psql(as(CUS) + "select pick_quote(jsonb_build_object('request','" + R5 + "','provider','cq-a','share',true));" + back);
+  const lateAns = allowed(as(PB) + "select answer_compare(jsonb_build_object('request','" + R5 + "','yes',true));" + back);
+  const lateQ = denied(as(PB) + "select submit_compare_quote(jsonb_build_object('request','" + R5 +
+    "','kind','fixed','amount',200000,'scope','6회','validTo','" + plus7 + "'));" + back);
+  ok("손님이 고른 뒤 늦게 온 업체는 견적을 못 낸다", lateQ.no && /이미 상담할 업체/.test(why(lateQ)), why(lateQ) + " / 답:" + lateAns.yes);
+  ok("  늦은 업체는 연락처 0줄", last(psql(as(PB) + "select count(*) from v_request_contact where id = '" + R5 + "';" + back)) === "0");
+  ok("고른 업체는 연락처를 읽는다 (취소 전)", last(psql(as(PA) + "select count(*) from v_request_contact where id = '" + R5 + "';" + back)) === "1");
+  const cx = allowed(as(CUS) + "select cancel_request(jsonb_build_object('request','" + R5 + "','why','다른 곳에서 해결'));" + back);
+  ok("손님이 요청을 취소한다", cx.yes && psql("select state from request where id = '" + R5 + "'") === "lost", why(cx));
+  ok("  ⚠️⚠️ 취소하면 **고른 업체도** 그 순간 연락처 0줄", last(psql(as(PA) + "select count(*) from v_request_contact where id = '" + R5 + "';" + back)) === "0");
+  const afterCx = denied(as(PA) + "select move_state('" + R5 + "','nego','{}'::jsonb);" + back);
+  ok("  취소된 요청은 업체가 다음 단계로 못 옮긴다", afterCx.no, why(afterCx));
+  const re = denied(as(STF) + "select assign_more(jsonb_build_object('request','" + R5 + "','provider','cq-b'));" + back);
+  ok("  취소된 요청에는 업체를 더 배정하지 않는다", re.no, why(re));
+  ok("  ⚠️ 기록은 지우지 않는다 (견적 · 배정 · 동의 시각이 남는다)",
+     psql("select count(*) from quote where request_id = '" + R5 + "'") === "1" &&
+     psql("select count(*) from assignment where request_id = '" + R5 + "' and agree3rd_at is not null") === "1");
+
   /* ── 단계 사이 — 0082 만 올라가고 0083 은 아직인 운영 ─────────────────
      ⚠️⚠️ 그 사이에도 **스위치가 꺼진 지금 화면**이 그대로 돌아야 하고(표에서
      연락처를 묻습니다), 비교 배정은 서버가 막아야 합니다. 0083 전 상태를 표 단위

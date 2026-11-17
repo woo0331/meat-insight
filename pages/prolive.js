@@ -18,7 +18,7 @@ exports.build = function(){
     '<p class="pghd-l">새로 등록된 업체를 바로 보여 드리는 자리입니다. 업체 정보를 불러오는 중입니다…</p>' +
     '</div></section>' +
     '<section class="sec"><div class="wrap"><div class="none">' +
-    '<h3>업체가 보이지 않으면 업체찾기에서 찾아보세요.</h3>' +
+    '<h2>업체가 보이지 않으면 업체찾기에서 찾아보세요.</h2>' +
     '<p>주소가 바뀌었거나 그 업체가 지금 공개되어 있지 않을 수 있습니다.</p>' +
     '<div class="none-b"><a class="btn btn-pt" href="/search">업체찾기</a>' +
     '<a class="btn btn-line" href="/match">견적 · 매칭 요청</a></div>' +

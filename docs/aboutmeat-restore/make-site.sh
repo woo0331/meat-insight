@@ -13,6 +13,8 @@ for f in index.html meat_insight_apply.html meat_insight_calculator.html meat_in
   perl -0pi -e 's/(<meta charset="?UTF-8"?\s*\/?>)/$1\n<meta name="robots" content="noindex,nofollow"\/>\n<script src="\/test-guard.js"><\/script>/i' "$OUT/$f"
   grep -q test-guard "$OUT/$f" || { echo "끼우지 못했습니다: $f"; exit 1; }
 done
+# 테스트 사이트 전용 화면 수정 (커뮤니티 예시 글 · 고정 시세 숨김 · 폰 머리말)
+node "$(dirname "$0")/patch-test.js" "$OUT/meat_insight_main.html"
 cat > "$OUT/test-guard.js" <<'GUARD'
 /* ABOUTMEAT 복구 테스트 사이트 전용 — 운영 데이터에 아무것도 쓰지 않게 막습니다.
    1) Supabase 로 가는 GET/HEAD 가 아닌 요청(등록·수정·삭제)을 보내지 않고 거절합니다.
@@ -48,7 +50,14 @@ cat > "$OUT/test-guard.js" <<'GUARD'
     b.setAttribute("role", "status");
     b.style.cssText = "position:fixed;left:0;right:0;bottom:0;z-index:2147483647;background:#7a1020;color:#fff;font:600 13px/1.4 sans-serif;padding:8px 12px;text-align:center";
     document.body.appendChild(b);
-    document.body.style.paddingBottom = "40px";
+    // 폰 아래 탭(.bottom-nav)이 있으면 그 위에 띄웁니다 — 탭을 덮지 않게
+    function place(){
+      var t = document.querySelector(".bottom-nav"), h = 0;
+      if (t && getComputedStyle(t).display !== "none") h = t.getBoundingClientRect().height;
+      b.style.bottom = h + "px";
+      document.body.style.paddingBottom = (h + b.offsetHeight) + "px";
+    }
+    place(); window.addEventListener("resize", place);
   });
 })();
 GUARD

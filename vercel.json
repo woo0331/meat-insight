@@ -2,196 +2,17 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "redirects": [
-    {
-      "source": "/home",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/partners",
-      "destination": "/join",
-      "permanent": true
-    },
-    {
-      "source": "/faq",
-      "destination": "/help",
-      "permanent": true
-    }
+    { "source": "/home", "destination": "/", "permanent": true },
+    { "source": "/closing", "destination": "/closure", "permanent": true },
+    { "source": "/acquisition", "destination": "/transfer", "permanent": true },
+    { "source": "/companies", "destination": "/providers", "permanent": true },
+    { "source": "/companies/sample-interior", "destination": "/sample", "permanent": true },
+    { "source": "/companies/:cat", "destination": "/providers/:cat", "permanent": true },
+    { "source": "/guides", "destination": "/content", "permanent": true },
+    { "source": "/guides/:slug", "destination": "/content", "permanent": true },
+    { "source": "/partners", "destination": "/join", "permanent": true }
   ],
-  "rewrites": [
-    {
-      "source": "/startup",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/closure",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/operation",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/transfer",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/providers",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/franchise",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/stores",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/assets",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/support",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/content",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/sell-biz",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/tools",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/about",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/compare",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/sample",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/closing",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/acquisition",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/companies",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/guides",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/startup/:p*",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/closure/:p*",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/providers/:p*",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/franchise/:p*",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/content/:p*",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/tools/:p*",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/companies/:p*",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/guides/:p*",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/g/:p*",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/c/:p*",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/p/:p*",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/f/:p*",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/s/:p*",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/a/:p*",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/sell",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/shop",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/repair",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/price",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/mvno",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/bid",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/track",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/biz",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/business",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/quote",
-      "destination": "/api/gone"
-    }
-  ],
+  "rewrites": [],
   "headers": [
     {
       "source": "/(.*)\\.(css|js)",
@@ -245,7 +66,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; img-src 'self' data: blob: https://*.supabase.co; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://*.supabase.co"
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self'"
         }
       ]
     }

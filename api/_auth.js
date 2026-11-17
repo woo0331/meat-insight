@@ -33,25 +33,9 @@ function env(name){
   return (typeof v === "string" && v.trim()) ? v.trim() : "";
 }
 
-/* 로그인에 꼭 있어야 하는 이름 — **여기 한 곳**입니다.
-   ⚠️ 이름을 늘리시는 날 `authReady()` 도 `authMissing()` 도 같이
-   따라옵니다 (두 곳에 적으면 한쪽만 고치는 날 어긋납니다). */
-const AUTH_ENV = ["SUPABASE_URL", "SUPABASE_ANON_KEY"];
-
 /* 로그인이 설정되어 있는가 */
 function authReady(){
-  return authMissing().length === 0;
-}
-
-/* 비어 있는 **이름**만 돌려줍니다 — 값은 한 글자도 담지 않습니다.
-   ⚠️⚠️ **2026-11-09 에 더했습니다.** 그 전에는 설정이 안 됐다는 것만
-   알 수 있고 **둘 중 어느 것이 비었는지 알 길이 없어서**, 사장님이
-   Vercel 에 넣고 다시 배포해도 화면이 그대로일 때 짐작만 오갔습니다
-   (철자가 틀렸나 · Production 에 체크를 안 했나 · 다른 프로젝트인가).
-   ⚠️ 이름은 비밀이 아닙니다 — `auth:false` 가 이미 "설정이 안 됐다" 를
-   말하고 있고, 여기서 **값 · 키는 여전히 한 글자도 안 나갑니다**. */
-function authMissing(){
-  return AUTH_ENV.filter(function(n){ return !env(n); });
+  return !!(env("SUPABASE_URL") && env("SUPABASE_ANON_KEY"));
 }
 
 function base(){
@@ -128,26 +112,6 @@ async function roleOf(token, sub){
 }
 
 /* 한 번에 — 화면이 보낸 요청에서 "누구이고 무슨 역할인가" 까지 */
-/* ⚠️⚠️ **역할(role)과 능력(hat)은 다른 것입니다** — 0025 머리말을 보세요.
-   role 은 권한(customer · provider · staff · admin), hat 은 능력
-   (seller · pro · biz) 입니다. 화면이 둘을 섞으면 "프로로 등록" 이
-   권한을 올리는 길처럼 보이게 됩니다.
-
-   ⚠️ 손님의 토큰으로 읽습니다 — RLS 가 **자기 것만** 돌려줍니다.
-   service key 로 읽으면 RLS 를 통째로 지나가므로 쓰지 않습니다.
-   ⚠️ 못 읽으면 **빈 배열**입니다 (fail-closed). 없는 능력을 있다고
-   읽으면 그 한 줄이 사고입니다. */
-async function hatsOf(token){
-  const r = await fetchWithTimeout(
-    base() + "/rest/v1/account_hat?select=hat",
-    { method:"GET",
-      headers:{ "apikey": env("SUPABASE_ANON_KEY"),
-                "authorization": "Bearer " + token } });
-  if(!r.ok || !Array.isArray(r.data)) return [];
-  return r.data.map(function(x){ return x.hat; })
-               .filter(Boolean).sort();
-}
-
 async function session(req){
   if(!authReady()) return { ok:false, why:"nowhere" };
   const token = bearer(req);
@@ -155,9 +119,8 @@ async function session(req){
   const w = await whoami(token);
   if(!w.ok) return w;
   const a = await roleOf(token, w.sub);
-  const hats = await hatsOf(token);
   return { ok:true, token:token, sub:w.sub, email:w.email,
-           role:a.role, provider_id:a.provider_id, name:a.name, hats:hats };
+           role:a.role, provider_id:a.provider_id, name:a.name };
 }
 
 /* 운영자에게 할 말 (절대 규칙 3 — 손님 화면에 찍지 않습니다) */
@@ -183,27 +146,10 @@ function authWhy(reason){
    `select=*` 를 쓰지 않는 것과 같은 까닭).
    ⚠️ `tools/test-auth.js` 가 **답 어디에도 service key 가 없는지**
    봅니다. */
-/* ⚠️⚠️ **2026-11-07 — 칸 하나를 더했습니다 (`pubBucket`).** 0064 의
-   광고 소재는 **공개 버킷**에 들어가고, 브라우저가 그 주소를 지어야
-   그립니다 (`js/adslot.js`). 비밀이 아닙니다 — 업체 시설 사진이 이미
-   그 버킷 주소로 **정적 HTML 에 박혀** 나가므로, 사이트를 열어 보면
-   누구나 알 수 있는 이름입니다.
-   ⚠️ 버킷이 없으면 **아예 안 내려갑니다**(`null` 이 아니라 칸이
-   없습니다) — 화면은 그러면 소재 없이 글자만 그립니다.
-   ⚠️⚠️⚠️ 이름을 적어 보내므로 **주소에 쓸 수 있는 글자만** 남깁니다
-   (`api/upload.js` 의 `clean()` 과 같은 규칙 — 두 곳이 어긋나면
-   한쪽이 짓는 주소가 다른 쪽에서 404 입니다). */
-function pubBucket(){
-  return String(process.env.PROVIDER_BUCKET || "").trim()
-    .replace(/[^A-Za-z0-9_.-]/g, "").slice(0, 60);
-}
 function publicConf(){
   if(!authReady()) return null;
-  var c = { url: base(), anonKey: env("SUPABASE_ANON_KEY") };
-  var bk = pubBucket();
-  if(bk) c.pubBucket = bk;
-  return c;
+  return { url: base(), anonKey: env("SUPABASE_ANON_KEY") };
 }
 
-module.exports = { authReady, authMissing, bearer, whoami, roleOf, hatsOf,
-                   session, authWhy, publicConf, AUTH_TIMEOUT };
+module.exports = { authReady, bearer, whoami, roleOf, session, authWhy,
+                   publicConf, AUTH_TIMEOUT };

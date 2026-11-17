@@ -34,12 +34,8 @@ var AM_AUTH_KEY = "am.auth.v1";
    `chrome.js` · 메모장 `state.js` · `/my`)이라 **같은 틱에 셋이 다
    그물을 빠져나갑니다.** 재 보니 화면마다 2번(`/my` 는 3번) 나가고
    있었습니다 — 지금은 돌고 있는 것을 그대로 돌려줍니다. */
-/* ⚠️⚠️ role 과 hats 는 **다른 것**입니다. role 은 권한(customer ·
-   provider · staff · admin), hats 는 능력(seller · pro · biz) 입니다.
-   화면이 둘을 한 칸에 담으면 "프로로 등록" 이 권한을 올리는 길처럼
-   보이게 됩니다 (db/migrations/0025_account_hat.sql 머리말). */
 var AM_AUTH = { asked:false, on:false, signedIn:false, role:"", name:"",
-                hats:[], provider:null, conf:null };
+                provider:null, conf:null };
 var AM_AUTH_FLY = null;
 
 /* ── 저장 ────────────────────────────────────────────────────────
@@ -89,9 +85,6 @@ function amAuthTakeHash(){
     window.history.replaceState({}, "",
       window.location.pathname + window.location.search);
   }catch(e){}
-  /* ⚠️ 방금 들어오셨다는 표 — 머리말(js/hdauth.js)이 보고 **닉네임을 아직 안
-     정하셨으면** 정하는 자리로 한 번 모십니다(2026-11-15 · 첫 가입 뒤 닉네임). */
-  try{ sessionStorage.setItem("am.fresh", "1"); }catch(e){}
   return true;
 }
 
@@ -110,7 +103,7 @@ function amAuthToken(){
      빈 칸이었습니다). 없는 것으로 보면 로그인 칸이 다시 서서 손님이
      빠져나올 수 있습니다.
      ⚠️ `realm` 에 한글을 넣으면 응답이 터지는 것과 같은 자리입니다
-     (앞 서비스의 `middleware.js` — 지금은 없습니다). */
+     (`middleware.js`). */
   var tk = String(t.access_token);
   if(!/^[A-Za-z0-9._-]+$/.test(tk)) return "";
   return tk;
@@ -176,77 +169,15 @@ function amAuthRefresh(){
 /* ── 지금 누구인가 ───────────────────────────────────────────────
    `/api/session` 한 번. ⚠️ 역할은 **서버가 토큰으로 DB 에서** 읽은
    값입니다 — 화면이 고르는 것이 아닙니다 (`api/_auth.js` 머리말). */
-/* ════════════════════════════════════════════════════════════════════
-   로그인한 뒤 **원래 보시던 자리로** 돌아갑니다
-
-   ⚠️⚠️⚠️ 전에는 돌아올 자리를 아무 데도 안 적었습니다. `/my` 에서
-   "로그인하기" 를 누르면 `/login` 으로 갔다가, 메일 링크를 눌러도
-   **`/login` 에 그대로** 남았습니다 — 손님이 내 정보를 다시 찾아
-   들어가야 했습니다. 화면도 · 문도 · 검사도 전부 멀쩡했습니다.
-
-   ⚠️⚠️⚠️ **`next` 를 그대로 믿으면 안 됩니다** (열린 전달 · open
-   redirect). 남이 `?next=https://가짜.example` 을 적은 링크를 뿌리면
-   우리 주소로 들어와서 남의 사이트로 튕겨 나갑니다 — 피싱의 고전적인
-   길입니다. 그래서 **우리 사이트 안의 길만** 받습니다:
-     · `/` 로 시작할 것
-     · 둘째 글자가 `/` 나 역슬래시가 **아닐 것** (`//남의집` 은 프로토콜
-       상대 주소라 브라우저가 **남의 사이트로 읽습니다**)
-     · 허락한 글자만 있을 것 (`:` 이 못 들어오므로 scheme 을 못 만듭니다)
-   맞지 않으면 **조용히 버리고** 홈으로 둡니다.
-   ⚠️ `tools/test-desk.js` 가 실제로 나쁜 값을 넣어 봅니다.
-   ════════════════════════════════════════════════════════════════════ */
-window.amSafeNext = function(v){
-  var t = String(v == null ? "" : v);
-  if(!t || t.charAt(0) !== "/") return "";
-  if(t.charAt(1) === "/" || t.charAt(1) === "\\") return "";
-  /* 허락한 글자만 — `:` 도 `@` 도 없으므로 다른 사이트를 못 가리킵니다 */
-  if(!/^\/[A-Za-z0-9\-._~\/]*(\?[A-Za-z0-9\-._~\/=&%+]*)?(#[A-Za-z0-9\-._~]*)?$/.test(t))
-    return "";
-  return t;
-};
-
-/* 주소의 `?next=` 를 꺼냅니다 — 못 믿을 값이면 빈 문자열입니다 */
-window.amNextPath = function(){
-  try{
-    return window.amSafeNext(
-      new URLSearchParams(window.location.search).get("next") || "");
-  }catch(e){ return ""; }
-};
-
-/* 메일 링크가 **돌아올 자리** — next 가 있으면 거기, 없으면 지금 화면 */
-window.amAfterLogin = function(){
-  return window.amNextPath() || window.location.pathname;
-};
-
-/* "로그인하기" 가 가리킬 주소 — ⚠️ 한 함수에서만 짓습니다.
-   다섯 곳에 손으로 적으면 한 곳만 고쳐서 조용히 어긋납니다. */
-window.amLoginUrl = function(here){
-  var p = window.amSafeNext(
-    here || (window.location.pathname + window.location.search));
-  /* ⚠️ /login 에서 /login 으로 돌아오게 두지 않습니다 (제자리걸음) */
-  if(!p || p === "/login" || p.indexOf("/login?") === 0) return "/login";
-  return "/login?next=" + encodeURIComponent(p);
-};
-
 window.amAuthAsk = function(force){
   if(AM_AUTH.asked && !force) return Promise.resolve(AM_AUTH);
   /* ⚠️ 이미 묻고 있으면 **그 물음을 그대로** 돌려줍니다 (요청 하나) */
   if(AM_AUTH_FLY && !force) return AM_AUTH_FLY;
   amAuthTakeHash();
-  /* ⚠️⚠️ **못 물어본 것과 「설정이 꺼져 있다」를 가릅니다** (2026-11-15) — 전에는 그물이
-     끊기거나 서버가 5xx 여도 `on:false` 가 되어, 양식 화면이 「지금은 받지 못합니다」로
-     **단정**했습니다. 이제 그때는 `failed` 를 세우고, 화면이 「다시 시도」를 냅니다.
-     ⚠️ 15초 안에 답이 없으면 실패로 봅니다(끝없는 「불러오는 중」을 남기지 않습니다). */
   function ask(){
-    var ctl = (typeof AbortController === "function") ? new AbortController() : null;
-    var t = ctl ? setTimeout(function(){ try{ ctl.abort(); }catch(_){} }, 15000) : null;
     return fetch("/api/session", { headers: Object.assign(
-      { accept:"application/json" }, window.amAuthHeaders()), signal: ctl ? ctl.signal : undefined })
-      .then(function(r){
-        if(t) clearTimeout(t);
-        if(!r.ok) throw new Error("session " + r.status);
-        return r.json();
-      }, function(e){ if(t) clearTimeout(t); throw e; });
+      { accept:"application/json" }, window.amAuthHeaders()) })
+      .then(function(r){ return r.ok ? r.json() : null; });
   }
   AM_AUTH_FLY = ask().then(function(d){
     /* 토큰이 만료되어 떨어졌으면 한 번만 새로 받아 다시 묻습니다 */
@@ -257,12 +188,10 @@ window.amAuthAsk = function(force){
     return d;
   }).then(function(d){
     AM_AUTH.asked = true;
-    AM_AUTH.failed = false;
-    if(!d){ AM_AUTH.on = false; AM_AUTH.hats = []; return AM_AUTH; }
+    if(!d){ AM_AUTH.on = false; return AM_AUTH; }
     AM_AUTH.on       = !!d.auth;
     AM_AUTH.signedIn = !!d.signedIn;
     AM_AUTH.role     = d.role || "";
-    AM_AUTH.hats     = Array.isArray(d.hats) ? d.hats : [];
     AM_AUTH.name     = d.name || "";
     AM_AUTH.provider = d.provider || null;
     AM_AUTH.conf     = d.conf || AM_AUTH.conf;
@@ -271,10 +200,7 @@ window.amAuthAsk = function(force){
     /* ⚠️ 운영자에게만 남깁니다 — 손님은 아무 잘못도 안 했습니다
        (절대 규칙 3). */
     try{ console.warn("[auth] /api/session — " + e); }catch(_){}
-    AM_AUTH.asked = true; AM_AUTH.on = false; AM_AUTH.hats = [];
-    AM_AUTH.failed = true;
-    /* ⚠️ 다음 물음은 **새로** 묻게 둡니다(실패를 담아 두지 않습니다) */
-    AM_AUTH_FLY = null; AM_AUTH.asked = false;
+    AM_AUTH.asked = true; AM_AUTH.on = false;
     return AM_AUTH;
   });
   /* ⚠️ 답이 오면 놓습니다 — `force` 로 다시 물을 수 있어야 합니다
@@ -303,7 +229,7 @@ window.amAuthSend = function(email){
       email: to,
       /* ⚠️ 돌아올 자리입니다. Supabase 쪽 **Redirect URLs** 에 이 주소가
          들어 있어야 합니다 — 안 넣으면 링크가 기본 주소로 갑니다. */
-      options: { email_redirect_to: window.location.origin + window.amAfterLogin() }
+      options: { email_redirect_to: window.location.origin + window.location.pathname }
     })
   }).then(function(r){
     if(r.ok) return { ok:true, say:"메일로 로그인 링크를 보냈습니다. 받은 편지함을 확인해 주세요." };
@@ -317,399 +243,19 @@ window.amAuthSend = function(email){
   });
 };
 
-/* ── 어떤 소셜 로그인이 **실제로 켜져 있나** ──────────────────────
-   ⚠️⚠️⚠️ **Supabase 에게 물어봅니다.** 화면에 목록을 박아 두면 아직
-   안 켠 공급자의 단추가 그려지고, 누르면 Supabase 가 거절합니다 —
-   눌러도 아무 일이 안 나는 단추입니다 (절대 규칙 5). 참값은
-   `/auth/v1/settings` 의 `external` 이고, 그것은 **공개로 열려 있는
-   자리**입니다(anon 키로 읽습니다 · 비밀이 아닙니다).
-   ⚠️⚠️ 그래서 **켜시는 날 단추가 저절로 섭니다** — 다시 배포할
-   것도, 코드를 고칠 것도 없습니다.
-   ⚠️⚠️ **못 읽으면 빈 배열입니다** — 모르는 것을 "켜져 있다" 로
-   읽지 않습니다(그때는 메일 링크만 그립니다). 0건과 못 읽은 것을
-   가르지 않는 까닭은, 둘 다 **그릴 수 없다**는 같은 뜻이기
-   때문입니다.
-   ⚠️ 차례는 `js/data/social.js` 한 곳이 정합니다 — Supabase 가 주는
-   차례로 그리면 단추 자리가 날마다 바뀝니다.
-   ⚠️ 한 화면에서 **한 번만** 묻습니다(`AM_SSO_FLY`) — `amAuthAsk` 가
-   같은 틱에 셋이 그물을 빠져나간 그 자리와 같은 꼴입니다. */
-var AM_SSO_FLY = null;
-window.amAuthProviders = function(){
-  if(AM_SSO_FLY) return AM_SSO_FLY;
-  var c = AM_AUTH.conf;
-  /* ⚠️ 화면에서 내린 공급자(`off`)는 묻지도 않습니다 (2026-11-15) */
-  var keys = (window.AM_SOCIAL || []).filter(function(s){ return s && !s.off; })
-    .map(function(s){ return s.key; });
-  if(!c || !keys.length) return Promise.resolve([]);
-  AM_SSO_FLY = fetch(c.url + "/auth/v1/settings", { headers:{ apikey: c.anonKey } })
-    .then(function(r){ return r.ok ? r.json() : null; })
-    .then(function(d){
-      var ex = d && d.external ? d.external : null;
-      /* ⚠️ Custom Provider 는 settings 에 **안 나옵니다** (supabase/auth settings.go 가
-         기본 공급자만 적습니다) — site.js 의 ssoCustom 에 적힌 것은 켜진 것으로 봅니다. */
-      return keys.filter(function(k){ return !!amSsoCustom(k) || (!!ex && ex[k] === true); });
-    })
-    .catch(function(){ return keys.filter(function(k){ return !!amSsoCustom(k); }); });
-  return AM_SSO_FLY;
-};
-/* site.js 의 ssoCustom — ⚠️ 꼴이 맞을 때만(`custom:` + 소문자 · 숫자 · 하이픈 · 콜론,
-   Supabase 의 식별자 규칙) 씁니다. 틀린 값은 **없는 것**으로 보고 기본 공급자로 둡니다. */
-function amSsoCustom(k){
-  var m = ((window.WOW_BIZ || {}).ssoCustom || {})[k];
-  m = String(m == null ? "" : m).trim();
-  return /^custom:[a-z0-9:-]{1,43}$/.test(m) ? m : "";
-}
-
-/* ── 소셜 로그인으로 보냅니다 ─────────────────────────────────────
-   ⚠️⚠️ **fetch 가 아니라 주소를 바꿉니다.** 그쪽 회사 화면에서
-   로그인하고 돌아오는 길이라 화면이 통째로 넘어가야 합니다.
-   ⚠️⚠️⚠️ **양식(form)으로 보내면 막힙니다** — `vercel.json` 의 CSP 가
-   `form-action 'self'` 입니다. 맨 위 이동(`location.href`)은 그것도
-   `connect-src` 도 아닌 다른 자물쇠라 지나갑니다.
-   ⚠️⚠️ 돌아오는 자리는 매직링크와 **같은 함수**(`amAfterLogin()`)
-   입니다 — 두 곳에 적으면 한쪽만 고치는 날 소셜로 들어오신 분만
-   홈으로 떨어집니다. 그 주소가 Supabase 의 **Redirect URLs** 에
-   들어 있어야 합니다(안 넣으면 기본 주소로 갑니다).
-   ⚠️⚠️ 돌아올 때 토큰은 주소의 **해시**에 실려 옵니다 — 받는 자리는
-   `amAuthTakeHash()` 하나이고 **매직링크와 같은 길**입니다. 새로 만든
-   되돌아오는 화면이 없습니다.
-   ⚠️ 모르는 키는 **아무 데도 안 보냅니다**(거짓을 돌려줍니다) —
-   주소를 지어 보내면 Supabase 가 그 글자를 그대로 받습니다. */
-window.amAuthGo = function(key){
-  var c = AM_AUTH.conf;
-  if(!c) return false;
-  /* ⚠️ 모르는 키는 아무 데도 안 보냅니다 — 우리가 아는 공급자인지
-     `AM_SOCIAL` 에서 찾아보고, 없으면 그대로 돌아갑니다. */
-  var row = null;
-  (window.AM_SOCIAL || []).forEach(function(s){ if(s.key === key) row = s; });
-  if(!row) return false;
-  try{
-    /* ⚠️⚠️⚠️ **`scopes` 를 안 싣습니다** (2026-11-11 저녁 · 증거를 받고 뒤집었습니다).
-       아침에는 "안 실으면 Supabase 가 제 기본값을 붙이니 우리가 싣자" 로
-       `scopes=profile_nickname` 을 실었습니다. 그런데 운영에서 카카오로
-       나간 **최종 요청**을 받아 보니 —
-         account_email  profile_image  profile_nickname  profile_nickname
-       `profile_nickname` 이 **두 번**입니다. 즉 GoTrue 는 우리가 보낸
-       값으로 기본값을 **덮는 것이 아니라 뒤에 더합니다.**
-       ⚠️⚠️ 그래서 **화면 코드로는 `account_email` 을 뺄 수가 없습니다.**
-       실어도 안 실어도 카카오에는 `account_email` 이 갑니다 — 실으면
-       거기에 중복만 하나 더 붙습니다. 그 중복을 없애려고 뗐습니다.
-       ⚠️ 고치는 길은 저장소 밖입니다(카카오 앱에서 그 동의항목을 켜거나,
-       Supabase Custom Provider 로 카카오를 직접 넣어 scope 를 우리가
-       정하거나, api/ 에 서버 측 OAuth 를 세우거나).
-       ⚠️⚠️⚠️ **다시 실으시려면 먼저 더하는지 덮는지를 재세요** — 최종
-       카카오 요청의 scope 를 눈으로 보는 것 말고는 아는 길이 없습니다. */
-    window.location.href = c.url + "/auth/v1/authorize?provider=" +
-      /* ⚠️ Custom Provider 로 돌렸으면 그 식별자로 보냅니다 (site.js 의 ssoCustom) */
-      encodeURIComponent(amSsoCustom(key) || key) +
-      "&redirect_to=" +
-      encodeURIComponent(window.location.origin + window.amAfterLogin());
-    return true;
-  }catch(e){ return false; }
-};
-
 /* ── 나가기 ──────────────────────────────────────────────────────
-   ⚠️⚠️ 2026-11-15 — 이 함수는 있었는데 **부르는 단추가 어디에도 없었습니다**
-   (/my 에 「로그아웃」을 냈습니다). 그리고 서버 알림이 실패해도 **말없이**
-   끝나서, 화면이 실패를 알 길이 없었습니다.
-   ⚠️ 지금은 — 서버가 받았거나(2xx) 세션이 이미 없으면(401 · 403) **이 브라우저의
-   토큰을 지우고** 성공입니다. 그물이 끊기거나 서버가 5xx 면 **지우지 않고 거절**합니다
-   (화면이 「다시 시도」 · 「이 기기에서만 로그아웃」을 고르게 합니다 — 말없이 지우면
-   서버 쪽 세션이 남은 것을 손님이 모릅니다).
-   ⚠️ `force` 면 서버를 묻지 않고 이 브라우저에서만 지웁니다. */
-window.amAuthOut = function(force){
+   ⚠️ 서버에 알리는 것이 실패해도 **이 브라우저에서는 지웁니다** —
+   지우지 않으면 "나갔다" 고 해 놓고 토큰이 남습니다 (절대 규칙 5). */
+window.amAuthOut = function(){
   var c = AM_AUTH.conf, tk = amAuthToken();
   var done = function(){
     amAuthClear();
     AM_AUTH.signedIn = false; AM_AUTH.role = ""; AM_AUTH.name = "";
     AM_AUTH.provider = null;
-    return { ok:true };
   };
-  if(force || !c || !tk) return Promise.resolve(done());
+  if(!c || !tk){ done(); return Promise.resolve(); }
   return fetch(c.url + "/auth/v1/logout", {
     method:"POST",
     headers:{ apikey:c.anonKey, authorization:"Bearer " + tk }
-  }).then(function(r){
-    if(r.ok || r.status === 401 || r.status === 403) return done();
-    throw new Error("logout " + r.status);
-  });
-};
-
-/* ── 아직 열지 않았을 때 **그 자리에 적습니다** ───────────────────
-   ⚠️⚠️⚠️ 2026-11-07 — 빌드가 찍어 둔 글이 "보이지 않으면 아직 올라온
-   글이 없는 것입니다" 였습니다. 로그인 · 접수가 설정되기 전에는 목록을
-   **불러오지도 못하므로**, 그 글이 손님 화면에 그대로 남아 "0건" 이라고
-   말하고 있었습니다 — 실제로는 **열지 않은 것**입니다 (절대 규칙 5 ·
-   "못 읽었으면 0건이라고 말하지 않습니다"). 다섯 화면이 그랬습니다
-   (게시판 · 부킹 · 조인 · 중고 · 인력).
-   ⚠️ 무엇이 닫혔는지는 **감싼 구간의 제목**이 이미 말합니다 (올라온
-   매물 · 열려 있는 조인 · 커뮤니티 게시판 …) — 그래서 여기서 이름을
-   받지 않습니다. 받으면 조사(은 · 는)가 받침에 따라 갈려 이름마다
-   틀린 말이 나옵니다.
-   ⚠️⚠️ **막다른 길로 두지 않습니다** (절대 규칙 2) — 고객센터로 가는
-   길을 같이 냅니다.
-   ⚠️ 무엇을 설정해야 하는지는 **console.warn 으로만** 말합니다 (절대
-   규칙 3) — 부르는 자리가 이미 그렇게 적고 있습니다. */
-window.amShut = function(id){
-  var box = document.getElementById(id);
-  if(!box) return;
-  box.innerHTML =
-    /* ⚠️⚠️ **"아직 열지 않았습니다" 를 쓰지 않습니다** — 그 말은 0056
-       자리에서 **기능을 아직 안 만들었다**는 뜻으로 이미 쓰고 있고
-       (`test-journey` 의 /cat/used 검사가 그 글자를 봅니다), 여기는
-       **기능은 있는데 설정이 안 된** 다른 자물쇠입니다. 자물쇠마다
-       다른 말로 거절합니다. 세째는 `draw()` 의 "지금 불러오지
-       못했습니다"(불러오다 실패)입니다 — 셋이 다 다른 말입니다. */
-    '<div class="none"><h3>아직 준비가 끝나지 않았습니다.</h3>' +
-    '<p>준비가 끝나면 이 자리에서 바로 보실 수 있습니다. ' +
-    '먼저 물어보실 것이 있으면 고객센터로 알려 주세요.</p>' +
-    '<a class="btn btn-pt" href="/help">고객센터</a></div>';
-};
-
-/* ════════════════════════════════════════════════════════════════════
-   목록을 읽는 자리 — 「정상 0건」과 「조회 실패」를 가릅니다 (2026-11-13)
-
-   ⚠️⚠️⚠️ **화면 열두 곳이 `r.ok ? r.json() : []` 로 적고 있었습니다.**
-   그러면 거절당한 것도 · 보기가 없는 것도 **빈 배열**이 되어, 화면이
-   "아직 올라온 것이 없습니다" 를 찍습니다. 2026-11-13 에 운영
-   `/cat/used` 가 실제로 그 꼴이었습니다 — 공개 보기가 운영에 없어서
-   **한 줄도 못 읽었는데** 손님에게는 "아직 올라온 매물이 없습니다" 로
-   보였습니다. **0 은 세어 본 값입니다**(절대 규칙 1) — 못 읽은 것을
-   0 으로 적으면 그건 지어낸 숫자입니다.
-
-   ⚠️⚠️ 그리고 **부분 적용된 DB** 를 버팁니다. 표는 있고 **새 칸이
-   없으면** PostgREST 가 400 `42703` 을 내고 그 질의가 통째로 거절되어
-   **목록이 사라집니다.** 그때만 그 칸을 빼고 **한 번** 다시 묻습니다.
-
-   ⚠️⚠️⚠️ **숨기는 범위를 좁게 못 박습니다.** 다시 묻는 것은
-   **① 400 이고 ② 거절한 말이 칸 이름을 말하고 ③ 그 이름이 부르는 쪽이
-   미리 적어 둔 목록에 있을 때**뿐입니다. 공개 보기가 없는 것(404 ·
-   `PGRST205`) · 권한(401 · 403 · `42501`) · 인증(JWT)은 **다시 묻지
-   않고 그대로 실패로 올립니다** — 그것을 재질의로 덮으면 "설정이
-   안 된 것" 이 "자료가 없는 것" 으로 보이고, 그게 바로 위에서 고친
-   고장입니다.
-
-   ⚠️ 손님 화면에는 **간단한 안내와 다시 시도**까지입니다 — 까닭 ·
-   칸 이름 · 코드는 `console` 에만 적습니다(절대 규칙 3).
-   ════════════════════════════════════════════════════════════════════ */
-
-/* 거절한 말에서 **없는 칸 이름**을 꺼냅니다.
-   ⚠️ PostgREST 가 두 가지로 말합니다 —
-     42703   : column v_listing_open.flex does not exist
-     PGRST204: Could not find the 'flex' column of 'listing' in the schema cache
-   ⚠️ 표가 없다는 말(`Could not find the table ...`)은 **안 걸립니다** —
-   그 꼴은 칸 이름을 말하지 않으므로 여기서 빈 글자가 되고, 그래서
-   재질의로 넘어가지 않습니다. */
-window.amMissCol = function(msg){
-  var s = String(msg || "");
-  var m = /column\s+(?:[A-Za-z0-9_]+\.)?"?([A-Za-z0-9_]+)"?\s+does not exist/i.exec(s);
-  if(m) return m[1];
-  m = /'([A-Za-z0-9_]+)'\s+column\s+of/i.exec(s);
-  return m ? m[1] : "";
-};
-
-/* 응답 하나를 `{ rows, miss }` 로 바꿉니다. 거절이면 **던집니다** —
-   ⚠️ 빈 배열로 바꾸면 그 순간 「조회 실패」가 「0건」이 됩니다. */
-window.amRows = function(r){
-  if(r.ok) return r.json().then(function(j){
-    return { rows: Array.isArray(j) ? j : [], miss: [] }; });
-  return r.text().then(function(t){
-    var o = {}; try{ o = JSON.parse(t) || {}; }catch(_){}
-    var e = new Error(o.message || ("HTTP " + r.status));
-    e.amStatus = r.status;
-    e.amCode = o.code || "";
-    e.amCol = window.amMissCol(o.message || t);
-    throw e;
-  });
-};
-
-/* `select=` 와 거르개에서 그 칸들을 빼냅니다 — **실제로 뺀 이름**을
-   돌려줍니다(0개면 다시 물어볼 까닭이 없습니다).
-   ⚠️ `qs` 를 **제자리에서** 고칩니다(부르는 쪽이 같은 배열로 다시
-   묻습니다). ⚠️ 차례(`order`)는 손대지 않습니다 — 지금 뺄 칸 가운데
-   차례로 쓰는 것이 하나도 없고, 손대면 목록이 조용히 다른 차례로
-   보입니다(정렬이 안 되는 것은 에러가 안 납니다). */
-window.amDropCols = function(qs, cols){
-  var gone = [];
-  function mark(c){ if(cols.indexOf(c) >= 0 && gone.indexOf(c) < 0) gone.push(c); }
-  for(var i = 0; i < qs.length; i++){
-    var p = String(qs[i]), eq = p.indexOf("=");
-    if(eq < 0) continue;
-    var k = p.slice(0, eq);
-    if(k === "select"){
-      var keep = p.slice(eq + 1).split(",").filter(function(c){
-        var n = c.trim();
-        if(cols.indexOf(n) < 0) return true;
-        mark(n); return false;
-      });
-      qs[i] = "select=" + keep.join(",");
-    }else if(cols.indexOf(k) >= 0){
-      mark(k); qs.splice(i, 1); i--;
-    }
-  }
-  return gone;
-};
-
-/* 다시 묻는 자리 — ⚠️ **한 곳**입니다(화면마다 적으면 한쪽만 고치는
-   날 어떤 화면은 버티고 어떤 화면은 통째로 사라집니다).
-   `go(qs)` 는 그 배열로 fetch 를 돌려주는 함수이고, `opt` 는 부르는
-   쪽이 **미리 적어 둔** 신규 선택 칸 목록입니다.
-   ⚠️ 다시 묻는 것은 **한 번**뿐입니다 — 두 번째도 실패하면 그대로
-   실패로 올립니다(끝없이 묻지 않습니다). */
-window.amRowsSoft = function(qs, opt, go){
-  return go(qs).then(window.amRows).catch(function(e){
-    /* ⚠️⚠️ 좁게 가립니다 — 400 이 아니면(404 보기 부재 · 403 권한 ·
-       401 인증) **덮지 않습니다.** */
-    if(!e || e.amStatus !== 400) throw e;
-    var c = e.amCol;
-    if(!c || opt.indexOf(c) < 0) throw e;
-    /* ⚠️ 한 마이그레이션이 같이 더한 칸들이라 **묶어서** 뺍니다 —
-       거절한 말은 한 칸만 말하지만, 하나가 없으면 나머지도 없습니다. */
-    var gone = window.amDropCols(qs, opt);
-    if(!gone.length) throw e;
-    try{ console.warn("[amRowsSoft] 운영 DB 에 아직 없는 칸을 빼고 다시 " +
-      "물었습니다 — " + gone.join(", ") + " (" + (e.amCode || "400") + ")"); }catch(_){}
-    return go(qs).then(window.amRows).then(function(x){
-      x.miss = gone; return x; });
-  });
-};
-
-/* 조회 실패를 손님에게 적는 글 — ⚠️ **한 곳**입니다.
-   ⚠️⚠️ 까닭을 적지 않습니다(절대 규칙 3) — 보기가 없는지 · 권한인지 ·
-   그물이 끊겼는지는 `console` 에만 남깁니다. 손님에게는 **0건이 아니라는
-   것**과 **다시 시도**까지입니다.
-   ⚠️ `what` 은 "매물" · "티타임" 처럼 **무엇을** 못 읽었는지입니다. */
-window.amFailHtml = function(what){
-  var w = String(what || "목록");
-  /* ⚠️⚠️ 조사를 **글자로 박지 않습니다** — 받침에 따라 갈립니다
-     ("프로을" 이 나갑니다). 붙이는 자리는 js/data/korean.js 한 곳이고,
-     그 파일이 안 실린 화면에서는 「…를」 없이 적습니다. */
-  var jo = window.josa ? window.josa(w, "을를") : "";
-  return '<div class="none none-fail"><h3>지금 ' + window.esc(w) + window.esc(jo) +
-    ' 불러오지 못했습니다</h3>' +
-    '<p>잠시 뒤에 다시 시도해 주세요. <b>0건이라는 뜻이 아닙니다.</b></p>' +
-    '<button class="btn btn-pt" type="button" data-amretry="1">다시 시도</button></div>';
-};
-
-/* 조회 실패를 개발 기록에만 적습니다 — ⚠️ 손님 화면에 한 글자도 안
-   냅니다(절대 규칙 3). `where` 는 어느 화면 · 어느 보기인지입니다. */
-window.amFailLog = function(where, e){
-  try{
-    console.warn("[" + String(where) + "] 조회 실패 — status=" +
-      ((e && e.amStatus) || "?") + " code=" + ((e && e.amCode) || "") +
-      " " + ((e && e.message) || ""));
-  }catch(_){}
-};
-
-/* 주소가 **글자 하나**인 자리를 위한 짝 — `/my` 의 화면들이 `get(a, path)`
-   꼴로 적혀 있어 배열이 아닙니다.
-   ⚠️ `select=` 에서 그 칸만 덥니다 (거르개는 손대지 않습니다 — 이 자리의
-   신규 칸은 전부 **고르는 칸이 아니라 보여 주는 칸**입니다). */
-window.amDropSel = function(path, col){
-  return String(path).replace(/([?&]select=)([^&]*)/, function(all, pre, sel){
-    var keep = sel.split(",").filter(function(c){ return c.trim() !== col; });
-    return pre + keep.join(",");
-  });
-};
-
-/* 주소 하나로 한 번만 다시 묻습니다 — `{ rows, miss }` 를 돌려줍니다.
-   ⚠️⚠️ 다시 묻는 조건은 `amRowsSoft` 와 **같습니다** — 400 이고 · 거절한
-   말이 칸 이름을 말하고 · 그 이름이 `opt` 에 있을 때만입니다. 보기
-   부재(404) · 권한(403) · 인증은 **그대로 던집니다.** */
-window.amPathSoft = function(path, opt, go){
-  return go(path).then(window.amRows).catch(function(e){
-    if(!e || e.amStatus !== 400) throw e;
-    var c = e.amCol;
-    if(!c || !opt || opt.indexOf(c) < 0) throw e;
-    var p2 = path, gone = [];
-    opt.forEach(function(k){
-      var n = window.amDropSel(p2, k);
-      if(n !== p2){ p2 = n; gone.push(k); }
-    });
-    if(!gone.length) throw e;
-    try{ console.warn("[amPathSoft] 운영 DB 에 아직 없는 칸을 빼고 다시 " +
-      "물었습니다 — " + gone.join(", ") + " (" + (e.amCode || "400") + ")"); }catch(_){}
-    return go(p2).then(window.amRows).then(function(x){ x.miss = gone; return x; });
-  });
-};
-
-/* ⚠️⚠️ **주소의 #자리로 늦게라도 갑니다** (2026-11-14) — 「내 정보에서 보기」
-   (/my#bkbox)나 로그인 뒤 돌아오는 자리(/cat/used#lsbox)는 그 상자를 **화면이
-   나중에** 그립니다. 브라우저는 처음 열 때 한 번만 #자리로 가므로, 그때 아직
-   숨어 있던 상자로는 안 가고 맨 위에 남았습니다(누른 단추가 아무 일도 안 한
-   것처럼 보입니다). 그 상자가 보이게 되면 **한 번** 그리로 갑니다.
-   ⚠️ 손님이 먼저 화면을 움직이면(휠 · 터치 · 키) 멈춥니다 — 읽고 계신 자리를
-   빼앗지 않습니다. ⚠️ 매직링크 토큰(#access_token=…)은 건드리지 않습니다. */
-(function(){
-  var h = "";
-  try{ h = decodeURIComponent(String(window.location.hash || "").slice(1)); }catch(e){ return; }
-  if(!/^[A-Za-z][A-Za-z0-9_-]{0,40}$/.test(h)) return;
-  var stop = false, n = 0;
-  function off(){ stop = true; }
-  ["wheel","touchstart","keydown"].forEach(function(k){
-    window.addEventListener(k, off, { once:true, passive:true });
-  });
-  function tick(){
-    if(stop || ++n > 40) return;
-    var el = document.getElementById(h);
-    if(el && el.getClientRects().length && el.getBoundingClientRect().height > 8){
-      var r = el.getBoundingClientRect();
-      if(r.top < 0 || r.top > window.innerHeight * 0.6){
-        try{ el.scrollIntoView({ block:"start" }); }catch(_){ }
-      }
-      return;
-    }
-    setTimeout(tick, 200);
-  }
-  if(document.readyState === "loading")
-    document.addEventListener("DOMContentLoaded", function(){ setTimeout(tick, 300); });
-  else setTimeout(tick, 300);
-})();
-
-/* ⚠️⚠️ **손님에게 보이는 실패 문장** (2026-11-14) — 양식들이 `err.message` 를
-   그대로 찍어, 그물이 끊기면 영문 「Failed to fetch」가, 500 이면 HTML 원문이,
-   제약 위반이면 `new row violates check constraint …` 가 손님 화면에 나왔습니다.
-   문(RPC)이 적어 둔 **한국어 거절**은 그대로 둡니다(그것이 까닭입니다 — 우리가
-   고쳐 쓰면 까닭이 바뀝니다). 한글이 하나도 없는 말만 바꾸고 원문은 개발 기록에. */
-window.amErrText = function(err, fall){
-  var m = String((err && err.message) || err || "");
-  if(m && /[가-힣]/.test(m) && m.length <= 300 && m.indexOf("<") < 0) return m;
-  try{ console.warn("[form] 보내기 실패 원문:", m); }catch(_){ }
-  return (fall || "지금 처리하지 못했습니다.") + " 연결이 잠깐 끊겼을 수 있습니다 — 잠시 뒤 다시 눌러 주세요.";
-};
-
-/* ⚠️⚠️ **양식 문 — 불러오는 중 · 준비됨 · 접수 중단 · 조회 실패** (2026-11-15)
-   빌드는 상자 안에 `.gate-load`(불러오는 중)와 `.gate-off`(접수 중단 글)를 같이 찍고,
-   CSS 가 자바스크립트가 켜진 화면에서는 `.gate-load` 만 보입니다. 확인이 끝나면 —
-     · 준비됨       → open(a) 가 양식을 그립니다
-     · 접수 중단    → `.gate-off` 를 보입니다(설정이 꺼졌거나 보유 기간이 빔)
-     · 조회 실패    → 「확인하지 못했습니다」 + 「다시 시도」(양식이 아직 안 그려졌으니
-                      잃을 입력이 없습니다)
-   ⚠️ open(a) 가 false 를 돌려주면 「접수 중단」입니다. */
-window.amGate = function(box, label, open){
-  if(!box) return;
-  var OFF = (box.querySelector(".gate-off") || {}).innerHTML || "";
-  function off(){
-    box.className = "none gate-done";
-    if(OFF) box.innerHTML = '<div class="gate-off">' + OFF + '</div>';
-  }
-  function run(force){
-    window.amAuthAsk(force).then(function(a){
-      if(a && a.failed){
-        box.className = "none none-fail";
-        box.innerHTML = "<h2>" + window.esc(label) + " 양식을 확인하지 못했습니다.</h2>" +
-          "<p>연결이 잠깐 끊겼을 수 있습니다. 접수가 중단됐다는 뜻이 아닙니다.</p>" +
-          '<div class="none-b"><button type="button" class="btn btn-pt" data-gate-retry="1">다시 시도</button></div>';
-        var b = box.querySelector("[data-gate-retry]");
-        if(b) b.addEventListener("click", function(){
-          box.className = "none";
-          box.innerHTML = '<p class="gate-load">' + window.esc(label) + " 양식을 불러오는 중입니다…</p>";
-          run(true);
-        });
-        return;
-      }
-      if(open(a) === false) off();
-    });
-  }
-  run(false);
+  }).catch(function(){}).then(done);
 };

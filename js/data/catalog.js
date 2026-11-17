@@ -1,718 +1,605 @@
 /* ════════════════════════════════════════════════════════════════════
-   서비스 분류 — 골프올인원이 중개하는 일 (열 가지 · 하위 예순둘)
+   ServiceCategory · ServiceSubcategory (§7~20 창업 · §21~33 폐업)
 
-   ⚠️⚠️ **2026-11-03 2차 지시서 §3 으로 교체했습니다.** 1차 때 제가
-   지은 하위 쉰아홉을 지시서가 준 예순둘로 바꿨습니다. 바꿀 수 있었던
-   까닭은 **저장된 골프 키가 0건**이었기 때문입니다 —
-     · 운영 DB 에는 0001~0007 만 돌아가 있어 `make_apply`(0027)가
-       아예 없습니다 = 입점 신청 줄이 생길 길이 없었습니다
-     · 저장소의 업체도 0곳이었습니다
-   ⚠️⚠️ **신청이 한 건이라도 들어오면 그때부터는 못 바꿉니다.**
-   `request_item.service_id` 와 `provider.subs` 가 이 키를 **글자로**
-   저장합니다. 바꾸면 지난 기록의 뜻이 조용히 달라집니다.
+   **이 파일이 플랫폼의 뼈대입니다.** 화면 · 검색 · 업체 입점 · 견적
+   요청 · 크롤러 본문 · 주소가 전부 여기서 나옵니다.
 
-   ⚠️⚠️ **키를 지난 두 사업의 키 여든다섯과 한 글자도 겹치지 않게**
-   지었습니다 (창업 · 폐업 26 · 중고폰 60). 하위마다 두 글자 머리를
-   붙여(ls- us- bk- jo- rg- mk- ft- tr- cr- cm-) 겹칠 길을 막았습니다.
-   `tools/check-keys.js` 가 빌드에서 멈춥니다.
+   | 칸 | 무엇 |
+   |---|---|
+   | `key`  | **주소에 들어갑니다** (`/c/interior`). 한 번 정하면 바꾸지 마세요 |
+   | `kind` | `provider` 업체를 찾는 곳 · `listing` 매물을 보고 등록하는 곳 · `info` 정보 |
+   | `items`| 하위 분류. 이것이 **업체 입점의 단위**입니다 (§39) |
 
-   ⚠️⚠️ **이 분류가 쓰이는 자리는 다섯입니다.**
-     ① 메인의 분류 카드 열 장
-     ② 메인의 **네 영역**(AM_ZONES) — 열 분류를 묶어 보여 줍니다
-     ③ 분류별 상세 화면 /cat/<key>
-     ④ 입점 신청 — 업체가 **하는 일**을 고르는 칸 (pv 가 true 인 하위만)
-     ⑤ 관리자 배정 — 항목마다 그 하위를 하는 업체를 고릅니다
-        (provider.subs 가 **하위 키**를 들고 있습니다)
-
-   칸
-     key      주소 · 저장 · 배정에 쓰는 값 — **바꾸지 마세요**
-     name     화면에 나가는 이름
-     lead     카드 아래 한 줄
-     icon     icon() 의 이름 — **없는 이름을 적으면 빈 칸이 됩니다**
-     kind     이 분류의 **화면 짜임새**
-                provider  업체와 손님을 잇습니다
-                trade     회원끼리 사고팝니다
-                match     회원끼리 모입니다
-                board     글을 올리고 읽습니다
-     provider 업체가 **입점해 등록하는** 분류인가 (입점 양식에 나옵니다)
-     items    하위 — [{key,name,pv}] · pv 를 안 적으면 provider 를 따릅니다
-              ⚠️ pv:false 는 **회원끼리만** 쓰는 하위입니다 (업체가 고를 수 없습니다)
-     kw       검색 전용 다른 말 — 손님은 분류 이름을 모르고 하려는 일을 칩니다
+   ⚠️ **하위 분류를 코드에 박지 마세요** (§54). 화면은 이 배열만
+   읽습니다. 관리자에서 추가·삭제·정렬하게 하려고 데이터로 둔 것입니다.
+   ⚠️ `equip`(시설·장비)의 하위는 **여기 없습니다.** 업종마다 다르기
+   때문에 `industries.js` 의 `equip` 에서 옵니다 (§12).
+   ⚠️ **업체 명단을 만들지 마세요.** 이 화면들은 "무엇이 필요한지"
+   고르는 자리이고, 업체는 조건이 정해진 뒤에 나옵니다 (§54).
+   ⚠️ 새 분류를 넣으면 `industries.js` 의 `startup`/`closure` 차례에도
+   넣으세요. 안 넣으면 그 업종에서 **조용히 안 보입니다** —
+   `node build-pages.js` 가 어긋난 key 를 잡습니다.
    ════════════════════════════════════════════════════════════════════ */
 
-window.AM_CATS = [
-
-  { key:"booking", name:"골프장 부킹", icon:"flag", kind:"provider", provider:true,
-    lead:"전국 골프장 예약",
-    kw:"부킹 예약 티타임 라운딩 골프장 그린피 주말부킹 잔여타임 특가 야간",
+/* ── START · 창업에 필요한 모든 것 ──────────────────────────────── */
+window.AM_START_CATS = [
+  { key:"item", name:"창업 아이템", icon:"bulb", tone:"t1", kind:"info",
+    lead:"무엇으로 시작할지부터",
+    desc:"프랜차이즈로 할지 내 브랜드로 할지, 얼마로 시작할 수 있는지부터 정합니다.",
     items:[
-      { key:"bk-find",  name:"골프장 검색" },
-      { key:"bk-time",  name:"티타임 정보" },
-      { key:"bk-agent", name:"부킹업체 연결" },
-      { key:"bk-deal",  name:"특가 부킹" },
-      { key:"bk-night", name:"9홀 · 야간 라운딩" }
+      { key:"franchise",   name:"프랜차이즈", to:"/franchise" },
+      { key:"independent", name:"개인창업" },
+      { key:"by-industry", name:"업종별 창업정보" },
+      { key:"small-cap",   name:"소자본 창업" },
+      { key:"unmanned",    name:"무인창업" },
+      { key:"solo",        name:"1인창업" },
+      { key:"new-brand",   name:"신규 브랜드" },
+      { key:"takeover",    name:"기존 매장 인수", to:"/stores" }
     ]},
 
-  { key:"matchup", name:"골프 조인", icon:"people", kind:"match", provider:false,
-    lead:"함께 라운딩 · 모임",
-    kw:"조인 동반자 라운딩 같이 모임 동호회 번개 조인방 인원구함 스크린조인",
+  { key:"store", name:"점포 · 상가", icon:"pin", tone:"t5", kind:"listing",
+    lead:"자리를 정합니다",
+    desc:"지역 · 업종 · 평수 · 보증금 · 월세 · 권리금으로 찾습니다.",
+    /* ⚠️ `kw` 는 **검색에만** 쓰는 다른 말입니다 — 화면에는 안 나옵니다.
+       손님이 치는 말과 저희 분류 이름이 달라서 **0건이던 말**을 적습니다
+       (2026-10-17 에 188낱말을 쳐 보고 찾았습니다). 아래 분류들의 `kw`
+       가 전부 같은 규칙입니다.
+       ⚠️⚠️ **없는 서비스를 적는 칸이 아닙니다** — 그 분류가 실제로
+       다루는 것을 가리키는 **다른 말**만 적습니다 (절대 규칙 1).
+       그래서 `소방안전관리자`(선임 대행)는 일부러 안 넣었습니다.
+       ⚠️ **더한 뒤에는 쳐 보고 어디로 가는지 확인하세요** — 걸리기만
+       하고 엉뚱한 데로 가면 더 나쁩니다. */
+    kw:"점포임대 상가임대 점포매매 가게임대 가게자리",
+    to:"/stores",
     items:[
-      { key:"jo-one",     name:"1인 조인" },
-      { key:"jo-two",     name:"2인 조인" },
-      { key:"jo-screen",  name:"스크린 조인" },
-      { key:"jo-regular", name:"정기 모임" },
-      { key:"jo-club",    name:"동호회 모집" }
+      { key:"shop",        name:"상가" },
+      { key:"store-space", name:"점포" },
+      { key:"running",     name:"기존 영업장" },
+      { key:"premium",     name:"권리금 매장" },
+      { key:"no-premium",  name:"무권리 매장" },
+      { key:"with-equip",  name:"시설 인수 가능 매장" }
     ]},
 
-  { key:"used", name:"중고 골프장터", icon:"cart", kind:"trade", provider:true,
-    lead:"중고매매 · 매입견적",
-    kw:"중고 중고채 중고클럽 팔기 삽니다 직거래 처분 되팔기 매입 위탁판매",
+  { key:"area", name:"상권 · 입지", icon:"map", tone:"t5", kind:"info",
+    lead:"그 자리가 맞는 자리인가",
+    desc:"자리를 정하기 전에 확인할 것과, 봐 줄 수 있는 전문가를 찾습니다.",
     items:[
-      { key:"us-driver",   name:"드라이버",          pv:false },
-      { key:"us-wood",     name:"우드",              pv:false },
-      { key:"us-utility",  name:"유틸리티",          pv:false },
-      { key:"us-iron",     name:"아이언",            pv:false },
-      { key:"us-wedge",    name:"웨지",              pv:false },
-      { key:"us-putter",   name:"퍼터",              pv:false },
-      { key:"us-set",      name:"풀세트",            pv:false },
-      { key:"us-shaft",    name:"샤프트",            pv:false },
-      { key:"us-bag",      name:"골프백",            pv:false },
-      /* ⚠️ 2026-11-09 — 중고장터 개편 지시서 §2-4 의 목록에 있는데
-         저희에게 없던 둘입니다. `listing.sub` 은 글자라 **마이그레이션이
-         한 줄도 필요 없습니다**(0056 이 키 묶음을 일부러 DB 에 안
-         박았습니다 — 박으면 종류가 느는 날 두 곳이 어긋나고 그때
-         화면은 보내는데 DB 가 거절합니다).
-         ⚠️⚠️ **`AM_LST_GROUP` 에도 같이** 넣습니다 — 안 넣으면 그
-         종류가 어느 탭에서도 안 보이고 **에러도 안 납니다.** */
-      { key:"us-ball",     name:"골프공",            pv:false },
-      { key:"us-wear",     name:"골프의류",          pv:false },
-      { key:"us-shoes",    name:"골프화",            pv:false },
-      { key:"us-acc",      name:"장갑 · 모자 · 액세서리", pv:false },
-      { key:"us-range",    name:"거리측정기",        pv:false },
-      { key:"us-gear",     name:"기타 용품",          pv:false },
-      { key:"us-buyquote", name:"중고채 매입 견적",   pv:true  },
-      { key:"us-consign",  name:"위탁판매 연결",      pv:true  }
+      { key:"trade-area",  name:"상권분석" },
+      { key:"foot-traffic",name:"유동인구" },
+      { key:"households",  name:"배후세대" },
+      { key:"competitors", name:"주변 경쟁업체" },
+      { key:"region",      name:"지역분석" },
+      { key:"sales-data",  name:"매출 관련 데이터" },
+      { key:"site-consult",name:"입지 상담", kind:"provider" }
     ]},
 
-  { key:"lesson", name:"골프 레슨", icon:"swing", kind:"provider", provider:true,
-    lead:"프로매칭 · 레슨예약",
-    kw:"레슨 프로 강습 배우기 골프배우기 입문 초보 원포인트 스윙교정 레슨비",
+  { key:"interior", name:"인테리어 · 시공", icon:"roller", tone:"t4", kind:"provider",
+    lead:"가게를 만듭니다",
+    desc:"지역 · 업종 · 평수 · 예산으로 업체를 비교하고 견적을 받습니다.",
+    kw:"간판제작 간판공사 소방시설 소방공사 에어컨설치 냉난방공사 타일 타일공사 바닥공사 유리공사 샤시 셔터 목공 철거후시공",
     items:[
-      { key:"ls-solo",   name:"개인 레슨" },
-      { key:"ls-group",  name:"그룹 레슨" },
-      { key:"ls-field",  name:"필드 레슨" },
-      /* ⚠️ 2026-11-10 에 더했습니다 — 레슨 지시서 §4 의 「레슨 종류」와
-         §5 의 카테고리 카드가 둘 다 숏게임을 적었는데 저희에게 없던
-         하나입니다. **키는 더하기만 합니다**(이미 그 키를 들고 있는
-         업체가 있으면 빼는 날 갈 자리가 없어집니다). */
-      { key:"ls-short",  name:"숏게임 레슨" },
-      { key:"ls-point",  name:"원포인트 레슨" },
-      { key:"ls-junior", name:"주니어 레슨" },
-      { key:"ls-online", name:"온라인 레슨" }
+      { key:"interior", name:"인테리어" }, { key:"design",  name:"설계" },
+      { key:"electric", name:"전기" },     { key:"plumbing",name:"배관" },
+      { key:"gas",      name:"가스" },     { key:"fire",    name:"소방" },
+      { key:"hvac",     name:"냉난방" },   { key:"duct",    name:"닥트 · 후드" },
+      { key:"floor",    name:"바닥" },     { key:"paint",   name:"도장" },
+      { key:"sign",     name:"간판" },     { key:"awning",  name:"어닝" },
+      { key:"metal",    name:"철물" }
     ]},
 
-  /* ⚠️ 중고 골프장터는 **둘이 섞입니다** — 회원끼리의 직거래와, 업체가
-     하는 매입 견적 · 위탁판매입니다. 그래서 kind 는 trade 이고
-     업체가 고를 수 있는 하위는 pv:true 인 둘뿐입니다. */
-  { key:"range", name:"골프 연습장", icon:"balls", kind:"provider", provider:true,
-    lead:"실내 · 실외 · 스크린",
-    kw:"연습장 실내연습장 실외연습장 스크린골프 타석 숏게임 퍼팅 이용권 체험권",
+  { key:"equip", name:"시설 · 장비", icon:"tool", tone:"t13", kind:"provider",
+    lead:"업종마다 다릅니다",
+    desc:"고르신 업종에 필요한 장비만 보여 드립니다.",
+    byIndustry:true,      /* ⚠️ 하위 분류가 업종에서 옵니다 (§12) */
+    /* ⚠️ `kw` 는 **검색에만** 쓰는 다른 말입니다 — 화면에는 안 나옵니다.
+       이 분류는 이름이 "시설 · 장비" 인데 손님은 **"주방설비"** 라고
+       칩니다. 하위가 업종에서 와서(`byIndustry`) 분류 자신이 들고 있는
+       글자가 거의 없고, 그래서 "주방설비" 가 **0건**이었습니다.
+       ⚠️ 없는 서비스를 적는 칸이 아닙니다 — **같은 것을 가리키는 다른
+       말**만 적습니다 (절대 규칙 1). */
+    kw:"주방설비 주방기기 설비 기기 집기설비",
+    items:[] },
+
+  { key:"furniture", name:"가구 · 집기", icon:"sofa", tone:"t3", kind:"provider",
+    lead:"앉을 것과 놓을 것",
+    desc:"업소용 가구와 맞춤 제작을 하는 곳을 찾습니다.",
     items:[
-      { key:"rg-in",    name:"실내 연습장" },
-      { key:"rg-out",   name:"실외 연습장" },
-      { key:"rg-sim",   name:"스크린골프" },
-      { key:"rg-short", name:"숏게임 연습장" },
-      { key:"rg-pass",  name:"이용권 · 체험권" }
+      { key:"table",   name:"테이블" }, { key:"chair",   name:"의자" },
+      { key:"shelf",   name:"선반" },   { key:"storage", name:"수납" },
+      { key:"counter", name:"카운터" }, { key:"biz-furn",name:"업소용 가구" },
+      { key:"custom",  name:"맞춤가구" }
     ]},
 
-  { key:"market", name:"골프용품 마켓", icon:"bag", kind:"provider", provider:true,
-    lead:"신품 · 중고 · 브랜드",
-    kw:"용품 신품 골프채 골프공 골프의류 골프화 장갑 액세서리 연습용품 할인",
+  { key:"it", name:"IT · 매장시스템", icon:"monitor", tone:"t1", kind:"provider",
+    lead:"주문받고 결제하고 지키는 것",
+    desc:"POS · 키오스크 · CCTV · 통신까지 한 번에 비교합니다.",
+    /* ⚠️ `kw` 는 **검색에만** 쓰는 다른 말입니다 — 화면에는 안
+       나옵니다. 하위가 "POS" 라 **"포스기"** 를 치면 0건이었습니다
+       (사장님이 실제로 쓰는 말입니다). 같은 것을 가리키는 다른 말만
+       적습니다 — 없는 서비스를 적는 칸이 아닙니다 (절대 규칙 1). */
+    kw:"포스기 포스 카드단말기 단말기 시시티비 씨씨티비 정수기 제빙기 공기청정기 렌탈 렌털 비데",
     items:[
-      { key:"mk-club",  name:"골프채" },
-      { key:"mk-ball",  name:"골프공" },
-      { key:"mk-bag",   name:"골프백" },
-      { key:"mk-shoe",  name:"골프화" },
-      { key:"mk-wear",  name:"의류" },
-      { key:"mk-acc",   name:"골프 액세서리" },
-      { key:"mk-train", name:"연습용품" },
-    /* ⚠️⚠️⚠️ **시안의 「렌탈존」이 갈 자리**입니다 (2026-11-08). 대여를
-       담는 분류도 하위도 없어서 머리말 메뉴가 **갈 데가 없었습니다**.
-       하위 키는 **더하기만** 합니다(이미 올라온 글이 키를 글자로 들고
-       있습니다) — 지금은 그 키로 저장된 것이 0건이라 더해도 안전합니다.
-       ⚠️ 업체가 0곳이라 당장은 빈 목록입니다. 다른 하위와 **같은 상태**
-       이고, 지어낸 업체를 넣지 않습니다(절대 규칙 1). */
-    { key:"mk-rent", name:"렌탈 · 대여" }
+      { key:"pos",       name:"POS" },        { key:"kiosk",   name:"키오스크" },
+      { key:"table-order",name:"테이블오더" }, { key:"cctv",    name:"CCTV" },
+      { key:"internet",  name:"인터넷" },      { key:"phone",   name:"전화" },
+      { key:"wifi",      name:"와이파이" },    { key:"booking", name:"예약시스템" },
+      { key:"waiting",   name:"웨이팅" },      { key:"payment", name:"결제단말기" },
+      { key:"e-menu",    name:"전자메뉴판" },  { key:"security",name:"보안" },
+      /* ⚠️ 2026-10-09 §5-2 D — 운영 솔루션 넷이 갈 곳이 없었습니다.
+         매장 안에서 도는 프로그램이라 `it` 이 맞는 자리입니다. */
+      { key:"inventory", name:"재고 관리" },  { key:"sales-mgmt",name:"매출 관리" },
+      { key:"hr-pay",    name:"근태 · 급여" }, { key:"acct-sw",  name:"회계 · 세무 프로그램" },
+      /* ⚠️⚠️ 2026-10-22 — **가입 쪽에 렌탈이 없었습니다.** 있던 것은
+         `contract/rental`(해지)과 `repair/rental-care`(점검)뿐이라,
+         운영 과제 "렌탈 · 정수기" 가 **해지 쪽**을 가리키고 있었습니다
+         (방향이 반대입니다). 자영업 거의 전부가 쓰는 것이고 수익상품
+         `water-ice-rental` 도 이미 있어서, **가입 쪽 자리**를 만듭니다.
+         ⚠️ 분류를 늘린 것이 아니라 **하위 한 줄을 더한 것**입니다 —
+         업체 `subs` · 매물 `sub` · 글 `cat` 이 쓰는 key 는 그대로입니다. */
+      { key:"rental",    name:"정수기 · 렌탈" }
     ]},
 
-  { key:"fitting", name:"피팅 · 수리", icon:"clubs", kind:"provider", provider:true,
-    lead:"클럽피팅 · 수리 · 리샤프트",
-    kw:"피팅 클럽피팅 드라이버피팅 아이언피팅 리샤프트 샤프트교체 그립교체 수리 로프트 라이각",
+  { key:"supply", name:"운영 공급업체", icon:"pkgck", tone:"t2", kind:"provider",
+    lead:"매일 들어오는 것",
+    desc:"거래처를 새로 뚫거나 바꾸실 때 조건을 비교합니다.",
+    kw:"포장용기 포장지 배달용기 일회용컵 식자재납품 배달대행 배달기사 라이더 배송",
+    /* ⚠️⚠️ 2026-10-09 최종 통합 지시서 §5-2 A · B — 운영 중인 사장님이
+       **매달 사는 것**이 여기 들어옵니다. 육류 · 수산 · 농산은 "식자재"
+       한 칸으로 묶여 있었는데, 거래처가 **서로 다른 업체**라 한 칸으로
+       두면 고기집 사장님께 채소 도매상이 갑니다.
+       ⚠️ key 를 바꾸지 않았습니다 — 더했습니다 (업체 `subs` · 상품 `sub` 이
+       그 값을 들고 있습니다). */
     items:[
-      { key:"ft-driver", name:"드라이버 피팅" },
-      { key:"ft-iron",   name:"아이언 피팅" },
-      { key:"ft-shaft",  name:"샤프트 교체" },
-      { key:"ft-grip",   name:"그립 교체" },
-      { key:"ft-mend",   name:"클럽 수리" },
-      { key:"ft-angle",  name:"로프트 · 라이 조정" }
+      { key:"ingredient",name:"식자재" },   { key:"meat",     name:"육류 · 축산물" },
+      { key:"seafood",   name:"수산물" },   { key:"produce",  name:"농산물" },
+      { key:"beverage",  name:"음료" },     { key:"coffee-bean",name:"커피 원두" },
+      { key:"bakery",    name:"베이커리 재료" },
+      { key:"liquor",    name:"주류" },     { key:"material", name:"원재료" },
+      { key:"packaging", name:"포장재" },   { key:"delivery-box",name:"배달용기" },
+      /* ⚠️ 2026-10-22 전수검사 P1-16 — "배달대행" 이 검색에서 **0건**
+         이었습니다. 배달용기는 있는데 **배달을 맡기는 일**이 없어서,
+         매일 쓰는 외주인데 들어올 자리가 없었습니다. ⚠️ 분류를 늘린
+         것이 아니라 하위를 더한 것입니다 (업체 `subs` · 상품 `sub` 이
+         그 key 를 들고 있습니다). */
+      { key:"delivery-agent",name:"배달 대행" },
+      { key:"disposable",name:"일회용품" }, { key:"consumable",name:"소모품" },
+      { key:"uniform",   name:"유니폼" },   { key:"hygiene",  name:"위생용품" },
+      { key:"cleaning-sup",name:"청소용품" }, { key:"office-sup",name:"사무용품" }
     ]},
 
-  { key:"travel", name:"골프 여행", icon:"plane", kind:"provider", provider:true,
-    lead:"국내 · 해외 골프투어",
-    kw:"골프여행 골프투어 해외골프 동남아 일본골프 패키지 골프텔 캠프 전지훈련 견적비교",
+  /* ⚠️⚠️ **새 분류입니다** (2026-10-09 최종 통합 지시서 §5-2 C).
+     이 저장소는 묶음 틀(단계 여섯 · 여정 넷 · 영업 카테고리 열넷)을
+     만들 때 **분류를 새로 만들지 않는 것**을 규칙으로 삼아 왔습니다.
+     그런데 **장비 · 시설 수리**는 갈 곳이 없었습니다 — `equip` 은 사는 것,
+     `clean` 은 청소, `contract` 은 해지입니다. 냉장고가 멈춰서 오늘 고쳐야
+     하는 사장님이 들어올 자리가 사이트에 **한 곳도 없었습니다.**
+     ⚠️ 분류를 늘리면 `lifecycle.js`(단계 여섯)와 `sales.js`(영업 카테고리
+     열넷)에도 **같이 넣어야** 합니다 — 안 넣으면 빌드가 멈춥니다. */
+  { key:"repair", name:"수리 · 유지보수", icon:"tool", tone:"t12", kind:"provider",
+    lead:"멈췄을 때 부르는 곳",
+    kw:"소방점검 전기안전점검 가스점검 법정점검 안전점검 고장 수리기사 AS",
+    desc:"장비가 멈추면 그날 장사가 안 됩니다. 지역 · 품목으로 찾습니다.",
+    /* ⚠️⚠️ **전업종 공통인 것을 앞에 둡니다.** 화면은 하위를 다섯까지만
+       미리 보여 주는데(`StepBand`), 냉장고 · 커피머신 같은 **업종이 드러나는
+       것**을 앞에 두었더니 **미용실 창업 화면에 "커피머신 수리" 가
+       떴습니다** — 전수 점검이 잡았습니다. 에어컨 · 전기배관 · 정기
+       점검 · 렌탈 · POS 는 어느 업종이든 쓸 일이 있습니다.
+       ⚠️ 전체 목록은 `/providers/repair` 에 그대로 있습니다 — 잘라 낸 것이
+       아니라 **차례만** 바꾸었습니다 (`amCatsFor()` 와 같은 생각). */
     items:[
-      { key:"tr-home",  name:"국내 골프 여행" },
-      { key:"tr-away",  name:"해외 골프 여행" },
-      { key:"tr-tel",   name:"골프텔" },
-      { key:"tr-pack",  name:"골프 패키지" },
-      { key:"tr-camp",  name:"골프 캠프" },
-      { key:"tr-quote", name:"여행사 견적 비교" }
+      { key:"aircon-fix", name:"에어컨 수리" },
+      { key:"elec-fix",   name:"전기 · 배관 · 설비" },
+      { key:"check-up",   name:"정기 시설 점검" },
+      /* ⚠️⚠️ 2026-10-22 전수검사 P1-16 — **법으로 하게 되어 있는 점검**은
+         위의 "정기 시설 점검"(스스로 맡기는 것)과 다른 일입니다. 안
+         받으면 과태료가 나오고, 사고가 나면 그때 책임이 갈립니다.
+         ⚠️⚠️ **대상 · 주기 · 과태료 숫자를 적지 마세요** — 업종 · 면적 ·
+         설비에 따라 갈립니다 (`AM_OPS_CHECK` 와 같은 규칙). 적는 것은
+         **그런 점검이 있다**는 것까지이고, 대상인지는 관할 소방서 ·
+         한국전기안전공사 · 도시가스사가 정합니다. */
+      { key:"legal-check",name:"법정 점검 (소방 · 전기 · 가스)" },
+      { key:"rental-care",name:"렌탈 점검 · 관리" },
+      { key:"it-fix",     name:"POS · CCTV 유지보수" },
+      { key:"fridge-fix", name:"냉장 · 냉동고 수리" },
+      { key:"kitchen-fix",name:"주방설비 유지보수" },
+      { key:"coffee-fix", name:"커피머신 수리" },
+      { key:"ice-fix",    name:"제빙기 관리" }
     ]},
 
-  { key:"career", name:"골프 인력 · 비즈니스", icon:"case", kind:"board", provider:true,
-    lead:"구인 · 구직 · 제휴",
-    kw:"구인 구직 채용 알바 캐디 프로채용 제휴 B2B 도매 양도양수 매장양도",
+  { key:"admin", name:"행정 · 전문가", icon:"briefcase", tone:"t3", kind:"provider",
+    lead:"서류와 자격",
+    /* ⚠️ 검색 전용 다른 말 — 손님은 분류 이름("행정 · 전문가")을 모르고
+       **하려는 일**("세금")을 칩니다. 2026-10-20 에 창업 고르개에서
+       "세금" 이 0건이던 자리입니다 (하위는 "세무사" 라 안 걸렸습니다).
+       ⚠️⚠️ **여기 적는 것은 이 분류가 실제로 다루는 것까지입니다** —
+       없는 서비스를 적으면 걸리기만 하고 엉뚱한 데로 보냅니다. */
+    kw:"세금 세무 회계 장부 기장 노무 4대보험 인허가 허가 영업신고 보험 법률 저작권 공연권료 음악저작권 상표 상표출원 주류면허 담배소매인",
+    desc:"지역 · 전문분야 · 상담 가능 여부로 전문가를 찾습니다.",
     items:[
-      { key:"cr-coach", name:"골프 프로 구인 · 구직" },
-      { key:"cr-caddy", name:"캐디 구인" },
-      { key:"cr-hire",  name:"골프장 · 연습장 채용" },
-      { key:"cr-tieup", name:"골프업체 제휴" },
-      { key:"cr-b2b",   name:"골프장비 · 시설 B2B" },
-      { key:"cr-hand",  name:"연습장 양도양수" }
+      { key:"tax-agent", name:"세무사" },     { key:"labor-agent",name:"노무사" },
+      { key:"admin-agent",name:"행정사" },    { key:"legal",     name:"법무 · 법률" },
+      { key:"insurance", name:"보험" },       { key:"biz-reg",   name:"사업자등록" },
+      /* ⚠️ 2026-10-22 전수검사 P1-16 — "저작권" · "공연권료" 가 검색에서
+         **0건**이었습니다. 매장에서 음악을 틀면 공연권료가 붙고(저작권법
+         제29조 제2항 단서 · 시행령 제11조), 간판 이름을 지키려면 상표를
+         내야 합니다 — 둘 다 자영업자가 실제로 겪는 일인데 들어올 자리가
+         없었습니다. ⚠️ **요율 · 면적 기준 숫자를 적지 마세요** — 업종 ·
+         면적으로 갈리고 해마다 바뀝니다. */
+      { key:"copyright",  name:"저작권 · 상표" },
+      { key:"permit",    name:"인허가" },     { key:"hygiene-edu",name:"위생교육" },
+      { key:"certify",   name:"인증" }
     ]},
 
-  { key:"community", name:"골프 커뮤니티", icon:"chat", kind:"board", provider:false,
-    lead:"질문 · 후기 · 정보공유",
-    kw:"커뮤니티 게시판 질문 후기 리뷰 정보 공유 자유게시판 골프장후기 레슨후기 장비후기",
+  { key:"staff", name:"인력", icon:"users", tone:"t5", kind:"provider",
+    lead:"같이 일할 사람",
+    desc:"채용을 대신하지 않습니다 — 채용을 도와줄 곳을 연결합니다.",
     items:[
-      /* ⚠️⚠️⚠️ **게시판은 여기 한 줄을 더하면 늘어납니다** (2026-11-06).
-         목록 거르개 · 글쓰기 고르개 · `/my` 의 내 글 · 커뮤니티 첫
-         화면의 묶음이 **전부 이 줄을 읽습니다**(`amCatItems`) — 화면에
-         이름을 글자로 박은 자리가 한 곳도 없습니다.
-         ⚠️⚠️ **키는 새로 더하기만 합니다.** 이미 올라온 글이 `cq.cat` 에
-         키를 **글자로** 들고 있어서, 키를 바꾸면 그 글들이 없는 게시판에
-         묶입니다 (작업 기억 — "분류 키를 바꿀 수 있는 때는 데이터가
-         0건일 때뿐입니다").
-         ⚠️⚠️⚠️ **사고파는 글을 받는 게시판은 만들지 않습니다** — 회원권
-         매매 · 쿠폰 양도 같은 것은 **중고 직거래(0056)** 로 갑니다. 거기만
-         값을 반드시 받고(지어낸 "협의" 가 안 생깁니다), 연락처를 양쪽이
-         따로 열고 닫으며(제17조 제2항), 분쟁 때 낼 것이 남습니다. 글
-         게시판으로 받으면 그 자물쇠를 전부 지나갑니다(제20조의4). */
-      { key:"cm-open",   name:"자유게시판" },
-      { key:"cm-ask",    name:"골프 질문" },
-      { key:"cm-course", name:"골프장 후기" },
-      { key:"cm-lesson", name:"레슨 후기" },
-      { key:"cm-gear",   name:"장비 후기" },
-      { key:"cm-screen", name:"스크린골프" },
-      { key:"cm-swing",  name:"스윙 · 연습" },
-      { key:"cm-begin",  name:"초보 입문" },
-      { key:"cm-tip",    name:"골프 정보" },
-      { key:"cm-event",  name:"대회 · 이벤트" },
-      { key:"cm-club",   name:"동호회" },
-      { key:"cm-women",  name:"여성 골퍼" }
+      { key:"fulltime", name:"정직원" },     { key:"parttime", name:"아르바이트" },
+      { key:"pro-staff",name:"업종별 전문인력" },
+      { key:"headhunt", name:"헤드헌팅" },   { key:"training", name:"교육" },
+      { key:"outsource",name:"외주" }
+    ]},
+
+  { key:"marketing", name:"마케팅 · 디자인", icon:"megaphone", tone:"t8", kind:"provider",
+    lead:"알리는 일",
+    desc:"브랜딩부터 오픈 마케팅까지 맡길 곳을 비교합니다.",
+    kw:"현수막 배너 블로그마케팅 인스타마케팅 인스타그램 네이버플레이스 바이럴 온라인광고",
+    items:[
+      { key:"naming",   name:"브랜드 네이밍" }, { key:"logo",     name:"로고" },
+      { key:"bici",     name:"BI · CI" },       { key:"menu-design",name:"메뉴판" },
+      { key:"package",  name:"패키지" },        { key:"photo",    name:"사진" },
+      { key:"video",    name:"영상" },          { key:"sns",      name:"SNS" },
+      { key:"blog",     name:"블로그" },        { key:"place",    name:"플레이스 관리" },
+      { key:"ad-agency",name:"광고대행" },      { key:"influencer",name:"인플루언서" },
+      { key:"flyer",    name:"전단지" },        { key:"outdoor",  name:"옥외광고" },
+      { key:"open-mkt", name:"오픈 마케팅" },
+      /* ⚠️ 2026-10-09 §5-2 E — 문 열고 나서 계속 돈이 드는 둘입니다 */
+      { key:"review",   name:"리뷰 관리" },   { key:"crm",      name:"고객 관리" }
+    ]},
+
+  { key:"clean", name:"청소 · 방역 · 유지관리", icon:"sparkle", tone:"t2", kind:"provider",
+    lead:"열기 전과 연 다음",
+    desc:"입주청소부터 정기 관리까지 맡길 곳을 찾습니다.",
+    items:[
+      { key:"move-in",  name:"입주청소" },   { key:"kitchen-clean",name:"주방청소" },
+      { key:"aircon",   name:"에어컨청소" }, { key:"disinfect",name:"방역" },
+      { key:"pest",     name:"해충방제" },   { key:"regular",  name:"정기청소" },
+      { key:"facility", name:"시설관리" }
+    ]},
+
+  { key:"fund", name:"자금 · 정부지원", icon:"wallet", tone:"t5", kind:"info",
+    lead:"돈이 드는 일이니까",
+    desc:"창업자금과 정책자금 정보를 모아 둡니다.",
+    to:"/support",
+    items:[
+      { key:"startup-fund",name:"창업자금 정보" }, { key:"policy-fund",name:"정책자금" },
+      { key:"gov-program", name:"정부지원사업" }, { key:"guarantee",  name:"보증제도" },
+      { key:"finance",     name:"금융 제휴" },    { key:"insure",     name:"보험" },
+      { key:"payment-svc", name:"결제" }
     ]}
 ];
 
-/* ════════════════════════════════════════════════════════════════════
-   네 영역 — 2차 지시서 §4
+/* ── CLOSE · 폐업에 필요한 모든 것 ──────────────────────────────── */
+window.AM_CLOSE_CATS = [
+  { key:"process", name:"폐업 절차", icon:"listck", tone:"t7", kind:"info",
+    lead:"무엇부터 해야 하는지",
+    desc:"순서 · 필요서류 · 예상되는 비용 · 기한을 정리합니다.",
+    items:[
+      { key:"checklist", name:"폐업 체크리스트" }, { key:"steps",   name:"폐업 절차" },
+      { key:"documents", name:"필요서류" },        { key:"cost",    name:"예상비용" },
+      { key:"schedule",  name:"일정관리" },        { key:"expert",  name:"관련 전문가" }
+    ]},
 
-   열 분류를 **그대로 두고** 메인 가운데에 크게 묶어 보여 줍니다.
-   ⚠️⚠️ **분류를 여기 다시 적지 않습니다** — 키만 가리킵니다. 이름을
-   두 곳에 적으면 한쪽만 고쳐서 조용히 달라집니다.
-   ⚠️ 어느 분류도 **빠지거나 두 번 들어가면 안 됩니다** — build.js 가
-   빌드에서 셉니다.
-   ════════════════════════════════════════════════════════════════════ */
-/* ════════════════════════════════════════════════════════════════════
-   분류마다 **다르게 여쭙는 것** (4차 지시서 §6)
+  { key:"transfer", name:"매장 양도", icon:"handover", tone:"t1", kind:"listing",
+    lead:"가게를 통째로 넘기기",
+    desc:"점포 · 권리금 · 시설을 포함해 넘기실 수 있습니다.",
+    kw:"권리금계산 권리금산정 가게넘기기 점포양도 매장매매",
+    to:"/stores",
+    items:[
+      { key:"store-transfer",name:"점포 양도" },   { key:"premium",  name:"권리금" },
+      { key:"equip-transfer",name:"시설 양도" },   { key:"find-buyer",name:"인수자 찾기" },
+      { key:"fc-transfer",   name:"프랜차이즈 매장 양도" }
+    ]},
 
-   ⚠️⚠️⚠️ **여기 적은 것은 전부 실제로 받는 칸입니다.** 지어낸 약속이
-   아닙니다 (절대 규칙 5). 뒤의 열쇠가 **어느 칸으로 들어가는지**입니다 —
-     svc     매칭 요청 양식의 하위 분류 체크 (request_item)
-     region  지역 고르개 (request.region)
-     want    희망 일정 (request.want_at)
-     budget  예산 아래 · 위 (request.budget_min · budget_max)
-     body    더 하실 말씀 (request.body · 2000자) — ⚠️ 그 칸의 길잡이 글이
-             분류마다 **이 줄에서** 바뀝니다 (js/matchform.js). 길잡이를
-             안 바꾸면 "여쭙는다" 고 적어 놓고 **안 여쭙는** 꼴입니다.
+  { key:"asset", name:"시설 · 집기 처분", icon:"sofa", tone:"t3", kind:"listing",
+    lead:"쓰던 장비와 집기",
+    desc:"개별 판매 · 일괄 판매 · 시설 전체 인수까지 됩니다.",
+    kw:"중고주방 중고주방기기 중고장비 장비매각 집기매각",
+    to:"/assets",
+    items:[
+      { key:"kitchen-eq",name:"주방장비" },  { key:"fridge",  name:"냉장 · 냉동" },
+      { key:"espresso",  name:"커피머신" },  { key:"furniture",name:"가구" },
+      { key:"pos",       name:"POS" },       { key:"kiosk",   name:"키오스크" },
+      { key:"fitness",   name:"운동기구" },  { key:"salon-eq",name:"미용기기" },
+      { key:"biz-eq",    name:"업소용 장비" }
+    ]},
 
-   ⚠️⚠️ **없는 분류는 비워 둡니다.** 조인 · 인력 · 커뮤니티는 회원끼리
-   쓰는 자리이고 그 기능이 아직 없습니다 — 요청 양식으로 보내면 눌러도
-   아무 데도 안 닿습니다. 지시서가 적어 준 항목이라도 **받을 자리가
-   없으면 적지 않습니다.**
-   ⚠️ 지시서가 "실제 예약 조건" 을 적었지만 우리가 예약을 잡아 드리는
-   장치가 없습니다 — "원하시는 티타임 · 인원" 까지만 받고, 예약은 업체와
-   직접 하십니다 (§6 "예약 가능 ... 문구를 표시하지 않는다").
-   ════════════════════════════════════════════════════════════════════ */
-/* ════════════════════════════════════════════════════════════════════
-   분류마다 **다르게 여쭙는 것** — 셋째 칸이 `true` 면 **필수**입니다
+  { key:"stock", name:"재고 처분", icon:"boxes", tone:"t2", kind:"listing",
+    lead:"남은 것",
+    desc:"식자재 · 상품 · 포장재 · 소모품을 업종별로 내놓습니다.",
+    to:"/assets",
+    items:[
+      { key:"ingredient",name:"식자재" },  { key:"goods",    name:"상품" },
+      { key:"packaging", name:"포장재" },  { key:"consumable",name:"소모품" },
+      { key:"material",  name:"원재료" },  { key:"etc-stock",name:"기타 재고" }
+    ]},
 
-   줄 꼴은 [보여 줄 말, 어느 칸으로 받나, 필수인가] 입니다.
-   셋째를 안 적으면 **선택**입니다 (전에는 셋째 칸이 아예 없었습니다).
+  { key:"demolish", name:"철거", icon:"hammer", tone:"t9", kind:"provider",
+    lead:"뜯어내는 일",
+    desc:"지역 · 평수 · 업종 · 사진을 올리면 여러 곳에서 견적이 옵니다.",
+    items:[
+      { key:"full",     name:"전체철거" },  { key:"partial", name:"부분철거" },
+      { key:"kitchen",  name:"주방철거" },  { key:"sign",    name:"간판철거" },
+      { key:"facility", name:"시설철거" },
+      /* ⚠️⚠️ **`waste` 분류와 이름을 갈라 둡니다** (2026-10-22 전수검사 P1-15).
+         여기 것은 **철거하며 나오는 것**이라 철거업체가 같이 싣고 가고,
+         `waste` 분류는 **따로 부르는 수거**입니다 (남은 짐 · 가구 · 전자
+         제품). 둘 다 "폐기물" 이면 폐업 전문관 한 화면에 같은 이름이
+         둘이고, 어느 쪽을 골라야 하는지가 안 읽힙니다 — `pickDupLabels()`
+         는 **글자가 똑같을 때만** 묶음 이름을 붙여서 이것을 못 잡습니다. */
+      { key:"waste",   name:"철거 폐기물" }
+    ]},
 
-   ⚠️⚠️⚠️ **왜 필수를 가르는가.** 전에는 분류 화면이 "지역 · 날짜를
-   여쭙습니다" 라고 적어 놓고 양식에서는 **전부 선택**이었습니다. 그래서
-   ① 부킹 요청에 **날짜가 없어도** 들어왔습니다 — 업체가 견적을 낼 수가
-   없습니다 ② 지역이 빈 요청이 들어왔는데, `js/assign.js` 는 **분류 + 지역**
-   으로 후보를 고릅니다 — 지역이 비면 맞는 업체를 고를 수가 없고 운영자는
-   손님에게 다시 물어야 합니다. 적어 놓고 안 받은 것입니다.
+  { key:"restore", name:"원상복구", icon:"roller", tone:"t5", kind:"provider",
+    lead:"임대차가 끝나기 전에",
+    desc:"어디까지 복구해야 하는지부터 확인하고 견적을 받습니다.",
+    kw:"원상복구비용 복구공사 철거후복구 벽복구 바닥복구",
+    items:[
+      { key:"shop-restore",name:"상가 원상복구" }, { key:"electric",name:"전기" },
+      { key:"plumbing",    name:"배관" },          { key:"gas",     name:"가스" },
+      { key:"floor",       name:"바닥" },          { key:"wall",    name:"벽" },
+      { key:"ceiling",     name:"천장" },          { key:"sign",    name:"간판" }
+    ]},
 
-   ⚠️⚠️ **예산은 어느 분류에서도 필수가 아닙니다.** 손님이 모르는 것이
-   정상이고, 강요하면 **지어내서 적습니다** — 그 숫자로 업체가 견적을
-   내면 서로 틀린 값을 보고 이야기하게 됩니다.
+  { key:"waste", name:"폐기물 · 수거", icon:"trash", tone:"t7", kind:"provider",
+    lead:"내보내는 일",
+    desc:"허가가 필요한 일입니다 — 자격을 확인한 곳으로 연결합니다.",
+    items:[
+      { key:"biz-waste", name:"사업장 폐기물" }, { key:"bulky",   name:"대형폐기물" },
+      { key:"furniture", name:"가구" },          { key:"electronics",name:"전자제품" },
+      { key:"biz-eq",    name:"업소용 장비" },   { key:"recycle", name:"재활용품" }
+    ]},
 
-   ⚠️⚠️⚠️ **이것은 화면의 규칙이고 DB 가 막는 것이 아닙니다.**
-   `make_request`(0041)는 분류마다 다른 규칙을 모릅니다 — 알게 하려면
-   하위분류 키 예순둘을 SQL 에 박아야 하고, 그러면 분류가 느는 날 화면과
-   DB 가 조용히 어긋납니다 (작업 기억 — 같은 규칙을 두 곳에 적는 자리).
-   그래서 **못 막는 것을 막는다고 적지 않습니다**: 주소로 직접 부르면
-   빈 값도 들어갑니다. 재려는 뜻은 "손님이 양식에서 빠뜨리지 않게" 입니다.
+  { key:"tax", name:"폐업 세무 · 행정", icon:"calc", tone:"t7", kind:"provider",
+    lead:"신고하고 정리하는 일",
+    desc:"기한을 놓치면 가산세가 붙습니다. 전문가와 확인하세요.",
+    kw:"폐업신고서 폐업신고절차 부가세신고 폐업세금",
+    items:[
+      { key:"close-report",name:"폐업신고" },     { key:"vat",     name:"부가세" },
+      { key:"income-tax",  name:"종합소득세" },   { key:"biz-reg", name:"사업자등록 정리" },
+      { key:"permit",      name:"인허가 정리" },  { key:"consult", name:"전문가 상담" }
+    ]},
 
-   ⚠️ 받을 자리가 없는 분류(조인 · 인력 · 커뮤니티)는 **비워 둡니다** —
-   그러면 그 구간이 화면에서 줄째 빠집니다. 그 셋은 제 양식이 따로
-   있습니다 (0046 · 0047 · 0048).
-   ════════════════════════════════════════════════════════════════════ */
-window.AM_ASK = {
-  lesson: [
-    ["레슨 유형",                    "svc",    true],
-    /* ⚠️ 배정이 지역으로 후보를 고릅니다 (js/assign.js) */
-    ["지역",                         "region", true],
-    ["희망 일정",                    "want"],
-    ["수업료",                       "budget"],
-    ["배우고 싶은 것 · 강사 조건",     "body",   true]
-  ],
-  booking: [
-    ["어떤 부킹인지",                "svc",    true],
-    ["지역",                         "region", true],
-    /* ⚠️ 날짜 없는 부킹 요청은 업체가 견적을 낼 수 없습니다 */
-    ["원하시는 날짜",                "want",   true],
-    ["예산",                         "budget"],
-    ["희망 티타임 · 인원",            "body",   true]
-  ],
-  range: [
-    ["실내 · 실외 · 스크린",          "svc",    true],
-    ["지역",                         "region", true],
-    ["이용료",                       "budget"],
-    /* ⚠️ 연습장은 "가까운 곳" 이면 되는 분이 많아 선택으로 둡니다 */
-    ["원하시는 시설 · 이용 시간대",    "body"]
-  ],
-  market: [
-    ["상품 종류",                    "svc",    true],
-    /* ⚠️ 택배로 받는 분이 많아 지역은 선택입니다 */
-    ["지역",                         "region"],
-    ["예산",                         "budget"],
-    ["브랜드 · 모델 · 새것인지 중고인지", "body", true]
-  ],
-  fitting: [
-    ["서비스 종류",                  "svc",    true],
-    /* ⚠️ 택배 피팅 · 택배 수리가 있어 지역은 선택입니다 */
-    ["지역",                         "region"],
-    ["예상 비용",                    "budget"],
-    ["클럽 · 증상 · 방문인지 택배인지", "body",  true]
-  ],
-  travel: [
-    ["여행 종류",                    "svc",    true],
-    ["출발 지역",                    "region", true],
-    ["희망 일정",                    "want",   true],
-    ["예산",                         "budget"],
-    ["목적지 · 인원 · 포함되었으면 하는 것", "body", true]
-  ],
-  used: [
-    ["매입 견적인지 위탁판매인지",     "svc",    true],
-    /* ⚠️ 택배 매입이 있어 지역은 선택입니다 */
-    ["지역",                         "region"],
-    ["희망 가격",                    "budget"],
-    ["브랜드 · 모델 · 부위 · 상태",    "body",   true]
-  ]
-};
+  { key:"labor", name:"직원 · 노무", icon:"users", tone:"t5", kind:"provider",
+    lead:"같이 일하던 사람",
+    desc:"퇴직금과 4대보험 정리는 순서가 있습니다.",
+    kw:"4대보험료 사대보험 퇴직금계산 해고예고수당",
+    items:[
+      { key:"resign",   name:"직원 퇴직" },   { key:"severance",name:"퇴직금" },
+      { key:"insurance4",name:"4대보험" },    { key:"contract-end",name:"근로계약 종료" },
+      { key:"consult",  name:"노무상담" }
+    ]},
 
-/* 그 분류로 요청할 수 있는가 — ⚠️ 판단은 **여기 한 곳**입니다.
-   화면도 양식도 이 함수를 부릅니다 (두 곳에 적으면 조용히 어긋납니다). */
-window.amAskOf = function(c){
-  var k = (c && c.key) || c;
-  var a = window.AM_ASK[k];
-  return (a && a.length) ? a : null;
-};
+  { key:"contract", name:"계약 해지", icon:"filex", tone:"t4", kind:"provider",
+    lead:"묶여 있는 것들",
+    desc:"약정 기간이 남아 있으면 위약금이 생깁니다. 먼저 확인하세요.",
+    items:[
+      { key:"internet", name:"인터넷" }, { key:"phone",   name:"전화" },
+      { key:"pos",      name:"POS" },    { key:"kiosk",   name:"키오스크" },
+      { key:"rental",   name:"렌탈" },   { key:"water",   name:"정수기" },
+      { key:"cctv",     name:"CCTV" },   { key:"security",name:"보안" },
+      { key:"insurance",name:"보험" }
+    ]},
 
-/* 그 분류에서 **필수**인 칸만 — ⚠️ 판단은 **여기 한 곳**입니다.
-   분류 화면이 별표를 찍는 자리와 양식이 required 를 거는 자리가 같은
-   줄을 읽습니다. 두 곳에 적으면 "필수라고 적어 놓고 안 받는" 꼴이
-   됩니다 (`tools/test-match.js` 가 맞춰 봅니다).
-   ⚠️ 모르는 분류면 **빈 것**을 돌려줍니다 — 모르는 것을 필수로 걸면
-   손님이 양식을 못 보냅니다. */
-window.amAskReq = function(c){
-  var a = window.amAskOf(c), out = {};
-  if(!a) return out;
-  a.forEach(function(x){ if(x[2]) out[x[1]] = true; });
-  return out;
-};
+  { key:"law", name:"법률 · 채무", icon:"scale", tone:"t6", kind:"provider",
+    lead:"다툼이 생겼을 때",
+    desc:"저희가 대리하지 않습니다 — 자격 있는 전문가를 연결합니다.",
+    kw:"제소전화해 명도소송 보증금반환 임대차분쟁",
+    items:[
+      { key:"lease",    name:"임대차" },   { key:"receivable",name:"미수금" },
+      { key:"debt",     name:"채권 · 채무" }, { key:"dispute", name:"계약분쟁" },
+      { key:"consult",  name:"법률상담" }
+    ]},
 
-/* 그 분류가 그 칸을 **뭐라고 부르는가** — ⚠️⚠️ 양식의 이름표가
-   `AM_ASK` 와 **같은 줄**을 읽어야 합니다. 2026-11-08 까지 `/match` 의
-   지역 칸이 이름표를 「지역」으로 **글자로 박고** 있었는데, 여행은
-   `AM_ASK` 가 「**출발 지역**」이라고 적어 두었습니다 — 분류 화면은
-   "출발 지역을 여쭙습니다" 라고 말해 놓고 양식은 그냥 "지역" 이라
-   물었습니다(`test-match` 는 **키**로 맞춰 보므로 영원히 초록입니다).
-   ⚠️ 못 찾으면 넘겨준 기본 이름을 씁니다(지어내지 않습니다). */
-window.amAskLabel = function(c, key, dflt){
-  var a = window.amAskOf(c);
-  if(a) for(var i = 0; i < a.length; i++) if(a[i][1] === key) return a[i][0];
-  return dflt || "";
-};
-
-/* 그 분류의 **더 하실 말씀** 칸에 띄울 길잡이 — body 로 받는 것들입니다 */
-window.amAskBody = function(c){
-  var a = window.amAskOf(c);
-  if(!a) return "";
-  var t = a.filter(function(x){ return x[1] === "body"; })
-           .map(function(x){ return x[0]; });
-  return t.length ? ("예: " + t.join(" · ")) : "";
-};
-
-window.AM_ZONES = [
-  { key:"learn", name:"골프 배우기", icon:"swing",
-    lead:"실력 향상을 위한 모든 것",
-    cats:["lesson", "range", "fitting"] },
-  { key:"trade", name:"골프 사고팔기", icon:"cart",
-    lead:"믿고 거래하는 골프 마켓",
-    cats:["used", "market"] },
-  { key:"play",  name:"골프 즐기기", icon:"flag",
-    lead:"라운딩부터 골프투어까지",
-    cats:["booking", "matchup", "travel"] },
-  { key:"biz",   name:"골프 비즈니스 · 소통", icon:"case",
-    lead:"골프업계의 새로운 기회",
-    cats:["career", "community"] }
+  { key:"support", name:"폐업지원", icon:"coins", tone:"t2", kind:"info",
+    lead:"받을 수 있는 것",
+    desc:"철거비 지원처럼 조건만 맞으면 받는 것이 있습니다.",
+    to:"/support",
+    items:[
+      { key:"gov-close", name:"정부 폐업지원" }, { key:"demolish-fund",name:"철거비 지원" },
+      { key:"rehire",    name:"재취업" },        { key:"restart",  name:"재창업" },
+      { key:"policy",    name:"정책지원" },      { key:"program",  name:"지원사업" }
+    ]}
 ];
 
-/* ── 꺼내 쓰는 자리 — 규칙은 **한 함수**에 두고 모두가 그것을 부릅니다 ── */
+/* ── 찾아 쓰는 함수 ──────────────────────────────────────────────── */
+window.AM_CATS = (window.AM_START_CATS || []).concat(window.AM_CLOSE_CATS || []);
 
-/* ⚠️⚠️ **분류 주소는 여기서만 짓습니다.** 한 번 build.js 에서만 /cat/ 으로
-   바꾸고 링크는 /c/ 로 남겨 둔 적이 있습니다 — 화면 열두 장의 링크
-   예순다섯 곳이 전부 410 으로 갈 뻔했습니다.
-   ⚠️ c 한 글자는 못 씁니다 — vercel.json 이 /c/:p* 를 410 으로 보냅니다. */
-window.amCatUrl = function(c){
-  var key = (typeof c === "string") ? c : (c && c.key);
-  return key ? "/cat/" + key : "/categories";
+/* 하위 분류 key → 이름. ⚠️ 전에는 `/p/:id` 화면 안에 박혀 있어서,
+   다른 자리(후기 · 검색)에서 쓰려면 같은 반복문을 또 적어야 했습니다. */
+window.amSubName = function(key){
+  if(!key) return "";
+  var cats = window.AM_CATS || [];
+  for(var i = 0; i < cats.length; i++){
+    var items = cats[i].items || [];
+    for(var j = 0; j < items.length; j++)
+      if(items[j].key === key) return items[j].name;
+  }
+  return key;
 };
 
-/* 분류 하나 — 없는 키면 null (지어내지 않습니다) */
 window.amCat = function(key){
-  var L = window.AM_CATS || [];
-  for(var i=0;i<L.length;i++) if(L[i].key === key) return L[i];
-  return null;
+  var r = AM_CATS.filter(function(c){ return c.key === key; });
+  return r.length ? r[0] : null;
 };
-
-/* 분류의 하위 — 없으면 빈 배열 */
-window.amCatItems = function(c){
-  if(typeof c === "string") c = window.amCat(c);
-  return (c && Array.isArray(c.items)) ? c.items : [];
+window.amCatSide = function(key){
+  return (window.AM_START_CATS||[]).some(function(c){ return c.key === key; }) ? "start" : "close";
 };
-
-/* 업체가 **고를 수 있는** 하위만 — 입점 양식이 이것을 씁니다.
-   ⚠️ pv 를 안 적은 하위는 분류의 provider 를 따릅니다. */
-window.amCatItemsForProvider = function(c){
-  if(typeof c === "string") c = window.amCat(c);
-  if(!c) return [];
-  return window.amCatItems(c).filter(function(it){
-    return (it.pv === undefined) ? !!c.provider : !!it.pv;
-  });
-};
-
-/* 업체가 입점하는 분류만 — 입점 안내 · 입점 양식이 이것을 씁니다.
-   ⚠️ 고를 수 있는 하위가 **하나도 없는** 분류는 뺍니다 (빈 칸이 됩니다). */
-window.amCatsForProvider = function(){
-  return (window.AM_CATS || []).filter(function(c){
-    return c.provider && window.amCatItemsForProvider(c).length > 0;
-  });
-};
-
-/* 하위 키 하나로 분류와 하위를 되찾습니다 — 배정 · 저장된 신청을 읽을 때 */
-window.amSub = function(subKey){
-  var L = window.AM_CATS || [];
-  for(var i=0;i<L.length;i++){
-    var it = window.amCatItems(L[i]);
-    for(var j=0;j<it.length;j++) if(it[j].key === subKey)
-      return { cat:L[i], item:it[j] };
+/* 업종을 알면 장비 하위 분류가 그 업종 것으로 바뀝니다 (§12) */
+window.amCatItems = function(cat, industryKey){
+  if(!cat) return [];
+  if(cat.byIndustry){
+    var ind = (typeof amIndustry === "function") ? amIndustry(industryKey) : null;
+    return (ind && ind.equip) ? ind.equip : [];
   }
-  return null;
+  return cat.items || [];
+};
+/* 업종이 정한 차례대로 카테고리를 돌려줍니다 (§41) */
+window.amCatsFor = function(industryKey, side){
+  var ind = (typeof amIndustry === "function") ? amIndustry(industryKey) : null;
+  var all = (side === "close") ? (window.AM_CLOSE_CATS||[]) : (window.AM_START_CATS||[]);
+  if(!ind) return all;
+  var order = (side === "close") ? (ind.closure||[]) : (ind.startup||[]);
+  if(!order.length) return all;
+  var picked = order.map(function(k){
+    return all.filter(function(c){ return c.key === k; })[0];
+  }).filter(Boolean);
+  /* 차례에 안 적힌 것도 빠뜨리지 않고 뒤에 붙입니다 —
+     ⚠️ 여기서 잘라 내면 그 업종 사장님에게는 그 기능이 없는 것이 됩니다 */
+  all.forEach(function(c){ if(picked.indexOf(c) < 0) picked.push(c); });
+  return picked;
+};
+/* 하위 분류 하나 찾기 — 업체 입점 · 업체 목록의 단위입니다 */
+window.amSub = function(catKey, subKey, industryKey){
+  var c = amCat(catKey); if(!c) return null;
+  var r = amCatItems(c, industryKey).filter(function(i){ return i.key === subKey; });
+  return r.length ? r[0] : null;
 };
 
-/* ⚠️⚠️⚠️ **하위분류로 업체를 좁혀 가는 주소 — 여기서만 짓습니다.**
-   하위 예순둘은 분류 화면에 **글로만** 있어서 거기까지 가는 길이
-   없었습니다 ("화면이 있다" 와 "거기까지 가는 길이 있다" 는 다릅니다 —
-   `/login` · `/my` 에서 겪은 자리). 지금은 업체찾기의 `sub` 로 갑니다.
-   ⚠️ 주소를 두 곳에 지으면 한쪽만 고쳐서 링크가 조용히 엉뚱한 데로
-   갑니다 (`amCatUrl` 로 겪었습니다) — 빌드도 브라우저도 이 함수를
-   부릅니다.
-   ⚠️ 하위 키가 없으면 분류만으로 좁힙니다 (지어내지 않습니다). */
-/* 그 하위가 **업체가 하는 일**인가 — `amSubUrl()` 이 갈래를 가를 때
-   씁니다. ⚠️ `pv` 를 안 적은 하위는 그 분류가 업체를 받는지로 갈립니다
-   (`amCatItemsForProvider` 와 **같은 규칙**이어야 합니다). */
-function amSubIsPv(catKey, subKey){
-  var L = window.amCatItemsForProvider(catKey) || [];
-  for(var i = 0; i < L.length; i++) if(L[i].key === subKey) return true;
-  return false;
-}
-/* 그 하위를 **누를 수 있는가** — 누르면 실제로 좁혀지는 자리가 있을
-   때만 링크로 냅니다 (절대 규칙 5 — 눌러도 아무 일이 안 나는 칸을 미리
-   만들지 않습니다).
-   ⚠️⚠️ 조인 다섯은 **글로 둡니다** — `joinroom` 에 하위 칸이 없어 좁힐
-   자료가 **정말로** 없습니다. 링크로 내면 영원히 0건인 자리로 보내는
-   것이고, 그건 눌러도 아무 일이 안 나는 칸과 같습니다.
-   ⚠️ 인력 · 게시판 · 중고의 하위는 제 목록이 `?s=` 를 읽습니다
-   (`js/career.js` · `js/community.js` · `js/listing.js`).
-   ⚠️ 그 밖은 **업체가 하는 하위**만 — 업체찾기가 `sub` 로 좁힙니다. */
-window.amSubGoes = function(catKey, subKey){
-  var c = (typeof catKey === "string") ? catKey : (catKey && catKey.key);
-  if(c === "career" || c === "community" || c === "used") return true;
-  return amSubIsPv(c, subKey);
-};
-window.amSubUrl = function(catKey, subKey){
-  var c = (typeof catKey === "string") ? catKey : (catKey && catKey.key);
-  /* ⚠️⚠️⚠️ **하위를 쉼표로 여럿 보낼 수 있습니다** (2026-11-09 · 머리말
-     하위 메뉴). 「골프 의류 · 신발」 처럼 **메뉴 이름 하나가 하위 둘**을
-     말하는 자리가 넷 있습니다 — 하나만 보내면 이름이 "신발" 을 말해 놓고
-     안 걸러 주는 꼴입니다.
-     ⚠️ 갈래(업체찾기냐 제 목록이냐)는 **첫 키**로 가릅니다 — 한 메뉴에
-     갈래가 다른 키를 섞으면 어차피 갈 자리가 둘이 되므로, 섞어 적는 것이
-     잘못입니다(섞으면 첫 키 쪽으로 가고 나머지는 거기서 안 걸립니다).
-     ⚠️ 받는 쪽이 쉼표를 갈라야 합니다 — `js/search.js`(sub) ·
-     `js/community.js`(s) 둘이 그렇게 합니다. 새 갈래를 더하는 날
-     **받는 쪽도 같이** 보세요. */
-  var first = String(subKey || "").split(",")[0].trim();
-  /* ⚠️⚠️⚠️ **인력 · 비즈니스의 하위는 업체 목록이 아닙니다.** "골프 프로
-     구인 · 구직" 을 업체찾기로 보내면 그 화면은 **영원히 0건**이고, 그건
-     눌러도 아무 일이 안 나는 칸과 같습니다 (절대 규칙 5). 그 하위는
-     제 글 목록으로 보냅니다 (`/cat/career` 의 `js/career.js` 가 `s=` 를
-     읽어 좁힙니다).
-     ⚠️ 갈래를 가르는 판단을 화면마다 적지 않습니다 — 여기 한 곳입니다. */
-  if(c === "career")
-    return "/cat/career" + (subKey ? "?s=" + encodeURIComponent(subKey) : "");
-  /* ⚠️⚠️⚠️ **게시판 열둘과 중고 물건 종류 일곱도 같은 자리입니다**
-     (2026-11-08). 그 열아홉은 `<span>` 으로 그려져 **한 번도 안 눌렸는데**,
-     받는 쪽은 진작 있었습니다 — `js/community.js` 와 `js/listing.js` 가
-     둘 다 `?s=` 를 읽습니다. **받는 쪽은 있는데 가는 길이 없던** 자리이고,
-     0067 에서 인력 `?rg=` · 구합니다 `?s=` 로 겪은 그 자리의 거울상입니다.
-     ⚠️ 중고는 **하위마다 갈립니다** — 업체가 하는 둘(`pv:true` · 매입
-     견적 · 위탁판매)은 업체찾기로, 나머지 일곱(회원끼리 쓰는 물건 종류)은
-     매물 목록으로 갑니다. 그 판단을 화면에 적으면 두 곳이 됩니다. */
-  if(c === "community")
-    return "/cat/community" + (subKey ? "?s=" + encodeURIComponent(subKey) : "");
-  if(c === "used" && subKey && !amSubIsPv("used", first))
-    return "/cat/used?s=" + encodeURIComponent(subKey);
-  /* ⚠️⚠️⚠️ **레슨은 2026-11-10 부터 제 화면에서 좁힙니다** (레슨 지시서
-     §5 — "각 카드를 누르면 해당 카테고리로 필터링된 프로 목록을 표시한다").
-     전에는 업체찾기로 보냈는데, 그러면 시안의 카테고리 카드를 누를 때마다
-     **화면이 통째로 바뀌어** 거르개 · 정렬 · 우측 레일이 사라집니다.
-     ⚠️ `/search?cat=lesson&sub=` 로 직접 들어오셔도 그대로 돕니다
-     (`js/search.js` 가 `sub` 를 그대로 읽습니다) — 길을 **없앤 것이
-     아니라 기본을 바꾼 것**입니다. */
-  if(c === "lesson")
-    return "/cat/lesson" + (subKey ? "?sub=" + encodeURIComponent(subKey) : "");
-  /* ⚠️⚠️⚠️ **피팅 · 수리도 2026-11-12 부터 제 화면에서 좁힙니다**
-     (확정 시안 ⑦ — 서비스 종류 탭을 누르면 그 일을 하는 업체만
-     남고 거르개와 차례는 그대로 서 있습니다). 업체찾기로 보내면
-     누를 때마다 **화면이 통째로 바띀어** 레일과 차례가 사라집니다 —
-     레슨에서 같은 판단을 한 그 자리입니다.
-     ⚠️ `/search?cat=fitting&sub=` 로 직접 들어오셔도 그대로 돵니다
-     (`js/search.js` 가 `sub` 을 그대로 읽습니다) — 길을 **없앤 것이
-     아니라 기본을 바꿜 것**입니다. */
-  if(c === "fitting")
-    return "/cat/fitting" + (subKey ? "?sub=" + encodeURIComponent(subKey) : "");
-  var qs = [];
-  if(c)      qs.push("cat=" + encodeURIComponent(c));
-  if(subKey) qs.push("sub=" + encodeURIComponent(subKey));
-  return "/search" + (qs.length ? "?" + qs.join("&") : "");
+/* ════════════════════════════════════════════════════════════════════
+   창업을 **과정**으로 보여 줍니다 (§7)
+
+   분류를 열세 개 늘어놓으면 손님이 그걸 공부해야 합니다. 사장님이
+   알고 싶은 것은 **"내가 지금 어디까지 왔고 다음에 뭘 해야 하는가"**
+   입니다.
+
+   ⚠️ **단계는 업종과 무관하게 같습니다.** 자리를 찾고 → 만들고 →
+   채우고 → 영업 준비하고 → 손님을 받는 것은 카페든 미용실이든
+   같습니다. 업종이 갈리는 것은 **각 단계 안의 하위 서비스**입니다
+   (카페 3단계에 커피머신, 미용 3단계에 샴푸대).
+
+   ⚠️⚠️ **모든 분류가 어느 한 단계에는 들어가야 합니다.** 빠뜨리면
+   그 분류가 창업 화면에서 **조용히 사라집니다** — 에러도 안 나고
+   화면도 멀쩡합니다. `check.js` 가 개수를 맞춰 봅니다.
+   ════════════════════════════════════════════════════════════════════ */
+window.AM_START_STEPS = [
+  { n:"01", key:"place", name:"자리 찾기", icon:"map",
+    lead:"무엇을 할지 정하고, 돈을 마련하고, 자리를 고릅니다",
+    cats:["item","fund","store","area"] },
+  { n:"02", key:"build", name:"가게 만들기", icon:"hammer",
+    lead:"공사가 제일 오래 걸리고 제일 많이 듭니다",
+    cats:["interior"] },
+  { n:"03", key:"fill",  name:"채우기", icon:"box",
+    lead:"업종에 따라 여기가 제일 많이 갈립니다",
+    cats:["equip","furniture","supply"] },
+  { n:"04", key:"ready", name:"영업 준비", icon:"doc",
+    lead:"서류와 시스템. 빠뜨리면 문을 못 엽니다",
+    cats:["it","admin","staff"] },
+  /* ⚠️⚠️ `repair`(수리 · 유지보수)가 여기 들어왔습니다 — 2026-10-09
+     §5-2 C 로 분류를 늘렸는데 **단계에 안 넣었더니 창업 화면에서
+     조용히 사라졌습니다** (화면 13 · 분류 14). 전수 점검이 개수를
+     맞춰 보고 잡았고, 이 파일 맨 위 경고가 적어 둔 바로 그 사고입니다.
+     ⚠️ 05 가 맞는 자리입니다 — 머리말이 이미 "열고 나서가 진짜
+     시작입니다" 이고, 수리는 문을 열고 나서 부르는 곳입니다. */
+  { n:"05", key:"open",  name:"손님 받기", icon:"megaphone",
+    lead:"열고 나서가 진짜 시작입니다",
+    cats:["marketing","clean","repair"] }
+];
+
+/* 그 업종의 그 단계에 들어가는 분류.
+   ⚠️ 업종 차례(`amCatsFor`)를 **단계 안에서** 지킵니다 — 업종이 먼저
+   꼽은 분류가 그 단계에서도 앞에 옵니다. */
+window.amStepCats = function(step, industryKey){
+  var order = (window.amCatsFor ? amCatsFor(industryKey, "start") : (window.AM_START_CATS||[]));
+  var want = {};
+  (step.cats || []).forEach(function(k){ want[k] = 1; });
+  return order.filter(function(c){ return want[c.key]; });
 };
 
-/* ⚠️⚠️⚠️ **`amSubFinds()` 를 여기서 지웠습니다** (2026-11-08).
-   그 함수는 "하위를 누르면 업체가 걸러지나 글이 걸러지나" 를 한 낱말로
-   내어 「…에서 다루는 것」 구간의 안내문에 쓰였습니다. 그 구간을 걷어
-   내면서 **부르는 자리가 0곳**이 되었고, 그러면 그건 기능이 아니라
-   남은 글입니다 (`check-doors` 가 SQL 의 문에 대고 세는 그 규칙과
-   같습니다 — 0이면 없는 것입니다).
-   ⚠️ 지금 그 판단을 하는 자리는 둘입니다 — 어디로 가는지는 `amSubUrl()`,
-   눌리는지는 `amSubGoes()`. 칩 위의 길잡이 한 줄은 분류마다 다른 말이라
-   `pages/category.js` 의 `KIND` 에 있습니다 (한 낱말로는 중고를 못
-   적습니다 — 거기는 하위마다 가는 곳이 갈립니다). */
+/* ════════════════════════════════════════════════════════════════════
+   폐업은 목록이 아니라 **무엇을 원하시는가**부터 묻습니다 (§8)
 
-/* ⚠️⚠️⚠️ **업체가 0곳이어도 지금 되는 것** — 절대 규칙 2 의 "0 인
-   자리에는 지금 실제로 되는 것을 같이 냅니다" 를 **한 곳**에서 냅니다.
-   업체가 0곳인 동안에도 **회원끼리 되는 것**이 셋 있습니다 (0046 ·
-   0047 · 0048) — 조인 · 커뮤니티 · 구인 · 구직. 전에는 0곳 화면이
-   "매칭 요청" 과 "입점하기" 둘만 내서, 업체를 기다리는 동안 손님이
-   할 수 있는 것이 **없는 것처럼** 보였습니다.
-   ⚠️⚠️ **두 곳(빌드 · 브라우저)이 같은 0곳 상자를 그립니다** —
-   `pages/search.js` 와 `js/search.js`. 글을 두 벌로 적으면 손님이
-   거르개를 누르는 순간 안내가 조용히 달라집니다 (업체 카드에서 겪은
-   자리). 그래서 **줄은 여기 하나**입니다.
-   ⚠️ 이름 · 주소를 여기 글자로 박지 않습니다 — `AM_CATS` 에서 끌어
-   옵니다 (분류 이름을 다듬는 날 두 곳이 어긋나지 않게).
-   ⚠️ 그 분류가 없어지면 그 줄도 **저절로 빠집니다** (지어내지 않습니다). */
-/* ⚠️ `here` 는 **보고 계신 분류의 키**입니다 (없으면 안 보냅니다) —
-   업체찾기 · 메인에는 분류가 없으므로 빈 채로 부릅니다. */
-window.amOpenNow = function(here){
-  var out = [];
-  /* ⚠️ 2026-11-06 — **중고 직거래가 넷째입니다** (0056). 전에는 셋이었고,
-     그때 중고장터는 "업체를 기다리는 자리" 였습니다 (매물을 올릴 길이
-     없었습니다). 이제 업체가 0곳이어도 회원끼리 사고파실 수 있습니다. */
-  [["matchup", "조인 열기"],
-   ["used", "중고 매물 올리기"],
-   /* ⚠️ 0059 — **"질문 올리기" 가 아니라 "글 올리기"** 입니다. 게시판이
-      열둘이고 그 가운데 질문은 하나뿐이라, 질문만 받는 자리처럼 적으면
-      하는 일을 좁혀 적는 것이 됩니다 (2026-11-05 에 분류 화면이 "여는
-      기능은 아직 없습니다" 라고 적고 있던 그 자리의 작은 판입니다). */
-   ["community", "게시판에 글 올리기"],
-   ["career", "구인 · 구직 올리기"],
-   /* ⚠️ 0061 — **다섯째입니다.** 업체가 0곳이어도 "이런 걸 찾고 있어요"
-      를 올려 두실 수 있고, 업체가 들어오는 날 그 글이 그대로 보입니다.
-      ⚠️ 보내는 곳은 레슨입니다 — 다섯 분류 가운데 손님이 가장 먼저
-      찾는 자리이고, 거기서 다른 분류로 가는 길이 화면에 있습니다
-      (묶음을 눌렀는데 분류 하나로 보내면 나머지는 어디 갔는지 알 수
-      없다는 그 줄과 같은 결입니다). */
-   ["lesson", "구합니다 글 올리기"]].forEach(function(x){
-    var c = window.amCat(x[0]);
-    /* ⚠️⚠️⚠️ **구합니다는 보고 계신 분류에 맞는 자리로 보냅니다**
-       (2026-11-08). 전에는 어느 화면에서든 레슨으로 보냈는데, 지시서
-       §12 가 「구매 희망 요청」을 중고장터에서 이어 주라고 적었습니다 —
-       그런데 중고채를 찾는 분을 **레슨 화면**으로 보내고 있었습니다.
-       ⚠️ 고르는 자리는 `wantNear()` **한 함수**입니다 (화면마다 따로
-       적으면 분류가 느는 날 어긋납니다). */
-    if(x[0] === "lesson" && here) c = wantNear(here) || c;
-    if(c) out.push({ href: window.amCatUrl(c), label: x[1], icon: c.icon });
+   폐업 화면에 들어오자마자 분류 열두 개를 늘어놓으면, 이미 지쳐
+   계신 분께 숙제를 하나 더 드리는 것입니다. 원하는 결과를 고르시면
+   그에 맞는 절차만 추려 드립니다.
+
+   ⚠️ **고르신 것에 없는 분류를 숨기지 마세요.** 추려 낸 것 아래에
+   나머지도 냅니다 — 숨기면 그 사장님에게는 그 기능이 없는 것이
+   됩니다. `check.js` 가 봅니다.
+   ════════════════════════════════════════════════════════════════════ */
+/* ⚠️⚠️ **2026-10-08 지시서 §16 STEP 01 의 넷으로 이름을 맞췄습니다.**
+   전에는 `돈을 남기고` · `빨리 정리` 처럼 **바라는 것**으로 물었는데,
+   지시서는 **지금 하려는 일**로 묻습니다 — 사장님이 답하기 쉬운 쪽은
+   뒤쪽이고(§20 "답변이 없는 항목을 임의로 추정하지 않는다"), 고른
+   결과가 §17 · §18 · §19 의 세 로드맵과 그대로 맞물립니다.
+
+   ⚠️⚠️ **key 를 바꾸지 마세요.** 주소(`?w=`)에 실려 밖으로 나간 링크가
+   그 값을 들고 있습니다 — 이름만 바꿉니다 (영업 상태 key 를 안 바꾸는
+   것과 같은 까닭입니다).
+   ⚠️ `cats` 는 **그 상황에서 먼저 볼 분류**입니다. 여기 없는 분류도
+   잘라 내지 않습니다 — `amCloseCatsFor()` 가 뒤에 붙여 줍니다. */
+window.AM_CLOSE_WANTS = [
+  { key:"pass",  name:"매장 전체를 넘기고 싶어요", icon:"key",
+    lead:"양도가 되면 철거비도 안 들고 권리금도 회수할 기회가 생깁니다",
+    cats:["transfer","contract","tax","labor"] },
+  { key:"money", name:"시설 · 장비를 정리하고 싶어요", icon:"won",
+    lead:"버리는 것보다 넘기는 쪽이 낫습니다. 시설 · 집기 · 재고까지",
+    cats:["asset","stock","transfer","tax","support"] },
+  { key:"fast",  name:"완전히 폐업하려고 해요", icon:"clock",
+    lead:"순서가 곧 돈입니다. 기한이 있는 것이 여럿입니다",
+    cats:["process","contract","tax","labor","demolish","restore","waste"] },
+  { key:"lost",  name:"아직 어떻게 해야 할지 모르겠어요", icon:"info",
+    lead:"넘길 수 있는 것부터 짚어 드립니다. 순서대로 보시면 됩니다",
+    cats:["transfer","process","tax","labor","contract"] }
+];
+
+window.amCloseWant = function(key){
+  var r = (window.AM_CLOSE_WANTS||[]).filter(function(w){ return w.key === key; });
+  return r.length ? r[0] : null;
+};
+
+/* 고르신 것에 맞는 분류를 **앞에**, 나머지는 뒤에.
+   ⚠️ 잘라 내지 않습니다 — 숨기면 그 기능이 없는 것이 됩니다. */
+window.amCloseCatsFor = function(wantKey, industryKey){
+  var all = (window.amCatsFor ? amCatsFor(industryKey, "close") : (window.AM_CLOSE_CATS||[]));
+  var w = amCloseWant(wantKey);
+  if(!w) return { hit:all, rest:[] };
+  var want = {};
+  w.cats.forEach(function(k){ want[k] = 1; });
+  return {
+    hit:  all.filter(function(c){ return want[c.key]; }),
+    rest: all.filter(function(c){ return !want[c.key]; })
+  };
+};
+
+/* 업체가 "내가 하는 일" 을 찾을 때 쓰는 목록.
+   ⚠️ `byIndustry` 분류(시설 · 장비)는 하위가 **업종에서** 옵니다.
+   업종을 안 고른 화면(`/join`)에서는 비어 있어서, 제목만 남고 칸이
+   텅 비었습니다 — 절대 규칙 2 위반입니다. 그래서 여기서는 **모든
+   업종의 장비를 합쳐서** 돌려줍니다. 주방설비 업체도 미용기기
+   업체도 자기 분야를 찾을 수 있어야 입점합니다.
+   ⚠️ 같은 이름이 여러 업종에 있습니다(냉장 · 냉동). 한 번만 냅니다. */
+window.amAllSubs = function(cat){
+  if(!cat) return [];
+  if(!cat.byIndustry) return (cat.items || []).slice();
+  /* ⚠️⚠️ **key 와 이름을 둘 다 봅니다** (2026-10-22 전수검사 P1-15).
+     전에는 **이름만** 보고 걸렀습니다 — 그래서 같은 key 를 업종마다
+     **다른 이름**으로 적어 둔 다섯(`sound` · `showcase` · `desk` ·
+     `pc` · `shelf`)이 **둘씩** 들어갔고, 고르개에서 **같은
+     `data-pick` id 를 가진 체크칸이 두 번** 그려졌습니다 — 하나를
+     누르면 둘이 같이 켜지는데 바구니에는 한 번만 담겨서, 손님이
+     보기에 "왜 두 개가 켜지지" 입니다 (§3-2 중복 방지).
+     ⚠️ key 로만 걸러도 안 됩니다 — **다른 key 를 같은 이름**으로 적어
+     두면 글자가 똑같은 칸이 둘이 됩니다.
+     ⚠️ 먼저 나온 이름을 남깁니다 (`AM_INDUSTRIES` 차례) — 그 key 로
+     저장된 지난 신청이 그 이름으로 읽혀야 합니다. */
+  var byKey = {}, byName = {}, out = [];
+  (window.AM_INDUSTRIES || []).forEach(function(i){
+    (i.equip || []).forEach(function(e){
+      if(!e || !e.key) return;
+      if(byKey[e.key] || byName[e.name]) return;
+      byKey[e.key] = 1; byName[e.name] = 1; out.push(e);
+    });
   });
   return out;
-};
-/* 이 분류에서 구합니다 글을 올릴 **가장 가까운 자리** —
-   ① 제 분류가 받으면 제 자리 ② 같은 영역의 형제 분류 ③ 못 찾으면 null
-   ⚠️ 못 찾으면 **null** 입니다 — 아무 분류나 돌려주면 손님이 엉뚱한
-   화면에서 "여기가 아닌데" 를 겪습니다 (부르는 쪽이 레슨으로 둡니다).
-   ⚠️⚠️ **`amWantCats()` 를 읽습니다** — 받는 분류를 여기 글자로 적으면
-   `AM_WANT_OFF` 를 고치는 날 두 곳이 어긋나고, 그때 화면은 보내는데
-   그 분류에는 올리는 자리가 없습니다. */
-function wantNear(key){
-  var c = window.amCat(key);
-  if(!c) return null;
-  var L = window.amWantCats ? window.amWantCats() : [];
-  var i;
-  for(i = 0; i < L.length; i++) if(L[i].key === key) return L[i];
-  /* ⚠️⚠️ **분류는 제 영역을 모릅니다** — 영역이 분류 목록을 들고
-     있습니다(`AM_ZONES` 의 `cats`). 처음에 `c.zone` 으로 견주었다가
-     **늘 undefined 라 아무것도 못 찾았고**, 중고에서 여전히 레슨으로
-     보냈습니다(에러는 한 줄도 안 납니다 — 조용히 기본값으로 떨어지는
-     그 자리입니다). 영역을 **찾아서** 봅니다. */
-  var Z = window.AM_ZONES || [], mine = null;
-  for(i = 0; i < Z.length; i++){
-    if((Z[i].cats || []).indexOf(key) >= 0){ mine = Z[i]; break; }
-  }
-  if(!mine) return null;
-  for(i = 0; i < L.length; i++){
-    if((mine.cats || []).indexOf(L[i].key) >= 0) return L[i];
-  }
-  return null;
-}
-
-/* ── 구합니다 (0061) 가 서는 분류 ──────────────────────────────────
-   ⚠️⚠️ **한 곳입니다.** 분류 화면(빌드) · 목록(브라우저) · `/my` · 검사가
-   전부 이 함수를 읽습니다. 글자로 박으면 분류가 바뀌는 날 두 곳이
-   어긋나고, 그때 화면은 보내는데 DB 가 거절합니다.
-
-   ⚠️⚠️⚠️ **부킹은 뺍니다.** 거기는 업체가 티타임을 올리는 자리(0060)가
-   이미 있어서, 같은 화면에 "자리 올림" 과 "자리 구함" 이 둘 다 서면
-   손님이 어느 쪽을 눌러야 할지 모릅니다. 부킹에서 자리를 찾으시는
-   길은 ① 티타임 목록 ② 60일 밖이면 사전 상담 둘입니다.
-   ⚠️ 빼는 분류를 여기 **한 줄**로 두는 까닭은, 다음에 누가 "왜 부킹만
-   없지" 하고 되살릴 때 **까닭이 바로 옆에** 있게 하려는 것입니다. */
-window.AM_WANT_OFF = ["booking"];
-window.amWantCats = function(){
-  var off = window.AM_WANT_OFF || [];
-  return (window.amCatsOf ? window.amCatsOf("provider") : []).filter(
-    function(c){ return off.indexOf(c.key) < 0; });
-};
-window.amWantOn = function(c){
-  if(typeof c === "string") c = window.amCat(c);
-  if(!c) return false;
-  return (window.amWantCats() || []).some(function(x){ return x.key === c.key; });
-};
-
-/* 화면 짜임새로 고르기 — ⚠️ kind 를 화면마다 다시 적지 마세요. */
-window.amCatsOf = function(kind){
-  return (window.AM_CATS || []).filter(function(c){ return c.kind === kind; });
-};
-window.amCatIsProvider = function(c){
-  if(typeof c === "string") c = window.amCat(c);
-  return !!(c && c.kind === "provider");
-};
-
-/* 네 영역 — 영역 하나가 가리키는 분류들 */
-window.amZoneCats = function(z){
-  if(typeof z === "string")
-    z = (window.AM_ZONES || []).filter(function(x){ return x.key === z; })[0];
-  if(!z) return [];
-  return (z.cats || []).map(function(k){ return window.amCat(k); })
-                       .filter(Boolean);
-};
-
-/* ── 커뮤니티 대표 탭 (확정 시안 ⑩) ────────────────────────────────
-   ⚠️⚠️⚠️ **게시판 열둘을 지우지 않습니다.** 시안의 탭은 여섯이고 저희
-   게시판은 열둘인데, 줄이면 **그 키로 이미 올라온 글이 갈 자리가
-   없어집니다**(게시판 키는 더하기만 합니다 · 0059). 그래서 탭은
-   **묶어 보여 주는 길**일 뿐이고, 열둘은 「전체 게시판」에 그대로
-   있으며 `?s=<키>` 주소도 하나도 안 없어졌습니다.
-
-   ⚠️⚠️ **묶은 자리는 화면이 그 자리에서 말합니다** — 「라운드 후기」를
-   누르면 어느 게시판을 모아 보는지 적습니다. 안 적으면 손님은 제가
-   무엇을 보고 있는지 모르고, 글을 올릴 때 **어느 게시판에 올라가는지도**
-   모릅니다.
-
-   ⚠️ 묶는 기준은 **글을 쓰는 사람의 자리**입니다 —
-   · 라운드 후기 = 골프장 후기 + 스크린골프 (둘 다 「치고 와서 쓰는 후기」)
-   · 연습 · 스윙 = 스윙 · 연습 + 레슨 후기 + 초보 입문 (둘 다 「늘리는 이야기」)
-   ⚠️⚠️ **어느 탭에도 안 든 넷**(골프 정보 · 대회 · 이벤트 · 동호회 ·
-   여성 골퍼)은 시안의 탭에 없는 자리입니다. 억지로 끼워 넣으면 그 탭의
-   이름이 거짓이 되므로 **「전체 게시판」에서** 들어갑니다 — 지시가
-   그 길을 허락했습니다.
-   ⚠️ `boards` 가 빈 배열이면 **좁히지 않습니다**(전체글). 열둘을 적어
-   두면 게시판이 느는 날 새 게시판이 전체글에서 빠집니다. */
-window.AM_CQ_TABS = [
-  { key:"all",   name:"전체글",     boards:[] },
-  { key:"open",  name:"자유게시판", boards:["cm-open"] },
-  { key:"ask",   name:"질문 · 답변", boards:["cm-ask"] },
-  { key:"gear",  name:"장비 이야기", boards:["cm-gear"] },
-  { key:"round", name:"라운드 후기", boards:["cm-course", "cm-screen"] },
-  { key:"swing", name:"연습 · 스윙", boards:["cm-swing", "cm-lesson", "cm-begin"] }
-];
-/* 「질문」 칩이 좁히는 게시판 — ⚠️ 한 곳입니다(화면이 따로 적으면
-   칩은 켜지는데 목록은 안 걸러 주는 날이 옵니다). */
-window.AM_CQ_ASK = "cm-ask";
-
-window.amCqTabs = function(){ return window.AM_CQ_TABS || []; };
-
-/* 지금 고른 게시판 묶음이 어느 탭인가 — 없으면 null.
-   ⚠️ **차례가 달라도 같은 묶음**입니다(집합으로 봅니다). */
-window.amCqTabOf = function(keys){
-  var want = (keys || []).slice().sort().join(",");
-  var L = window.amCqTabs();
-  for(var i = 0; i < L.length; i++){
-    if((L[i].boards || []).slice().sort().join(",") === want) return L[i];
-  }
-  return null;
-};
-
-/* 그 탭이 모아 보는 게시판 이름들 — 묶음을 **그 자리에서** 적으려고 */
-window.amCqTabBoardNames = function(tab){
-  var items = window.amCatItems("community");
-  return (tab && tab.boards || []).map(function(k){
-    for(var i = 0; i < items.length; i++) if(items[i].key === k) return items[i].name;
-    return "";
-  }).filter(Boolean);
-};
-
-/* 어느 대표 탭에도 안 든 게시판 — 「전체 게시판」이 책임집니다.
-   ⚠️ 세어서 냅니다 — 글자로 박으면 탭을 고치는 날 둘이 어긋납니다. */
-window.amCqLooseBoards = function(){
-  var inTab = {};
-  window.amCqTabs().forEach(function(t){
-    (t.boards || []).forEach(function(k){ inTab[k] = 1; });
-  });
-  return window.amCatItems("community").filter(function(b){ return !inTab[b.key]; });
 };

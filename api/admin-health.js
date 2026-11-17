@@ -15,12 +15,10 @@
    돌려줍니다. 웹훅 주소나 API 키가 한 글자라도 새어 나가면 그걸로
    끝입니다. 길이도 알려 주지 않습니다 — 길이도 단서입니다.
 
-   ⚠️⚠️⚠️ **앞을 막아 주는 것이 없습니다.** 2026-11-10 까지 여기
-   "middleware.js 가 이 주소도 막습니다 · matcher 에서 빼지 마세요"
-   라고 적혀 있었는데, **그 파일은 골프 전환 때 없어졌습니다**(앞
-   서비스 것이고 `git show 4563539:middleware.js` 에 있습니다).
-   즉 이 주소를 지키는 것은 **아래 `ADMIN_PASSWORD` 한 줄뿐**입니다 —
-   "한 겹 더 있으니까" 로 읽고 이 줄을 느슨하게 하지 마세요.
+   ⚠️ **middleware.js 가 이 주소도 막습니다.** matcher 에서 빼지
+   마세요. 빼면 누구나 "이 회사가 슬랙을 쓰는가" 를 알 수 있습니다.
+   ⚠️ 막혀 있더라도 혹시 모르니 여기서도 한 번 더 봅니다 — 미들웨어가
+   지워지거나 matcher 가 어긋나도 값이 새지 않게.
    ════════════════════════════════════════════════════════════════════ */
 
 /* 있으면 true. ⚠️ 공백만 있는 값은 **없는 것**으로 봅니다 — Vercel 에
@@ -137,9 +135,8 @@ module.exports = async function handler(req, res){
     partner: { webhook: has("PARTNER_WEBHOOK_URL"), mailTo: has("PARTNER_EMAIL_TO") }
   };
 
-  /* 한 종류라도 받을 곳이 있는가 — ⚠️ 이 규칙이 적힌 자리는 지금
-     **여기 하나**입니다(앞 서비스의 `api/_send.js` 를 2026-11-10 에
-     걷어냈습니다). 웹훅 하나, 또는 키와 받는 주소가 **둘 다**. */
+  /* 한 종류라도 받을 곳이 있는가 — api/_send.js 가 판단하는 것과
+     같은 규칙입니다 (웹훅 하나, 또는 키와 받는 주소가 **둘 다**). */
   function ready(k){
     var b = byKind[k];
     return !!(b.webhook || common.webhook ||
@@ -201,4 +198,10 @@ module.exports = async function handler(req, res){
        실제로 생깁니다 (CLAUDE.md 의 경고). */
     env: process.env.VERCEL_ENV || "unknown"
   });
+};
+
+/* 복구 점검본: 운영 DB·메일·웹훅을 호출하지 않고 종료합니다. */
+module.exports = function restorationClosed(req, res){
+  res.setHeader("Cache-Control", "no-store");
+  return res.status(503).json({ error:"복구 점검 중으로 현재 접수하지 않습니다.", restoration:true });
 };

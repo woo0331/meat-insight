@@ -19,6 +19,8 @@ window.WOW_BIZ = {
 
   sosReady:       false,
 
+  mailNotifyReady: false,
+
   effective:      "2026-09-25"
 };
 

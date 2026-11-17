@@ -91,7 +91,7 @@ const FAKE_SEND = { INTAKE_WEBHOOK_URL: "https://example.invalid/hook" };
     const env = Object.assign({ STOREWAY_INTAKE_OPEN: "join" }, FAKE_DB, FAKE_SEND);
     const h = fresh(env); calls.length = 0;
     const r = res(); await h(req(JOIN), r);
-    ok(r.code !== 503, "join 만 열면 입점 신청은 게이트를 지남", { code: r.code, body: r.body });
+    ok(!(r.body && r.body.closed), "join 만 열면 입점 신청은 게이트를 지남 (닫힘 표시 없음)", { code: r.code, body: r.body });
   }
 
   /* 열면 실제로 게이트를 지나 저장 길로 들어가는가 (너무 넓게 막는 것도 고장) */

@@ -3999,12 +3999,15 @@ function checkApplySql(){
      번호를 돌려주는 줄을 **따로** 봅니다. */
   if(fs.existsSync(q)){
     const js = fs.readFileSync(q, "utf8").replace(/\/\*[\s\S]*?\*\//g, " ");
-    if(!/dbInsert\(\s*"provider_apply"/.test(js))
+    /* ⚠️ 2026-11-18 W02 — 저장은 submit_apply()(0082) 한 번의 호출입니다. 그 함수가
+       provider_apply 에 실제로 넣는지는 tools/test-w02.js 가 Postgres 로 잽니다.
+       DB 설정 전에 받지 않는 것은 api/_gate.js 가 맡습니다 (tools/test-gate.js). */
+    if(!/dbCallService\(\s*"submit_apply"/.test(js))
       throw new Error("api/quote.js 가 입점 신청을 저장하지 않습니다 — " +
-        "0016 의 표가 만들어만 두고 비어 있습니다");
-    if(!/kind\s*===\s*"partner"\s*&&\s*dbReady\(\)/.test(js))
-      throw new Error("api/quote.js 가 DB 설정 전에도 입점 신청을 저장하려 듭니다 — " +
-        "설정 전에는 오늘과 글자 하나 다르지 않게 동작해야 합니다 (fail-closed)");
+        "submit_apply() 를 부르는 줄이 없습니다");
+    if(!/gate\(\s*formOf\(/.test(js))
+      throw new Error("api/quote.js 가 접수 게이트를 거치지 않습니다 — " +
+        "DB 설정 전에도 받으려 들 수 있습니다 (api/_gate.js)");
   }
 
   console.log("   업체 입점 신청 표가 직원 · 관리자 밖으로 안 나갑니다 (0016)");

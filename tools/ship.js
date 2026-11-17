@@ -222,7 +222,12 @@ const STEPS = [
      주석 처리로 열여덟 번 당한 자리라 함정 열네만큼을 먼저 넣어 봅니다. */
   { n: "주석 떼기",            c: ["node", ["tools/test-strip.js"]],              fast: true },
   { n: "사진 규격",            c: ["node", ["tools/check-photos.js"]],            fast: true },
-  { n: "접수 API 계약",        c: ["node", ["tools/test-api.js"]],                fast: true },
+  /* 2026-11-18 W01 · W02 — 옛 test-api.js 는 "성함 · 내용이 슬랙 글에 실려 가는가" ·
+     "저장이 실패해도 성공" 을 재던 검사라 지시서 9장 · W02 ① 과 반대입니다.
+     새 동작은 아래 셋이 잽니다 (test-api.js 는 기록으로만 남깁니다). */
+  { n: "접수 게이트 (T01)",    c: ["node", ["tools/test-gate.js"]],               fast: true },
+  { n: "접수 저장 · 알림 API", c: ["node", ["tools/test-w02-api.js"]],            fast: true },
+  { n: "접수 저장 DB (0082)",  c: ["node", ["tools/test-w02.js"]],                fast: true, skip2: true },
   { n: "접수번호 · 중복",      c: ["node", ["tools/test-intake.js"]],             fast: true },
   { n: "상태 열셋",            c: ["node", ["tools/test-deal.js"]],               fast: true },
   { n: "수수료 계산",          c: ["node", ["tools/test-fee.js"]],                fast: true },

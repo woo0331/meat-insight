@@ -438,6 +438,8 @@ window.qcClear = function(){
 };
 
 function QNotifyBox(){
+
+  if(!(window.WOW_BIZ && WOW_BIZ.mailNotifyReady === true)) return "";
   return '<label class="agree-l q-nt" for="q-nt">'+
     '<input type="checkbox" id="q-nt">'+
     '<span><b>진행 상황을 메일로 알려 주세요</b> (선택) — '+
@@ -575,7 +577,12 @@ window.amSend = function(failId, body, again, done){
       if(box) box.innerHTML = '<div class="notice-ok"><b>' +
         (dup ? "이미 접수되었습니다." : "접수되었습니다.") + '</b>' +
         (no ? '<p>접수번호 <b>' + esc(no) + '</b> — 문의하실 때 알려 주세요.</p>' : '') +
-        '<p>적어 주신 연락처로 안내드리겠습니다. 회신 시점을 약속드리지는 않습니다.</p></div>';
+        (body && body.form === "sell"
+          ? '<p>운영자가 검수한 뒤에 올립니다 — <b>자동으로 게시되지 않습니다.</b> 연락처는 매물에 나가지 않습니다.</p>'
+          : body && body.kind === "partner"
+          ? '<p>입점 심사를 거칩니다 — 심사 전에는 업체 목록에 나가지 않습니다.</p>'
+          : '<p>현재 상태는 <b>접수됨</b>입니다. 운영자가 확인합니다.</p>') +
+        '<p>회신 시점과 업체 연결을 약속드리지는 않습니다.</p></div>';
 
       if(no && box && (!body || body.kind !== "partner") &&
          typeof amPhotoAfter === "function")

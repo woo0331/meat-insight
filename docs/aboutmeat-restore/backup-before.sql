@@ -4,8 +4,7 @@
 --              consult_requests · supply_requests 는 anon=ar (INSERT · SELECT) · authenticated=ALL
 -- 칸 단위 권한: 16개 모두 없음
 begin;
-drop policy if exists am_read_listings   on public.listings;
-drop policy if exists am_read_businesses on public.businesses;
+-- (B안을 쓰지 않으므로 지울 정책 없음)
 
 grant all on table public.business_members, public.businesses, public.closure_requests,
   public.community_comments, public.community_posts, public.jobs, public.listings, public.members,

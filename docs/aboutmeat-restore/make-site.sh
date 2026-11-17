@@ -17,7 +17,7 @@ done
 node "$(dirname "$0")/patch-test.js" "$OUT/meat_insight_main.html"
 cat > "$OUT/test-guard.js" <<'GUARD'
 /* ABOUTMEAT 복구 테스트 사이트 전용 — 운영 데이터에 아무것도 쓰지 않게 막습니다.
-   1) Supabase 로 가는 GET/HEAD 가 아닌 요청(등록·수정·삭제)을 보내지 않고 거절합니다.
+   1) Supabase 로 가는 요청을 읽기 · 쓰기 모두 보내지 않고 거절합니다 (옛 DB 와 완전히 끊음).
    2) 결제창(TossPayments)을 열지 않습니다.
    3) 화면 위에 "테스트 사이트" 띠를 붙입니다. */
 (function(){
@@ -27,7 +27,8 @@ cat > "$OUT/test-guard.js" <<'GUARD'
     window.fetch = function(input, init){
       var url = typeof input === "string" ? input : (input && input.url) || "";
       var m = ((init && init.method) || (input && input.method) || "GET").toUpperCase();
-      if (url.indexOf("supabase.co") >= 0 && m !== "GET" && m !== "HEAD") {
+      // 2026-11-17 대표자 결정: 기존 상품 · 매물도 자동 공개하지 않습니다 → 읽기까지 전부 막습니다
+      if (url.indexOf("supabase.co") >= 0) {
         console.warn("[test-guard] 막음:", m, url);
         return Promise.resolve(new Response(JSON.stringify({ message: MSG, code: "TEST_SITE" }),
           { status: 403, headers: { "content-type": "application/json" } }));

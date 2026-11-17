@@ -81,7 +81,7 @@ function get(url, opt){
       "--max-time", String(Math.round(TIMEOUT / 1000)),
       "-D", headF, "-o", bodyF,
       "-w", "%{http_code}",
-      "-A", "golf-allinone-data-collector/1.0 (+https://www.storeway.co.kr)",
+      "-A", "golf-allinone-data-collector/1.0 (+https://storeway.co.kr)",
       "-H", "accept: */*"
     ].concat(opt.form !== undefined ? ["-X", "POST", "--data", opt.form] : []).concat([url]));
     var out = "", err = "";

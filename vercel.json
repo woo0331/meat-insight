@@ -2,15 +2,51 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "redirects": [
-    { "source": "/home", "destination": "/", "permanent": true },
-    { "source": "/closing", "destination": "/closure", "permanent": true },
-    { "source": "/acquisition", "destination": "/transfer", "permanent": true },
-    { "source": "/companies", "destination": "/providers", "permanent": true },
-    { "source": "/companies/sample-interior", "destination": "/sample", "permanent": true },
-    { "source": "/companies/:cat", "destination": "/providers/:cat", "permanent": true },
-    { "source": "/guides", "destination": "/content", "permanent": true },
-    { "source": "/guides/:slug", "destination": "/content", "permanent": true },
-    { "source": "/partners", "destination": "/join", "permanent": true }
+    {
+      "source": "/home",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/closing",
+      "destination": "/closure",
+      "permanent": true
+    },
+    {
+      "source": "/acquisition",
+      "destination": "/transfer",
+      "permanent": true
+    },
+    {
+      "source": "/companies",
+      "destination": "/providers",
+      "permanent": true
+    },
+    {
+      "source": "/companies/sample-interior",
+      "destination": "/sample",
+      "permanent": true
+    },
+    {
+      "source": "/companies/:cat",
+      "destination": "/providers/:cat",
+      "permanent": true
+    },
+    {
+      "source": "/guides",
+      "destination": "/content",
+      "permanent": true
+    },
+    {
+      "source": "/guides/:slug",
+      "destination": "/content",
+      "permanent": true
+    },
+    {
+      "source": "/partners",
+      "destination": "/join",
+      "permanent": true
+    }
   ],
   "rewrites": [],
   "headers": [
@@ -70,5 +106,7 @@
         }
       ]
     }
-  ]
+  ],
+  "buildCommand": "node build-pages.js && node tools/make-restore-public.js",
+  "outputDirectory": "restore-public"
 }

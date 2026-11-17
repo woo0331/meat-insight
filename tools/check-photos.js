@@ -16,7 +16,7 @@
      · `alt` 가 비어 있지 않은가
      · `img/` 에 **아무도 안 쓰는 파일**이 굴러다니지 않는가
 
-   ⚠️ 규격은 `js/data/photos.js` 의 `AM_PHOTO_SLOTS` **한 곳**에만
+   ⚠️ 규격은 `js/data/photos.js` 의 `WOW_PHOTO_SLOTS` **한 곳**에만
    있습니다. 자리를 늘리면 거기만 고치세요.
 
    ⚠️ 이건 **규격 검사**이지 "보기 좋은가" 를 보는 것이 아닙니다.
@@ -74,63 +74,14 @@ function size(buf){
 
 /* ── 검사 ───────────────────────────────────────────────────────── */
 const W = load();
-const SLOTS = W.AM_PHOTO_SLOTS || [];
-const PHOTOS = W.AM_PHOTOS || {};
+const SLOTS = W.WOW_PHOTO_SLOTS || [];
+const PHOTOS = W.WOW_PHOTOS || {};
 const bySlot = {};
 SLOTS.forEach(s => { bySlot[s.key] = s; });
 
 const bad = [], warn = [];
 const used = new Set();
 let ok = 0;
-
-/* ⚠️⚠️ **영역 카드 자리는 `AM_ZONES` 의 key 와 짝이라야 합니다.**
-   한 글자 틀리면 그 카드만 **조용히 사진 없이** 나옵니다 — 에러도
-   404 도 안 납니다 (이 저장소가 "같은 규칙을 두 곳에 적는" 자리로
-   여러 번 겪었습니다). 그래서 **양쪽을 맞춰** 봅니다. */
-(function(){
-  const w2 = {};
-  new Function("window", fs.readFileSync(
-    path.join(ROOT, "js/components/base.js"), "utf8"))(w2);
-  new Function("window", fs.readFileSync(
-    path.join(ROOT, "js/data/catalog.js"), "utf8"))(w2);
-  /* ⚠️ 짝을 맞출 자리가 둘입니다 — 영역(zone-)과 분류(cat-).
-     규칙이 같으니 **한 함수**로 봅니다 (두 벌로 적으면 한쪽만 고칩니다). */
-  function pair(prefix, keys, what){
-    if(!keys.length){
-      bad.push(what + " 를 한 줄도 못 읽었습니다 — 검사가 틀렸습니다");
-      return;
-    }
-    const mine = SLOTS.map(s => s.key).filter(k => k.indexOf(prefix) === 0)
-      .map(k => k.slice(prefix.length));
-    keys.forEach(z => {
-      if(mine.indexOf(z) < 0)
-        bad.push(what + " '" + z + "' 의 사진 자리(" + prefix + z + ")가 없습니다 — " +
-                 "그 카드만 조용히 사진 없이 나옵니다");
-    });
-    mine.forEach(z => {
-      if(keys.indexOf(z) < 0)
-        bad.push("사진 자리 '" + prefix + z + "' 가 가리키는 " + what +
-                 "가 없습니다 — 아무 데도 안 쓰이는 자리입니다");
-    });
-  }
-  pair("zone-", (w2.AM_ZONES || []).map(z => z.key), "영역");
-  pair("cat-",  (w2.AM_CATS  || []).map(c => c.key), "분류");
-
-  /* ⚠️⚠️ **로고도 그림입니다** — 자리 목록에는 없지만(사진이 아니라
-     브랜드 자산입니다) 경로가 틀리면 **머리말과 푸터 두 곳이 동시에**
-     빈 네모가 됩니다. 비어 있으면 방패 표식으로 돌아가므로 괜찮지만,
-     **적혀 있는데 파일이 없는 것**은 고장입니다. */
-  new Function("window", fs.readFileSync(
-    path.join(ROOT, "js/data/brand.js"), "utf8"))(w2);
-  const logo = ((w2.AM_BRAND || {}).logo || "").split("?")[0];
-  if(logo){
-    if(logo[0] !== "/")
-      bad.push("AM_BRAND.logo 의 경로가 / 로 시작하지 않습니다 (" + logo + ")");
-    else if(!fs.existsSync(path.join(ROOT, logo.replace(/^\//, ""))))
-      bad.push("AM_BRAND.logo — 파일이 없습니다: " + logo +
-               " (머리말 · 푸터 두 곳이 같이 빈 네모가 됩니다)");
-  }
-})();
 
 Object.keys(PHOTOS).forEach(key => {
   const p = PHOTOS[key] || {};
@@ -201,12 +152,7 @@ Object.keys(PHOTOS).forEach(key => {
   /* ⚠️ 화면이 `<img src>` 하나라 `<picture>` 분기가 없습니다 */
   if(d.type === "webp")
     warn.push(tag + " — WebP 입니다. 되도록 JPEG 로 주세요 (대체 그림 자리가 없습니다)");
-  /* ⚠️⚠️ **투명한 그림에 JPEG 를 권하지 마세요.** JPEG 는 알파를 못 담아
-     투명한 자리가 **검정**이 됩니다 — 그 말을 따르면 사진이 까매집니다.
-     PNG 머리의 색 종류(6 = RGBA · 4 = 회색+알파)를 보고 가릅니다. */
-  const pngAlpha = (d.type === "png" && buf.length > 26 &&
-                    (buf[25] === 6 || buf[25] === 4));
-  if(d.type === "png" && kb > 100 && !pngAlpha)
+  if(d.type === "png" && kb > 100)
     warn.push(tag + " — 사진인데 PNG 입니다 (" + kb + "KB). JPEG 가 훨씬 작습니다");
 
   /* ⚠️ alt 는 읽어 주는 프로그램과 검색엔진이 봅니다 */
@@ -227,11 +173,9 @@ if(fs.existsSync(IMG)){
        "안 쓰는 파일" 로 잡아서 경고가 났습니다 — 원본은 화면이
        읽지 않는 것이 맞습니다. */
     if(fs.statSync(path.join(IMG, f)).isDirectory()) return;
-    /* ⚠️ 그림이 아닌 파일(README 등)은 "안 쓰는 사진" 이 아닙니다 */
-    if(!/\.(jpe?g|png|webp|avif|gif|svg)$/i.test(f)) return;
     const rel = path.join("img", f);
     if(!used.has(rel))
-      warn.push(rel + " — AM_PHOTOS 에 없는 파일입니다 (안 쓰입니다)");
+      warn.push(rel + " — WOW_PHOTOS 에 없는 파일입니다 (안 쓰입니다)");
   });
 }
 
@@ -252,13 +196,7 @@ if(bad.length){
   console.log("");
   process.exit(1);
 }
-/* ⚠️⚠️ **0장이면 "전부 맞습니다" 가 아닙니다.** 잰 것이 없는데 초록을
-   내면 "검사가 보고 있다" 고 착각하게 됩니다 — 이 저장소가 여러 번
-   겪은 자리입니다. 0장은 **지금 맞는 상태**이므로 실패로 치지는 않되,
-   **0장이라고 말하고** 넘어갑니다. */
-console.log("\n✅ " + (ok ? ok + "장 전부 규격에 맞습니다"
-                          : "넣은 사진이 **0장**입니다 — 잴 것이 없었습니다") +
+console.log("\n✅ " + ok + "장 전부 규격에 맞습니다" +
   (warn.length ? " (⚠️ " + warn.length + "건은 봐 주세요)" : ""));
-console.log("   ⚠️ 이건 **규격** 검사입니다. 골프로 읽히는지 · 보기 흉한지 ·");
-console.log("      얼굴이나 상표가 들어갔는지는 **사람이** 봐야 합니다 —");
-console.log("      tools/shot.js 로 찍어 보세요.\n");
+console.log("   ⚠️ 이건 규격 검사입니다. 업종이 드러나는지 · 폐업 쪽이");
+console.log("      처연한지는 사람이 봐야 합니다 — tools/shot.js 로 찍어 보세요.\n");

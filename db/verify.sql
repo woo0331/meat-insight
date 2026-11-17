@@ -8,37 +8,7 @@
 --     몇 번 돌려도 안전하고, 운영 중에 돌려도 됩니다.
 --
 --  ⚠️⚠️ 기대값은 전부 **저장소에서 센 값**입니다 (눈대중이 아닙니다) —
---     판 75 · 표 57 · 상태 13 · 역할 4 · 길 70 · 함수 43.
---     ⚠️ 2026-11-15 — 0082 · 0083(비교견적) 으로 판이 83 이 됩니다. 0082 만 올렸으면 82 · 아무것도 안 올렸으면 81 이 맞습니다. 0084(매물 사진 다섯 장)까지 올렸으면 84 · 0085(티타임 관리)까지 85 입니다 (표 · 함수 수는 그대로 — 함수 하나(store_listing_photo)가 늘지만 이 목록은 손님이 부르는 문만 셉니다).
---     ⚠️⚠️⚠️ **2026-11-13 — 판만 79 → 81 로 올렸습니다.** 0080 · 0081 은
---       **칸만** 더해서 표 · 상태 · 길은 그대로입니다(함수는 0081 의
---       `save_course_photo` 가 늘었지만 이 검사가 세는 **목록**에는 없어
---       43 그대로입니다). ⚠️ 눈대중으로 안 고쳤습니다 — 임시 Postgres 에
---       0001~0081 을 올리고 **이 파일을 실제로 돌려** 나온 값입니다.
---     ⚠️⚠️ **0080 · 0081 은 아직 운영에 안 올렸습니다** — 올리기 전에
---       이 검사를 돌리시면 1번이 79 로 나와 ❌ 입니다. 그것이 맞습니다 —
---       「아직 마지막까지 안 올렸다」는 뜻입니다.
---     ⚠️⚠️ 2026-11-12 — 0077(여행 출발일) · 0078(인력 북마크) ·
---       0079(피팅 거래 조건)가 판 셋 · 표 둘(`tripdate` · `jobfav`)을
---       더했습니다. 그래서 **판 79 · 표 59** 입니다(함수 목록은 그대로).
---       ⚠️ 0076 때는 판만 76 이었습니다. 마이그레이션을
---       더하는 날 아래 기대값도 같이 올리세요 — 안 올리면 **올바르게
---       올린 DB 를 ❌ 로** 읽습니다(2026-11-09 에 네 줄이 그랬습니다).
---     ⚠️ 2026-11-09 — 0070 이 판 하나를 더했습니다(표 · 함수는 그대로입니다:
---       `move_listing` 을 **덮어쓴** 것이고 새 함수가 아닙니다).
---     ⚠️⚠️⚠️ **2026-11-09 에 다시 셌습니다.** 그 전에는 판 23 · 표 21 ·
---     함수 48 로 **0023 판의 값**이 남아 있어서, 0069 까지 올린 멀쩡한
---     DB 가 네 줄에서 ❌ 로 찍혔습니다 (판 · 표 · 함수 · anon).
---     ⚠️ 눈대중으로 고치지 않았습니다 — 임시 Postgres 에 0001~0069 를
---     전부 올리고 **이 파일을 실제로 돌려** 나온 값입니다.
---     ⚠️ 전에 여기 적혀 있던 **트리거 4** 는 근거 없는 숫자였습니다 —
---     이 파일이 세는 트리거는 **가입 트리거 하나**(on_auth_user_created)
---     뿐입니다. 세지 않는 것을 기대값처럼 적지 마세요.
---     ⚠️ 이 줄이 2026-11-01 까지 **판 19 · 표 17 · 함수 40** 으로
---     낡아 있었습니다 — 기대값(want)은 맞는데 사장님이 읽는 설명만
---     틀려서, 멀쩡한 DB 를 보고 "판 19 가 맞나" 로 헷갈릴 자리입니다.
---     `checkMigDocs()` 는 세는 목록과 want 만 봅니다 — **설명 주석은
---     사람이 같이 고쳐야 합니다.**
+--     판 19 · 표 17 · 상태 13 · 역할 4 · 길 70 · 함수 40 · 트리거 4.
 --     저장소를 고치면 이 파일도 같이 고치세요.
 --
 --  ⚠️⚠️ `tools/test-sql.js` 는 **가짜 auth 스키마**로 돌립니다
@@ -48,32 +18,11 @@
 -- ════════════════════════════════════════════════════════════════════
 
 with
-/* ① 판 번호 — 마이그레이션 수와 같아야 합니다 (0001~0076).
-      ⚠️⚠️ 마이그레이션을 더하는 날 아래 want 도 같이 올리세요 —
-      안 올리면 **멀쩡히 올린 DB 를 ❌ 로** 읽습니다. 세는 법은
-      ls db/migrations 입니다 (2026-11-12 — 0072~0074 가 세 줄 더했습니다).
-      ⚠️ 마이그레이션을 더하는 날 이 수도 같이 올리세요 — 이 파일은
-         SQL 편집기에서 도는 글이라 폴더를 셀 수가 없습니다. */
-v_other as (
-  /* ⚠️⚠️⚠️ **이 Supabase 프로젝트에는 다른 서비스가 같이 살고 있습니다**
-     (2026-11-13 · survey 93행으로 확인). `public` 에 정육 · 창업 상담
-     서비스의 표 16개가 **실데이터와 함께** 들어 있습니다 — 우리가 만든
-     것이 아니고 우리가 건드리지도 않습니다.
-     ⚠️ 그래서 아래 ② · ③ · ⑫ 는 그 열여섯을 **빼고** 셉니다. 안 빼면
-        제대로 올린 DB 가 "표 75/59 ❌ · RLS 안 켜진 표 8 ❌ · anon 이
-        읽는 표 112 ❌" 로 나와서, **멀쩡한 DB 를 고쳐야 한다고** 읽게
-        됩니다 (이 저장소가 여러 번 겪은 자리입니다).
-     ⚠️ 목록이 썩으면 드러나게 ⑬ 줄이 **몇 개를 찾았는지** 찍습니다. */
-  select unnest(array[
-    'business_members','businesses','closure_requests','community_comments',
-    'community_posts','consult_requests','jobs','listings','members','orders',
-    'partner_requests','products','purchase_requests','subsidy_requests',
-    'suppliers','supply_requests']) nm
-),
+/* ① 판 번호 — 열아홉 줄이어야 합니다 (0001~0019) */
 v_ver as (
   select count(*)::int n from schema_version
 ),
-/* ② 표 — 스물하나 전부 있어야 합니다
+/* ② 표 — 열넷 전부 있어야 합니다
       ⚠️⚠️ **2026-10-18 — `request_item` 이 목록에서 빠져 있었습니다.**
       0009 로 표가 열셋이 됐고 기대값만 13 으로 올려서, **제대로
       돌린 DB 가 12/13 ❌ 로** 나왔습니다 — 멀쩡한 DB 를 "고쳐야
@@ -81,14 +30,21 @@ v_ver as (
       유일한 길이라 제일 나쁜 종류입니다. 지금은 `checkMigDocs()` 가
       **목록 수와 기대값이 같은지**를 바로 봅니다. */
 v_tab as (
-  /* ⚠️⚠️⚠️ **표 이름을 손으로 적어 두지 않습니다** (2026-11-09). 전에는
-     스물한 개를 글자로 박아 두어서, 앞 서비스(중고폰)의 표 넷이 지워지고
-     골프 표가 마흔 넘게 늘어난 뒤에도 **그 스물한 개만** 세고 있었습니다
-     (그래서 멀쩡한 DB 가 17/21 로 ❌ 였습니다).
-     이제 public 스키마의 **진짜 표**를 셉니다 — 보기(view)는 뺍니다. */
   select count(*)::int n from information_schema.tables
-   where table_schema = 'public' and table_type = 'BASE TABLE'
-     and table_name not in (select nm from v_other)
+   where table_schema = 'public'
+     and table_name in ('account','assignment','audit_log','deal','deal_move',
+                        'fee_policy','offer','provider','quote','request',
+                        'request_item','request_photo','schema_version',
+                        'settlement','user_state',
+                        'provider_contact',
+                        'provider_apply')
+   /* ⚠️ 0013 의 provider_contact 를 provider 에 안 넣은 까닭 —
+      0001 의 grant select on provider to authenticated 가 표째라,
+      거기 직통 번호를 넣으면 로그인한 손님 전부가 읽습니다.
+      ⚠️⚠️ 이 목록의 괄호 안에는 **소괄호를 쓰지 마세요** —
+      checkMigDocs 가 in 다음 괄호를 글자로 잘라 세기 때문에
+      주석의 소괄호에서 멈추고 **멀쩡한 목록을 15개로** 셉니다.
+      2026-10-22 에 그렇게 걸렸습니다. */
 ),
 /* ③ ⚠️⚠️ RLS 가 안 켜진 표 — 0 이어야 합니다.
       안 켜진 표는 누구나 남의 신청과 계약금액을 읽습니다. */
@@ -97,7 +53,6 @@ v_rls as (
     from pg_tables t join pg_class c on c.relname = t.tablename
                                     and c.relnamespace = 'public'::regnamespace
    where t.schemaname = 'public' and c.relrowsecurity = false
-     and t.tablename not in (select nm from v_other)
 ),
 /* ④ 신청 상태 — 열셋 (보류 hold 포함) */
 v_st as (
@@ -140,7 +95,7 @@ v_fn as (
                  /* 0009 — 신청 하나에 서비스 여러 개 (2026-10-17 §6 · §7) */
                  ('save_request_items'),('assign_item'),('move_item_state'),
                  ('is_my_item'),
-                 /* 0010 — 회원 임시저장 · 체크리스트 (2026-10-18 §6-2 · §9) */
+                 /* 0010 — 회원 임사정장 · 체크리스트 (2026-10-18 §6-2 · §9) */
                  ('save_user_state'),('clear_user_state'),
                  ('user_state_guard'),
                  /* 0011 — 사진 · 서류 (2026-10-18 §7-3 · §15) */
@@ -159,21 +114,7 @@ v_fn as (
                  ('provider_linked'),('provider_link_check'),
                  ('linked_providers'),
                  /* 0019 — 남의 건을 밀 수 없게 (2026-10-25 §6 · §7) */
-                 ('request_scope_check'),
-                 /* 0020 — 직접 매입 재고 (2026-10-29 PHONEWAY ⑥) */
-                 /* ⚠️ 앞 서비스(중고폰)의 기기 함수 넷
-                    (make_device · move_device · add_device_check ·
-                    add_device_cost)과 set_provider_inhouse 는 **지워졌습니다**.
-                    목록에 남겨 두면 멀쩡한 DB 가 "빠진 것 다섯" 으로
-                    찍힙니다 — 그래서 뺐습니다(2026-11-09). */
-                 /* ⚠️⚠️ 0021 — 자체 매입 부서를 경쟁 입찰에서 갈라 둡니다
-                    (2026-10-30 PHONEWAY §10). `account_role_guard` 가
-                    **입찰을 내는 쪽과 다 보는 쪽이 같은 계정일 수 없게**
-                    막습니다 — 이게 없으면 한 줄로 둘 다 됩니다. */
-                 ('account_role_guard'),
-                 /* 0022 — 앞 서비스 접수를 보관 표시로 (2026-11-01 §6).
-                    ⚠️ 지우는 문이 아닙니다 — 내려놓고 되돌립니다. */
-                 ('archive_legacy_side'),('restore_legacy_request')) w(f)
+                 ('request_scope_check')) w(f)
 ),
 /* ⑧ ⚠️⚠️ 가입 트리거가 **auth.users 에** 걸렸는가 (진짜 Supabase 전용).
       이게 없으면 가입해도 account 줄이 안 생겨서, 로그인은 되는데
@@ -204,30 +145,13 @@ v_audit as (
   select count(*)::int n from pg_policies
    where tablename = 'audit_log' and cmd in ('UPDATE','DELETE','ALL')
 ),
-/* ⑫ ⚠️⚠️⚠️ **표와 보기를 갈라서 봅니다** (2026-11-09).
-      전에는 "anon 에게 준 권한은 0 이어야 한다" 였습니다 — 0023 판에서는
-      맞는 말이었습니다(공개 목록을 빌드가 찍은 HTML 이 냈습니다). 지금은
-      자유게시판 읽기(0059) · 광고(0064) · 공개 카드가 **공개 보기**로
-      나가므로 보기 열여덟이 열려 있는 것이 **맞습니다.**
-      ⚠️⚠️ 막아야 하는 것은 **표(base table)** 입니다 — 보기는 `where`
-      절로 줄과 칸을 고를 수 있지만, 표를 열면 RLS 가 줄은 막아도 **칸은
-      못 막습니다**(0064 가 `ad_run` 에서 단가 · 메모가 새던 것을 거둔
-      그 자리).
-      ⚠️ `membership_plan` 하나만 일부러 열려 있습니다 — 우리가 파는
-      멤버십 요금제이고 칸이 이름 · 월 요금 · 혜택 · 공개 여부뿐이라
-      공개가 맞습니다(0026). 그 하나는 빼고 셉니다. */
+/* ⑫ ⚠️ 로그인 안 한 사람(anon)에게 준 권한 — 0 이어야 합니다.
+      공개 목록은 빌드가 미리 만든 HTML 이 냅니다. */
 v_anon as (
-  select count(*) filter (where t.table_type = 'BASE TABLE'
-                            and t.table_name <> 'membership_plan')::int n,
-         coalesce(string_agg(distinct t.table_name, ', ')
-                  filter (where t.table_type = 'BASE TABLE'
-                            and t.table_name <> 'membership_plan'), '—') who,
-         count(distinct t.table_name) filter (where t.table_type = 'VIEW')::int views
-    from information_schema.role_table_grants g
-    join information_schema.tables t
-      on t.table_schema = g.table_schema and t.table_name = g.table_name
-   where g.grantee = 'anon' and g.table_schema = 'public'
-     and g.table_name not in (select nm from v_other)
+  select count(*)::int n,
+         coalesce(string_agg(distinct table_name, ', '), '—') who
+    from information_schema.role_table_grants
+   where grantee = 'anon' and table_schema = 'public'
 ),
 /* ⑬ ⚠️⚠️ 가입할 때 역할을 고를 수 없는가 — 트리거가 'customer' 를 박습니다. */
 v_cust as (
@@ -237,26 +161,20 @@ v_cust as (
      and pg_get_functiondef(p.oid) like '%''customer''%'
 ),
 rows as (
-  select 1 i, '판 번호 (0001~0083)'            t, v_ver.n::text   got, '83' want from v_ver
-  union all select  1, '다른 서비스의 표 (세는 데서 뺍니다)',
-       (select count(*)::text from information_schema.tables
-         where table_schema = 'public' and table_type = 'BASE TABLE'
-           and table_name in (select nm from v_other)), '16'
-  union all select  2, '표 (public · 보기 뺀 것)',  v_tab.n::text,  '59' from v_tab
+  select 1 i, '판 번호 (0001~0019)'            t, v_ver.n::text   got, '19' want from v_ver
+  union all select  2, '표 (public)',              v_tab.n::text,  '17' from v_tab
   union all select  3, '⚠️ RLS 안 켜진 표: ' || v_rls.who, v_rls.n::text, '0' from v_rls
   union all select  4, '신청 상태 (hold 포함: ' ||
                        case when v_st.has_hold then 'O' else 'X' end || ')',
                        v_st.n::text, '13' from v_st
   union all select  5, '역할',                     v_role.n::text, '4'  from v_role
   union all select  6, '갈 수 있는 길 (deal_move)', v_move.n::text, '70' from v_move
-  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '43' from v_fn
+  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '40' from v_fn
   union all select  8, '⚠️ 가입 트리거 (auth.users)', v_trg.n::text, '1' from v_trg
   union all select  9, '⚠️ auth.uid()',            v_uid.n::text,  '1'  from v_uid
   union all select 10, '⚠️ 돈 칸 쓰기 권한: ' || v_money.who, v_money.n::text, '0' from v_money
   union all select 11, '⚠️ 감사 기록 수정·삭제 정책', v_audit.n::text, '0' from v_audit
-  union all select 12, '⚠️ anon 이 읽는 **표**(요금제 빼고): ' || v_anon.who ||
-                       '  · 공개 보기 ' || v_anon.views::text || '개는 정상',
-                       v_anon.n::text, '0' from v_anon
+  union all select 12, '⚠️ anon 권한: ' || v_anon.who, v_anon.n::text, '0' from v_anon
   union all select 13, '가입 시 역할을 customer 로 박음', v_cust.n::text, '1' from v_cust
 )
 select i "#", t "검사", got "지금", want "기대",

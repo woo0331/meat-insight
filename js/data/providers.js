@@ -1,400 +1,189 @@
 /* ════════════════════════════════════════════════════════════════════
-   업체를 꺼내 쓰는 자리 — 규칙은 **여기 한 곳**입니다
+   Provider · ProviderService · Portfolio · Review (§36 · §37 · §40)
 
-   ⚠️⚠️ 업체 **자료**는 `js/data/providers.generated.js` 에 있고 그것은
-   DB 에서 나옵니다 (`tools/pull-providers.js`). 이 파일은 그 자료를
-   **어떻게 고르고 어떻게 읽는가**만 정합니다. 둘을 섞지 마세요.
+   ⚠️⚠️ **업체를 한 곳도 지어내지 않습니다.** 지금 `AM_PROVIDERS` 는
+   비어 있고, 그게 사실입니다. 카드 여섯 장을 만들어 채워 두면 그
+   순간 **없는 회사를 광고**하는 것이고 표시·광고의 공정화에 관한
+   법률 제3조 위반입니다. 화면은 비면 비었다고 말합니다 — 대신
+   **입점 안내**와 **견적 요청**을 내놓습니다 (그 둘은 업체가 0곳
+   이어도 실제로 돌아갑니다).
 
-   ⚠️⚠️ **업체가 어느 분류에 뜨는가는 `subs`(하위 키)로 정해집니다.**
-   분류 키를 적으면 그 업체만 **조용히 아무 데도 안 뜹니다** — 에러도
-   404 도 안 납니다. `build.js` 의 가드가 빌드에서 멈춥니다.
+   ⚠️ **평점과 후기 수와 누적 작업 수를 값으로 저장하지 마세요.**
+   `amProviderStats()` 가 **실제 후기 배열에서 계산**합니다. 숫자로
+   들고 있으면 누군가 그 칸에 손으로 4.9 를 적어 넣을 수 있습니다.
+   후기가 없으면 평점 자리는 아예 안 나옵니다.
 
-   ⚠️⚠️ **평점 · 후기 수를 값으로 들고 있지 않습니다.** 실제 후기에서
-   **계산**합니다 (절대 규칙 1). 그래서 여기에 그런 함수가 없고,
-   후기가 생기는 날 그때 **배열에서 세는** 함수를 만듭니다.
+   ── Provider 한 건의 생김새 ─────────────────────────────────────
+   {
+     id:"", name:"", logo:"", cover:"",
+     regions:["gyeonggi"],          지역 key (regions.js)
+     gu:["안양시","군포시"],          서비스 가능 시/군/구
+     industries:["cafe"],           전문 업종 key (industries.js)
+     subs:["interior","design"],    전문 서비스 = 하위 분류 key (catalog.js)
+     intro:"", since:2015, staff:0,
+     price:[ {name:"카페 인테리어", from:0, unit:"평당", note:""} ],
+     portfolio:[ {title:"", industry:"", region:"", year:2026,
+                  before:"", after:"", images:[] } ],
+     reviews:[ {at:"2026-09-01", by:"", industry:"", sub:"",
+                score:{ total:0, price:0, speed:0, pro:0, schedule:0, again:0 },
+                text:"", images:[],
+                badge:"consult|contract|deal|pay"   ← 인증 배지 (§40)
+              } ],
+     verified:{ biz:false, license:false, insurance:false },
+     responseHours:null,            응답까지 걸린 시간 — **재어 본 값만**
+     consultHours:"평일 09:00~18:00",
+     ── 아래 둘은 2026-10-06 2차 §10 · §11 ─────────────────────────
+     as:{ period:"", what:"" },     A/S — 기간과 범위. **업체가 적은 값**
+     faq:[ {q:"", a:""} ]           업체 FAQ — 업체가 적은 글
+   }
+   ⚠️⚠️ `as` 와 `faq` 는 **업체가 적은 값**입니다. 우리가 확인한 사실이
+   아니라서 화면에 "업체가 적어 준 내용입니다" 를 같이 냅니다 — 확인한
+   것(`verified`)과 섞이면 "플랫폼이 A/S 를 보증한다" 로 읽힙니다.
+   ⚠️ 비어 있으면 그 구간이 **통째로 빠집니다** (절대 규칙 2).
+   ⚠️ `faq` 의 답에 `**굵게**` 를 쓰지 마세요 — `esc()` 만 거치는 칸이라
+   별표가 글자로 찍힙니다.
+   ⚠️ `badge` 는 **플랫폼이 확인한 것만** 붙입니다. 상담 기록이 없는데
+   "상담 인증" 을 붙이면 그게 지어낸 신뢰입니다.
    ════════════════════════════════════════════════════════════════════ */
 
-/* ⚠️⚠️ **업체 주소는 여기서만 짓습니다.** 한 글자짜리 p 는 못 씁니다 —
-   vercel.json 이 /p/:p* 를 410 으로 보냅니다 (앞 서비스의 업체 주소).
-   분류 주소(amCatUrl)와 같은 규칙입니다. */
-window.amProviderUrl = function(p){
-  var id = (typeof p === "string") ? p : (p && p.id);
-  return id ? "/pro/" + id : "/search";
-};
+window.AM_PROVIDERS = [];
 
-/* 전부 — 없으면 빈 배열입니다 (null 을 돌려주지 않습니다) */
-window.amProviders = function(){
-  return Array.isArray(window.AM_PROVIDERS) ? window.AM_PROVIDERS : [];
+/* 인증 배지 이름 — 후기 신뢰도의 근거입니다 (§40) */
+window.AM_REVIEW_BADGES = {
+  consult:  "상담 인증",
+  contract: "계약 인증",
+  deal:     "거래 인증",
+  pay:      "결제 인증"
 };
+/* 후기 평가 항목 (§40) */
+window.AM_REVIEW_AXES = [
+  { key:"total",    name:"전체 만족도" },
+  { key:"price",    name:"가격 만족도" },
+  { key:"speed",    name:"응답속도" },
+  { key:"pro",      name:"전문성" },
+  { key:"schedule", name:"일정 준수" },
+  { key:"again",    name:"재이용 의향" }
+];
 
 window.amProvider = function(id){
-  var L = window.amProviders();
-  for(var i = 0; i < L.length; i++) if(L[i].id === id) return L[i];
-  return null;
+  var r = (window.AM_PROVIDERS||[]).filter(function(p){ return p.id === id; });
+  return r.length ? r[0] : null;
 };
 
-/* 이 업체가 **실제로 하는** 하위 — 목록에 없는 키는 걸러 냅니다.
-   ⚠️ 조용히 거르지 않고 빌드 가드가 먼저 잡습니다. 여기서 거르는 것은
-   자료가 앞서 나갔을 때 화면이 안 깨지게 하는 안전장치입니다. */
-/* ⚠️⚠️⚠️ **업체가 스스로 올린 시설 사진**입니다 (0051). 0건이면 빈
-   배열이고, 화면은 그때 **분류 아이콘 타일**로 돌아갑니다.
-   ⚠️ 증빙서류는 **한 장도 안 들어옵니다** — 공개 보기
-   (`v_provider_photo_public`)에 그 줄이 아예 없습니다.
-   ⚠️ 세는 자리는 **여기 하나**입니다 (카드와 업체 화면이 따로 세면
-   한쪽만 고쳐서 어긋납니다).
-   ⚠️ 주소가 없는 줄은 버립니다 — 깨진 그림을 손님 화면에 걸지
-   않습니다 (`providers.generated.js` 가 주소 없이 찍힐 일은 없지만,
-   그 파일이 옛것일 수 있습니다). */
-window.amProviderPhotos = function(p){
-  var L = (p && Array.isArray(p.photos)) ? p.photos : [];
-  return L.filter(function(x){ return x && x.url; });
+/* ⚠️ **평점은 계산합니다.** 후기가 없으면 `null` 을 돌려주고, 화면은
+   그 자리를 통째로 뺍니다 — "평점 0.0" 은 평점이 아닙니다. */
+window.amProviderStats = function(p){
+  if(!p) return null;
+  var rv = p.reviews || [];
+  var pf = p.portfolio || [];
+  var s = { reviews: rv.length, jobs: pf.length, rating: null };
+  if(rv.length){
+    var sum = rv.reduce(function(a, r){ return a + ((r.score||{}).total || 0); }, 0);
+    s.rating = Math.round((sum / rv.length) * 10) / 10;
+  }
+  return s;
 };
 
-window.amProviderSubs = function(p){
-  var subs = (p && Array.isArray(p.subs)) ? p.subs : [];
-  return subs.filter(function(k){ return !!window.amSub(k); });
+/* ⚠️⚠️ **업체가 이 분류의 일을 하는가** — 하위 분류 key 로 봅니다.
+   `subs` 에 적는 것은 **하위 분류**(`catalog.js` 의 `items[].key`)이지
+   분류 key 가 아닙니다.
+
+   ⚠️ 비어 있으면 **아무 분류에도 안 걸립니다.** 지역 · 업종은 안 적으면
+   "전국 · 전업종" 으로 읽는 게 말이 되지만, 하시는 일을 안 적은 것을
+   "전부 다 합니다" 로 읽으면 인테리어 업체가 세무 화면에 앉습니다.
+   비어 있는 채로 등록되는 것은 `build-pages.js` 가 막습니다.
+
+   ⚠️ 이 규칙은 **여기 한 곳**입니다. `join.js` 의 `amProvidersInCat()`
+   도 이것을 부릅니다 — 두 곳에 적으면 한쪽만 고치게 됩니다. */
+/* ⚠️⚠️ **플랫폼이 확인한 것**만 배지로 냅니다 (§40).
+   전에는 `ProviderCard` 안에 적혀 있었고 **첫 배지 하나만** 찍었습니다 —
+   사업자 확인이 켜져 있으면 보험 가입은 영영 안 보입니다. 게다가
+   **상세 화면(`/p/:id`)에는 아예 없었습니다** — 손님이 업체를 고르는
+   자리가 거기인데 목록에만 보였습니다.
+
+   ⚠️ 상태색(`--ok` 초록)이 아니라 **골드**입니다. 초록은 "좋다/나쁘다"
+   를 말하는 색인데, 확인은 판정이 아니라 **확인했다는 표시**입니다. */
+/* ── 확인 배지 (2026-10-05 V2 §20) ───────────────────────────────
+   > "사업자 인증 · 대표자 인증 · 전화 인증 · 주소 확인 · 자격증 확인 ·
+   >  포트폴리오 확인 · 보험 확인 · STOREWAY 인증"
+
+   ⚠️⚠️ **플랫폼이 실제로 확인한 것만** 켭니다. 업체가 "확인했다" 고
+   말했다고 켜면 그건 지어낸 신뢰입니다 — 손님은 이 배지를 보고
+   수천만 원짜리 계약을 합니다.
+   ⚠️ **포트폴리오 확인은 `verified` 에 두지 않습니다** — 포트폴리오가
+   실제로 **몇 건 올라와 있는가**는 배열을 세면 나옵니다. 값으로 들고
+   있으면 포트폴리오가 0건인데 "확인" 이 켜져 있을 수 있습니다
+   (평점을 값으로 저장하지 않는 것과 같은 까닭입니다).
+   ⚠️ 이름은 **"확인"** 까지입니다. "인증" 은 저희가 자격을 준다는 말로
+   읽히는데, 저희가 하는 일은 **서류를 봤다**는 표시입니다.
+   ⚠️ 차례를 바꾸지 마세요 — 손님이 제일 먼저 보는 것이 사업자입니다. */
+window.AM_VERIFY = [
+  { key:"biz",       name:"사업자 확인",  what:"사업자등록증" },
+  { key:"owner",     name:"대표자 확인",  what:"대표자 신원" },
+  { key:"phone",     name:"전화 확인",    what:"연락 가능한 번호" },
+  { key:"addr",      name:"주소 확인",    what:"사업장 소재지" },
+  { key:"license",   name:"면허 확인",    what:"업종에 필요한 면허 · 자격" },
+  { key:"insurance", name:"보험 가입",    what:"영업배상책임보험 등" }
+];
+
+/* **우리가 서류로 확인한 것**만 — 거르개가 보는 것이 이쪽입니다 */
+window.amProviderVerified = function(p){
+  var v = (p && p.verified) || {};
+  /* ⚠️ 목록을 손으로 또 적지 마세요 — 위 한 곳에서 옵니다 */
+  return (window.AM_VERIFY || []).filter(function(x){ return v[x.key]; })
+    .map(function(x){ return x.name; });
 };
 
-/* 이 업체가 뜨는 분류들 — ⚠️ **여기서만 셉니다.** 분류 화면과 업체
-   화면이 따로 세면 한쪽만 고쳐서 어긋납니다. */
-window.amProviderCats = function(p){
-  var keys = {}, out = [];
-  window.amProviderSubs(p).forEach(function(k){
-    var f = window.amSub(k);
-    if(f && !keys[f.cat.key]){ keys[f.cat.key] = 1; out.push(f.cat); }
-  });
+window.amProviderBadges = function(p){
+  var out = window.amProviderVerified(p);
+  /* ⚠️⚠️ 포트폴리오는 **센 값**이지 확인이 아닙니다. 처음에 "포트폴리오
+     확인" 으로 적었다가 "확인된 곳만" 거르개에 같이 걸렸습니다 —
+     사진을 올린 것과 저희가 서류를 본 것은 다른 일인데 한 낱말이
+     두 뜻으로 쓰인 것입니다. 건수를 그대로 냅니다. */
+  var n = ((p && p.portfolio) || []).length;
+  if(n) out.push("포트폴리오 " + n + "건");
   return out;
 };
 
-/* 한 분류에 뜨는 업체들 — sub 를 주면 그 하위만 */
-window.amProvidersOf = function(catKey, subKey){
-  return window.amProviders().filter(function(p){
-    var subs = window.amProviderSubs(p);
-    if(subKey) return subs.indexOf(subKey) >= 0;
-    return subs.some(function(k){
-      var f = window.amSub(k);
-      return f && f.cat.key === catKey;
-    });
+/* ⚠️ 후기를 쓰신 분의 이름은 **가려서** 냅니다. 그대로 올리면 그 자체가
+   개인정보이고, 가게 상호와 붙으면 누구인지 특정됩니다.
+   "김사장" → "김○○" · "이훈" → "이○" 입니다. */
+window.amMaskName = function(n){
+  n = String(n || "").trim();
+  if(!n) return "";
+  if(n.length === 1) return n;
+  return n.charAt(0) + new Array(n.length).join("○");
+};
+
+window.amProviderInCat = function(p, cat){
+  var keys = ((cat && cat.items) || []).map(function(i){ return i.key; });
+  if(!keys.length) return false;
+  return (p.subs || []).some(function(s){ return keys.indexOf(s) >= 0; });
+};
+
+/* 조건으로 거르기 — 분류 · 지역 · 업종 · 서비스 (§35)
+   ⚠️⚠️ **`cat` 을 빼먹지 마세요.** `/providers/:cat` 이 분류를 안 넘기고
+   있어서, 하위 분류를 고르기 전에는 **등록된 모든 업체가 모든 분야
+   화면에** 나왔습니다 — 철거를 찾는 손님에게 인테리어 업체가 보이고,
+   그 업체에 철거 요청이 갑니다. 업체가 0곳이라 아무도 못 봤고,
+   **첫 업체를 등록하는 날** 터질 버그였습니다. */
+window.amProviders = function(f){
+  f = f || {};
+  var cat = f.cat ? (window.amCat ? amCat(f.cat) : null) : null;
+  return (window.AM_PROVIDERS||[]).filter(function(p){
+    if(f.cat      && !window.amProviderInCat(p, cat)) return false;
+    if(f.sub      && (p.subs||[]).indexOf(f.sub) < 0) return false;
+    if(f.industry && (p.industries||[]).length &&
+       (p.industries||[]).indexOf(f.industry) < 0) return false;
+    if(f.region   && (p.regions||[]).length &&
+       (p.regions||[]).indexOf(f.region) < 0) return false;
+    /* ── 2026-10-05 V2 §11 의 거르개 ──────────────────────────────
+       ⚠️⚠️ **재 본 적 없는 값으로는 안 거릅니다.** 지시서가 적은
+       "평점 · 응답속도" 는 각각 후기 0건 · 재는 장치 없음이라,
+       거르개로 만들면 그 순간 아무도 안 걸리거나 지어낸 순서가 됩니다.
+       여기 있는 둘은 **우리가 실제로 들고 있는 사실**입니다. */
+    if(f.verified && !window.amProviderVerified(p).length) return false;
+    if(f.folio    && !((p.portfolio||[]).length)) return false;
+    return true;
   });
-};
-
-/* 지역 이름 — ⚠️ 키가 아니라 **사람이 읽는 이름**입니다.
-   regions.js 가 없으면 키를 그대로 돌려줍니다 (조용히 빈 칸이 되지
-   않게 — 빈 칸이면 아무도 어긋난 것을 모릅니다). */
-window.amProviderRegions = function(p){
-  var L = (p && Array.isArray(p.regions)) ? p.regions : [];
-  return L.map(function(k){
-    var r = window.amRegion ? window.amRegion(k) : null;
-    return (r && r.name) ? r.name : k;
-  });
-};
-
-/* 거래 규모 — 0023 의 scale (small · mid · large).
-   ⚠️ 없으면 **null** 입니다. "(미기재)" 를 찍지 않습니다. */
-window.AM_SCALE = { small:"소규모", mid:"중간 규모", large:"대규모" };
-window.amProviderScale = function(p){
-  var s = p && p.scale;
-  return (s && window.AM_SCALE[s]) ? window.AM_SCALE[s] : null;
-};
-
-/* 상담 방식 (0044) — ⚠️⚠️ **말은 여기 한 곳**입니다. 화면마다 따로
-   적으면 한쪽만 고쳐서 "전화상담" 과 "전화" 가 섞입니다.
-   ⚠️ 0건이면 **빈 배열**입니다 — 화면은 그때 그 줄을 뺍니다
-   ("미정" 을 찍지 않습니다 · 절대 규칙 2). */
-window.AM_CONTACT_WAYS = [
-  { key:"phone",  name:"전화 상담" },
-  { key:"visit",  name:"방문 상담" },
-  { key:"online", name:"온라인 상담" },
-  { key:"shop",   name:"매장 방문" }
-];
-window.amContactWays = function(p){
-  var L = (p && Array.isArray(p.contact_ways)) ? p.contact_ways : [];
-  return L.map(function(k){
-    var f = window.AM_CONTACT_WAYS.filter(function(x){ return x.key === k; })[0];
-    return f ? f.name : k;
-  });
-};
-
-/* 취급 브랜드 — 업체가 적은 글자 그대로입니다 (esc() 는 화면이 합니다) */
-window.amProviderBrands = function(p){
-  return (p && Array.isArray(p.brands)) ? p.brands : [];
-};
-
-/* 확인된 것 — ⚠️ **플랫폼이 서류를 본 것만** 들어 있습니다.
-   업체가 스스로 켤 수 없습니다 (provider_guard 트리거). */
-window.AM_VERIFIED = {
-  brn:   "사업자등록 확인",
-  tel:   "연락처 확인",
-  place: "사업장 확인"
-};
-window.amProviderVerified = function(p){
-  var v = (p && p.verified && typeof p.verified === "object") ? p.verified : {};
-  return Object.keys(window.AM_VERIFIED)
-    .filter(function(k){ return v[k]; })
-    .map(function(k){ return window.AM_VERIFIED[k]; });
-};
-
-/* ════════════════════════════════════════════════════════════════════
-   사업자 신원정보 (0057) — ⚠️⚠️ **한 곳**입니다
-   ────────────────────────────────────────────────────────────────────
-   ⚠️⚠️⚠️ **전자상거래법 제20조 제2항 · 시행령 제25조.** 중개자는
-   입점업체가 사업자일 때 그 **상호 · 대표자 성명 · 주소 · 전화번호 ·
-   전자우편주소 · 사업자등록번호**를 손님이 볼 수 있게 해야 합니다.
-   공정위가 당근마켓에 시정명령과 과태료를 부과한 조항이 이것입니다.
-
-   ⚠️⚠️ **비어 있으면 줄을 안 냅니다** (절대 규칙 1 · 2). 지어낼 수
-   없는 값이고, `(미기재)` 를 찍으면 미완성 사이트로 읽힙니다.
-   ⚠️ 상호(`name`)는 **여기 안 담습니다** — 화면의 제목이 이미 그것이고,
-   같은 글자를 두 자리에 찍으면 한쪽만 고치는 날 둘이 달라집니다.
-   ⚠️⚠️ 전화는 **공개 대표번호**입니다. 배정받을 때 쓰는 담당자 직통은
-   `provider_contact`(0013) 이고 손님에게 정책이 아예 없습니다 —
-   이 함수는 그 칸을 모릅니다 (알 수도 없습니다).
-   ════════════════════════════════════════════════════════════════════ */
-window.AM_IDENT = [
-  { key:"ceo",   name:"대표자" },
-  { key:"brn",   name:"사업자등록번호" },
-  { key:"addr",  name:"사업장 주소" },
-  { key:"tel",   name:"전화" },
-  { key:"email", name:"이메일" }
-];
-window.amProviderIdent = function(p){
-  return window.AM_IDENT.map(function(f){
-    var v = p ? p[f.key] : null;
-    v = (v === null || v === undefined) ? "" : String(v).trim();
-    return v ? { key:f.key, name:f.name, value:v } : null;
-  }).filter(Boolean);
-};
-/* ════════════════════════════════════════════════════════════════════
-   개인인가 사업자인가 — 전자상거래법 제20조의4 ③   (0071 · 2026-11-10)
-
-   ⚠️⚠️⚠️ **구분해 표시해야 합니다.** 레슨 프로는 사업자등록 없이
-   연습장에 소속해 가르치는 분이 많아서, `/join` 이 「사업자등록 없어도
-   신청하실 수 있습니다」 로 문을 여는 순간 손님 화면에 **개인과 사업자가
-   섞입니다.** 그때 법이 구분해 표시하라고 합니다.
-
-   ⚠️⚠️⚠️ **모르면 아무 딱지도 안 찍습니다** (`kind` 가 null). 확인한
-   사람이 켜고(0071 의 `set_provider_kind` · 관리자만), 그 전에는 빈
-   글자입니다 — 「미확인」 같은 말도 안 찍습니다(그것도 우리가 만든
-   평가입니다 · 절대 규칙 1 · 2).
-   ⚠️⚠️ **`brn` 이 비었다고 '개인' 으로 읽지 마세요** — 사업자인데 번호를
-   아직 안 적은 업체가 **개인으로 찍힙니다.** 가르는 것은 `kind` 한 칸뿐입니다.
-   ════════════════════════════════════════════════════════════════════ */
-window.AM_PV_KIND = {
-  biz:    { name:"사업자",      note:"사업자등록을 확인했습니다" },
-  person: { name:"개인",        note:"사업자등록이 없는 개인입니다" }
-};
-/* ⚠️ 모르는 값이면 **그 글자를 그대로** 돌려줍니다 (이름을 지어내지
-   않습니다 — 0056 의 상태 말과 같은 규칙). null · 빈 값이면 null 입니다. */
-window.amPvKind = function(p){
-  var k = (p && p.kind) ? String(p.kind).trim() : "";
-  if(!k) return null;
-  var row = window.AM_PV_KIND[k];
-  return row ? { key:k, name:row.name, note:row.note }
-             : { key:k, name:k, note:"" };
-};
-
-/* ⚠️ 한 칸이라도 있는가 — 0건이면 화면이 구간을 **줄째** 뺍니다 */
-window.amProviderHasIdent = function(p){
-  return window.amProviderIdent(p).length > 0;
-};
-
-/* ── 연습장 시설 정보 (0074) ─────────────────────────────────────
-   ⚠️⚠️ **키 묶음은 여기 한 곳**입니다 — DB 는 갯수와 길이만 봅니다
-   (0056 이 listing.sub 를 안 박은 그 까닭). 늘리실 때는 **더하기만**
-   하세요: 이미 등록한 연습장이 그 글자를 들고 있습니다.
-   ⚠️ 시안 ⑤ 의 고르개 다섯 가운데 넷이 여기이고, 지역은
-   `AM_REGIONS`, 가격은 **provider_price(0042)** 가 이미 담습니다. */
-window.AM_RANGE_OPT = [
-  { key:"indoor",  name:"실내" },
-  { key:"outdoor", name:"실외" },
-  { key:"screen",  name:"스크린" },
-  { key:"parking", name:"주차 가능" },
-  { key:"lesson",  name:"레슨 운영" }
-];
-window.amRangeOpt = function(k){
-  var L = window.AM_RANGE_OPT || [];
-  for(var i = 0; i < L.length; i++) if(L[i].key === k) return L[i];
-  return null;
-};
-/* 업체가 고른 것을 사람 말로 — ⚠️ 모르는 키는 **그대로** 냅니다
-   (이름을 지어내지 않습니다 · 절대 규칙 1) */
-window.amRangeOptsOf = function(p){
-  var a = (p && p.range_opts) || [];
-  return a.map(function(k){ var r = window.amRangeOpt(k); return r ? r.name : k; });
-};
-
-/* ── 연습장 1회 가격대 (확정 시안 ⑤ 의 고르개 다섯 가운데 하나) ────
-   ⚠️⚠️ 값은 **업체가 `provider_price`(0042) 에 올린 것**으로 가릅니다.
-   등록이 0건인 연습장은 **어느 가격대에도 안 걸립니다** — 값을 모르는
-   것을 아무 칸에나 넣으면 그게 지어낸 값입니다(절대 규칙 1). 그 사실을
-   화면이 그 자리에서 말합니다.
-   ⚠️ 경계는 **아래를 열고 위를 닫습니다**(gte · lt) — 둘 다 닫으면
-   1만원짜리가 두 칸에 걸립니다.
-   ⚠️ 구간 셋은 **저희가 고른 값**입니다(시안은 칸만 그려 두고 값을
-   안 적었습니다) — 시안의 예시가 12,000 ~ 18,000원이라 그 둘레로
-   잡았습니다. */
-window.AM_RANGE_PRICE = [
-  { key:"r1", name:"1만원 미만",      gte:null,  lt:10000 },
-  { key:"r2", name:"1만 ~ 2만원",     gte:10000, lt:20000 },
-  { key:"r3", name:"2만원 이상",      gte:20000, lt:null }
-];
-window.amRangePrice = function(key){
-  var L = window.AM_RANGE_PRICE || [];
-  for(var i = 0; i < L.length; i++) if(L[i].key === key) return L[i];
-  return null;
-};
-/* ⚠️⚠️⚠️ `amPriceLow()` 를 그대로 쓰면 **분류를 안 가립니다** — 레슨도
-   하시는 연습장의 카드에 레슨 8회권 값이 「1회 60분」인 것처럼 찍힙니다
-   (2026-11-10 에 레슨 화면에서 겪은 그 자리). 연습장 화면은 **연습장
-   하위에 달린 값만** 봅니다.
-   ⚠️ 세는 자리는 여전히 `amPriceLow()` 한 곳입니다 — 여기서는 **무엇을
-   세느냐**만 좁힙니다(셈을 두 벌로 적지 않습니다).
-   ⚠️ 값이 0건이면 **null** 입니다 — 0 이 아닙니다. */
-window.amRangeLow = function(p){
-  var L = (p && Array.isArray(p.prices)) ? p.prices : [];
-  var only = L.filter(function(x){
-    var s = (x && x.sub && window.amSub) ? window.amSub(x.sub) : null;
-    return s && s.cat && s.cat.key === "range";
-  });
-  if(!only.length) return null;
-  return window.amPriceLow ? window.amPriceLow({ prices: only }) : null;
-};
-/* 시설 칩 — ⚠️ 업체가 고른 것만. 안 고른 연습장은 **빈 배열**이고
-   화면이 그 줄을 통째로 뺍니다(「정보 없음」을 안 찍습니다). */
-window.amRangeHas = function(p, key){
-  var a = (p && Array.isArray(p.range_opts)) ? p.range_opts : [];
-  return a.indexOf(key) >= 0;
-};
-
-/* ════════════════════════════════════════════════════════════════════
-   피팅 · 수리 (확정 시안 ⑦ · 2026-11-12)
-   ════════════════════════════════════════════════════════════════════
-   ⚠️⚠️ 목록은 **여기 한 곳**입니다 — 거르개(js/fitting.js) · 업체
-     작업실(js/deskme.js) · 카드(js/card.js)가 같은 줄을 읽습니다.
-     두 곳에 적으면 한쪽만 고치는 날 「택배」를 고를 수는 있는데 아무도
-     안 걸리는 칸이 됩니다.
-   ⚠️ DB(0076)는 **키 묶음을 모릅니다** — 갯수와 길이만 막습니다.
-     그래서 늘리실 때 마이그레이션이 필요 없고, **빼지 말고 더하기만**
-     하세요(이미 고르신 업체가 그 글자를 들고 있습니다). */
-
-/* 이용 방식 — 시안의 「서비스 방식」입니다.
-   ⚠️⚠️ `contact_ways`(0044 · 상담 방식 넷)와 **다른 칸**입니다 — 저쪽은
-     "어떻게 이야기하나", 이쪽은 "클럽을 어떻게 맡기나" 입니다. */
-window.AM_FIT_WAY = [
-  { key:"visit", name:"방문 이용", lead:"매장 방문" },
-  { key:"ship",  name:"택배 이용", lead:"클럽 발송" }
-];
-
-/* ⚠️ 업체가 고른 것을 **이름으로** 돌려줍니다. 모르는 키가 들어오면
-   그 글자를 그대로 냅니다 — 이름을 지어내지 않습니다. */
-window.amFitWaysOf = function(p){
-  var L = (p && Array.isArray(p.fit_ways)) ? p.fit_ways : [];
-  return L.filter(Boolean).map(function(k){
-    var f = window.AM_FIT_WAY.filter(function(x){ return x.key === k; })[0];
-    return f ? f.name : String(k);
-  });
-};
-
-window.amFitHasWay = function(p, key){
-  var L = (p && Array.isArray(p.fit_ways)) ? p.fit_ways : [];
-  return L.indexOf(key) >= 0;
-};
-
-/* 가격대 — 시안의 세 칸 그대로입니다.
-   ⚠️ 경계는 **아래를 열고 위를 닫습니다**(gte · lt) — 둘 다 닫으면
-     10,000원이 두 칸에 다 걸립니다(AM_TEE_BAND 와 같은 규칙).
-   ⚠️ 그래서 이름도 「10,000원 **미만**」입니다 — 이름과 경계를 따로
-     적으면 그 칸이 거짓말을 합니다. */
-window.AM_FIT_PRICE = [
-  { key:"f1", name:"10,000원 미만",        gte:null,   lt:10000 },
-  { key:"f2", name:"10,000 ~ 30,000원",    gte:10000,  lt:30000 },
-  { key:"f3", name:"30,000원 이상",        gte:30000,  lt:null  }
-];
-
-window.amFitPrice = function(key){
-  return window.AM_FIT_PRICE.filter(function(x){ return x.key === key; })[0] || null;
-};
-
-/* ⚠️⚠️ **피팅 값만** 봅니다 — `amPriceLow()` 는 분류를 안 가려서,
-   레슨도 하시는 피팅 업체 카드에 레슨 회차권 값이 「그립 교체 공임」인
-   것처럼 찍힙니다(2026-11-10 에 레슨에서 · 2026-11-12 에 연습장에서
-   겪은 그 자리). 세는 셈은 여전히 `amPriceLow()` 한 곳입니다 —
-   **무엇을 세느냐만** 좁힙니다. */
-window.amFitLow = function(p){
-  if(!p || !window.amPriceLow) return null;
-  var c = window.amCat ? window.amCat("fitting") : null;
-  var keys = (c && window.amCatItems)
-    ? window.amCatItems(c).map(function(i){ return i.key; }) : [];
-  var rows = (Array.isArray(p.prices) ? p.prices : []).filter(function(r){
-    return keys.indexOf(r && r.sub) >= 0;
-  });
-  return window.amPriceLow({ prices: rows });
-};
-
-/* 업체 목록의 차례 — 레슨(2026-11-10)과 피팅 · 수리(2026-11-12)가
-   **같은 줄**을 읽습니다.
-   ⚠️ 키는 주소에 실립니다(`?o=`). 이름을 바꾸셔도 키는 그대로
-     두세요 — 복사해 보내신 주소가 깨집니다.
-   ⚠️⚠️⚠️ **「추천순」은 여기 없습니다** — 무엇이 추천인지 세어 본
-     적이 없고 세는 자료도 없습니다(조회도 · 거래 건수도 안 셉니다).
-     시안에 그 칸이 있어도 지어낸 차례를 「추천」이라고 적으면
-     절대 규칙 1 입니다. **세어서 줄 세울 수 있는 것**만 냅니다. */
-/* 등록된 날 — **「최신 등록순」이 읽는 자리 한 곳**입니다(레슨 · 피팅이
-   같이 씁니다). 0079 가 `v_provider_card` 에 `created_at` 을 내고
-   `tools/pull-providers.js` 가 그것을 가져옵니다.
-   ⚠️ 못 읽으면 **null** 입니다 — 0 으로 돌려주면 날짜를 모르는 업체가
-     「가장 오래된 곳」이 되고 그건 지어낸 차례입니다(절대 규칙 1). */
-window.amPvNewAt = function(p){
-  var v = (p && p.created_at) ? String(p.created_at) : "";
-  if(!v) return null;
-  var t = Date.parse(v);
-  return isNaN(t) ? null : t;
-};
-
-window.AM_PV_SORT = [
-  { key:"name", name:"가나다순" },
-  { key:"low",  name:"가격 낮은 순" },
-  { key:"high", name:"가격 높은 순" },
-  { key:"rate", name:"후기 평점순" },
-  /* ⚠️⚠️ 시안의 「추천순」 자리입니다 — 무엇이 추천인지는 못 세지만
-     **등록된 날짜는 셀 수 있습니다**(0079 가 `v_provider_card` 에
-     `created_at` 을 냅니다). 셀 수 없는 이름 대신 **세어서 줄 세우는
-     이름**을 적습니다. ⚠️ 날짜가 없는 업체는 맨 뒤로 갑니다 —
-     없는 날짜를 지어내지 않습니다. */
-  { key:"new",  name:"최신 등록순" }
-];
-
-/* 피팅 서비스 — 확정 시안 ⑦ 의 **선택 UI** (2026-11-12)
-
-   ⚠️⚠️⚠️ **하위 키를 하나도 안 줄입니다.** 시안의 「클럽 피팅」이 우리
-   하위 **둘**(드라이버 피팅 · 아이언 피팅)이라, 묶음만 내고 끝내면 그
-   둘로 바로 가는 길이 없어집니다. 그래서 —
-     · **묶음 탭**(시안의 생김새) — 「클럽 피팅」이 둘을 쉼표로 보냅니다
-     · **하위 칩 여섯**(`.chips-sub`) — 키마다 제 길이 그대로 있습니다
-   둘 다 `amSubUrl()` 한 곳에서 주소를 짓습니다.
-
-   ⚠️⚠️ **쉼표를 받는 쪽을 같이 고쳐야 합니다** — `js/fitting.js` 의
-   `subKeys()` 입니다. 길만 내고 받는 쪽을 안 고치면 **눌러도 아무것도
-   안 걸립니다**(에러 0줄 · 2026-11-09 에 머리말에서 겪은 자리).
-
-   ⚠️ 아이콘은 **있는 이름만** 씁니다 — 없는 이름은 `console.warn` 만
-   내고 **빈 글자**를 돌려주어 그 칸에 아이콘만 조용히 빠집니다
-   (`check-safe` ⑨ 가 세는 자리). 시안의 샤프트 · 그립 그림은 저희에게
-   없어서, 뜻이 가까운 것으로 둡니다(지어낸 이름을 적지 않습니다). */
-window.AM_FIT_GROUP = [
-  { key:"",                  name:"전체",          icon:"menu"   },
-  { key:"ft-driver,ft-iron", name:"클럽 피팅",     icon:"clubs"  },
-  { key:"ft-shaft",          name:"샤프트 교체",   icon:"bolt"   },
-  { key:"ft-grip",           name:"그립 교체",     icon:"bag"    },
-  { key:"ft-mend",           name:"클럽 수리",     icon:"shield" },
-  { key:"ft-angle",          name:"로프트 · 라이 조정", icon:"match" }
-];
-
-/* 지금 켜진 묶음 — ⚠️ 못 찾으면 **null** 입니다(`""` 로 돌려주면 모르는
-   값이 「전체」로 읽혀 탭이 엉뚱한 곳에 켜집니다 · 0069 의 그 규칙). */
-window.amFitGroupOf = function(sub){
-  var s = String(sub || "");
-  var L = window.AM_FIT_GROUP || [];
-  for(var i = 0; i < L.length; i++) if(L[i].key === s) return L[i];
-  return null;
 };

@@ -148,8 +148,8 @@ function StartApplyBand(){
       '<p class="eyebrow">STEP 02</p>'+
       '<h2>고르셨으면 한 번만 적어 보내세요</h2>'+
       '<p>같은 내용을 업체마다 다시 적지 않으셔도 됩니다. '+
-        '지역과 연락처만 적어 주시면 서비스마다 업체를 찾아 '+
-        '연결해 드립니다. 무료입니다.</p>'+
+        '지역과 연락처만 적어 주시면 서비스마다 맞는 업체가 있는지 '+
+        '운영자가 확인합니다. 무료입니다.</p>'+
     '</div>'+
     '<div class="row-cta">'+
       '<a class="btn btn-b btn-lg" data-pick-go href="'+esc(amPickQuoteTo())+'">'+
@@ -733,8 +733,8 @@ function PageCat(cat){
     Empty({
       icon:cat.icon,
       title:"아직 여기에 올라온 것이 없습니다",
-      text:"실제 업체와 자료가 확인된 것만 올립니다. 그동안에는 견적 요청으로 "+
-           "바로 연결해 드립니다.",
+      text:"실제 업체와 자료가 확인된 것만 올립니다. 그동안에는 견적 요청 화면에서 "+
+           "지금 접수를 받는지 확인하실 수 있습니다.",
       cta:'<a class="btn btn-b" href="'+esc(quoteTo({cat:cat.key,industry:ind,side:side}))+'">'+
           '견적 요청하기'+icon("arrow",16)+'</a>'+
           '<a class="btn btn-o" href="/join">이 분야 업체라면 입점하기</a>'

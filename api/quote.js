@@ -45,6 +45,7 @@ const { reqNo, telKey, intakeDup } = require("./_intake.js");
    맞습니다 — 견적 하나 받으려고 가입하게 만들면 거기서 닫힙니다.
    토큰이 같이 왔을 때만 신청을 그 계정에 이어 둡니다 (§10). */
 const { authReady, bearer, session } = require("./_auth.js");
+const { gate, formOf, CLOSED_SAY } = require("./_gate.js");
 
 const KINDS = { sos:1, quote:1, partner:1 };
 
@@ -131,6 +132,19 @@ module.exports = async function handler(req, res){
   let b = req.body;
   if(typeof b === "string"){ try{ b = JSON.parse(b); }catch(e){ b = null; } }
   if(!b || typeof b !== "object") return res.status(400).json({ error: "내용을 읽지 못했습니다" });
+
+  /* ── W01 ① 서버 게이트 — 동의 · 칸 검사보다 **먼저** 봅니다 ──────
+     닫혀 있으면 DB · 웹훅 · 메일을 한 번도 부르지 않고 끝냅니다.
+     ⚠️ 화면의 sosReady 를 믿지 않습니다 — 이 주소로 직접 보낸 요청도
+     여기서 막힙니다. */
+  {
+    const g = gate(formOf(b));
+    if(!g.open){
+      console.warn("[site] 접수 게이트가 닫혀 있습니다 — " + g.why);
+      res.setHeader("Cache-Control", "no-store");
+      return res.status(503).json({ error: CLOSED_SAY, closed: true });
+    }
+  }
   if(b.agree !== true) return res.status(400).json({ error: "개인정보 수집·이용 동의가 필요합니다" });
 
   const kind = KINDS[b.kind] ? b.kind : "quote";
@@ -337,7 +351,7 @@ module.exports = async function handler(req, res){
          ⚠️ 항목 저장이 실패해도 **접수는 그대로 둡니다** — 번호는 이미
          나갔고, 슬랙 글에 항목이 그대로 적혀 있어 사람이 보고 처리할
          수 있습니다. 손님의 요청을 잃는 쪽이 더 나쁩니다. */
-      if(q.items.length){
+      if(q.items && q.items.length){   /* sos 는 items 가 없습니다 — DB 를 켜면 여기서 500 이 났습니다 (2026-11-18) */
         const it = await dbCallService("save_request_items",
           { p_request: saved.row && saved.row.id, p_items: q.items });
         if(!it.ok)
@@ -553,8 +567,3 @@ module.exports = async function handler(req, res){
   res.status(200).json(no ? { ok: true, no: no } : { ok: true });
 };
 
-/* 복구 점검본: 운영 DB·메일·웹훅을 호출하지 않고 종료합니다. */
-module.exports = function restorationClosed(req, res){
-  res.setHeader("Cache-Control", "no-store");
-  return res.status(503).json({ error:"복구 점검 중으로 현재 접수하지 않습니다.", restoration:true });
-};

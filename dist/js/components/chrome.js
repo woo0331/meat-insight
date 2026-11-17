@@ -51,7 +51,7 @@ function Logo(where){
 
 function Header(){
 
-  return '<header class="hd"><div class="w-wide hd-in">'+
+  return '<div role="status" style="background:#12243a;color:#fff;text-align:center;padding:10px 16px;font-size:14px">인수인계 복구 점검 중 · 상담·등록·로그인은 아직 접수하지 않습니다.</div><header class="hd"><div class="w-wide hd-in">'+
     Logo() +
     '<nav class="gnb" id="gnb" aria-label="주요 메뉴">'+
       AM_GNB.map(function(m){

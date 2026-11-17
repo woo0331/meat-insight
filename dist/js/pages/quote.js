@@ -102,7 +102,7 @@ function QuoteOfferBand(){
       return '<li>'+icon(o.icon || "check", 15)+esc(o.name)+'</li>'; }).join("")+'</ul>'+
 
     '<p class="qof-n">'+icon("info",14)+
-      '<span>한 번만 적으시면 저희가 나눠서 연결해 드립니다 — '+
+      '<span>한 번만 적으시면 저희가 서비스마다 나눠서 확인합니다 — '+
       '<b>상품마다 업체와 계약은 따로</b>입니다.</span></p>'+
   '</div>';
 }
@@ -249,8 +249,8 @@ function QuoteStage(){
   var n = (window.AM_PROVIDERS || []).length;
   if(n > 0)
     return '<p class="note-box qt-stage">지금 제휴업체 <b>'+n+'곳</b>이 '+
-      '등록되어 있습니다. 적어 주신 분야 · 지역 · 업종에 맞는 곳을 찾아 '+
-      '연결해 드립니다 — 어느 업체인지는 정해진 뒤에 알려 드리고, '+
+      '등록되어 있습니다. 적어 주신 분야 · 지역 · 업종에 맞는 곳이 있는지 '+
+      '운영자가 확인합니다 — 연결할 업체가 정해지면 어느 업체인지 알려 드리고, '+
       '그때 연락처 전달 동의를 다시 받습니다.</p>';
   return '<p class="note-box qt-stage"><b>지금 등록된 제휴업체는 없습니다.</b> '+
     '요청을 받아 그 분야 업체를 찾아 드리는 단계입니다 — 접수는 실제로 '+
@@ -282,8 +282,8 @@ function PageQuote(){
 
   return PgHero({
     kicker:"견적 요청",
-    h1raw:"한 번만 적으시면<br class=\"br-m\"> 여러 곳에서 답이 옵니다.",
-    lead:"고르신 서비스마다 업체를 찾아 연결해 드립니다. 같은 내용을 업체마다 다시 적지 않으셔도 됩니다. 무료입니다.",
+    h1raw:"한 번만 적으시면<br class=\"br-m\"> 서비스마다 나눠서 확인합니다.",
+    lead:"고르신 서비스마다 조건에 맞는 업체가 있는지 운영자가 확인합니다. 같은 내용을 업체마다 다시 적지 않으셔도 됩니다. 맞는 업체가 없으면 연결되지 않을 수 있습니다. 무료입니다.",
     tight:true
   })+
   '<section class="sec sec-white"><div class="w form-wrap">'+

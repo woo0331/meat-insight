@@ -44,8 +44,8 @@ function PageStores(){
       : Empty({
           icon:"key",
           title:"조건에 맞는 매장이 아직 없습니다",
-          text:"없는 매물을 지어내지 않습니다. 찾으시는 조건을 남겨 두시면 "+
-               "올라오는 대로 알려 드리고, 정리하시는 중이라면 지금 등록하실 수 있습니다.",
+          text:"없는 매물을 지어내지 않습니다. 매물이 올라오면 이 목록에 나옵니다 "+
+               "(따로 알려 드리는 기능은 아직 없습니다). 정리하시는 중이라면 매물 등록 화면을 보실 수 있습니다.",
           reads: amContentsFor({ cat:"store", side:"start", industry:ind, limit:3 }),
           readTitle:"자리를 보러 가시기 전에",
           cta:'<a class="btn btn-b" href="'+esc(quoteTo({side:"start",industry:ind,region:reg}))+'">'+
@@ -134,7 +134,7 @@ function PageAssets(){
           icon:"box",
           title:"조건에 맞는 시설 · 집기가 아직 없습니다",
           text:"없는 매물을 지어내지 않습니다. 정리하시는 중이라면 지금 등록하실 수 있고, "+
-               "찾으시는 것이 있으면 조건을 남겨 두시면 올라오는 대로 알려 드립니다.",
+               "매물이 올라오면 이 목록에 나옵니다. 올라왔다고 따로 알려 드리는 기능은 아직 없습니다.",
           reads: amContentsFor({ cat:"asset", side:"close", industry:ind, limit:3 }),
           readTitle:"장비를 사고 넘기기 전에",
           cta:'<a class="btn btn-b" href="/sell?t=asset">내 시설 내놓기'+icon("arrow",16)+'</a>'+
@@ -562,6 +562,7 @@ window.sellSend = function(ev){
   var ns = isStore ? "sell-store" : "sell-asset";
   return amSend("sl-fail", {
     kind: "quote",
+    form: "sell",
     cat:  isStore ? "transfer" : "asset",
     idem: amIdem(ns),
     name:  v("sl-name"),

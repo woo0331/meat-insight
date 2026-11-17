@@ -276,7 +276,7 @@ function PageProviderCat(cat){
           reads: amContentsFor({ cat:cat.key, side:side, industry:ind, limit:4 }),
 
           note:"이 분야에 등록된 "+amBrand()+" 파트너 업체는 지금 "+
-               all.length+"곳입니다. 조건을 남겨 두시면 등록되는 대로 연결해 드립니다.",
+               all.length+"곳입니다. 업체가 등록되면 이 목록에 나옵니다.",
           cta:'<a class="btn btn-b" href="'+esc(quoteTo({cat:cat.key,sub:sub,industry:ind,region:reg,side:side}))+'">'+
               '원하는 조건 남기기'+icon("arrow",16)+'</a>'+
               '<a class="btn btn-o" href="/join">'+esc(cat.name)+' 업체라면 입점하기</a>'

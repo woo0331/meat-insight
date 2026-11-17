@@ -249,8 +249,8 @@ function OpsPick(cur, ind){
         '<a class="opk-go" href="/tools">도구 전부 보기'+icon("arrow",14)+'</a>')+
       box("users","맡길 곳 찾기",
         '<p class="opk-n">'+esc(cat ? cat.name : o.name)+' 분야 등록 업체 <b>'+n+'곳</b></p>'+
-        (n ? "" : '<p class="opk-p">아직 모으는 중입니다. 조건을 남겨 두시면 '+
-              '업체가 등록되는 대로 연결해 드립니다.</p>'),
+        (n ? "" : '<p class="opk-p">아직 모으는 중입니다. 업체가 등록되면 '+
+              '이 자리에 나옵니다.</p>'),
         '<a class="opk-go" href="'+esc(to)+'">'+esc(cat ? (cat.name + " 보기") : "바로가기")+
           icon("arrow",14)+'</a>'+
         '<a class="opk-go" href="'+esc(quoteTo({ cat:o.cat, sub:o.sub,

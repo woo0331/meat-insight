@@ -414,7 +414,7 @@ window.PackBand = function(side, tone){
 
     '<p class="sec-note">'+icon("info",15)+
       ' 묶어서 신청하셔도 <b>상품마다 업체와 계약은 따로</b>입니다. '+
-      '한 번만 적으시면 저희가 나눠서 연결해 드립니다.</p>'+
+      '한 번만 적으시면 저희가 서비스마다 나눠서 확인합니다.</p>'+
   '</div></section>';
 };
 

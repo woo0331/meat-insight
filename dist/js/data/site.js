@@ -17,7 +17,7 @@ window.WOW_BIZ = {
   privacyEmail:   "",
   privacyPhone:   "",
 
-  sosReady:       true,
+  sosReady:       false,
 
   effective:      "2026-09-25"
 };

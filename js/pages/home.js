@@ -1115,8 +1115,8 @@ function HomeQuoteCard(){
   return '<div class="bqc">'+
     '<p class="bqc-k">FREE ESTIMATE</p>'+
     '<b>무료 견적 신청</b>'+
-    '<p>어떤 서비스가 필요하신지 적어 보내시면, 그 분야 업체를 찾아 '+
-      '연결해 드립니다.</p>'+
+    '<p>어떤 서비스가 필요하신지 적어 보내시면, 운영자가 확인하고 '+
+      '맞는 업체가 있으면 연결을 도와 드립니다.</p>'+
     '<ul class="bqc-l">'+L.map(function(t){
       return '<li>'+icon("check",16)+'<span>'+esc(t)+'</span></li>';
     }).join("")+'</ul>'+
@@ -1315,8 +1315,8 @@ function HomeCta(){
   return '<section class="bcta"><div class="w bcta-c">'+
     '<p class="eyebrow">FREE ESTIMATE</p>'+
     '<h2>지금, '+esc(wa)+' 함께 시작하세요.</h2>'+
-    '<p>업종 · 지역 · 조건을 한 번만 적어 보내시면, 그 분야 업체를 찾아 '+
-      '연결해 드립니다. 신청은 무료이고 가입이 필요 없습니다.</p>'+
+    '<p>업종 · 지역 · 조건을 한 번만 적어 보내시면, 운영자가 확인하고 '+
+      '맞는 업체가 있으면 연결을 도와 드립니다. 신청은 무료이고 가입이 필요 없습니다.</p>'+
     '<div class="bcta-go">'+
       '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">'+
         '무료 견적 신청'+icon("arrow",18)+'</a>'+

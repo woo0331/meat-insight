@@ -405,6 +405,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
               !/시간 안에|당일|보장/.test(t);
      }), "A-알림④ 광고를 안 보낸다고 적고 끄는 길을 적는다");
  }
+ if(nOn){   /* 상자가 있을 때만 — 2026-11-18 W01 ⑥ */
  await pg.check("#q-nt");
  const bodyN = await pg.evaluate(()=>{
    let got=null; const real=window.amSend;
@@ -415,6 +416,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  say(!!bodyN && bodyN.notify===true, "A-알림⑤ 고르면 켜진 채로 간다",
      bodyN && bodyN.notify);
  await pg.uncheck("#q-nt");
+ }
 
  /* ── B. 복수 서비스 — 하나의 신청서 ──────────────────────────── */
  await pg.goto(B+"/startup",{waitUntil:"networkidle"});

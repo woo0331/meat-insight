@@ -58,8 +58,9 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  /* ⚠️⚠️ **2026-10-16 §3-3 — 메인에서 /startup 으로 가는 길이 진입
     카드 셋의 첫 장이 됐습니다** (전문관 넷 + 전체보기는 내려왔습니다).
     카드 전체가 하나의 링크라 카드를 그대로 누릅니다. */
- await click('.bent-c.ent-startup > a');
- say((await url())==="/startup","메인 진입 카드 창업 준비 → /startup",await url());
+ /* 2026-11-18 메인 개편 — 창업은 히어로 왼쪽 판의 단추입니다 */
+ await click('.sw-hbtn-st');
+ say((await url())==="/startup","메인 히어로 창업 준비 → /startup",await url());
  /* ⚠️⚠️ **2026-10-17 창업 준비 §2 로 업종 고르개가 접혔습니다.**
     주인공이 **서비스 고르기**(§2-B)이고, 고르는 격자 둘이 나란히 있으면
     "같은 선택 영역의 반복" 입니다 (§11). 길은 그대로이고 **한 번 더
@@ -134,28 +135,30 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     내려왔습니다.** 진입 카드 셋이 전문관 세 화면으로 **바로** 보내고,
     매장 양도양수는 ④ 가로형 배너가 받습니다. 끝이 막힌 길이 생기지
     않았는지 넷 다 눌러 봅니다. */
- await click('.bent-c.ent-closure > a');
- say((await url())==="/closure","메인 진입 카드 폐업 · 정리 → /closure",await url());
+ await click('.sw-hbtn-cl');
+ say((await url())==="/closure","메인 히어로 폐업 · 철거 → /closure",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bent-c.ent-operation > a');
- say((await url())==="/operation","메인 진입 카드 매장 운영 → /operation",await url());
+ await click('.sw-qc[href="/operation"]');
+ say((await url())==="/operation","메인 보조 진입 매장 운영 → /operation",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bent-c.ent-transfer a[href="/transfer"]');
- say((await url())==="/transfer","양도양수 배너 → 전문관",await url());
+ await click('.sw-qc[href="/transfer"]');
+ say((await url())==="/transfer","메인 보조 진입 양도양수 → 전문관",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  /* ⚠️⚠️ **2026-10-22 — 서비스 배너 둘이 메인에서 내려왔습니다**
     (사장님 시안). 그 길은 ③ 직접 서비스 찾기 여덟이 그대로 받습니다 —
     함수는 안 지웠으니 되살리시면 여기에 .bban-c 를 다시 넣으세요. */
- await click('.bdir-c:nth-child(1)');
- say((await url()).startsWith("/providers/"),"직접 찾기 → 분야 화면",await url());
+ await click('.sw-shg li:nth-child(1) .sw-shc');
+ say((await url()).startsWith("/providers/"),"서비스 바로가기 → 분야 화면",await url());
  /* ⚠️⚠️ **2026-10-25 §1-01 — 히어로가 01 구간으로 돌아왔습니다.**
     첫 화면에서 바로 신청으로 가는 길이 다시 생겼습니다 — 그쪽을 먼저
     눌러 봅니다. ⚠️ 히어로를 다시 빼실 때는 여기도 같이 고치세요
     (없는 요소를 집으면 타임아웃으로 터지고 뒤 블록이 통째로 안
     돕니다 — 이 저장소가 그렇게 겪은 자리입니다). */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bhero-go a[href="/quote"]');
- say((await url()).startsWith("/quote"),"히어로 무료 견적 신청 → 신청 화면",await url());
+ /* 2026-11-18 메인 개편 — 히어로에 신청 단추가 없습니다 (접수 중단 중에는 신청처럼 보이면 안 됩니다).
+    대신 히어로 검색이 실제로 /search 로 가는지 봅니다. */
+ await pg.fill('#sw-q','인테리어'); await click('.sw-find-b');
+ say((await url()).startsWith("/search"),"히어로 검색 → 통합검색",await url());
  /* ⚠️ 헤더 CTA 는 **160개 화면 전부**에 있는 늘 보이는 길입니다 */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  await click('.hd .hd-cta');
@@ -174,8 +177,17 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  say((await url())==="/join","푸터 업체 입점 → 신청 화면",await url());
  /* §2-E — 메인에서 견적 · 상담으로 가는 길이 하나는 있어야 합니다 */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bcta-go a[href="/quote"]');
- say((await url()).startsWith("/quote"),"마지막 구간 → 견적 · 상담 신청",await url());
+ /* 2026-11-18 메인 개편 · W01 — 접수가 닫혀 있으면 마지막 구간은 신청 단추 대신
+    계산도구 · 자주 묻는 질문으로 보냅니다. 열려 있으면 견적 신청으로 갑니다. */
+ const ctaOpen = await pg.evaluate(()=>!!(window.WOW_BIZ && WOW_BIZ.sosReady));
+ if(ctaOpen){
+   await click('.bcta-go a[href="/quote"]');
+   say((await url()).startsWith("/quote"),"마지막 구간 → 견적 · 상담 신청",await url());
+ } else {
+   say(!(await pg.$('.bcta-go a[href^="/quote"]')),"접수 중단 — 마지막 구간에 신청 단추가 없다");
+   await click('.bcta-go a[href="/tools"]');
+   say((await url())==="/tools","접수 중단 — 마지막 구간 → 계산도구",await url());
+ }
  /* ⚠️⚠️ 2026-10-25 §1-07 · §11 — **중간 대형 무료 견적 신청 섹션이
     없어야 합니다.** 그래서 `.bqc`(견적 안내 카드)를 더 안 냅니다 —
     첫 화면의 히어로(바로 위)와 맨 아래 07 구간 둘이 그 길입니다.
@@ -927,8 +939,9 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
                               ["양도양수","/transfer","transfer"], ["폐업","/closure","close"]]){
    await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
    await pg.goto(B+"/",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
-   const card = await pg.$('.bent-g a[href="'+to+'"]');
-   say(!!card, nm+" — 메인 진입 카드가 그 전문관으로 간다", to);
+   /* 2026-11-18 메인 개편 — 네 전문관은 메인의 네 걸음(.sw-flg)이 같은 차례로 보냅니다 */
+   const card = await pg.$('.sw-flg a[href="'+to+'"]');
+   say(!!card, nm+" — 메인 네 걸음이 그 전문관으로 간다", to);
    if(!card) continue;
    await card.click(); await pg.waitForTimeout(700);
    const at = await url();

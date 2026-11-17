@@ -2120,61 +2120,33 @@ const AUDIT = `(() => {
      ⚠️ 이건 "보기 좋은가" 를 재는 검사가 아닙니다. 나중에 여기에
      큰 배너 · 설명 · 검색창을 하나씩 더하다 보면 카드가 첫 화면
      아래로 밀려나는데, 그걸 막는 것이 목적입니다. */
-  await f("메인은 히어로 다음이 진입 카드 넷이고 번호가 01~04 다", "/", `
-    /* ⚠️⚠️ **2026-10-22 "최상단 디자인 최종 변경" §2 — 히어로가 다시
-       빠졌습니다.** "기존 상단 대형 히어로(카페 사진)를 제거하고 4개
-       전문관 카드를 최상단 콘텐츠로 한다." 이 검사는 10-17 에 한 번
-       그 모양이었고, 10-22 시안으로 히어로가 돌아왔다가, 같은 날
-       최상단 지시서로 다시 빠졌습니다 — **되살리시면 그날 (1) 과 (3)
-       을 뒤집으세요** (첫 구간이 bhero · h1 이 bhero 안).
+  await f("메인은 히어로 다음이 보조 진입 넷이고 네 걸음이 차례대로다", "/", `
+    /* 2026-11-18 메인 디자인 개편(대표 확정 시안) — 뜻은 그대로, 재는 자리만 새 화면으로.
+       옛 판의 사연은 git show 2aa1d8d:check.js 에 있습니다. 이 주석에 백틱 금지. */
 
-       여기서 지키는 것은 넷입니다 —
-         (1) **첫 구간이 진입 카드 넷**일 것 (헤더 바로 아래)
-         (2) 화면의 h1 이 **하나**이고 그것이 진입 카드 구간에 있을 것
-         (3) **번호가 01~04 로 이어질 것**
-         (4) 사진이 있으면 실제로 그려질 것
-
-       ⚠️ 이건 "보기 좋은가" 를 재는 검사가 아닙니다 — 나중에 여기에
-       큰 배너 · 설명 · 검색창을 하나씩 더하다 보면 카드가 첫 화면
-       아래로 밀려나는데, (1) 이 그걸 막습니다.
-
-       ⚠️⚠️ (3) 은 사장님이 실제로 걸린 자리입니다. 양도양수를 큰 카드
-       셋 아래 가로 배너로 내렸더니 번호가 01·02·03 에서 끝나 **04 가
-       빠진 것처럼** 읽혔습니다 — 이 저장소가 "다른 걸음으로 내리면
-       이건 내 일이 아니구나로 읽힌다" 고 적어 둔 그 자리입니다. */
-    const v = document.getElementById("view");
-    const secs = [].slice.call(v.querySelectorAll("#view > section"));
+    const secs = [].slice.call(document.querySelectorAll("#view > section"));
     if(!secs.length) return "메인에 구간이 없습니다";
-    /* WARN 2026-10-25 §1-01 — 첫 구간은 **히어로**이고 진입 카드 넷은
-       바로 그 다음입니다 ("메인페이지에 접속하면 … 히어로 … 그 아래
-       4개 핵심 서비스"). 10-22 지시서 때는 (1) 이 bent 였습니다 —
-       되돌리시면 그날 여기와 (2) 를 같이 뒤집으세요. */
     if(!secs[0].classList.contains("bhero"))
-      return "첫 구간이 히어로가 아닙니다 — " +
-             (secs[0].className || "").split(" ")[0];
+      return "첫 구간이 히어로가 아닙니다 — " + (secs[0].className || "").split(" ")[0];
     if(!(secs[1] && secs[1].classList.contains("bent")))
-      return "히어로 다음이 진입 카드 넷이 아닙니다 — " +
-             ((secs[1] || {}).className || "").split(" ")[0];
-
+      return "히어로 다음이 보조 진입이 아닙니다 — " + ((secs[1] || {}).className || "").split(" ")[0];
     const h1s = document.querySelectorAll("#view h1");
     if(h1s.length !== 1) return "화면의 h1 이 " + h1s.length + "개입니다";
     if(!h1s[0].closest(".bhero")) return "h1 이 히어로 구간에 없습니다";
-
-    /* (3) 번호가 빠짐없이 이어지는가 — 넷이 같은 무게로 섭니다 */
-    const nos = [].slice.call(v.querySelectorAll(".bent-no"))
-      .map(function(e){ return (e.textContent || "").trim(); });
-    const want = (window.HOME_ENTER || []).map(function(x){ return x.no; });
-    if(!want.length) return "HOME_ENTER 를 못 읽습니다";
-    if(nos.join(",") !== want.join(","))
-      return "진입 카드 번호가 [" + nos.join(" ") + "] 입니다 — [" +
-             want.join(" ") + "] 라야 차례가 안 끊깁니다";
-
-    /* (4) 사진 — 자리가 채워져 있으면 실제로 그려져야 합니다 */
-    const EN = (window.HOME_ENTER || []);
-    for(const x of EN){
-      if(window.hasPhoto && hasPhoto(x.ph) &&
-         !document.querySelector(".ent-" + x.key + " .bent-ph .ph"))
-        return x.key + " 카드 사진이 있는데 안 그려졌습니다";
+    const hrefs = function(q){ return [].slice.call(document.querySelectorAll(q))
+      .map(function(a){ return a.getAttribute("href"); }); };
+    const q = hrefs(".sw-qc"), wq = ["/transfer","/operation","/providers","/about"];
+    if(q.join() !== wq.join()) return "보조 진입이 [" + q.join(" ") + "] 입니다 — [" + wq.join(" ") + "]";
+    const fl = hrefs(".sw-fl"), wf = ["/startup","/operation","/transfer","/closure"];
+    if(fl.join() !== wf.join())
+      return "네 걸음이 [" + fl.join(" ") + "] 입니다 — 창업 → 운영 → 양도양수 → 폐업 차례라야 합니다";
+    const st = document.querySelector('.sw-hp-st a[href="/startup"]');
+    const cl = document.querySelector('.sw-hp-cl a[href="/closure"]');
+    if(!st || !cl) return "히어로 두 판이 창업 · 폐업으로 가지 않습니다";
+    for(const k of ["hero-start","hero-close"]){
+      const side = k === "hero-start" ? ".sw-hp-st" : ".sw-hp-cl";
+      if(window.hasPhoto && hasPhoto(k) && !document.querySelector(side + " .sw-hph img"))
+        return k + " 사진이 있는데 안 그려졌습니다";
     }
     return true;`);
   await f("어느 화면에서나 검색으로 가는 길이 있고 메인이 두 갈래로 갈린다", "/", `
@@ -2205,8 +2177,13 @@ const AUDIT = `(() => {
     /* ⚠️ 2026-10-17 §4 로 히어로가 메인에서 빠졌습니다. 검색으로 가는
        길은 **헤더 하나**이고, 메인 본문에 또 만들면 같은 일을 하는
        입구가 한 화면에 둘이 됩니다 (어느 쪽을 쓸지 흐려집니다). */
-    if(document.querySelector("#view input[type=search]"))
-      return "메인 본문에 검색창이 생겼습니다 (중복)";
+    /* 2026-11-18 시안 — 본문 검색은 히어로의 하나뿐이고 /search 로 갑니다 (둘이면 중복) */
+    const bodyQ = document.querySelectorAll("#view input[type=search]");
+    if(bodyQ.length > 1) return "메인 본문에 검색창이 " + bodyQ.length + "개입니다 (중복)";
+    if(bodyQ.length === 1){
+      const fm = bodyQ[0].closest("form.sw-find");
+      if(!fm || fm.getAttribute("action") !== "/search") return "메인 검색창이 /search 로 가지 않습니다";
+    }
     /* ⚠️ 패널 탭이 가리키던 다섯 곳이 길을 잃지 않았는지 — 메인이나
        푸터 어디에든 있어야 합니다 (지시서 §2-2 "기능 삭제 금지"). */
     const miss = ["/providers","/franchise","/stores","/support","/tools"]
@@ -2248,76 +2225,22 @@ const AUDIT = `(() => {
        · 폐업 쪽이 **빨강으로 흘러가지 않는 것** (그 순간 옛 걱정이
          그대로 돌아옵니다 — 이 저장소가 여러 곳에 못박아 둔 것입니다)
        · 두 쪽의 **크기와 무게가 같은 것** (위 히어로 검사가 봅니다) */
-  await f("전문관 셋이 저마다의 색으로 갈린다", "/", `
-    /* ⚠️⚠️ **규칙이 여러 번 뒤집혔습니다.**
-       ① 처음에는 "창업과 폐업을 색으로 가르지 않는다" 였습니다 —
-          빨강/초록으로 나누면 "폐업은 나쁜 것" 이 되기 때문입니다.
-       ② 2026-09-30 이 START=초록 / CLOSE=주황으로 정했고,
-       ③ 2026-10-08 이 창업을 블루로,
-       ④ 2026-10-15 가 히어로 한 자리에서 폐업을 딥 버건디로,
-       ⑤ **2026-10-16 §2-1 이 다크 브라운 위에서 셋을 다시 정했습니다** —
-          창업 = 브라운 · 골드 / 운영 = 딥 포레스트 그린 /
-          폐업 = 딥 버건디. 지시서가 "세 전문관의 색상 구분은 반드시
-          유지한다" 고 직접 적었습니다.
-       그래서 지금 지키는 것은 —
-         · 셋이 **서로 다른 색**일 것 (구분이 정체성입니다)
-         · 창업은 따뜻한 브라운 · 골드 쪽일 것
-         · 운영은 **초록 성분이 제일 큰** 쪽일 것
-         · 폐업은 붉은 쪽이되 **주황이 아니라 버건디**(붉은빛이 파랑보다
-           크고 초록이 제일 작은, 어두운 면)일 것
-         · 세 카드의 **크기와 무게가 같을 것** (아래 짝 검사)
-       ⚠️ 이 셋은 **다크 위의 면**이라 밝기로 재지 않습니다. */
+  await f("창업 · 폐업 두 판이 저마다의 색으로 갈리고 폐업이 빨강이 아니다", "/", `
+    /* 2026-11-18 메인 디자인 개편(대표 확정 시안) — 뜻은 그대로, 재는 자리만 새 화면으로.
+       옛 판의 사연은 git show 2aa1d8d:check.js 에 있습니다. 이 주석에 백틱 금지. */
+
     const bg = function(q){
       const e = document.querySelector(q); if(!e) return null;
-      const cs = getComputedStyle(e);
-      const m = (cs.backgroundColor + " " + cs.backgroundImage)
-        .match(/rgba?\\((\\d+), ?(\\d+), ?(\\d+)/g) || [];
-      for(const one of m){
-        const v = one.match(/(\\d+), ?(\\d+), ?(\\d+)/);
-        const c = [+v[1], +v[2], +v[3]];
-        if(c[0] + c[1] + c[2] > 30) return c;
-      }
-      return null;
+      const p = getComputedStyle(e).backgroundColor.replace("rgba(", "").replace("rgb(", "")
+        .replace(")", "").split(",").map(Number);
+      return p.length >= 3 && !isNaN(p[0]) ? p.slice(0, 3) : null;
     };
-    /* ⚠️⚠️ 재는 자리가 **번호 알약**입니다 — 카드 면이 아닙니다.
-       2026-10-26 "최종 디자인 개선"(브라운 통일)이 카드 넷을 전부 같은
-       크림 면으로 바꿨고, 그 블록은 **메인을 전면 리뉴얼 직전으로
-       되돌릴 때도 남겼습니다** (사장님이 고르신 쪽입니다). 구분 색은
-       번호 알약 · 아이콘 · 바로가기 알약이 그대로 들고 있고, 그중
-       **면으로 재기 좋은 것**이 번호 알약입니다.
-       ⚠️ **규칙은 한 줄도 안 바꿨습니다** (서로 다를 것 · 창업 브라운 ·
-       운영 초록 · 폐업 버건디이되 주황이 아닐 것) — 재는 자리만입니다.
-       ⚠️⚠️ **카드 면으로 되돌리지 마세요.** 넷이 전부 크림이라 "색이
-       겹칩니다" 가 **되돌리기 전부터** 뜹니다 — 복원하면서 검사를 통째로
-       되돌렸다가 실제로 그렇게 걸렸습니다 (색을 옮기고 검사는 안 옮긴
-       그 사고의 반대쪽입니다). */
-    const st = bg(".ent-startup .bent-no");
-    const op = bg(".ent-operation .bent-no");
-    const cl = bg(".ent-closure .bent-no");
-    if(!st || !op || !cl) return "진입 카드 셋의 색을 못 읽습니다";
-    if(st.join() === op.join() || op.join() === cl.join() || st.join() === cl.join())
-      return "진입 카드 셋의 색이 겹칩니다 (§2-1 — 색상 구분 유지)";
-    if(!(st[0] > st[1] && st[1] > st[2]))
-      return "창업이 브라운 · 골드 쪽이 아닙니다 rgb(" + st.join(",") + ")";
-    if(!(op[1] > op[0] && op[1] >= op[2]))
-      return "운영이 딥 포레스트 그린이 아닙니다 rgb(" + op.join(",") + ")";
-    if(!(cl[0] > cl[2] && cl[2] > cl[1]))
-      return "폐업이 딥 버건디가 아닙니다 rgb(" + cl.join(",") + ")";
-    /* ⚠️⚠️ **주황으로 흘러가면 안 됩니다** — 버건디는 파랑이 초록보다
-       크고, 주황은 그 반대입니다. 둘을 가르는 줄입니다. */
-    if(cl[1] > cl[2]) return "폐업이 주황 쪽으로 넘어갔습니다 rgb(" + cl.join(",") + ")";
-
-    /* ⚠️ 악센트(번호 · 화살표)도 셋이 서로 달라야 합니다 — 면만 다르고
-       글자가 같은 색이면 카드 셋이 한 덩이로 읽힙니다. */
-    const acc = function(q){
-      const e = document.querySelector(q); if(!e) return null;
-      return getComputedStyle(e).color;
-    };
-    const a1 = acc(".ent-startup .bent-no"), a2 = acc(".ent-operation .bent-no"),
-          a3 = acc(".ent-closure .bent-no");
-    if(!a1 || !a2 || !a3) return "진입 카드 번호를 못 읽습니다";
-    if(a1 === a2 || a2 === a3 || a1 === a3)
-      return "진입 카드 악센트가 겹칩니다";
+    const st = bg(".sw-hp-st"), cl = bg(".sw-hp-cl");
+    if(!st || !cl) return "두 판의 색을 못 읽습니다";
+    if(st.join() === cl.join()) return "두 판의 색이 같습니다";
+    if(!(st[2] > st[0] && st[2] > st[1])) return "창업 판이 파랑 쪽이 아닙니다 — " + st.join(",");
+    if(!(cl[0] > cl[1] && cl[1] > cl[2])) return "폐업 판이 주황 쪽이 아닙니다 — " + cl.join(",");
+    if(cl[1] < cl[0] * 0.35) return "폐업 판이 빨강으로 흘렀습니다 — " + cl.join(",") + " (폐업은 나쁜 것이 아닙니다)";
     return true;`);
 
   /* ⑨ 규모감 숫자 — **센 값**이어야 합니다
@@ -3797,13 +3720,18 @@ const AUDIT = `(() => {
     /* WARN 2026-10-25 §1 — .bhero-go 가 돌아오고 .bwhy-g · .bqc 가
        내려갔습니다 (중간 대형 견적 신청 섹션 금지). 되살리시면 그날
        여기에 다시 넣으세요. */
-    const need = [[".bhero-go", "히어로 신청 단추"],
-                  [".bent-g",   "네 가지 핵심 서비스 카드"],
-                  [".bdir-g",   "직접 서비스 찾기 여덟"],
-                  [".bstep-g",  "이용 방법 5단계"],
+    /* 2026-11-18 시안 — 지금 화면의 표시. 접수가 닫혀 있으면 본문에 신청 단추가 없어야 합니다. */
+    const need = [[".sw-hgrid", "창업 · 폐업 두 판"],
+                  [".sw-qg",    "보조 진입 넷"],
+                  [".sw-flg",   "네 걸음"],
+                  [".sw-sw",    "전국 매장 양도양수"],
+                  [".sw-tb",    "왜 일까요 띠"],
+                  [".sw-shg",   "서비스 바로가기"],
                   [".bcal-g",   "계산도구 넷"],
                   [".bgd-g",    "이용 가이드"],
-                  [".bcta-go",  "하단 견적 신청"]];
+                  [".bcta-go",  "하단 안내"]];
+    if(!(window.WOW_BIZ && WOW_BIZ.sosReady) && v.querySelector('a[href="/quote"]'))
+      return "접수가 닫혀 있는데 메인 본문에 견적 신청 단추가 있습니다 (W01)";
     for(const q of need)
       if(!v.querySelector(q[0])) return q[1] + " 가 메인에 없습니다";
     /* ⚠️⚠️ **메인에서는 헤더 검색을 찾지 않습니다** (2026-10-13 §3 —
@@ -3864,7 +3792,7 @@ const AUDIT = `(() => {
     /* WARN bwhy 가 2026-10-25 §1 로 내려가서 그 자리를 히어로가
        받습니다 — §1-01 이 "BRIGHT PREMIUM 디자인 방향을 유지한다" 고
        직접 적은 구간입니다. */
-    for(const q of [[".bhero","히어로"], [".bstep","이용 방법"],
+    for(const q of [[".bhero","히어로"], [".bpass","전국 매장 양도양수"],
                     [".bcal","계산도구"]]){
       const e = document.querySelector(q[0]);
       if(!e) return q[1] + " 구간이 없습니다";
@@ -3998,36 +3926,24 @@ const AUDIT = `(() => {
       .filter(function(u){ return !document.querySelector('a[href="' + u + '"]'); });
     if(lost.length) return "사이트 안에서 갈 길이 없는 단계 — " + lost.join(" · ");
     return true;`);
-  await f("진입 카드 셋의 크기가 같다", "/", `
-    /* ⚠️⚠️ **한쪽을 좁히거나 가볍게 만들면 그게 "덜 중요한 것" 이라는
-       말입니다.** 재는 자리가 세 번 옮겨 왔습니다 — 히어로 선택 카드
-       둘(2026-10-08) → 전문관 카드 넷(10-11) → **창업 · 운영 · 폐업
-       진입 카드 셋**(10-16 §3-3). 규칙이 바뀐 것이 아니라 재는 자리가
-       바뀐 것입니다.
-       ⚠️ 나란히 놓인 때만 봅니다 (좁아지면 줄이 갈립니다). */
-    /* ⚠️ 2026-10-20 시안 1 — 양도양수가 가로형 배너에서 카드로
-       올라와 **넷**입니다. 규칙이 바뀐 것이 아니라 재는 자리가
-       바뀵 것입니다 — 넷의 크기와 무게가 같아야 합니다. */
-    const L = [].slice.call(document.querySelectorAll(".bent-c"));
-    if(L.length !== 4) return "진입 카드가 " + L.length + "개입니다";
-    if(innerWidth <= 900) return true;
+  await f("창업 · 폐업 두 판의 크기가 같다", "/", `
+    /* 2026-11-18 메인 디자인 개편(대표 확정 시안) — 재는 자리만 새 화면으로.
+       옛 판은 git show 2aa1d8d:check.js 에 있습니다. 이 주석에 백틱 금지. */
+
+    const L = [].slice.call(document.querySelectorAll(".sw-hp"));
+    if(L.length !== 2) return "히어로 판이 " + L.length + "개입니다";
     const R = L.map(function(e){ return e.getBoundingClientRect(); });
-    if(Math.max.apply(null, R.map(function(r){ return r.top; })) -
-       Math.min.apply(null, R.map(function(r){ return r.top; })) > 2) return true;
-    const w = R.map(function(r){ return r.width; });
-    const h = R.map(function(r){ return r.height; });
-    if(Math.max.apply(null,w) - Math.min.apply(null,w) > 2 ||
-       Math.max.apply(null,h) - Math.min.apply(null,h) > 2)
-      return L.map(function(e, i){ return e.textContent.trim().slice(0,6) + " " +
-        Math.round(w[i]) + "×" + Math.round(h[i]); }).join(" · ");
-    /* ⚠️⚠️ **카드 전체가 하나의 링크입니다** — 안에 또 링크를 넣으면
-       브라우저가 쪼갭니다. "서비스 보기 →" 는 표시이지 단추가 아닙니다. */
+    if(Math.abs(R[0].top - R[1].top) > 2) return true;
+    if(Math.abs(R[0].width - R[1].width) > 2 || Math.abs(R[0].height - R[1].height) > 2)
+      return "창업 " + Math.round(R[0].width) + "×" + Math.round(R[0].height) +
+             " · 폐업 " + Math.round(R[1].width) + "×" + Math.round(R[1].height) +
+             " — 두 쪽의 크기와 무게가 같아야 합니다";
     for(const e of L){
-      const a = e.querySelector("a");
-      if(!a) return "진입 카드가 링크가 아닙니다";
-      if(a.querySelector("a")) return "진입 카드 안에 링크가 또 있습니다";
-      const h2 = a.getAttribute("href") || "";
-      if(!h2 || h2 === "#") return "진입 카드에 가짜 링크가 있습니다";
+      for(const a of e.querySelectorAll("a")){
+        if(a.querySelector("a")) return "히어로 링크 안에 링크가 또 있습니다";
+        const h = a.getAttribute("href") || "";
+        if(!h || h === "#") return "히어로에 가짜 링크가 있습니다";
+      }
     }
     return true;`);
   /* ══ 여정 넷 (2026-10-05 V2 지시서 §1 · §2 · §4 · §6 · §7 · §31) ══ */
@@ -4226,19 +4142,11 @@ const AUDIT = `(() => {
     return true;`);
 
   await f("메인 아이콘이 비지 않고 한 묶음 안에서 겹치지 않는다", "/", `
-    /* ⚠️ 아이콘이 비면 key 를 잘못 적은 것입니다 — icon() · iconArt() 가
-       모르는 이름에 **빈 문자열**을 돌려주어 조용히 빈 칸이 됩니다
-       (에러도 404 도 없고 전수 점검도 통과했던 자리입니다).
-       ⚠️ 이 주석에 백틱을 쓰지 마세요 — 문자열이 거기서 끝납니다.
-       ⚠️⚠️ 2026-10-25 §1 로 메인이 일곱 구간이 되면서 재는 자리가
-       **진입 카드 넷 · 직접 찾기 여덟 · 계산도구 넷 · 이용 방법 다섯**
-       으로 옮겨갔습니다. 보는 것은 그대로입니다 — 빈 아이콘과 한 묶음
-       안의 중복, 그리고 가짜 링크입니다.
-       ⚠️ 선택 까닭(.bwhy-i)과 배너(.bban-i)는 구간이 내려가서 뺐습니다 —
-       되살리시면 그날 여기도 같이 넣으세요 (안 넣으면 그 구간의 빈
-       아이콘을 아무도 안 봅니다). */
-    const groups = [[".bent-i", "진입 카드"], [".bdir-i", "직접 찾기"],
-                    [".bcal-i", "계산도구"], [".bstep-i", "이용 방법"]];
+    /* 2026-11-18 메인 디자인 개편(대표 확정 시안) — 재는 자리만 새 화면으로.
+       옛 판은 git show 2aa1d8d:check.js 에 있습니다. 이 주석에 백틱 금지. */
+
+    const groups = [[".sw-qi", "보조 진입"], [".sw-fi", "네 걸음"],
+                    [".sw-shc", "서비스 바로가기"], [".bcal-i", "계산도구"]];
     for(const g of groups){
       const L = [].slice.call(document.querySelectorAll("#view " + g[0]));
       if(!L.length) return g[1] + " 아이콘이 하나도 없습니다";
@@ -4251,42 +4159,10 @@ const AUDIT = `(() => {
         seen.push(k);
       }
     }
-
-    /* ⚠️ 메인의 모든 링크가 **실제로 있는 주소**라야 합니다 (절대 규칙 5) */
     const bad = [].slice.call(document.querySelectorAll("#view a"))
       .map(function(a){ return a.getAttribute("href") || ""; })
       .filter(function(h){ return !h || h === "#" || h.indexOf("javascript:") === 0; });
     if(bad.length) return "메인에 가짜 링크가 " + bad.length + "개 있습니다";
-
-    /* ⚠️⚠️ **대표 서비스 다섯은 전문관 데이터에서 옵니다** (§6) —
-       HOME_ENTER 가 **이름만** 들고 있고 아이콘 · 글자 · 개수는
-       halls.js 것입니다. 손으로 적으면 전문관을 고칠 때 한쪽만
-       바뀝니다 (이 저장소가 아이콘 표로 겪은 자리).
-       ⚠️ 이름이 어긋나면 그 칸이 **조용히 빠집니다** — 다섯인지까지
-       같이 봅니다. */
-    const HS = (window.AM_HALLS || []);
-    if(!HS.length) return "전문관 데이터가 없습니다 (halls.js 가 안 실렸습니다)";
-    const EN = (window.HOME_ENTER || []);
-    if(EN.length !== 4) return "HOME_ENTER 가 " + EN.length + "개입니다";
-    const cards = [].slice.call(document.querySelectorAll(".bent-c"));
-    for(let i = 0; i < cards.length; i++){
-      const c = cards[i];
-      const to = (c.querySelector("a") || {}).getAttribute
-        ? c.querySelector("a").getAttribute("href") : "";
-      let h = null;
-      for(const x of HS) if(x.to === to) h = x;
-      if(!h) return "진입 카드가 전문관으로 안 갑니다 — " + to;
-      const en = EN.filter(function(x){ return x.key === h.key; })[0];
-      if(!en) return h.name + " 카드가 HOME_ENTER 에 없습니다";
-      /* ⚠️ 2026-10-20 시안 1(확대본) — 카드가 **사진 + 이름 + 한 줄 +
-         [바로가기]** 까지로 간결해졌습니다 — 대표 서비스 아이콘 다섯은
-         카드에서 내렸습니다. 그 줄이 들고 있던 길은 카드가 바로 가는
-         전문관 화면이 받습니다 (아래 검사가 거기서 직접 봅니다). */
-      if(c.querySelector(".bent-sv"))
-        return h.name + " 카드에 대표 서비스 줄이 아직 있습니다";
-      if(!c.querySelector(".bent-go"))
-        return h.name + " 카드에 바로가기 표시가 없습니다";
-    }
     return true;`);
 
   await f("양도양수가 인수 · 양도 · 전문관 세 길을 낸다", "/", `
@@ -4426,7 +4302,7 @@ const AUDIT = `(() => {
        금지해서, 그 카드가 들어 있던 구간을 안 부릅니다. 함수는
        지우지 않았으니 되살리실 수 있습니다 — 그날 bcal 다음에
        bwhy 를 다시 넣으세요. */
-    const want = ["bhero","bent","bdir","bcal","bstep","bgd","bcta"];
+    const want = ["bhero","bent","bpass","bwhy","bdir","bcal","bgd","bcta"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";

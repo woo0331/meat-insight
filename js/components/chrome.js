@@ -246,7 +246,16 @@ function Logo(where){
 function Header(){
   /* ⚠️ 본문 바로가기는 `index.html` 에 이미 있습니다. 여기서 또 내면
      읽어 주는 프로그램에 같은 것이 두 번 들립니다. */
-  return '<div role="status" style="background:#12243a;color:#fff;text-align:center;padding:10px 16px;font-size:14px">인수인계 복구 점검 중 · 상담·등록·로그인은 아직 접수하지 않습니다.</div><header class="hd"><div class="w-wide hd-in">'+
+  /* ⚠️ 2026-11-18 W01 ③ — 접수 중단 띠. 밝은 면에 짙은 글자입니다 (전에는 짙은 남색
+     띠라 폰 360px 첫 화면의 어두운 면이 15% 를 넘었습니다 · sweep-rest 13건).
+     ⚠️ sosReady 가 켜지면 저절로 사라집니다 — 손으로 지우는 띠를 만들지 않습니다.
+     재개일은 적지 않습니다 (확정되지 않았습니다). */
+  var closedBar = (window.WOW_BIZ && WOW_BIZ.sosReady) ? "" :
+    '<div role="status" style="background:var(--bg-sky,#EFF6FC);color:var(--navy,#0C3D70);'+
+      'border-bottom:1px solid var(--line,#E2E8F0);text-align:center;padding:10px 16px;font-size:14px">'+
+      '현재 견적 · 매물 등록 · 입점 · 로그인 접수를 받지 않습니다. '+
+      '정보 · 계산도구 · 체크리스트는 그대로 이용하실 수 있습니다.</div>';
+  return closedBar + '<header class="hd"><div class="w-wide hd-in">'+
     Logo() +
     '<nav class="gnb" id="gnb" aria-label="주요 메뉴">'+
       AM_GNB.map(function(m){

@@ -378,6 +378,14 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     안 고르셔도 접수는 그대로 되고, 안 고른 것이 `false` 로 갑니다. */
  say(!!bodyA && bodyA.notify===false,
      "A-알림① 안 고르면 꺼진 채로 간다", bodyA && bodyA.notify);
+ /* ⚠️ 2026-11-18 W01 ⑥ — 견적 양식에 이메일 칸이 없고 발송도 확인되지 않아
+    WOW_BIZ.mailNotifyReady 가 false 인 동안에는 상자를 **그리지 않는 것이 맞습니다**.
+    켜는 날에는 아래 옛 세 검사가 그대로 돕니다. */
+ const nOn = await pg.evaluate(()=>!!(window.WOW_BIZ && WOW_BIZ.mailNotifyReady === true));
+ if(!nOn){
+   say(await pg.evaluate(()=>!document.getElementById("q-nt")),
+       "A-알림② 발송이 확인되기 전에는 알림 상자를 그리지 않는다");
+ } else {
  say(await pg.evaluate(()=>{
        const el=document.getElementById("q-nt");
        return !!el && el.required!==true && !el.checked;
@@ -396,6 +404,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
        return /광고는 보내지 않/.test(t) && /회신/.test(t) &&
               !/시간 안에|당일|보장/.test(t);
      }), "A-알림④ 광고를 안 보낸다고 적고 끄는 길을 적는다");
+ }
  await pg.check("#q-nt");
  const bodyN = await pg.evaluate(()=>{
    let got=null; const real=window.amSend;

@@ -10,6 +10,14 @@ alter default privileges in schema public revoke all on sequences from anon, aut
 alter default privileges revoke execute on functions from public;  -- Postgres 는 새 함수를 PUBLIC(=모두)에게 엽니다 (스키마를 적으면 안 먹습니다)
 revoke execute on all functions in schema public from public;
 
--- 확인: 아래가 0줄이어야 합니다 (anon · authenticated 에게 열리는 기본 권한)
--- select defaclobjtype, defaclacl from pg_default_acl a join pg_namespace n on n.oid=a.defaclnamespace
---  where n.nspname='public' and (defaclacl::text like '%anon=%' or defaclacl::text like '%authenticated=%');
+-- 확인: 아래가 0줄이어야 합니다 (postgres 가 앞으로 만드는 것이 anon · authenticated 에게 열리는 기본 권한)
+-- select defaclobjtype, defaclacl from pg_default_acl a join pg_roles r on r.oid=a.defaclrole
+--  left join pg_namespace n on n.oid=a.defaclnamespace
+--  where r.rolname='postgres' and coalesce(n.nspname,'public')='public'
+--    and (defaclacl::text like '%anon=%' or defaclacl::text like '%authenticated=%');
+--
+-- 알아 둘 것 (2026-11-17 최종 확인)
+--  · SQL 편집기 · Table Editor 로 만드는 표의 주인은 postgres 라 이 잠금이 걸립니다.
+--  · supabase_admin(Supabase 내부)이 만드는 것의 기본 권한은 postgres 로 바꿀 수 없어 그대로 둡니다 — 우리 표와 무관합니다.
+--  · service_role(서버 전용 키)은 그대로 쓸 수 있습니다. 화면(anon)에 열 표는 만들 때 grant 와 RLS 정책을 직접 적습니다.
+--  · 두 번 실행해도 됩니다. 아무 데이터도 만들거나 지우지 않습니다.

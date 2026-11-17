@@ -1,0 +1,16 @@
+storeway.co.kr/ | 200  | Vercel | <title>골프올인원 | 골프의 모든 것, 골프올인원 <link rel="canonical" href="https://www.storeway.co.kr/">
+storeway.co.kr/api/session | 200  | Vercel | "auth":true
+storeway.co.kr/robots.txt | 200  | Vercel | Disallow: /
+storeway.co.kr/sitemap.xml | 200  | Vercel | loc 528개
+www.storeway.co.kr/ | 308 → https://storeway.co.kr/ | Vercel |  
+www.storeway.co.kr/api/session | 308 → https://storeway.co.kr/api/session | Vercel | 
+www.storeway.co.kr/robots.txt | 308 → https://storeway.co.kr/robots.txt | Vercel | 
+www.storeway.co.kr/sitemap.xml | 308 → https://storeway.co.kr/sitemap.xml | Vercel | loc 0개
+aboutmeat.co.kr/ | 308 → https://storeway.co.kr/ | Vercel |  
+aboutmeat.co.kr/api/session | 308 → https://storeway.co.kr/api/session | Vercel | 
+aboutmeat.co.kr/robots.txt | 308 → https://storeway.co.kr/robots.txt | Vercel | 
+aboutmeat.co.kr/sitemap.xml | 308 → https://storeway.co.kr/sitemap.xml | Vercel | loc 0개
+www.aboutmeat.co.kr/ | 200  | Vercel | <title>골프올인원 | 골프의 모든 것, 골프올인원 <link rel="canonical" href="https://www.storeway.co.kr/">
+www.aboutmeat.co.kr/api/session | 200  | Vercel | "auth":true
+www.aboutmeat.co.kr/robots.txt | 200  | Vercel | Disallow: /
+www.aboutmeat.co.kr/sitemap.xml | 200  | Vercel | loc 528개

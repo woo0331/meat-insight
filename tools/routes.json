@@ -25,6 +25,7 @@
     "/privacy",
     "/membership",
     "/404",
+    "/pro",
     "/course/mcst-golf-nationwide-h7faf29991416",
     "/course/mcst-golf-nationwide-h8bdf33c0744e",
     "/course/mcst-golf-nationwide-h801fd9d95343",
@@ -539,6 +540,7 @@
     "/my",
     "/admin",
     "/desk",
-    "/404"
+    "/404",
+    "/pro"
   ]
 }

@@ -1086,10 +1086,50 @@
     var msg = wrap.querySelector("#lsmsg2");
     var btn = f.querySelector('button[type="submit"]');
     if(btn) btn.disabled = true;
-    if(msg){ msg.hidden = false; msg.textContent = "보내는 중입니다…"; }
-    call(a, "ask_listing", {
-      listing_id: f.getAttribute("data-id"),
+    if(msg){ msg.hidden = false; msg.textContent = "지금 값 · 상태를 다시 확인하는 중입니다…"; }
+    var lid = f.getAttribute("data-id");
+    var seen = (ONE && String(ONE.id) === String(lid)) ? ONE : null;
+    /* ⚠️⚠️ 보내기 직전에 그 매물 **한 줄을 다시 읽습니다** (2026-11-17) — 상세를 열어 둔
+       사이 팔렸거나 값이 바뀌었으면 옛 값을 보고 문의가 갔습니다. 바뀌었으면 **보내지
+       않고** 바뀐 값을 보여 드립니다. 못 읽었으면 보내지 않습니다(옛 값을 지금 값처럼
+       믿지 않습니다). 서버(0084)도 본 값을 한 번 더 맞춰 봅니다. */
+    var h = Object.assign({ apikey:a.conf.anonKey },
+                          window.amAuthHeaders ? window.amAuthHeaders() : {});
+    fetch(a.conf.url + "/rest/v1/v_listing_open?select=id,price,state&id=eq." +
+          encodeURIComponent(lid) + "&limit=1", { headers:h })
+      .then(function(r){ if(!r.ok) throw new Error("v_listing_open " + r.status); return r.json(); })
+      .then(function(rows){
+        /* ⚠️ 그 id 의 줄만 믿습니다 */
+        var now = (rows || []).filter(function(r){ return String(r.id) === String(lid); })[0] || null;
+        if(!now){
+          if(btn) btn.disabled = true;
+          if(msg) msg.textContent = "이 매물은 지금 문의를 받지 않습니다 — 팔렸거나 내려갔습니다. " +
+            "목록으로 돌아가 다른 매물을 보세요.";
+          return;
+        }
+        if(seen && Number(now.price) !== Number(seen.price)){
+          var was = window.amLstPrice(seen.price), is = window.amLstPrice(now.price);
+          seen.price = now.price; seen.state = now.state;
+          var pe = document.querySelector(".lsd-p");
+          if(pe) pe.textContent = is;
+          if(btn) btn.disabled = false;
+          if(msg) msg.textContent = "파는 분이 값을 바꿨습니다 — " + was + " → " + is +
+            ". 바뀐 값을 확인하시고 다시 보내 주세요.";
+          return;
+        }
+        return send(now);
+      }, function(e){
+        window.amFailLog("listing/ask-recheck", e);
+        if(btn) btn.disabled = false;
+        if(msg) msg.textContent = "지금 값 · 상태를 확인하지 못해 보내지 않았습니다. 잠시 뒤 다시 눌러 주세요.";
+      });
+    function send(now){
+    if(msg) msg.textContent = "보내는 중입니다…";
+    return call(a, "ask_listing", {
+      listing_id: lid,
       msg: f.msg.value, contact: f.contact.value,
+      /* 0084 의 문이 마지막으로 맞춰 봅니다(0084 전 DB 는 이 칸을 그냥 둡니다) */
+      seen_price: Number(now.price),
       /* ⚠️ 동의 시각은 **누른 그 순간**입니다 (연 시각이 아닙니다) */
       agree_at: new Date().toISOString()
     }).then(function(){
@@ -1107,6 +1147,7 @@
          문이 "올리신 분은 문의하실 수 없습니다" 라고 말합니다 */
       if(msg) msg.textContent = window.amErrText(err, "보내지 못했습니다.");
     });
+    }
   }
 
   /* ── 뼈대 ──────────────────────────────────────────────────────────

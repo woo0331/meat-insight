@@ -178,12 +178,15 @@ function market(){
       none("중고 매물은 중고 골프장터에서 보실 수 있습니다.", "",
         '<a class="btn btn-line btn-sm" href="' + esc(usedUrl) + '">중고 매물 보기</a>') +
     '</div>' +
-    '<div class="hm-mk-p" id="hm-mk-new" data-mkpane="new" hidden>' +
-      (items.length
-        ? W.amMkGrid(items.slice(0, 4))
-        : none("아직 새상품을 올린 업체가 없습니다.", "골프용품 업체가 입점하면 여기에 보입니다.",
+    /* ⚠️⚠️ 두 꼴(있을 때 · 없을 때)을 다 찍습니다 — 업체 자료를 브라우저가 지금 값으로
+       다시 읽으면(js/pvlive.js) 보이는 쪽만 바꾸고 격자를 같은 카드 함수로 갈아 끼웁니다. */
+    '<div class="hm-mk-p" id="hm-mk-new" data-mkpane="new" data-pvmk hidden>' +
+      '<div data-pvgrid data-pvstate="list"' + (items.length ? '' : ' hidden') + '>' +
+        (items.length ? W.amMkGrid(items.slice(0, 4)) : '') + '</div>' +
+      '<div data-pvstate="zero"' + (items.length ? ' hidden' : '') + '>' +
+        none("아직 새상품을 올린 업체가 없습니다.", "골프용품 업체가 입점하면 여기에 보입니다.",
             '<a class="btn btn-line btn-sm" href="' + esc(newUrl) + '">골프용품 마켓 보기</a>' +
-            '<a class="btn btn-line btn-sm" href="/join">업체 입점 신청</a>')) +
+            '<a class="btn btn-line btn-sm" href="/join">업체 입점 신청</a>') + '</div>' +
     '</div>' +
     '<p class="hm-mk-sell">' + icon("bag", 18) + '<span>내 장비도 판매하고 싶다면?</span>' +
       '<a class="hm-link hm-link-d" href="' + esc(usedUrl) + '#lsbox">매물 등록하기' + icon("arrow", 16) + '</a></p>' +
@@ -288,6 +291,9 @@ exports.build = function(){
     js: ["/js/data/providers.generated.js", "/js/data/providers.js",
          "/js/data/site.js", "/js/data/regions.js", "/js/data/deal.js",
          "/js/data/courses.generated.js", "/js/data/courses.js",
-         "/js/adslot.js", "/js/homefind.js", "/js/auth.js", "/js/homemix.js"]
+         "/js/adslot.js", "/js/homefind.js", "/js/auth.js", "/js/homemix.js",
+         /* ⚠️⚠️ 새상품(업체가 올린 상품)을 **지금 값으로** 다시 읽습니다 (js/pvlive.js) —
+            카드를 그리는 `card.js` · 상품을 펴 놓는 `data/market.js` 까지 싣는 것이 기능입니다. */
+         "/js/data/market.js", "/js/card.js", "/js/data/pvnorm.js", "/js/pvlive.js"]
   };
 };

@@ -76,6 +76,8 @@ exports.build = function(){
     js: ["/js/data/site.js", "/js/data/regions.js",
          "/js/data/providers.generated.js", "/js/data/providers.js",
          "/js/auth.js", "/js/photo.js", "/js/data/compare.js",
-         "/js/matchform.js", "/js/compareform.js"]
+         "/js/matchform.js", "/js/compareform.js",
+         /* ⚠️ 「보고 오신 업체」를 지금 값으로 맞춥니다 (js/pvlive.js · 2026-11-17) */
+         "/js/data/pvnorm.js", "/js/pvlive.js"]
   };
 };

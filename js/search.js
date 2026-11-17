@@ -369,6 +369,18 @@
     paint();
   });
 
+  /* ⚠️⚠️ 업체 자료가 **지금 값으로** 바뀌면(js/pvlive.js) 그 자료로 다시 그립니다 —
+     `all` 을 처음에 담아 두므로 **새로 담고** 그립니다(안 담으면 옛 목록으로 다시 그립니다).
+     ⚠️ 비교에 담아 둔 업체가 사라졌으면(정지 · 공개 끄기) 비교에서도 뺍니다. */
+  window.addEventListener("am:providers", function(e){
+    if(!(e && e.detail && e.detail.state === "ok")) return;
+    all = window.amProviders ? window.amProviders() : [];
+    var ids = {};
+    all.forEach(function(p){ ids[p.id] = true; });
+    Object.keys(CMP).forEach(function(k){ if(!ids[k]) delete CMP[k]; });
+    paint();
+  });
+
   /* 뒤로 가기 · 앞으로 가기 */
   window.addEventListener("popstate", function(){
     var s = now();

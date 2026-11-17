@@ -188,7 +188,9 @@ exports.build = function(){
             거르개를 눌러도 골프장 구간만 처음 것 그대로 남습니다
             (값을 읽는 파일을 싣는 것까지가 기능입니다). */
          "/js/data/courses.generated.js", "/js/data/courses.js",
-         "/js/card.js", "/js/search.js", "/js/adslot.js"]
+         "/js/card.js", "/js/search.js", "/js/adslot.js",
+         /* ⚠️⚠️ 업체 자료를 **지금 값으로** 다시 읽습니다 (js/pvlive.js · 2026-11-17) */
+         "/js/data/pvnorm.js", "/js/pvlive.js"]
   };
 };
 

@@ -370,6 +370,8 @@ declare
   v_pvst text;
   v_used int;
   v_new  uuid;
+  v_terms jsonb;
+  v_k    text;
 begin
   if v_me is null then raise exception '로그인하셔야 예약을 신청하실 수 있습니다'; end if;
   if v_id is null then raise exception '어느 자리인지 알 수 없습니다'; end if;
@@ -387,6 +389,26 @@ begin
   select state into v_pvst from provider
    where id = v_row.provider_id and is_test = false and listed = true;
   if v_pvst is null or v_pvst <> 'approved' then raise exception '지금은 그 업체의 자리를 받지 않습니다'; end if;
+
+  -- ⚠️⚠️ 손님이 **본 조건**과 지금 조건을 맞춰 봅니다 (2026-11-17).
+  --   화면은 양식을 열 때 · 보내기 직전에 다시 읽지만, 그 둘 사이에도 업체가
+  --   그린피 · 취소 조건을 바꿀 수 있습니다. 그러면 저장되는 신청 조건(snap)이
+  --   손님이 동의한 것과 달라집니다. 보낸 칸만 봅니다(옛 화면은 seen 을 안 보냅니다).
+  --   ⚠️ 신청 마감 시각(timestamptz)은 글자 꼴이 서버마다 달라 여기서 안 맞춥니다 —
+  --   그 칸은 위에서 **지금 시각과** 따로 봅니다.
+  if jsonb_typeof(p->'seen') = 'object' then
+    v_terms := jsonb_build_object(
+      'course', v_row.course, 'course_sub', v_row.course_sub, 'play_at', v_row.play_at,
+      'tee_at', v_row.tee_at, 'holes', v_row.holes, 'green_fee', v_row.green_fee,
+      'price_unit', v_row.price_unit, 'cart_rule', v_row.cart_rule, 'cart_fee', v_row.cart_fee,
+      'caddie_rule', v_row.caddie_rule, 'caddie_fee', v_row.caddie_fee,
+      'cancel_terms', v_row.cancel_terms, 'note', v_row.note, 'min_players', v_row.min_players);
+    for v_k in select jsonb_object_keys(p->'seen') loop
+      if v_terms ? v_k and (p->'seen'->v_k) is distinct from (v_terms->v_k) then
+        raise exception '자리 조건이 바뀌었습니다 — 바뀐 조건을 확인하고 다시 신청해 주세요';
+      end if;
+    end loop;
+  end if;
 
   if v_name is null then raise exception '성함을 적어 주세요'; end if;
   if v_tel  is null then raise exception '연락처를 적어 주세요'; end if;

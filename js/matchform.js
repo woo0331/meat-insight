@@ -385,6 +385,31 @@
     box.className = "jbox";
     box.innerHTML = form();
     document.getElementById("mf").addEventListener("submit", submit);
+    /* ⚠️⚠️ 업체 자료가 **지금 값으로** 바뀌면(js/pvlive.js · 2026-11-17) 「보고 오신 업체」를
+       다시 맞춥니다 — 빌드 뒤에 승인된 업체는 빌드 자료에 없어 미리 고를 것이 없었고,
+       정지된 업체는 빌드 자료에 남아 「이 업체를 보고 오셨습니다」를 적고 있었습니다.
+       ⚠️ 손님이 이미 무엇을 고르거나 적으셨으면 **양식을 갈아 끼우지 않습니다**(적은 것이
+       날아갑니다) — 그때는 「보고 오신 업체」 줄만 맞춥니다. */
+    var touched = false;
+    box.addEventListener("input", function(){ touched = true; });
+    box.addEventListener("change", function(){ touched = true; });
+    window.addEventListener("am:providers", function(e){
+      if(!(e && e.detail && e.detail.state === "ok")) return;
+      var pv = "";
+      try{ pv = new URLSearchParams(location.search).get("pv") || ""; }catch(_){}
+      if(!pv) return;
+      var now = (window.amProvider && window.amProvider(pv)) || null;
+      if((now ? now.id : null) === (WANT ? WANT.id : null) && !now) return;
+      WANT = now;
+      if(!touched){
+        box.innerHTML = form();
+        document.getElementById("mf").addEventListener("submit", submit);
+        return;
+      }
+      var w = box.querySelector(".want");
+      var row = w ? w.closest(".jrow") : null;
+      if(row && !WANT) row.remove();
+    });
     box.addEventListener("click", function(e){
       var b = e.target && e.target.closest ? e.target.closest("button.svc-x") : null;
       if(b) toggleSvc(b);

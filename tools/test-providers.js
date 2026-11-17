@@ -1712,8 +1712,22 @@ function nowServe(){ return serve(0); }
        Vercel 은 **저장소의 파일을 그대로 섬깁니다** — 올렸으면 없는
        회사를 광고하고 있었을 것입니다. **파일이 실제로 없는지** 봅니다. */
     ran++;
+    /* ⚠️ 2026-11-17 — `pro/index.html` 은 **빌드가 늘 찍는 빈 자리**(`/pro?id=` · 빌드 뒤에
+       승인된 업체를 브라우저가 그리는 곳 · pages/prolive.js)입니다. 업체 화면은
+       `pro/<id>/` 폴더라 **폴더만** 셉니다. 대신 그 빈 자리에 씨앗 업체 이름이 한 글자도
+       안 박혔는지를 따로 봅니다(그 파일로 없는 회사가 새지 않게). */
     const left = fs.existsSync(path.join(ROOT, "pro"))
-      ? fs.readdirSync(path.join(ROOT, "pro")) : [];
+      ? fs.readdirSync(path.join(ROOT, "pro")).filter(function(n){
+          return fs.statSync(path.join(ROOT, "pro", n)).isDirectory(); }) : [];
+    const shellF = path.join(ROOT, "pro", "index.html");
+    if(fs.existsSync(shellF)){
+      ran++;
+      const sh = fs.readFileSync(shellF, "utf8");
+      const leak = SEED.filter(function(p){ return sh.indexOf(p.id) >= 0; });
+      if(!leak.length) console.log("  ✅ 빈 자리(pro/index.html)에 씨앗 업체가 **한 글자도** 없습니다");
+      else { bad++; console.log("  ❌ 빈 자리(pro/index.html)에 씨앗 업체가 박혔습니다 — " +
+                                leak.map(function(p){ return p.id; }).join(" · ")); }
+    }
     if(!left.length)
       console.log("  ✅ 찍힌 업체 화면이 저장소에 **한 장도 안 남았습니다**");
     else {

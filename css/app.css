@@ -5239,3 +5239,11 @@ picture{ display: contents; }
 .tt-pvl{ margin:0 0 8px; padding-left:18px; color:var(--ink); }
 .tt-res{ margin:10px 0 0; padding-left:18px; font-size:14px; color:var(--ink2); }
 .tfc-sub{ font-size:14px; font-weight:600; color:var(--ink2); }
+
+/* ── 업체 자료를 지금 값으로 덮는 자리 (2026-11-17 · js/pvlive.js) ──────────
+   ⚠️ 빌드가 두 꼴(있을 때 · 0곳)을 다 찍고 하나를 `hidden` 으로 둡니다 — `.none` · `.sec-hd`
+   처럼 display 를 적어 둔 칸은 속성만으로 안 가려지므로 여기서 같이 막습니다. */
+[data-pvstate][hidden], [data-pvgrid][hidden], [data-pvblock][hidden]{ display:none !important; }
+.pvstale{ background:var(--bad-soft); border-block:1px solid var(--line); padding-block:12px; }
+.pvstale .wrap{ display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; }
+.pvstale p{ margin:0; flex:1 1 320px; color:var(--ink); font-size:14.5px; line-height:1.6; }

@@ -570,6 +570,33 @@ module.exports = function(T){
   const same = denied(as(SEL) + "select close_listing('" +
     J({ id:RID, state:"open" }) + "'::jsonb)");
   ok("  ⚠️ **같은 상태로는 못 옮긴다** (기록이 거짓이 되지 않게)", same.no, same.why);
+
+  /* ⚠️⚠️ 0084 — 손님이 **본 값**을 문이 마지막으로 맞춰 보고, 그때 값을 문의에 담습니다 (2026-11-17)
+     — 지금 RID 의 값은 바로 위에서 777,000원으로 고쳤습니다. */
+  const SEEN = psql("insert into auth.users (email) values ('ls-seen@x.test') returning id");
+  const sOld = denied(ask(SEEN, RID, { seen_price: 350000 }));
+  ok("⚠️⚠️ 0084 — 바뀌기 전 값을 보고 보낸 문의는 **문이 받지 않는다**",
+     sOld.no && /값이 바뀌었습니다/.test(sOld.why), sOld.why);
+  ok("  그때 문의 줄이 **안 생긴다**",
+     psql("select count(*) from listingask where listing_id = '" + RID + "' and by_user = '" + SEEN + "'") === "0");
+  const sStr = denied(ask(SEEN, RID, { seen_price: "777000" }));
+  ok("  ⚠️ 숫자가 아닌 값(꾸러미를 고친 것)은 **안 맞춰 보는 것이 아니라 거절**한다",
+     sStr.no && /보신 값을 알 수 없습니다/.test(sStr.why), sStr.why);
+  const sNow = allowed(ask(SEEN, RID, { seen_price: 777000 }));
+  ok("  지금 값을 보고 보내면 들어간다", sNow.yes && /^[0-9a-f-]{36}$/.test(sNow.out), sNow.out || sNow.why);
+  ok("  ⚠️⚠️ 그 문의에 **문의하신 때 값**이 담긴다",
+     psql("select price_at from listingask where id = '" + sNow.out + "'") === "777000");
+  psql(as(SEL) + "select edit_listing('" + J({ id:RID, price:"700000" }) + "'::jsonb)");
+  ok("  ⚠️ 파는 분이 뒤에 값을 바꿔도 **그 문의의 값은 그대로**다",
+     psql("select price_at from listingask where id = '" + sNow.out + "'") === "777000");
+  const sAt = psql(as(SEEN) + "select price_at from listingask where id = '" + sNow.out + "'");
+  ok("  문의하신 분이 그 값을 **읽을 수 있다** (칸 GRANT)", sAt === "777000", sAt);
+  const sAtSel = psql(as(SEL) + "select price_at from listingask where id = '" + sNow.out + "'");
+  ok("  파는 분도 그 값을 읽는다 (같은 자료로 봅니다)", sAtSel === "777000", sAtSel);
+  const sLegacy = allowed(ask(NOSY, RID, {}));
+  ok("  옛 화면(본 값을 안 보냄)도 그대로 문의된다 — 값은 그때 값이 담긴다",
+     sLegacy.yes && psql("select price_at from listingask where id = '" + sLegacy.out + "'") === "700000",
+     sLegacy.out || sLegacy.why);
   const resNot = denied(as(NOSY) + "select close_listing('" +
     J({ id:RID, state:"reserved" }) + "'::jsonb)");
   ok("  ⚠️ **남이 예약중으로 못 둔다**", resNot.no, resNot.why);

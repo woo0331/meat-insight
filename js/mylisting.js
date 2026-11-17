@@ -45,9 +45,17 @@
      ⚠️⚠️ 다시 묻는 것은 **`OPTCOL` 에 적어 둔 확인된 새 칸**이
      없다고 400 이 말할 때만이고, 보기 부재(404) · 권한(403) · 인증은
      덮지 않습니다. */
-  var OPTCOL = ["model", "flex", "hand"];
+  /* ⚠️ `price_at`(문의하신 때 값)은 0084 의 칸입니다 — 그 칸이 없는 DB 에서는 그것만 빼고
+     다시 묻습니다(문의 질의에는 model · flex · hand 가 없어 같이 빠질 칸이 없습니다). */
+  var OPTCOL = ["model", "flex", "hand", "price_at"];
   var MISS = [];
 
+  /* 문의하신 때의 값 — ⚠️ 칸이 없거나(0084 전) 비었으면 **줄째 뺍니다**(지어내지 않습니다).
+     ⚠️ 0 은 「무료로 나눔」이라 `||` 로 거르지 않습니다. */
+  function askedAt(q){
+    if(q.price_at === null || q.price_at === undefined || q.price_at === "") return "";
+    return '<p class="mj-z">문의하신 때 값 ' + esc(window.amLstPrice(q.price_at)) + '</p>';
+  }
   function get(a, path){
     return window.amPathSoft(path, OPTCOL, function(p){
       return fetch(a.conf.url + "/rest/v1/" + p, {
@@ -170,6 +178,7 @@
                 return '<li>' +
                   '<p class="mj-m">' + (q.msg ? esc(q.msg) : '(남기신 말 없음)') +
                     ' — <b>' + esc(window.amLstAskSt(q.state).name) + '</b></p>' +
+                  askedAt(q) +
                   (q.state === "asked"
                     ? '<button type="button" class="btn btn-pt ls-ok" data-id="' +
                         esc(q.id) + '">받아들이기</button>' +
@@ -211,6 +220,7 @@
              파는 분의 말이고, 여기 찍으면 절대 규칙 3 입니다. */
           '<p class="mj-t"><b>' + esc(window.amLstAskMine(q.state)) + '</b>' +
             (q.msg ? ' · ' + esc(q.msg) : '') + '</p>' +
+          askedAt(q) +
           (q.state === "asked"
             ? '<button type="button" class="btn btn-line ls-cancel" data-id="' + esc(q.id) +
               '">문의 거두기</button>' : '') +
@@ -456,7 +466,7 @@
              "brand,model,flex,hand,hidden_why,created_at" +
              "&order=created_at.desc&limit=50"),
       get(a, "listingask?select=id,listing_id,msg,state,created_at,by_user," +
-             "seller_share_at,buyer_share_at&order=created_at.desc&limit=200"),
+             "seller_share_at,buyer_share_at,price_at&order=created_at.desc&limit=200"),
       get(a, "v_listing_contact?select=ask_id,seller_contact,buyer_contact," +
              "seller_share_at,buyer_share_at&limit=200")
     ]).then(function(r){

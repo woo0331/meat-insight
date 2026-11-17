@@ -497,6 +497,98 @@
 
   /* 그린 줄을 id 로 들고 있습니다 — 신청 양식이 최소 인원 · 남은 자리 · 조건을 **카드 글자에서 다시 읽지 않게**
      (글자에서 읽다가 최소 인원이 빠졌습니다 · 2026-11-17 검사가 잡았습니다) */
+  /* 목록 · 한 줄 다시 읽기가 **같은 칸**을 받습니다 — 두 곳에 적으면 한쪽만
+     칸이 늘어 양식이 옛 칸으로 조건을 맞춰 보게 됩니다. */
+  var SEL = "id,provider_id,provider_name,kind,region,course,play_at," +
+            "tee_at,holes,slots,green_fee,tel,note,left_n,photo," +
+            "course_sub,min_players,price_unit,cart_rule,cart_fee,caddie_rule,caddie_fee,apply_until,cancel_terms";
+
+  /* ── 신청 조건은 **신청하는 그 순간의 것**이어야 합니다 (2026-11-17) ──
+     ⚠️⚠️⚠️ 전에는 「예약 신청」을 누르면 **목록을 불러온 때의 자료**로 양식을 열었습니다.
+     그 사이 업체가 그린피 · 취소 조건을 바꾸거나 일시중지 · 마감해도, 열어 둔 화면은
+     옛 조건을 보여 주고 신청은 **바뀐 조건으로** 들어갔습니다(0085 의 신청 조건 저장도
+     서버의 새 값을 담으므로, 손님이 본 것과 저장된 것이 달랐습니다).
+     지금은 ① 양식을 열 때 그 자리 **한 줄을 다시 읽고** ② 보내기 직전에 한 번 더 읽어
+     조건이 달라졌으면 **보내지 않고** 바뀐 조건을 보여 드리며 ③ 본 조건을 서버에 같이
+     보내 0085 의 신청 문이 **마지막으로** 맞춰 봅니다(둘 사이에 바뀌는 틈까지).
+     ⚠️ 다시 읽지 못하면 **옛 조건으로 열지 않습니다** — 오래된 가격을 지금 값처럼
+     보여 주는 것이 됩니다. 남은 자리 수만 바뀐 것은 조건이 아닙니다(서버가 셉니다). */
+  var TERMS = ["course", "course_sub", "play_at", "tee_at", "holes", "green_fee",
+               "price_unit", "cart_rule", "cart_fee", "caddie_rule", "caddie_fee",
+               "cancel_terms", "note", "min_players", "apply_until"];
+  function seenOf(t){
+    var o = {};
+    TERMS.forEach(function(k){
+      if(t && Object.prototype.hasOwnProperty.call(t, k)) o[k] = (t[k] === undefined ? null : t[k]);
+    });
+    return o;
+  }
+  function changed(a, b){
+    return TERMS.filter(function(k){
+      if(!(a && b) || !(k in a) || !(k in b)) return false;
+      return JSON.stringify(a[k] === undefined ? null : a[k]) !==
+             JSON.stringify(b[k] === undefined ? null : b[k]);
+    });
+  }
+  /* 한 줄 — 보기에 그 줄이 없으면 **null**(마감 · 일시중지 · 지난 시각 · 업체 정지),
+     못 읽었으면 **던집니다**(0줄과 못 읽은 것을 섞지 않습니다). */
+  function one(id){
+    var q = ["select=" + SEL, "id=eq." + encodeURIComponent(id), "limit=1"];
+    MISS.forEach(function(c){ window.amDropCols(q, [c]); });
+    return window.amRowsSoft(q, OPTCOL, function(qq){
+      var h = { apikey:(A && A.conf ? A.conf.anonKey : "") };
+      if(window.amAuthHeaders) h = Object.assign(h, window.amAuthHeaders());
+      return fetch(A.conf.url + "/rest/v1/v_teetime_open?" + qq.join("&"), { headers:h });
+    }).then(function(x){
+      if(x.miss && x.miss.length) tookOut(x.miss);
+      /* ⚠️ 그 id 의 줄만 믿습니다(다른 줄을 그 자리로 읽지 않습니다) */
+      return (x.rows || []).filter(function(r){ return String(r.id) === String(id); })[0] || null;
+    });
+  }
+  function goneHtml(){
+    return '<div class="none"><h3>이 자리는 지금 신청을 받지 않습니다.</h3>' +
+      '<p>업체가 마감했거나 잠시 멈췄거나, 신청 마감 · 티오프 시각이 지났거나, 자리가 다 찼습니다. ' +
+      '목록을 새로 불러오면 지금 신청할 수 있는 자리만 보입니다.</p>' +
+      '<button type="button" class="btn btn-line tf-reload">목록 새로 불러오기</button></div>';
+  }
+  function checkFailHtml(){
+    return '<div class="none none-fail"><h3>이 자리의 지금 조건을 확인하지 못했습니다.</h3>' +
+      '<p>확인하지 못한 채로는 신청 양식을 열지 않습니다 — 화면에 남은 가격 · 조건이 ' +
+      '지금과 다를 수 있습니다.</p>' +
+      '<button type="button" class="btn btn-line tf-book">다시 확인하기</button></div>';
+  }
+  /* 그 카드만 새 줄로 갈아 끼우고 양식을 다시 엽니다 — ⚠️ 적어 두신 글은 살립니다 */
+  function swap(li, t, keep, note){
+    BYID[t.id] = t;
+    var w = document.createElement("div");
+    w.innerHTML = row(t);
+    var nl = w.firstChild;
+    li.parentNode.replaceChild(nl, li);
+    var bx = nl.querySelector(".tf-bx");
+    if(bx){
+      bx.innerHTML = '<p class="tf-chg lmsg">' + esc(note) + '</p>' + bookForm(t);
+      if(keep){
+        Object.keys(keep).forEach(function(n){
+          var el = bx.querySelector('[name="' + n + '"]');
+          if(!el) return;
+          if(el.type === "checkbox") return;      /* 동의는 **다시** 받습니다 */
+          /* 인원 — 줄어든 자리 밖의 수는 안 남깁니다(서버도 다시 셉니다) */
+          if(el.tagName === "SELECT" &&
+             !Array.prototype.some.call(el.options, function(o){ return o.value === keep[n]; })) return;
+          el.value = keep[n];
+        });
+      }
+    }
+    return nl;
+  }
+  function gone(li){
+    var ob = li.querySelector(".tf-book");
+    if(ob) ob.remove();
+    var bx = li.querySelector(".tf-bx");
+    if(bx) bx.innerHTML = goneHtml();
+    li.classList.add("tf-gone");
+  }
+
   var BYID = {};
   function paint(rows){
     BYID = {};
@@ -574,9 +666,7 @@
       return Promise.resolve();
     }
 
-    var qs = ["select=id,provider_id,provider_name,kind,region,course,play_at," +
-              "tee_at,holes,slots,green_fee,tel,note,left_n,photo," +
-              "course_sub,min_players,price_unit,cart_rule,cart_fee,caddie_rule,caddie_fee,apply_until,cancel_terms",
+    var qs = ["select=" + SEL,
               "kind=eq." + encodeURIComponent(KIND),
               "order=play_at.asc,tee_at.asc", "limit=100"];
     /* ⚠️⚠️ 묶음을 **지역 여럿**으로 풀어 서버에 보냅니다 (`in.(…)`).
@@ -729,11 +819,35 @@
     var bt = f.querySelector('button[type="submit"]');
     var msg = f.querySelector(".tf-msg");
     if(bt) bt.disabled = true;
-    call("book_teetime", {
-      tee: li.getAttribute("data-tee"), name: val("name"), tel: val("tel"),
-      people: val("people"), memo: val("memo"),
-      agree3rd: !!(ag && ag.checked)
-    }).then(function(){
+    var tid = li.getAttribute("data-tee");
+    var shown = BYID[tid] || null;
+    var keep = { name: val("name"), tel: val("tel"), people: val("people"), memo: val("memo") };
+    if(msg){ msg.hidden = false; msg.textContent = "지금 조건을 다시 확인하는 중입니다…"; }
+    /* ⚠️⚠️ 보내기 직전에 **한 번 더** 읽습니다 — 양식을 연 뒤에도 바뀔 수 있습니다 */
+    one(tid).then(function(now){
+      if(!now){ gone(li); return null; }
+      var diff = changed(shown, now);
+      if(diff.length){
+        swap(li, now, keep, "신청하시기 직전에 업체가 이 자리의 조건을 바꿨습니다. " +
+          "바뀐 내용을 확인하시고 동의에 다시 표시해 신청해 주세요.");
+        return null;
+      }
+      BYID[tid] = now;
+      return call("book_teetime", {
+        tee: tid, name: keep.name, tel: keep.tel,
+        people: keep.people, memo: keep.memo,
+        agree3rd: !!(ag && ag.checked),
+        /* 0085 의 신청 문이 마지막으로 맞춰 봅니다(0085 전 DB 는 이 칸을 그냥 둡니다) */
+        seen: seenOf(now)
+      }).then(function(){ return true; });
+    }, function(e){
+      window.amFailLog("booking/recheck", e);
+      if(bt) bt.disabled = false;
+      if(msg){ msg.hidden = false;
+        msg.textContent = "지금 조건을 확인하지 못해 신청을 보내지 않았습니다. 잠시 뒤 다시 눌러 주세요."; }
+      return null;
+    }).then(function(ok){
+      if(!ok) return;
       var bx = li.querySelector(".tf-bx");
       if(bx) bx.innerHTML = '<div class="none">' +
         '<h3>예약을 신청했습니다.</h3>' +
@@ -749,7 +863,15 @@
     }).catch(function(err){
       if(bt) bt.disabled = false;
       /* ⚠️ DB 가 거절한 **그 말**을 그대로 보여 줍니다 */
-      if(msg){ msg.hidden = false; msg.textContent = window.amErrText(err); }
+      var t2 = window.amErrText(err);
+      if(msg){ msg.hidden = false; msg.textContent = t2; }
+      /* 서버가 「조건이 바뀌었습니다」로 막았으면 그 카드를 새 조건으로 다시 그립니다 */
+      if(/조건이 바뀌었/.test(String(t2))){
+        one(tid).then(function(now){
+          if(!now){ gone(li); return; }
+          swap(li, now, keep, t2);
+        }, function(){});
+      }
     });
   });
 
@@ -775,26 +897,33 @@
       try{ window.history.pushState(null, "", myUrl(S.d)); }catch(_){}
       return void load();
     }
+    if(t.closest(".tf-reload")) return void load();
     var b = t.closest(".tf-book");
     if(!b) return;
     var li = b.closest("li[data-tee]");
     var bx = li ? li.querySelector(".tf-bx") : null;
     if(!bx) return;
-    if(bx.innerHTML.trim()){ bx.innerHTML = ""; return; }
-    /* 그 줄의 자료로 양식을 엽니다 (상호를 보여 주어야 하므로) */
-    /* ⚠️⚠️⚠️ **카드를 바꾸면 그 카드를 집는 자리도 같이** —
-       확정 시안 ① 로 바꾸면서 상호 칸이 `.tf-pv` → `.tfc-pv` 가 됐는데
-       여기를 안 고쳐서 **동의 문구의 상호가 빈 글자**가 됐습니다 — 그러면
-       「　에 성함과 연락처를 넘기는 데 동의」가 되어 **누구에게 주는지가 안
-       적힐 동의**입니다(제17조 제2항). 검사가 잡았습니다. */
-    var name = li.querySelector(".tfc-pv");
-    var left = /남은 자리 (\d+)/.exec(li.textContent || "");
-    var src = BYID[li.getAttribute("data-tee")] || {};
-    bx.innerHTML = bookForm({
-      provider_name: src.provider_name || (name ? name.textContent : ""),
-      left_n: src.left_n !== undefined ? src.left_n : (left ? Number(left[1]) : 1),
-      min_players: src.min_players, cancel_terms: src.cancel_terms
+    var again = !!b.closest(".tf-bx");
+    if(!again && bx.innerHTML.trim()){ bx.innerHTML = ""; return; }
+    /* ⚠️⚠️ 로그인 전 · 보유 기간이 빈 때는 그 안내만 냅니다(읽을 것이 없습니다) */
+    if(!(A && A.signedIn) || !KEEP){ bx.innerHTML = bookForm({}); return; }
+    var tid = li.getAttribute("data-tee");
+    var before = BYID[tid] || null;
+    bx.innerHTML = '<p class="myhint">이 자리의 지금 조건을 확인하는 중입니다…</p>';
+    one(tid).then(function(now){
+      if(!now){ gone(li); return; }
+      var diff = changed(before, now);
+      if(diff.length){
+        swap(li, now, null, "목록을 불러온 뒤 업체가 이 자리의 조건을 바꿔, 지금 조건으로 다시 보여 드립니다.");
+        return;
+      }
+      BYID[tid] = now;
+      bx.innerHTML = bookForm(now);
+    }, function(e){
+      window.amFailLog("booking/one", e);
+      bx.innerHTML = checkFailHtml();
     });
+    return;
   });
 
   window.amAuthAsk().then(function(a){

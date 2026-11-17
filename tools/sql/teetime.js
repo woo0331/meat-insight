@@ -463,6 +463,27 @@ module.exports = function(T){
   const live = psql(anon + "select green_fee from v_teetime_open where id = '" + T1 + "';" + back);
   ok("  게시 값은 바뀐다 (새 신청부터)", live === "900000", live);
 
+  /* ⚠️⚠️ 손님이 **본 조건**과 지금 조건이 다르면 서버가 받지 않습니다 (2026-11-17)
+     — 본 조건은 화면이 공개 보기에서 받은 그대로입니다(그 꼴을 흉내 내 보기 줄을 jsonb 로 만듭니다). */
+  const SEEN = psql("insert into auth.users (email) values ('tt-seen@x.test') returning id");
+  psql("insert into account (id, role, name) values ('" + SEEN + "','customer','본조건손님') on conflict (id) do nothing");
+  const oldSeen = "jsonb_build_object('green_fee',600000,'cancel_terms','3일 전까지 무료 취소')";
+  const sOld = denied(as(SEEN) + "select book_teetime(jsonb_build_object('tee','" + T1 + "','name','본조건손님','tel','010-5555-6666'," +
+                     "'people','2','agree3rd',true,'seen'," + oldSeen + "));" + back);
+  ok("⚠️⚠️ 옛 조건(바뀌기 전 그린피 · 취소 조건)을 보고 보낸 신청은 **서버가 받지 않는다**",
+     sOld.no && /조건이 바뀌었습니다/.test(sOld.why), sOld.why);
+  ok("  그때 신청 줄이 **안 생긴다**",
+     psql("select count(*) from teebook where tee_id = '" + T1 + "' and by_user = '" + SEEN + "'") === "0");
+  const nowSeen = "(select to_jsonb(v) from (select course, course_sub, play_at, tee_at, holes, green_fee, price_unit, " +
+                  "cart_rule, cart_fee, caddie_rule, caddie_fee, cancel_terms, note, min_players " +
+                  "from v_teetime_open where id = '" + T1 + "') v)";
+  const sNow = psql(as(SEEN) + "select book_teetime(jsonb_build_object('tee','" + T1 + "','name','본조건손님','tel','010-5555-6666'," +
+                    "'people','2','agree3rd',true,'seen'," + nowSeen + "));" + back);
+  ok("  지금 조건(공개 보기가 낸 그대로 — 시각 · 날짜 꼴 포함)을 보고 보내면 들어간다", /^[0-9a-f-]{36}$/.test(sNow), sNow);
+  ok("  그 신청에 담긴 조건이 **손님이 본 값**이다",
+     psql("select snap->>'green_fee' from teebook where id = '" + sNow + "'") === "900000");
+  psql("update teebook set state = 'canceled' where id = '" + sNow + "'");
+
   /* 접수 중지 · 마감 · 다시 열기 */
   const ps = allowed(as(OWN) + "select set_teetime_state(jsonb_build_object('id','" + T1 + "','to','paused'))::text;" + back);
   ok("접수 중지가 된다 · 남은 신청 수를 돌려준다", ps.yes && /"applied": 1/.test(ps.out), ps.out || ps.why);

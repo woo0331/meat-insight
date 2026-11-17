@@ -275,6 +275,12 @@
      없으면 주소만 바뀌고 **목록이 그대로** 있습니다. */
   W.addEventListener("popstate", function(){ paint(); });
 
+  /* ⚠️⚠️ 업체 자료가 **지금 값으로** 바뀌면(js/pvlive.js) 그 자료로 다시 그립니다 —
+     안 들으면 덮은 자료가 있어도 화면은 빌드가 찍은 옛 카드 그대로입니다. */
+  W.addEventListener("am:providers", function(e){
+    if(e && e.detail && e.detail.state === "ok") paint();
+  });
+
   /* ⚠️⚠️⚠️ 머리의 단추 이름을 **버킷이 켜졌을 때만** 시안의 말로
      바꿉니다. 시안은 「클럽 사진으로 상담 요청」인데, `INTAKE_BUCKET`
      이 없으면 `/match` 에 **사진 칸이 아예 안 그려집니다**(js/photo.js) —

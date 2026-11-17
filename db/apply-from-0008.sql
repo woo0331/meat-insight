@@ -21704,6 +21704,8 @@ commit;
 --      브라우저를 안 지난 파일(위치정보가 그대로인 원본)이 **공개 보기에 바로** 나갔습니다.
 --      이제 서버(api/upload.js 의 저장 완료 검사)가 실제 파일을 보고 `stored_at` 을 적어야만
 --      공개 보기 · 목록 카드에 나갑니다.
+--   ④ (2026-11-17 더함) 문의 문이 손님이 **본 값**을 마지막으로 맞춰 보고 그때 값을 문의에 담습니다
+--      (`listingask.price_at`). 상세를 열어 둔 사이 값이 바뀌면 옛 값을 보고 문의가 갔습니다.
 --
 -- 0082 · 0083 과 — **내용으로는 서로 상관이 없습니다**(사진 표 · 문 · 보기만 건드립니다).
 --   다만 번호가 그 뒤라, `schema_version` 차례를 지키려면 **0082 → 0083 → 0084** 로 올립니다.
@@ -21894,6 +21896,77 @@ create or replace view v_listing_photo_public as
      and f.stored_at is not null;
 grant select on v_listing_photo_public to anon, authenticated;
 
+-- ④ 문의 — 손님이 **본 값**을 서버가 마지막으로 맞춰 보고, 그때 값을 문의에 담습니다 (2026-11-17)
+--   ⚠️⚠️ 상세 화면을 열어 둔 사이 파는 분이 값을 바꾸면, 손님은 옛 값을 보고 문의를 보내고
+--   파는 분은 새 값으로 읽습니다. 화면이 보내기 직전에 다시 읽지만 그 틈까지 막으려고
+--   여기서 한 번 더 봅니다. ⚠️ 옛 화면은 `seen_price` 를 안 보내므로 그때는 안 봅니다.
+--   ⚠️ 문의는 **가격 약속이 아닙니다**(값은 둘이 이야기합니다) — 그래도 "문의하신 때의 값" 이
+--   남아야 나중에 "그 값에 판다고 했다" 를 둘이 같은 자료로 봅니다.
+alter table listingask add column if not exists price_at int;
+grant select (price_at) on listingask to authenticated;
+
+create or replace function ask_listing(p jsonb)
+returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  v_uid     uuid := auth.uid();
+  v_lst     uuid := nullif(btrim(coalesce(p->>'listing_id','')), '')::uuid;
+  v_msg     text := nullif(btrim(coalesce(p->>'msg','')), '');
+  v_contact text := nullif(btrim(coalesce(p->>'contact','')), '');
+  v_own     uuid;
+  v_st      text;
+  v_price   int;
+  v_id      uuid;
+begin
+  if v_uid is null then raise exception '로그인이 필요합니다'; end if;
+  if v_lst is null then raise exception '어느 매물인지 알 수 없습니다'; end if;
+  if v_contact is null then raise exception '연락처를 적어 주세요'; end if;
+  if length(v_contact) > 100 then raise exception '연락처가 너무 깁니다'; end if;
+  if v_msg is not null and length(v_msg) > 300 then
+    raise exception '남기실 말이 너무 깁니다 (300자)';
+  end if;
+  if p->>'agree_at' is null then
+    raise exception '개인정보 수집 · 이용 동의가 필요합니다';
+  end if;
+  if (p->>'agree_at')::timestamptz > now() + interval '5 minutes'
+     or (p->>'agree_at')::timestamptz < now() - interval '1 day' then
+    raise exception '동의 시각이 올바르지 않습니다';
+  end if;
+
+  select by_user, state, price into v_own, v_st, v_price from listing where id = v_lst for update;
+  if v_st is null then raise exception '그런 매물이 없습니다'; end if;
+  if v_st not in ('open','reserved') then
+    raise exception '지금은 문의를 받지 않는 매물입니다';
+  end if;
+  if coalesce(v_own = v_uid, false) then
+    raise exception '올리신 분은 문의하실 수 없습니다';
+  end if;
+  -- ⚠️⚠️ 본 값 — 숫자가 아니면 안 맞춰 보는 것이 아니라 **거절**합니다(꾸러미를 고친 것입니다)
+  if p ? 'seen_price' and jsonb_typeof(p->'seen_price') <> 'null' then
+    if jsonb_typeof(p->'seen_price') <> 'number' then
+      raise exception '보신 값을 알 수 없습니다';
+    end if;
+    if (p->>'seen_price')::numeric is distinct from v_price::numeric then
+      raise exception '값이 바뀌었습니다 — 바뀐 값을 확인하고 다시 문의해 주세요';
+    end if;
+  end if;
+
+  if (select count(*) from listingask
+       where by_user = v_uid and created_at > now() - interval '1 day') >= 30 then
+    raise exception '오늘은 더 문의할 수 없습니다 (하루 서른 건)';
+  end if;
+
+  insert into listingask (listing_id, by_user, msg, contact, agree_at, price_at)
+  values (v_lst, v_uid, v_msg, v_contact, (p->>'agree_at')::timestamptz, v_price)
+  returning id into v_id;
+  return v_id;
+exception
+  when unique_violation then
+    raise exception '이미 이 매물에 문의하셨습니다';
+end $$;
+revoke all on function ask_listing(jsonb) from public;
+grant execute on function ask_listing(jsonb) to authenticated;
+
 insert into schema_version (n, name) values (84, '0084_listing_photo_five')
   on conflict (n) do nothing;
 
@@ -21906,6 +21979,7 @@ commit;
 --   drop function if exists store_listing_photo(jsonb);
 --   update listingphoto set stored_at = coalesce(stored_at, created_at);
 --   delete from schema_version where n = 84;
+--   (문의의 `price_at` 칸은 남깁니다 — 문의 문은 0069 의 ask_listing 을 다시 붙여 넣으면 돌아갑니다)
 -- commit;
 -- 그 뒤 0069 의 claim_listing_photo · order_listing_photo 와 0080 의 v_listing_open,
 -- 0069 의 v_listing_photo_public 을 그 파일에서 꺼내 붙여 넣으면 열 장 · 저장 조건 없음으로 돌아갑니다.
@@ -22263,6 +22337,8 @@ declare
   v_pvst text;
   v_used int;
   v_new  uuid;
+  v_terms jsonb;
+  v_k    text;
 begin
   if v_me is null then raise exception '로그인하셔야 예약을 신청하실 수 있습니다'; end if;
   if v_id is null then raise exception '어느 자리인지 알 수 없습니다'; end if;
@@ -22280,6 +22356,26 @@ begin
   select state into v_pvst from provider
    where id = v_row.provider_id and is_test = false and listed = true;
   if v_pvst is null or v_pvst <> 'approved' then raise exception '지금은 그 업체의 자리를 받지 않습니다'; end if;
+
+  -- ⚠️⚠️ 손님이 **본 조건**과 지금 조건을 맞춰 봅니다 (2026-11-17).
+  --   화면은 양식을 열 때 · 보내기 직전에 다시 읽지만, 그 둘 사이에도 업체가
+  --   그린피 · 취소 조건을 바꿀 수 있습니다. 그러면 저장되는 신청 조건(snap)이
+  --   손님이 동의한 것과 달라집니다. 보낸 칸만 봅니다(옛 화면은 seen 을 안 보냅니다).
+  --   ⚠️ 신청 마감 시각(timestamptz)은 글자 꼴이 서버마다 달라 여기서 안 맞춥니다 —
+  --   그 칸은 위에서 **지금 시각과** 따로 봅니다.
+  if jsonb_typeof(p->'seen') = 'object' then
+    v_terms := jsonb_build_object(
+      'course', v_row.course, 'course_sub', v_row.course_sub, 'play_at', v_row.play_at,
+      'tee_at', v_row.tee_at, 'holes', v_row.holes, 'green_fee', v_row.green_fee,
+      'price_unit', v_row.price_unit, 'cart_rule', v_row.cart_rule, 'cart_fee', v_row.cart_fee,
+      'caddie_rule', v_row.caddie_rule, 'caddie_fee', v_row.caddie_fee,
+      'cancel_terms', v_row.cancel_terms, 'note', v_row.note, 'min_players', v_row.min_players);
+    for v_k in select jsonb_object_keys(p->'seen') loop
+      if v_terms ? v_k and (p->'seen'->v_k) is distinct from (v_terms->v_k) then
+        raise exception '자리 조건이 바뀌었습니다 — 바뀐 조건을 확인하고 다시 신청해 주세요';
+      end if;
+    end loop;
+  end if;
 
   if v_name is null then raise exception '성함을 적어 주세요'; end if;
   if v_tel  is null then raise exception '연락처를 적어 주세요'; end if;

@@ -38,33 +38,14 @@ const OUT  = path.join(ROOT, "js", "data", "providers.generated.js");
    **화면이 쓰는 칸만** 받아 적기 위해서입니다 (보기에 칸이 늘어도
    파일이 저절로 커지지 않게). */
 const VIEW = "v_provider_card";
-const COLS = "id,name,intro,regions,gu,subs,since,consult_hours,verified,brands,scale,contact_ways," +
-             /* ⚠️⚠️ 0057 — 사업자 신원정보 다섯. 전자상거래법 제20조 제2항이
-                손님에게 보이게 하라고 정한 것이라 **공개 자료**입니다.
-                ⚠️ 비어 있으면 화면에서 그 줄이 빠집니다 — 지어내지 않습니다.
-                ⚠️⚠️ 배정받을 때 쓰는 담당자 직통(provider_contact · 0013)은
-                **여기 없습니다** — 그쪽은 운영자와 그 업체만 봅니다. */
-               "ceo,addr,tel,email,brn," +
-               /* ⚠️⚠️⚠️ 0071 — 개인인가 사업자인가(제20조의4 ③) · 레슨 장소 ·
-                  레슨 목적. **안 가져오면 `/pro` 에 구분 표시가 안 나갑니다**
-                  (빌드가 찍는 화면이라 이 도구가 가져온 것만 들어갑니다).
-                  ⚠️ `kind` 가 null 이면 화면이 **아무 딱지도 안 찍습니다** —
-                  「미확인」 같은 말도 안 찍습니다(절대 규칙 1). */
-               "kind,place_name,lesson_goals," +
-               /* ⚠️⚠️ 0074 — 연습장 시설 속성 · 이용 시간. **안 가져오면
-                  `/cat/range` 의 시설 거르개가 영원히 0건**이고 카드에
-                  이용 시간이 안 나갑니다(빌드가 찍는 화면이라 이 도구가
-                  가져온 것만 들어갑니다 — 0071 과 같은 자리). */
-               /* ⚠️⚠️ 0076 · 0079 — 피팅 이용 방식 · 거래 조건. **안 가져오면
-                  `/cat/fitting` 거르개가 0건**이고 카드 · 업체 화면에서
-                  거래 조건이 빠집니다(0074 와 같은 자리). */
-               "range_opts,open_hours,fit_ways,fit_terms," +
-               /* ⚠️⚠️ 0079 — 「최신 등록순」이 읽는 칸입니다. **안 가져오면
-                  그 차례가 조용히 아무것도 안 바꿉니다**(에러 0줄) —
-                  시안의 「추천순」을 대신하는 자리라 셀 수 있는 값이
-                  반드시 있어야 합니다. */
-               "created_at," +
-               "is_test";
+/* ⚠️⚠️⚠️ 받을 칸 · 다듬는 규칙 · 가격 · 사진 붙이기는 **js/data/pvnorm.js 한 곳**입니다
+   (2026-11-17) — 화면이 열릴 때 같은 보기를 읽는 `js/pvlive.js` 도 그 파일을 씁니다.
+   전에는 여기서 칸을 받아 놓고 **열 칸만 남겨** 0057 의 사업자 신원정보 · 0071 의 구분 ·
+   0074 · 0076 · 0079 의 연습장 · 피팅 속성이 파일에 한 줄도 안 들어갔습니다.
+   칸마다의 까닭은 그 파일과 아래 마이그레이션 머리말에 있습니다
+   (0057 공개 사업자 정보 · 0071 개인/사업자 · 0074 연습장 · 0076 · 0079 피팅 · created_at). */
+const NORM = require("../js/data/pvnorm.js");
+const COLS = NORM.COLS;
 
 /* ⚠️⚠️ **검사용 업체를 두 겹으로 거릅니다** (0030 · 2차 지시서 §8).
    ① RLS 의 provider_public 이 anon 에게 `is_test = true` 를 안 내줍니다
@@ -85,7 +66,7 @@ const NOT_TEST = "&is_test=eq.false";
    가격이 없는 업체 · 업체가 없는 가격이 생기고, 그때 가격은 **아무
    화면에도 안 뜨면서 아무 에러도 안 납니다** (후기에서 겪은 자리). */
 const PVIEW = "v_provider_price_public";
-const PCOLS = "id,provider_id,sub,label,amount,unit,note";
+const PCOLS = NORM.PCOLS;
 
 /* ⚠️⚠️⚠️ **시설 사진도 같은 번에 가져옵니다** (0051 의
    `v_provider_photo_public`). 그 보기가 사진만 · 승인 · 공개 · 검사용
@@ -98,7 +79,7 @@ const PCOLS = "id,provider_id,sub,label,amount,unit,note";
    이름은 `PROVIDER_BUCKET` 에서 읽습니다 — 없으면 사진 없이 갑니다
    (지어낸 주소를 찍지 않습니다). */
 const FVIEW = "v_provider_photo_public";
-const FCOLS = "id,provider_id,path,mime,caption";
+const FCOLS = NORM.FCOLS;
 function pvBucket(){
   return String(process.env.PROVIDER_BUCKET || "").trim()
     .replace(/[^A-Za-z0-9_.-]/g, "").slice(0, 60);
@@ -191,18 +172,7 @@ if(!url || !key){
     process.exit(1);
   }
   const live = rows.filter(function(p){ return p.is_test !== true; });
-  const clean = live.map(function(p){
-    const o = { id: p.id, name: p.name };
-    ["intro", "since", "consult_hours", "scale"].forEach(function(k){
-      if(p[k] !== null && p[k] !== undefined && String(p[k]).trim() !== "") o[k] = p[k];
-    });
-    ["regions", "gu", "subs", "brands", "contact_ways"].forEach(function(k){
-      if(Array.isArray(p[k]) && p[k].length) o[k] = p[k];
-    });
-    if(p.verified && typeof p.verified === "object" && Object.keys(p.verified).length)
-      o.verified = p.verified;
-    return o;
-  });
+  const clean = NORM.clean(live);
   /* ── 가격 (0042) ──────────────────────────────────────────────
      ⚠️ 못 읽으면 **멈춥니다.** 가격 없이 찍으면 "가격을 안 올린 업체" 와
      "가격을 못 읽은 업체" 가 화면에서 똑같이 보입니다 — 그 둘은 다릅니다. */
@@ -227,28 +197,13 @@ if(!url || !key){
   /* ⚠️⚠️ **업체가 없는 가격은 버리지 않고 말합니다** — 그 가격은 어느
      화면에도 안 뜨면서 아무 에러도 안 납니다. 보기 둘이 어긋났다는
      뜻이고, 조용히 지나가면 다음 차수가 모릅니다. */
-  const byId = {};
-  clean.forEach(function(p){ byId[p.id] = p; });
-  const lost = [];
-  prices.forEach(function(x){
-    const p = byId[x.provider_id];
-    if(!p){ lost.push(x.provider_id); return; }
-    if(!p.prices) p.prices = [];
-    const o = { sub: x.sub, label: x.label, amount: Number(x.amount), unit: x.unit };
-    if(x.note !== null && x.note !== undefined && String(x.note).trim() !== "")
-      o.note = x.note;
-    p.prices.push(o);
-  });
-  if(lost.length)
-    console.warn("⚠️ 업체 목록에 없는 업체의 가격 " + lost.length + "건을 뺐습니다 — " +
-                 Array.from(new Set(lost)).join(" · ") +
-                 "\n   보기 둘이 어긋났습니다 (0032 · 0042 의 where 를 보세요).");
+  /* 붙이는 것은 사진까지 받은 뒤 **한 번에** 합니다(js/data/pvnorm.js 의 join) */
 
   /* ── 시설 사진 (0051) ────────────────────────────────────────
      ⚠️ 버킷 이름이 없으면 **사진 없이** 갑니다 — 주소를 지어내면
      깨진 그림이 손님 화면에 걸립니다 (절대 규칙 1 · 2). */
   const bk = pvBucket();
-  let shots = [], lostPh = [];
+  let shots = [];
   if(!bk){
     console.warn("⚠️ PROVIDER_BUCKET 이 없어 **시설 사진 없이** 가져왔습니다 — " +
                  "주소를 지어내지 않습니다 (업체가 올린 사진은 그대로 있습니다).");
@@ -273,22 +228,17 @@ if(!url || !key){
       console.error("❌ 시설 사진이 목록이 아닙니다 — 파일을 그대로 둡니다.");
       process.exit(1);
     }
-    const pub = url.replace(/\/+$/, "") + "/storage/v1/object/public/" + bk + "/";
-    shots.forEach(function(x){
-      const p = byId[x.provider_id];
-      /* ⚠️ 업체가 없는 사진은 **버리지 않고 말합니다** (가격과 같은 까닭) */
-      if(!p){ lostPh.push(x.provider_id); return; }
-      if(!p.photos) p.photos = [];
-      const o2 = { url: pub + String(x.path).split("/").map(encodeURIComponent).join("/") };
-      if(x.caption !== null && x.caption !== undefined &&
-         String(x.caption).trim() !== "") o2.caption = x.caption;
-      p.photos.push(o2);
-    });
-    if(lostPh.length)
-      console.warn("⚠️ 업체 목록에 없는 업체의 사진 " + lostPh.length + "건을 뺐습니다 — " +
-                   Array.from(new Set(lostPh)).join(" · ") +
-                   "\n   보기 둘이 어긋났습니다 (0032 · 0051 의 where 를 보세요).");
   }
+  const J = NORM.join(clean, prices, shots, bk ? NORM.pubBase(url, bk) : "");
+  const lost = J.lostPrice, lostPh = J.lostPhoto;
+  if(lost.length)
+    console.warn("⚠️ 업체 목록에 없는 업체의 가격 " + lost.length + "건을 뺐습니다 — " +
+                 Array.from(new Set(lost)).join(" · ") +
+                 "\n   보기 둘이 어긋났습니다 (0032 · 0042 의 where 를 보세요).");
+  if(lostPh.length)
+    console.warn("⚠️ 업체 목록에 없는 업체의 사진 " + lostPh.length + "건을 뺐습니다 — " +
+                 Array.from(new Set(lostPh)).join(" · ") +
+                 "\n   보기 둘이 어긋났습니다 (0032 · 0051 의 where 를 보세요).");
 
   const now = new Date().toISOString().replace("T", " ").slice(0, 16) + " UTC";
   write(clean, now);

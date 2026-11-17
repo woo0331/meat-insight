@@ -176,6 +176,12 @@
      없으면 주소만 바뀌고 **목록이 그대로** 있습니다. */
   W.addEventListener("popstate", function(){ paint(); });
 
+  /* ⚠️⚠️ 업체 자료가 **지금 값으로** 바뀌면(js/pvlive.js) 그 자료로 다시 그립니다 —
+     안 들으면 덮은 자료가 있어도 화면은 빌드가 찍은 옛 카드 그대로입니다. */
+  W.addEventListener("am:providers", function(e){
+    if(e && e.detail && e.detail.state === "ok") paint();
+  });
+
   /* 주소에 조건이 실려 들어오셨으면 그 자리에서 한 번 그립니다.
      ⚠️ 조건이 없으면 **다시 안 그립니다** — 빌드가 찍은 것과 같은
      목록이고, 괜히 다시 그리면 자바스크립트가 꺼진 분과 켜진 분이 다른

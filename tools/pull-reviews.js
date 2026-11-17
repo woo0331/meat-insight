@@ -32,7 +32,9 @@ const VIEW = "v_review_public";
 /* ⚠️ 보기가 이미 칸을 골라 담았습니다 — 여기서 또 적는 까닭은 **화면이
    쓰는 칸만** 받아 적기 위해서입니다 (보기에 칸이 늘어도 파일이 저절로
    커지지 않게). ⚠️ by_user · request_id 는 보기에 **없습니다**. */
-const COLS = "id,provider_id,rating,body,created_at,updated_at,reply,reply_at,who";
+/* ⚠️ 칸 · 다듬는 규칙은 js/data/pvnorm.js 한 곳입니다(화면이 열릴 때 읽는 js/pvlive.js 와 같이 씁니다) */
+const NORM = require("../js/data/pvnorm.js");
+const COLS = NORM.RCOLS;
 
 function write(rows, note){
   const body =
@@ -97,21 +99,16 @@ if(!url || !key){
   /* ⚠️⚠️ **둘째 자물쇠** — 보기의 where 가 느슨해지는 날 여기서
      멈춥니다 (0037 을 다시 붙여 넣으면 조용히 옛 판으로 돌아갑니다).
      조용히 거르지 않고 **몇 건을 걸렀는지 말합니다**. */
-  const bad = rows.filter(function(v){
-    return !(Number(v.rating) >= 1 && Number(v.rating) <= 5);
-  });
+  const R = NORM.reviews(rows);
+  const bad  = R.bad.filter(function(x){ return x.why === "rating"; });
+  const leak = R.bad.filter(function(x){ return x.why === "who"; });
   if(bad.length){
     console.error("❌ 별점이 1~5 밖인 후기 " + bad.length + "건이 넘어왔습니다 — " +
                   bad.map(function(v){ return v.id; }).join(" · "));
     console.error("   ⚠️ 0037 의 check 제약이 내려갔습니다. 지금 파일은 그대로 둡니다.");
     process.exit(1);
   }
-  /* ⚠️ 작성자 칸이 마스킹 안 된 채 오면 멈춥니다 — 보기가 바뀐 것입니다.
-     별표가 하나도 없고 두 글자 이상이면 본이름일 수 있습니다. */
-  const leak = rows.filter(function(v){
-    const w = String(v.who || "");
-    return w.length > 1 && w !== "회원" && w.indexOf("*") < 0;
-  });
+  /* ⚠️ 작성자 칸이 마스킹 안 된 채 오면 멈춥니다 — 보기가 바뀐 것입니다. */
   if(leak.length){
     console.error("❌ 작성자 이름이 마스킹되지 않은 후기 " + leak.length + "건이 " +
                   "넘어왔습니다 — " + leak.map(function(v){ return v.id; }).join(" · "));
@@ -119,25 +116,7 @@ if(!url || !key){
                   "(개인정보 보호법). 지금 파일은 그대로 둡니다.");
     process.exit(1);
   }
-
-  /* ⚠️ 비어 있는 칸은 **빼고** 적습니다 — null 이 파일에 쌓이면 화면이
-     "(미기재)" 를 찍고 싶어집니다 (절대 규칙 2). */
-  const clean = rows.map(function(v){
-    const o = { id: v.id, provider_id: v.provider_id,
-                rating: Number(v.rating), body: v.body,
-                created_at: v.created_at, who: v.who || "회원" };
-    if(v.reply && String(v.reply).trim() !== ""){
-      o.reply = v.reply;
-      if(v.reply_at) o.reply_at = v.reply_at;
-    }
-    /* ⚠️ 고친 후기에는 **고쳤다고 적습니다.** 처음 적은 날만 보이면
-       나중에 고친 글이 그날 쓴 글처럼 보입니다 (하지 않은 말을 했다고
-       하는 것과 같은 자리입니다).
-       ⚠️ 1분을 둡니다 — 넣을 때 updated_at 이 몇 밀리초 늦습니다. */
-    const t0 = Date.parse(v.created_at || ""), t1 = Date.parse(v.updated_at || "");
-    if(t0 && t1 && t1 - t0 > 60000) o.edited = true;
-    return o;
-  });
+  const clean = R.rows;
 
   const now = new Date().toISOString().replace("T", " ").slice(0, 16) + " UTC";
   write(clean, now);

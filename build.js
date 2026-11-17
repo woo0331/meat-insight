@@ -49,6 +49,9 @@ global.window = {};
  /* 비교견적 (0082) — 분류 화면이 진입 단추를 찍을지 compareOn 을 봅니다 */
  "js/data/compare.js",
  "js/data/lesson.js","js/card.js",
+ /* 업체 하나 화면 — ⚠️⚠️ 빌드와 브라우저가 **같은 함수**로 그립니다 (2026-11-17 ·
+    js/pvlive.js 가 지금 값으로 다시 그립니다). 다듬는 규칙(pvnorm)도 같이 씁니다. */
+ "js/data/pvnorm.js","js/pvpage.js",
  "js/data/legal-terms.js","js/data/legal-privacy.js"]
   .forEach(function(f){ require("./" + f); });
 /* ⚠️⚠️ **srcset 에 없는 파일을 적지 않게** — 빌드가 파일을 보고
@@ -629,6 +632,13 @@ if(require.main === module){
   });
   if(zBad.length){ zBad.forEach(function(m){ console.error("❌ " + m); }); process.exit(1); }
 
+  /* ⚠️⚠️ 업체 화면이 싣는 파일 — /pro/<id> 와 /pro(빌드 뒤에 승인된 업체)가 **같은 줄**을
+     씁니다. 브라우저가 업체의 지금 값을 읽어 같은 함수로 다시 그리므로 그 함수가 읽는
+     파일을 다 싣습니다(값을 읽는 파일을 싣는 것까지가 기능입니다). */
+  W.AM_PVLIVE_JS = ["/js/data/regions.js",
+    "/js/data/providers.generated.js", "/js/data/providers.js",
+    "/js/data/reviews.generated.js", "/js/data/review.js", "/js/data/lesson.js",
+    "/js/data/pvnorm.js", "/js/pvpage.js", "/js/pvlive.js"];
   var prov = require("./pages/provider.js");
   /* ⚠️⚠️ **골프장 화면은 자료가 있을 때만 찍힙니다** (0066). 0곳이면
      한 장도 안 찍고, 그게 맞습니다 — 없는 골프장 주소를 만들어 두면
@@ -650,6 +660,7 @@ if(require.main === module){
     .concat(W.AM_CATS.map(function(c){ return cat.build(c); }))
     .concat(flat)
     .concat(provs.map(function(p){ return prov.build(p); }))
+    .concat([require("./pages/prolive.js").build()])
     .concat(cours.map(function(c){ return crs.build(c); }));
 
   /* ⚠️⚠️ 찍기 전에 **주소가 vercel.json 에 잡아먹히는지** 먼저 봅니다.

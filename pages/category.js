@@ -1168,35 +1168,50 @@ function pvBlock(c, k, list, pvItems, opt){
      받지만 하위 칩이 전부 제 글 목록으로 가고 AM_ASK 도 비어 있어,
      업체가 0곳인 동안은 "아직 등록된 업체가 없습니다" 한 줄만 남습니다.
      그 한 줄은 손님이 할 수 있는 일이 없는 자리입니다 (절대 규칙 2). */
-  if(!list.length && !pvItems.length && !ask) return "";
+  /* ⚠️⚠️⚠️ **두 꼴을 다 찍습니다** (2026-11-17) — 업체 자료를 브라우저가 지금 값으로 다시
+     읽으므로(js/pvlive.js), 빌드 때 0곳이던 분류에 업체가 생기거나 그 반대가 될 수 있습니다.
+     있을 때 · 0곳일 때를 둘 다 찍고 지금 맞는 쪽만 보이게 두면, 브라우저는 **보이는 쪽만
+     바꾸고** 카드 격자만 같은 카드 함수로 갈아 끼웁니다(글을 브라우저에 두 벌로 적지 않습니다).
+     ⚠️ 할 말이 하나도 없던 덩이(인력 · 0곳 · 칩 없음)는 **숨긴 채로** 찍습니다 — 업체가
+     생기는 날 세웁니다(`data-pvhide`). */
+  var empty = (!list.length && !pvItems.length && !ask);
   /* ⚠️⚠️ `quiet` — 목록과 0곳 안내를 **다른 구간이 이미 냈을 때**
      씁니다(연습장). 하위 칩과 매칭 요청은 그대로 남깁니다 — 그
      둘은 **업체찾기로 가는 길**이라 지우면 갈 자리가 없어집니다. */
   if(opt && opt.quiet){
+    if(empty) return "";
     /* ⚠️⚠️ `noChips` — 하위 칩도 **다른 구간이 이미 냈을 때** 씁니다
        (피팅의 서비스 종류 탭). 두 번 내면 같은 여섯이 한 화면에
-       두 줄 서고, 칩을 세는 검사가 두 배를 셎니다. */
+       두 줄 서고, 칩을 세는 검사가 두 배를 셉니다. */
     var cz = (opt.noChips ? "" : chips(c, pvItems, k.pvOn || k.subs));
     if(!cz && !ask) return "";
     return '<section class="sec sec-alt"><div class="wrap">' +
       cz + ask +
     '</div></section>';
   }
+  var on = list.length > 0;
+  var hid = function(st){ return (st === "list" ? !on : on) ? ' hidden' : ''; };
   /* ⚠️ 칩 위의 길잡이 한 줄은 **업체가 있을 때와 0곳일 때가 다릅니다** */
-  var note = k.pvNote !== undefined ? k.pvNote
-           : (list.length ? (k.pvOn || k.subs) : k.subs);
-  if(list.length)
-    return '<section class="sec sec-alt"><div class="wrap">' +
-      '<div class="sec-hd"><h2>' + esc(c.name) + ' 업체 ' + W.won(list.length) + '곳</h2>' +
+  var noteOn  = k.pvNote !== undefined ? k.pvNote : (k.pvOn || k.subs);
+  var noteOff = k.pvNote !== undefined ? k.pvNote : k.subs;
+  var notes = pvItems.length
+    ? (noteOn === noteOff
+        ? (noteOn ? '<p class="chips-n">' + esc(noteOn) + '</p>' : '')
+        : (noteOn  ? '<p class="chips-n" data-pvstate="list"' + hid("list") + '>' + esc(noteOn) + '</p>' : '') +
+          (noteOff ? '<p class="chips-n" data-pvstate="zero"' + hid("zero") + '>' + esc(noteOff) + '</p>' : ''))
+    : '';
+  return '<section class="sec sec-alt" data-pvblock="' + esc(c.key) + '"' +
+      (empty ? ' data-pvhide hidden' : '') + '><div class="wrap">' +
+    '<div class="sec-hd" data-pvstate="list"' + hid("list") + '><h2>' + esc(c.name) + ' 업체 <span data-pvn>' +
+      W.won(list.length) + '</span>곳</h2>' +
       '<p>골프올인원은 통신판매중개자이며 거래 당사자가 아닙니다.</p></div>' +
-      chips(c, pvItems, note) +
-      card.grid(list) + ask +
-    '</div></section>';
-  return '<section class="sec sec-alt"><div class="wrap">' +
-    '<div class="sec-hd"><h2>' + esc(k.pvH || k.zeroT) + '</h2>' +
-    '<p>' + esc(k.pvH ? k.pvD : k.zeroD) + '</p></div>' +
-    chips(c, pvItems, note) +
-    '<div class="none">' +
+    (empty ? '' :
+    '<div class="sec-hd" data-pvstate="zero"' + hid("zero") + '><h2>' + esc(k.pvH || k.zeroT) + '</h2>' +
+      '<p>' + esc(k.pvH ? k.pvD : k.zeroD) + '</p></div>') +
+    notes + chips(c, pvItems, null) +
+    '<div data-pvgrid' + hid("list") + '>' + (on ? card.grid(list) : '') + '</div>' +
+    (empty ? '' :
+    '<div class="none" data-pvstate="zero"' + hid("zero") + '>' +
       (k.pvH ? '<h3>' + esc(k.zeroT) + '</h3><p>' + esc(k.zeroD) + '</p>' : '') +
       /* ⚠️⚠️ 매칭 요청 단추가 **한 화면에 둘**이 되지 않게 — 아래
          `asksBlock` 이 무엇을 여쭙는지까지 말해 주므로 그쪽을 남깁니다. */
@@ -1205,7 +1220,7 @@ function pvBlock(c, k, list, pvItems, opt){
           icon(k.cta[2], 20) + esc(k.cta[1]) + '</a>'
         : '') +
       nowOpen(c) +
-    '</div>' + ask +
+    '</div>') + ask +
   '</div></section>';
 }
 
@@ -1840,7 +1855,17 @@ exports.build = function(c){
       : [])
     .concat(c.key === "travel"
       ? ["/js/data/trip.js", "/js/trip.js"]
-      : []),
+      : [])
+    /* ⚠️⚠️⚠️ 업체를 받는 분류는 **업체 자료를 지금 값으로 다시 읽습니다** (2026-11-17 ·
+       js/pvlive.js) — 카드를 다시 그리는 함수(`card.js`) · 평점(`review.js`) · 다듬는 규칙
+       (`pvnorm.js`)을 같이 싣습니다(값을 읽는 파일을 싣는 것까지가 기능입니다).
+       ⚠️ 같은 파일이 두 번 실리지 않게 **처음 것만** 남깁니다(레슨 · 연습장 · 피팅 · 마켓은
+       위에서 이미 싣습니다 — 차례는 그쪽이 맞습니다). */
+    .concat(c.provider
+      ? ["/js/data/reviews.generated.js", "/js/data/review.js", "/js/card.js",
+         "/js/data/pvnorm.js", "/js/pvpage.js", "/js/pvlive.js"]
+      : [])
+    .filter(function(f, i, a){ return a.indexOf(f) === i; }),
     /* ⚠️⚠️ **차례 한 줄이 이 화면의 뜻입니다** — 찾는 칸이 맨 위,
        그 다음이 **지금 실제로 되는 것**(회원 것), 그 다음이 업체 것.
        업체가 실제로 있으면 그때만 업체가 앞으로 옵니다. */

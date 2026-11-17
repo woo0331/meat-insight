@@ -70,7 +70,10 @@ function pvCount(){
 const PV = pvCount();
 
 /* ── ② 찍힌 /pro/<id> 가 자료와 수가 맞는가 ─────────────────────── */
-const proDirs = HTML.filter(function(f){ return /^pro\//.test(f); });
+/* ⚠️ 2026-11-17 — `pro/index.html` 은 업체 화면이 아니라 **빌드 뒤에 승인된 업체를 브라우저가
+   그리는 빈 자리**(`/pro?id=` · pages/prolive.js)입니다. 업체 화면은 `pro/<id>/` 폴더만 셉니다.
+   그 빈 자리에 씨앗 표식이 섞이지 않았는지는 ③ 이 화면 전부를 훑어 봅니다. */
+const proDirs = HTML.filter(function(f){ return /^pro\/[^\/]+\//.test(f); });
 ok("② 찍힌 업체 화면 수가 자료의 업체 수와 같다",
    proDirs.length === PV,
    "찍힌 " + proDirs.length + "장 · 자료 " + PV + "곳" +

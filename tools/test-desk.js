@@ -4800,6 +4800,9 @@ function boardsOf(){
       await g.p.evaluate(function(){
         window.AM_PROVIDERS = [{ id:"t-range", name:"남서울 실내연습장",
           regions:["seoul"], subs:["rg-in"] }];
+        /* ⚠️ 2026-11-17 — "빌드에 있다" 는 업체 화면 파일이 실제로 찍혔다는 뜻입니다(js/pvlive.js 의
+           AM_PROVIDERS_BUILT). 자료만 넣고 그 표를 안 고치면 빌드 뒤 승인 업체로 읽혀 /pro?id= 로 갑니다. */
+        window.AM_PROVIDERS_BUILT = Object.assign(window.AM_PROVIDERS_BUILT || {}, { "t-range": true });
       });
       await g.p.evaluate(function(){
         return window.amAdFill(document.querySelector('[data-adslot="main_hero"]'));

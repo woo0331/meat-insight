@@ -13,6 +13,10 @@ for f in index.html meat_insight_apply.html meat_insight_calculator.html meat_in
   perl -0pi -e 's/(<meta charset="?UTF-8"?\s*\/?>)/$1\n<meta name="robots" content="noindex,nofollow"\/>\n<script src="\/test-guard.js"><\/script>/i' "$OUT/$f"
   grep -q test-guard "$OUT/$f" || { echo "끼우지 못했습니다: $f"; exit 1; }
 done
+# 옛 공용 Supabase(골프올인원과 같은 프로젝트) 주소 · 키와 옛 결제 테스트 키를 떼어 냅니다 (2026-11-17)
+# ABOUTMEAT 저장소에 골프 쪽 설정이 한 글자도 남지 않게 합니다. test-guard.js 가 이 주소로 가는 요청도 막습니다.
+perl -pi -e "s#https://igignylgzjphtnyxhhsd\.supabase\.co#https://aboutmeat-disconnected.supabase.co#g; s#'eyJ[A-Za-z0-9_.-]+'#'disconnected'#g; s#'sb_publishable_[A-Za-z0-9_]+'#'disconnected'#g; s#'test_ck_[A-Za-z0-9]+'#'disconnected'#g" "$OUT"/*.html
+if grep -l -E "igignylgzjphtnyxhhsd|eyJhbGci|sb_publishable_|test_ck_" "$OUT"/*.html; then echo "옛 주소 · 키가 남았습니다"; exit 1; fi
 # 테스트 사이트 전용 화면 수정 (커뮤니티 예시 글 · 고정 시세 숨김 · 폰 머리말)
 node "$(dirname "$0")/patch-test.js" "$OUT/meat_insight_main.html"
 cat > "$OUT/test-guard.js" <<'GUARD'

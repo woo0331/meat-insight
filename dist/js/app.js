@@ -470,6 +470,7 @@ function render(){
   initReveal();
 
   if(nowPath() === "/my" && typeof window.myLoadDb === "function") window.myLoadDb();
+  if(nowPath() === "/my" && typeof window.myLkInit === "function") window.myLkInit();
   if(nowPath() === "/intake" && typeof window.intakePaint === "function") window.intakePaint();
 
   if(typeof window.pickPaint === "function") window.pickPaint();

@@ -1136,6 +1136,77 @@ const ADM_DEAL = [
     await ctx.close();
   }
 
+  console.log("\nW03 본인 확인 후 조회 — /my 의 두 영역");
+  for(const W of [1440, 390]){
+    /* ① 닫힘 — 조회가 안 열려 있으면 사실만 적고 폼이 없다 */
+    {
+      const ctx = await br.newContext({ viewport:{ width:W, height:900 } });
+      const pg = await ctx.newPage(); const errs = [];
+      pg.on("pageerror", e => errs.push(String(e)));
+      await pg.route("**/api/session", r => r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ auth:false, signedIn:false, lookup:false, intake:{ quote:false } }) }));
+      await pg.goto(base + "/my", { waitUntil:"networkidle" }); await pg.waitForTimeout(400);
+      const st = await pg.evaluate(() => ({
+        hs: [].slice.call(document.querySelectorAll("#view .my-area-hd h2")).map(h => h.textContent.trim()),
+        off: !!document.querySelector('#my-lk [data-lk="off"]'), form: !!document.querySelector("#my-lk form") }));
+      ok(W + "px 닫힘 — 두 영역 제목이 갈려 있다",
+         st.hs.indexOf("본인 확인 후 조회하는 신청 내역") >= 0 && st.hs.indexOf("이 브라우저에 저장한 준비 기록") >= 0, JSON.stringify(st.hs));
+      ok(W + "px 닫힘 — 열리지 않았다는 사실만 · 폼 없음", st.off && !st.form, JSON.stringify(st));
+      ok(W + "px 닫힘 — JS 에러 0", errs.length === 0, errs.join(" | "));
+      await ctx.close();
+    }
+    /* ② 열림 — 번호+전화 → 인증번호 → 결과. 토큰은 머리로만 · 이 탭에만 */
+    {
+      const ctx = await br.newContext({ viewport:{ width:W, height:900 } });
+      const pg = await ctx.newPage(); const errs = [], seen = [];
+      pg.on("pageerror", e => errs.push(String(e)));
+      await pg.route("**/api/session", r => r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ auth:false, signedIn:false, lookup:true, intake:{ quote:false } }) }));
+      await pg.route("**/api/lookup", r => {
+        const q = r.request(), b = JSON.parse(q.postData() || "{}");
+        seen.push({ url:q.url(), b, h:q.headers() });
+        if(b.op === "start") return r.fulfill({ status:200, contentType:"application/json",
+          body: JSON.stringify({ ok:true, challenge:"11111111-2222-3333-4444-555555555555", say:"인증번호를 보냈습니다.", testCode:"123456" }) });
+        if(b.op === "verify") return b.code === "123456"
+          ? r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify({ ok:true, token:"T".repeat(43) }) })
+          : r.fulfill({ status:400, contentType:"application/json", body: JSON.stringify({ ok:false, error:"인증번호가 맞지 않습니다." }) });
+        return r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify({ ok:true, data:{
+          no:"SW-AAAA-0001", created_at:"2026-11-18T00:00:00Z", side:"start", state:"check",
+          rollup:{ total:2, open:1, done:1, lost:0, hold:0, phase:"open" },
+          items:[{ service_id:"interior", state:"done" }, { service_id:"demolish", state:"consult" }],
+          notes:[{ at:"2026-11-18T03:00:00Z", body:"담당자가 확인하고 있습니다." }] } }) });
+      });
+      await pg.goto(base + "/my", { waitUntil:"networkidle" }); await pg.waitForTimeout(400);
+      await pg.click("#my-lk form button[type=submit]"); await pg.waitForTimeout(200);
+      /* 비워 두면 브라우저의 required 가 먼저 막습니다 — 보내지 않는 것이 요점입니다 */
+      ok(W + "px 열림 — 비워 두면 안 보냄", seen.length === 0);
+      await pg.evaluate(() => window.myLkStart({ preventDefault(){} })); await pg.waitForTimeout(150);
+      ok(W + "px 열림 — 직접 불러도 빈 값이면 안 보내고 알림", seen.length === 0 && (await pg.locator("#my-lk [role=alert]").count()) === 1);
+      await pg.fill("#my-lk-no", "SW-AAAA-0001"); await pg.fill("#my-lk-tel", "010-1234-5678");
+      await pg.click("#my-lk form button[type=submit]"); await pg.waitForTimeout(400);
+      ok(W + "px 열림 — 인증번호 칸으로 넘어가고 초점이 거기", (await pg.evaluate(() => document.activeElement && document.activeElement.id)) === "my-lk-code");
+      await pg.fill("#my-lk-code", "000000"); await pg.click('#my-lk [data-lk="code"] button[type=submit]'); await pg.waitForTimeout(400);
+      ok(W + "px 열림 — 틀리면 그 자리에서 알림", (await pg.locator("#my-lk [role=alert]").textContent()).includes("맞지 않습니다"));
+      await pg.fill("#my-lk-code", "123456"); await pg.click('#my-lk [data-lk="code"] button[type=submit]'); await pg.waitForTimeout(600);
+      const v = await pg.locator('#my-lk [data-lk="view"]').textContent().catch(() => "");
+      ok(W + "px 열림 — 접수번호 · 진행 상태 · 서비스별 상태 · 안내",
+         v.includes("SW-AAAA-0001") && v.includes("진행 중") && v.includes("진행 1 · 완료 1") && v.includes("담당자가 확인하고 있습니다"), v.slice(0, 160));
+      const rd = seen.find(x => x.b.op === "read") || {};
+      ok(W + "px 열림 — 토큰은 머리로만 (URL · 몸통에 없음)",
+         rd.h && rd.h["x-lookup-token"] === "T".repeat(43) && rd.url.indexOf("T".repeat(10)) < 0 && JSON.stringify(rd.b).indexOf("TTTT") < 0, JSON.stringify(rd.b));
+      const stor = await pg.evaluate(() => ({ s: sessionStorage.getItem("am.lookup.v1") || "", l: JSON.stringify(localStorage) }));
+      ok(W + "px 열림 — 확인은 이 탭(sessionStorage)에만 · 번호 · 전화는 어디에도 안 남김",
+         stor.s.indexOf("TTTT") >= 0 && stor.l.indexOf("TTTT") < 0 && (stor.s + stor.l).indexOf("1234") < 0 && (stor.s + stor.l).indexOf("SW-AAAA") < 0, JSON.stringify(stor).slice(0, 160));
+      ok(W + "px 열림 — 가로 스크롤 없음", await pg.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+      await pg.reload({ waitUntil:"networkidle" }); await pg.waitForTimeout(600);
+      ok(W + "px 열림 — 새로고침해도 30분 안에는 다시 묻지 않음", (await pg.locator('#my-lk [data-lk="view"]').count()) === 1);
+      await pg.click('#my-lk [data-lk="view"] button'); await pg.waitForTimeout(300);
+      ok(W + "px 열림 — 확인 끝내기 → 토큰 지움", (await pg.evaluate(() => sessionStorage.getItem("am.lookup.v1"))) === null);
+      ok(W + "px 열림 — JS 에러 0", errs.length === 0, errs.join(" | "));
+      await ctx.close();
+    }
+  }
+
   await br.close(); srv.close();
   console.log("\n" + (fail ? "❌" : "✅") + " 통과 " + pass + " · 실패 " + fail);
   process.exit(fail ? 1 : 0);

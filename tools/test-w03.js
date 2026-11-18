@@ -57,6 +57,7 @@ const as = (u, sql) => psql("set role authenticated; select become('" + u + "');
 const asErr = (u, sql) => err("set role authenticated; select become('" + u + "'); " + sql);
 const svc = sql => psql("set role service_role; " + sql);
 
+(async () => {
 try{
   start();
   execFileSync(path.join(BIN, "createdb"), ["-h", DIR, "-p", String(PORT), "-U", "postgres", "w03"]);
@@ -163,6 +164,92 @@ try{
   ok(st.send === false && !st.dest, "한 신청에 한 시간 세 번까지 — 넷째는 안 보냄 (같은 모양)", JSON.stringify(st));
   ok(psql("select count(*) from lookup_challenge where code_hash ~ '^[0-9]{6}$'") === "0", "인증번호 원문이 DB 에 없음 (해시만)");
   ok(psql("select count(*) from audit_log where to_state='lookup:verified' and (data::text ~ '1234' or data::text ~ 'tok')") === "0", "조회 기록에 연락처 · 토큰이 없음");
+
+  /* ══ E2E — 합성 신청 1건: API 로 저장 → 관리자 확인 · 공개 안내 → 본인 조회 ══════════
+     api/quote.js · api/lookup.js 를 **그대로** 부르고, 그 둘이 PostgREST 로 부르는
+     /rest/v1/rpc/<함수> 를 이 로컬 Postgres 에서 service_role 로 실행해 돌려줍니다.
+     (PostgREST 자체는 흉내입니다 — 운영 Supabase 를 거친 확인은 미검증입니다.) */
+  console.log("\n▶ E2E — 접수 API → 관리자 → 본인 조회 API (로컬 Postgres)");
+  const ENVK = ["STOREWAY_INTAKE_OPEN","SUPABASE_URL","SUPABASE_SERVICE_KEY","LOOKUP_OTP_ADAPTER","INTAKE_WEBHOOK_URL","VERCEL_ENV","LOOKUP_HMAC_KEY"];
+  const keepEnv = {}; ENVK.forEach(k => { keepEnv[k] = process.env[k]; delete process.env[k]; });
+  Object.assign(process.env, { STOREWAY_INTAKE_OPEN:"quote", SUPABASE_URL:"https://db.test", SUPABASE_SERVICE_KEY:"svc-test",
+    LOOKUP_OTP_ADAPTER:"test", INTAKE_WEBHOOK_URL:"https://hook.test/x" });
+  const out = []; const realFetch = global.fetch;
+  const reply = (st, obj) => ({ ok: st < 300, status: st, headers:{ get: () => null },
+    text: async () => obj === undefined || obj === null ? "" : JSON.stringify(obj), json: async () => obj });
+  global.fetch = async (url, opt) => {
+    const u = String(url), m = u.match(/\/rest\/v1\/rpc\/([a-z_]+)$/);
+    if(m){
+      const a = JSON.parse((opt && opt.body) || "{}");
+      const parts = Object.keys(a).map(k => k + " := " + (a[k] === null ? "null" :
+        typeof a[k] === "object" ? lit(a[k]) : "'" + String(a[k]).replace(/'/g, "''") + "'"));
+      try{ const v = psql("set role service_role; select " + m[1] + "(" + parts.join(", ") + ")");
+           let d = null; if(v !== ""){ try{ d = JSON.parse(v); }catch(_){ d = v; } }
+           return reply(200, d); }
+      catch(e){ return reply(400, { message: String(e.stderr || e.message).split("\n")[0] }); }
+    }
+    if(/\/rest\/v1\/request\?/.test(u)) return reply(200, []);
+    out.push(u); return reply(200, {});
+  };
+  const fresh = n => { Object.keys(require.cache).forEach(k => { if(k.indexOf(path.join(ROOT, "api") + path.sep) === 0) delete require.cache[k]; });
+                       return require(path.join(ROOT, "api", n)); };
+  const R = (body, h) => ({ method:"POST", body, headers: Object.assign({ origin:"https://storeway.co.kr", host:"storeway.co.kr" }, h || {}) });
+  const S = () => { const r = { code:0, body:null, headers:{} }; r.status = c => (r.code = c, r);
+                    r.json = b => (r.body = b, r); r.setHeader = (k, v) => { r.headers[k.toLowerCase()] = v; }; return r; };
+  const Q = { kind:"quote", name:"합성고객E2E", tel:"010-7777-3333", region:"서울", q:"원문 비밀 XYZ789",
+    items:[{ id:"interior" }, { id:"demolish" }], agree:true, idem:"e2e-1" };
+  let r = S(); await fresh("quote.js")(R(Q), r);
+  ok(r.code === 200 && /^SW-/.test(r.body.no), "접수 API — 200 과 접수번호 (저장 뒤)", JSON.stringify(r.body));
+  const no = r.body.no;
+  ok(psql("select count(*) from request where no='" + no + "'") === "1" &&
+     psql("select count(*) from request_item i join request q on q.id=i.request_id where q.no='" + no + "'") === "2",
+     "T02 — 부모 요청 1 · 서비스별 하위 요청 2 저장");
+  ok(psql("select string_agg(status, ',') from notify_job j join request q on q.id=j.request_id where q.no='" + no + "'") === "sent",
+     "T05 — 저장 뒤 운영자 알림 작업이 보냄으로 기록됨 (개인정보 없는 웹훅)");
+  ok(out.length >= 1 && !out.join("").includes("7777"), "웹훅 주소 외에 연락처가 URL 에 안 실림");
+  r = S(); await fresh("quote.js")(R(Q), r);
+  ok(r.code === 200 && r.body.no === no && psql("select count(*) from request where idem='e2e-1'") === "1", "T03 — 같은 키로 다시 보내도 한 건", JSON.stringify(r.body));
+  const idE = psql("select id from request where no='" + no + "'");
+  const fe = JSON.parse(as(STAFF, "select json_agg(row_to_json(t)) from admin_inbox_flags(array['" + idE + "']::uuid[]) t"))[0];
+  ok(fe.tel_mask === "010-****-3333" && fe.services.join() === "interior,demolish" && fe.form === "quote",
+     "관리자 — 목록 표시로 확인 (가린 번호 · 서비스 · 종류)", JSON.stringify(fe));
+  as(STAFF, "select add_request_note('" + idE + "','public','접수를 확인했습니다. 담당자가 조건을 보고 있습니다.')");
+  as(STAFF, "select add_request_note('" + idE + "','memo','내부용 — 고객 성향 메모')");
+
+  const LK = fresh("lookup.js");
+  r = S(); await LK(R({ op:"start", no:no.toLowerCase(), tel:"01077773333" }), r);
+  ok(r.code === 200 && r.body.challenge && /^[0-9]{6}$/.test(r.body.testCode || ""), "본인 조회 시작 — 시험용 어댑터가 번호를 줌", JSON.stringify(r.body).replace(/"testCode":"\d+"/, '"testCode":"******"'));
+  const ch = r.body.challenge, code = r.body.testCode;
+  const r2 = S(); await LK(R({ op:"start", no:no, tel:"010-0000-0000" }), r2);
+  ok(r2.code === 200 && r2.body.say === r.body.say && !r2.body.testCode && Object.keys(r2.body).sort().join() === "challenge,ok,say",
+     "전화가 틀려도 같은 말 · 같은 모양 (안 맞았다고 갈라 말하지 않음)", JSON.stringify(r2.body));
+  r = S(); await LK(R({ op:"read" }, { "x-lookup-token": "x".repeat(40) }), r);
+  ok(r.code === 401, "토큰 없이(가짜 토큰) 읽기 → 401");
+  r = S(); await LK(R({ op:"verify", challenge:ch, no:no, code: code === "000000" ? "000001" : "000000" }), r);
+  ok(r.code === 400 && /맞지 않습니다/.test(r.body.error), "틀린 인증번호 → 400", JSON.stringify(r.body));
+  r = S(); await LK(R({ op:"verify", challenge:ch, no:no, code:code }), r);
+  ok(r.code === 200 && r.body.token, "맞는 인증번호 → 조회 토큰");
+  const tok = r.body.token;
+  r = S(); await LK(R({ op:"verify", challenge:ch, no:no, code:code }), r);
+  ok(r.code === 400 && /이미 쓴/.test(r.body.error), "같은 인증번호 재사용 → 막힘", JSON.stringify(r.body));
+  r = S(); await LK(R({ op:"read" }, { "x-lookup-token": tok }), r);
+  const dj = JSON.stringify(r.body);
+  ok(r.code === 200 && r.body.data.no === no && r.body.data.items.length === 2 && r.body.data.notes.length === 1,
+     "본인 조회 — 번호 · 서비스 둘 · 공개 안내 하나", dj.slice(0, 160));
+  ok(!dj.includes("합성고객E2E") && !dj.includes("7777") && !dj.includes("XYZ789") && !dj.includes("내부용"),
+     "본인 조회에 성함 · 연락처 · 원문 · 내부 메모가 없음");
+  ok(psql("select count(*) from lookup_session where token_hash = '" + tok + "'") === "0", "DB 에는 토큰 원문이 없음 (해시만)");
+
+  process.env.VERCEL_ENV = "production";
+  r = S(); await fresh("lookup.js")(R({ op:"start", no:no, tel:"01077773333" }), r);
+  ok(r.code === 503 && r.body.closed === true && !r.body.testCode, "운영(production)에서는 시험용 어댑터가 막힘 → 503");
+  delete process.env.VERCEL_ENV; delete process.env.LOOKUP_OTP_ADAPTER;
+  r = S(); await fresh("lookup.js")(R({ op:"start", no:no, tel:"01077773333" }), r);
+  ok(r.code === 503, "어댑터가 없으면 503 (열린 척하지 않음)");
+  r = S(); await fresh("lookup.js")(R({ op:"start", no:no, tel:"01077773333" }, { origin:"https://evil.example" }), r);
+  ok(r.code === 403, "다른 출처 → 403");
+  global.fetch = realFetch;
+  ENVK.forEach(k => { if(keepEnv[k] === undefined) delete process.env[k]; else process.env[k] = keepEnv[k]; });
 }catch(e){
   bad++; console.log("  ❌ 검사가 멈췄습니다 — " + String(e.stderr || e.message).split("\n").slice(0, 3).join(" "));
 }finally{
@@ -170,3 +257,4 @@ try{
 }
 console.log("\n" + (pass + bad) + "건 중 " + pass + "건 통과 · " + bad + "건 실패");
 process.exit(bad ? 1 : 0);
+})();

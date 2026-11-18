@@ -629,6 +629,7 @@ function render(){
      않습니다. ⚠️ 다른 화면에서는 묻지 않습니다 — 한 번씩 더 가는
      요청은 그만큼 느려집니다. */
   if(nowPath() === "/my" && typeof window.myLoadDb === "function") window.myLoadDb();
+  if(nowPath() === "/my" && typeof window.myLkInit === "function") window.myLkInit();
   if(nowPath() === "/intake" && typeof window.intakePaint === "function") window.intakePaint();
   /* 고르신 서비스 — 하단 띠 높이를 재서 본문을 그만큼 비우고, 단추
      글씨의 개수를 맞춥니다 (2026-10-17 창업 준비 §3-3).

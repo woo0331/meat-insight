@@ -115,6 +115,8 @@ window.amAuthAsk = function(force){
     AM_AUTH.asked = true;
 
     AM_AUTH.quoteOpen = !!(d && d.intake && d.intake.quote === true);
+
+    AM_AUTH.lookup = !!(d && d.lookup === true);
     if(!d){ AM_AUTH.on = false; return AM_AUTH; }
     AM_AUTH.on       = !!d.auth;
     AM_AUTH.signedIn = !!d.signedIn;

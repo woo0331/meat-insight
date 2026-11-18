@@ -6969,3 +6969,18 @@ html.ivh #view .bgd{ background-color:#FFFFFF; }
 .itk-t b{ font-size:16px; }
 .itk-t i{ font-style:normal; font-size:var(--t-cap); color:var(--ink2); line-height:1.5; }
 @media (max-width:640px){ .itk-g{ grid-template-columns:1fr; } }
+/* W03 /my — 두 영역을 갈라 보이게 · 본인 조회 */
+.my-area-hd{ margin:0 0 var(--s5); padding-bottom:var(--s3); border-bottom:1px solid var(--line); }
+#view .my-area-hd h2{ font-size:22px; margin:0 0 var(--s2); color:var(--ink); }
+.my-area-hd p{ margin:0; color:var(--ink2); line-height:1.7; }
+.my-lk-f{ display:flex; flex-direction:column; gap:var(--s3); max-width:720px; }
+.my-lk-f .btn{ align-self:flex-start; }
+.my-lk-v{ max-width:720px; display:flex; flex-direction:column; gap:var(--s3); }
+.my-lk-v h3{ font-size:17px; margin:var(--s3) 0 0; }
+.my-lk-no, .my-lk-ph{ margin:0; }
+.my-lk-it, .my-lk-nt{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.my-lk-it li{ display:flex; justify-content:space-between; gap:12px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:#fff; }
+.my-lk-nt li{ padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:#fff; }
+.my-lk-nt em{ font-style:normal; font-size:var(--t-cap); color:var(--ink2); }
+.my-lk-nt p{ margin:4px 0 0; white-space:pre-wrap; overflow-wrap:anywhere; }
+.my-lk-v .btn{ align-self:flex-start; }

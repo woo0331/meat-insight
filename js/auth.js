@@ -191,6 +191,8 @@ window.amAuthAsk = function(force){
     AM_AUTH.asked = true;
     /* 2026-11-18 — 서버 접수 게이트(api/_gate.js)의 견적 상태. 못 읽으면 닫힘입니다. */
     AM_AUTH.quoteOpen = !!(d && d.intake && d.intake.quote === true);
+    /* W03 — 비회원 본인 조회가 열려 있는가 (못 읽으면 닫힘) */
+    AM_AUTH.lookup = !!(d && d.lookup === true);
     if(!d){ AM_AUTH.on = false; return AM_AUTH; }
     AM_AUTH.on       = !!d.auth;
     AM_AUTH.signedIn = !!d.signedIn;

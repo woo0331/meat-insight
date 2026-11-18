@@ -1728,7 +1728,7 @@ const AUDIT = `(() => {
     const open = !!(window.amAuthNow && amAuthNow().quoteOpen) && !!(window.WOW_BIZ && WOW_BIZ.sosReady);
     const t = L[0].textContent.trim(), h = L[0].getAttribute("href") || "";
     if(open) return (t.indexOf("견적 신청") >= 0 && h.indexOf("/quote") === 0) ? true : "열렸는데 " + t + " " + h;
-    if(t !== "접수 안내" || h !== "/intake") return "닫혔는데 헤더가 " + t + " → " + h + " 입니다";
+    if(t !== "접수 안내" || h !== "/intake") return "닫혔는데 헤더 CTA: " + t + " → " + h;
     return true;`);
   await f("업종 화면 → 견적 요청에 업종이 실린다", "/startup/hair", `
     const a = document.querySelector('a[href^="/quote"]');

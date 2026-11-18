@@ -184,6 +184,25 @@ const realHandler = async function handler(req, res){
   /* 마이페이지가 "저장해 두신 것" 을 같이 냅니다 (§6-2 · §9) */
   out.state = await readState();
 
+  /* W03 관리자 접수함 — 목록에 붙이는 표시 (0083 admin_inbox_flags).
+     연락처는 **가린 것**(010-****-5678)만 · 같은 번호 중복 후보 · 알림 실패 ·
+     서비스 ID · 모은 상태 · 다음 행동 기한 · 신청 종류.
+     ⚠️ 원문 연락처는 여기 안 옵니다 — 건을 열고 "연락처 보기" 를 눌러야
+        오고, 그때 열람 기록이 남습니다 (?c=1 · note_request_open).
+     ⚠️ 실패해도 목록은 그대로 냅니다 (0083 을 아직 안 돌린 DB 등) — 표시만 빠집니다. */
+  if(role === "staff" && q.rows && q.rows.length){
+    const fl = await dbRpc(s.token, "admin_inbox_flags", { p_ids: q.rows.map(function(r){ return r.id; }) });
+    if(fl.ok && Array.isArray(fl.data)){
+      const by = {};
+      fl.data.forEach(function(x){ by[x.id] = x; });
+      q.rows.forEach(function(r){
+        const x = by[r.id]; if(!x) return;
+        r.tel_mask = x.tel_mask; r.dup_count = x.dup_count; r.notify_failed = x.notify_failed;
+        r.services = x.services; r.rollup = x.rollup; r.next_due = x.next_due; r.form = x.form;
+      });
+    } else console.warn("[me] admin_inbox_flags — " + (fl.why || "모양이 다릅니다"));
+  }
+
   /* 업체 · 관리자만 계약을 봅니다. ⚠️ 고객에게는 **묻지도 않습니다** —
      RLS 가 어차피 빈 목록을 주지만, 안 묻는 쪽이 한 겹 더 안전합니다. */
   if(s.role === "provider" || s.role === "admin"){
@@ -399,6 +418,15 @@ const realHandler = async function handler(req, res){
       "&order=at.asc&limit=" + HIST_LIMIT);
     if(h.ok) out.history = h.rows;
     else console.warn("[me] audit_log(request) — " + h.why);
+    /* W03 — 메모 · 연락 기록 · 고객 공개 안내 (0083). 직원 · 관리자만 묻습니다
+       (RLS 도 그렇게 막지만 묻지 않는 쪽이 한 겹 더 안전합니다). */
+    if(role === "staff"){
+      const nt = await dbSelectAs(s.token, "request_note",
+        "?select=" + encodeURIComponent("id,item_id,kind,body,result,by_role,at") +
+        "&request_id=eq." + encodeURIComponent(one) + "&order=at.desc&limit=" + HIST_LIMIT);
+      if(nt.ok) out.notes = nt.rows;
+      else console.warn("[me] request_note — " + nt.why);
+    }
   }
 
   /* ── 신청 한 건의 연락처 (2026-10-22 P0 ③) ──────────────────────

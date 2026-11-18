@@ -2888,9 +2888,10 @@ grant execute on function request_rollup(uuid) to service_role;
 --   ⚠️⚠️ 목록에는 연락처를 **가려서**만 냅니다 (010-****-5678). 원문은 건을 열고
 --   "연락처 보기" 를 눌러야 오고, 그때 열람 기록이 남습니다 (note_request_open · 0012).
 --   중복 후보 — 같은 번호(숫자만)로 최근 30일 안에 들어온 **다른** 신청 수.
+drop function if exists admin_inbox_flags(uuid[]);
 create or replace function admin_inbox_flags(p_ids uuid[])
   returns table (id uuid, tel_mask text, dup_count int, notify_failed boolean,
-                 services text[], rollup jsonb)
+                 services text[], rollup jsonb, next_due timestamptz, form text)
   language plpgsql stable security definer set search_path = public as $$
 begin
   if auth.uid() is null or my_role() not in ('staff','admin') then
@@ -2907,7 +2908,7 @@ begin
         and o.created_at < r.created_at + interval '30 days'),
     exists (select 1 from notify_job j where j.request_id = r.id and j.status in ('failed','gave_up')),
     coalesce((select array_agg(i.service_id order by i.created_at) from request_item i where i.request_id = r.id), '{}'),
-    request_rollup(r.id)
+    request_rollup(r.id), r.next_due, r.form
   from request r where r.id = any(p_ids);
 end $$;
 revoke all on function admin_inbox_flags(uuid[]) from public, anon;

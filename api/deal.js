@@ -93,6 +93,9 @@ const OK_FN = {
      정작 돈 쪽 알림이 그 더미에 묻힙니다 (save_user_state 와 같은 까닭).
      열람 이력은 audit_log 에 그대로 남습니다 (제29조 접속기록). */
   set_owner:1, note_request_open:1,
+  /* W03 (0083) — 다음 행동 기한 · 메모(내부 / 연락 기록 / 고객 공개 안내).
+     ⚠️ FN_SAY 에 넣지 않습니다 — 직원이 하루에 수십 번 누르는 일입니다. */
+  set_next_due:1, add_request_note:1,
   /* 2026-10-25 P1-7 (0016) — `/join` 입점 신청의 상태.
      ⚠️⚠️ **`FN_SAY` 에 넣지 마세요.** 이 문을 누르는 사람이 곧 직원
      입니다 — 자기가 방금 누른 것을 운영자 채널로 되받으면 정작 돈 쪽
@@ -131,6 +134,7 @@ const OK_ARG = {
   /* 0009 — ⚠️ `p_agree3rd` 를 빼지 마세요. 그 칸이 안 가면 DB 가
      제17조로 거절하고, 화면에는 "처리하지 못했습니다" 만 나갑니다. */
   p_item:1, p_agree3rd:1,                              /* assign_item · move_item_state */
+  p_due:1, p_kind:1, p_body:1, p_result:1,             /* W03 set_next_due · add_request_note */
   /* 0012 — ⚠️ p_owner 는 **직원 · 관리자 계정**이라야 합니다 (DB 가 봅니다).
      p_assignable 은 listed 와 다른 플래그입니다 — "배정해도 되는가" 입니다. */
   p_owner:1, p_assignable:1,                           /* set_owner · approve_provider */

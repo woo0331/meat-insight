@@ -589,8 +589,8 @@ function PageSell(){
     '<p class="note">'+esc(SELL_TABS.filter(function(x){
       return x.k === t; })[0].lead)+'</p>'+
 
-    (ready ? "" :
-      '<div class="notice-bad"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
+    (
+      '<div class="notice-bad" data-cta="off" data-cta-form="sell"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
         '<p>접수처 설정이 끝나면 바로 열립니다. 그동안에는 '+
         '<a href="/stores">지금 나와 있는 매장</a>이나 '+
         '<a href="/closure">폐업 · 정리에 필요한 것</a>을 먼저 '+
@@ -636,7 +636,7 @@ function PageSell(){
       AgreeBox("sl-ag","성함 · 연락처 · 업종 · 지역 · 적어 주신 매물 조건과 설명",
                "매물 등록 확인과 문의 전달","등록을 내리신 날로부터 1년")+
       '<div id="sl-fail"></div>'+
-      '<button class="btn btn-b btn-lg btn-full" type="submit"'+(ready?"":" disabled")+'>'+
+      '<button class="btn btn-b btn-lg btn-full" type="submit"'+' disabled data-gate="sell"'+'>'+
         (isStore ? "매장 내놓기" : "시설 · 장비 내놓기")+icon("arrow",18)+'</button>'+
       '<p class="note note-mid">내리고 싶으시면 같은 연락처로 말씀해 주세요. '+
         '오래된 매물을 그대로 두지 않습니다 — 올린 날짜를 화면에 같이 냅니다.</p>'+

@@ -415,7 +415,8 @@ function PageClosure(){
       title:"정리하기 전에 숫자부터 보세요",
       lead:"빠뜨린 것과 들 돈을 먼저 보실 수 있습니다. 적으신 값은 저장하지 않습니다." })+
     ClosureHelpBand()+
-    HallSteps({ quote:quoteTo({ side:"close" }) }) +
+    HallSteps({ quote:"/quote?mode=close&from=closure-steps", ctaForm:"close",
+                goName:"매장 정리 상담 신청하기" }) +
     JourneyBand({ current:"closing",
       title:"다른 것도 준비하고 계신가요?",
       lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." })+
@@ -432,13 +433,45 @@ function ClosureIntro(){
     kicker:"매장 정리부터 철거, 세무까지 한 번에",
     h1raw:"폐업 · 철거<br><em>통합 서비스</em>",
     lead:"바로 철거하기 전에 넘길 수 있는 것부터 확인하세요. 양도 검토 → 집기 처분 → 철거 · 원상복구 → 신고 · 세무 순서로 짚어 드립니다.",
-    quote: quoteTo({ side:"close" }),
-    goName:"통합 상담 신청하기",
+
+    quote: "/quote?mode=close&from=closure-hero", ctaForm:"close",
+    goName:"매장 정리 상담 신청하기",
     second:'<a class="btn btn-lg hh-o" href="#pick">필요한 서비스 고르기'+icon("arrow",18)+'</a>',
     cardTitle:"폐업 · 철거, 이 화면에서 하실 수 있는 것",
     checks:[["handover","매장을 넘길 수 있는지 먼저 확인"],["box","집기 · 설비 처분 길 찾기"],
             ["hammer","철거 · 원상복구 범위 정리"],["doc","폐업 신고 · 지원 · 세무 순서 확인"]]
-  }) + ClosureFlow();
+  }) + ClosureQuick() + ClosureFlow();
+}
+
+var CLOSE_QUICK_URGENT = "/quote?mode=close&from=closure-urgent&sv=" +
+  encodeURIComponent("asset/kitchen-eq,demolish/full");
+var CLOSE_QUICK_ASSET  = "/quote?mode=close&from=closure-asset&sv=" +
+  encodeURIComponent("asset/kitchen-eq,asset/furniture");
+function ClosureQuick(){
+  function card(href, ic, b, i, go, extra){
+    return '<a class="clq-c" href="'+esc(href)+'"'+(extra || "")+'>'+
+      '<span class="clq-i" aria-hidden="true">'+icon(ic, 26)+'</span>'+
+      '<span class="clq-t"><b>'+esc(b)+'</b><i>'+esc(i)+'</i></span>'+
+      '<span class="clq-go">'+esc(go)+icon("arrow",15)+'</span></a>';
+  }
+  var on = ' data-cta="on" data-cta-form="close" hidden', off = ' data-cta="off" data-cta-form="close"';
+  return '<section class="sec sec-white clq"><div class="w">'+
+    '<div class="sec-hd sec-hd-c"><p class="eyebrow">지금 바로</p>'+
+      '<h2>지금 어떤 상황이신가요?</h2>'+
+      '<p>고르시면 그 자리로 바로 갑니다. 아래 정리 순서 · 가이드 · 계산도구는 그대로 있습니다.</p></div>'+
+    '<ul class="clq-g">'+
+      '<li>'+card("/transfer?t=out", "handover", "매장을 넘길 수 있는지 보기",
+          "넘기면 철거비 · 원상복구비가 줄어듭니다. 양도 순서와 권리금 계산부터 봅니다.", "양도 순서 보기")+'</li>'+
+      '<li>'+card(CLOSE_QUICK_URGENT, "clock", "철거 일정이 급해요",
+          "양도 검토 없이 집기 처분과 철거를 한 번에 견적 받습니다.", "집기 처분 + 철거 상담 신청", on)+
+        card("/providers/demolish", "clock", "철거 일정이 급해요",
+          "지금은 매장 정리 상담 접수를 받지 않습니다. 철거에서 무엇을 정해야 하는지 먼저 봅니다.", "철거 분야 보기", off)+'</li>'+
+      '<li>'+card(CLOSE_QUICK_ASSET, "box", "집기 · 설비 처분",
+          "주방기기 · 냉장고 · 가구를 정리할 견적을 받습니다.", "집기 처분 상담 신청", on)+
+        card("/assets", "box", "집기 · 설비 처분",
+          "지금은 매장 정리 상담 접수를 받지 않습니다. 시설 · 집기 정리 화면을 먼저 봅니다.", "시설 · 집기 보기", off)+'</li>'+
+    '</ul>'+
+  '</div></section>';
 }
 
 var CLOSE_FLOW = [

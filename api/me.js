@@ -76,6 +76,10 @@ const ITEMS_S = "request_item(id,service_id,state,detail," +
    화면이 쓸 일이 없습니다 (최소 수집). */
 const STATE_PICK = "pick,draft,checks,updated_at";
 
+/* 0084 칸 — 돌리기 전에 배포돼도 안 깨지게 따로 둡니다 (아래 다시 묻기) */
+const S84 = "channel,src,want_at,outcome_why,outcome_on,settle,";
+const Q84 = "waste,restore,extra,src,";
+
 const PICK = {
   customer:
     "id,no,side,cat,industry,region,gu,state,want_at,created_at," +
@@ -93,7 +97,10 @@ const PICK = {
        없으면 직원이 둘이 되는 날 **같은 건에 두 사람이 전화**합니다.
        ⚠️ 담당자의 **성함은 여기로 안 옵니다** — 화면이 직원 목록
        (아래 out.staff)에서 id 로 찾습니다 (최소 수집). */
+    /* 2026-11-18 (0084) — 접수 길 · 유입 경로 · 결과(사유 · 확인일 · 정산 여부).
+       ⚠️ 연락처 · 원문이 아닙니다 (src 는 경로와 utm 값뿐 · DB 가 막습니다). */
     "id,no,side,cat,industry,region,gu,state,owner_id,created_at," +
+    S84 +
     "assignment(provider_id,state,created_at)," + ITEMS_S + "," + PHOTOS
 };
 
@@ -168,9 +175,19 @@ const realHandler = async function handler(req, res){
   const role = s.role === "admin" ? "staff" : s.role;
   const pick = PICK[role] || PICK.customer;
 
-  const q = await dbSelectAs(s.token, "request",
+  let q = await dbSelectAs(s.token, "request",
     "?select=" + encodeURIComponent(pick) +
     "&order=created_at.desc&limit=" + LIMIT);
+  /* ⚠️⚠️ 2026-11-18 — 0084 를 돌리기 전에 이 코드가 먼저 배포되면 새 칸
+     (channel · src · outcome …)이 없어서 PostgREST 가 400 을 돌려주고
+     **관리자 접수함이 통째로 빕니다.** 그 칸만 빼고 한 번 더 묻습니다
+     (배포 순서가 어긋나도 오늘 화면은 그대로입니다). */
+  if(!q.ok && pick.indexOf(S84) >= 0 && /\b400\b/.test(q.why || "")){
+    console.warn("[me] 0084 칸이 아직 없어 옛 칸으로 다시 묻습니다 — " + q.why);
+    q = await dbSelectAs(s.token, "request",
+      "?select=" + encodeURIComponent(pick.replace(S84, "")) +
+      "&order=created_at.desc&limit=" + LIMIT);
+  }
   if(!q.ok){
     if(q.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
     console.warn("[me] " + q.why);
@@ -397,11 +414,16 @@ const realHandler = async function handler(req, res){
   {
     const qp = "id,request_id,provider_id,amount,vat,scope,excludes,days," +
                "start_on,warranty,valid_to,note,state,chosen_at," +
+               /* 0084 — 철거 견적을 같은 칸으로 견줍니다 (누가 적었나 포함) */
+               Q84 +
                "created_at,updated_at";
-    const qq = await dbSelectAs(s.token, "quote",
-      "?select=" + encodeURIComponent(
-        s.role === "customer" ? qp + ",provider(id,name)" : qp) +
-      "&order=created_at.desc&limit=" + QUOTE_LIMIT);
+    const qsel = function(p){ return "?select=" + encodeURIComponent(
+        s.role === "customer" ? p + ",provider(id,name)" : p) +
+      "&order=created_at.desc&limit=" + QUOTE_LIMIT; };
+    let qq = await dbSelectAs(s.token, "quote", qsel(qp));
+    /* ⚠️ 0084 전이면 새 견적 칸 없이 다시 묻습니다 (위 접수함과 같은 까닭) */
+    if(!qq.ok && /\b400\b/.test(qq.why || ""))
+      qq = await dbSelectAs(s.token, "quote", qsel(qp.replace(Q84, "")));
     if(qq.ok) out.quotes = qq.rows;
     else console.warn("[me] quote — " + qq.why);
   }

@@ -1855,6 +1855,15 @@ function HomeSplitHero(){
         'placeholder="지금, 어떤 서비스가 필요하신가요? (예: 인테리어, 철거, 매장 양도)">'+
       '<button class="sw-find-b" type="submit">검색</button>'+
     '</form>'+
+    /* 2026-11-18 STOREWAY 1차 — 창업 · 폐업 바로 다음의 양도양수 입구.
+       ⚠️ 구간을 새로 만들지 않고 히어로 안의 한 줄입니다 (구간 차례 그대로).
+       ⚠️⚠️ "내 매장 넘기기" 는 매물 등록(sell) 접수를 따릅니다 — 닫혀 있으면
+       등록 양식이 아니라 **양도 안내**(/transfer?t=out)로 갑니다. */
+    '<nav class="sw-tr" aria-label="매장 양도양수">'+
+      '<a class="sw-trb" href="/stores">'+icon("search",20)+'<span><b>매장 찾기</b><i>지역 · 업종 · 보증금 · 월세 · 권리금으로 거르기</i></span>'+icon("arrow",16)+'</a>'+
+      '<a class="sw-trb" href="/sell" data-cta="on" data-cta-form="sell" hidden>'+icon("handover",20)+'<span><b>내 매장 넘기기</b><i>매물 등록 신청 — 운영자 검수 뒤 게시</i></span>'+icon("arrow",16)+'</a>'+
+      '<a class="sw-trb" href="/transfer?t=out" data-cta="off" data-cta-form="sell">'+icon("handover",20)+'<span><b>내 매장 넘기기</b><i>넘기는 순서와 권리금부터 보기</i></span>'+icon("arrow",16)+'</a>'+
+    '</nav>'+
   '</section>';
 }
 window.swFind = function(e){
@@ -1922,9 +1931,9 @@ function HomeStores(){
     right = '<div class="sw-s0">'+icon("store",40)+
       '<b>아직 올라온 매물이 없습니다.</b>'+
       '<p>없는 매물을 지어내지 않습니다 — 확인된 매물만 이 자리에 올라옵니다.</p>'+
-      (swOpen()
-        ? '<a class="sw-s0-go" href="/sell">매장 내놓기 안내'+icon("arrow",15)+'</a>'
-        : '<p class="sw-s0-n">매물 등록 접수는 현재 받지 않습니다. 접수가 열리면 이 자리에서 안내드립니다.</p>')+
+      /* ⚠️ 2026-11-18 — 화면 설정만 보지 않고 서버의 매물 등록(sell) 게이트를 따릅니다 */
+      '<a class="sw-s0-go" href="/sell" data-cta="on" data-cta-form="sell" hidden>매장 내놓기 안내'+icon("arrow",15)+'</a>'+
+      '<p class="sw-s0-n" data-cta="off" data-cta-form="sell">매물 등록 접수는 현재 받지 않습니다. 접수가 열리면 이 자리에서 안내드립니다.</p>'+
     '</div>';
   }
   return '<section class="bpass sw-store"><div class="w sw-sw">'+

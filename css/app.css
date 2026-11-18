@@ -919,3 +919,20 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 .q-nt b{ color:var(--ink); }
 /* 2026-11-18 — 헤더 CTA 둘 중 하나만 (견적 접수 상태 · chrome.js hdCtaPaint) */
 .hd-cta[hidden]{ display:none !important; }
+
+/* ════════════════════════════════════════════════════════════════════
+   2026-11-18 STOREWAY 1차 — 접수 양식마다 열림을 따로 따릅니다.
+   ⚠️ html.iq-<양식> 은 hdCtaPaint() 가 서버 게이트(/api/session 의 intake)와
+   화면 설정을 보고 붙입니다. 없으면 **닫힘**입니다 (fail-closed).
+   닫힌 양식으로 가는 신청 단추는 숨기고, 그 자리에서 "지금은 받지 않습니다" 를
+   말합니다 (.pk-closed). ⚠️ pickPaint() 가 hidden 을 고쳐도 이 규칙이 이깁니다.
+   ════════════════════════════════════════════════════════════════════ */
+html:not(.iq-quote) [data-go-form="quote"]:not(.pk-closed),
+html:not(.iq-close) [data-go-form="close"]:not(.pk-closed),
+html:not(.iq-sell)  [data-go-form="sell"]:not(.pk-closed),
+html:not(.iq-join)  [data-go-form="join"]:not(.pk-closed){ display:none !important; }
+html.iq-quote .pk-closed[data-go-form="quote"],
+html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
+.pk-closed-n{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:10px 0 0;
+  font-size:var(--t-cap); color:var(--ink2); }
+.pk-closed-n a{ min-height:40px; display:inline-flex; align-items:center; font-weight:700; }

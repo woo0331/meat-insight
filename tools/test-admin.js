@@ -667,6 +667,87 @@ function ok(name, cond, extra) {
      ⚠️ 가로채는 쪽도 `move_state` 와 **같은 말로** 거절합니다 — 다른
      말로 거절하면 화면이 엉뚱한 안내를 해도 통과합니다. */
   console.log("\n로그인하면 — 접수 목록 · 상태 변경 · 배정");
+  /* ── 2026-11-18 STOREWAY 1차 — 운영 단계 여섯 · 견적 비교 · 견적 기록 · 결과 ── */
+  console.log("\n▶ 매장 정리 상담 — 운영 단계 · 견적 비교 · 견적 기록 · 결과");
+  {
+    const { pg, ctx, errs } = await fresh(1440, 1200);
+    const sentL = [];
+    await pg.route("**/api/session", r => r.fulfill({ status:200, contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"staff", name:"직원", provider:null,
+                             conf:{ url:"https://proj.supabase.co", anonKey:"ANON-TEST" } }) }));
+    const R = (id, no, st, extra) => Object.assign({ id:id, no:no, side:"close", cat:"asset/kitchen-eq",
+      industry:"restaurant", region:"경기", gu:"안양시", state:st, channel:"close",
+      created_at:"2026-11-18T02:00:00+00:00", assignment:[] }, extra || {});
+    await pg.route("**/api/me**", r => r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify({
+      auth:true, signedIn:true, role:"staff",
+      requests:[
+        R("a0000000-0000-0000-0000-000000000001","SW-S1AA-0001","new"),
+        R("a0000000-0000-0000-0000-000000000002","SW-S1AA-0002","check",{ owner_id:"x" }),
+        R("a0000000-0000-0000-0000-000000000003","SW-S1AA-0003","assigned",{ assignment:[{ provider_id:"syn-a", state:"sent" }] }),
+        R("a0000000-0000-0000-0000-000000000004","SW-S1AA-0004","quoted",{ assignment:[{ provider_id:"syn-a" },{ provider_id:"syn-b" }] }),
+        R("a0000000-0000-0000-0000-000000000005","SW-S1AA-0005","signed",{ assignment:[{ provider_id:"syn-a" }] }),
+        R("a0000000-0000-0000-0000-000000000006","SW-S1AA-0006","lost")
+      ],
+      providers:[{ id:"syn-a", name:"합성 철거 갑" },{ id:"syn-b", name:"합성 철거 을" }],
+      quotes:[
+        { id:"qa", request_id:"a0000000-0000-0000-0000-000000000004", provider_id:"syn-a", amount:3300000, vat:"add",
+          scope:"주방 · 홀 전체 철거", waste:"포함 (5톤 1대)", restore:"바닥 · 벽", excludes:"간판", extra:"초과 1톤당 추가",
+          days:3, state:"open", src:"staff", created_at:"2026-11-18T03:00:00+00:00" },
+        { id:"qb", request_id:"a0000000-0000-0000-0000-000000000004", provider_id:"syn-b", amount:2900000, vat:"incl",
+          scope:"주방만 철거", state:"open", src:"provider", created_at:"2026-11-18T04:00:00+00:00" }
+      ], deals:[], audits:[] }) }));
+    await pg.route("**/api/deal", r => { const b = JSON.parse(r.request().postData() || "{}"); sentL.push(b);
+      r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify({ ok:true }) }); });
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(500);
+
+    const stg = await pg.locator("#rq .rq-stg .chip").allTextContents();
+    ok("운영 단계 여섯이 차례대로 · 센 값",
+       stg.join("|") === "미배정 1|연락 대기 1|업체 응답 대기 1|견적 도착 1|계약 1|종료 1", stg.join("|"));
+    ok("매장 정리 상담 접수라고 목록에 보인다",
+       (await pg.locator("#rq .rq-s-rq .rq-m").first().textContent()).includes("매장 정리 상담"));
+    await pg.locator("#rq .rq-stg .chip", { hasText:"견적 도착" }).click();
+    await pg.waitForTimeout(200);
+    ok("단계로 거르면 그 단계 건만", (await pg.locator("#rq .rq-s-rq .rq-r").count()) === 1);
+    await pg.locator("#rq .rq-s-rq .rq-r .rq-hd").first().click();
+    await pg.waitForTimeout(200);
+    const head = await pg.locator("#rq .rq-qt thead th").allTextContents();
+    ok("견적 둘을 같은 표에 나란히 (업체 이름으로)", head.join("|") === "항목|합성 철거 갑|합성 철거 을", head.join("|"));
+    const rowsH = await pg.locator("#rq .rq-qt tbody th").allTextContents();
+    ok("비교 칸 — 작업 범위 · 폐기물 반출 · 원상복구 범위 · VAT · 제외 항목 · 추가 비용 조건",
+       ["작업 범위","폐기물 반출","원상복구 범위","VAT","제외 항목","추가 비용 조건"].every(k => rowsH.includes(k)), rowsH.join(","));
+    const qtTxt = await pg.locator("#rq .rq-qt").textContent();
+    ok("안 적힌 칸은 — (지어내지 않음) · 누가 적었나가 보임",
+       (await pg.locator("#rq .rq-qt .rq-dash").count()) >= 4 && qtTxt.includes("운영자 기록") && qtTxt.includes("업체 제출"));
+    ok("금액순으로 세우지 않음 (등록 차례 · 3,300,000 이 먼저)", qtTxt.indexOf("3,300,000") < qtTxt.indexOf("2,900,000"));
+    ok("견적 기록 칸의 업체 고르개는 연결된 업체뿐",
+       (await pg.locator("#rq .rq-sq select >> nth=0 >> option").count()) === 2);
+    await pg.locator("#rq-sq-go").click(); await pg.waitForTimeout(150);
+    ok("금액 · 범위 없이 누르면 안 보냄", sentL.length === 0);
+    const inp = pg.locator("#rq .rq-sq .rq-f input");
+    await inp.nth(0).fill("2,500,000");
+    await pg.locator("#rq .rq-sq textarea").fill("전체 철거");
+    await inp.nth(1).fill("포함");
+    await pg.locator("#rq-sq-go").click(); await pg.waitForTimeout(300);
+    const sq = sentL[0] || {};
+    ok("견적 기록 — staff_record_quote 에 이 건 · 업체 · 칸만",
+       sq.fn === "staff_record_quote" && sq.args.p_request === "a0000000-0000-0000-0000-000000000004" &&
+       sq.args.p_provider === "syn-a" && sq.args.p_data.amount === 2500000 && sq.args.p_data.scope === "전체 철거" &&
+       sq.args.p_data.waste === "포함" && Object.keys(sq.args).join() === "p_request,p_provider,p_data", JSON.stringify(sq));
+    await pg.locator("#rq .rq-stg .chip", { hasText:"계약" }).click(); await pg.waitForTimeout(200);
+    await pg.locator("#rq .rq-s-rq .rq-r .rq-hd").first().click(); await pg.waitForTimeout(200);
+    ok("계약 건에 결과 칸 (사유 · 확인일 · 완료 · 취소 · 정산)", (await pg.locator("#rq .rq-oc").count()) === 1);
+    await pg.locator("#rq .rq-oc .rq-f input").first().fill("철거 계약");
+    await pg.locator("#rq .rq-oc select").selectOption("done");
+    await pg.locator("#rq .rq-oc .btn").click(); await pg.waitForTimeout(300);
+    const oc = sentL[sentL.length - 1] || {};
+    ok("결과 기록 — set_outcome (돈 칸 없음)",
+       oc.fn === "set_outcome" && oc.args.p_why === "철거 계약" && oc.args.p_settle === "done" && /^\d{4}-\d{2}-\d{2}$/.test(oc.args.p_on) &&
+       Object.keys(oc.args).join() === "p_request,p_why,p_on,p_settle", JSON.stringify(oc));
+    ok("JS 에러 없음 (매장 정리 상담 블록)", !errs.length, errs.join(" | "));
+    await ctx.close();
+  }
+
   {
     const { pg, ctx, errs } = await fresh(1440, 1200);
     let sent = null;
@@ -760,9 +841,10 @@ function ok(name, cond, extra) {
        없을 때 30초 타임아웃으로 터지고 **어느 검사가 틀렸는지도 안
        나옵니다** — 되돌려 보다가 그대로 당했습니다 (2차에서 환수
        미리보기로 겪은 자리). */
-    const qn = await pg.locator("#rq .rq-s-rq .rq-q > li").count();
+    /* 2026-11-18 STOREWAY 1차 — 목록이 **같은 칸 비교표**가 됐습니다 (업체마다 한 열) */
+    const qn = await pg.locator("#rq .rq-s-rq .rq-qt thead th").count() - 1;
     ok("펼친 줄에 받은 견적이 나온다", qn === 1, qn);
-    const qTxt = qn ? await pg.locator("#rq .rq-s-rq .rq-q").textContent() : "";
+    const qTxt = qn > 0 ? await pg.locator("#rq .rq-s-rq .rq-qt").textContent() : "";
     ok("견적 금액 · 부가세 처리가 같이 나온다",
        /1,200,000원/.test(qTxt) && /부가세 별도/.test(qTxt), qTxt);
     ok("포함 범위가 나온다 (금액만으로는 못 견줍니다)",
@@ -770,9 +852,9 @@ function ok(name, cond, extra) {
     /* ⚠️ 상태 딱지는 `/my` 와 **같은 클래스**입니다 — 다른 색이면 한
        시스템으로 안 읽힙니다 (css/admin.css 가 적어 둔 그대로). */
     ok("견적 딱지가 /my 와 같은 클래스를 쓴다",
-       (await pg.locator("#rq .rq-s-rq .rq-q .myq-st").count()) === 1);
+       (await pg.locator("#rq .rq-s-rq .rq-qt .myq-st").count()) === 1);
     ok("견적 금액 줄이 또렷한 글씨다 (결정에 쓰는 값)",
-       qn ? (await pg.locator("#rq .rq-s-rq .rq-q-m").count()) === 1 : false);
+       qn > 0 ? (await pg.locator("#rq .rq-s-rq .rq-qt .rq-q-m").count()) === 1 : false);
     /* ⚠️⚠️ **고르는 단추를 여기 만들지 않습니다** — 고르는 것은
        고객이고, 두 곳에 두면 "누가 골랐는가" 가 흐려집니다. */
     ok("직원 화면에는 고르는 단추가 없다",

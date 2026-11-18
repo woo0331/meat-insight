@@ -115,6 +115,7 @@ window.pickPaint = function(){
     var go = document.getElementById(id);
     if(!go) return;
     go.setAttribute("href", amPickQuoteTo(go.getAttribute("data-side")));
+    go.setAttribute("data-go-form", amPickGoForm(go.getAttribute("data-side")));
 
     var t = go.querySelector("span");
     if(t) t.textContent = "선택한 " + n + "개 서비스 견적 신청하기";
@@ -122,8 +123,14 @@ window.pickPaint = function(){
 
   pickPad();
 
+  [].slice.call(document.querySelectorAll("[data-pick-free],[data-pick-closed]")).forEach(function(a){
+    var sd = a.getAttribute("data-pick-free") || a.getAttribute("data-pick-closed");
+    a.setAttribute("data-go-form", amPickGoForm(sd));
+    if(a.hasAttribute("data-pick-free")) a.setAttribute("href", amPickQuoteTo(sd));
+  });
   [].slice.call(document.querySelectorAll("[data-pick-go]")).forEach(function(a){
     a.setAttribute("href", amPickQuoteTo(a.getAttribute("data-pick-go")));
+    a.setAttribute("data-go-form", amPickGoForm(a.getAttribute("data-pick-go")));
     var t = a.querySelector("span");
     if(t) t.textContent = n ? ("선택한 " + n + "개 서비스 견적 신청하기")
                             : "견적 신청하기";
@@ -136,8 +143,19 @@ function pickPad(){
   document.documentElement.style.setProperty("--pk-bar-h", Math.round(h) + "px");
 }
 
+window.amPickGoForm = function(side){
+  if(side !== "close") return "quote";
+  var cats = (window.AM_CLOSE_SCOPE && AM_CLOSE_SCOPE.cats) || [];
+  if(!cats.length) return "quote";
+  var ids = amPickGet();
+  return ids.every(function(id){ return cats.indexOf(String(id).split("/")[0]) >= 0; })
+    ? "close" : "quote";
+};
 window.amPickQuoteTo = function(side){
   var ids = amPickGet();
+  if(window.amPickGoForm(side) === "close")
+    return "/quote?mode=close&from=closure-pick" +
+      (ids.length ? "&sv=" + encodeURIComponent(ids.join(",")) : "");
 
   var q = ["side=" + encodeURIComponent(side || "start")];
   if(ids.length) q.push("sv=" + encodeURIComponent(ids.join(",")));
@@ -187,22 +205,29 @@ window.PickAside = function(side){
       '<ul class="pks-l" id="pka-list">'+pickRows()+'</ul>'+
 
       '<a class="btn btn-b" id="pka-go"'+(n ? "" : " hidden")+
-        ' data-side="'+esc(side || "start")+'"'+
+        ' data-side="'+esc(side || "start")+'" data-go-form="'+esc(amPickGoForm(side))+'"'+
         ' href="'+esc(amPickQuoteTo(side))+'">'+
         '<span>선택한 '+n+'개 서비스 견적 신청하기</span>'+icon("arrow",16)+'</a>'+
+      PickClosedNote(side)+
       '<button class="btn btn-o pks-clr" type="button" id="pka-clr"'+
         (n ? "" : " hidden")+' onclick="pickClear()">전부 해제</button>'+
     '</div>'+
   '</aside>';
 };
 
+window.PickClosedNote = function(side){
+  return '<p class="pk-closed pk-closed-n" data-pick-closed="'+esc(side || "start")+'" data-go-form="'+esc(amPickGoForm(side))+'">'+
+    icon("info",15)+' 지금은 이 신청을 받지 않습니다. 고르신 것은 그대로 남습니다. '+
+    '<a href="/intake">접수 안내</a></p>';
+};
 window.PickBar = function(side){
   var n = amPickCount();
   return '<div class="pk-bar" id="pk-bar"'+(n ? "" : " hidden")+'>'+
     '<p class="pk-bar-t">선택한 서비스 <b data-pick-n>'+n+'</b>개</p>'+
-    '<a class="btn btn-b" id="pk-bar-go" data-side="'+esc(side || "start")+'"'+
+    '<a class="btn btn-b" id="pk-bar-go" data-side="'+esc(side || "start")+'" data-go-form="'+esc(amPickGoForm(side))+'"'+
       ' href="'+esc(amPickQuoteTo(side))+'">'+
       '<span>선택한 '+n+'개 서비스 견적 신청하기</span>'+icon("arrow",17)+'</a>'+
+    '<a class="btn btn-o pk-closed" href="/intake" data-pick-closed="'+esc(side || "start")+'" data-go-form="'+esc(amPickGoForm(side))+'">접수 안내 보기</a>'+
   '</div>';
 };
 
@@ -225,7 +250,7 @@ window.PickBasket = function(side){
 
       '<div class="pkb-go">'+
         '<a class="btn btn-b btn-lg" id="pk-go-on"'+(n ? "" : " hidden")+
-          ' data-pick-go="'+esc(side || "start")+'"'+
+          ' data-pick-go="'+esc(side || "start")+'" data-go-form="'+esc(amPickGoForm(side))+'"'+
           ' href="'+esc(amPickQuoteTo(side))+'">'+
           '<span>선택한 '+n+'개 서비스 견적 신청하기</span>'+icon("arrow",18)+'</a>'+
         '<button class="btn btn-b btn-lg" id="pk-go-off" type="button" disabled'+
@@ -239,9 +264,10 @@ window.PickBasket = function(side){
         '<p>위에서 필요한 것을 하나라도 고르시면 신청하실 수 있습니다. '+
           '<b>무엇이 필요한지 모르시겠으면</b> 고르지 않고 바로 '+
           '상담을 신청하셔도 됩니다.</p>'+
-        '<a class="btn btn-o" href="'+esc(amPickQuoteTo(side))+'">'+
+        '<a class="btn btn-o" data-pick-free="'+esc(side || "start")+'" data-go-form="'+esc(amPickGoForm(side))+'" href="'+esc(amPickQuoteTo(side))+'">'+
           '고르지 않고 바로 상담 신청하기</a>'+
       '</div>'+
+      PickClosedNote(side)+
     '</div>'+
 
     '<p class="sec-note">'+icon("info",15)+

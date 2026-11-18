@@ -923,6 +923,12 @@ function HomeSplitHero(){
         'placeholder="지금, 어떤 서비스가 필요하신가요? (예: 인테리어, 철거, 매장 양도)">'+
       '<button class="sw-find-b" type="submit">검색</button>'+
     '</form>'+
+
+    '<nav class="sw-tr" aria-label="매장 양도양수">'+
+      '<a class="sw-trb" href="/stores">'+icon("search",20)+'<span><b>매장 찾기</b><i>지역 · 업종 · 보증금 · 월세 · 권리금으로 거르기</i></span>'+icon("arrow",16)+'</a>'+
+      '<a class="sw-trb" href="/sell" data-cta="on" data-cta-form="sell" hidden>'+icon("handover",20)+'<span><b>내 매장 넘기기</b><i>매물 등록 신청 — 운영자 검수 뒤 게시</i></span>'+icon("arrow",16)+'</a>'+
+      '<a class="sw-trb" href="/transfer?t=out" data-cta="off" data-cta-form="sell">'+icon("handover",20)+'<span><b>내 매장 넘기기</b><i>넘기는 순서와 권리금부터 보기</i></span>'+icon("arrow",16)+'</a>'+
+    '</nav>'+
   '</section>';
 }
 window.swFind = function(e){
@@ -988,9 +994,9 @@ function HomeStores(){
     right = '<div class="sw-s0">'+icon("store",40)+
       '<b>아직 올라온 매물이 없습니다.</b>'+
       '<p>없는 매물을 지어내지 않습니다 — 확인된 매물만 이 자리에 올라옵니다.</p>'+
-      (swOpen()
-        ? '<a class="sw-s0-go" href="/sell">매장 내놓기 안내'+icon("arrow",15)+'</a>'
-        : '<p class="sw-s0-n">매물 등록 접수는 현재 받지 않습니다. 접수가 열리면 이 자리에서 안내드립니다.</p>')+
+
+      '<a class="sw-s0-go" href="/sell" data-cta="on" data-cta-form="sell" hidden>매장 내놓기 안내'+icon("arrow",15)+'</a>'+
+      '<p class="sw-s0-n" data-cta="off" data-cta-form="sell">매물 등록 접수는 현재 받지 않습니다. 접수가 열리면 이 자리에서 안내드립니다.</p>'+
     '</div>';
   }
   return '<section class="bpass sw-store"><div class="w sw-sw">'+

@@ -91,16 +91,19 @@ window.AM_DEAL_MOVE = [
   ["new",      "lost",     ["staff","admin","customer"], ["why"]],
   ["check",    "assigned", ["staff","admin"],            ["providerId","agree3rd"]],
   ["check",    "lost",     ["staff","admin","customer"], ["why"]],
-  /* 업체가 거절하면 **실패가 아니라 다시 배정**입니다 — 손님 쪽에서
+  /* ⚠️ 2026-11-18 (0084) — 초기에는 운영자가 업체와 통화하고 **대신**
+     넘깁니다(업체 계정 없이 수동 운영). 그래서 아래 네 걸음에 직원 ·
+     관리자가 들어갔습니다. 0084 의 insert 와 같아야 합니다.
+     업체가 거절하면 **실패가 아니라 다시 배정**입니다 — 손님 쪽에서
      보면 아직 진행 중인 건입니다 */
-  ["assigned", "accepted", ["provider"]],
+  ["assigned", "accepted", ["provider","staff","admin"]],
   ["assigned", "check",    ["provider","staff","admin"], ["why"]],
   ["assigned", "lost",     ["staff","admin","customer"], ["why"]],
-  ["accepted", "consult",  ["provider"]],
+  ["accepted", "consult",  ["provider","staff","admin"]],
   ["accepted", "lost",     ["staff","admin","customer"], ["why"]],
-  ["consult",  "quoted",   ["provider"]],
+  ["consult",  "quoted",   ["provider","staff","admin"]],
   ["consult",  "lost",     ["staff","admin","customer"], ["why"]],
-  ["quoted",   "nego",     ["provider","customer"]],
+  ["quoted",   "nego",     ["provider","customer","staff","admin"]],
   ["quoted",   "lost",     ["staff","admin","customer"], ["why"]],
   /* ⚠️⚠️ 업체가 "계약했습니다" 를 누르는 자리입니다. 계약금액을 같이
      적게 합니다 — 안 받으면 수수료를 계산할 근거가 없습니다.
@@ -283,6 +286,35 @@ window.amDealTone = function(key){
   if(s.key === "lost")  return "gray";
   if(s.end)             return "ok";
   return "on";
+};
+
+/* ── 운영 단계 여섯 (2026-11-18 STOREWAY 1차 · 관리자 접수함) ─────────
+   ⚠️⚠️ **새 상태를 만들지 않습니다.** 상태 열셋(AM_DEAL_ST)과 담당자
+   (owner_id)를 직원이 보는 말 여섯으로 **묶어 보기만** 합니다 — 0001 의
+   enum · 0004 의 길 표 · 손님 화면이 그대로입니다.
+     미배정       new · check 인데 담당자 없음
+     연락 대기     new · check 인데 담당자 있음 · 보류(다시 연락할 건)
+     업체 응답 대기 assigned · accepted · consult (업체를 연결했고 견적 전)
+     견적 도착     quoted · nego
+     계약          signed · done · fee_wait · fee_done
+     종료          lost
+   ⚠️ 차례를 바꾸면 접수함 칩 차례가 바뀝니다 (검사가 여섯을 셉니다). */
+window.AM_DEAL_STAGE = [
+  { key:"unassigned", name:"미배정" },
+  { key:"contact",    name:"연락 대기" },
+  { key:"vendor",     name:"업체 응답 대기" },
+  { key:"quoted",     name:"견적 도착" },
+  { key:"signed",     name:"계약" },
+  { key:"closed",     name:"종료" }
+];
+window.amDealStage = function(r){
+  var st = r && r.state;
+  if(st === "lost") return "closed";
+  if(st === "signed" || st === "done" || st === "fee_wait" || st === "fee_done") return "signed";
+  if(st === "quoted" || st === "nego") return "quoted";
+  if(st === "assigned" || st === "accepted" || st === "consult") return "vendor";
+  if(st === "hold") return "contact";
+  return (r && r.owner_id) ? "contact" : "unassigned";
 };
 
 window.amRoleName = function(key){

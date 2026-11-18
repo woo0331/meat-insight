@@ -48,6 +48,19 @@ const { authReady, bearer, session } = require("./_auth.js");
 const { gate, formOf, CLOSED_SAY } = require("./_gate.js");
 const { consentFor } = require("./_consent.js");
 const { runJob } = require("./_notify.js");
+const { inArea, svcOk, OUT_SAY } = require("./_scope.js");
+
+/* 유입 경로 — ⚠️⚠️ 연락처 · 상담 원문을 담지 않습니다. 화면이 보낸
+   경로(/closure · /quote …)와 utm 값만, 글자를 좁혀서 받습니다. 숫자가
+   여덟 개 넘게 붙어 있거나 @ 가 있으면 통째로 버립니다 (전화번호 ·
+   메일이 섞였을 수 있습니다 · DB 의 request_src_ck 가 한 번 더 막습니다).
+   ⚠️ 그래서 숫자가 아홉 개 넘게 들어간 경로도 같이 버립니다. */
+function cleanSrc(v){
+  const t = String(v || "").slice(0, 300);
+  /* ⚠️ 하이픈으로 끊긴 전화번호(010-1234-5678)도 잡게 **숫자 개수**로 봅니다 */
+  if(!t || t.replace(/[^0-9]/g, "").length >= 9 || t.indexOf("@") >= 0) return "";
+  return /^[A-Za-z0-9/_\-.,:=|?&]+$/.test(t) ? t : "";
+}
 
 const KINDS = { quote:1, partner:1 };   /* sos 는 받지 않습니다 — 동의 상자를 보여 주는 화면이 없습니다 (2026-11-18) */
 
@@ -203,6 +216,28 @@ module.exports = async function handler(req, res){
                  .slice(0, 40).map(function(s){ return clean(s, 40); }).filter(Boolean);
   }
 
+  /* ── 매장 정리 상담 (form = "close") — 2026-11-18 STOREWAY 1차 ─────
+     ⚠️⚠️ 화면이 막아도 여기서 한 번 더 봅니다 — 이 주소로 직접 보내면
+     화면을 거치지 않습니다.
+       ① 정리 분류(양도 · 집기 · 철거 · 원상복구 · 폐기물)의 서비스만
+       ② 초기 지역(안양 · 군포 · 의왕) 밖이면 접수하지 않음 (422)
+       ③ 업종 · 정리 희망일은 필수 · 상담 내용은 선택 (비면 고르신 것으로 채움)
+     ⚠️ 상황(side)은 손님이 고르지 않고 close 로 둡니다. */
+  const isClose = formOf(b) === "close";
+  if(isClose){
+    if(kind !== "quote") return res.status(400).json({ error: "지금은 받지 않는 양식입니다" });
+    if(!q.items.length) return res.status(400).json({ error: "필요한 서비스를 하나 이상 골라 주세요" });
+    if(q.items.some(function(it){ return !svcOk(it.id); }))
+      return res.status(400).json({ error: "매장 정리 상담에서는 양도 · 집기 처분 · 철거 · 원상복구 · 폐기물만 받습니다" });
+    if(!inArea(clean(b.regionKey, 20), q.region, clean(b.gu, 40))){
+      console.warn("[site] 매장 정리 상담 — 초기 지역 밖 (" + (q.region || "-") + " " + (clean(b.gu, 40) || "-") + ")");
+      return res.status(422).json({ error: OUT_SAY, outArea: true });
+    }
+    if(!clean(b.industry, 40)) return res.status(400).json({ error: "업종을 골라 주세요" });
+    if(!clean(b.wantAt, 40))   return res.status(400).json({ error: "정리 희망일을 골라 주세요" });
+    if(!q.q) q.q = "매장 정리 상담 — " + q.items.map(function(it){ return it.id; }).join(", ");
+  }
+
   /* ── 빠진 것 확인 ─────────────────────────────────────────
      ⚠️ 화면에서도 막지만 여기서 한 번 더 봅니다. 이 주소로 직접
      보내는 것은 화면을 거치지 않습니다. */
@@ -242,7 +277,7 @@ module.exports = async function handler(req, res){
      ════════════════════════════════════════════════════════════ */
   const form = formOf(b);
   const idem = clean(b.idem, 80);
-  const consent = consentFor(kind === "partner" ? "join" : form);
+  const consent = consentFor(kind === "partner" ? "join" : form);   /* close 는 close 고지문 */
   if(!consent) return res.status(400).json({ error: "지금은 받지 않는 양식입니다" });
 
   /* 같은 연락처의 최근 접수 — **막지 않고** 운영자에게 표시만 합니다.
@@ -291,9 +326,11 @@ module.exports = async function handler(req, res){
       services: q.services, note: q.note || null, consent: consent } });
   }else{
     saved = await dbCallService("submit_intake", { p: {
-      no: cand, idem: idem || null, form: form,
+      /* ⚠️ DB 의 양식 값은 quote 입니다 — 매장 정리 상담도 견적 요청이고,
+         어느 접수 길인지는 channel 로 따로 적습니다 (0084). */
+      no: cand, idem: idem || null, form: isClose ? "quote" : form,
       user_id: uid,
-      side: clean(b.side, 20) || "start",
+      side: isClose ? "close" : (clean(b.side, 20) || "start"),
       industry: clean(b.industry, 40) || null,
       cat: q.cat || q.service || null,
       offer_id: clean(b.offerId, 60) || null,
@@ -318,6 +355,14 @@ module.exports = async function handler(req, res){
   if(got.dup){
     console.warn("[site] 같은 신청서를 다시 보내셨습니다 — " + got.no);
     return res.status(200).json({ ok:true, no:got.no, dup:true, say:"이미 접수되었습니다." });
+  }
+
+  /* ②-1 접수 길 · 유입 경로 (0084) — ⚠️ 연락처 · 원문 없이. 실패해도
+     접수는 성공입니다 (기록은 거들기입니다). */
+  if(kind !== "partner"){
+    const meta = await dbCallService("note_intake_meta",
+      { p_no: got.no, p_channel: form, p_src: cleanSrc(b.src) || null });
+    if(!meta.ok) console.warn("[site] 접수 길을 적지 못했습니다 — " + dbWhy(meta.why));
   }
 
   /* ③ 알림 — 저장과 따로. 실패해도 응답은 성공입니다 (저장이 끝났으니까요).

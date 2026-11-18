@@ -375,13 +375,69 @@ window.amQuoteOpen = function(){
   return window.amAuthAsk().then(function(a){ return !!(a && a.quoteOpen); },
                                  function(){ return false; });
 };
+/* 2026-11-18 STOREWAY 1차 — 양식 하나의 열림 (quote · close · sell · join).
+   ⚠️⚠️ 화면 설정(sosReady)과 그 양식의 서버 게이트가 **둘 다** 켜져야
+   열림입니다. 매장 정리 상담(close)만 열었을 때 견적 · 매물 · 입점 단추가
+   같이 열리면 안 됩니다 — 그래서 양식마다 따로 봅니다. */
+window.amIntakeOpen = function(form){
+  form = form || "quote";
+  if(!(window.WOW_BIZ && WOW_BIZ.sosReady)) return Promise.resolve(false);
+  if(typeof window.amAuthAsk !== "function") return Promise.resolve(false);
+  return window.amAuthAsk().then(function(a){
+    return !!(a && a.intake && a.intake[form] === true); }, function(){ return false; });
+};
+/* 2026-11-18 STOREWAY 1차 — 본문의 신청 단추(.btn)를 **어느 양식인지** 표시합니다.
+   ⚠️⚠️ 화면마다 손으로 data-cta 짝을 다는 대신 주소로 가립니다 —
+     /quote?mode=close → close · /sell → sell · /join → join · 나머지 /quote → quote.
+   닫힌 양식의 단추는 CSS(html.iq-<양식>)가 가립니다 (css/app.css).
+   ⚠️ 정리 분류(집기 · 철거 · 원상복구 · 폐기물 · 양도)의 폐업 쪽 견적 단추는
+   매장 정리 상담 양식으로 돌립니다 — 그 화면에서 일반 견적이 닫혀 있어도
+   매장 정리 상담만 열 수 있게. 이미 짝이 있는 단추(data-cta · data-go-form)는
+   건드리지 않습니다. */
+function ctaTagLinks(){
+  var cats = (window.AM_CLOSE_SCOPE && AM_CLOSE_SCOPE.cats) || [];
+  els('#view a.btn[href^="/quote"], #view a.btn[href^="/sell"], #view a.btn[href^="/join"]').forEach(function(a){
+    if(a.hasAttribute("data-cta") || a.hasAttribute("data-go-form")) return;
+    var h = a.getAttribute("href") || "", f = "quote";
+    if(h.indexOf("/sell") === 0) f = "sell";
+    else if(h.indexOf("/join") === 0) f = "join";
+    else {
+      var q = {};
+      (h.split("?")[1] || "").split("#")[0].split("&").forEach(function(kv){
+        var p = kv.split("="); if(p[0]) q[p[0]] = decodeURIComponent(p[1] || ""); });
+      if(q.mode === "close") f = "close";
+      else if(q.side === "close" && q.c && cats.indexOf(String(q.c).split("/")[0]) >= 0){
+        a.setAttribute("href", "/quote?mode=close&from=cat-" + String(q.c).replace(/[^a-z0-9]/gi, "-") +
+          "&sv=" + encodeURIComponent(q.s ? q.c + "/" + q.s : q.c));
+        f = "close";
+      }
+    }
+    a.setAttribute("data-go-form", f);
+  });
+}
 window.hdCtaPaint = hdCtaPaint;
 function hdCtaPaint(){
-  window.amQuoteOpen().then(function(open){
-    /* 2026-11-18 — 헤더뿐 아니라 본문(전문관 머리 · 상담 진행 띠)의 짝도 같이 고릅니다 */
-    els('[data-cta]').forEach(function(a){
-      var mine = a.getAttribute("data-cta") === (open ? "on" : "off");
-      if(mine) a.removeAttribute("hidden"); else a.setAttribute("hidden","");
+  ctaTagLinks();
+  /* data-cta 짝은 data-cta-form 으로 어느 양식인지 밝힙니다 (없으면 견적).
+     data-gate 는 보내기 단추 — 열렸을 때만 풀립니다 (기본은 잠김). */
+  /* ⚠️ 넷 다 늘 봅니다 — <html> 의 iq-<양식> 칸이 고르개 신청 단추
+     (data-go-form)를 CSS 로 가립니다 (css/app.css). 기본은 닫힘입니다. */
+  var forms = { quote:1, close:1, sell:1, join:1 };
+  els('[data-cta],[data-gate]').forEach(function(a){
+    forms[a.getAttribute("data-cta-form") || a.getAttribute("data-gate") || "quote"] = 1; });
+  Object.keys(forms).forEach(function(f){
+    window.amIntakeOpen(f).then(function(open){
+      els('[data-cta]').forEach(function(a){
+        if((a.getAttribute("data-cta-form") || "quote") !== f) return;
+        var mine = a.getAttribute("data-cta") === (open ? "on" : "off");
+        if(mine) a.removeAttribute("hidden"); else a.setAttribute("hidden","");
+      });
+      els('[data-gate="'+f+'"]').forEach(function(b){
+        /* 지역 밖을 고르셨으면 열려 있어도 잠근 채입니다 (매장 정리 상담) */
+        b.disabled = !open || (b.id === "cq-go" && !!document.getElementById("cq-gu") &&
+                                document.getElementById("cq-gu").value === "out");
+      });
+      document.documentElement.classList.toggle("iq-" + f, !!open);
     });
   });
 }
@@ -597,7 +653,7 @@ function Footer(){
         Logo("ft") +
         '<p>'+esc((window.AM_BRAND||{}).slogan || "")+'<br> '+
           '창업에 필요한 모든 것, 폐업에 필요한 모든 것.</p>'+
-        '<a class="btn btn-nv" href="/join">업체 입점하기'+icon("arrow",16)+'</a>'+
+        '<a class="btn btn-nv" href="/join" data-go-form="join">업체 입점하기'+icon("arrow",16)+'</a>'+
       '</div>'+
       /* ⚠️⚠️ **머리말을 단추로 감쌉니다 — 폰에서 접기 위해서입니다.**
          링크 스물셋이 세로로 쌓이면 푸터가 **1,317px**(폰 화면 1.5개)이

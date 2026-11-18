@@ -196,6 +196,8 @@ function rqList(){
       '손님이 견적 요청을 넣으시면 여기에 쌓입니다.</p>' + rqOutRow();
 
   var shown = RQ.fil ? L.filter(function(r){ return r.state === RQ.fil; }) : L;
+  /* 2026-11-18 STOREWAY 1차 — 운영 단계 여섯으로 거르기 (amDealStage · deal.js) */
+  if(RQ.stage) shown = shown.filter(function(r){ return window.amDealStage(r) === RQ.stage; });
   if(RQ.mine) shown = shown.filter(rqIsMine);
 
   return '<p class="ad-lead">'+
@@ -210,6 +212,7 @@ function rqList(){
        (api/quote.js 의 저장 · 전달 갈라 보기와 짝입니다). */
     '<p class="rq-note">⚠️ <b>이 목록이 기준입니다 — 슬랙이 아닙니다.</b> '+
       '알림이 실패하면 슬랙에는 없고 여기에만 있습니다.</p>'+
+    rqStages(L)+
     rqChips(L)+
     '<div class="rq-g">'+ shown.map(rqRow).join("") +'</div>'+
     '<p class="rq-note">위 숫자는 <b>최근 '+L.length+'건에서 센 값</b>입니다. '+
@@ -239,7 +242,19 @@ function rqChips(L){
   return out + '</div>';
 }
 
-window.rqFil = function(k){ RQ.fil = k; RQ.mine = false; RQ.open = ""; RQ.to = ""; rqDraw(); };
+window.rqFil = function(k){ RQ.fil = k; RQ.stage = ""; RQ.mine = false; RQ.open = ""; RQ.to = ""; rqDraw(); };
+/* 운영 단계 여섯 — ⚠️ 개수는 그 자리에서 세는 값 · 0 인 단계도 냅니다
+   (미배정 0 은 "할 일 없음" 이라는 정보입니다). */
+function rqStages(L){
+  var n = {};
+  L.forEach(function(r){ var k = window.amDealStage(r); n[k] = (n[k] || 0) + 1; });
+  return '<div class="chip-g chip-g-fil rq-stg" role="group" aria-label="운영 단계">'+
+    (window.AM_DEAL_STAGE || []).map(function(g){
+      return '<button class="chip'+(RQ.stage === g.key ? " on" : "")+'" type="button" '+
+        'data-stage="'+esc(g.key)+'" onclick="rqStage(\''+esc(g.key)+'\')">'+esc(g.name)+' '+(n[g.key] || 0)+'</button>';
+    }).join("")+'</div>';
+}
+window.rqStage = function(k){ RQ.stage = (RQ.stage === k) ? "" : k; RQ.fil = ""; RQ.mine = false; RQ.open = ""; RQ.to = ""; rqDraw(); };
 window.rqMineGo = function(){ RQ.mine = !RQ.mine; RQ.fil = ""; RQ.open = ""; rqDraw(); };
 function rqIsMine(r){ return !!(RQ.me && r.owner_id === RQ.me); }
 
@@ -372,6 +387,7 @@ function rqRow(r){
   var open = RQ.open === r.id;
   /* ⚠️ 값이 없는 칸은 **줄째 뺍니다** (절대 규칙 2) */
   var meta = [
+    r.channel === "close" ? "매장 정리 상담" : "",
     rqSideName(r.side), rqCatName(r.cat), rqIndName(r.industry), rqRegName(r)
   ].filter(Boolean).join(" · ");
   var day = window.amDate(String(r.created_at || "").slice(0, 10));
@@ -399,7 +415,8 @@ function rqRow(r){
     '</button>'+
     (open ? '<div class="rq-bd">'+ rqOwnerRow(r) + rqContactRow(r) +
               rqItems(r) + rqMove(r) + rqAsg(r) +
-              rqQuotes(r) + rqDueRow(r) + rqNoteRow(r) + rqHistRow(r) +'</div>' : '')+
+              rqQuotes(r) + rqStaffQuote(r) + rqOutcome(r) +
+              rqDueRow(r) + rqNoteRow(r) + rqHistRow(r) +'</div>' : '')+
   '</article>';
 }
 
@@ -419,6 +436,8 @@ window.rqOpen = function(id){
   RQ.conOf = ""; RQ.con = null;
   /* W03 — 메모도 같이 닫습니다 (다른 건의 메모가 남지 않게) */
   RQ.noteOf = ""; RQ.notes = null; RQ.nctx = {};
+  /* 2026-11-18 — 견적 기록 · 결과 칸도 같이 비웁니다 (남의 건 값이 남지 않게) */
+  RQ.qctx = {}; RQ.octx = {};
   rqDraw();
 };
 
@@ -1483,7 +1502,7 @@ function rqCall(fn, args, say, keep){
     /* W03 — 기한 · 메모는 그 건을 연 채로 둡니다 (다시 펼쳐 찾지 않게) */
     if(keep){
       var reopen = RQ.open, nOf = RQ.noteOf;
-      RQ.nctx = {}; RQ.busy = false;
+      RQ.nctx = {}; RQ.qctx = {}; RQ.octx = {}; RQ.busy = false;
       rqLoad();
       RQ.open = reopen;
       if(nOf){ RQ.noteOf = ""; window.rqNoteGo(nOf); }
@@ -2240,29 +2259,135 @@ window.rqProvGo = function(id, on){
 function rqQuotes(r){
   var L = (RQ.quotes || []).filter(function(q){ return q.request_id === r.id; });
   if(!L.length) return "";
-  return '<div class="rq-s"><h4>받은 견적 '+L.length+'건</h4>'+
-    '<ul class="rq-q">'+L.map(function(q){
-      var bits = [];
-      if(q.amount != null)
-        bits.push(won(q.amount)+"원 · "+
-          (typeof amQuoteVat === "function" ? amQuoteVat(q.vat) : ""));
-      if(q.days)     bits.push(q.days+"일");
-      if(q.start_on) bits.push(amDate(q.start_on)+" 시작");
-      return '<li><div class="rq-q-h">'+
-          '<b>'+esc(q.provider_id)+'</b>'+
-          /* ⚠️ 딱지는 `css/pages.css` 의 `.myq-st` 를 그대로 씁니다 —
-             `/my` 와 색이 같아야 한 시스템으로 읽힙니다 (admin.css 가
-             적어 둔 그대로입니다). 새 이름을 지으면 그 줄만 스타일이
-             안 먹고 에러도 안 납니다. */
-          '<i class="myq-st myq-'+esc(typeof amQuoteTone === "function"
-            ? amQuoteTone(q.state) : "gray")+'">'+
-            esc(typeof amQuoteName === "function" ? amQuoteName(q.state) : q.state)+
-          '</i></div>'+
-        (bits.length ? '<p class="rq-q-m">'+esc(bits.join(" · "))+'</p>' : "")+
-        (q.scope ? '<p class="rq-q-s">'+esc(String(q.scope))+'</p>' : "")+
-      '</li>';
-    }).join("")+'</ul></div>';
+  /* 2026-11-18 STOREWAY 1차 — 철거 견적을 **같은 칸으로** 나란히 봅니다.
+     작업 범위 · 폐기물 반출 · 원상복구 범위 · VAT · 제외 항목 · 추가 비용 조건.
+     ⚠️ 금액순으로 세우지 않습니다 (범위가 달라 금액만으로는 못 견줍니다 ·
+     세우면 그 순서가 곧 추천입니다). 등록된 차례 그대로입니다.
+     ⚠️ 안 적힌 칸은 "—" 입니다 — 빈칸과 "없음" 을 갈라 적지 않습니다
+     (0 원은 값입니다). */
+  var rows = [
+    ["금액", function(q){ return q.amount != null ? won(q.amount) + "원" : ""; }],
+    ["VAT", function(q){ return typeof amQuoteVat === "function" ? amQuoteVat(q.vat) : (q.vat || ""); }],
+    ["작업 범위", function(q){ return q.scope || ""; }],
+    ["폐기물 반출", function(q){ return q.waste || ""; }],
+    ["원상복구 범위", function(q){ return q.restore || ""; }],
+    ["제외 항목", function(q){ return q.excludes || ""; }],
+    ["추가 비용 조건", function(q){ return q.extra || ""; }],
+    ["작업 기간", function(q){ return q.days ? q.days + "일" : ""; }],
+    ["상태", function(q){ return typeof amQuoteName === "function" ? amQuoteName(q.state) : q.state; }],
+    ["적은 사람", function(q){ return q.src === "staff" ? "운영자 기록" : "업체 제출"; }]
+  ];
+  return '<div class="rq-s"><h4>받은 견적 '+L.length+'건 — 같은 칸으로 비교</h4>'+
+    '<div class="rq-qt-w"><table class="rq-qt"><thead><tr><th scope="col">항목</th>'+
+      L.map(function(q){ return '<th scope="col">'+esc(rqPvName(q.provider_id) || q.provider_id)+'</th>'; }).join("")+
+    '</tr></thead><tbody>'+
+    rows.map(function(row){
+      return '<tr><th scope="row">'+esc(row[0])+'</th>'+L.map(function(q){
+        var v = row[1](q);
+        if(v === "" || v == null) return '<td><span class="rq-dash">—</span></td>';
+        /* 금액은 결정에 쓰는 값이라 또렷하게 · 상태 딱지는 /my 와 같은 클래스 */
+        if(row[0] === "금액") return '<td><b class="rq-q-m">'+esc(String(v))+'</b></td>';
+        if(row[0] === "상태") return '<td><i class="myq-st myq-'+esc(typeof amQuoteTone === "function"
+          ? amQuoteTone(q.state) : "gray")+'">'+esc(String(v))+'</i></td>';
+        return '<td>'+esc(String(v))+'</td>';
+      }).join("")+'</tr>';
+    }).join("")+
+    '</tbody></table></div>'+
+    '<p class="rq-note">등록된 차례입니다 — 금액순이 아닙니다. 범위가 다르면 금액만으로 견주지 마세요.</p>'+
+  '</div>';
 }
+
+/* ── 운영자가 받은 견적을 적습니다 (0084 staff_record_quote) ─────────
+   ⚠️⚠️ **연결한 업체의 견적만** 적습니다 — 업체 고르개가 이 건의 배정
+   업체뿐입니다 (DB 도 다시 봅니다). 연결 전에는 그 업체에 연락처가 안
+   갔습니다 (제17조).
+   ⚠️ 적으면 그 건이 "견적 도착" 으로 넘어갑니다 (move_state · 기록이 남습니다).
+   ⚠️ 결제 · 청구를 하는 자리가 아닙니다. */
+var RQ_QFIELDS = [
+  ["amount","견적 금액 (원) *","num"], ["scope","작업 범위 *","area"],
+  ["waste","폐기물 반출","text"], ["restore","원상복구 범위","text"],
+  ["excludes","제외 항목","text"], ["extra","추가 비용 조건","text"],
+  ["days","작업 기간 (일)","num"], ["note","메모","text"]
+];
+function rqStaffQuote(r){
+  var okSt = ["assigned","accepted","consult","quoted","nego"];
+  if(okSt.indexOf(r.state) < 0) return "";
+  var pv = (r.assignment || []).map(function(a){ return a.provider_id; }).filter(Boolean);
+  if(!pv.length) return "";
+  var c = RQ.qctx || (RQ.qctx = {});
+  if(!c.provider) c.provider = pv[0];
+  return '<div class="rq-s rq-sq"><h4>받은 견적 적기</h4>'+
+    '<p class="rq-note">업체가 전화 · 문자로 보낸 견적을 같은 칸에 옮겨 적습니다. 적으면 "견적 도착" 으로 넘어가고 기록이 남습니다.</p>'+
+    '<div class="rq-sq-g">'+
+      '<label class="rq-f"><span>업체</span><select class="sel" onchange="rqQctx(\'provider\', this.value)">'+
+        pv.map(function(id){ return '<option value="'+esc(id)+'"'+(c.provider === id ? " selected" : "")+'>'+esc(rqPvName(id) || id)+'</option>'; }).join("")+
+      '</select></label>'+
+      '<label class="rq-f"><span>VAT</span><select class="sel" onchange="rqQctx(\'vat\', this.value)">'+
+        [["add","별도"],["incl","포함"],["free","면세"]].map(function(v){
+          return '<option value="'+v[0]+'"'+((c.vat || "add") === v[0] ? " selected" : "")+'>'+v[1]+'</option>'; }).join("")+
+      '</select></label>'+
+      RQ_QFIELDS.map(function(f){
+        var v = c[f[0]] != null ? String(c[f[0]]) : "";
+        if(f[2] === "area")
+          return '<label class="rq-f rq-f-w"><span>'+esc(f[1])+'</span><textarea rows="2" oninput="rqQctx(\''+f[0]+'\', this.value)">'+esc(v)+'</textarea></label>';
+        return '<label class="rq-f"><span>'+esc(f[1])+'</span><input '+(f[2] === "num" ? 'inputmode="numeric" ' : '')+
+          'value="'+esc(v)+'" oninput="rqQctx(\''+f[0]+'\', this.value)"></label>';
+      }).join("")+
+    '</div>'+
+    '<button class="btn btn-b" type="button" id="rq-sq-go"'+(RQ.busy ? " disabled" : "")+
+      ' onclick="rqQuoteGo(\''+esc(r.id)+'\')">견적 기록하기</button>'+
+  '</div>';
+}
+window.rqQctx = function(k, v){ (RQ.qctx || (RQ.qctx = {}))[k] = v; };
+window.rqQuoteGo = function(id){
+  var c = RQ.qctx || {};
+  var amt = String(c.amount || "").replace(/[^0-9]/g, "");
+  if(!amt){ toast("견적 금액을 숫자로 적어 주세요"); return; }
+  if(!String(c.scope || "").trim()){ toast("작업 범위를 적어 주세요"); return; }
+  var data = { amount:Number(amt), vat:c.vat || "add", scope:String(c.scope).trim() };
+  ["waste","restore","excludes","extra","note"].forEach(function(k){
+    if(String(c[k] || "").trim()) data[k] = String(c[k]).trim(); });
+  var d = String(c.days || "").replace(/[^0-9]/g, "");
+  if(d) data.days = Number(d);
+  rqCall("staff_record_quote", { p_request:id, p_provider:c.provider, p_data:data },
+         "견적을 기록했습니다", true);
+};
+
+/* ── 계약 · 종료 결과 (0084 set_outcome) ─────────────────────────────
+   계약했거나 접은 건에 **사유와 확인일**, 그리고 완료 · 취소 · 정산 확인을
+   적습니다. ⚠️ 돈을 받는 자리가 아닙니다 — 정산 "여부" 만 적습니다. */
+var RQ_SETTLE = [["pending","정산 확인 전"],["done","정산 확인함"],["none","정산 없음 (취소 · 무상)"]];
+function rqOutcome(r){
+  if(["signed","done","fee_wait","fee_done","lost"].indexOf(r.state) < 0) return "";
+  var c = RQ.octx || (RQ.octx = {});
+  var now = (r.outcome_why || r.outcome_on)
+    ? '<p class="rq-oc-now"><b>'+(r.state === "lost" ? "종료" : "계약")+' 기록</b> · '+
+        esc(r.outcome_on ? amDate(r.outcome_on) : "")+' · '+esc(r.outcome_why || "")+
+        (r.settle ? ' · '+esc((RQ_SETTLE.filter(function(x){ return x[0] === r.settle; })[0] || ["",r.settle])[1]) : '')+'</p>'
+    : '';
+  var today = new Date().toISOString().slice(0, 10);
+  return '<div class="rq-s rq-oc"><h4>'+(r.state === "lost" ? "종료 사유와 확인일" : "계약 결과와 확인일")+'</h4>'+ now +
+    '<div class="rq-sq-g">'+
+      '<label class="rq-f rq-f-w"><span>'+(r.state === "lost" ? "종료 사유 *" : "계약 내용 · 사유 *")+'</span>'+
+        '<input value="'+esc(c.why || "")+'" oninput="rqOctx(\'why\', this.value)" '+
+        'placeholder="'+(r.state === "lost" ? "예: 고객이 직접 처리 · 일정 안 맞음" : "예: 철거 + 원상복구 계약, 12/20 착공")+'"></label>'+
+      '<label class="rq-f"><span>확인일 *</span><input type="date" value="'+esc(c.on || today)+'" oninput="rqOctx(\'on\', this.value)"></label>'+
+      '<label class="rq-f"><span>완료 · 취소 · 정산</span><select class="sel" onchange="rqOctx(\'settle\', this.value)">'+
+        RQ_SETTLE.map(function(x){ return '<option value="'+x[0]+'"'+((c.settle || r.settle || "pending") === x[0] ? " selected" : "")+'>'+x[1]+'</option>'; }).join("")+
+      '</select></label>'+
+    '</div>'+
+    '<button class="btn btn-o" type="button"'+(RQ.busy ? " disabled" : "")+
+      ' onclick="rqOutcomeGo(\''+esc(r.id)+'\')">결과 기록하기</button>'+
+  '</div>';
+}
+window.rqOctx = function(k, v){ (RQ.octx || (RQ.octx = {}))[k] = v; };
+window.rqOutcomeGo = function(id){
+  var c = RQ.octx || {};
+  if(!String(c.why || "").trim()){ toast("사유를 적어 주세요"); return; }
+  var on = c.on || new Date().toISOString().slice(0, 10);
+  rqCall("set_outcome", { p_request:id, p_why:String(c.why).trim(), p_on:on, p_settle:c.settle || "pending" },
+         "결과를 기록했습니다", true);
+};
 
 function rqHistRow(r){
   var on = RQ.histOf === r.id;

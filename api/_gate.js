@@ -6,7 +6,7 @@
 
    열려면 둘이 다 있어야 합니다.
      1) 환경변수 STOREWAY_INTAKE_OPEN 에 그 종류가 적혀 있다
-        (쉼표로 여럿 · quote · sell · join · 비어 있으면 전부 닫힘)
+        (쉼표로 여럿 · quote · close · sell · join · 비어 있으면 전부 닫힘)
      2) DB 에 저장할 수 있다 (dbReady) — 저장이 확정된 뒤에만 접수
         성공을 말하므로, DB 없이 여는 길을 두지 않습니다 (W02 ①).
 
@@ -17,7 +17,10 @@
 
 const { dbReady } = require("./_db.js");
 
-const FORMS = { quote: 1, sell: 1, join: 1 };
+/* ⚠️ 2026-11-18 — close 는 매장 정리 상담(집기 처분 · 철거 · 원상복구)입니다.
+   견적(quote)과 **따로** 엽니다. close 만 열어도 일반 견적 · 매물 등록 ·
+   입점은 닫힌 그대로입니다. */
+const FORMS = { quote: 1, close: 1, sell: 1, join: 1 };
 
 /* 요청 몸통에서 어느 양식인지 가립니다.
    ⚠️ partner 는 업체 입점(/join) 입니다. sell 은 화면이 form 으로 밝힙니다. */
@@ -25,6 +28,7 @@ function formOf(b){
   if (!b || typeof b !== "object") return "quote";
   if (b.kind === "partner") return "join";
   if (b.form === "sell") return "sell";
+  if (b.form === "close") return "close";
   return "quote";
 }
 

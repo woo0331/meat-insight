@@ -755,11 +755,11 @@ function JoinFaq(){
 function JoinForm(ready){
   return '<section class="sec sec-white" id="join-form"><div class="w form-wrap">'+
     '<h2 class="pg-h2">입점 신청</h2>'+
-    (ready ? "" :
+    (
 
-      '<div class="notice-bad"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
+      '<div class="notice-bad" data-cta="off" data-cta-form="join"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
         '<p>접수처 설정이 끝나면 바로 열립니다. 그동안에도 '+
-        '<a href="/providers">업체찾기</a>와 <a href="/quote">견적 요청</a>은 '+
+        '<a href="/providers">업체찾기</a>와 <a href="/content">이용 가이드</a>는 '+
         '그대로 쓰실 수 있습니다.</p></div>')+
     '<form id="join-f" onsubmit="return joinSend(event)">'+
       Field("jn-name","업체명","",true,"text","organization")+
@@ -777,7 +777,7 @@ function JoinForm(ready){
       AgreeBox("jn-ag","업체명 · 담당자 성함 · 연락처 · 이메일 · 하시는 일 · 지역",
                "입점 심사와 안내", "입점 종료 후 1년")+
       '<div id="jn-fail"></div>'+
-      '<button class="btn btn-b btn-lg btn-full" type="submit"'+(ready?"":" disabled")+'>'+
+      '<button class="btn btn-b btn-lg btn-full" type="submit"'+' disabled data-gate="join"'+'>'+
         '입점 신청하기'+icon("arrow",18)+'</button>'+
     '</form>'+
   '</div></section>';

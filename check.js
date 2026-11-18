@@ -1402,6 +1402,8 @@ const AUDIT = `(() => {
     for(const a of document.querySelectorAll("#view .cn-b a")){
       const h = a.getAttribute("href") || "";
       if(!h || h === "#") return "글 끝에 가짜 링크가 있습니다";
+      /* 2026-11-18 — 닫힌 접수 양식의 신청 단추는 CSS 가 가립니다 (안 보이는 것은 누를 것이 아님) */
+      if(!a.getClientRects().length) continue;
       if(a.getBoundingClientRect().height < 40) return "글 끝 링크가 40px 미만입니다";
     }
     return true;`);
@@ -2879,7 +2881,9 @@ const AUDIT = `(() => {
        받는데(0001 — start | ops | transfer | close) 화면이 다른 값을
        실어 보내면, 배정하는 직원이 엉뚱한 업체를 찾습니다 — 이
        저장소가 ops 와 transfer 로 **두 번** 겪은 자리입니다. */
-    if((bar.getAttribute("href") || "").indexOf("side=" + WANT_SIDE) < 0)
+    /* 2026-11-18 STOREWAY 1차 — 폐업 쪽의 정리 분류는 매장 정리 상담(mode=close)으로 갑니다 */
+    if((bar.getAttribute("href") || "").indexOf("side=" + WANT_SIDE) < 0 &&
+       (bar.getAttribute("href") || "").indexOf("mode=close") < 0)
       return "신청 주소의 쪽이 " + WANT_SIDE + " 가 아닙니다 — " + bar.getAttribute("href");
     /* ⑤ 체크리스트 · 절차 */
     if(!document.querySelector(".stD, .opsck")) return "체크리스트(절차)가 없습니다";
@@ -2918,7 +2922,9 @@ const AUDIT = `(() => {
        받는데(0001 — start | ops | transfer | close) 화면이 다른 값을
        실어 보내면, 배정하는 직원이 엉뚱한 업체를 찾습니다 — 이
        저장소가 ops 와 transfer 로 **두 번** 겪은 자리입니다. */
-    if((bar.getAttribute("href") || "").indexOf("side=" + WANT_SIDE) < 0)
+    /* 2026-11-18 STOREWAY 1차 — 폐업 쪽의 정리 분류는 매장 정리 상담(mode=close)으로 갑니다 */
+    if((bar.getAttribute("href") || "").indexOf("side=" + WANT_SIDE) < 0 &&
+       (bar.getAttribute("href") || "").indexOf("mode=close") < 0)
       return "신청 주소의 쪽이 " + WANT_SIDE + " 가 아닙니다 — " + bar.getAttribute("href");
     /* ⑤ 체크리스트 · 절차 */
     if(!document.querySelector(".stD, .opsck")) return "체크리스트(절차)가 없습니다";
@@ -2957,7 +2963,9 @@ const AUDIT = `(() => {
        받는데(0001 — start | ops | transfer | close) 화면이 다른 값을
        실어 보내면, 배정하는 직원이 엉뚱한 업체를 찾습니다 — 이
        저장소가 ops 와 transfer 로 **두 번** 겪은 자리입니다. */
-    if((bar.getAttribute("href") || "").indexOf("side=" + WANT_SIDE) < 0)
+    /* 2026-11-18 STOREWAY 1차 — 폐업 쪽의 정리 분류는 매장 정리 상담(mode=close)으로 갑니다 */
+    if((bar.getAttribute("href") || "").indexOf("side=" + WANT_SIDE) < 0 &&
+       (bar.getAttribute("href") || "").indexOf("mode=close") < 0)
       return "신청 주소의 쪽이 " + WANT_SIDE + " 가 아닙니다 — " + bar.getAttribute("href");
     /* ⑤ 체크리스트 · 절차 */
     if(!document.querySelector(".stD, .opsck")) return "체크리스트(절차)가 없습니다";
@@ -2996,7 +3004,9 @@ const AUDIT = `(() => {
        받는데(0001 — start | ops | transfer | close) 화면이 다른 값을
        실어 보내면, 배정하는 직원이 엉뚱한 업체를 찾습니다 — 이
        저장소가 ops 와 transfer 로 **두 번** 겪은 자리입니다. */
-    if((bar.getAttribute("href") || "").indexOf("side=" + WANT_SIDE) < 0)
+    /* 2026-11-18 STOREWAY 1차 — 폐업 쪽의 정리 분류는 매장 정리 상담(mode=close)으로 갑니다 */
+    if((bar.getAttribute("href") || "").indexOf("side=" + WANT_SIDE) < 0 &&
+       (bar.getAttribute("href") || "").indexOf("mode=close") < 0)
       return "신청 주소의 쪽이 " + WANT_SIDE + " 가 아닙니다 — " + bar.getAttribute("href");
     /* ⑤ 체크리스트 · 절차 */
     if(!document.querySelector(".stD, .opsck")) return "체크리스트(절차)가 없습니다";
@@ -3226,6 +3236,9 @@ const AUDIT = `(() => {
      ⚠️⚠️ **모르시는 분의 길은 닫지 않습니다** — 까닭 줄 안에 고르지
      않고도 바로 상담으로 갈 수 있는 링크가 있어야 합니다. */
   await f("0개면 신청 단추가 안 눌리고 까닭이 보인다", "/operation", `
+    /* 2026-11-18 — 검사 서버는 접수가 닫혀 있어 신청 단추가 CSS 로 가려집니다.
+       여기서 보는 것은 0개 · 1개의 갈림이라 열림을 흉내 냅니다 (닫힘은 test-s1 · test-gate). */
+    document.documentElement.classList.add("iq-quote","iq-close");
     try{ localStorage.removeItem("am.pick.v1"); }catch(e){}
     const on = document.getElementById("pk-go-on");
     const off = document.getElementById("pk-go-off");

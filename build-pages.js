@@ -87,7 +87,9 @@ function loadApp(){
                    slug 를 가리킵니다 — 셋 다 위에 있습니다 (2026-10-18 §9) */
                 "js/data/opscheck.js",
                 /* 이용 절차 넷 — 메인 05 구간과 크롤러 본문이 같이 읽습니다 */
-                "js/data/steps.js"];
+                "js/data/steps.js",
+                /* 매장 정리 상담의 초기 범위 — api/_scope.js 와 같아야 합니다 (2026-11-18) */
+                "js/data/closescope.js"];
 
   /* ⚠️ 여기는 **glob 이 아니라 손으로 적은 목록**입니다. 새 데이터
      파일을 만들고 여기에 안 넣으면, 그 데이터를 쓰는 주소가 **에러
@@ -2195,7 +2197,20 @@ function checkDealSql(W){
     /* insert … values ( … ) ; 안의 줄을 꺼냅니다 */
     const seg = msql.split("insert into deal_move (from_state, to_state, role, needs) values")[1];
     if(!seg) throw new Error("0004 에 deal_move 를 채우는 insert 가 없습니다");
-    const body = seg.split(/;\s*$|;\n/)[0];
+    /* ⚠️ 2026-11-18 — 0004 는 이미 돌아간 파일이라 길을 늘리는 것은
+       **다음 번호의 insert** 입니다 (0084 가 직원 · 관리자 네 걸음을
+       더했습니다). 0004 만 보면 멀쩡한 코드가 "DB 에 없는 길" 로
+       멈춥니다 — 뒤 번호의 deal_move insert 를 전부 같이 읽습니다.
+       ⚠️ delete from deal_move 는 쓰지 않는 규칙이라(길을 줄이려면
+       새 번호에서 지우세요) 여기서는 더하기만 셉니다. */
+    const body = [seg].concat(MIG.filter(x => x > "0004").map(function(x){
+        return fs.readFileSync(path.join(ROOT, "db", "migrations", x), "utf8")
+          .replace(/^\s*--.*$/gm, " ")
+          .split("insert into deal_move (from_state, to_state, role, needs) values").slice(1)
+          .join("\n");
+      })).map(function(t){ return t.split(/;\s*$|;\n/m)[0]; }).join("\n");
+    if(/delete\s+from\s+deal_move/i.test(bare))
+      throw new Error("deal_move 에서 지우는 마이그레이션이 있습니다 — 이 검사는 더하기만 셉니다. 검사를 같이 고치세요");
     const got = new Set();
     const re = /\(\s*'([a-z_]+)'\s*,\s*'([a-z_]+)'\s*,\s*'([a-z_]+)'\s*,\s*([^)]*)\)/g;
     let m;
@@ -3725,6 +3740,20 @@ checkSales(W);
 checkDeal(W);
 checkFee(W);
 checkDealSql(W);
+/* 2026-11-18 STOREWAY 1차 — 매장 정리 상담 범위가 화면과 서버에서 같은가.
+   ⚠️ 한쪽만 고치면 화면은 "연결됩니다" 라고 하는데 서버가 422 로 거절하거나,
+   화면이 막는 지역을 서버가 받습니다 (에러 없이 조용히 어긋나는 종류). */
+(function checkCloseScope(){
+  const S = require(path.join(ROOT, "api", "_scope.js"));
+  const a = JSON.stringify(W.AM_CLOSE_SCOPE || null), b = JSON.stringify(S.CLOSE_SCOPE);
+  if(a !== b) throw new Error("매장 정리 상담 범위가 화면과 서버에서 다릅니다\n   화면: " + a + "\n   서버: " + b);
+  if(W.AM_CLOSE_OUT_SAY !== S.OUT_SAY) throw new Error("지역 밖 안내 글이 화면과 서버에서 다릅니다");
+  for(const g of S.CLOSE_SCOPE.gu)
+    if(!((W.AM_REGIONS || []).filter(r => r.key === S.CLOSE_SCOPE.region)[0] || {gu:[]}).gu.includes(g))
+      throw new Error("매장 정리 상담 지역 " + g + " 이(가) regions.js 에 없습니다");
+  for(const c of S.CLOSE_SCOPE.cats)
+    if(!(W.AM_CATS || []).some(x => x.key === c)) throw new Error("매장 정리 상담 분류 " + c + " 이(가) catalog.js 에 없습니다");
+})();
 checkClaimSql();
 checkQuoteSql(W);
 checkRpcArgs();
@@ -3776,11 +3805,12 @@ function checkHallFrame(){
   });
   /* ⚠️ 화면이 받는 값 넷과 같아야 합니다 (0001 — start | ops | transfer | close) */
   ["start", "ops", "transfer", "close"].forEach(function(k){
-    if(!sides[k]) die("전문관 공통 검사에 쪽 " + k + " 가 빠졌습니다");
+    if(!sides[k]) throw new Error("전문관 공통 검사에 쪽 " + k + " 가 빠졌습니다");
   });
   rest.forEach(function(b, i){
     if(b !== rest[0])
-      die("전문관 공통 검사 " + got[i].url + " 의 본문이 " + got[0].url +
+      /* ⚠️ die 라는 함수는 없습니다 — 걸리는 날 ReferenceError 로 까닭이 묻혔습니다 */
+      throw new Error("전문관 공통 검사 " + got[i].url + " 의 본문이 " + got[0].url +
           " 과 다릅니다 — 넷은 WANT_SIDE 말고는 글자까지 같아야 합니다");
   });
   console.log("   전문관 공통 검사 4개가 글자까지 같습니다 (" +

@@ -496,6 +496,7 @@ window.HallCalcBand = function(o){
   '</div></section>';
 };
 
+function ctaF(o){ return (o && o.ctaForm) ? ' data-cta-form="'+esc(o.ctaForm)+'"' : ""; }
 window.HallHero = function(o){
   o = o || {};
   var ph = o.photo && typeof hasPhoto === "function" && hasPhoto(o.photo);
@@ -513,9 +514,9 @@ window.HallHero = function(o){
         '<h1 class="pg-h1 hh-h1">'+(o.h1raw || esc(o.h1 || ""))+'</h1>'+
         (o.lead ? '<p class="pg-lead hh-lead">'+esc(o.lead)+'</p>' : '')+
         '<div class="row-cta hh-cta">'+
-          '<a class="btn btn-lg hh-go" href="/intake" data-cta="off">'+
+          '<a class="btn btn-lg hh-go" href="/intake" data-cta="off"'+ctaF(o)+'>'+
             '접수 안내 보기'+icon("arrow",18)+'</a>'+
-          '<a class="btn btn-lg hh-go" href="'+esc(o.quote || "/quote")+'" data-cta="on" hidden>'+
+          '<a class="btn btn-lg hh-go" href="'+esc(o.quote || "/quote")+'" data-cta="on"'+ctaF(o)+' hidden>'+
             esc(o.goName || "상담 신청하기")+icon("arrow",18)+'</a>'+
           (o.second ? o.second : '')+
         '</div>'+
@@ -539,8 +540,8 @@ window.HallSteps = function(o){
         '<b>'+esc(s.n || "")+'</b></li>';
     }).join("")+'</ol>'+
     '<div class="hst-go">'+
-      '<a class="btn btn-lg hh-go" href="/intake" data-cta="off">접수 안내 보기'+icon("arrow",18)+'</a>'+
-      '<a class="btn btn-lg hh-go" href="'+esc(o.quote || "/quote")+'" data-cta="on" hidden>'+
+      '<a class="btn btn-lg hh-go" href="/intake" data-cta="off"'+ctaF(o)+'>접수 안내 보기'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-lg hh-go" href="'+esc(o.quote || "/quote")+'" data-cta="on"'+ctaF(o)+' hidden>'+
         esc(o.goName || "상담 신청하기")+icon("arrow",18)+'</a>'+
     '</div>'+
   '</div></section>';

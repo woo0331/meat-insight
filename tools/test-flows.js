@@ -37,7 +37,12 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     시안 2 · 3). 1100px 위에서는 오른쪽 고정 패널(`#pka-go`)이고,
     그 아래에서는 하단 고정 띠(`#pk-bar-go`)입니다 — 둘을 동시에
     내면 한 화면에 같은 단추가 둘입니다. **보이는 쪽**을 고릅니다. */
+ /* ⚠️ 2026-11-18 STOREWAY 1차 — 이 검사 서버에는 /api/session 이 없어 접수가
+    **닫힘**이고, 닫힌 양식의 신청 단추는 CSS 가 가립니다 (html.iq-<양식>).
+    여기서 보는 것은 **길이 끝까지 이어지는가**라 열림을 흉내 냅니다 —
+    닫혔을 때 가려지는지는 【15】 가 따로 봅니다. */
  const pickGoSel=async()=>pg.evaluate(()=>{
+   document.documentElement.classList.add("iq-quote","iq-close");
    const vis=e=>e&&!e.hidden&&e.getClientRects().length>0&&
      getComputedStyle(e).display!=="none";
    if(vis(document.getElementById("pka-go")))    return "#pka-go";
@@ -179,7 +184,8 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     견적 신청"(`/quote`) 이 됐습니다** — 업체 입점은 이제 **푸터**가
     유일한 길입니다. 끝이 막히지 않았는지 거기서 눌러 봅니다. */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.ft a[href="/join"]');
+ /* 2026-11-18 — 입점 접수가 닫혀 있으면 단추 꼴 링크는 가려지고 글 링크(파트너 입점)가 길을 지킵니다 */
+ await click('.ft a[href="/join"]:visible');
  say((await url())==="/join","푸터 업체 입점 → 신청 화면",await url());
  /* §2-E — 메인에서 견적 · 상담으로 가는 길이 하나는 있어야 합니다 */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
@@ -598,8 +604,32 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    say(n === String(want), no+"② 고른 "+want+"개를 그대로 센다", n);
    /* ② 한 번에 신청 — 폰 고정 띠의 주소에 쪽과 고른 것이 실립니다 */
    const href = await pickGoAttr("href");
-   say((href||"").indexOf("side="+side) >= 0, no+"③ 신청 주소의 쪽이 "+side+" 다", href);
+   /* ⚠️ 2026-11-18 STOREWAY 1차 — 폐업 쪽에서 고른 것이 전부 정리 분류(양도 · 집기 ·
+      철거 · 원상복구 · 폐기물)면 **매장 정리 상담** 양식(mode=close)으로 갑니다. */
+   const isClose = side === "close";
+   say(isClose ? (href||"").indexOf("mode=close") >= 0 : (href||"").indexOf("side="+side) >= 0,
+       no+"③ 신청 주소가 "+(isClose ? "매장 정리 상담" : "쪽 "+side)+" 이다", href);
    await pickGo();
+   if(isClose){
+     say(/^\/quote/.test(await url()), no+"④ 신청 화면으로 간다", await url());
+     const cn = await pg.evaluate(()=>document.querySelectorAll('input[name="cq-s"]:checked').length);
+     say(cn === want, no+"⑤⑥ 매장 정리 상담 양식에 고른 "+want+"개가 체크되어 있다", String(cn));
+     await pg.selectOption("#cq-gu","안양시"); await pg.selectOption("#cq-ind","restaurant");
+     await pg.fill("#cq-when","2026-12-30");
+     await pg.fill("#cq-name","홍길동"); await pg.fill("#cq-tel","010-1234-5678");
+     await pg.check("#cq-ag");
+     const cb = await pg.evaluate(()=>{
+       let got=null; const real=window.amSend;
+       window.amSend=(id,b)=>{ got=b; return false; };
+       window.closeSend(new Event("submit"));
+       window.amSend=real; return got;
+     });
+     say(!!cb && cb.form === "close" && cb.items.length === want, no+"⑦ 한 신청서에 항목 "+want+"개 (form close)", cb && cb.items && cb.items.length);
+     say(!!cb && cb.side === "close" && cb.gu === "안양시" && cb.regionKey === "gyeonggi", no+"⑧ 보낼 쪽 · 지역", cb && [cb.side, cb.gu]);
+     say(cb && cb.detail && cb.detail["상황"] === "폐업 · 정리", no+"⑨ 접수 글의 상황 칸이 폐업 · 정리 다", cb && cb.detail);
+     await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
+     continue;
+   }
    say(/^\/quote/.test(await url()), no+"④ 신청 화면으로 간다", await url());
    const got = await pg.evaluate(()=>({
      side: (document.getElementById("q-side")||{}).value||"",
@@ -958,8 +988,9 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    await bx[0].click(); await pg.waitForTimeout(300);
    const go = await pg.$("[data-pick-go]");
    const href = go ? await go.getAttribute("href") : "";
-   say(href.indexOf("side="+side) >= 0 && href.indexOf("sv=") >= 0,
-       nm+" — 신청 단추가 쪽과 고른 것을 들고 간다", href);
+   /* 2026-11-18 — 폐업 쪽의 정리 분류는 매장 정리 상담 양식(mode=close)으로 갑니다 */
+   say((side === "close" ? href.indexOf("mode=close") >= 0 : href.indexOf("side="+side) >= 0) && href.indexOf("sv=") >= 0,
+       nm+" — 신청 단추가 쪽(또는 매장 정리 상담)과 고른 것을 들고 간다", href);
  }
 
  /* §1-03 — 고르신 것이 있으면 **메인이 그 자리에서** 냅니다.

@@ -388,6 +388,9 @@ function QuoteStage(){
 }
 
 function PageQuote(){
+  /* 2026-11-18 STOREWAY 1차 — 매장 정리 상담 (집기 처분 · 철거 · 원상복구).
+     ⚠️ 새 주소를 만들지 않습니다 — 같은 접수 API 에 form:"close" 로 갑니다. */
+  if(nowQS("mode") === "close") return PageQuoteClose();
   var list = quoteServices();
   var cat  = nowQS("c"), sub = nowQS("s");
   var ind  = nowQS("i"), reg = nowQS("r");
@@ -437,8 +440,10 @@ function PageQuote(){
        안 고치고** 아래 문장이 바뀝니다 (이 저장소가 CLAUDE.md 의
        "아직 안 된 것" 표에서 겪은 자리). */
     QuoteStage()+
-    (ready ? "" :
-      '<div class="notice-bad"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
+    /* ⚠️ 2026-11-18 — 화면 설정만 보지 않습니다. 서버의 견적 접수(quote)가
+       열렸을 때만 안내가 사라지고 단추가 풀립니다 (hdCtaPaint · data-gate). */
+    (
+      '<div class="notice-bad" data-cta="off" data-cta-form="quote"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
         '<p>접수처 설정이 끝나면 바로 열립니다. 그동안에는 '+
         '<a href="/providers">업체찾기</a>에서 분야를 보시거나, '+
         '<a href="/content">창업 · 폐업 정보</a>에서 무엇을 확인해야 하는지 '+
@@ -533,7 +538,7 @@ function PageQuote(){
                  "견적 요청 접수와 상담 안내","접수일로부터 1년")+
         QNotifyBox()+
         '<div id="q-fail"></div>'+
-        '<button class="btn btn-b btn-lg btn-full" type="submit"'+(ready?"":" disabled")+'>'+
+        '<button class="btn btn-b btn-lg btn-full" type="submit" disabled data-gate="quote">'+
           '<span id="q-go-t">'+(list.length
             ? "선택한 "+list.length+"개 서비스 견적 신청하기"
             : "견적 신청하기")+'</span>'+icon("arrow",18)+'</button>'+
@@ -993,4 +998,140 @@ window.intakePaint = function(){
       if(mine) e.removeAttribute("hidden"); else e.setAttribute("hidden","");
     });
   });
+};
+
+/* ════════════════════════════════════════════════════════════════════
+   매장 정리 상담 — /quote?mode=close (2026-11-18 STOREWAY 1차)
+
+   집기 처분 · 철거 · 원상복구를 **한 번에** 견적 요청하는 짧은 양식입니다.
+   ⚠️⚠️ 매장 양도 검토를 거치지 않아도 됩니다 — 일정이 급한 분이 양도
+   화면을 돌아 나올 까닭이 없습니다 (양도도 같이 고르실 수는 있습니다).
+   ⚠️⚠️ 일반 견적(quote)과 **따로 엽니다** — 서버 게이트의 close 만 봅니다.
+   ⚠️ 받는 지역은 api/_scope.js (화면은 js/data/closescope.js — 빌드가 맞춰
+   봅니다). 그 밖의 지역은 **접수하지 않고 그 사실을 그대로** 말합니다.
+   ⚠️ 처음 묻는 것은 여섯뿐입니다 — 지역 · 업종 · 정리 희망일 · 필요한
+   서비스 · 연락처 · 필수 동의. 상황 설명과 사진은 선택입니다 (사진은
+   접수 뒤에 붙습니다 · 접수번호가 있어야 자리를 줍니다).
+   ════════════════════════════════════════════════════════════════════ */
+var CLOSE_OPTS = ["asset/kitchen-eq","asset/fridge","asset/furniture",
+                  "demolish/full","demolish/partial","demolish/sign",
+                  "restore/shop-restore","waste/biz-waste","transfer/store-transfer"];
+
+function closeSrc(){
+  /* 유입 경로 — ⚠️ 경로 글자만 (연락처 · 원문 없음 · 서버가 한 번 더 거릅니다) */
+  var from = String(nowQS("from") || "").replace(/[^a-z0-9\-]/gi, "").slice(0, 40);
+  var path = "";
+  try{
+    var r = document.referrer ? new URL(document.referrer) : null;
+    if(r && r.origin === location.origin) path = r.pathname.replace(/[^A-Za-z0-9/_\-]/g, "").slice(0, 80);
+  }catch(e){}
+  return ["close", from, path].filter(Boolean).join("|");
+}
+
+function PageQuoteClose(){
+  var SC = window.AM_CLOSE_SCOPE || { gu:[], cats:[] };
+  var pre = {};
+  String(nowQS("sv") || "").split(",").forEach(function(x){ x = x.trim(); if(x) pre[x] = 1; });
+  var opts = CLOSE_OPTS.map(function(id){ return amPickOne(id); }).filter(Boolean);
+  var ind = nowQS("i");
+  var today = new Date(); var iso = today.toISOString().slice(0, 10);
+  return PgHero({
+    kicker:"매장 정리 상담",
+    h1raw:"집기 처분 · 철거 · 원상복구를<br class=\"br-m\"> 한 번에 견적 받아 보세요.",
+    lead:"필요한 것만 고르고 연락처를 남기시면 운영자가 확인하고 맞는 업체를 찾아 연락드립니다. 가입하지 않으셔도 됩니다. 무료입니다.",
+    tight:true
+  })+
+  '<section class="sec sec-white"><div class="w form-wrap cq">'+
+    '<div class="notice-bad" data-cta="off" data-cta-form="close" role="status"><b>지금은 매장 정리 상담을 받지 않습니다.</b>'+
+      '<p>지금 보내셔도 접수되지 않습니다. 재개 일정은 정해지지 않았습니다. '+
+      '그동안 <a href="/closure">폐업 · 정리 순서</a>와 '+
+      '<a href="/tools/closecost">폐업 예상비용 계산</a>을 먼저 보실 수 있습니다.</p></div>'+
+    /* ⚠️ flex 칸이라 글을 span 하나로 감쌉니다 — 맨글과 b 를 섞으면 b 가 제 칸이 되어 세로로 쪼개집니다 */
+    '<p class="note-box cq-area">'+icon("mappin",16)+'<span>지금은 <b>'+esc(SC.gu.join(" · "))+
+      '</b>의 매장을 연결해 드립니다. 업체 연결은 운영자가 직접 확인해 진행하고, '+
+      '연결할 업체가 정해지면 어느 업체인지 알려 드린 뒤 연락처 전달 동의를 다시 받습니다.</span></p>'+
+    '<form id="cq-f" onsubmit="return closeSend(event)" novalidate>'+
+      '<div class="qs">'+QStepHd("01", "필요한 서비스를 골라 주세요", "여러 개를 함께 고르셔도 한 번에 접수됩니다.")+
+        '<div class="cq-svc" role="group" aria-label="필요한 서비스">'+
+          opts.map(function(sv){
+            var id = "cq-s-" + sv.id.replace(/[^a-z0-9]/gi, "-");
+            return '<label class="cq-k" for="'+id+'"><input type="checkbox" id="'+id+'" name="cq-s" value="'+esc(sv.id)+'"'+
+              (pre[sv.id] ? " checked" : "")+'><span>'+esc(amPickLabel(sv))+'</span></label>';
+          }).join("")+
+        '</div></div>'+
+      '<div class="qs">'+QStepHd("02", "매장은 어디인가요?", "")+
+        '<div class="f-2">'+
+          '<div class="f-r"><label for="cq-gu">시 · 군 <b>*</b></label>'+
+            '<select class="sel" id="cq-gu" onchange="closeAreaPaint()"><option value="">골라 주세요</option>'+
+              SC.gu.map(function(g){ return '<option value="'+esc(g)+'">경기 '+esc(g)+'</option>'; }).join("")+
+              '<option value="out">그 밖의 지역</option></select></div>'+
+          '<div class="f-r"><label for="cq-ind">업종 <b>*</b></label>'+IndustrySelect("cq-ind", ind, "", "골라 주세요")+'</div>'+
+        '</div>'+
+        '<div class="notice-bad cq-out" id="cq-out" hidden role="status"><b>'+esc(window.AM_CLOSE_OUT_SAY || "")+'</b>'+
+          '<p><a href="/closure">폐업 · 정리 순서</a>와 <a href="/tools/closecost">예상비용 계산</a>은 지역과 상관없이 쓰실 수 있습니다.</p></div>'+
+        '<div class="f-r"><label for="cq-when">정리 희망일 <b>*</b></label>'+
+          '<input id="cq-when" type="date" min="'+iso+'"></div>'+
+      '</div>'+
+      '<div class="qs">'+QStepHd("03", "연락처를 남겨 주세요", "")+
+        '<div class="f-2">'+
+          '<div class="f-r"><label for="cq-name">성함 <b>*</b></label><input id="cq-name" autocomplete="name"></div>'+
+          '<div class="f-r"><label for="cq-tel">연락처 <b>*</b></label><input id="cq-tel" type="tel" autocomplete="tel" inputmode="tel" placeholder="010-0000-0000"></div>'+
+        '</div>'+
+        '<div class="f-r"><label for="cq-q">지금 상황 <i>(선택)</i></label>'+
+          '<textarea id="cq-q" rows="4" placeholder="예: 30평 음식점, 다음 달 말 계약 만료. 주방 기기는 팔고 싶고 철거와 원상복구가 필요합니다."></textarea></div>'+
+        '<p class="note">사진은 접수 뒤에 올리실 수 있습니다 (선택).</p>'+
+      '</div>'+
+      '<div class="qs">'+QStepHd("04", "확인하고 보내기", "")+
+        AgreeBox("cq-ag","성함 · 연락처 · 업종 · 지역 · 정리 희망일 · 필요한 서비스 · 적어 주신 내용(선택)",
+                 "매장 정리 상담 접수와 업체 연결 안내","접수일로부터 1년")+
+        '<div id="cq-fail"></div>'+
+        '<button class="btn btn-b btn-lg btn-full" id="cq-go" type="submit" disabled data-gate="close">'+
+          '매장 정리 상담 신청하기'+icon("arrow",18)+'</button>'+
+        '<p class="note note-mid">회신 시점과 업체 연결을 약속드리지는 않습니다. 결제는 이 화면에서 하지 않습니다.</p>'+
+      '</div>'+
+    '</form>'+
+  '</div></section>';
+}
+
+/* 지역 밖이면 그 자리에서 말하고 단추를 잠급니다 — ⚠️ 서버도 422 로 막습니다 */
+window.closeAreaPaint = function(){
+  var out = $("cq-gu") && $("cq-gu").value === "out";
+  var box = $("cq-out"); if(box){ if(out) box.removeAttribute("hidden"); else box.setAttribute("hidden",""); }
+  var b = $("cq-go"); if(b && out) b.disabled = true;
+  else if(b && typeof hdCtaPaint === "function") hdCtaPaint();
+};
+
+window.closeSend = function(ev){
+  ev.preventDefault();
+  var SC = window.AM_CLOSE_SCOPE || { gu:[] };
+  var ids = [].slice.call(document.querySelectorAll('input[name="cq-s"]:checked')).map(function(x){ return x.value; });
+  var gu = $("cq-gu").value;
+  if(!ids.length){ toast("필요한 서비스를 하나 이상 골라 주세요"); return false; }
+  if(!gu){ toast("시 · 군을 골라 주세요"); $("cq-gu").focus(); return false; }
+  if(gu === "out" || SC.gu.indexOf(gu) < 0){ closeAreaPaint(); toast(window.AM_CLOSE_OUT_SAY || ""); return false; }
+  var need = [["cq-ind","업종"],["cq-when","정리 희망일"],["cq-name","성함"],["cq-tel","연락처"]];
+  for(var i=0;i<need.length;i++){
+    if(!$(need[i][0]).value.trim()){ toast(need[i][1]+"을(를) 적어 주세요"); $(need[i][0]).focus(); return false; }
+  }
+  var tel = $("cq-tel").value.replace(/[^0-9]/g, "");
+  if(tel.length < 9 || tel.length > 11){ toast("연락처를 다시 확인해 주세요"); $("cq-tel").focus(); return false; }
+  if(!$("cq-ag").checked){ toast("개인정보 수집 · 이용 동의가 필요합니다"); return false; }
+  var list = ids.map(amPickOne).filter(Boolean);
+  var ind = $("cq-ind").value;
+  var body = {
+    kind:"quote", form:"close",
+    name:$("cq-name").value.trim(), tel:$("cq-tel").value.trim(),
+    region:SC.regionName, regionKey:SC.region, gu:gu,
+    side:"close", industry:ind, cat:list[0].id,
+    serviceName:list.map(amPickLabel).join(" · "),
+    q:$("cq-q").value.trim(), wantAt:$("cq-when").value,
+    items:list.map(function(sv){ return { id:sv.id, detail:{} }; }),
+    idem:amIdem("close"),
+    detail:amDropEmpty({ "상황":"폐업 · 정리", "업종":ind ? amIndustryName(ind) : "",
+                         "시군구":gu, "정리 희망일":$("cq-when").value,
+                         "신청 서비스":list.map(amPickLabel).join(" · ") }),
+    src:closeSrc(),
+    agree:true
+  };
+  return amSend("cq-fail", body, "closeSend", function(){ amIdemClear("close"); });
 };

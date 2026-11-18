@@ -522,3 +522,13 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 .q-nt b{ color:var(--ink); }
 
 .hd-cta[hidden]{ display:none !important; }
+
+html:not(.iq-quote) [data-go-form="quote"]:not(.pk-closed),
+html:not(.iq-close) [data-go-form="close"]:not(.pk-closed),
+html:not(.iq-sell)  [data-go-form="sell"]:not(.pk-closed),
+html:not(.iq-join)  [data-go-form="join"]:not(.pk-closed){ display:none !important; }
+html.iq-quote .pk-closed[data-go-form="quote"],
+html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
+.pk-closed-n{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:10px 0 0;
+  font-size:var(--t-cap); color:var(--ink2); }
+.pk-closed-n a{ min-height:40px; display:inline-flex; align-items:center; font-weight:700; }

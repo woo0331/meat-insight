@@ -161,6 +161,10 @@ window.amAuthAsk = function(force){
 
     AM_AUTH.quoteOpen = !!(d && d.intake && d.intake.quote === true);
 
+    AM_AUTH.intake = {};
+    ["quote","close","sell","join"].forEach(function(k){
+      AM_AUTH.intake[k] = !!(d && d.intake && d.intake[k] === true); });
+
     AM_AUTH.lookup = !!(d && d.lookup === true);
     if(!d){ AM_AUTH.on = false; return AM_AUTH; }
     AM_AUTH.on       = !!d.auth;
@@ -174,7 +178,7 @@ window.amAuthAsk = function(force){
   }).catch(function(e){
 
     try{ console.warn("[auth] /api/session — " + e); }catch(_){}
-    AM_AUTH.asked = true; AM_AUTH.on = false; AM_AUTH.quoteOpen = false;
+    AM_AUTH.asked = true; AM_AUTH.on = false; AM_AUTH.quoteOpen = false; AM_AUTH.intake = {};
     return AM_AUTH;
   });
 

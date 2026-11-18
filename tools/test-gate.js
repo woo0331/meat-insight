@@ -130,7 +130,21 @@ const FAKE_SEND = { INTAKE_WEBHOOK_URL: "https://example.invalid/hook" };
     ok(calls.length === 0, nm + " → 바깥 요청 0건", calls);
     ok(!JSON.stringify(r.body).match(/STOREWAY_INTAKE_OPEN|SUPABASE|why/),
       nm + " → 설정 이름 · 까닭을 내보내지 않음", r.body);
-    ok(Object.keys(r.body.intake).join() === "quote", nm + " → 견적 하나만 담음", r.body.intake);
+    /* ⚠️ 2026-11-18 STOREWAY 1차 — 양식마다 **따로** 실습니다 (전에는 견적
+       하나뿐이었습니다). 섞이지 않는지는 바로 아래 close 만 연 경우가 봅니다. */
+    ok(Object.keys(r.body.intake).join() === "quote,close,sell,join", nm + " → 양식 넷을 따로 담음", r.body.intake);
+  }
+  console.log("\n▶ 매장 정리 상담만 열면 다른 양식은 닫힌 그대로");
+  {
+    fresh(Object.assign({ STOREWAY_INTAKE_OPEN: "close" }, FAKE_DB));
+    const sh = require(path.join(ROOT, "api", "session.js"));
+    const r = res(); await sh({ method: "GET", headers: {} }, r);
+    const it = (r.body && r.body.intake) || {};
+    ok(it.close === true && it.quote === false && it.sell === false && it.join === false,
+       "close 만 열림 → 견적 · 매물 · 입점은 false", it);
+    const hq = require(path.join(ROOT, "api", "quote.js"));
+    const r2 = res(); await hq(req(QUOTE), r2);
+    ok(r2.code === 503 && r2.body && r2.body.closed === true, "close 만 열려 있으면 일반 견적은 503", r2.body);
   }
 
   global.fetch = realFetch;

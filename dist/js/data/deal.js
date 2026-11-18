@@ -46,14 +46,14 @@ window.AM_DEAL_MOVE = [
   ["check",    "assigned", ["staff","admin"],            ["providerId","agree3rd"]],
   ["check",    "lost",     ["staff","admin","customer"], ["why"]],
 
-  ["assigned", "accepted", ["provider"]],
+  ["assigned", "accepted", ["provider","staff","admin"]],
   ["assigned", "check",    ["provider","staff","admin"], ["why"]],
   ["assigned", "lost",     ["staff","admin","customer"], ["why"]],
-  ["accepted", "consult",  ["provider"]],
+  ["accepted", "consult",  ["provider","staff","admin"]],
   ["accepted", "lost",     ["staff","admin","customer"], ["why"]],
-  ["consult",  "quoted",   ["provider"]],
+  ["consult",  "quoted",   ["provider","staff","admin"]],
   ["consult",  "lost",     ["staff","admin","customer"], ["why"]],
-  ["quoted",   "nego",     ["provider","customer"]],
+  ["quoted",   "nego",     ["provider","customer","staff","admin"]],
   ["quoted",   "lost",     ["staff","admin","customer"], ["why"]],
 
   ["nego",     "signed",   ["provider","staff","admin"], ["amount"]],
@@ -180,6 +180,24 @@ window.amDealTone = function(key){
   if(s.key === "lost")  return "gray";
   if(s.end)             return "ok";
   return "on";
+};
+
+window.AM_DEAL_STAGE = [
+  { key:"unassigned", name:"미배정" },
+  { key:"contact",    name:"연락 대기" },
+  { key:"vendor",     name:"업체 응답 대기" },
+  { key:"quoted",     name:"견적 도착" },
+  { key:"signed",     name:"계약" },
+  { key:"closed",     name:"종료" }
+];
+window.amDealStage = function(r){
+  var st = r && r.state;
+  if(st === "lost") return "closed";
+  if(st === "signed" || st === "done" || st === "fee_wait" || st === "fee_done") return "signed";
+  if(st === "quoted" || st === "nego") return "quoted";
+  if(st === "assigned" || st === "accepted" || st === "consult") return "vendor";
+  if(st === "hold") return "contact";
+  return (r && r.owner_id) ? "contact" : "unassigned";
 };
 
 window.amRoleName = function(key){

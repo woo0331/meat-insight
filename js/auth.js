@@ -241,6 +241,11 @@ window.amAuthAsk = function(force){
     AM_AUTH.asked = true;
     /* 2026-11-18 — 서버 접수 게이트(api/_gate.js)의 견적 상태. 못 읽으면 닫힘입니다. */
     AM_AUTH.quoteOpen = !!(d && d.intake && d.intake.quote === true);
+    /* 2026-11-18 STOREWAY 1차 — 양식마다 따로 (quote · close · sell · join).
+       ⚠️ true 인 것만 true 입니다 — 못 읽거나 모르는 양식은 닫힘입니다. */
+    AM_AUTH.intake = {};
+    ["quote","close","sell","join"].forEach(function(k){
+      AM_AUTH.intake[k] = !!(d && d.intake && d.intake[k] === true); });
     /* W03 — 비회원 본인 조회가 열려 있는가 (못 읽으면 닫힘) */
     AM_AUTH.lookup = !!(d && d.lookup === true);
     if(!d){ AM_AUTH.on = false; return AM_AUTH; }
@@ -256,7 +261,7 @@ window.amAuthAsk = function(force){
     /* ⚠️ 운영자에게만 남깁니다 — 손님은 아무 잘못도 안 했습니다
        (절대 규칙 3). */
     try{ console.warn("[auth] /api/session — " + e); }catch(_){}
-    AM_AUTH.asked = true; AM_AUTH.on = false; AM_AUTH.quoteOpen = false;
+    AM_AUTH.asked = true; AM_AUTH.on = false; AM_AUTH.quoteOpen = false; AM_AUTH.intake = {};
     return AM_AUTH;
   });
   /* ⚠️ 답이 오면 놓습니다 — `force` 로 다시 물을 수 있어야 합니다

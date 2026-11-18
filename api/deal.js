@@ -96,6 +96,11 @@ const OK_FN = {
   /* W03 (0083) — 다음 행동 기한 · 메모(내부 / 연락 기록 / 고객 공개 안내).
      ⚠️ FN_SAY 에 넣지 않습니다 — 직원이 하루에 수십 번 누르는 일입니다. */
   set_next_due:1, add_request_note:1,
+  /* 2026-11-18 STOREWAY 1차 (0084) — 운영자가 받은 견적을 적고, 계약 · 종료
+     사유와 확인일 · 정산 여부를 적습니다. ⚠️ FN_SAY 에 넣지 않습니다 —
+     운영자가 스스로 누르는 일이고, 상태가 바뀌는 자리는 그 안의
+     move_state() 가 감사 기록에 남깁니다. ⚠️ 결제 · 청구는 하지 않습니다. */
+  staff_record_quote:1, set_outcome:1,
   /* 2026-10-25 P1-7 (0016) — `/join` 입점 신청의 상태.
      ⚠️⚠️ **`FN_SAY` 에 넣지 마세요.** 이 문을 누르는 사람이 곧 직원
      입니다 — 자기가 방금 누른 것을 운영자 채널로 되받으면 정작 돈 쪽
@@ -135,6 +140,7 @@ const OK_ARG = {
      제17조로 거절하고, 화면에는 "처리하지 못했습니다" 만 나갑니다. */
   p_item:1, p_agree3rd:1,                              /* assign_item · move_item_state */
   p_due:1, p_kind:1, p_body:1, p_result:1,             /* W03 set_next_due · add_request_note */
+  p_on:1, p_settle:1,                                  /* 0084 set_outcome (staff_record_quote 는 위 칸들) */
   /* 0012 — ⚠️ p_owner 는 **직원 · 관리자 계정**이라야 합니다 (DB 가 봅니다).
      p_assignable 은 listed 와 다른 플래그입니다 — "배정해도 되는가" 입니다. */
   p_owner:1, p_assignable:1,                           /* set_owner · approve_provider */

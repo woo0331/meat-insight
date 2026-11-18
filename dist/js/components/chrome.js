@@ -120,13 +120,56 @@ window.amQuoteOpen = function(){
   return window.amAuthAsk().then(function(a){ return !!(a && a.quoteOpen); },
                                  function(){ return false; });
 };
+
+window.amIntakeOpen = function(form){
+  form = form || "quote";
+  if(!(window.WOW_BIZ && WOW_BIZ.sosReady)) return Promise.resolve(false);
+  if(typeof window.amAuthAsk !== "function") return Promise.resolve(false);
+  return window.amAuthAsk().then(function(a){
+    return !!(a && a.intake && a.intake[form] === true); }, function(){ return false; });
+};
+
+function ctaTagLinks(){
+  var cats = (window.AM_CLOSE_SCOPE && AM_CLOSE_SCOPE.cats) || [];
+  els('#view a.btn[href^="/quote"], #view a.btn[href^="/sell"], #view a.btn[href^="/join"]').forEach(function(a){
+    if(a.hasAttribute("data-cta") || a.hasAttribute("data-go-form")) return;
+    var h = a.getAttribute("href") || "", f = "quote";
+    if(h.indexOf("/sell") === 0) f = "sell";
+    else if(h.indexOf("/join") === 0) f = "join";
+    else {
+      var q = {};
+      (h.split("?")[1] || "").split("#")[0].split("&").forEach(function(kv){
+        var p = kv.split("="); if(p[0]) q[p[0]] = decodeURIComponent(p[1] || ""); });
+      if(q.mode === "close") f = "close";
+      else if(q.side === "close" && q.c && cats.indexOf(String(q.c).split("/")[0]) >= 0){
+        a.setAttribute("href", "/quote?mode=close&from=cat-" + String(q.c).replace(/[^a-z0-9]/gi, "-") +
+          "&sv=" + encodeURIComponent(q.s ? q.c + "/" + q.s : q.c));
+        f = "close";
+      }
+    }
+    a.setAttribute("data-go-form", f);
+  });
+}
 window.hdCtaPaint = hdCtaPaint;
 function hdCtaPaint(){
-  window.amQuoteOpen().then(function(open){
+  ctaTagLinks();
 
-    els('[data-cta]').forEach(function(a){
-      var mine = a.getAttribute("data-cta") === (open ? "on" : "off");
-      if(mine) a.removeAttribute("hidden"); else a.setAttribute("hidden","");
+  var forms = { quote:1, close:1, sell:1, join:1 };
+  els('[data-cta],[data-gate]').forEach(function(a){
+    forms[a.getAttribute("data-cta-form") || a.getAttribute("data-gate") || "quote"] = 1; });
+  Object.keys(forms).forEach(function(f){
+    window.amIntakeOpen(f).then(function(open){
+      els('[data-cta]').forEach(function(a){
+        if((a.getAttribute("data-cta-form") || "quote") !== f) return;
+        var mine = a.getAttribute("data-cta") === (open ? "on" : "off");
+        if(mine) a.removeAttribute("hidden"); else a.setAttribute("hidden","");
+      });
+      els('[data-gate="'+f+'"]').forEach(function(b){
+
+        b.disabled = !open || (b.id === "cq-go" && !!document.getElementById("cq-gu") &&
+                                document.getElementById("cq-gu").value === "out");
+      });
+      document.documentElement.classList.toggle("iq-" + f, !!open);
     });
   });
 }
@@ -245,7 +288,7 @@ function Footer(){
         Logo("ft") +
         '<p>'+esc((window.AM_BRAND||{}).slogan || "")+'<br> '+
           '창업에 필요한 모든 것, 폐업에 필요한 모든 것.</p>'+
-        '<a class="btn btn-nv" href="/join">업체 입점하기'+icon("arrow",16)+'</a>'+
+        '<a class="btn btn-nv" href="/join" data-go-form="join">업체 입점하기'+icon("arrow",16)+'</a>'+
       '</div>'+
 
       cols.map(function(c){

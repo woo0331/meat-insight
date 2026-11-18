@@ -183,7 +183,8 @@ try{
                   "db/migrations/0019_request_scope.sql",
                   /* 2026-11-18 W02 — 운영은 20~81 이 골프 판이라 번호가 건너뜁니다 */
                   "db/migrations/0082_storeway_intake.sql",
-                  "db/migrations/0083_storeway_inbox_lookup.sql"];
+                  "db/migrations/0083_storeway_inbox_lookup.sql",
+                  "db/migrations/0084_storeway_close_consult.sql"];
   for(const f of ["db/test/00_stub_auth.sql"].concat(MIGS)){
     let e = "";
     try{ psqlFile(f); }catch(err){ /* ⚠️⚠️ NOTICE 가 먼저 쏟아져서 앞 세 줄만 보면 **진짜
@@ -2532,9 +2533,13 @@ try{
     /* ⚠️⚠️ **다음 네 걸음은 업체 전용입니다** — 직원도 관리자도 못
        갑니다 (업체가 수락했다는 기록을 남이 적으면 뜻이 달라집니다).
        그래서 업체 계정 연결이 §5 의 자리였습니다. */
-    r = denied(as(ST) + "select move_state('" + RA + "','accepted','{}'::jsonb)");
-    ok("§7A-5 수락은 직원이 대신 못 한다 (업체 전용)",
-       r.no && /staff\(으\)로는 할 수 없습니다/.test(r.why || ""), r.why);
+    /* ⚠️⚠️ 2026-11-18 (0084) — 초기 수동 운영에서는 운영자가 업체와
+       통화하고 **대신** 넘깁니다. 그래서 이 걸음이 업체 전용이 아니게
+       됐습니다. 대신 **누가 넘겼는가가 기록에 갈려서 남는지**를
+       tools/test-s1.js 가 봅니다 (by_role = staff). 여기서는 길 표에
+       그 줄이 있는지만 봅니다 — 이 건은 업체가 직접 수락합니다. */
+    r = { n: psql("select count(*) from deal_move where from_state='assigned' and to_state='accepted' and role='staff'") };
+    ok("§7A-5 수락은 직원도 대신 적을 수 있다 (0084 · 기록에 직원으로 남음)", r.n === "1", r.n);
     a = allowed(as(PV) + "select move_state('" + RA + "','accepted','{}'::jsonb)");
     ok("§7A-6 배정받은 업체가 수락한다", a.yes, a.why);
     /* ⚠️⚠️ **여기가 §7 을 쓰다 찾은 구멍입니다** — `move_state()` 가

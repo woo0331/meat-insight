@@ -26,7 +26,12 @@ const { authReady, bearer, session, publicConf } = require("./_auth.js");
    ⚠️ true/false 만 나갑니다. 까닭(why)은 운영자용이라 내보내지 않습니다 (절대 규칙 3).
    ⚠️ 환경변수만 읽습니다 — DB · 메일 · 웹훅을 부르지 않습니다. */
 const { gate } = require("./_gate.js");
-function intakeState(){ return { quote: gate("quote").open === true }; }
+/* ⚠️ 2026-11-18 — 양식마다 따로 실습니다. 화면은 그 양식의 값만 봅니다
+   (매장 정리 상담만 열었을 때 일반 견적 단추가 같이 열리면 안 됩니다). */
+function intakeState(){
+  return { quote: gate("quote").open === true, close: gate("close").open === true,
+           sell:  gate("sell").open === true,  join:  gate("join").open === true };
+}
 /* W03 — 비회원 본인 조회가 열려 있는가 (true/false 만 · 어댑터 이름도 안 냅니다).
    ⚠️ 운영(production)에서는 시험용 어댑터가 켜지지 않아 늘 false 입니다 (api/_lookup.js). */
 const { lookupReady } = require("./_lookup.js");

@@ -246,7 +246,16 @@ function Logo(where){
 function Header(){
   /* ⚠️ 본문 바로가기는 `index.html` 에 이미 있습니다. 여기서 또 내면
      읽어 주는 프로그램에 같은 것이 두 번 들립니다. */
-  return '<div role="status" style="background:#12243a;color:#fff;text-align:center;padding:10px 16px;font-size:14px">인수인계 복구 점검 중 · 상담·등록·로그인은 아직 접수하지 않습니다.</div><header class="hd"><div class="w-wide hd-in">'+
+  /* ⚠️ 2026-11-18 W01 ③ — 접수 중단 띠. 밝은 면에 짙은 글자입니다 (전에는 짙은 남색
+     띠라 폰 360px 첫 화면의 어두운 면이 15% 를 넘었습니다 · sweep-rest 13건).
+     ⚠️ sosReady 가 켜지면 저절로 사라집니다 — 손으로 지우는 띠를 만들지 않습니다.
+     재개일은 적지 않습니다 (확정되지 않았습니다). */
+  var closedBar = (window.WOW_BIZ && WOW_BIZ.sosReady) ? "" :
+    '<div role="status" style="background:var(--bg-sky,#EFF6FC);color:var(--navy,#0C3D70);'+
+      'border-bottom:1px solid var(--line,#E2E8F0);text-align:center;padding:10px 16px;font-size:14px">'+
+      '현재 견적 · 매물 등록 · 입점 · 로그인 접수를 받지 않습니다. '+
+      '정보 · 계산도구 · 체크리스트는 그대로 이용하실 수 있습니다.</div>';
+  return closedBar + '<header class="hd"><div class="w-wide hd-in">'+
     Logo() +
     '<nav class="gnb" id="gnb" aria-label="주요 메뉴">'+
       AM_GNB.map(function(m){
@@ -293,7 +302,16 @@ function Header(){
          표시를 보고 **보던 조건을 href 에 실어 줍니다.** 없으면
          분류 화면에서 눌렀을 때 빈 견적 화면이 떠서 처음부터 다시
          적게 됩니다 (업체 상세의 `quoteTo({})` 로 겪은 사고). */
-      '<a class="btn btn-nv hd-cta" href="/quote" data-to="/quote">'+
+      /* ⚠️⚠️ 2026-11-18 — 견적 접수 상태에 따라 둘 중 **하나만** 보입니다.
+         기본은 "접수 안내"(닫힘)이고, 서버 게이트(api/_gate.js 의 quote)가
+         열려 있고 화면 설정(WOW_BIZ.sosReady)도 켜져 있을 때만 "견적 신청" 으로
+         바꿉니다 — `hdCtaPaint()`. 못 읽으면 닫힘 그대로입니다 (fail-closed).
+         ⚠️ 태그를 바꿔 끼우지 않고 둘 다 두고 hidden 으로 가립니다 —
+         `.hd-cta[hidden]{display:none}` 이 css/app.css 에 같이 있어야 합니다
+         (.btn 이 inline-flex 라 작성자 CSS 가 [hidden] 을 이깁니다). */
+      '<a class="btn btn-nv hd-cta hd-cta-off" href="/intake" data-cta="off">'+
+        '접수 안내'+icon("arrow",16)+'</a>'+
+      '<a class="btn btn-nv hd-cta hd-cta-on" href="/quote" data-to="/quote" data-cta="on" hidden>'+
         '<span class="hd-cta-w">무료 </span>견적 신청'+icon("arrow",16)+'</a>'+
       /* ⚠️⚠️ **폰 햄버거** (§3 — "모바일에서는 간결한 로고, 견적 신청
          진입 버튼, 햄버거 메뉴를 우선 배치한다").
@@ -345,6 +363,29 @@ window.hdMenu = function(open){
   bt.setAttribute("aria-expanded", on ? "true" : "false");
 };
 
+/* 2026-11-18 — 헤더 CTA 를 견적 접수 상태로 고릅니다.
+   ⚠️⚠️ 별도 상태값을 만들지 않습니다. 둘 다 이미 있는 것입니다 —
+     · 서버 접수 게이트 api/_gate.js 의 quote (/api/session 의 intake.quote)
+     · 화면 설정 WOW_BIZ.sosReady (꺼져 있으면 /quote 양식이 스스로 잠깁니다)
+   둘 다 켜져야 "견적 신청" 입니다. 한쪽만 보면 헤더는 열림인데 양식은 잠긴
+   어긋남이 생깁니다. 서버의 접수 차단은 이것과 상관없이 그대로입니다. */
+window.amQuoteOpen = function(){
+  if(!(window.WOW_BIZ && WOW_BIZ.sosReady)) return Promise.resolve(false);
+  if(typeof window.amAuthAsk !== "function") return Promise.resolve(false);
+  return window.amAuthAsk().then(function(a){ return !!(a && a.quoteOpen); },
+                                 function(){ return false; });
+};
+window.hdCtaPaint = hdCtaPaint;
+function hdCtaPaint(){
+  window.amQuoteOpen().then(function(open){
+    /* 2026-11-18 — 헤더뿐 아니라 본문(전문관 머리 · 상담 진행 띠)의 짝도 같이 고릅니다 */
+    els('[data-cta]').forEach(function(a){
+      var mine = a.getAttribute("data-cta") === (open ? "on" : "off");
+      if(mine) a.removeAttribute("hidden"); else a.setAttribute("hidden","");
+    });
+  });
+}
+
 /* ⚠️⚠️ **로그인이 설정되기 전에는 아무것도 안 그립니다** (§0-7 ·
    절대 규칙 2 · 5). `auth:false` 면 `hidden` 인 채로 둡니다 —
    "준비 중" 도 적지 않습니다. */
@@ -357,8 +398,11 @@ function hdAuthPaint(){
     box.innerHTML = a.signedIn
       ? '<a class="hd-txt" href="/my">'+icon("user",18)+
           '<span>'+esc("내 계정")+'</span></a>'
-      : '<a class="hd-txt" href="/my">'+icon("user",18)+
+      : '<a class="hd-txt" href="/my?next='+encodeURIComponent(window.location.pathname + window.location.search)+'">'+icon("user",18)+
           '<span>'+esc("로그인")+'</span></a>';
+    /* 2026-11-18 — 카카오 취소 · 실패로 돌아왔으면 그 자리에서 알립니다 */
+    var es = window.amAuthErrSay ? amAuthErrSay() : "";
+    if(es && typeof window.toast === "function") toast(es);
   });
 }
 
@@ -677,6 +721,7 @@ window.mountChrome = function(){
   /* ⚠️ 로그인 칸은 한 번만 묻습니다 (`amAuthAsk()` 가 스스로 캐시합니다) —
      화면을 옮길 때마다 `/api/session` 을 때리지 않습니다. */
   hdAuthPaint();
+  hdCtaPaint();
 };
 
 /* 헤더 통합검색 — ⚠️ 빈 채로 보내면 `/search` 가 빈 화면입니다. */

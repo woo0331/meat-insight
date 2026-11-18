@@ -1049,7 +1049,11 @@ const ADM_DEAL = [
       contentType:"application/json",
       body: JSON.stringify({ auth:true, signedIn:true, role:"customer",
         requests:[], quotes:[], state:null }) }));
-    await pg.route("https://zz.supabase.co/**", r => {
+    /* W03 — 브라우저는 Supabase 를 직접 부르지 않고 같은 출처의 /api/auth 를 지납니다
+       (CSP connect-src 'self'). Supabase 주소로 가는 요청은 따로 세어 0 인지 봅니다. */
+    const direct = [];
+    await pg.route("https://zz.supabase.co/**", r => { direct.push(r.request().url()); r.abort(); });
+    await pg.route("**/api/auth", r => {
       hit.push({ u:r.request().url(), h:r.request().headers(),
                  b:r.request().postData() || "" });
       r.fulfill({ status:200, contentType:"application/json",
@@ -1062,12 +1066,12 @@ const ADM_DEAL = [
       "at:Date.now()-1000}))}catch(e){}");
     await pg.goto(base + "/my", { waitUntil:"networkidle" });
     await pg.waitForTimeout(600);
-    const ref = hit.filter(x => x.u.indexOf("grant_type=refresh_token") >= 0);
-    ok("만료되면 새로 받는다", ref.length === 1, JSON.stringify(hit.map(x => x.u)));
-    /* ⚠️⚠️ **화면에 내려가는 것은 주소와 공개 키 둘뿐입니다** — service
-       key 는 RLS 를 통째로 지나갑니다 (api/_auth.js 의 publicConf). */
-    ok("공개 키를 apikey 로 보낸다 (service key 가 아님)",
-        ref.length === 1 && ref[0].h.apikey === "ZZ-ANON", JSON.stringify(ref[0] && ref[0].h));
+    const ref = hit.filter(x => x.b.indexOf('"op":"refresh"') >= 0);
+    ok("만료되면 새로 받는다 (/api/auth · refresh)", ref.length === 1, JSON.stringify(hit.map(x => x.b)));
+    /* ⚠️⚠️ 키는 서버에만 있습니다 — 브라우저 요청에 apikey 를 싣지 않습니다 */
+    ok("브라우저가 키를 싣지 않고 Supabase 를 직접 부르지 않는다",
+        ref.length === 1 && !ref[0].h.apikey && direct.length === 0,
+        JSON.stringify({ h: ref[0] && ref[0].h.apikey, direct: direct }));
     ok("새 토큰으로 갈아 끼운다", await pg.evaluate(() => {
       try { return JSON.parse(localStorage.getItem("am.auth.v1")).access_token === "NEW"; }
       catch (e) { return false; } }));
@@ -1088,9 +1092,11 @@ const ADM_DEAL = [
     await pg.route("**/api/me**", r => r.fulfill({ status:200,
       contentType:"application/json",
       body: JSON.stringify({ auth:true, signedIn:false }) }));
-    await pg.route("https://zz.supabase.co/**", r => {
+    const direct2 = [];
+    await pg.route("https://zz.supabase.co/**", r => { direct2.push(r.request().url()); r.abort(); });
+    await pg.route("**/api/auth", r => {
       otp.push({ u:r.request().url(), b:r.request().postData() || "" });
-      r.fulfill({ status:200, contentType:"application/json", body:"{}" });
+      r.fulfill({ status:200, contentType:"application/json", body:'{"ok":true}' });
     });
     await pg.goto(base + "/my", { waitUntil:"networkidle" });
     await pg.waitForTimeout(400);
@@ -1122,10 +1128,148 @@ const ADM_DEAL = [
     })());
     /* ⚠️⚠️ 돌아올 자리를 같이 보냅니다 — Supabase 쪽 Redirect URLs 에
        그 주소가 없으면 링크가 기본 주소로 갑니다 */
-    ok("돌아올 자리를 같이 보낸다",
-        otp.length >= 1 && otp[0].b.indexOf("email_redirect_to") >= 0,
+    /* W03 — 돌아올 자리는 **경로만** 보내고 서버가 들어온 출처에 붙입니다 (api/auth.js) */
+    ok("돌아올 자리(경로)를 같이 보낸다 · Supabase 직접 호출 0",
+        otp.length >= 1 && otp[0].b.indexOf('"op":"otp"') >= 0 && otp[0].b.indexOf('"path":"/my"') >= 0 && direct2.length === 0,
         otp[0] && otp[0].b);
     ok("JS 에러 0", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
+  console.log("\nW03 본인 확인 후 조회 — /my 의 두 영역");
+  for(const W of [1440, 390]){
+    /* ① 닫힘 — 조회가 안 열려 있으면 사실만 적고 폼이 없다 */
+    {
+      const ctx = await br.newContext({ viewport:{ width:W, height:900 } });
+      const pg = await ctx.newPage(); const errs = [];
+      pg.on("pageerror", e => errs.push(String(e)));
+      await pg.route("**/api/session", r => r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ auth:false, signedIn:false, lookup:false, intake:{ quote:false } }) }));
+      await pg.goto(base + "/my", { waitUntil:"networkidle" }); await pg.waitForTimeout(400);
+      const st = await pg.evaluate(() => ({
+        hs: [].slice.call(document.querySelectorAll("#view .my-area-hd h2")).map(h => h.textContent.trim()),
+        off: !!document.querySelector('#my-lk [data-lk="off"]'), form: !!document.querySelector("#my-lk form") }));
+      ok(W + "px 닫힘 — 두 영역 제목이 갈려 있다",
+         st.hs.indexOf("본인 확인 후 조회하는 신청 내역") >= 0 && st.hs.indexOf("이 브라우저에 저장한 준비 기록") >= 0, JSON.stringify(st.hs));
+      ok(W + "px 닫힘 — 열리지 않았다는 사실만 · 폼 없음", st.off && !st.form, JSON.stringify(st));
+      ok(W + "px 닫힘 — JS 에러 0", errs.length === 0, errs.join(" | "));
+      await ctx.close();
+    }
+    /* ② 열림 — 번호+전화 → 인증번호 → 결과. 토큰은 머리로만 · 이 탭에만 */
+    {
+      const ctx = await br.newContext({ viewport:{ width:W, height:900 } });
+      const pg = await ctx.newPage(); const errs = [], seen = [];
+      pg.on("pageerror", e => errs.push(String(e)));
+      await pg.route("**/api/session", r => r.fulfill({ status:200, contentType:"application/json",
+        body: JSON.stringify({ auth:false, signedIn:false, lookup:true, intake:{ quote:false } }) }));
+      await pg.route("**/api/lookup", r => {
+        const q = r.request(), b = JSON.parse(q.postData() || "{}");
+        seen.push({ url:q.url(), b, h:q.headers() });
+        if(b.op === "start") return r.fulfill({ status:200, contentType:"application/json",
+          body: JSON.stringify({ ok:true, challenge:"11111111-2222-3333-4444-555555555555", say:"인증번호를 보냈습니다.", testCode:"123456" }) });
+        if(b.op === "verify") return b.code === "123456"
+          ? r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify({ ok:true, token:"T".repeat(43) }) })
+          : r.fulfill({ status:400, contentType:"application/json", body: JSON.stringify({ ok:false, error:"인증번호가 맞지 않습니다." }) });
+        return r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify({ ok:true, data:{
+          no:"SW-AAAA-0001", created_at:"2026-11-18T00:00:00Z", side:"start", state:"check",
+          rollup:{ total:2, open:1, done:1, lost:0, hold:0, phase:"open" },
+          items:[{ service_id:"interior", state:"done" }, { service_id:"demolish", state:"consult" }],
+          notes:[{ at:"2026-11-18T03:00:00Z", body:"담당자가 확인하고 있습니다." }] } }) });
+      });
+      await pg.goto(base + "/my", { waitUntil:"networkidle" }); await pg.waitForTimeout(400);
+      await pg.click("#my-lk form button[type=submit]"); await pg.waitForTimeout(200);
+      /* 비워 두면 브라우저의 required 가 먼저 막습니다 — 보내지 않는 것이 요점입니다 */
+      ok(W + "px 열림 — 비워 두면 안 보냄", seen.length === 0);
+      await pg.evaluate(() => window.myLkStart({ preventDefault(){} })); await pg.waitForTimeout(150);
+      ok(W + "px 열림 — 직접 불러도 빈 값이면 안 보내고 알림", seen.length === 0 && (await pg.locator("#my-lk [role=alert]").count()) === 1);
+      await pg.fill("#my-lk-no", "SW-AAAA-0001"); await pg.fill("#my-lk-tel", "010-1234-5678");
+      await pg.click("#my-lk form button[type=submit]"); await pg.waitForTimeout(400);
+      ok(W + "px 열림 — 인증번호 칸으로 넘어가고 초점이 거기", (await pg.evaluate(() => document.activeElement && document.activeElement.id)) === "my-lk-code");
+      await pg.fill("#my-lk-code", "000000"); await pg.click('#my-lk [data-lk="code"] button[type=submit]'); await pg.waitForTimeout(400);
+      ok(W + "px 열림 — 틀리면 그 자리에서 알림", (await pg.locator("#my-lk [role=alert]").textContent()).includes("맞지 않습니다"));
+      await pg.fill("#my-lk-code", "123456"); await pg.click('#my-lk [data-lk="code"] button[type=submit]'); await pg.waitForTimeout(600);
+      const v = await pg.locator('#my-lk [data-lk="view"]').textContent().catch(() => "");
+      ok(W + "px 열림 — 접수번호 · 진행 상태 · 서비스별 상태 · 안내",
+         v.includes("SW-AAAA-0001") && v.includes("진행 중") && v.includes("진행 1 · 완료 1") && v.includes("담당자가 확인하고 있습니다"), v.slice(0, 160));
+      const rd = seen.find(x => x.b.op === "read") || {};
+      ok(W + "px 열림 — 토큰은 머리로만 (URL · 몸통에 없음)",
+         rd.h && rd.h["x-lookup-token"] === "T".repeat(43) && rd.url.indexOf("T".repeat(10)) < 0 && JSON.stringify(rd.b).indexOf("TTTT") < 0, JSON.stringify(rd.b));
+      const stor = await pg.evaluate(() => ({ s: sessionStorage.getItem("am.lookup.v1") || "", l: JSON.stringify(localStorage) }));
+      ok(W + "px 열림 — 확인은 이 탭(sessionStorage)에만 · 번호 · 전화는 어디에도 안 남김",
+         stor.s.indexOf("TTTT") >= 0 && stor.l.indexOf("TTTT") < 0 && (stor.s + stor.l).indexOf("1234") < 0 && (stor.s + stor.l).indexOf("SW-AAAA") < 0, JSON.stringify(stor).slice(0, 160));
+      ok(W + "px 열림 — 가로 스크롤 없음", await pg.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+      await pg.reload({ waitUntil:"networkidle" }); await pg.waitForTimeout(600);
+      ok(W + "px 열림 — 새로고침해도 30분 안에는 다시 묻지 않음", (await pg.locator('#my-lk [data-lk="view"]').count()) === 1);
+      await pg.click('#my-lk [data-lk="view"] button'); await pg.waitForTimeout(300);
+      ok(W + "px 열림 — 확인 끝내기 → 토큰 지움", (await pg.evaluate(() => sessionStorage.getItem("am.lookup.v1"))) === null);
+      ok(W + "px 열림 — JS 에러 0", errs.length === 0, errs.join(" | "));
+      await ctx.close();
+    }
+  }
+
+  console.log("\n카카오 간편 로그인 — 시작 · 복귀 · 취소 · 꺼짐 · 로그인 의무 없음");
+  for(const W of [1440, 390]){
+    const ctx = await br.newContext({ viewport:{ width:W, height:900 } });
+    const pg = await ctx.newPage(); const errs = [], posts = [];
+    pg.on("pageerror", e => errs.push(String(e)));
+    let kk = true;
+    await pg.route("**/api/session", r => {
+      const signed = (r.request().headers()["authorization"] || "").indexOf("Bearer ") === 0;
+      return r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify(signed
+        ? { auth:true, signedIn:true, role:"customer", conf:{ url:"https://zz.supabase.co", anonKey:"ZZ-ANON" }, kakao:kk, lookup:false, intake:{ quote:false } }
+        : { auth:true, signedIn:false, conf:{ url:"https://zz.supabase.co", anonKey:"ZZ-ANON" }, kakao:kk, lookup:false, intake:{ quote:false } }) });
+    });
+    await pg.route("**/api/me**", r => r.fulfill({ status:200, contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:false }) }));
+    const direct = [];
+    await pg.route("https://zz.supabase.co/**", r => { direct.push(r.request().url()); r.abort(); });
+    /* Supabase 가 카카오 동의 뒤 원래 자리로 #access_token 을 붙여 돌려보내는 것을 흉내 냅니다 */
+    const TOK = "aaa.bbb.ccc";
+    await pg.route("**/api/auth", r => {
+      const b = JSON.parse(r.request().postData() || "{}"); posts.push(b);
+      return r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify({
+        url: base + (b.path || "/my") + "#access_token=" + TOK + "&refresh_token=rrrrrrrrrr&expires_in=3600&token_type=bearer" }) });
+    });
+    await pg.goto(base + "/my?next=" + encodeURIComponent("/startup?i=cafe"), { waitUntil:"networkidle" });
+    await pg.waitForTimeout(500);
+    const btn = pg.locator(".my-kakao");
+    ok(W + "px 카카오 — 켜져 있으면 단추가 보임", await btn.isVisible());
+    const bh = await btn.evaluate(e => e.getBoundingClientRect().height);
+    ok(W + "px 카카오 — 단추 높이 44px 이상", bh >= 44, bh);
+    ok(W + "px 카카오 — 로그인 없이도 쓸 수 있다는 말", (await pg.locator(".my-kk").textContent()).includes("로그인 없이도"));
+    await btn.click(); await pg.waitForTimeout(900);
+    ok(W + "px 카카오 — 서버에 원래 자리(next)를 보냄", posts[0] && posts[0].op === "oauth" && posts[0].provider === "kakao" && posts[0].path === "/startup?i=cafe", JSON.stringify(posts[0]));
+    const back = await pg.evaluate(() => ({ p: location.pathname + location.search, h: location.hash,
+      t: (JSON.parse(localStorage.getItem("am.auth.v1") || "{}").access_token) || "" }));
+    ok(W + "px 카카오 — 원래 페이지로 돌아오고 토큰을 받아 둠 · 주소창의 토큰은 지움",
+       back.p === "/startup?i=cafe" && back.h === "" && back.t === TOK, JSON.stringify(back));
+    ok(W + "px 카카오 — 헤더가 로그인 상태(내 계정)", (await pg.locator("#hdAuth").textContent()).includes("내 계정"));
+    ok(W + "px 카카오 — 브라우저가 Supabase 를 직접 부르지 않음", direct.length === 0, direct.join(" "));
+    /* 로그아웃 */
+    await pg.goto(base + "/my", { waitUntil:"networkidle" }); await pg.waitForTimeout(300);
+    await pg.evaluate(() => window.amAuthOut()); await pg.waitForTimeout(300);
+    ok(W + "px 로그아웃 — 이 브라우저의 토큰을 지움", (await pg.evaluate(() => localStorage.getItem("am.auth.v1"))) === null);
+    /* 취소 — 동의 화면에서 취소하면 ?error=access_denied 로 돌아옵니다 */
+    await pg.goto(base + "/startup?error=access_denied&error_code=401&error_description=user%20cancelled", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(700);
+    const cx = await pg.evaluate(() => ({ s: location.search, t: (document.getElementById("toast") || {}).textContent || "" }));
+    ok(W + "px 취소 — '취소하셨습니다' 를 알리고 주소창의 오류를 치움", cx.t.includes("취소하셨습니다") && cx.s === "", JSON.stringify(cx));
+    /* ⚠️ 바로 앞이 /startup 이라 해시만 바꾸면 **같은 문서 안 이동**(새로 안 읽음)입니다.
+       실제로는 Supabase 에서 다른 출처로 **새로 들어오는** 길이라, 한 번 다른 데로 갔다 옵니다. */
+    await pg.goto("about:blank");
+    await pg.goto(base + "/startup#error=server_error&error_description=x", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(700);
+    const fx = await pg.evaluate(() => ({ h: location.hash, t: (document.getElementById("toast") || {}).textContent || "" }));
+    ok(W + "px 실패 — '로그인하지 못했습니다' · 주소 정리", fx.t.includes("로그인하지 못했습니다") && fx.h === "", JSON.stringify(fx));
+    /* 꺼짐 */
+    kk = false;
+    await pg.goto(base + "/my", { waitUntil:"networkidle" }); await pg.waitForTimeout(400);
+    ok(W + "px 꺼짐 — 카카오 단추가 없음 (메일 로그인은 그대로)", (await pg.locator(".my-kakao").count()) === 0 && (await pg.locator("#my-em").count()) === 1);
+    /* 로그인 의무 없음 — 검색 · 가이드 · 신청 양식이 로그인 없이 열림 */
+    await pg.goto(base + "/quote", { waitUntil:"networkidle" }); await pg.waitForTimeout(300);
+    const free = await pg.evaluate(() => ({ form: !!document.getElementById("q-f"), sign: !!document.querySelector(".my-in, .my-kakao") }));
+    ok(W + "px 비회원 신청 양식에 로그인 요구가 없음", free.form && !free.sign, JSON.stringify(free));
+    ok(W + "px 카카오 — JS 에러 0", errs.length === 0, errs.join(" | "));
     await ctx.close();
   }
 

@@ -917,3 +917,5 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 .q-nt span{ padding-top:2px; }
 .q-nt input{ margin-top:2px; }
 .q-nt b{ color:var(--ink); }
+/* 2026-11-18 — 헤더 CTA 둘 중 하나만 (견적 접수 상태 · chrome.js hdCtaPaint) */
+.hd-cta[hidden]{ display:none !important; }

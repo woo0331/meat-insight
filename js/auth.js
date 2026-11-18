@@ -35,7 +35,7 @@ var AM_AUTH_KEY = "am.auth.v1";
    그물을 빠져나갑니다.** 재 보니 화면마다 2번(`/my` 는 3번) 나가고
    있었습니다 — 지금은 돌고 있는 것을 그대로 돌려줍니다. */
 var AM_AUTH = { asked:false, on:false, signedIn:false, role:"", name:"",
-                provider:null, conf:null };
+                provider:null, conf:null, quoteOpen:false, kakao:false };
 var AM_AUTH_FLY = null;
 
 /* ── 저장 ────────────────────────────────────────────────────────
@@ -64,7 +64,57 @@ function amAuthClear(){
 /* ── 매직링크가 돌아왔을 때 ───────────────────────────────────────
    ⚠️⚠️ **해시를 한 번만 읽고 바로 지웁니다.** 안 지우면 주소창에
    토큰이 남아 어깨너머로 보이고, 공유하면 그대로 넘어갑니다. */
+/* 2026-11-18 카카오 — 동의 화면에서 **취소**하거나 실패하면 Supabase 가
+   ?error=access_denied … 또는 #error=… 로 돌려보냅니다. 받아서 사람 말로 알리고
+   주소창을 치웁니다 (오류 글이 주소에 남아 공유되지 않게). */
+var AM_AUTH_ERR = "";
+function amAuthTakeError(){
+  var src = "";
+  try{ src = String(window.location.hash || "").replace(/^#/, "") + "&" +
+             String(window.location.search || "").replace(/^\?/, ""); }catch(e){ return; }
+  if(src.indexOf("error=") < 0 && src.indexOf("error_description=") < 0) return;
+  var q = {};
+  src.split("&").forEach(function(kv){
+    var i = kv.indexOf("=");
+    if(i > 0) try{ q[decodeURIComponent(kv.slice(0,i))] = decodeURIComponent(kv.slice(i+1).replace(/\+/g, " ")); }catch(e){}
+  });
+  if(!q.error && !q.error_description) return;
+  AM_AUTH_ERR = (q.error === "access_denied") ? "cancel" : "fail";
+  try{
+    var keep = String(window.location.search || "").replace(/^\?/, "").split("&").filter(function(kv){
+      return kv && !/^(error|error_code|error_description)=/.test(kv); }).join("&");
+    window.history.replaceState({}, "", window.location.pathname + (keep ? "?" + keep : ""));
+  }catch(e){}
+}
+window.amAuthErrSay = function(){
+  var e = AM_AUTH_ERR; AM_AUTH_ERR = "";
+  return e === "cancel" ? "카카오 로그인을 취소하셨습니다."
+       : e === "fail"   ? "로그인하지 못했습니다. 잠시 뒤 다시 시도해 주세요." : "";
+};
+/* 로그인 뒤 돌아갈 자리 — ?next= 가 **우리 사이트 안 경로**일 때만 씁니다 */
+window.amAuthNext = function(){
+  var n = "";
+  try{ n = new URLSearchParams(window.location.search).get("next") || ""; }catch(e){}
+  if(n.charAt(0) !== "/" || n.charAt(1) === "/" || n.indexOf("\\") >= 0) return "";
+  return n.split("#")[0].slice(0, 200);
+};
+/* 카카오로 시작하기 — 서버가 만든 Supabase 주소로 갑니다 (키는 서버에만).
+   ⚠️ 처음이면 그 자리에서 가입되고, 같은 카카오 계정이면 같은 회원으로 돌아옵니다
+   (Supabase 가 카카오 계정 id 로 묶습니다 — 저희가 따로 잇지 않습니다). */
+window.amAuthKakao = function(path){
+  var p = path || window.amAuthNext() || window.location.pathname;
+  return fetch("/api/auth", { method:"POST", headers:{ "content-type":"application/json" },
+    body: JSON.stringify({ op:"oauth", provider:"kakao", path:p }) })
+    .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ return { ok:r.ok, d:d }; }); })
+    .then(function(x){
+      if(x.ok && x.d && x.d.url){ window.location.assign(x.d.url); return { ok:true, say:"카카오로 이동합니다…" }; }
+      return { ok:false, say:(x.d && x.d.error) || "지금은 카카오로 로그인할 수 없습니다." };
+    })
+    .catch(function(){ return { ok:false, say:"연결이 끊겼습니다. 잠시 뒤 다시 눌러 주세요." }; });
+};
+
 function amAuthTakeHash(){
+  amAuthTakeError();
   var h = "";
   try{ h = String(window.location.hash || ""); }catch(e){ return false; }
   if(h.indexOf("access_token=") < 0) return false;
@@ -151,10 +201,11 @@ window.amAuthHeaders = function(){
 function amAuthRefresh(){
   var t = amAuthLoad(), c = AM_AUTH.conf;
   if(!t || !t.refresh_token || !c) return Promise.resolve(false);
-  return fetch(c.url + "/auth/v1/token?grant_type=refresh_token", {
+  /* W03 — 같은 출처의 /api/auth 를 지납니다 (CSP connect-src 'self' · api/auth.js) */
+  return fetch("/api/auth", {
     method:"POST",
-    headers:{ "content-type":"application/json", apikey:c.anonKey },
-    body: JSON.stringify({ refresh_token: t.refresh_token })
+    headers:{ "content-type":"application/json" },
+    body: JSON.stringify({ op:"refresh", refresh_token: t.refresh_token })
   }).then(function(r){ return r.ok ? r.json() : null; })
     .then(function(d){
       if(!d || !d.access_token){ amAuthClear(); return false; }
@@ -188,8 +239,13 @@ window.amAuthAsk = function(force){
     return d;
   }).then(function(d){
     AM_AUTH.asked = true;
+    /* 2026-11-18 — 서버 접수 게이트(api/_gate.js)의 견적 상태. 못 읽으면 닫힘입니다. */
+    AM_AUTH.quoteOpen = !!(d && d.intake && d.intake.quote === true);
+    /* W03 — 비회원 본인 조회가 열려 있는가 (못 읽으면 닫힘) */
+    AM_AUTH.lookup = !!(d && d.lookup === true);
     if(!d){ AM_AUTH.on = false; return AM_AUTH; }
     AM_AUTH.on       = !!d.auth;
+    AM_AUTH.kakao    = !!(d.auth && d.kakao === true);
     AM_AUTH.signedIn = !!d.signedIn;
     AM_AUTH.role     = d.role || "";
     AM_AUTH.name     = d.name || "";
@@ -200,7 +256,7 @@ window.amAuthAsk = function(force){
     /* ⚠️ 운영자에게만 남깁니다 — 손님은 아무 잘못도 안 했습니다
        (절대 규칙 3). */
     try{ console.warn("[auth] /api/session — " + e); }catch(_){}
-    AM_AUTH.asked = true; AM_AUTH.on = false;
+    AM_AUTH.asked = true; AM_AUTH.on = false; AM_AUTH.quoteOpen = false;
     return AM_AUTH;
   });
   /* ⚠️ 답이 오면 놓습니다 — `force` 로 다시 물을 수 있어야 합니다
@@ -222,15 +278,13 @@ window.amAuthSend = function(email){
   var to = String(email || "").trim();
   if(!/^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(to))
     return Promise.resolve({ ok:false, say:"메일 주소를 확인해 주세요" });
-  return fetch(c.url + "/auth/v1/otp", {
+  /* W03 — 같은 출처의 /api/auth 를 지납니다 (CSP connect-src 'self').
+     돌아올 자리는 **경로만** 보내고 서버가 들어온 출처에 붙입니다 (바깥 주소로 못 보냅니다).
+     ⚠️ Supabase 쪽 Redirect URLs 에 이 주소가 들어 있어야 합니다. */
+  return fetch("/api/auth", {
     method:"POST",
-    headers:{ "content-type":"application/json", apikey:c.anonKey },
-    body: JSON.stringify({
-      email: to,
-      /* ⚠️ 돌아올 자리입니다. Supabase 쪽 **Redirect URLs** 에 이 주소가
-         들어 있어야 합니다 — 안 넣으면 링크가 기본 주소로 갑니다. */
-      options: { email_redirect_to: window.location.origin + window.location.pathname }
-    })
+    headers:{ "content-type":"application/json" },
+    body: JSON.stringify({ op:"otp", email: to, path: window.amAuthNext() || window.location.pathname })
   }).then(function(r){
     if(r.ok) return { ok:true, say:"메일로 로그인 링크를 보냈습니다. 받은 편지함을 확인해 주세요." };
     /* 너무 자주 누르면 Supabase 가 429 를 돌려줍니다 — 그건 알려
@@ -254,8 +308,9 @@ window.amAuthOut = function(){
     AM_AUTH.provider = null;
   };
   if(!c || !tk){ done(); return Promise.resolve(); }
-  return fetch(c.url + "/auth/v1/logout", {
+  return fetch("/api/auth", {
     method:"POST",
-    headers:{ apikey:c.anonKey, authorization:"Bearer " + tk }
+    headers:{ "content-type":"application/json", authorization:"Bearer " + tk },
+    body: JSON.stringify({ op:"logout" })
   }).catch(function(){}).then(done);
 };

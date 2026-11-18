@@ -199,7 +199,8 @@ function rqList(){
   if(RQ.mine) shown = shown.filter(rqIsMine);
 
   return '<p class="ad-lead">'+
-      '<b>목록에는 성함 · 연락처가 없습니다</b> — 가져오지 않습니다. '+
+      '<b>목록에는 성함이 없고 연락처는 가려서만 보입니다</b> (010-****-1234) — '+
+      '원문은 건을 열고 "연락처 보기" 를 눌러야 오고, 그때 열람 기록이 남습니다. '+
       '배정하면 그때 업체에게만 갑니다 (개인정보보호법 제17조). '+
       '상태를 바꾸면 <b>누가 · 언제 · 왜</b>가 DB 에 같이 남습니다.</p>'+
     /* ⚠️⚠️ **2026-10-25 §4 — 이 목록이 기준입니다.** 저장이 전달보다
@@ -380,6 +381,7 @@ function rqRow(r){
       '<span class="rq-hd-l">'+
         (r.no ? '<b class="rq-no">'+esc(r.no)+'</b>' : '')+
         '<span class="rq-m">'+esc(meta || "조건이 적혀 있지 않습니다")+'</span>'+
+        rqFlags(r)+
       '</span>'+
       '<span class="rq-hd-r">'+
         /* ⚠️⚠️ 딱지 색은 `amDealTone()` 한 곳입니다 — `/my` 와 같은
@@ -397,7 +399,7 @@ function rqRow(r){
     '</button>'+
     (open ? '<div class="rq-bd">'+ rqOwnerRow(r) + rqContactRow(r) +
               rqItems(r) + rqMove(r) + rqAsg(r) +
-              rqQuotes(r) + rqHistRow(r) +'</div>' : '')+
+              rqQuotes(r) + rqDueRow(r) + rqNoteRow(r) + rqHistRow(r) +'</div>' : '')+
   '</article>';
 }
 
@@ -415,6 +417,8 @@ window.rqOpen = function(id){
      **남의 성함 · 번호**가 그 줄 아래에 그대로 남습니다 (이력에서
      겪은 자리와 같습니다). */
   RQ.conOf = ""; RQ.con = null;
+  /* W03 — 메모도 같이 닫습니다 (다른 건의 메모가 남지 않게) */
+  RQ.noteOf = ""; RQ.notes = null; RQ.nctx = {};
   rqDraw();
 };
 
@@ -1462,7 +1466,7 @@ window.rqClawGo = function(id){
 /* ── 부르기 한 곳 ────────────────────────────────────────────────
    ⚠️⚠️ **DB 가 거절한 그 말**을 그대로 보여 줍니다 — "서비스 완료
    상태에서만 …" 처럼 무엇을 하면 되는지가 거기 적혀 있습니다. */
-function rqCall(fn, args, say){
+function rqCall(fn, args, say, keep){
   RQ.busy = true; rqDraw();
   fetch("/api/deal", {
     method:"POST",
@@ -1476,6 +1480,15 @@ function rqCall(fn, args, say){
     RQ.busy = false;
     if(!x.ok){ toast((x.d && x.d.error) || "처리하지 못했습니다"); rqDraw(); return; }
     toast(say);
+    /* W03 — 기한 · 메모는 그 건을 연 채로 둡니다 (다시 펼쳐 찾지 않게) */
+    if(keep){
+      var reopen = RQ.open, nOf = RQ.noteOf;
+      RQ.nctx = {}; RQ.busy = false;
+      rqLoad();
+      RQ.open = reopen;
+      if(nOf){ RQ.noteOf = ""; window.rqNoteGo(nOf); }
+      return;
+    }
     RQ.money = ""; RQ.mctx = {}; RQ.open = ""; RQ.to = ""; RQ.ctx = {};
     RQ.itemOf = ""; RQ.ictx = {};
     RQ.pvOf = ""; RQ.pctx = {};
@@ -2302,4 +2315,141 @@ window.rqHistGo = function(id){
       try{ console.warn("[rq] 이력 — " + e); }catch(_){}
       if(RQ.histOf === id){ RQ.hist = []; rqDraw(); }
     });
+};
+
+
+/* ════════════════════════════════════════════════════════════════════
+   W03 — 관리자 접수함 표시 · 다음 행동 기한 · 메모(내부 / 연락 기록 / 고객 공개 안내)
+
+   ⚠️⚠️ 목록의 연락처는 **가린 것**(010-****-5678)뿐입니다 — 서버가 원문을 안 보냅니다
+      (0083 admin_inbox_flags). 원문은 "연락처 보기" 를 눌러야 오고 열람 기록이 남습니다.
+   ⚠️⚠️ 내부 메모 · 연락 기록과 **고객에게 보이는 안내**를 한 칸에 섞지 않습니다 —
+      종류를 고르고, 고객 공개는 그 자리에서 "고객에게 그대로 보입니다" 라고 말합니다.
+   ⚠️ 메모는 고치거나 지울 수 없습니다 (기록입니다 · DB 가 막습니다).
+   ⚠️ 시각은 한국시간으로 보이고 +09:00 을 붙여 보냅니다.
+   ════════════════════════════════════════════════════════════════════ */
+var RQ_FORM = { quote:"견적", sell:"매물 등록", sos:"사장님 SOS" };
+var RQ_NOTE_KIND = { memo:"내부 메모", contact:"연락 기록", "public":"고객 공개 안내" };
+var RQ_NOTE_RES = { reached:"통화함", no_answer:"받지 않음", left_msg:"메시지 남김", wrong_no:"번호 오류" };
+
+function rqKst(v, withTime){
+  if(!v) return "";
+  var d = new Date(v); if(isNaN(d)) return "";
+  var o = { timeZone:"Asia/Seoul", year:"numeric", month:"2-digit", day:"2-digit" };
+  if(withTime){ o.hour = "2-digit"; o.minute = "2-digit"; o.hour12 = false; }
+  return d.toLocaleString("ko-KR", o);
+}
+function rqFlags(r){
+  var L = [];
+  if(r.form && RQ_FORM[r.form]) L.push('<i class="rq-fl">'+esc(RQ_FORM[r.form])+'</i>');
+  if(r.tel_mask) L.push('<i class="rq-fl rq-fl-tel">'+esc(r.tel_mask)+'</i>');
+  if(r.services && r.services.length)
+    L.push('<i class="rq-fl">'+esc(r.services.map(rqSvcName).join(" · "))+'</i>');
+  if(r.rollup && r.rollup.total > 1)
+    L.push('<i class="rq-fl">서비스 '+r.rollup.total+'개 · 진행 '+r.rollup.open+' · 완료 '+r.rollup.done+'</i>');
+  if(r.next_due){
+    var late = new Date(r.next_due).getTime() < Date.now();
+    L.push('<i class="rq-fl'+(late ? ' rq-fl-bad' : '')+'">'+(late ? '기한 지남 ' : '다음 행동 ')+
+      esc(rqKst(r.next_due, true))+'</i>');
+  }
+  if(r.dup_count > 0) L.push('<i class="rq-fl rq-fl-bad">중복 후보 '+r.dup_count+'</i>');
+  if(r.notify_failed) L.push('<i class="rq-fl rq-fl-bad">알림 실패</i>');
+  return L.length ? '<span class="rq-fls">'+L.join("")+'</span>' : '';
+}
+
+/* 다음 행동 기한 — datetime-local 은 한국시간으로 적는다고 보고 +09:00 을 붙입니다 */
+function rqDueRow(r){
+  var cur = "";
+  if(r.next_due){
+    var d = new Date(new Date(r.next_due).getTime() + 9 * 3600e3);
+    cur = d.toISOString().slice(0, 16);
+  }
+  return '<div class="rq-as rq-due"><b>다음 행동 기한</b>'+
+    '<div class="rq-due-f">'+
+      '<label class="sr-only" for="rq-due-'+esc(r.id)+'">다음 행동 기한 (한국시간)</label>'+
+      '<input type="datetime-local" id="rq-due-'+esc(r.id)+'" value="'+esc(cur)+'">'+
+      '<button class="btn btn-o btn-sm" type="button"'+(RQ.busy ? ' disabled' : '')+
+        ' onclick="rqDueGo(\''+esc(r.id)+'\')">기한 저장</button>'+
+      (r.next_due ? '<button class="btn btn-o btn-sm" type="button"'+(RQ.busy ? ' disabled' : '')+
+        ' onclick="rqDueGo(\''+esc(r.id)+'\', true)">기한 지우기</button>' : '')+
+    '</div>'+
+    '<p class="rq-none">한국시간 기준입니다. 바꾸면 이력에 남습니다.</p>'+
+  '</div>';
+}
+window.rqDueGo = function(id, clear){
+  var v = clear ? "" : ((document.getElementById("rq-due-" + id) || {}).value || "");
+  if(!clear && !v){ toast("기한을 골라 주세요"); return; }
+  rqCall("set_next_due", { p_request:id, p_due: clear ? null : v + ":00+09:00",
+    p_why: clear ? "기한 지움" : "기한 정함" }, clear ? "기한을 지웠습니다" : "기한을 저장했습니다", true);
+};
+
+function rqNoteRow(r){
+  var on = RQ.noteOf === r.id;
+  return '<div class="rq-hist-b">'+
+      '<button class="btn btn-o btn-sm" type="button" onclick="rqNoteGo(\''+esc(r.id)+'\')">'+
+        icon("doc",18)+(on ? '메모 · 연락 기록 닫기' : '메모 · 연락 기록 · 고객 안내')+'</button>'+
+    '</div>'+ (on ? rqNotes(r) : '');
+}
+function rqNotes(r){
+  var c = RQ.nctx || {};
+  var kind = c.kind || "memo";
+  var list;
+  if(RQ.notes === null) list = '<p class="rq-none">불러오는 중…</p>';
+  else if(!RQ.notes.length) list = '<p class="rq-none">아직 적은 것이 없습니다.</p>';
+  else list = '<ol class="rq-nl">'+ RQ.notes.map(function(n){
+    return '<li class="rq-n rq-n-'+esc(n.kind)+'">'+
+      '<em>'+esc(rqKst(n.at, true))+'</em> '+
+      '<b>'+esc(RQ_NOTE_KIND[n.kind] || n.kind)+'</b>'+
+      (n.result ? ' <i>· '+esc(RQ_NOTE_RES[n.result] || n.result)+'</i>' : '')+
+      (n.kind === "public" ? ' <i class="rq-fl">고객에게 보임</i>' : '')+
+      '<p>'+esc(n.body)+'</p></li>';
+  }).join("") +'</ol>';
+  return '<div class="rq-as rq-notes"><b>메모 · 연락 기록 · 고객 공개 안내</b>'+ list +
+    '<div class="rq-nf">'+
+      '<label for="rq-nk">종류</label>'+
+      '<select class="sel" id="rq-nk" onchange="rqNctx(\'kind\', this.value); rqDraw();">'+
+        Object.keys(RQ_NOTE_KIND).map(function(k){
+          return '<option value="'+k+'"'+(k === kind ? ' selected' : '')+'>'+esc(RQ_NOTE_KIND[k])+'</option>'; }).join("")+
+      '</select>'+
+      (kind === "contact" ?
+        '<label for="rq-nr">연락 결과</label>'+
+        '<select class="sel" id="rq-nr" onchange="rqNctx(\'result\', this.value)">'+
+          '<option value="">골라 주세요</option>'+
+          Object.keys(RQ_NOTE_RES).map(function(k){
+            return '<option value="'+k+'"'+(c.result === k ? ' selected' : '')+'>'+esc(RQ_NOTE_RES[k])+'</option>'; }).join("")+
+        '</select>' : '')+
+      '<label for="rq-nb">내용</label>'+
+      '<textarea id="rq-nb" rows="3" maxlength="2000" oninput="rqNctx(\'body\', this.value)">'+esc(c.body || "")+'</textarea>'+
+      (kind === "public"
+        ? '<p class="rq-note">⚠️ <b>고객에게 그대로 보입니다</b> (본인 조회 화면). 업체 이름 · 금액 · 다른 사람 정보 · 지킬 수 없는 연락 시점을 적지 마세요.</p>'
+        : '<p class="rq-none">직원 · 관리자만 봅니다. 고객에게는 보이지 않습니다.</p>')+
+      '<button class="btn btn-b btn-sm" type="button"'+(RQ.busy ? ' disabled' : '')+
+        ' onclick="rqNoteSave(\''+esc(r.id)+'\')">적기</button>'+
+      '<p class="rq-none">적은 것은 고치거나 지울 수 없습니다 (기록입니다).</p>'+
+    '</div>'+
+  '</div>';
+}
+window.rqNctx = function(k, v){ RQ.nctx = RQ.nctx || {}; RQ.nctx[k] = v; };
+window.rqNoteGo = function(id){
+  if(RQ.noteOf === id){ RQ.noteOf = ""; RQ.notes = null; rqDraw(); return; }
+  RQ.noteOf = id; RQ.notes = null; RQ.nctx = {}; rqDraw();
+  fetch("/api/me?r=" + encodeURIComponent(id), { headers: Object.assign(
+    { accept:"application/json" }, window.amAuthHeaders()) })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if(RQ.noteOf !== id) return;
+      RQ.notes = (d && d.notes) || [];
+      rqDraw();
+    })
+    .catch(function(e){
+      try{ console.warn("[rq] 메모 — " + e); }catch(_){}
+      if(RQ.noteOf === id){ RQ.notes = []; rqDraw(); }
+    });
+};
+window.rqNoteSave = function(id){
+  var c = RQ.nctx || {}, kind = c.kind || "memo", body = String(c.body || "").trim();
+  if(!body){ toast("내용을 적어 주세요"); return; }
+  if(kind === "contact" && !c.result){ toast("연락 결과를 골라 주세요"); return; }
+  rqCall("add_request_note", { p_request:id, p_kind:kind, p_body:body, p_item:null,
+    p_result: kind === "contact" ? c.result : null }, "적었습니다", true);
 };

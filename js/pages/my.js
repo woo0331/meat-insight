@@ -126,8 +126,18 @@ function myDbPaint(d){
    ⚠️ **지킬 수 없는 약속을 적지 마세요.** "바로 로그인됩니다" 가
    아니라 메일이 가는 데까지가 우리가 아는 전부입니다. */
 function MySignInBand(){
+  var kk = !!(window.amAuthNow && amAuthNow().kakao);
   return myHd("MY", "로그인하고 신청 내역 보기",
-    "메일 주소를 적으시면 로그인 링크를 보내 드립니다. 비밀번호는 없습니다.")+
+    kk ? "카카오로 시작하시거나, 메일로 로그인 링크를 받으실 수 있습니다. 비밀번호는 없습니다."
+       : "메일 주소를 적으시면 로그인 링크를 보내 드립니다. 비밀번호는 없습니다.")+
+    /* 2026-11-18 카카오 간편 로그인 · 가입 — 서버(AUTH_KAKAO)가 켜졌을 때만 나옵니다.
+       ⚠️ 서비스 검색 · 가이드 · 비회원 접수에는 로그인이 필요 없습니다 (그 말을 같이 적습니다). */
+    (kk ? '<div class="my-kk">'+
+      '<button class="btn btn-lg my-kakao" type="button" onclick="myKakao()">'+icon("chat",18)+' 카카오로 시작하기</button>'+
+      '<p class="f-h">처음이시면 그 자리에서 가입되고, 다음부터는 같은 카카오 계정으로 로그인됩니다. '+
+        '서비스 찾기 · 가이드 · 견적 신청은 로그인 없이도 쓰실 수 있습니다.</p>'+
+      '<p class="my-in-n" id="my-kk-n" role="status"></p>'+
+    '</div>' : '')+
     /* ⚠️ 폼 클래스는 이 저장소 것을 그대로 씁니다 — `.f-r` 과 맨
        `<input type=email>` 입니다. 새 이름을 지어내면 그 줄만 스타일이
        안 먹고 에러도 안 납니다 (`.f-i` · `.f-l` 로 한 번 겪었습니다). */
@@ -1029,9 +1039,12 @@ function PageMy(){
   return PgHero({
     kicker:"MY",
     h1raw: p.side === "close" ? "내 폐업" : (p.side === "start" ? "내 창업" : "지금 어느 쪽이세요?"),
-    lead:"이 브라우저에만 남습니다. 서버로 보내지 않습니다.",
+    lead:"신청 내역(본인 확인 후 조회)과 이 브라우저에만 저장한 준비 기록을 나눠서 보여 드립니다.",
     tight:true
   })+
+  /* W03 — 두 영역을 **갈라서** 냅니다. 위: 서버에 저장된 내 신청 (본인 확인 후) ·
+     아래: 이 브라우저에만 남는 준비 기록 (서버로 안 보냄). */
+  MyLookupBand()+
   /* ⚠️⚠️ §11-1 — 로그인이 설정되면 **여기에 신청 내역이
      섭니다.** 지금은 `/api/session` 이 `auth:false` 라 구간이 빈 채로
      숨어 있고 화면에는 아무것도 안 보입니다 — "로그인" 단추도
@@ -1040,6 +1053,9 @@ function PageMy(){
      이 구간은 **서버에 저장된 신청**입니다 — 둘은 다릅니다. */
   MyDbBand()+
   '<section class="sec sec-white"><div class="w">'+
+    '<div class="my-area-hd"><h2>이 브라우저에 저장한 준비 기록</h2>'+
+      '<p>아래 기록은 <b>이 브라우저에만</b> 남고 서버로 보내지 않습니다. 신청서에 저절로 붙지도 않습니다. '+
+      '다른 기기에서는 보이지 않습니다.</p></div>'+
     '<div class="my-set">'+
       '<div class="f-r"><label for="my-side">상황</label>'+
         '<select class="sel" id="my-side" onchange="myPut()">'+
@@ -1192,3 +1208,151 @@ function MyTools(){
     }).join("")+'</ul>'+
   '</div>';
 }
+
+
+/* ════════════════════════════════════════════════════════════════════
+   W03 — 본인 확인 후 조회하는 신청 내역 (비회원)
+
+   ⚠️⚠️ 접수번호 + 전화번호만으로는 열리지 않습니다 — 그 번호로 보낸 인증번호까지
+      맞아야 30분짜리 확인이 나옵니다 (api/lookup.js · 0083).
+   ⚠️ 적으신 접수번호 · 전화번호 · 인증번호를 저장하지 않습니다. 확인 토큰만
+      **이 탭(sessionStorage)** 에 30분 둡니다 — 탭을 닫으면 사라집니다.
+   ⚠️ 조회 결과에는 성함 · 연락처 · 적어 주신 원문이 없습니다 (서버가 안 보냅니다).
+   ⚠️ 조회가 안 열려 있으면(운영 포함 · 문자 발송 수단 미정) 그 사실만 적습니다.
+   ════════════════════════════════════════════════════════════════════ */
+var LKS = { step:"no", ch:"", no:"", say:"", test:"", err:"", data:null, busy:false };
+var LK_TOK = "am.lookup.v1";
+var LK_PHASE = { open:"진행 중", hold:"보류", done:"완료", lost:"종료", none:"확인 중" };
+
+function MyLookupBand(){
+  return '<section class="sec sec-white my-lk" aria-labelledby="my-lk-h"><div class="w">'+
+    '<div class="my-area-hd"><h2 id="my-lk-h">본인 확인 후 조회하는 신청 내역</h2>'+
+      '<p>접수번호와 전화번호를 적으시면 그 번호로 인증번호를 보내 드리고, 인증번호까지 맞으면 '+
+      '진행 상태를 보여 드립니다. 접수번호와 전화번호만으로는 열리지 않습니다.</p></div>'+
+    '<div id="my-lk">'+ myLkBody(false) +'</div>'+
+  '</div></section>';
+}
+function myLkBody(open){
+  if(!open) return '<p class="note-box" data-lk="off">본인 확인 조회는 아직 열리지 않았습니다 — '+
+    '인증번호를 보낼 수단이 정해지면 이 자리에서 바로 쓰실 수 있습니다.</p>';
+  if(LKS.data) return myLkView(LKS.data);
+  var err = LKS.err ? '<p class="notice-bad" role="alert">'+esc(LKS.err)+'</p>' : '';
+  if(LKS.step === "code"){
+    return err + '<form class="my-lk-f" onsubmit="return myLkVerify(event)" data-lk="code">'+
+      '<p role="status">'+esc(LKS.say)+'</p>'+
+      (LKS.test ? '<p class="note-box">시험용 — 실제로 보내지 않았습니다. 인증번호 <b>'+esc(LKS.test)+'</b></p>' : '')+
+      '<div class="f-r"><label for="my-lk-code">인증번호 6자리 <b>*</b></label>'+
+        '<input id="my-lk-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required></div>'+
+      '<div class="row-cta">'+
+        '<button class="btn btn-b" type="submit"'+(LKS.busy ? ' disabled' : '')+'>확인</button>'+
+        '<button class="btn btn-o" type="button" onclick="myLkReset()">처음부터</button>'+
+      '</div></form>';
+  }
+  return err + '<form class="my-lk-f" onsubmit="return myLkStart(event)" data-lk="start">'+
+    '<div class="f-2">'+
+      '<div class="f-r"><label for="my-lk-no">접수번호 <b>*</b></label>'+
+        '<input id="my-lk-no" autocomplete="off" placeholder="예: SW-AB12-CD34" required></div>'+
+      '<div class="f-r"><label for="my-lk-tel">신청할 때 적은 전화번호 <b>*</b></label>'+
+        '<input id="my-lk-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000" required></div>'+
+    '</div>'+
+    '<p class="note">적으신 번호는 저장하지 않습니다. 인증번호는 10분 동안만 쓸 수 있고 다섯 번 틀리면 막힙니다.</p>'+
+    '<button class="btn btn-b" type="submit"'+(LKS.busy ? ' disabled' : '')+'>인증번호 받기</button>'+
+  '</form>';
+}
+function myLkKst(v){
+  var d = new Date(v); if(isNaN(d)) return "";
+  return d.toLocaleString("ko-KR", { timeZone:"Asia/Seoul", year:"numeric", month:"2-digit", day:"2-digit" });
+}
+function myLkView(d){
+  var ru = d.rollup || {};
+  var items = (d.items || []).map(function(it){
+    var o = window.amPickOne ? amPickOne(it.service_id) : null;
+    var nm = (o && window.amPickLabel) ? amPickLabel(o) : it.service_id;
+    var st = window.amDealStName ? amDealStName(it.state) : it.state;
+    return '<li><b>'+esc(nm)+'</b><span>'+esc(st)+'</span></li>';
+  }).join("");
+  var notes = (d.notes || []).map(function(n){
+    return '<li><em>'+esc(myLkKst(n.at))+'</em><p>'+esc(n.body)+'</p></li>';
+  }).join("");
+  return '<div class="my-lk-v" data-lk="view">'+
+    '<p class="my-lk-no">접수번호 <b>'+esc(d.no)+'</b>'+(d.created_at ? ' · 접수일 '+esc(myLkKst(d.created_at)) : '')+'</p>'+
+    '<p class="my-lk-ph">지금 상태 <b>'+esc(LK_PHASE[ru.phase] || "확인 중")+'</b>'+
+      (ru.total > 1 ? ' — 서비스 '+ru.total+'개 중 진행 '+ru.open+' · 완료 '+ru.done+(ru.hold ? ' · 보류 '+ru.hold : '')+(ru.lost ? ' · 종료 '+ru.lost : '') : '')+'</p>'+
+    (items ? '<h3>서비스별 상태</h3><ul class="my-lk-it">'+items+'</ul>' : '')+
+    '<h3>안내</h3>'+(notes ? '<ol class="my-lk-nt">'+notes+'</ol>'
+      : '<p class="note">아직 남겨 드린 안내가 없습니다.</p>')+
+    '<p class="note">업체가 정해지면 업체에 연락처를 전하기 전에 따로 동의를 여쭙니다. 연락 시점은 약속드리지 않습니다.</p>'+
+    '<button class="btn btn-o" type="button" onclick="myLkReset(true)">다른 신청 조회 · 확인 끝내기</button>'+
+  '</div>';
+}
+function myLkDraw(){
+  var box = document.getElementById("my-lk"); if(!box) return;
+  box.innerHTML = myLkBody(!!(window.amAuthNow && amAuthNow().lookup));
+}
+function myLkPost(body, tok){
+  var h = { "content-type":"application/json", accept:"application/json" };
+  if(tok) h["x-lookup-token"] = tok;
+  return fetch("/api/lookup", { method:"POST", headers:h, body: JSON.stringify(body) })
+    .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ return { ok:r.ok, d:d }; }); });
+}
+window.myLkStart = function(e){
+  if(e && e.preventDefault) e.preventDefault();
+  var no = (document.getElementById("my-lk-no") || {}).value || "";
+  var tel = (document.getElementById("my-lk-tel") || {}).value || "";
+  if(!no.trim() || tel.replace(/[^0-9]/g, "").length < 8){ LKS.err = "접수번호와 전화번호를 확인해 주세요"; myLkDraw(); return false; }
+  LKS.busy = true; LKS.err = ""; myLkDraw();
+  myLkPost({ op:"start", no:no, tel:tel }).then(function(x){
+    LKS.busy = false;
+    if(!x.ok){ LKS.err = (x.d && x.d.error) || "지금 처리하지 못했습니다"; myLkDraw(); return; }
+    LKS.step = "code"; LKS.ch = x.d.challenge; LKS.no = no; LKS.say = x.d.say || ""; LKS.test = x.d.testCode || "";
+    myLkDraw();
+    var c = document.getElementById("my-lk-code"); if(c) c.focus();
+  }).catch(function(){ LKS.busy = false; LKS.err = "연결이 끊겼습니다. 잠시 뒤 다시 눌러 주세요"; myLkDraw(); });
+  return false;
+};
+window.myLkVerify = function(e){
+  if(e && e.preventDefault) e.preventDefault();
+  var code = ((document.getElementById("my-lk-code") || {}).value || "").replace(/[^0-9]/g, "");
+  if(code.length !== 6){ LKS.err = "인증번호 여섯 자리를 적어 주세요"; myLkDraw(); return false; }
+  LKS.busy = true; LKS.err = ""; myLkDraw();
+  myLkPost({ op:"verify", challenge:LKS.ch, no:LKS.no, code:code }).then(function(x){
+    LKS.busy = false;
+    if(!x.ok || !x.d.token){ LKS.err = (x.d && x.d.error) || "확인하지 못했습니다"; myLkDraw(); return; }
+    try{ sessionStorage.setItem(LK_TOK, JSON.stringify({ t:x.d.token, until: Date.now() + 29 * 60e3 })); }catch(_){}
+    LKS.no = ""; LKS.ch = ""; LKS.test = "";
+    myLkRead(x.d.token);
+  }).catch(function(){ LKS.busy = false; LKS.err = "연결이 끊겼습니다. 잠시 뒤 다시 눌러 주세요"; myLkDraw(); });
+  return false;
+};
+function myLkRead(tok){
+  myLkPost({ op:"read" }, tok).then(function(x){
+    if(!x.ok){ myLkReset(); LKS.err = (x.d && x.d.error) || "다시 확인해 주세요"; myLkDraw(); return; }
+    LKS.data = x.d.data; myLkDraw();
+  }).catch(function(){ LKS.err = "연결이 끊겼습니다. 잠시 뒤 다시 눌러 주세요"; myLkDraw(); });
+}
+window.myLkReset = function(end){
+  LKS.step = "no"; LKS.ch = ""; LKS.no = ""; LKS.say = ""; LKS.test = ""; LKS.err = ""; LKS.data = null;
+  if(end){ try{ sessionStorage.removeItem(LK_TOK); }catch(_){} }
+  myLkDraw();
+};
+/* 화면을 그린 뒤 — 조회가 열려 있으면 폼을, 이 탭에 남은 확인이 있으면 바로 결과를 */
+window.myLkInit = function(){
+  if(typeof window.amAuthAsk !== "function") return;
+  window.amAuthAsk().then(function(a){
+    if(!a || !a.lookup){ myLkDraw(); return; }
+    var saved = null;
+    try{ saved = JSON.parse(sessionStorage.getItem(LK_TOK) || "null"); }catch(_){}
+    if(saved && saved.t && saved.until > Date.now()){ myLkDraw(); myLkRead(saved.t); }
+    else { try{ sessionStorage.removeItem(LK_TOK); }catch(_){} myLkDraw(); }
+  });
+};
+
+/* 2026-11-18 카카오로 시작하기 */
+window.myKakao = function(){
+  var n = document.getElementById("my-kk-n");
+  if(typeof amAuthKakao !== "function") return;
+  if(n){ n.textContent = "카카오로 이동합니다…"; n.className = "my-in-n"; }
+  amAuthKakao().then(function(r){
+    if(!r.ok && n){ n.textContent = r.say; n.className = "my-in-n bad"; }
+  });
+};

@@ -82,6 +82,8 @@ var META = {
                  "판매가와 재료비를 넣으면 원가율과 한 개 남는 돈이 같이 나옵니다. 한 달 판매 수량까지 적으시면 달 단위로도 봅니다."],
   "/tools/closecost":["폐업 예상비용",
                  "철거 · 원상복구 · 위약금처럼 나가는 돈과 보증금 · 시설 매각처럼 돌아오는 돈을 같이 놓습니다. 중요한 것은 그 차액입니다."],
+  "/intake":    ["접수 안내",
+                 "지금 견적 접수를 받고 있는지, 그리고 지금 바로 이용하실 수 있는 서비스 둘러보기 · 계산도구 · 이용 가이드를 안내합니다."],
   "/faq":       ["자주 묻는 것",
                  "돈이 드는지, 연락처가 업체에 바로 넘어가는지, 등록된 업체가 몇 곳인지 — 먼저 궁금해하시는 것들에 그대로 답했습니다."],
   "/about":     ["소개",
@@ -92,7 +94,7 @@ var META = {
                  "어떤 정보를 어떤 목적으로 얼마나 보관하는지, 업체에 연락처를 전달할 때 어떻게 다시 동의를 받는지 적어 두었습니다."]
 };
 
-var NOINDEX = ["/my","/search","/quote","/compare","/sample"];
+var NOINDEX = ["/my","/search","/quote","/compare","/sample","/intake"];
 
 function pvDesc(pv){
   var who = [];
@@ -188,6 +190,7 @@ window.routeInfo = function(path){
     "/tools/delivery":"tool-delivery",
     "/tools/margin":"tool-margin",
     "/tools/closecost":"tool-closecost",
+    "/intake":    "intake",
     "/faq":       "faq",
     "/about":     "about",
     "/terms":     "terms",
@@ -451,6 +454,7 @@ function render(){
     case "tool-margin":     html = PageToolMargin();                break;
     case "tool-closecost":  html = PageToolCloseCost();             break;
     case "faq":             html = PageFaq();                       break;
+    case "intake":          html = PageIntake();                    break;
     case "about":           html = PageAbout();                     break;
     case "terms":           html = PageTerms();                     break;
     case "privacy":         html = PagePrivacy();                   break;
@@ -466,6 +470,10 @@ function render(){
   initReveal();
 
   if(nowPath() === "/my" && typeof window.myLoadDb === "function") window.myLoadDb();
+  if(nowPath() === "/my" && typeof window.myLkInit === "function") window.myLkInit();
+  if(nowPath() === "/intake" && typeof window.intakePaint === "function") window.intakePaint();
+
+  if(typeof window.hdCtaPaint === "function") window.hdCtaPaint();
 
   if(typeof window.pickPaint === "function") window.pickPaint();
 

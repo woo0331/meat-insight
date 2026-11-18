@@ -1,3 +1,8 @@
+/* ⚠️⚠️ 2026-11-18 — 이 파일은 ship.js 가 더 이상 돌리지 않습니다 (W02 이전 동작의 기록).
+   이 검사는 ① DB 없이도 접수 성공 ② 저장이 실패해도 성공 ③ 성함 · 연락처 · 내용을
+   슬랙 글에 싣기 ④ sos 접수를 전제로 합니다. STOREWAY 1차 지시서 W02 ① · 9장이
+   그 넷을 금지해 api/quote.js 가 반대로 바뀌었습니다. 지금 동작은
+   tools/test-gate.js · tools/test-w02-api.js · tools/test-w02.js 가 잽니다. */
 #!/usr/bin/env node
 /* ════════════════════════════════════════════════════════════════════
    접수 주소(/api/quote)가 화면이 보낸 칸을 빠짐없이 전달하는가
@@ -43,15 +48,29 @@ function fakeRes(){
 }
 
 /* 요청 하나를 흘려보내고, 웹훅으로 나가려던 것을 돌려줍니다 */
-async function send(body){
+async function send(body, o){
+  o = o || {};
+  /* ⚠️ 2026-11-18 W01 · W02 — 서버 게이트(api/_gate.js)가 **열림 + DB 있음**
+     일 때만 받습니다. "DB 없이 웹훅만" 인 상태는 이제 접수하지 않으므로,
+     여기서는 게이트를 열고 DB 는 가짜로 성공시킨 뒤 **웹훅으로 나간 것만**
+     봅니다 (이 묶음이 재는 것은 화면이 보낸 칸이 빠짐없이 가는가입니다). */
   process.env.INTAKE_WEBHOOK_URL = "https://example.invalid/hook";
-  delete require.cache[require.resolve(QUOTE)];
-  delete require.cache[require.resolve(path.join(__dirname,"..","api","_send.js"))];
+  process.env.STOREWAY_INTAKE_OPEN = "quote,sell,join";
+  process.env.SUPABASE_URL = "https://x.supabase.co";
+  process.env.SUPABASE_SERVICE_KEY = "service-key-should-never-leak";
+  if(o.noDb) for(const k of ["SUPABASE_URL","SUPABASE_SERVICE_KEY"]) delete process.env[k];
+  for(const f of ["quote.js", "_send.js", "_db.js", "_intake.js", "_auth.js", "_gate.js"])
+    delete require.cache[require.resolve(path.join(__dirname, "..", "api", f))];
   const handler = require(QUOTE);
 
   let sentBody = null;
   const realFetch = global.fetch;
   global.fetch = async function(url, init){
+    if(String(url).indexOf("https://x.supabase.co/") === 0){
+      const isGet = !init || !init.method || init.method === "GET";
+      return { ok:true, status: isGet ? 200 : 201, headers:{ get(){ return ""; } },
+               text: async()=> isGet ? "[]" : "[{}]" };
+    }
     sentBody = JSON.parse(init.body);
     return { ok:true, status:200, headers:{ get(){ return ""; } }, text: async()=> "" };
   };
@@ -73,7 +92,8 @@ async function sendWithDb(body, opt){
   process.env.INTAKE_WEBHOOK_URL = "https://example.invalid/hook";
   process.env.SUPABASE_URL = "https://x.supabase.co";
   process.env.SUPABASE_SERVICE_KEY = "service-key-should-never-leak";
-  for(const f of ["quote.js", "_send.js", "_db.js", "_intake.js", "_auth.js"])
+  process.env.STOREWAY_INTAKE_OPEN = "quote,sell,join";
+  for(const f of ["quote.js", "_send.js", "_db.js", "_intake.js", "_auth.js", "_gate.js"])
     delete require.cache[require.resolve(path.join(__dirname, "..", "api", f))];
   const handler = require(QUOTE);
 
@@ -240,9 +260,11 @@ async function sendWithDb(body, opt){
        내주고 저장을 안 하면 그 번호로 물어봐도 아무것도 없습니다
        (절대 규칙 5). */
     {
-      const off = await send(P);
+      /* ⚠️ 2026-11-18 W02 ① — DB 가 없으면 **받지 않습니다** (전에는 슬랙으로만
+         보내고 성공이라 했습니다). 저장이 확정된 뒤에만 성공을 말합니다. */
+      const off = await send(P, { noDb:true });
       ok("DB 가 없으면 접수번호를 안 낸다",
-         off.res.code === 200 && !off.res.body.no, off.res.body);
+         off.res.code === 503 && !off.res.body.no && off.sent === null, off.res.body);
     }
 
     const g = await sendWithDb(P, { rows:[] });
@@ -393,15 +415,17 @@ async function sendWithDb(body, opt){
   console.log("\n── ⚠️⚠️ DB 가 없으면 오늘과 똑같이 동작한다 (fail-closed)");
   {
     for(const k of ["SUPABASE_URL","SUPABASE_SERVICE_KEY"]) delete process.env[k];
+    /* ⚠️ 2026-11-18 W02 ① — 뜻이 바뀌었습니다: DB 가 없으면 받지 않고(503),
+       슬랙으로도 보내지 않습니다. 저장 없이 알림만 가는 접수를 만들지 않습니다. */
     const { res, sent } = await send({
       kind:"quote", service:"duct", q:"확인 부탁드립니다",
-      name:"홍길동", tel:"010-1234-5678", agree:true });
-    ok("200 으로 받는다", res.code === 200, "code=" + res.code);
+      name:"홍길동", tel:"010-1234-5678", agree:true }, { noDb:true });
+    ok("503 으로 받지 않는다", res.code === 503 && res.body.closed === true, "code=" + res.code);
     /* ⚠️⚠️ 저장을 안 했으니 접수번호를 주지 않습니다 — 번호를 주고
        저장은 안 하면 손님이 그 번호로 물어봐도 아무것도 없습니다
        (절대 규칙 5) */
     ok("접수번호를 발급하지 않는다", res.body.no === undefined, res.body);
-    ok("슬랙 글에도 접수번호가 없다", !/접수번호/.test(sent.text));
+    ok("슬랙으로도 보내지 않는다", sent === null, sent);
   }
 
   console.log("\n── DB 가 있으면 접수번호가 생긴다 (§6)");
@@ -703,15 +727,24 @@ async function sendWithDb(body, opt){
     /* 보낸 것을 가려 봅니다 — 운영자(웹훅)와 손님(Resend) 둘입니다 */
     async function sendAck(body, env){
       process.env.INTAKE_WEBHOOK_URL = "https://example.invalid/hook";
+      /* 2026-11-18 — 게이트를 열고 DB 는 가짜로 성공시킵니다 (안내 메일만 봅니다) */
+      process.env.STOREWAY_INTAKE_OPEN = "quote,sell,join";
+      process.env.SUPABASE_URL = "https://x.supabase.co";
+      process.env.SUPABASE_SERVICE_KEY = "service-key-should-never-leak";
       for(const k of ["RESEND_API_KEY","CUSTOMER_EMAIL_FROM"]) delete process.env[k];
       Object.keys(env || {}).forEach(k => { process.env[k] = env[k]; });
-      for(const f of ["quote.js", "_send.js"])
+      for(const f of ["quote.js", "_send.js", "_db.js", "_gate.js"])
         delete require.cache[require.resolve(path.join(__dirname, "..", "api", f))];
       const handler = require(QUOTE);
       let mail = null, hook = null;
       const realFetch = global.fetch;
       global.fetch = async function(url, init){
         const u = String(url);
+        if(u.indexOf("https://x.supabase.co/") === 0){
+          const isGet = !init || !init.method || init.method === "GET";
+          return { ok:true, status:isGet?200:201, headers:{ get(){ return ""; } },
+                   text: async()=> isGet ? "[]" : "[{}]" };
+        }
         if(/api\.resend\.com/.test(u)) mail = JSON.parse(init.body);
         else hook = JSON.parse(init.body);
         return { ok:true, status:200, headers:{ get(){ return ""; } }, text: async()=> "" };
@@ -753,9 +786,12 @@ async function sendWithDb(body, opt){
        !/시간 안에|당일 연락|24시간|보장/.test(txt), txt);
     /* ⚠️ 광고를 섞지 않습니다 — 섞는 순간 제50조 사전동의가 먼저입니다 */
     ok("광고가 아니라고 적는다", txt.indexOf("광고가 아닙니다") >= 0, txt);
-    /* ⚠️⚠️ DB 가 없으면 접수번호가 없습니다 — **없는 번호를 적지
-       않습니다** (절대 규칙 2 · 5). */
-    ok("번호가 없으면 번호 줄을 안 적는다", txt.indexOf("접수번호") < 0, txt);
+    /* ⚠️ 2026-11-18 W02 ① — 이제 접수는 **저장된 뒤에만** 성립하므로 안내
+       메일에는 실제로 발급된 번호가 적힙니다. 번호를 지어내지 않는지는
+       응답의 번호와 **같은 글자**인지로 봅니다. */
+    ok("안내에 적힌 번호가 발급된 번호와 같다",
+       !!(g.res.body && g.res.body.no) && txt.indexOf(g.res.body.no) >= 0,
+       { no: g.res.body && g.res.body.no, txt: txt.slice(0, 80) });
 
     /* 업체 입점에는 안 보냅니다 — 신청이 아니라 업체 등록입니다 */
     g = await sendAck({ kind:"partner", company:"가나다", services:["인테리어"],
@@ -773,12 +809,20 @@ async function sendWithDb(body, opt){
     process.env.INTAKE_WEBHOOK_URL = "https://example.invalid/hook";
     process.env.RESEND_API_KEY = "re_x";
     process.env.CUSTOMER_EMAIL_FROM = "hi@storeway.co.kr";
-    for(const f of ["quote.js", "_send.js"])
+    process.env.STOREWAY_INTAKE_OPEN = "quote,sell,join";
+    process.env.SUPABASE_URL = "https://x.supabase.co";
+    process.env.SUPABASE_SERVICE_KEY = "service-key-should-never-leak";
+    for(const f of ["quote.js", "_send.js", "_db.js", "_gate.js"])
       delete require.cache[require.resolve(path.join(__dirname, "..", "api", f))];
     {
       const handler = require(QUOTE);
       const realFetch = global.fetch;
-      global.fetch = async function(url){
+      global.fetch = async function(url, init){
+        if(String(url).indexOf("https://x.supabase.co/") === 0){
+          const isGet = !init || !init.method || init.method === "GET";
+          return { ok:true, status:isGet?200:201, headers:{ get(){ return ""; } },
+                   text: async()=> isGet ? "[]" : "[{}]" };
+        }
         if(/api\.resend\.com/.test(String(url))) throw new Error("mail down");
         return { ok:true, status:200, headers:{ get(){ return ""; } }, text: async()=> "" };
       };

@@ -269,7 +269,7 @@ function ContentNext(c){
           esc(i.name)+'</a></li>'; }).join("")+'</ul>'+
 
       '<p class="cn-n">'+esc(cat.name)+' 분야에 등록된 업체 '+n+'곳'+
-        (n ? '' : ' — 없는 업체를 지어내지 않습니다. 견적을 남기시면 조건에 맞는 곳을 찾아 연결해 드립니다.')+'</p>'+
+        (n ? '' : ' — 없는 업체를 지어내지 않습니다. 견적을 남기시면 조건에 맞는 곳이 있는지 운영자가 확인합니다.')+'</p>'+
       '<div class="row-cta">'+
         '<a class="btn btn-b" href="'+esc(catTo(cat))+'">'+
           esc(cat.kind === "provider" ? cat.name + " 업체 보기" : cat.name + " 보기")+icon("arrow",16)+'</a>'+

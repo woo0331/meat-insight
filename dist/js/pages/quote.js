@@ -102,7 +102,7 @@ function QuoteOfferBand(){
       return '<li>'+icon(o.icon || "check", 15)+esc(o.name)+'</li>'; }).join("")+'</ul>'+
 
     '<p class="qof-n">'+icon("info",14)+
-      '<span>한 번만 적으시면 저희가 나눠서 연결해 드립니다 — '+
+      '<span>한 번만 적으시면 저희가 서비스마다 나눠서 확인합니다 — '+
       '<b>상품마다 업체와 계약은 따로</b>입니다.</span></p>'+
   '</div>';
 }
@@ -249,8 +249,8 @@ function QuoteStage(){
   var n = (window.AM_PROVIDERS || []).length;
   if(n > 0)
     return '<p class="note-box qt-stage">지금 제휴업체 <b>'+n+'곳</b>이 '+
-      '등록되어 있습니다. 적어 주신 분야 · 지역 · 업종에 맞는 곳을 찾아 '+
-      '연결해 드립니다 — 어느 업체인지는 정해진 뒤에 알려 드리고, '+
+      '등록되어 있습니다. 적어 주신 분야 · 지역 · 업종에 맞는 곳이 있는지 '+
+      '운영자가 확인합니다 — 연결할 업체가 정해지면 어느 업체인지 알려 드리고, '+
       '그때 연락처 전달 동의를 다시 받습니다.</p>';
   return '<p class="note-box qt-stage"><b>지금 등록된 제휴업체는 없습니다.</b> '+
     '요청을 받아 그 분야 업체를 찾아 드리는 단계입니다 — 접수는 실제로 '+
@@ -282,8 +282,8 @@ function PageQuote(){
 
   return PgHero({
     kicker:"견적 요청",
-    h1raw:"한 번만 적으시면<br class=\"br-m\"> 여러 곳에서 답이 옵니다.",
-    lead:"고르신 서비스마다 업체를 찾아 연결해 드립니다. 같은 내용을 업체마다 다시 적지 않으셔도 됩니다. 무료입니다.",
+    h1raw:"한 번만 적으시면<br class=\"br-m\"> 서비스마다 나눠서 확인합니다.",
+    lead:"고르신 서비스마다 조건에 맞는 업체가 있는지 운영자가 확인합니다. 같은 내용을 업체마다 다시 적지 않으셔도 됩니다. 맞는 업체가 없으면 연결되지 않을 수 있습니다. 무료입니다.",
     tight:true
   })+
   '<section class="sec sec-white"><div class="w form-wrap">'+
@@ -438,6 +438,8 @@ window.qcClear = function(){
 };
 
 function QNotifyBox(){
+
+  if(!(window.WOW_BIZ && WOW_BIZ.mailNotifyReady === true)) return "";
   return '<label class="agree-l q-nt" for="q-nt">'+
     '<input type="checkbox" id="q-nt">'+
     '<span><b>진행 상황을 메일로 알려 주세요</b> (선택) — '+
@@ -575,7 +577,12 @@ window.amSend = function(failId, body, again, done){
       if(box) box.innerHTML = '<div class="notice-ok"><b>' +
         (dup ? "이미 접수되었습니다." : "접수되었습니다.") + '</b>' +
         (no ? '<p>접수번호 <b>' + esc(no) + '</b> — 문의하실 때 알려 주세요.</p>' : '') +
-        '<p>적어 주신 연락처로 안내드리겠습니다. 회신 시점을 약속드리지는 않습니다.</p></div>';
+        (body && body.form === "sell"
+          ? '<p>운영자가 검수한 뒤에 올립니다 — <b>자동으로 게시되지 않습니다.</b> 연락처는 매물에 나가지 않습니다.</p>'
+          : body && body.kind === "partner"
+          ? '<p>입점 심사를 거칩니다 — 심사 전에는 업체 목록에 나가지 않습니다.</p>'
+          : '<p>현재 상태는 <b>접수됨</b>입니다. 운영자가 확인합니다.</p>') +
+        '<p>회신 시점과 업체 연결을 약속드리지는 않습니다.</p></div>';
 
       if(no && box && (!body || body.kind !== "partner") &&
          typeof amPhotoAfter === "function")
@@ -651,4 +658,47 @@ window.amCopy = function(btn){
     try{ document.execCommand("copy"); done(); }catch(e){ toast("복사하지 못했습니다"); }
     document.body.removeChild(ta);
   }
+};
+
+var INTAKE_USE = [
+  ["/providers", "grid",   "서비스 둘러보기",  "분야별로 어떤 업체가 무엇을 하는지 봅니다"],
+  ["/tools",     "calc",   "계산도구",         "창업비 · 손익분기 · 권리금 · 폐업비용을 미리 계산합니다"],
+  ["/content",   "book",   "이용 가이드",      "창업 · 운영 · 양도양수 · 폐업에서 자주 막히는 것을 정리했습니다"],
+  ["/startup",   "check",  "창업 준비 순서",   "업종을 고르면 무엇부터 할지 순서대로 봅니다"],
+  ["/stores",    "store",  "매장 매물 보기",   "올라온 매물이 있으면 조건으로 걸러 봅니다"],
+  ["/faq",       "info",   "자주 묻는 질문",   "비용 · 연락처 전달 · 진행 방법에 대한 답"]
+];
+function PageIntake(){
+  var cards = INTAKE_USE.map(function(x){
+    return '<li><a class="itk-c" href="'+esc(x[0])+'">'+
+      '<span class="itk-i" aria-hidden="true">'+icon(x[1],24)+'</span>'+
+      '<span class="itk-t"><b>'+esc(x[2])+'</b><i>'+esc(x[3])+'</i></span>'+
+      icon("arrow",16)+'</a></li>';
+  }).join("");
+  return PgHero({ kicker:"접수 안내", h1:"견적 접수 안내", tight:true,
+                  lead:"지금 견적 접수를 받고 있는지, 그리고 지금 바로 쓰실 수 있는 기능을 안내합니다." })+
+  '<section class="sec sec-white"><div class="w w-narrow itk">'+
+    '<div class="itk-st itk-off" data-intake="off" role="status">'+
+      '<h2>현재 견적 접수를 받지 않습니다.</h2>'+
+      '<p>지금 신청서를 보내셔도 접수되지 않습니다. 재개 일정은 아직 정해지지 않았습니다. '+
+        '접수가 열리면 화면 위쪽 단추가 <b>견적 신청</b>으로 바뀝니다.</p>'+
+      '<p class="itk-n">이 안내는 견적 접수 기준입니다. 매물 등록 · 업체 입점은 각 화면에서 따로 안내합니다.</p>'+
+    '</div>'+
+    '<div class="itk-st itk-on" data-intake="on" role="status" hidden>'+
+      '<h2>지금 견적 접수를 받고 있습니다.</h2>'+
+      '<p>필요한 서비스와 지역을 한 번만 적어 보내시면 운영자가 확인합니다. 신청은 무료입니다.</p>'+
+      '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">견적 신청하기'+icon("arrow",18)+'</a>'+
+    '</div>'+
+    '<h2 class="itk-h">지금 바로 이용하실 수 있는 기능</h2>'+
+    '<ul class="itk-g">'+cards+'</ul>'+
+  '</div></section>';
+}
+window.intakePaint = function(){
+  if(typeof window.amQuoteOpen !== "function") return;
+  window.amQuoteOpen().then(function(open){
+    els('[data-intake]').forEach(function(e){
+      var mine = e.getAttribute("data-intake") === (open ? "on" : "off");
+      if(mine) e.removeAttribute("hidden"); else e.setAttribute("hidden","");
+    });
+  });
 };

@@ -45,8 +45,11 @@ const { reqNo, telKey, intakeDup } = require("./_intake.js");
    맞습니다 — 견적 하나 받으려고 가입하게 만들면 거기서 닫힙니다.
    토큰이 같이 왔을 때만 신청을 그 계정에 이어 둡니다 (§10). */
 const { authReady, bearer, session } = require("./_auth.js");
+const { gate, formOf, CLOSED_SAY } = require("./_gate.js");
+const { consentFor } = require("./_consent.js");
+const { runJob } = require("./_notify.js");
 
-const KINDS = { sos:1, quote:1, partner:1 };
+const KINDS = { quote:1, partner:1 };   /* sos 는 받지 않습니다 — 동의 상자를 보여 주는 화면이 없습니다 (2026-11-18) */
 
 /* ── 신청 서비스 항목 (2026-10-17 §5-4 · §6 · §8) ─────────────────
    > §8 — "서버 측 필수값 검증 · **잘못된 서비스 ID 차단**"
@@ -131,8 +134,25 @@ module.exports = async function handler(req, res){
   let b = req.body;
   if(typeof b === "string"){ try{ b = JSON.parse(b); }catch(e){ b = null; } }
   if(!b || typeof b !== "object") return res.status(400).json({ error: "내용을 읽지 못했습니다" });
+
+  /* ── W01 ① 서버 게이트 — 동의 · 칸 검사보다 **먼저** 봅니다 ──────
+     닫혀 있으면 DB · 웹훅 · 메일을 한 번도 부르지 않고 끝냅니다.
+     ⚠️ 화면의 sosReady 를 믿지 않습니다 — 이 주소로 직접 보낸 요청도
+     여기서 막힙니다. */
+  {
+    const g = gate(formOf(b));
+    if(!g.open){
+      console.warn("[site] 접수 게이트가 닫혀 있습니다 — " + g.why);
+      res.setHeader("Cache-Control", "no-store");
+      return res.status(503).json({ error: CLOSED_SAY, closed: true });
+    }
+  }
   if(b.agree !== true) return res.status(400).json({ error: "개인정보 수집·이용 동의가 필요합니다" });
 
+  /* ⚠️ 모르는 종류를 견적으로 바꿔 받지 않습니다 — 그러면 손님이 보지 않은
+     고지문에 동의했다는 증거가 남습니다 (2026-11-18 · sos 가 그랬습니다). */
+  if(b.kind !== undefined && !KINDS[b.kind])
+    return res.status(400).json({ error: "지금은 받지 않는 양식입니다" });
   const kind = KINDS[b.kind] ? b.kind : "quote";
 
   /* 어느 화면에서 왔든 공통 */
@@ -159,8 +179,12 @@ module.exports = async function handler(req, res){
     /* 2026-10-17 §5-4 — 신청 서비스 항목 (여러 개를 한 신청으로) */
     const got     = readItems(b.items);
     q.items       = got.items;
-    if(got.bad.length)
-      console.warn("[site] 없는 서비스 id 를 빼고 접수했습니다 — " + got.bad.join(", "));
+    /* ⚠️ 2026-11-18 T06 — 없는 서비스 id 를 조용히 빼고 받지 않습니다.
+       빼고 받으면 손님은 고른 서비스가 빠진 줄 모릅니다. */
+    if(got.bad.length){
+      console.warn("[site] 없는 서비스 id 로 왔습니다 — " + got.bad.join(", "));
+      return res.status(400).json({ error: "고르신 서비스를 다시 확인해 주세요" });
+    }
     /* 해결 가이드에서 고르신 "업체에 물어볼 것".
        ⚠️ 이건 사장님이 업체에게 **대신 물어봐 달라고 맡기신 것**입니다.
        빠뜨리면 요청은 성공하는데 정작 물어볼 것이 사라집니다. */
@@ -202,359 +226,112 @@ module.exports = async function handler(req, res){
      ⚠️ 업체 입점(partner)은 신청이 아니라 **업체 등록 신청**이라 다른
      표로 갑니다 (`provider_apply` · 0016) — 바로 아래 블록입니다.
      ════════════════════════════════════════════════════════════ */
-  let no = "", nearWhy = "";
-  const idem = clean(b.idem, 80);
-  if(kind !== "partner" && dbReady()){
-    /* ── ⓪ 멱등 열쇠로 **먼저** 찾습니다 (2026-10-25 §3) ──────────
-       ⚠️⚠️ **이 조회가 따로 있는 까닭이 셋입니다.**
-         ① `0017` 을 아직 안 돌린 DB 에서도 **멱등은 돕니다**
-            (`idem` 칸과 unique 인덱스는 `0009` 부터 있습니다).
-         ② 손님이 번호를 고쳐서 다시 누르신 재시도도 잡습니다
-            (아래 ①은 번호로 좁히기 때문에 못 잡습니다).
-         ③ 시각을 안 봅니다 — 끊긴 요청을 한참 뒤에 다시 누르셔도
-            같은 신청입니다.
-       ⚠️ 열쇠는 `crypto` 로 뽑은 32글자이고 손님이 고를 수 없습니다. */
-    if(idem){
-      const was = await dbSelect("request",
-        "?select=no&idem=eq." + encodeURIComponent(idem) + "&limit=1");
-      if(!was.ok)
-        console.error("[site] 멱등 조회를 못 했습니다 — " + dbWhy(was.why));
-      else if(was.rows.length && was.rows[0].no){
-        /* ⚠️⚠️ **두 번 보내지 않습니다.** 먼저 받은 번호를 그대로
-           돌려주고 여기서 끝냅니다 — 슬랙에도 안 갑니다. */
-        console.warn("[site] 같은 신청서를 다시 보내셨습니다 — " + was.rows[0].no);
-        return res.status(200).json({ ok:true, no:was.rows[0].no, dup:true,
-          say:"이미 접수되었습니다." });
-      }
-    }
+  /* ════════════════════════════════════════════════════════════
+     W02 (2026-11-18) — 저장이 먼저이고, 저장이 **확정된 뒤에만** 성공입니다.
 
-    /* ── ① 최근 한 시간, 같은 번호의 것 ─────────────────────────
-       ⚠️⚠️ **`tel` 이 아니라 `tel_key` 로 묻습니다** (`0017`). 표에는
-       손님이 적으신 그대로(`010-1234-5678`) 들어가는데 여기서는 숫자만
-       남겨 묻기 때문에, `tel=eq.…` 로 두면 **한 줄도 안 걸렸습니다** —
-       그러면 그 안에서 하는 멱등 비교와 스팸 판정도 같이 안 돕니다.
-       ⚠️ `0017` 을 안 돌린 DB 에서는 이 조회가 400 입니다 — 아래가
-       막지 않고 로그만 남깁니다 (멱등은 ⓪ 이 이미 잡습니다).
-       ⚠️ 손님이 보낸 값을 질의문자에 그대로 이어 붙이지 않습니다 */
+     ① 부모 요청 · 서비스 항목 · 동의 증거 · 알림 작업 · 감사기록을
+        `submit_intake()`(입점은 `submit_apply()`) **한 번의 호출**로 적습니다.
+        DB 안에서 한 트랜잭션이라 일부만 남는 신청이 없습니다 (0082).
+     ② 그 호출이 실패하면 **503 이고 접수번호를 내주지 않습니다.**
+        전에는 저장이 실패해도 슬랙으로 보내고 "접수됐다" 고 했습니다 —
+        손님은 번호 없이 성공을 보고, DB 에는 아무것도 없었습니다.
+     ③ 알림은 그 **뒤에** 따로 보냅니다 (api/_notify.js). 실패해도 접수는
+        그대로이고 notify_job 에 남아 다시 보냅니다 (api/notify-retry.js).
+     ④ 같은 멱등 키는 DB 가 먼저 받은 번호를 돌려줍니다 — 더블클릭 ·
+        끊긴 뒤 재시도 · 동시에 두 번 들어온 경우가 전부 한 건입니다.
+     ════════════════════════════════════════════════════════════ */
+  const form = formOf(b);
+  const idem = clean(b.idem, 80);
+  const consent = consentFor(kind === "partner" ? "join" : form);
+  if(!consent) return res.status(400).json({ error: "지금은 받지 않는 양식입니다" });
+
+  /* 같은 연락처의 최근 접수 — **막지 않고** 운영자에게 표시만 합니다.
+     ⚠️ 1시간에 5건을 넘는 것만 막습니다 (공유 IP 가 아니라 연락처 기준 —
+     같은 사무실에서 여러 분이 보내셔도 막지 않습니다). 조회가 실패해도
+     접수는 막지 않습니다. */
+  let near = false;
+  if(kind !== "partner"){
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const found = await dbSelect("request",
       "?select=no,tel,offer_id,cat,idem,created_at" +
       "&tel_key=eq." + encodeURIComponent(telKey(q.tel)) +
       "&created_at=gte." + encodeURIComponent(since) +
       "&order=created_at.desc&limit=20");
-
-    /* ⚠️ DB 가 대답하지 않으면 **접수를 막지 않습니다.** 중복 검사는
-       편의이고, 그것 때문에 손님의 요청을 잃으면 더 나쁩니다.
-       대신 운영자에게 남깁니다 (절대 규칙 3). */
     if(!found.ok) console.error("[site] 중복 검사를 못 했습니다 — " + dbWhy(found.why));
     else {
       const dup = intakeDup(new Date(), found.rows,
-        { tel:q.tel, offerId:clean(b.offerId, 60), cat:q.cat || q.service,
-          /* §8 "재시도 요청의 중복 접수를 방지하기 위한 멱등성 처리"
-             ⚠️⚠️ 같은 열쇠가 오면 **시각과 상관없이** 같은 접수입니다 —
-             끊긴 요청을 다시 누르신 것이지 새 신청이 아닙니다. */
-          idem:idem });
-      /* ⚠️⚠️ **업무상 중복이 의심되는 것은 막지 않고 보이게 합니다**
-         (2026-10-25 §3). 같은 번호 · 같은 서비스가 10분 안에 또 와도
-         멱등 열쇠가 다르면 **손님이 새로 시작하신 것**이라 받습니다 —
-         대신 직원이 보는 자리(슬랙 글)에 한 줄로 붙습니다.
-         ⚠️ 손님 화면에는 한 글자도 안 나갑니다 (절대 규칙 3). */
-      if(dup.near){
-        nearWhy = dup.why || "";
-        console.warn("[site] 중복이 의심되지만 받았습니다 — " + nearWhy);
-      }
-      /* 같은 요청을 또 누른 것 — 두 번 보내지 않고 먼저 받은 번호를
-         그대로 돌려줍니다 (손님에게는 성공입니다) */
+        { tel:q.tel, offerId:clean(b.offerId, 60), cat:q.cat || q.service, idem:idem });
+      if(dup.near) near = true;
       if(dup.dup){
         console.warn("[site] 중복 접수 — " + dup.why);
         return res.status(200).json({ ok:true, no:dup.no, dup:true, say:dup.say });
       }
       if(dup.spam){
         console.warn("[site] 접수가 너무 많습니다 — " + dup.why);
-        /* ⚠️⚠️ 손님에게 "스팸" 이라고 하지 않습니다 (절대 규칙 3) */
         return res.status(429).json({ error:dup.say });
       }
     }
-
-    /* 로그인하고 넣으셨으면 그 계정에 바로 이어 둡니다 — 나중에
-       `claim_request` 로 번호와 연락처를 다시 적지 않아도 됩니다 (§10).
-       ⚠️⚠️ **요청이 보낸 아이디를 쓰지 않습니다.** 토큰을 Supabase 에
-       물어서 나온 값만 씁니다 — 아이디를 받아 적으면 누구나 남의
-       계정에 신청을 꽂아 넣을 수 있습니다.
-       ⚠️ 토큰이 없거나 만료됐으면 **그냥 비워 둡니다.** 접수는
-       그대로 됩니다 (로그인 때문에 요청을 잃지 않습니다). */
-    let uid = null;
-    if(authReady() && bearer(req)){
-      const who = await session(req);
-      if(who.ok) uid = who.sub;
-      else console.warn("[site] 로그인을 확인하지 못해 신청을 계정에 잇지 않았습니다 — " + who.why);
-    }
-
-    /* 저장 — ⚠️ 저장이 실패하면 접수를 막지 않고 번호만 안 냅니다.
-       슬랙으로는 그대로 갑니다. 손님의 요청을 잃는 쪽이 더 나쁩니다. */
-    const cand = reqNo();
-    const row = {
-      no:        cand,
-      user_id:   uid,
-      side:      clean(b.side, 20) || (kind === "sos" ? "ops" : "start"),
-      industry:  q.biz || clean(b.industry, 40) || null,
-      cat:       q.cat || q.service || null,
-      offer_id:  clean(b.offerId, 60) || null,
-      region:    q.region || null,
-      gu:        clean(b.gu, 40) || null,
-      want_at:   clean(b.wantAt, 40) || null,
-      body:      q.q || null,
-      detail:    (b.detail && typeof b.detail === "object") ? b.detail : {},
-      name:      q.name,
-      tel:       q.tel,
-      email:     q.email || null,
-      /* ⚠️⚠️ 동의를 **시각으로** 남깁니다. boolean 으로 두면 "언제
-         받았나" 를 못 대고, 그게 분쟁에서 받지 않은 것과 같아집니다. */
-      agree_at:  new Date().toISOString(),
-      /* ⑱ 진행 안내 (2026-10-22 P2) — **선택**이고 기본은 꺼짐입니다.
-         ⚠️⚠️ 안 고르신 것을 "받겠다" 로 읽으면 그게 동의 없이 보내는
-         것입니다 — `=== true` 로만 켭니다 (문자열 "false" 도 참이라
-         `!!b.notify` 로 두면 켜집니다).
-         ⚠️⚠️ **동의했다면 시각이 같이** 갑니다 — boolean 하나로 두면
-         "언제 받았나" 를 못 대고, 그건 받지 않은 것과 같습니다
-         (DB 의 `request_notify_at_ok` 가 한 번 더 막습니다). */
-      notify_ok: b.notify === true,
-      notify_at: b.notify === true ? new Date().toISOString() : null,
-      /* ⚠️⚠️ 제3자 제공 재동의는 **여기서 받지 않습니다** (제17조 제2항).
-         어느 업체에 줄지 정해지지 않았으니까요 — 배정할 때 받습니다.
-         방침 제4조 제3항이 그렇게 적혀 있습니다. 비워 둡니다. */
-      /* §8 멱등 — 끊겨서 다시 누르신 것을 알아보는 열쇠입니다 */
-      idem:      idem || null,
-      state:     "new"
-    };
-    const saved = await dbInsert("request", row);
-    if(saved.ok){
-      no = cand;
-      /* ⚠️⚠️ **항목은 함수로 적습니다** — `save_request_items()` 가
-         신청서와 항목을 **한 트랜잭션**으로 묶습니다 (§8 "신청서 저장과
-         서비스 항목 저장이 중간에 실패하여 불완전한 신청이 생성되지
-         않도록"). 여기서 줄마다 insert 하면 중간에 끊긴 신청이 생깁니다.
-         ⚠️ 항목 저장이 실패해도 **접수는 그대로 둡니다** — 번호는 이미
-         나갔고, 슬랙 글에 항목이 그대로 적혀 있어 사람이 보고 처리할
-         수 있습니다. 손님의 요청을 잃는 쪽이 더 나쁩니다. */
-      if(q.items.length){
-        const it = await dbCallService("save_request_items",
-          { p_request: saved.row && saved.row.id, p_items: q.items });
-        if(!it.ok)
-          console.error("[site] 신청 서비스 항목을 저장하지 못했습니다 — " +
-            dbWhy(it.why) + " (접수번호 " + cand + ")");
-      }
-    }
-    else {
-      /* ── 동시에 들어온 요청 (2026-10-25 §3 의 5) ─────────────────
-         ⚠️⚠️ **둘째 자물쇠가 걸린 것입니다.** `0009` 의 부분 unique
-         인덱스(`request_idem_once`)가 같은 열쇠로 두 줄이 들어가는 것을
-         막습니다 — ⓪ 의 조회와 insert 사이에 다른 요청이 끼어들면
-         여기로 옵니다 (화면이 두 번 눌리거나 재시도가 겹칠 때).
-         ⚠️ 전에는 여기서 **로그만 남기고 번호를 안 냈습니다** — 다시
-         누른 손님만 번호를 못 받는 꼴이었습니다. 지금은 **먼저 들어간
-         줄의 번호를 다시 읽어** 돌려줍니다. */
-      const clash = saved.status === 409 ||
-                    /duplicate key|request_idem_once/i.test(String(saved.why || ""));
-      if(clash && idem){
-        const mine = await dbSelect("request",
-          "?select=no&idem=eq." + encodeURIComponent(idem) + "&limit=1");
-        if(mine.ok && mine.rows.length && mine.rows[0].no){
-          console.warn("[site] 동시에 들어온 같은 신청입니다 — " + mine.rows[0].no);
-          return res.status(200).json({ ok:true, no:mine.rows[0].no, dup:true,
-            say:"이미 접수되었습니다." });
-        }
-      }
-      console.error("[site] 접수를 저장하지 못했습니다 — " + dbWhy(saved.why));
-    }
   }
 
-  /* ── 업체 입점 신청 (2026-10-25 진단 P1-7 · 0016) ───────────────
-     전에는 `/join` 으로 들어온 입점 신청이 **슬랙으로만** 갔습니다.
-     채널 글이 묻히면 그 업체는 사라지고, 직원은 전화하려고 그 글을
-     찾아 **업체명 · 번호 · 하는 일을 다시 손으로 칩니다** — 그러다
-     하나라도 틀리면 `/admin` 9번 칸이 만드는 등록 줄이 어긋납니다.
-
-     ⚠️⚠️ **`provider` 에 바로 넣지 않습니다.** 신청은 아직 업체가
-     아닙니다 — 통화도 안 해 봤고 계약도 없습니다. `provider` 에
-     꽂으면 배정 고르개에 바로 떠서, 거기 배정되면 그 순간 손님 성함 ·
-     연락처가 **아무 합의도 없는 회사로** 넘어갑니다 (개인정보보호법
-     제17조 제2항 · 0012 의 `assignable` 을 둔 까닭 그대로).
-
-     ⚠️⚠️ **DB 가 없으면 오늘과 글자 하나 다르지 않습니다** — 슬랙으로
-     보내고 끝이고, 접수번호도 안 냅니다 (번호를 내주고 저장을 안 하면
-     그 번호로 물어봐도 아무것도 없습니다 — 절대 규칙 5).
-     ⚠️ 저장이 실패해도 **접수는 막지 않습니다.** 슬랙으로는 그대로
-     가고 번호만 안 냅니다 — 업체의 신청을 잃는 쪽이 더 나쁩니다.
-     ───────────────────────────────────────────────────────────── */
-  if(kind === "partner" && dbReady()){
-    /* 두 번 누르신 것 — ⚠️⚠️ **중복은 에러가 아니라 성공입니다.**
-       에러를 보여 주면 같은 신청을 또 보냅니다 (`request` 쪽과 같은
-       규칙) — 먼저 받은 번호를 그대로 돌려주고 다시 안 보냅니다.
-       ⚠️⚠️ **번호를 질의문자로 거르지 않습니다.** 업체가 `031-000-0000`
-       처럼 줄표를 넣어 적으시면 `tel=eq.0310000000` 에 **한 줄도 안
-       걸립니다** — 숫자만 남겨 견주는 일은 받아 온 뒤에 여기서 합니다
-       (`/admin` 영업 작업대 · `intakeDup()` 과 같은 규칙). 그래서
-       10분 창에 스물까지만 가져옵니다. */
-    const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-    const found = await dbSelect("provider_apply",
-      "?select=no,company,tel,created_at" +
-      "&created_at=gte." + encodeURIComponent(since) +
-      "&order=created_at.desc&limit=20");
-    if(!found.ok)
-      console.error("[site] 입점 신청 중복 검사를 못 했습니다 — " + dbWhy(found.why));
-    else {
-      const key = telKey(q.tel), co = q.company.replace(/\s+/g, "");
-      const same = (found.rows || []).filter(function(r){
-        return telKey(r && r.tel) === key &&
-               String((r && r.company) || "").replace(/\s+/g, "") === co;
-      })[0];
-      if(same && same.no){
-        console.warn("[site] 같은 업체가 10분 안에 또 신청했습니다 — " + same.no);
-        return res.status(200).json({ ok:true, no:same.no, dup:true,
-          say:"방금 같은 신청이 접수되었습니다." });
-      }
-    }
-
-    const cand = reqNo();
-    const saved = await dbInsert("provider_apply", {
-      no:       cand,
-      company:  q.company,
-      brn:      q.brn || null,
-      name:     q.name,
-      tel:      q.tel,
-      email:    q.email || null,
-      region:   q.region || null,
-      /* ⚠️ `/join` 의 "주로 하시는 업종" 입니다 — 화면이 이름 글자로
-         보냅니다 (분류 key 가 아닙니다). */
-      industry: q.exp || null,
-      services: q.services,
-      note:     q.note || null,
-      /* ⚠️⚠️ 동의를 **시각으로** 남깁니다 (제15조) — boolean 으로 두면
-         "언제 받았나" 를 못 대고, 그게 분쟁에서 받지 않은 것과
-         같아집니다 (`request.agree_at` 과 같은 규칙). */
-      agree_at: new Date().toISOString(),
-      state:    "new"
-    });
-    if(saved.ok) no = cand;
-    else console.error("[site] 입점 신청을 저장하지 못했습니다 — " + dbWhy(saved.why));
+  /* 로그인하고 넣으셨으면 그 계정에 잇습니다 — 토큰을 Supabase 에 물어 나온
+     값만 씁니다 (요청이 보낸 아이디를 믿지 않습니다). */
+  let uid = null;
+  if(kind !== "partner" && authReady() && bearer(req)){
+    const who = await session(req);
+    if(who.ok) uid = who.sub;
+    else console.warn("[site] 로그인을 확인하지 못해 신청을 계정에 잇지 않았습니다 — " + who.why);
   }
 
-  const head = kind === "sos" ? "[SOS]" : kind === "partner" ? "[파트너]" : "[견적]";
-  const subject =
-    kind === "partner"
-      ? head + " " + q.company + " · " + q.services.slice(0,3).join(" · ") +
-        (q.services.length > 3 ? " 외 " + (q.services.length - 3) : "")
-      : head + " " + q.name +
-        (kind === "sos"
-           ? (q.biz ? " · " + q.biz : "") + (q.cat ? " · " + q.cat : "")
-           : (q.serviceName ? " · " + q.serviceName : q.service ? " · " + q.service : ""));
-
-  const L = [];
-  /* ⚠️ 제일 위에 둡니다 — 직원이 전화하면서 제일 먼저 묻는 것입니다 */
-  if(no) L.push("접수번호  " + no);
-  /* ⚠️⚠️ **운영자에게만 보이는 줄입니다** (2026-10-25 §3 "관리자가
-     확인할 수 있도록 하되 정상 신청을 차단하지 않는다"). 손님 화면에는
-     한 글자도 안 나갑니다 (절대 규칙 3) — 슬랙 글이 직원이 보는
-     자리라 여기에 붙입니다.
-     ⚠️ 개인정보를 싣지 않습니다 — 몇 번째인가와 앞 건의 접수번호
-     까지입니다 (성함 · 연락처는 아래 줄에 이미 있습니다). */
-  if(nearWhy) L.push("⚠️ 확인 필요  " + nearWhy);
-  if(kind === "partner") L.push("업체명    " + q.company);
-  L.push("성함      " + q.name);
-  L.push("연락처    " + q.tel);
-  if(q.email)  L.push("이메일    " + q.email);
-  if(q.biz)    L.push("업종      " + q.biz);
-  if(q.region) L.push("지역      " + q.region);
-  if(q.cat)    L.push("분류      " + q.cat);
-  if(q.serviceName || q.service)
-               L.push("서비스    " + (q.serviceName || q.service));
-  if(q.budget) L.push("예산      " + q.budget + " 만원");
-  if(q.brn)    L.push("사업자번호 " + q.brn);
-  if(q.exp)    L.push("경력      " + q.exp);
-
+  const cand = reqNo();
+  let saved;
   if(kind === "partner"){
-    L.push("");
-    L.push("── 하시는 일 ──");
-    L.push(q.services.join(" · "));
-    if(q.note){ L.push(""); L.push("── 더 하신 말씀 ──"); L.push(q.note); }
+    saved = await dbCallService("submit_apply", { p: {
+      no: cand, company: q.company, brn: q.brn || null, name: q.name, tel: q.tel,
+      email: q.email || null, region: q.region || null, industry: q.exp || null,
+      services: q.services, note: q.note || null, consent: consent } });
   }else{
-    if(q.detail && q.detail.length){
-      L.push("");
-      L.push("── 요청 조건 ──");
-      q.detail.forEach(function(x){ L.push(x); });
-    }
-    /* ⚠️⚠️ 2026-10-17 §7 — **서비스마다 다른 업체에 배정**하시려면
-       받아 보는 사람이 항목을 항목으로 봐야 합니다. 이름이 이어 붙은
-       한 줄로는 나눌 수가 없습니다 (그게 이번에 고친 자리입니다). */
-    if(q.items && q.items.length)
-      itemLines(q.items).forEach(function(x){ L.push(x); });
-    L.push("");
-    L.push(kind === "sos" ? "── 적어 주신 상황 ──" : "── 필요한 것 ──");
-    L.push(q.q);
-    /* ⚠️ **제일 아래**에 둡니다. 업체에 견적을 부탁할 때 그대로 옮겨
-       적을 수 있어야 하는 목록이라, 다른 것과 섞이면 안 됩니다. */
-    if(q.asks && q.asks.length){
-      L.push("");
-      L.push("── 업체에 물어봐 달라고 하신 것 ──");
-      q.asks.forEach(function(x, i){ L.push("  " + (i+1) + ". " + x); });
-    }
-  }
-  const text = L.join("\n");
-
-  /* ── 저장과 전달을 **갈라서** 봅니다 (2026-10-25 §4) ──────────────
-     ⚠️⚠️ **전에는 전달이 실패하면 저장과 상관없이 503 이었습니다.**
-     DB 가 켜진 뒤에는 그게 이런 꼴이 됩니다 —
-
-        저장 성공 → 슬랙 실패 → 손님은 "접수되지 않았습니다" 를 보는데
-                              **DB 에는 이미 들어가 있습니다**
-
-     손님은 다시 누르고(그건 멱등이 막습니다) 그래도 실패를 보고
-     떠나시는데, 정작 요청은 받아 둔 상태입니다. §4 가 정한 대로
-     **저장된 접수는 성공**입니다.
-
-     ⚠️⚠️ 반대로 **아무 데도 안 갔으면 성공이라고 하지 않습니다**
-     (절대 규칙 5). 저장도 안 됐고 전달도 안 됐으면 503 입니다 —
-     손님이 다시 누를 수 있어야 합니다.
-
-     ⚠️ 알림이 안 간 접수는 **운영자가 `/admin` 접수 목록에서** 봅니다.
-     슬랙만 보시면 이 건을 영영 못 봅니다 — 그래서 로그에 접수번호를
-     같이 적습니다 (번호는 개인정보가 아닙니다). */
-  const sent = await deliver(kind, q, subject, text);
-  if(!sent.ok){
-    console.error("[site] 요청을 전달하지 못했습니다 — " + why(kind, sent.why));
-    if(!no)
-      return res.status(503).json({ error: "지금 접수하지 못했습니다" });
-    console.error("[site] ⚠️⚠️ 접수는 저장됐는데 알림이 가지 않았습니다 — " +
-      no + " · 슬랙에는 없습니다. /admin 접수 목록에서 보세요 " +
-      "(손님에게는 접수 성공으로 안내했습니다)");
-  }
-  /* ── 손님에게 접수 완료 안내 (2026-10-22 P0 ⑥) ──────────────────
-     ⚠️⚠️ **접수를 막지 않습니다.** 보낼 곳이 설정되기 전에는 아무 일도
-     안 하고(`customerAck` 가 "off" 를 돌려줍니다), 실패해도 접수는
-     성공입니다 — 안내 때문에 요청을 잃는 쪽이 더 나쁩니다.
-     ⚠️ 업체 입점(partner)에는 안 보냅니다 — 신청이 아니라 업체 등록
-     이고, 보낼 글이 다릅니다.
-     ⚠️⚠️ **`await` 로 기다립니다.** 서버리스는 응답을 돌려준 뒤
-     프로세스를 멈춰서, 기다리지 않으면 메일이 **조용히 사라집니다**
-     (api/deal.js 의 알림에서 겪은 자리).
-     ⚠️ 중복 접수로 일찍 돌아간 길에는 안 옵니다 — 두 번 누르셨을 때
-     같은 안내를 두 번 보내지 않습니다 (그 길은 위에서 return 합니다). */
-  if(kind !== "partner" && q.email){
-    const ack = await customerAck(q.email, no);
-    if(!ack.ok && ack.why !== "off")
-      console.warn("[site] 접수 안내 메일을 보내지 못했습니다 — " + ack.why +
-        " (접수는 되었습니다" + (no ? " · " + no : "") + ")");
+    saved = await dbCallService("submit_intake", { p: {
+      no: cand, idem: idem || null, form: form,
+      user_id: uid,
+      side: clean(b.side, 20) || "start",
+      industry: clean(b.industry, 40) || null,
+      cat: q.cat || q.service || null,
+      offer_id: clean(b.offerId, 60) || null,
+      region: q.region || null,
+      gu: clean(b.gu, 40) || null,
+      want_at: clean(b.wantAt, 40) || null,
+      body: q.q || null,
+      detail: (b.detail && typeof b.detail === "object" && !Array.isArray(b.detail)) ? b.detail : {},
+      name: q.name, tel: q.tel, email: q.email || null,
+      notify: b.notify === true,
+      items: q.items || [],
+      consent: consent } });
   }
 
-  /* ⚠️ `no` 는 **실제로 저장됐을 때만** 들어갑니다. 화면은 있으면
-     보여 주고 없으면 안 보여 줍니다 (자리표시자를 찍지 않습니다 —
-     절대 규칙 2). */
-  res.status(200).json(no ? { ok: true, no: no } : { ok: true });
+  /* ② 저장이 확정되지 않았으면 성공이라 하지 않습니다 */
+  const got = saved.ok && saved.data && typeof saved.data === "object" ? saved.data : null;
+  if(!got || !got.no){
+    console.error("[site] 접수를 저장하지 못했습니다 — " + dbWhy(saved.why || "no_row"));
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(503).json({ error: "지금 접수하지 못했습니다. 적어 주신 내용은 그대로 두었으니 잠시 뒤 다시 보내 주세요." });
+  }
+  if(got.dup){
+    console.warn("[site] 같은 신청서를 다시 보내셨습니다 — " + got.no);
+    return res.status(200).json({ ok:true, no:got.no, dup:true, say:"이미 접수되었습니다." });
+  }
+
+  /* ③ 알림 — 저장과 따로. 실패해도 응답은 성공입니다 (저장이 끝났으니까요).
+     ⚠️ await 로 기다립니다 — 서버리스는 응답 뒤 멈춰서 안 기다리면 사라집니다. */
+  const info = { form: kind === "partner" ? "join" : form, no: got.no,
+                 services: kind === "partner" ? q.services
+                   : (q.items || []).map(function(x){ return x && (x.name || x.id); }).filter(Boolean)
+                       .concat(q.serviceName && !(q.items || []).length ? [q.serviceName] : []),
+                 region: q.region || "", near: near, email: q.email || "" };
+  for(const job of (Array.isArray(got.jobs) ? got.jobs : [])){
+    try{ await runJob(job, info); }
+    catch(e){ console.error("[site] 알림 작업이 터졌습니다 — " + (e && e.message)); }
+  }
+
+  res.status(200).json({ ok:true, no:got.no });
 };
 
-/* 복구 점검본: 운영 DB·메일·웹훅을 호출하지 않고 종료합니다. */
-module.exports = function restorationClosed(req, res){
-  res.setHeader("Cache-Control", "no-store");
-  return res.status(503).json({ error:"복구 점검 중으로 현재 접수하지 않습니다.", restoration:true });
-};

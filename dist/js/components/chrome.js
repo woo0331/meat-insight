@@ -51,7 +51,12 @@ function Logo(where){
 
 function Header(){
 
-  return '<header class="hd"><div class="w-wide hd-in">'+
+  var closedBar = (window.WOW_BIZ && WOW_BIZ.sosReady) ? "" :
+    '<div role="status" style="background:var(--bg-sky,#EFF6FC);color:var(--navy,#0C3D70);'+
+      'border-bottom:1px solid var(--line,#E2E8F0);text-align:center;padding:10px 16px;font-size:14px">'+
+      '현재 견적 · 매물 등록 · 입점 · 로그인 접수를 받지 않습니다. '+
+      '정보 · 계산도구 · 체크리스트는 그대로 이용하실 수 있습니다.</div>';
+  return closedBar + '<header class="hd"><div class="w-wide hd-in">'+
     Logo() +
     '<nav class="gnb" id="gnb" aria-label="주요 메뉴">'+
       AM_GNB.map(function(m){
@@ -72,7 +77,9 @@ function Header(){
 
       '<a class="hd-txt" href="/my">'+icon("user",18)+'<span>내 기록</span></a>'+
 
-      '<a class="btn btn-nv hd-cta" href="/quote" data-to="/quote">'+
+      '<a class="btn btn-nv hd-cta hd-cta-off" href="/intake" data-cta="off">'+
+        '접수 안내'+icon("arrow",16)+'</a>'+
+      '<a class="btn btn-nv hd-cta hd-cta-on" href="/quote" data-to="/quote" data-cta="on" hidden>'+
         '<span class="hd-cta-w">무료 </span>견적 신청'+icon("arrow",16)+'</a>'+
 
       '<button class="hd-ic hd-mb" type="button" id="hdMb" aria-label="메뉴"'+
@@ -107,6 +114,23 @@ window.hdMenu = function(open){
   bt.setAttribute("aria-expanded", on ? "true" : "false");
 };
 
+window.amQuoteOpen = function(){
+  if(!(window.WOW_BIZ && WOW_BIZ.sosReady)) return Promise.resolve(false);
+  if(typeof window.amAuthAsk !== "function") return Promise.resolve(false);
+  return window.amAuthAsk().then(function(a){ return !!(a && a.quoteOpen); },
+                                 function(){ return false; });
+};
+window.hdCtaPaint = hdCtaPaint;
+function hdCtaPaint(){
+  window.amQuoteOpen().then(function(open){
+
+    els('[data-cta]').forEach(function(a){
+      var mine = a.getAttribute("data-cta") === (open ? "on" : "off");
+      if(mine) a.removeAttribute("hidden"); else a.setAttribute("hidden","");
+    });
+  });
+}
+
 function hdAuthPaint(){
   var box = document.getElementById("hdAuth");
   if(!box || typeof window.amAuthAsk !== "function") return;
@@ -116,8 +140,11 @@ function hdAuthPaint(){
     box.innerHTML = a.signedIn
       ? '<a class="hd-txt" href="/my">'+icon("user",18)+
           '<span>'+esc("내 계정")+'</span></a>'
-      : '<a class="hd-txt" href="/my">'+icon("user",18)+
+      : '<a class="hd-txt" href="/my?next='+encodeURIComponent(window.location.pathname + window.location.search)+'">'+icon("user",18)+
           '<span>'+esc("로그인")+'</span></a>';
+
+    var es = window.amAuthErrSay ? amAuthErrSay() : "";
+    if(es && typeof window.toast === "function") toast(es);
   });
 }
 
@@ -289,6 +316,7 @@ window.mountChrome = function(){
   paintChrome();
 
   hdAuthPaint();
+  hdCtaPaint();
 };
 
 window.hdSearch = function(e){

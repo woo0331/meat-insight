@@ -733,8 +733,9 @@ function ok(name, cond, extra) {
        (await pg.locator("#rq .rq-s-rq .rq-no").first().textContent()) === "SW-AB12-CD34");
     /* ⚠️⚠️ 목록 하나가 곧 유출인 자리입니다 */
     const listTxt = await pg.locator("#rq .rq-s-rq").textContent();
-    ok("목록에 성함 · 연락처가 없다",
-       !/010-|@/.test(listTxt) && listTxt.includes("성함 · 연락처가 없습니다"));
+    /* W03 — 목록 연락처는 **가린 것만** (010-****-1234). 가운데까지 보이는 번호 · 메일이 없어야 합니다 */
+    ok("목록에 성함이 없고 연락처는 가린 것만",
+       !/010-[0-9]{3,4}-[0-9]{4}|@/.test(listTxt) && listTxt.includes("성함이 없고 연락처는 가려서만"));
     ok("상태 칩의 숫자가 센 값이다",
        (await pg.locator("#rq .rq-s-rq .rq-fil .chip").first().textContent()).includes("전체 2"));
 
@@ -2337,6 +2338,81 @@ function ok(name, cond, extra) {
        grp[1].v.indexOf("pv-cut") >= 0 &&
        grp[1].v.indexOf("pv-bare") >= 0, JSON.stringify(grp));
 
+    ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
+  /* ══ W03 관리자 접수함 — 목록 표시 · 기한 · 메모(내부/연락/공개) ═════════════
+     ⚠️ 서버(0083 admin_inbox_flags)가 원문 연락처를 안 보냅니다. 화면이 받은 것은
+     가린 번호뿐이고, 그 밖의 표시가 목록에 실제로 그려지는지 봅니다. */
+  console.log("\nW03 관리자 접수함");
+  {
+    const { pg, ctx, errs } = await fresh(1440, 1400);
+    const sent = [];
+    await pg.route("**/api/session", r => r.fulfill({ status:200, contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:true, role:"staff", name:"직원", provider:null,
+                             conf:{ url:"https://proj.supabase.co", anonKey:"ANON-TEST" } }) }));
+    let notes = [
+      { id:"n1", kind:"memo", body:"내부 메모 — 오후 선호", result:null, by_role:"staff", at:"2026-11-18T01:00:00Z" },
+      { id:"n2", kind:"contact", body:"첫 통화", result:"no_answer", by_role:"staff", at:"2026-11-18T02:00:00Z" },
+      { id:"n3", kind:"public", body:"담당자가 확인하고 있습니다.", result:null, by_role:"staff", at:"2026-11-18T03:00:00Z" } ];
+    await pg.route("**/api/me**", r => {
+      const one = new URL(r.request().url()).searchParams.get("r") || "";
+      return r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify({
+        auth:true, signedIn:true, role:"staff", me:"44444444-4444-4444-4444-444444444444",
+        requests:[{ id:"aaaa1111-1111-1111-1111-111111111111", no:"SW-AAAA-0001", side:"start", cat:"interior",
+          industry:"cafe", region:"seoul", gu:"", state:"check", owner_id:null,
+          created_at:"2026-11-18T00:00:00Z", assignment:[], request_item:[],
+          form:"quote", tel_mask:"010-****-5678", dup_count:1, notify_failed:true,
+          services:["interior","demolish"], rollup:{ total:2, open:1, done:1, lost:0, hold:0, phase:"open" },
+          next_due:"2020-01-01T00:00:00Z" }],
+        providers:[], staff:[], history: one ? [] : undefined, notes: one ? notes : undefined }) });
+    });
+    await pg.route("**/api/deal", r => { sent.push(JSON.parse(r.request().postData() || "{}"));
+      return r.fulfill({ status:200, contentType:"application/json", body:'{"ok":true}' }); });
+    await pg.goto(base + "/admin.html", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(600);
+    const fl = await pg.locator("#rq .rq-r .rq-fl").allTextContents();
+    ok("목록 — 신청 종류 · 가린 번호 · 서비스 · 모은 상태 · 기한 · 중복 · 알림 실패",
+       fl.includes("견적") && fl.includes("010-****-5678") && fl.some(x => x.includes("인테리어")) &&
+       fl.some(x => x.includes("진행 1 · 완료 1")) && fl.some(x => x.startsWith("기한 지남")) &&
+       fl.includes("중복 후보 1") && fl.includes("알림 실패"), fl.join(" | "));
+    ok("목록에 가운데 번호가 없음", !(await pg.locator("#rq").textContent()).includes("1234-5678"));
+    await pg.click("#rq .rq-r .rq-hd");
+    await pg.waitForTimeout(300);
+    await pg.fill("#rq-due-aaaa1111-1111-1111-1111-111111111111", "2026-11-20T09:30");
+    await pg.click("#rq .rq-due button:has-text('기한 저장')");
+    await pg.waitForTimeout(400);
+    const d1 = sent.find(x => x.fn === "set_next_due") || {};
+    ok("기한 — 한국시간으로 +09:00 을 붙여 보냄",
+       d1.args && d1.args.p_due === "2026-11-20T09:30:00+09:00", JSON.stringify(d1));
+    await pg.click("#rq .rq-r .rq-hd").catch(() => {});
+    await pg.waitForTimeout(200);
+    if(!(await pg.locator("#rq .rq-bd").count())){ await pg.click("#rq .rq-r .rq-hd"); await pg.waitForTimeout(200); }
+    await pg.click("#rq button:has-text('메모 · 연락 기록 · 고객 안내')");
+    await pg.waitForTimeout(400);
+    const nl = await pg.locator("#rq .rq-n").allTextContents();
+    ok("메모 · 연락 기록 · 고객 공개 안내가 갈려서 보임",
+       nl.length === 3 && nl[0].includes("내부 메모") && nl[1].includes("받지 않음") &&
+       nl[2].includes("고객 공개 안내") && nl[2].includes("고객에게 보임"), nl.join(" | "));
+    await pg.selectOption("#rq-nk", "public");
+    await pg.waitForTimeout(150);
+    ok("고객 공개를 고르면 '고객에게 그대로 보입니다' 를 그 자리에서 말함",
+       (await pg.locator("#rq .rq-nf").textContent()).includes("고객에게 그대로 보입니다"));
+    await pg.selectOption("#rq-nk", "contact");
+    await pg.waitForTimeout(150);
+    await pg.fill("#rq-nb", "두 번째 통화");
+    await pg.click("#rq .rq-nf button:has-text('적기')");
+    await pg.waitForTimeout(300);
+    ok("연락 기록은 결과 없이 안 보냄", !sent.some(x => x.fn === "add_request_note"));
+    await pg.selectOption("#rq-nr", "reached");
+    await pg.click("#rq .rq-nf button:has-text('적기')");
+    await pg.waitForTimeout(500);
+    const n1 = sent.find(x => x.fn === "add_request_note") || {};
+    ok("메모 — 이 길이 요구한 칸만 보냄",
+       n1.args && n1.args.p_kind === "contact" && n1.args.p_result === "reached" &&
+       n1.args.p_body === "두 번째 통화" && Object.keys(n1.args).sort().join() === "p_body,p_item,p_kind,p_request,p_result",
+       JSON.stringify(n1));
     ok("JS 에러 없음", errs.length === 0, errs.join(" | "));
     await ctx.close();
   }

@@ -561,8 +561,13 @@ function PageMain(){
      ① 이 return ② `css/pages.css` 맨 뒤 블록 둘 ③ `check.js` 의
      `want`·`need` ④ `build-pages.js` 의 크롤러 본문 ⑤ `test-flows.js`
      · `prove-checks.js`. **하나만 고치면 빌드가 멈춥니다.** */
-  return HomeHero()+ HomeEnter()+ HomeDirect()+
-         HomeCalc()+ HomeSteps()+ HomeGuide()+ HomeCta();
+  /* ⚠️⚠️ 2026-11-18 — 대표 확정 시안으로 바꿨습니다 (파일 맨 아래 배너).
+     전 차례는 HomeHero · HomeEnter · HomeDirect · HomeCalc · HomeSteps ·
+     HomeGuide · HomeCta 였고 함수는 하나도 지우지 않았습니다. HomeSteps(이용 절차)
+     는 보조 진입 "이용 가이드"(/about)가 받습니다. 되돌리시면 check.js 의 want ·
+     build-pages.js 의 메인 크롤러 본문도 같이 고치세요. */
+  return HomeSplitHero()+ HomeQuick()+ HomeStores()+ HomeTrust()+ HomeShortcuts()+
+         HomeCalc()+ HomeGuide()+ HomeCta();
 }
 
 
@@ -1115,8 +1120,8 @@ function HomeQuoteCard(){
   return '<div class="bqc">'+
     '<p class="bqc-k">FREE ESTIMATE</p>'+
     '<b>무료 견적 신청</b>'+
-    '<p>어떤 서비스가 필요하신지 적어 보내시면, 그 분야 업체를 찾아 '+
-      '연결해 드립니다.</p>'+
+    '<p>어떤 서비스가 필요하신지 적어 보내시면, 운영자가 확인하고 '+
+      '맞는 업체가 있으면 연결을 도와 드립니다.</p>'+
     '<ul class="bqc-l">'+L.map(function(t){
       return '<li>'+icon("check",16)+'<span>'+esc(t)+'</span></li>';
     }).join("")+'</ul>'+
@@ -1312,11 +1317,23 @@ function HomeGuide(){
 function HomeCta(){
   var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND||{}).name || ""));
   var wa = (window.koWith ? koWith(nm, "와과") : nm + "와");
+  /* ⚠️ 2026-11-18 W01 — 접수가 닫혀 있으면 신청을 권하지 않습니다 (sosReady). */
+  if(!(window.WOW_BIZ && WOW_BIZ.sosReady))
+    return '<section class="bcta"><div class="w bcta-c">'+
+      '<p class="eyebrow">NOTICE</p>'+
+      '<h2>지금은 견적 접수를 받지 않습니다.</h2>'+
+      '<p>서비스 안내 · 계산도구 · 체크리스트는 그대로 이용하실 수 있습니다. '+
+        '접수가 열리면 이 자리에서 안내드립니다. 재개 일정은 아직 정해지지 않았습니다.</p>'+
+      '<div class="bcta-go">'+
+        '<a class="btn btn-ac btn-lg" href="/tools">계산도구 보기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-cr btn-lg" href="/faq">자주 묻는 질문</a>'+
+      '</div>'+
+    '</div></section>';
   return '<section class="bcta"><div class="w bcta-c">'+
     '<p class="eyebrow">FREE ESTIMATE</p>'+
     '<h2>지금, '+esc(wa)+' 함께 시작하세요.</h2>'+
-    '<p>업종 · 지역 · 조건을 한 번만 적어 보내시면, 그 분야 업체를 찾아 '+
-      '연결해 드립니다. 신청은 무료이고 가입이 필요 없습니다.</p>'+
+    '<p>업종 · 지역 · 조건을 한 번만 적어 보내시면, 운영자가 확인하고 '+
+      '맞는 업체가 있으면 연결을 도와 드립니다. 신청은 무료이고 가입이 필요 없습니다.</p>'+
     '<div class="bcta-go">'+
       '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">'+
         '무료 견적 신청'+icon("arrow",18)+'</a>'+
@@ -1756,3 +1773,203 @@ window.homeGuideFor = function(hall, n){
     });
   return hit.slice(0, n);
 };
+
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-11-18 메인페이지 디자인 개편 — 대표 확정 시안 (파랑 · 주황 두 판)
+
+   ① sw-hero    창업 준비(파랑) / 폐업·철거(주황) 두 판 + 가운데 검색
+   ② sw-quick   보조 진입 넷 + "STOREWAY 하나로" 네 걸음
+   ③ sw-store   전국 매장 양도양수 — 매물이 0건이면 0건이라고 말합니다
+   ④ sw-trust   왜 STOREWAY 일까요 — 사실인 것만
+   ⑤ sw-short   서비스 바로가기 일곱
+   그 아래는 전과 같은 계산도구 · 정보 · 마지막 안내(HomeCalc · HomeGuide · HomeCta).
+
+   ⚠️⚠️ 시안에서 **안 옮긴 것과 까닭** (절대 규칙 1 · 5)
+     · 매물 카드 넷(권리금 7,000만원 …) — 등록된 매물이 0건입니다. 지어내면 허위매물.
+     · 추천 매물 · 인기 매물 탭 — 고를 기준(조회 · 계약)을 재지 않습니다.
+     · "검증된 매물과 업체 · 빠른 상담 연결 · 전국 네트워크" — 검증 기능도,
+       지킬 수 있는 연결 속도도, 전국 업체도 없습니다. 같은 자리에 사실 넷.
+     · 아정당 · 무촌철거 등 업체 이름 · 로고 · 제휴 표현 — 넣지 않습니다.
+   ⚠️ 접수 상태(WOW_BIZ.sosReady)를 따릅니다 — 닫혀 있으면 "신청" 을 권하지 않습니다.
+   ⚠️ 이름 · 주소는 catalog.js 에서 옵니다 (손으로 적지 않습니다).
+   ══════════════════════════════════════════════════════════════════ */
+
+function swCat(k){
+  var C = window.AM_CATS || [];
+  for(var i = 0; i < C.length; i++) if(C[i].key === k) return C[i];
+  return null;
+}
+function swTo(k){
+  var c = swCat(k);
+  if(!c) return "";
+  return (typeof catTo === "function") ? catTo(c) : ("/providers/" + c.key);
+}
+function swOpen(){ return !!(window.WOW_BIZ && WOW_BIZ.sosReady); }
+
+/* 히어로 한 판의 키워드 — 글자는 시안, 가는 곳은 실제 분류 */
+function swKeys(list){
+  /* 시안처럼 세 개씩 두 줄 — 한 줄로 흘리면 줄이 바뀐 자리 앞에 구분선이 남습니다 */
+  var row = function(part){
+    return '<ul class="sw-keys">' + part.map(function(x){
+      var to = swTo(x[1]);
+      return to ? '<li><a href="'+esc(to)+'">'+esc(x[0])+'</a></li>' : "";
+    }).join("") + '</ul>';
+  };
+  return '<div class="sw-kw">' + row(list.slice(0, 3)) + row(list.slice(3)) + '</div>';
+}
+
+var SW_START_KEYS = [["상권분석","area"],["인테리어·시공","interior"],["주방기기·설비","equip"],
+                     ["POS·키오스크","it"],["마케팅·홍보","marketing"],["창업자금·정책정보","fund"]];
+var SW_CLOSE_KEYS = [["폐업 절차 안내","process"],["철거·원상복구","demolish"],["집기·설비 처분","asset"],
+                     ["중고매각 연결","stock"],["세무정리","tax"],["폐업지원 정보","support"]];
+
+function HomeSplitHero(){
+  var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND || {}).name || ""));
+  var ph = function(k){ return hasPhoto(k)
+    ? '<span class="sw-hph" aria-hidden="true">'+photoBox(k, "", true, "(max-width:768px) 100vw, 50vw")+'</span>' : ""; };
+  return '<section class="bhero sw-hero">'+
+    '<h1 class="sr-only">'+esc(nm)+' — 창업부터 폐업까지, 사장님의 모든 가게 이야기</h1>'+
+    '<div class="sw-hgrid">'+
+      '<div class="sw-hp sw-hp-st">'+ ph("hero-start") +
+        '<div class="sw-hin">'+
+          '<p class="sw-hk">새로운 시작을 준비하는 사장님이라면!</p>'+
+          '<h2>'+icon("store",44)+'<span>창업 준비</span></h2>'+
+          swKeys(SW_START_KEYS)+
+          '<a class="sw-hbtn sw-hbtn-st" href="/startup"><span>창업 준비 <span class="sw-hbtn-x">서비스 </span>보기</span>'+icon("arrow",18)+'</a>'+
+        '</div>'+
+      '</div>'+
+      '<div class="sw-hp sw-hp-cl">'+ ph("hero-close") +
+        '<div class="sw-hin">'+
+          '<p class="sw-hk">정리도, 새로운 시작도 체계적으로!</p>'+
+          '<h2>'+icon("hammer",44)+'<span>폐업·철거</span></h2>'+
+          swKeys(SW_CLOSE_KEYS)+
+          '<a class="sw-hbtn sw-hbtn-cl" href="/closure"><span>폐업·철거 <span class="sw-hbtn-x">서비스 </span>보기</span>'+icon("arrow",18)+'</a>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    '<form class="sw-find" role="search" action="/search" onsubmit="return swFind(event)">'+
+      '<label class="sr-only" for="sw-q">서비스 검색</label>'+
+      icon("search",22)+
+      '<input id="sw-q" name="q" type="search" autocomplete="off" '+
+        'placeholder="지금, 어떤 서비스가 필요하신가요? (예: 인테리어, 철거, 매장 양도)">'+
+      '<button class="sw-find-b" type="submit">검색</button>'+
+    '</form>'+
+  '</section>';
+}
+window.swFind = function(e){
+  if(e) e.preventDefault();
+  var el = document.getElementById("sw-q"), q = el ? el.value.trim() : "";
+  go(q ? "/search?q=" + encodeURIComponent(q) : "/search");
+  return false;
+};
+
+/* 보조 진입 넷 + 네 걸음 */
+var SW_QUICK = [
+  { to:"/transfer",  ic:"handover",  b:"매장 양도양수", s:"전국 매물 찾기 · 등록" },
+  { to:"/operation", ic:"gauge",     b:"매장 운영",     s:"운영에 필요한 서비스" },
+  { to:"/providers", ic:"users",     b:"제휴업체",       s:"분야별 업체 찾기" },
+  { to:"/about",     ic:"book",      b:"이용 가이드",    s:"신청 방법과 진행 절차" }
+];
+var SW_FLOW = [
+  { to:"/startup",   ic:"rocket",   b:"창업 준비",     s:"가게 시작을 위한 준비" },
+  { to:"/operation", ic:"store",    b:"매장 운영",     s:"운영 효율화 · 비용 점검" },
+  { to:"/transfer",  ic:"handover", b:"매장 양도양수", s:"넘기고 받는 길 안내" },
+  { to:"/closure",   ic:"hammer",   b:"폐업·철거",     s:"정리 · 처분 · 세무까지" }
+];
+function HomeQuick(){
+  var en = ((window.AM_BRAND || {}).en || "");
+  var q = SW_QUICK.map(function(x){
+    return '<li><a class="sw-qc" href="'+esc(x.to)+'">'+
+      '<span class="sw-qi" aria-hidden="true">'+icon(x.ic,34)+'</span>'+
+      '<span class="sw-qt"><b>'+esc(x.b)+'</b><em>'+esc(x.s)+'</em></span>'+
+      '<span class="sw-qgo" aria-hidden="true">'+icon("arrow",16)+'</span></a></li>';
+  }).join("");
+  var f = SW_FLOW.map(function(x){
+    return '<li><a class="sw-fl" href="'+esc(x.to)+'">'+
+      '<span class="sw-fi" aria-hidden="true">'+icon(x.ic,36)+'</span>'+
+      '<span class="sw-ft"><b>'+esc(x.b)+'</b><em>'+esc(x.s)+'</em></span></a></li>';
+  }).join("");
+  return '<section class="bent sw-quick"><div class="w">'+
+    '<ul class="sw-qg">'+q+'</ul>'+
+    '<h2 class="sw-flh">'+(en ? '<i>'+esc(en)+'</i> ' : '')+'하나로, 사장님의 모든 순간을 해결하세요.</h2>'+
+    '<ol class="sw-flg">'+f+'</ol>'+
+  '</div></section>';
+}
+
+/* 전국 매장 양도양수 — 매물은 실제 등록분만 (AM_STORES) */
+function HomeStores(){
+  var S = (window.AM_STORES || []).slice().sort(function(a, b){
+    return String(b.at || "").localeCompare(String(a.at || ""));
+  }).slice(0, 4);
+  var right;
+  if(S.length){
+    right = '<p class="sw-stab"><span>최신 등록</span></p>'+
+      '<ul class="sw-sg">' + S.map(function(s){
+        var won = function(v){ return (v != null && v !== "") ? (Number(v).toLocaleString("ko-KR") + "만원") : ""; };
+        var ind = (typeof amIndustryName === "function") ? amIndustryName(s.industry) : "";
+        var reg = [(typeof amRegionName === "function") ? amRegionName(s.region) : "", s.gu || ""].filter(Boolean).join(" ");
+        return '<li><a class="sw-sc" href="/s/'+esc(s.id)+'">'+
+          (ind ? '<span class="sw-sk">'+esc(ind)+'</span>' : "")+
+          (reg ? '<span class="sw-sr">'+esc(reg)+'</span>' : "")+
+          '<b>'+esc(s.title || "")+'</b>'+
+          (s.premium != null ? '<span class="sw-sp">권리금 <i>'+esc(won(s.premium))+'</i></span>' : "")+
+          '<span class="sw-sm">'+[s.deposit != null ? "보증금 "+won(s.deposit) : "", s.rent != null ? "월세 "+won(s.rent) : ""].filter(Boolean).map(esc).join(" · ")+'</span>'+
+          '<span class="sw-sn">올리신 사장님이 적으신 값입니다</span>'+
+        '</a></li>';
+      }).join("") + '</ul>';
+  }else{
+    right = '<div class="sw-s0">'+icon("store",40)+
+      '<b>아직 올라온 매물이 없습니다.</b>'+
+      '<p>없는 매물을 지어내지 않습니다 — 확인된 매물만 이 자리에 올라옵니다.</p>'+
+      (swOpen()
+        ? '<a class="sw-s0-go" href="/sell">매장 내놓기 안내'+icon("arrow",15)+'</a>'
+        : '<p class="sw-s0-n">매물 등록 접수는 현재 받지 않습니다. 접수가 열리면 이 자리에서 안내드립니다.</p>')+
+    '</div>';
+  }
+  return '<section class="bpass sw-store"><div class="w sw-sw">'+
+    '<div class="sw-sl">'+
+      '<p class="sw-ey">전국 매장 양도양수</p>'+
+      '<h2>원하는 매장을<br class="br-m"> 지금 바로 찾아보세요.</h2>'+
+      '<p>지역 · 업종 · 보증금 · 월세 · 권리금으로 매물을 걸러 보실 수 있습니다.</p>'+
+      '<a class="sw-sl-go" href="/stores">매물 전체보기'+icon("arrow",15)+'</a>'+
+      '<span class="sw-pin" aria-hidden="true">'+icon("pin",64)+'</span>'+
+    '</div>'+
+    '<div class="sw-sr-w">'+right+'</div>'+
+  '</div></section>';
+}
+
+/* 왜 STOREWAY 일까요 — 사실인 것만 (시안의 넷은 지킬 수 없는 말이라 바꿨습니다) */
+function HomeTrust(){
+  var en = ((window.AM_BRAND || {}).en || "");
+  var nTool = (window.AM_TOOLS || []).length;
+  var T = [
+    { ic:"layers",  b:"창업부터 폐업까지 한곳에", s:"준비 · 운영 · 양도 · 정리 서비스를 단계별로" },
+    { ic:"calc",    b:"무료 계산도구"+(nTool ? " "+nTool+"개" : ""), s:"창업비 · 손익분기 · 권리금 · 폐업비용" },
+    { ic:"shield",  b:"지어낸 업체 · 매물 없음",  s:"확인된 것만 올리고, 없으면 없다고 말합니다" },
+    { ic:"lock",    b:"연락처는 동의 뒤에만",     s:"업체가 정해지면 상호를 알리고 다시 여쭙니다" }
+  ];
+  return '<section class="bwhy sw-trust"><div class="w"><div class="sw-tb">'+
+    '<h2>왜 '+(en ? '<i>'+esc(en)+'</i>' : '인수인계')+'일까요?</h2>'+
+    '<ul>'+T.map(function(x){
+      return '<li>'+icon(x.ic,30)+'<span><b>'+esc(x.b)+'</b><em>'+esc(x.s)+'</em></span></li>';
+    }).join("")+'</ul>'+
+  '</div></div></section>';
+}
+
+/* 서비스 바로가기 일곱 — 이름 · 주소는 catalog.js */
+var SW_SHORT = ["interior","equip","it","marketing","staff","admin","asset"];
+function HomeShortcuts(){
+  var li = SW_SHORT.map(function(k){
+    var c = swCat(k); if(!c) return "";
+    return '<li><a class="sw-shc" href="'+esc(swTo(k))+'">'+icon(c.icon || "doc",34)+
+      '<span>'+esc(c.name)+'</span></a></li>';
+  }).filter(Boolean).join("");
+  if(!li) return "";
+  return '<section class="bdir sw-short"><div class="w">'+
+    '<div class="sw-shh"><h2>서비스 바로가기</h2><p>사장님께 필요한 서비스를 한곳에서 빠르게 찾아보세요.</p></div>'+
+    '<ul class="sw-shg">'+li+'</ul>'+
+    /* 고르신 서비스가 있으면 그 자리에서 신청까지 (옛 직접 찾기가 들고 있던 줄 · 0개면 없음) */
+    HomePicked()+
+  '</div></section>';
+}

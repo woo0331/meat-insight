@@ -58,8 +58,9 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  /* ⚠️⚠️ **2026-10-16 §3-3 — 메인에서 /startup 으로 가는 길이 진입
     카드 셋의 첫 장이 됐습니다** (전문관 넷 + 전체보기는 내려왔습니다).
     카드 전체가 하나의 링크라 카드를 그대로 누릅니다. */
- await click('.bent-c.ent-startup > a');
- say((await url())==="/startup","메인 진입 카드 창업 준비 → /startup",await url());
+ /* 2026-11-18 메인 개편 — 창업은 히어로 왼쪽 판의 단추입니다 */
+ await click('.sw-hbtn-st');
+ say((await url())==="/startup","메인 히어로 창업 준비 → /startup",await url());
  /* ⚠️⚠️ **2026-10-17 창업 준비 §2 로 업종 고르개가 접혔습니다.**
     주인공이 **서비스 고르기**(§2-B)이고, 고르는 격자 둘이 나란히 있으면
     "같은 선택 영역의 반복" 입니다 (§11). 길은 그대로이고 **한 번 더
@@ -134,32 +135,40 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     내려왔습니다.** 진입 카드 셋이 전문관 세 화면으로 **바로** 보내고,
     매장 양도양수는 ④ 가로형 배너가 받습니다. 끝이 막힌 길이 생기지
     않았는지 넷 다 눌러 봅니다. */
- await click('.bent-c.ent-closure > a');
- say((await url())==="/closure","메인 진입 카드 폐업 · 정리 → /closure",await url());
+ await click('.sw-hbtn-cl');
+ say((await url())==="/closure","메인 히어로 폐업 · 철거 → /closure",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bent-c.ent-operation > a');
- say((await url())==="/operation","메인 진입 카드 매장 운영 → /operation",await url());
+ await click('.sw-qc[href="/operation"]');
+ say((await url())==="/operation","메인 보조 진입 매장 운영 → /operation",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bent-c.ent-transfer a[href="/transfer"]');
- say((await url())==="/transfer","양도양수 배너 → 전문관",await url());
+ await click('.sw-qc[href="/transfer"]');
+ say((await url())==="/transfer","메인 보조 진입 양도양수 → 전문관",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  /* ⚠️⚠️ **2026-10-22 — 서비스 배너 둘이 메인에서 내려왔습니다**
     (사장님 시안). 그 길은 ③ 직접 서비스 찾기 여덟이 그대로 받습니다 —
     함수는 안 지웠으니 되살리시면 여기에 .bban-c 를 다시 넣으세요. */
- await click('.bdir-c:nth-child(1)');
- say((await url()).startsWith("/providers/"),"직접 찾기 → 분야 화면",await url());
+ await click('.sw-shg li:nth-child(1) .sw-shc');
+ say((await url()).startsWith("/providers/"),"서비스 바로가기 → 분야 화면",await url());
  /* ⚠️⚠️ **2026-10-25 §1-01 — 히어로가 01 구간으로 돌아왔습니다.**
     첫 화면에서 바로 신청으로 가는 길이 다시 생겼습니다 — 그쪽을 먼저
     눌러 봅니다. ⚠️ 히어로를 다시 빼실 때는 여기도 같이 고치세요
     (없는 요소를 집으면 타임아웃으로 터지고 뒤 블록이 통째로 안
     돕니다 — 이 저장소가 그렇게 겪은 자리입니다). */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bhero-go a[href="/quote"]');
- say((await url()).startsWith("/quote"),"히어로 무료 견적 신청 → 신청 화면",await url());
+ /* 2026-11-18 메인 개편 — 히어로에 신청 단추가 없습니다 (접수 중단 중에는 신청처럼 보이면 안 됩니다).
+    대신 히어로 검색이 실제로 /search 로 가는지 봅니다. */
+ await pg.fill('#sw-q','인테리어'); await click('.sw-find-b');
+ say((await url()).startsWith("/search"),"히어로 검색 → 통합검색",await url());
  /* ⚠️ 헤더 CTA 는 **160개 화면 전부**에 있는 늘 보이는 길입니다 */
- await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.hd .hd-cta');
- say((await url()).startsWith("/quote"),"헤더 견적 신청 → 신청 화면",await url());
+ /* 2026-11-18 — 이 검사 서버에는 /api/session 이 없어 견적 접수가 **닫힘**으로 읽힙니다
+    (fail-closed). 그래서 여기서는 "접수 안내" 쪽을 봅니다. 열림은 【14】 에서 봅니다. */
+ await pg.goto(B+"/",{waitUntil:"networkidle"}); await pg.waitForTimeout(300);
+ const ctaC = await pg.evaluate(()=>[].slice.call(document.querySelectorAll(".hd .hd-cta"))
+   .filter(a=>!a.hidden && a.getClientRects().length).map(a=>[a.textContent.trim(), a.getAttribute("href")]));
+ say(ctaC.length===1 && ctaC[0][0]==="접수 안내" && ctaC[0][1]==="/intake",
+     "접수 닫힘 — 헤더 CTA 가 하나이고 '접수 안내' → /intake", JSON.stringify(ctaC));
+ await click('.hd .hd-cta-off');
+ say((await url())==="/intake","헤더 접수 안내 → 접수 안내 화면",await url());
  /* ⚠️ 업체찾기로 가는 길도 헤더에 있어야 합니다 (메뉴에서 빠지면
     160개 화면에서 길이 끊깁니다) */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
@@ -174,8 +183,17 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  say((await url())==="/join","푸터 업체 입점 → 신청 화면",await url());
  /* §2-E — 메인에서 견적 · 상담으로 가는 길이 하나는 있어야 합니다 */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bcta-go a[href="/quote"]');
- say((await url()).startsWith("/quote"),"마지막 구간 → 견적 · 상담 신청",await url());
+ /* 2026-11-18 메인 개편 · W01 — 접수가 닫혀 있으면 마지막 구간은 신청 단추 대신
+    계산도구 · 자주 묻는 질문으로 보냅니다. 열려 있으면 견적 신청으로 갑니다. */
+ const ctaOpen = await pg.evaluate(()=>!!(window.WOW_BIZ && WOW_BIZ.sosReady));
+ if(ctaOpen){
+   await click('.bcta-go a[href="/quote"]');
+   say((await url()).startsWith("/quote"),"마지막 구간 → 견적 · 상담 신청",await url());
+ } else {
+   say(!(await pg.$('.bcta-go a[href^="/quote"]')),"접수 중단 — 마지막 구간에 신청 단추가 없다");
+   await click('.bcta-go a[href="/tools"]');
+   say((await url())==="/tools","접수 중단 — 마지막 구간 → 계산도구",await url());
+ }
  /* ⚠️⚠️ 2026-10-25 §1-07 · §11 — **중간 대형 무료 견적 신청 섹션이
     없어야 합니다.** 그래서 `.bqc`(견적 안내 카드)를 더 안 냅니다 —
     첫 화면의 히어로(바로 위)와 맨 아래 07 구간 둘이 그 길입니다.
@@ -266,7 +284,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
  await pg.reload({waitUntil:"networkidle"});
  const osec=await pg.evaluate(()=>document.querySelectorAll("#view > section").length);
- say(osec===7,"운영 ① 일곱 영역이다 (§2)","지금 "+osec);
+ say(osec===9,"운영 ① 아홉 영역이다 (§2 + 2026-11-18 고민 카드 · 이용 순서)","지금 "+osec);
  const ogr=await pg.evaluate(()=>document.querySelectorAll(".opg-c").length);
  say(ogr===8,"운영 ② 대표 여덟이 나온다 (§4-2)","지금 "+ogr);
  await click(".opg-h");
@@ -378,6 +396,14 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     안 고르셔도 접수는 그대로 되고, 안 고른 것이 `false` 로 갑니다. */
  say(!!bodyA && bodyA.notify===false,
      "A-알림① 안 고르면 꺼진 채로 간다", bodyA && bodyA.notify);
+ /* ⚠️ 2026-11-18 W01 ⑥ — 견적 양식에 이메일 칸이 없고 발송도 확인되지 않아
+    WOW_BIZ.mailNotifyReady 가 false 인 동안에는 상자를 **그리지 않는 것이 맞습니다**.
+    켜는 날에는 아래 옛 세 검사가 그대로 돕니다. */
+ const nOn = await pg.evaluate(()=>!!(window.WOW_BIZ && WOW_BIZ.mailNotifyReady === true));
+ if(!nOn){
+   say(await pg.evaluate(()=>!document.getElementById("q-nt")),
+       "A-알림② 발송이 확인되기 전에는 알림 상자를 그리지 않는다");
+ } else {
  say(await pg.evaluate(()=>{
        const el=document.getElementById("q-nt");
        return !!el && el.required!==true && !el.checked;
@@ -396,6 +422,8 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
        return /광고는 보내지 않/.test(t) && /회신/.test(t) &&
               !/시간 안에|당일|보장/.test(t);
      }), "A-알림④ 광고를 안 보낸다고 적고 끄는 길을 적는다");
+ }
+ if(nOn){   /* 상자가 있을 때만 — 2026-11-18 W01 ⑥ */
  await pg.check("#q-nt");
  const bodyN = await pg.evaluate(()=>{
    let got=null; const real=window.amSend;
@@ -406,6 +434,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  say(!!bodyN && bodyN.notify===true, "A-알림⑤ 고르면 켜진 채로 간다",
      bodyN && bodyN.notify);
  await pg.uncheck("#q-nt");
+ }
 
  /* ── B. 복수 서비스 — 하나의 신청서 ──────────────────────────── */
  await pg.goto(B+"/startup",{waitUntil:"networkidle"});
@@ -916,8 +945,9 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
                               ["양도양수","/transfer","transfer"], ["폐업","/closure","close"]]){
    await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
    await pg.goto(B+"/",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
-   const card = await pg.$('.bent-g a[href="'+to+'"]');
-   say(!!card, nm+" — 메인 진입 카드가 그 전문관으로 간다", to);
+   /* 2026-11-18 메인 개편 — 네 전문관은 메인의 네 걸음(.sw-flg)이 같은 차례로 보냅니다 */
+   const card = await pg.$('.sw-flg a[href="'+to+'"]');
+   say(!!card, nm+" — 메인 네 걸음이 그 전문관으로 간다", to);
    if(!card) continue;
    await card.click(); await pg.waitForTimeout(700);
    const at = await url();
@@ -1004,5 +1034,66 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  console.log("\n【5】 콘솔 오류");
  say(errs.length===0,"JS 에러 없음",errs.join(" / "));
  console.log(bad?("\n❌ "+bad+"건 실패"):"\n✅ 흐름 전부 통과");
+ /* ══ 【14】 2026-11-18 헤더 공통 CTA — 견적 접수 열림 / 닫힘 ══
+    ⚠️ 열림은 **가짜 서버 응답**으로만 만듭니다 — 운영 설정을 건드리지 않습니다.
+    /api/session 의 intake.quote(서버 게이트)와 화면 설정 sosReady 를 갈라서 봅니다. */
+ console.log("\n【14】 헤더 공통 CTA — 접수 열림 / 닫힘");
+ const ctaRun = async (nm, gateOpen, sos, w) => {
+   const cx = await br.newContext({ viewport:{ width:w, height:900 } });
+   const p2 = await cx.newPage();
+   await p2.route("**/api/session", r => r.fulfill({ status:200, contentType:"application/json",
+     body: JSON.stringify({ auth:false, signedIn:false, intake:{ quote: gateOpen } }) }));
+   await p2.route("**/dist/js/data/site.js*", async r => {
+     const t = fs.readFileSync(path.join(root, "dist/js/data/site.js"), "utf8")
+       .replace(/sosReady:(\s*)false/, "sosReady:$1" + (sos ? "true" : "false"));
+     await r.fulfill({ status:200, contentType:"text/javascript", body:t });
+   });
+   const vis = () => p2.evaluate(() => [].slice.call(document.querySelectorAll(".hd .hd-cta"))
+     .filter(a => !a.hidden && a.getClientRects().length).map(a => [a.textContent.trim(), a.getAttribute("href")]));
+   for (const u of ["/", "/providers/interior?i=cafe&r=gyeonggi"]){
+     await p2.goto(B + u, { waitUntil:"networkidle" }); await p2.waitForTimeout(350);
+     const v = await vis();
+     const open = gateOpen && sos;
+     const good = v.length === 1 && (open
+       ? v[0][0].indexOf("견적 신청") >= 0 && v[0][1].indexOf("/quote") === 0
+       : v[0][0] === "접수 안내" && v[0][1] === "/intake");
+     say(good, nm + " · " + w + "px · " + u + " — 헤더 " + (open ? "'견적 신청' → /quote" : "'접수 안내' → /intake"), JSON.stringify(v));
+     if(open && u.indexOf("cafe") >= 0)
+       say(v[0][1].indexOf("i=cafe") >= 0 && v[0][1].indexOf("r=gyeonggi") >= 0,
+           nm + " · " + w + "px — 열렸을 때 보던 조건을 /quote 로 들고 간다", v[0][1]);
+   }
+   await p2.goto(B + "/", { waitUntil:"networkidle" }); await p2.waitForTimeout(350);
+   await p2.click(".hd .hd-cta:not([hidden])"); await p2.waitForTimeout(500);
+   const at = await p2.evaluate(() => location.pathname);
+   if(gateOpen && sos){
+     say(at === "/quote", nm + " · " + w + "px — 누르면 신청 화면", at);
+   } else {
+     say(at === "/intake", nm + " · " + w + "px — 누르면 접수 안내 화면", at);
+     const st = await p2.evaluate(() => {
+       const off = document.querySelector('[data-intake="off"]'), on = document.querySelector('[data-intake="on"]');
+       const g = document.querySelector(".itk-g");
+       const r = off && off.getBoundingClientRect();
+       return { off: !!off && !off.hidden, on: !!on && !on.hidden, form: !!document.getElementById("q-f"),
+                top: r ? Math.round(r.top) : -1, above: !!(r && g && r.top < g.getBoundingClientRect().top),
+                links: [].slice.call(document.querySelectorAll(".itk-g a")).map(a => a.getAttribute("href")) };
+     });
+     say(st.off && !st.on && !st.form && st.above && st.top >= 0 && st.top < 900,
+         nm + " · " + w + "px — 중단 사실이 첫 화면 맨 위에 있고 신청 양식이 없다", JSON.stringify(st));
+     say(st.links.length >= 5, nm + " · " + w + "px — 지금 쓸 수 있는 기능으로 가는 길", st.links.join(" "));
+   }
+   if(gateOpen && sos){
+     await p2.goto(B + "/intake", { waitUntil:"networkidle" }); await p2.waitForTimeout(350);
+     const s2 = await p2.evaluate(() => ({ on: !document.querySelector('[data-intake="on"]').hidden,
+                                           off: !document.querySelector('[data-intake="off"]').hidden }));
+     say(s2.on && !s2.off, nm + " · " + w + "px — 접수 안내 화면도 열림을 말한다", JSON.stringify(s2));
+   }
+   await cx.close();
+ };
+ for (const w of [1440, 390]){
+   await ctaRun("열림(게이트 열림 + sosReady)", true,  true,  w);
+   await ctaRun("닫힘(게이트 닫힘)",            false, true,  w);
+   await ctaRun("닫힘(sosReady 꺼짐)",          true,  false, w);
+ }
+
  await br.close(); srv.close(); process.exit(bad?1:0);
 })();

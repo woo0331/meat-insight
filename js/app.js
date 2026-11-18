@@ -133,6 +133,8 @@ var META = {
                  "판매가와 재료비를 넣으면 원가율과 한 개 남는 돈이 같이 나옵니다. 한 달 판매 수량까지 적으시면 달 단위로도 봅니다."],
   "/tools/closecost":["폐업 예상비용",
                  "철거 · 원상복구 · 위약금처럼 나가는 돈과 보증금 · 시설 매각처럼 돌아오는 돈을 같이 놓습니다. 중요한 것은 그 차액입니다."],
+  "/intake":    ["접수 안내",
+                 "지금 견적 접수를 받고 있는지, 그리고 지금 바로 이용하실 수 있는 서비스 둘러보기 · 계산도구 · 이용 가이드를 안내합니다."],
   "/faq":       ["자주 묻는 것",
                  "돈이 드는지, 연락처가 업체에 바로 넘어가는지, 등록된 업체가 몇 곳인지 — 먼저 궁금해하시는 것들에 그대로 답했습니다."],
   "/about":     ["소개",
@@ -149,7 +151,8 @@ var META = {
 /* ⚠️⚠️ `/sample` 은 **지어낸 업체 화면**이라 반드시 색인에서 뺍니다 —
    구글에 나가면 손님이 검색으로 들어와 전화를 겁니다 (절대 규칙 1).
    업체 사장님께 "입점하면 이렇게 나갑니다" 를 보여 드리는 자리입니다. */
-var NOINDEX = ["/my","/search","/quote","/compare","/sample"];
+/* /intake 는 접수 상태에 따라 말이 바뀌는 화면이라 색인하지 않습니다 (2026-11-18) */
+var NOINDEX = ["/my","/search","/quote","/compare","/sample","/intake"];
 
 /* ⚠️⚠️ **업체 · 브랜드 상세의 설명을 등록값으로 만듭니다.**
    전에는 `pv.intro` 한 줄을 그대로 썼습니다 — 소개가 짧으면 검색 결과에
@@ -260,6 +263,7 @@ window.routeInfo = function(path){
     "/tools/delivery":"tool-delivery",
     "/tools/margin":"tool-margin",
     "/tools/closecost":"tool-closecost",
+    "/intake":    "intake",
     "/faq":       "faq",
     "/about":     "about",
     "/terms":     "terms",
@@ -595,6 +599,7 @@ function render(){
     case "tool-margin":     html = PageToolMargin();                break;
     case "tool-closecost":  html = PageToolCloseCost();             break;
     case "faq":             html = PageFaq();                       break;
+    case "intake":          html = PageIntake();                    break;
     case "about":           html = PageAbout();                     break;
     case "terms":           html = PageTerms();                     break;
     case "privacy":         html = PagePrivacy();                   break;
@@ -624,6 +629,10 @@ function render(){
      않습니다. ⚠️ 다른 화면에서는 묻지 않습니다 — 한 번씩 더 가는
      요청은 그만큼 느려집니다. */
   if(nowPath() === "/my" && typeof window.myLoadDb === "function") window.myLoadDb();
+  if(nowPath() === "/my" && typeof window.myLkInit === "function") window.myLkInit();
+  if(nowPath() === "/intake" && typeof window.intakePaint === "function") window.intakePaint();
+  /* 2026-11-18 — 본문의 data-cta 짝(전문관 머리 등)도 견적 접수 상태로 고릅니다 */
+  if(typeof window.hdCtaPaint === "function") window.hdCtaPaint();
   /* 고르신 서비스 — 하단 띠 높이를 재서 본문을 그만큼 비우고, 단추
      글씨의 개수를 맞춥니다 (2026-10-17 창업 준비 §3-3).
      ⚠️ 어느 화면에서나 부릅니다 — 띠가 없는 화면에서는 아무 일도 안

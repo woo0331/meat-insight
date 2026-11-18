@@ -414,7 +414,7 @@ window.PackBand = function(side, tone){
 
     '<p class="sec-note">'+icon("info",15)+
       ' 묶어서 신청하셔도 <b>상품마다 업체와 계약은 따로</b>입니다. '+
-      '한 번만 적으시면 저희가 나눠서 연결해 드립니다.</p>'+
+      '한 번만 적으시면 저희가 서비스마다 나눠서 확인합니다.</p>'+
   '</div></section>';
 };
 
@@ -492,6 +492,56 @@ window.HallCalcBand = function(o){
     '<div class="row-cta">'+
       '<a class="btn btn-o" href="/tools">계산도구 전부 보기'+icon("arrow",16)+'</a>'+
       '<a class="btn btn-o" href="/faq">자주 묻는 질문</a>'+
+    '</div>'+
+  '</div></section>';
+};
+
+window.HallHero = function(o){
+  o = o || {};
+  var ph = o.photo && typeof hasPhoto === "function" && hasPhoto(o.photo);
+  var checks = (o.checks || []).map(function(c){
+    return '<li><span class="hh-ci" aria-hidden="true">'+icon(c[0] || "check", 20)+'</span>'+
+      '<span>'+esc(c[1])+'</span></li>';
+  }).join("");
+  return '<section class="pgh hh hh-'+esc(o.side || "start")+(ph ? ' hh-im-on' : '')+'">'+
+    (ph ? '<span class="hh-ph pgh-im-'+esc(o.photo)+'">'+
+          photoBox(o.photo, "", true, "(max-width:900px) 100vw, 62vw")+'</span>' : '')+
+    '<div class="w hh-in">'+
+      '<div class="hh-tx">'+
+        (o.crumb ? '<nav class="crumb" aria-label="현재 위치">'+o.crumb+'</nav>' : '')+
+        (o.kicker ? '<p class="hh-k">'+esc(o.kicker)+'</p>' : '')+
+        '<h1 class="pg-h1 hh-h1">'+(o.h1raw || esc(o.h1 || ""))+'</h1>'+
+        (o.lead ? '<p class="pg-lead hh-lead">'+esc(o.lead)+'</p>' : '')+
+        '<div class="row-cta hh-cta">'+
+          '<a class="btn btn-lg hh-go" href="/intake" data-cta="off">'+
+            '접수 안내 보기'+icon("arrow",18)+'</a>'+
+          '<a class="btn btn-lg hh-go" href="'+esc(o.quote || "/quote")+'" data-cta="on" hidden>'+
+            esc(o.goName || "상담 신청하기")+icon("arrow",18)+'</a>'+
+          (o.second ? o.second : '')+
+        '</div>'+
+      '</div>'+
+      (checks ? '<div class="hh-card"><p class="hh-card-t">'+esc(o.cardTitle || "이 화면에서 하실 수 있는 것")+'</p>'+
+        '<ul class="hh-cl">'+checks+'</ul></div>' : '')+
+    '</div>'+
+  '</section>';
+};
+
+window.HallSteps = function(o){
+  o = o || {};
+  var S = (window.AM_STEPS || []);
+  if(!S.length) return "";
+  return '<section class="sec sec-white hst"><div class="w hst-in">'+
+    '<div class="hst-hd"><h2>'+esc(o.title || "상담 신청은 이렇게 진행됩니다")+'</h2>'+
+      '<p>서비스를 고르시고 한 번만 적어 보내시면 운영자가 확인합니다. 업체에 연락처를 전하기 전에는 따로 동의를 여쭙니다.</p></div>'+
+    '<ol class="hst-g">'+S.map(function(s, i){
+      return '<li><span class="hst-n">'+(i+1)+'</span>'+
+        '<span class="hst-i" aria-hidden="true">'+icon(s.ic || "check", 26)+'</span>'+
+        '<b>'+esc(s.n || "")+'</b></li>';
+    }).join("")+'</ol>'+
+    '<div class="hst-go">'+
+      '<a class="btn btn-lg hh-go" href="/intake" data-cta="off">접수 안내 보기'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-lg hh-go" href="'+esc(o.quote || "/quote")+'" data-cta="on" hidden>'+
+        esc(o.goName || "상담 신청하기")+icon("arrow",18)+'</a>'+
     '</div>'+
   '</div></section>';
 };

@@ -180,7 +180,10 @@ try{
                      아무 업체 계정이나 남의 건을 수락 · 상담 · 견적으로
                      밀 수 있었고, 고객 계정도 남의 접수를 취소할 수
                      있었습니다. §7A-7 을 쓰다 찾았습니다. */
-                  "db/migrations/0019_request_scope.sql"];
+                  "db/migrations/0019_request_scope.sql",
+                  /* 2026-11-18 W02 — 운영은 20~81 이 골프 판이라 번호가 건너뜁니다 */
+                  "db/migrations/0082_storeway_intake.sql",
+                  "db/migrations/0083_storeway_inbox_lookup.sql"];
   for(const f of ["db/test/00_stub_auth.sql"].concat(MIGS)){
     let e = "";
     try{ psqlFile(f); }catch(err){ /* ⚠️⚠️ NOTICE 가 먼저 쏟아져서 앞 세 줄만 보면 **진짜
@@ -2763,7 +2766,9 @@ try{
       }
       ok("0007 까지 돌아간 DB 에 한 번에 부어도 통과한다", !why, why);
       const top = psql("select coalesce(max(n),0) from schema_version", "swpaste");
-      ok("판 번호가 " + MIGS.length + "까지 올라간다", top === String(MIGS.length), top);
+      /* ⚠️ 2026-11-18 — 번호가 0019 → 0082 로 건너뛰므로 "개수" 가 아니라 **마지막 파일의 번호**와 견줍니다 */
+      const LAST = String(Number(path.basename(MIGS[MIGS.length - 1]).slice(0, 4)));
+      ok("판 번호가 " + LAST + "까지 올라간다", top === LAST, top);
       /* 돌린 뒤 사장님이 보는 것은 verify.sql 열세 줄입니다 */
       let vout = "";
       try{ vout = psqlFile("db/verify.sql", "swpaste"); }catch(err){ vout = String(err.stdout || ""); }

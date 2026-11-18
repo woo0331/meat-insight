@@ -22,18 +22,46 @@ function PageStartup(){
 }
 
 function StartIntro(ind){
-  return PgHero({
-    photo:"hero-startup",
-    kicker:"START · 창업 준비",
-    h1raw:"창업에 필요한 것,<br class=\"br-m\"> 여기서 한 번에 고르세요.",
-    lead:"필요한 서비스를 여러 개 고르시고 한 번만 적어 보내시면 됩니다. "+
-         "가입 없이 무료입니다.",
-    cta:'<a class="btn btn-b btn-lg" href="#pick">'+
-        '필요한 서비스 고르기'+icon("arrow",18)+'</a>'+
-        '<a class="btn btn-o btn-lg" href="'+esc(quoteTo({ side:"start",
-           industry:ind || "" }))+'">무엇이 필요한지 모르겠어요</a>'
-  });
+
+  return HallHero({
+    side:"start", photo:"hero-startup",
+    kicker:"창업 준비 · 가게 창업, 막막하지 않게",
+    h1raw:"예비 창업자를 위한<br><em>원스톱 창업 준비</em>",
+    lead:"상권 · 인테리어 · 주방기기 · 자금 · 세무까지, 창업에 필요한 것을 한 곳에서 고르고 한 번에 신청하세요.",
+    quote: quoteTo({ side:"start", industry:ind || "" }),
+    goName:"창업 상담 신청하기",
+    second:'<a class="btn btn-lg hh-o" href="#pick">필요한 서비스 고르기'+icon("arrow",18)+'</a>',
+    cardTitle:"이 화면에서 하실 수 있는 것",
+    checks:[["seed","업종을 고르면 그 업종의 준비 순서"],["won","창업비 정리표로 예산 미리 따져 보기"],
+            ["check","필요한 서비스를 여러 개 골라 한 번에 신청"]]
+  }) + StartSignature(ind);
 }
+
+function StartSignature(ind){
+  var L = (window.AM_INDUSTRIES || []).filter(function(x){ return x.key !== "etc"; }).slice(0, 6);
+  return '<section class="sec sec-white hsg"><div class="w hsg-in">'+
+    '<form class="hsg-calc" onsubmit="return stCalcGo(event)">'+
+      '<h2>창업 비용 계산기</h2>'+
+      '<p>업종을 고르시면 창업비 정리표가 그 업종으로 열립니다. 적으신 값은 저장하지 않습니다.</p>'+
+      '<div class="f-r"><label for="st-calc-i">업종</label>'+IndustrySelect("st-calc-i", ind || "", "", "업종을 골라 주세요")+'</div>'+
+      '<button class="btn btn-b btn-lg" type="submit">'+icon("calc",18)+' 예상 창업 비용 따져 보기</button>'+
+    '</form>'+
+    '<div class="hsg-ind">'+
+      '<div class="hsg-hd"><h2>업종별 창업 준비 과정</h2>'+
+        '<a class="hsg-all" href="#st-indsel">전체 업종 보기'+icon("chev",16)+'</a></div>'+
+      '<ul class="hsg-ig">'+L.map(function(x){
+        return '<li><a href="/startup/'+esc(x.key)+'"><span class="hsg-ii" aria-hidden="true">'+icon(x.icon || "store", 28)+'</span>'+
+          '<b>'+esc(x.name)+'</b>'+icon("chev",16)+'</a></li>'; }).join("")+'</ul>'+
+      '<p class="hsg-note">업종을 고르시면 그 업종에 흔히 필요한 서비스부터 앞에 놓습니다 — 조회수나 신청 건수 같은 통계가 아니라 저희가 추려 둔 차례입니다.</p>'+
+    '</div>'+
+  '</div></section>';
+}
+window.stCalcGo = function(e){
+  if(e && e.preventDefault) e.preventDefault();
+  var v = (document.getElementById("st-calc-i") || {}).value || "";
+  go("/tools/cost" + (v ? "?i=" + encodeURIComponent(v) : ""));
+  return false;
+};
 
 function StartPickBand(top, rest, ind){
 
@@ -148,8 +176,8 @@ function StartApplyBand(){
       '<p class="eyebrow">STEP 02</p>'+
       '<h2>고르셨으면 한 번만 적어 보내세요</h2>'+
       '<p>같은 내용을 업체마다 다시 적지 않으셔도 됩니다. '+
-        '지역과 연락처만 적어 주시면 서비스마다 업체를 찾아 '+
-        '연결해 드립니다. 무료입니다.</p>'+
+        '지역과 연락처만 적어 주시면 서비스마다 맞는 업체가 있는지 '+
+        '운영자가 확인합니다. 무료입니다.</p>'+
     '</div>'+
     '<div class="row-cta">'+
       '<a class="btn btn-b btn-lg" data-pick-go href="'+esc(amPickQuoteTo())+'">'+
@@ -387,6 +415,7 @@ function PageClosure(){
       title:"정리하기 전에 숫자부터 보세요",
       lead:"빠뜨린 것과 들 돈을 먼저 보실 수 있습니다. 적으신 값은 저장하지 않습니다." })+
     ClosureHelpBand()+
+    HallSteps({ quote:quoteTo({ side:"close" }) }) +
     JourneyBand({ current:"closing",
       title:"다른 것도 준비하고 계신가요?",
       lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." })+
@@ -397,17 +426,39 @@ var CLOSE_CALC      = ["close", "closecost", "premium"];
 var CLOSE_CALC_TONE = { close:"sv4", closecost:"sv5", premium:"t13" };
 
 function ClosureIntro(){
-  return PgHero({
-    photo:"hero-closure",
-    kicker:"CLOSE · 폐업 · 정리",
-    h1raw:"폐업하기 전에,<br class=\"br-m\"> 넘길 수 있는 것부터 확인하세요.",
-    lead:"매장과 시설, 장비를 바로 철거하기 전에 다음 사장님에게 이어질 수 " +
-         "있는지 먼저 확인해보세요. 순서와 기한이 있는 일이라 빠뜨리면 돈이 나갑니다.",
-    cta:'<a class="btn btn-b btn-lg" href="#pick">'+
-        '필요한 서비스 고르기'+icon("arrow",18)+'</a>'+
-        '<a class="btn btn-o btn-lg" href="'+esc(quoteTo({ side:"close" }))+'">'+
-        '무엇이 필요한지 모르겠어요</a>'
-  });
+
+  return HallHero({
+    side:"close", photo:"hero-closure",
+    kicker:"매장 정리부터 철거, 세무까지 한 번에",
+    h1raw:"폐업 · 철거<br><em>통합 서비스</em>",
+    lead:"바로 철거하기 전에 넘길 수 있는 것부터 확인하세요. 양도 검토 → 집기 처분 → 철거 · 원상복구 → 신고 · 세무 순서로 짚어 드립니다.",
+    quote: quoteTo({ side:"close" }),
+    goName:"통합 상담 신청하기",
+    second:'<a class="btn btn-lg hh-o" href="#pick">필요한 서비스 고르기'+icon("arrow",18)+'</a>',
+    cardTitle:"폐업 · 철거, 이 화면에서 하실 수 있는 것",
+    checks:[["handover","매장을 넘길 수 있는지 먼저 확인"],["box","집기 · 설비 처분 길 찾기"],
+            ["hammer","철거 · 원상복구 범위 정리"],["doc","폐업 신고 · 지원 · 세무 순서 확인"]]
+  }) + ClosureFlow();
+}
+
+var CLOSE_FLOW = [
+  ["handover", "매장 양도 검토",   "넘기면 철거비 · 원상복구비가 줄어듭니다", "/transfer?t=out"],
+  ["box",      "집기 · 설비 처분", "주방기기 · 가구 · 비품을 팔 길",        "/assets"],
+  ["hammer",   "철거 견적",        "무엇을 뜯는지부터 정리",                "/providers/demolish"],
+  ["roller",   "원상복구",         "임대 계약 조건에 맞는 범위",            "/providers/restore"],
+  ["doc",      "폐업 신고 · 지원", "신고 순서와 지원사업 찾는 곳",          "/c/process"],
+  ["calc",     "세무 정리",        "부가세 · 종합소득세 등 폐업 세무",       "/providers/tax"]
+];
+function ClosureFlow(){
+  return '<section class="sec sec-white hfl"><div class="w">'+
+    '<div class="sec-hd sec-hd-c"><p class="eyebrow">CLOSE FLOW</p>'+
+      '<h2>폐업도 순서대로, 단계별로 정리하세요</h2>'+
+      '<p>앞 걸음이 뒤 걸음의 비용을 줄입니다. 칸을 누르면 그 단계 화면으로 갑니다.</p></div>'+
+    '<ol class="hfl-g">'+CLOSE_FLOW.map(function(x, i){
+      return '<li><a href="'+esc(x[3])+'"><span class="hfl-n">0'+(i+1)+'</span>'+
+        '<span class="hfl-i" aria-hidden="true">'+icon(x[0], 28)+'</span>'+
+        '<b>'+esc(x[1])+'</b><span class="hfl-d">'+esc(x[2])+'</span></a></li>'; }).join("")+'</ol>'+
+  '</div></section>';
 }
 
 var CLOSE_PATHS = [
@@ -733,8 +784,8 @@ function PageCat(cat){
     Empty({
       icon:cat.icon,
       title:"아직 여기에 올라온 것이 없습니다",
-      text:"실제 업체와 자료가 확인된 것만 올립니다. 그동안에는 견적 요청으로 "+
-           "바로 연결해 드립니다.",
+      text:"실제 업체와 자료가 확인된 것만 올립니다. 그동안에는 견적 요청 화면에서 "+
+           "지금 접수를 받는지 확인하실 수 있습니다.",
       cta:'<a class="btn btn-b" href="'+esc(quoteTo({cat:cat.key,industry:ind,side:side}))+'">'+
           '견적 요청하기'+icon("arrow",16)+'</a>'+
           '<a class="btn btn-o" href="/join">이 분야 업체라면 입점하기</a>'

@@ -16,7 +16,14 @@ const { authReady } = require("./_auth.js");
 const { fromOurPages } = require("./_send.js");
 const { accountsOpen, closed } = require("./_open.js");
 
-const OPS = { otp:1, refresh:1, logout:1 };
+const OPS = { otp:1, refresh:1, logout:1, oauth:1 };
+/* 2026-11-18 카카오 간편 로그인 — Supabase Auth 의 kakao 공급자를 그대로 씁니다.
+   ⚠️ 켜는 것은 둘 다 필요합니다: STOREWAY_ACCOUNTS_OPEN=1(계정 스위치 · 재사용) +
+   AUTH_KAKAO=1(Supabase 대시보드에서 Kakao 공급자를 켜 두었다는 운영자 표시).
+   AUTH_KAKAO 가 없으면 화면에 카카오 단추가 안 나오고 여기서도 거절합니다.
+   ⚠️ 공급자는 이 목록뿐입니다 — 아무 이름이나 넘기면 열린 중계기가 됩니다. */
+const PROVIDERS = { kakao:1 };
+function kakaoOn(){ return String(process.env.AUTH_KAKAO || "").trim() === "1"; }
 const TIMEOUT = 8000;
 
 function env(n){ const v = process.env[n]; return (typeof v === "string" && v.trim()) ? v.trim() : ""; }
@@ -65,6 +72,19 @@ module.exports = async function handler(req, res){
     return res.status(502).json({ error:"지금 보내지 못했습니다. 잠시 뒤 다시 눌러 주세요." });
   }
 
+  if(op === "oauth"){
+    const pv = String(b.provider || "");
+    if(!PROVIDERS[pv] || !kakaoOn()) return res.status(400).json({ error:"지금은 이 방법으로 로그인할 수 없습니다" });
+    /* 돌아올 자리 — 들어온 출처 + 경로만 (바깥 주소로 못 보냅니다).
+       ⚠️ Supabase 대시보드의 Redirect URLs 에 이 출처가 들어 있어야 합니다. */
+    const to = redirectFor(req, b.path);
+    /* ⚠️ 바깥으로 요청하지 않습니다 — 주소만 만들어 돌려주고, 화면이 그리로 갑니다.
+       Supabase 가 카카오 동의 화면을 거쳐 #access_token=… 로 돌려보내고,
+       js/auth.js 의 amAuthTakeHash() 가 매직링크와 **같은 자리**에서 받습니다. */
+    return res.status(200).json({ url: base() + "/auth/v1/authorize?provider=" + pv +
+      "&redirect_to=" + encodeURIComponent(to) });
+  }
+
   if(op === "refresh"){
     const rt = String(b.refresh_token || "");
     if(!/^[A-Za-z0-9._~+/=-]{8,600}$/.test(rt)) return res.status(400).json({ error:"다시 로그인해 주세요" });
@@ -83,3 +103,5 @@ module.exports = async function handler(req, res){
   if(m) await call("/auth/v1/logout", { method:"POST", headers:{ apikey:key, authorization:"Bearer " + m[1] } });
   return res.status(200).json({ ok:true });
 };
+
+module.exports.kakaoOn = kakaoOn;

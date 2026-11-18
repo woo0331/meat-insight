@@ -1207,6 +1207,72 @@ const ADM_DEAL = [
     }
   }
 
+  console.log("\n카카오 간편 로그인 — 시작 · 복귀 · 취소 · 꺼짐 · 로그인 의무 없음");
+  for(const W of [1440, 390]){
+    const ctx = await br.newContext({ viewport:{ width:W, height:900 } });
+    const pg = await ctx.newPage(); const errs = [], posts = [];
+    pg.on("pageerror", e => errs.push(String(e)));
+    let kk = true;
+    await pg.route("**/api/session", r => {
+      const signed = (r.request().headers()["authorization"] || "").indexOf("Bearer ") === 0;
+      return r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify(signed
+        ? { auth:true, signedIn:true, role:"customer", conf:{ url:"https://zz.supabase.co", anonKey:"ZZ-ANON" }, kakao:kk, lookup:false, intake:{ quote:false } }
+        : { auth:true, signedIn:false, conf:{ url:"https://zz.supabase.co", anonKey:"ZZ-ANON" }, kakao:kk, lookup:false, intake:{ quote:false } }) });
+    });
+    await pg.route("**/api/me**", r => r.fulfill({ status:200, contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:false }) }));
+    const direct = [];
+    await pg.route("https://zz.supabase.co/**", r => { direct.push(r.request().url()); r.abort(); });
+    /* Supabase 가 카카오 동의 뒤 원래 자리로 #access_token 을 붙여 돌려보내는 것을 흉내 냅니다 */
+    const TOK = "aaa.bbb.ccc";
+    await pg.route("**/api/auth", r => {
+      const b = JSON.parse(r.request().postData() || "{}"); posts.push(b);
+      return r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify({
+        url: base + (b.path || "/my") + "#access_token=" + TOK + "&refresh_token=rrrrrrrrrr&expires_in=3600&token_type=bearer" }) });
+    });
+    await pg.goto(base + "/my?next=" + encodeURIComponent("/startup?i=cafe"), { waitUntil:"networkidle" });
+    await pg.waitForTimeout(500);
+    const btn = pg.locator(".my-kakao");
+    ok(W + "px 카카오 — 켜져 있으면 단추가 보임", await btn.isVisible());
+    const bh = await btn.evaluate(e => e.getBoundingClientRect().height);
+    ok(W + "px 카카오 — 단추 높이 44px 이상", bh >= 44, bh);
+    ok(W + "px 카카오 — 로그인 없이도 쓸 수 있다는 말", (await pg.locator(".my-kk").textContent()).includes("로그인 없이도"));
+    await btn.click(); await pg.waitForTimeout(900);
+    ok(W + "px 카카오 — 서버에 원래 자리(next)를 보냄", posts[0] && posts[0].op === "oauth" && posts[0].provider === "kakao" && posts[0].path === "/startup?i=cafe", JSON.stringify(posts[0]));
+    const back = await pg.evaluate(() => ({ p: location.pathname + location.search, h: location.hash,
+      t: (JSON.parse(localStorage.getItem("am.auth.v1") || "{}").access_token) || "" }));
+    ok(W + "px 카카오 — 원래 페이지로 돌아오고 토큰을 받아 둠 · 주소창의 토큰은 지움",
+       back.p === "/startup?i=cafe" && back.h === "" && back.t === TOK, JSON.stringify(back));
+    ok(W + "px 카카오 — 헤더가 로그인 상태(내 계정)", (await pg.locator("#hdAuth").textContent()).includes("내 계정"));
+    ok(W + "px 카카오 — 브라우저가 Supabase 를 직접 부르지 않음", direct.length === 0, direct.join(" "));
+    /* 로그아웃 */
+    await pg.goto(base + "/my", { waitUntil:"networkidle" }); await pg.waitForTimeout(300);
+    await pg.evaluate(() => window.amAuthOut()); await pg.waitForTimeout(300);
+    ok(W + "px 로그아웃 — 이 브라우저의 토큰을 지움", (await pg.evaluate(() => localStorage.getItem("am.auth.v1"))) === null);
+    /* 취소 — 동의 화면에서 취소하면 ?error=access_denied 로 돌아옵니다 */
+    await pg.goto(base + "/startup?error=access_denied&error_code=401&error_description=user%20cancelled", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(700);
+    const cx = await pg.evaluate(() => ({ s: location.search, t: (document.getElementById("toast") || {}).textContent || "" }));
+    ok(W + "px 취소 — '취소하셨습니다' 를 알리고 주소창의 오류를 치움", cx.t.includes("취소하셨습니다") && cx.s === "", JSON.stringify(cx));
+    /* ⚠️ 바로 앞이 /startup 이라 해시만 바꾸면 **같은 문서 안 이동**(새로 안 읽음)입니다.
+       실제로는 Supabase 에서 다른 출처로 **새로 들어오는** 길이라, 한 번 다른 데로 갔다 옵니다. */
+    await pg.goto("about:blank");
+    await pg.goto(base + "/startup#error=server_error&error_description=x", { waitUntil:"networkidle" });
+    await pg.waitForTimeout(700);
+    const fx = await pg.evaluate(() => ({ h: location.hash, t: (document.getElementById("toast") || {}).textContent || "" }));
+    ok(W + "px 실패 — '로그인하지 못했습니다' · 주소 정리", fx.t.includes("로그인하지 못했습니다") && fx.h === "", JSON.stringify(fx));
+    /* 꺼짐 */
+    kk = false;
+    await pg.goto(base + "/my", { waitUntil:"networkidle" }); await pg.waitForTimeout(400);
+    ok(W + "px 꺼짐 — 카카오 단추가 없음 (메일 로그인은 그대로)", (await pg.locator(".my-kakao").count()) === 0 && (await pg.locator("#my-em").count()) === 1);
+    /* 로그인 의무 없음 — 검색 · 가이드 · 신청 양식이 로그인 없이 열림 */
+    await pg.goto(base + "/quote", { waitUntil:"networkidle" }); await pg.waitForTimeout(300);
+    const free = await pg.evaluate(() => ({ form: !!document.getElementById("q-f"), sign: !!document.querySelector(".my-in, .my-kakao") }));
+    ok(W + "px 비회원 신청 양식에 로그인 요구가 없음", free.form && !free.sign, JSON.stringify(free));
+    ok(W + "px 카카오 — JS 에러 0", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
   await br.close(); srv.close();
   console.log("\n" + (fail ? "❌" : "✅") + " 통과 " + pass + " · 실패 " + fail);
   process.exit(fail ? 1 : 0);

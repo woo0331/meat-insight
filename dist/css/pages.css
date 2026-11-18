@@ -5094,3 +5094,7 @@ html.ivh #view .bgd{ background-color:#FFFFFF; }
 
 #view .pgh.hh{ background:#0B2A55; border-bottom:0; padding:56px 0 60px; display:block; }
 @media (max-width:900px){ #view .pgh.hh{ padding:0 0 28px; } }
+
+.my-kk{ display:flex; flex-direction:column; gap:8px; margin:0 0 var(--s5); max-width:560px; }
+.my-kakao, .my-kakao:visited{ background:#FEE500; border-color:#FEE500; color:#191600; justify-content:center; font-weight:800; }
+.my-kakao:hover{ background:#F5DC00; border-color:#F5DC00; color:#191600; }

@@ -3,7 +3,7 @@
 var AM_AUTH_KEY = "am.auth.v1";
 
 var AM_AUTH = { asked:false, on:false, signedIn:false, role:"", name:"",
-                provider:null, conf:null, quoteOpen:false };
+                provider:null, conf:null, quoteOpen:false, kakao:false };
 var AM_AUTH_FLY = null;
 
 function amAuthSave(t){
@@ -20,7 +20,52 @@ function amAuthClear(){
   try{ localStorage.removeItem(AM_AUTH_KEY); }catch(e){}
 }
 
+var AM_AUTH_ERR = "";
+function amAuthTakeError(){
+  var src = "";
+  try{ src = String(window.location.hash || "").replace(/^#/, "") + "&" +
+             String(window.location.search || "").replace(/^\?/, ""); }catch(e){ return; }
+  if(src.indexOf("error=") < 0 && src.indexOf("error_description=") < 0) return;
+  var q = {};
+  src.split("&").forEach(function(kv){
+    var i = kv.indexOf("=");
+    if(i > 0) try{ q[decodeURIComponent(kv.slice(0,i))] = decodeURIComponent(kv.slice(i+1).replace(/\+/g, " ")); }catch(e){}
+  });
+  if(!q.error && !q.error_description) return;
+  AM_AUTH_ERR = (q.error === "access_denied") ? "cancel" : "fail";
+  try{
+    var keep = String(window.location.search || "").replace(/^\?/, "").split("&").filter(function(kv){
+      return kv && !/^(error|error_code|error_description)=/.test(kv); }).join("&");
+    window.history.replaceState({}, "", window.location.pathname + (keep ? "?" + keep : ""));
+  }catch(e){}
+}
+window.amAuthErrSay = function(){
+  var e = AM_AUTH_ERR; AM_AUTH_ERR = "";
+  return e === "cancel" ? "카카오 로그인을 취소하셨습니다."
+       : e === "fail"   ? "로그인하지 못했습니다. 잠시 뒤 다시 시도해 주세요." : "";
+};
+
+window.amAuthNext = function(){
+  var n = "";
+  try{ n = new URLSearchParams(window.location.search).get("next") || ""; }catch(e){}
+  if(n.charAt(0) !== "/" || n.charAt(1) === "/" || n.indexOf("\\") >= 0) return "";
+  return n.split("#")[0].slice(0, 200);
+};
+
+window.amAuthKakao = function(path){
+  var p = path || window.amAuthNext() || window.location.pathname;
+  return fetch("/api/auth", { method:"POST", headers:{ "content-type":"application/json" },
+    body: JSON.stringify({ op:"oauth", provider:"kakao", path:p }) })
+    .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ return { ok:r.ok, d:d }; }); })
+    .then(function(x){
+      if(x.ok && x.d && x.d.url){ window.location.assign(x.d.url); return { ok:true, say:"카카오로 이동합니다…" }; }
+      return { ok:false, say:(x.d && x.d.error) || "지금은 카카오로 로그인할 수 없습니다." };
+    })
+    .catch(function(){ return { ok:false, say:"연결이 끊겼습니다. 잠시 뒤 다시 눌러 주세요." }; });
+};
+
 function amAuthTakeHash(){
+  amAuthTakeError();
   var h = "";
   try{ h = String(window.location.hash || ""); }catch(e){ return false; }
   if(h.indexOf("access_token=") < 0) return false;
@@ -119,6 +164,7 @@ window.amAuthAsk = function(force){
     AM_AUTH.lookup = !!(d && d.lookup === true);
     if(!d){ AM_AUTH.on = false; return AM_AUTH; }
     AM_AUTH.on       = !!d.auth;
+    AM_AUTH.kakao    = !!(d.auth && d.kakao === true);
     AM_AUTH.signedIn = !!d.signedIn;
     AM_AUTH.role     = d.role || "";
     AM_AUTH.name     = d.name || "";
@@ -148,7 +194,7 @@ window.amAuthSend = function(email){
   return fetch("/api/auth", {
     method:"POST",
     headers:{ "content-type":"application/json" },
-    body: JSON.stringify({ op:"otp", email: to, path: window.location.pathname })
+    body: JSON.stringify({ op:"otp", email: to, path: window.amAuthNext() || window.location.pathname })
   }).then(function(r){
     if(r.ok) return { ok:true, say:"메일로 로그인 링크를 보냈습니다. 받은 편지함을 확인해 주세요." };
 

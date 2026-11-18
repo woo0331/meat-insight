@@ -140,8 +140,11 @@ function hdAuthPaint(){
     box.innerHTML = a.signedIn
       ? '<a class="hd-txt" href="/my">'+icon("user",18)+
           '<span>'+esc("내 계정")+'</span></a>'
-      : '<a class="hd-txt" href="/my">'+icon("user",18)+
+      : '<a class="hd-txt" href="/my?next='+encodeURIComponent(window.location.pathname + window.location.search)+'">'+icon("user",18)+
           '<span>'+esc("로그인")+'</span></a>';
+
+    var es = window.amAuthErrSay ? amAuthErrSay() : "";
+    if(es && typeof window.toast === "function") toast(es);
   });
 }
 

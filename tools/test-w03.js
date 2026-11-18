@@ -165,6 +165,28 @@ try{
   ok(psql("select count(*) from lookup_challenge where code_hash ~ '^[0-9]{6}$'") === "0", "인증번호 원문이 DB 에 없음 (해시만)");
   ok(psql("select count(*) from audit_log where to_state='lookup:verified' and (data::text ~ '1234' or data::text ~ 'tok')") === "0", "조회 기록에 연락처 · 토큰이 없음");
 
+  /* ══ 카카오 간편 로그인 — 같은 카카오 계정이 두 번 가입되지 않는가 (계정 줄 기준) ══
+     Supabase 는 (공급자 · 카카오 계정 id) 로 auth.users 한 줄을 들고, 재방문은 그 줄의
+     로그인 시각만 갱신합니다 (insert 가 아닙니다). 여기서는 그 모양을 흉내 내어
+     저희 쪽(account · 0005 트리거)이 줄을 하나만 만드는지와 역할을 못 올리는지 봅니다.
+     ⚠️ Supabase 의 신원 묶기 자체는 실제 Supabase 에서만 확인됩니다 (미검증). */
+  console.log("\n▶ 카카오 — 첫 로그인 · 재방문 · 역할");
+  const KU = "abcdabcd-0000-4000-8000-000000000001";
+  psql("insert into auth.users (id, email, raw_user_meta_data) values ('" + KU + "', null, " +
+       lit({ provider:"kakao", sub:"kakao-12345", name:"카카오합성", role:"admin" }) + ")");
+  ok(psql("select count(*) from account where id='" + KU + "'") === "1" &&
+     psql("select role from account where id='" + KU + "'") === "customer",
+     "첫 카카오 로그인 — 계정 한 줄 · 역할은 customer (보낸 role 무시)");
+  psql("update auth.users set raw_user_meta_data = " + lit({ provider:"kakao", sub:"kakao-12345", name:"카카오합성", role:"admin" }) + " where id='" + KU + "'");
+  ok(psql("select count(*) from account where id='" + KU + "'") === "1" &&
+     psql("select role from account where id='" + KU + "'") === "customer",
+     "재방문(같은 카카오 계정) — 계정이 늘지 않고 역할도 그대로");
+  ok(/duplicate key|unique/.test(err("insert into auth.users (id) values ('" + KU + "')")),
+     "같은 회원 id 로 두 번째 가입 줄은 생기지 않음");
+  ok(psql("select count(*) from pg_proc p where pronamespace = 'public'::regnamespace and " +
+          "(prosrc ~* 'merge_account|link_identity|identities')") === "0",
+     "저희 DB 에 이메일로 계정을 합치는 함수가 없음 (검증 안 된 연결을 하지 않음)");
+
   /* ══ E2E — 합성 신청 1건: API 로 저장 → 관리자 확인 · 공개 안내 → 본인 조회 ══════════
      api/quote.js · api/lookup.js 를 **그대로** 부르고, 그 둘이 PostgREST 로 부르는
      /rest/v1/rpc/<함수> 를 이 로컬 Postgres 에서 service_role 로 실행해 돌려줍니다.

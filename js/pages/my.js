@@ -126,8 +126,18 @@ function myDbPaint(d){
    ⚠️ **지킬 수 없는 약속을 적지 마세요.** "바로 로그인됩니다" 가
    아니라 메일이 가는 데까지가 우리가 아는 전부입니다. */
 function MySignInBand(){
+  var kk = !!(window.amAuthNow && amAuthNow().kakao);
   return myHd("MY", "로그인하고 신청 내역 보기",
-    "메일 주소를 적으시면 로그인 링크를 보내 드립니다. 비밀번호는 없습니다.")+
+    kk ? "카카오로 시작하시거나, 메일로 로그인 링크를 받으실 수 있습니다. 비밀번호는 없습니다."
+       : "메일 주소를 적으시면 로그인 링크를 보내 드립니다. 비밀번호는 없습니다.")+
+    /* 2026-11-18 카카오 간편 로그인 · 가입 — 서버(AUTH_KAKAO)가 켜졌을 때만 나옵니다.
+       ⚠️ 서비스 검색 · 가이드 · 비회원 접수에는 로그인이 필요 없습니다 (그 말을 같이 적습니다). */
+    (kk ? '<div class="my-kk">'+
+      '<button class="btn btn-lg my-kakao" type="button" onclick="myKakao()">'+icon("chat",18)+' 카카오로 시작하기</button>'+
+      '<p class="f-h">처음이시면 그 자리에서 가입되고, 다음부터는 같은 카카오 계정으로 로그인됩니다. '+
+        '서비스 찾기 · 가이드 · 견적 신청은 로그인 없이도 쓰실 수 있습니다.</p>'+
+      '<p class="my-in-n" id="my-kk-n" role="status"></p>'+
+    '</div>' : '')+
     /* ⚠️ 폼 클래스는 이 저장소 것을 그대로 씁니다 — `.f-r` 과 맨
        `<input type=email>` 입니다. 새 이름을 지어내면 그 줄만 스타일이
        안 먹고 에러도 안 납니다 (`.f-i` · `.f-l` 로 한 번 겪었습니다). */
@@ -1334,5 +1344,15 @@ window.myLkInit = function(){
     try{ saved = JSON.parse(sessionStorage.getItem(LK_TOK) || "null"); }catch(_){}
     if(saved && saved.t && saved.until > Date.now()){ myLkDraw(); myLkRead(saved.t); }
     else { try{ sessionStorage.removeItem(LK_TOK); }catch(_){} myLkDraw(); }
+  });
+};
+
+/* 2026-11-18 카카오로 시작하기 */
+window.myKakao = function(){
+  var n = document.getElementById("my-kk-n");
+  if(typeof amAuthKakao !== "function") return;
+  if(n){ n.textContent = "카카오로 이동합니다…"; n.className = "my-in-n"; }
+  amAuthKakao().then(function(r){
+    if(!r.ok && n){ n.textContent = r.say; n.className = "my-in-n bad"; }
   });
 };

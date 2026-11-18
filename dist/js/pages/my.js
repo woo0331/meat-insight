@@ -53,8 +53,17 @@ function myDbPaint(d){
 }
 
 function MySignInBand(){
+  var kk = !!(window.amAuthNow && amAuthNow().kakao);
   return myHd("MY", "로그인하고 신청 내역 보기",
-    "메일 주소를 적으시면 로그인 링크를 보내 드립니다. 비밀번호는 없습니다.")+
+    kk ? "카카오로 시작하시거나, 메일로 로그인 링크를 받으실 수 있습니다. 비밀번호는 없습니다."
+       : "메일 주소를 적으시면 로그인 링크를 보내 드립니다. 비밀번호는 없습니다.")+
+
+    (kk ? '<div class="my-kk">'+
+      '<button class="btn btn-lg my-kakao" type="button" onclick="myKakao()">'+icon("chat",18)+' 카카오로 시작하기</button>'+
+      '<p class="f-h">처음이시면 그 자리에서 가입되고, 다음부터는 같은 카카오 계정으로 로그인됩니다. '+
+        '서비스 찾기 · 가이드 · 견적 신청은 로그인 없이도 쓰실 수 있습니다.</p>'+
+      '<p class="my-in-n" id="my-kk-n" role="status"></p>'+
+    '</div>' : '')+
 
     '<form class="my-in" onsubmit="return mySignIn(event)">'+
       '<div class="f-r">'+
@@ -1072,5 +1081,14 @@ window.myLkInit = function(){
     try{ saved = JSON.parse(sessionStorage.getItem(LK_TOK) || "null"); }catch(_){}
     if(saved && saved.t && saved.until > Date.now()){ myLkDraw(); myLkRead(saved.t); }
     else { try{ sessionStorage.removeItem(LK_TOK); }catch(_){} myLkDraw(); }
+  });
+};
+
+window.myKakao = function(){
+  var n = document.getElementById("my-kk-n");
+  if(typeof amAuthKakao !== "function") return;
+  if(n){ n.textContent = "카카오로 이동합니다…"; n.className = "my-in-n"; }
+  amAuthKakao().then(function(r){
+    if(!r.ok && n){ n.textContent = r.say; n.className = "my-in-n bad"; }
   });
 };

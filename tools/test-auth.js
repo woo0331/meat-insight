@@ -1495,6 +1495,28 @@ console.log("\n── W03 /api/auth — 브라우저 대신 Supabase 로 전함 
   ok("갱신 — 토큰 셋만 돌려줌 (user 를 안 실음)", r.code === 200 && r.body.access_token === "a.b.c" && !r.body.user, r.body);
   calls = []; r = res(); await Hauth(req({ method:"GET", headers:O }), r);
   ok("POST 만 받음", r.code === 405, r);
+
+  /* 2026-11-18 카카오 간편 로그인 — 주소만 만들어 돌려줍니다 (바깥 요청 0) */
+  delete process.env.AUTH_KAKAO;
+  calls = []; r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"oauth", provider:"kakao", path:"/startup" } }), r);
+  ok("카카오 — AUTH_KAKAO 가 없으면 거절 · 바깥 요청 0", r.code === 400 && calls.length === 0, r);
+  process.env.AUTH_KAKAO = "1";
+  calls = []; r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"oauth", provider:"kakao", path:"/startup?i=cafe" } }), r);
+  ok("카카오 — Supabase authorize 주소 · 돌아올 자리는 들어온 출처 + 원래 경로",
+     r.code === 200 && r.body.url === URL_ + "/auth/v1/authorize?provider=kakao&redirect_to=" +
+       encodeURIComponent("https://storeway.co.kr/startup?i=cafe") && calls.length === 0, r.body);
+  ok("카카오 — 주소에 키가 안 실림", r.body.url.indexOf(ANON) < 0 && r.body.url.indexOf(SVC) < 0, r.body.url);
+  r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"oauth", provider:"kakao", path:"//evil.example/x" } }), r);
+  ok("카카오 — 바깥 주소로 못 돌림", r.body.url.endsWith(encodeURIComponent("https://storeway.co.kr/my")), r.body.url);
+  r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"oauth", provider:"google" } }), r);
+  ok("카카오 — 목록 밖 공급자는 거절", r.code === 400, r);
+  r = res(); await Hauth(req({ method:"POST", headers:{ origin:"https://evil.example", host:"storeway.co.kr" }, body:{ op:"oauth", provider:"kakao" } }), r);
+  ok("카카오 — 다른 출처 403", r.code === 403, r);
+  r = res(); await Hsession(req({ method:"GET" }), r);
+  ok("세션 — 켜져 있으면 kakao:true", r.body.kakao === true, r.body);
+  delete process.env.AUTH_KAKAO;
+  r = res(); await Hsession(req({ method:"GET" }), r);
+  ok("세션 — 꺼져 있으면 kakao:false", r.body.kakao === false, r.body);
   calls = []; r = res(); await Hauth(req({ method:"POST", headers:Object.assign({ authorization:"Bearer " + TOK }, O), body:{ op:"logout" } }), r);
   ok("나가기 — 그 사람 토큰으로 알림", r.code === 200 && calls.length === 1 && calls[0].h.authorization === "Bearer " + TOK, calls);
 }

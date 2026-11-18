@@ -28,7 +28,7 @@ const { authReady, bearer, session, publicConf } = require("./_auth.js");
 const { gate } = require("./_gate.js");
 function intakeState(){ return { quote: gate("quote").open === true }; }
 
-module.exports = async function handler(req, res){
+const realHandler = async function handler(req, res){
   if(req.method !== "GET"){
     res.setHeader("Allow", "GET");
     return res.status(405).json({ error:"GET 으로 보내 주세요" });
@@ -72,7 +72,14 @@ module.exports = async function handler(req, res){
 };
 
 /* 복구 점검본: 운영 DB·메일·웹훅을 호출하지 않고 종료합니다. */
-module.exports = function restorationClosed(req, res){
-  res.setHeader("Cache-Control", "no-store");
-  return res.status(200).json({ auth:false, signedIn:false, restoration:true, intake:intakeState() });
+/* 복구 점검본 — STOREWAY_ACCOUNTS_OPEN=1 일 때만 실제 경로 (api/_open.js).
+   ⚠️ 꺼져 있으면 "로그인 꺼짐" 으로만 대답합니다 (200 · 화면이 구간째 안 그립니다).
+   ⚠️ intake 는 어느 쪽이든 실립니다 — 헤더 CTA 가 읽습니다 (환경변수만 봅니다). */
+const { accountsOpen } = require("./_open.js");
+module.exports = function restorationGate(req, res){
+  if(!accountsOpen()){
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(200).json({ auth:false, signedIn:false, restoration:true, intake:intakeState() });
+  }
+  return realHandler(req, res);
 };

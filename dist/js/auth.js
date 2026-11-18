@@ -78,10 +78,11 @@ window.amAuthHeaders = function(){
 function amAuthRefresh(){
   var t = amAuthLoad(), c = AM_AUTH.conf;
   if(!t || !t.refresh_token || !c) return Promise.resolve(false);
-  return fetch(c.url + "/auth/v1/token?grant_type=refresh_token", {
+
+  return fetch("/api/auth", {
     method:"POST",
-    headers:{ "content-type":"application/json", apikey:c.anonKey },
-    body: JSON.stringify({ refresh_token: t.refresh_token })
+    headers:{ "content-type":"application/json" },
+    body: JSON.stringify({ op:"refresh", refresh_token: t.refresh_token })
   }).then(function(r){ return r.ok ? r.json() : null; })
     .then(function(d){
       if(!d || !d.access_token){ amAuthClear(); return false; }
@@ -141,14 +142,11 @@ window.amAuthSend = function(email){
   var to = String(email || "").trim();
   if(!/^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(to))
     return Promise.resolve({ ok:false, say:"메일 주소를 확인해 주세요" });
-  return fetch(c.url + "/auth/v1/otp", {
-    method:"POST",
-    headers:{ "content-type":"application/json", apikey:c.anonKey },
-    body: JSON.stringify({
-      email: to,
 
-      options: { email_redirect_to: window.location.origin + window.location.pathname }
-    })
+  return fetch("/api/auth", {
+    method:"POST",
+    headers:{ "content-type":"application/json" },
+    body: JSON.stringify({ op:"otp", email: to, path: window.location.pathname })
   }).then(function(r){
     if(r.ok) return { ok:true, say:"메일로 로그인 링크를 보냈습니다. 받은 편지함을 확인해 주세요." };
 
@@ -168,8 +166,9 @@ window.amAuthOut = function(){
     AM_AUTH.provider = null;
   };
   if(!c || !tk){ done(); return Promise.resolve(); }
-  return fetch(c.url + "/auth/v1/logout", {
+  return fetch("/api/auth", {
     method:"POST",
-    headers:{ apikey:c.anonKey, authorization:"Bearer " + tk }
+    headers:{ "content-type":"application/json", authorization:"Bearer " + tk },
+    body: JSON.stringify({ op:"logout" })
   }).catch(function(){}).then(done);
 };

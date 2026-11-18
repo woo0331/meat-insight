@@ -25,6 +25,10 @@ function ok(name, cond, got){
     (got !== undefined ? "  →  " + String(JSON.stringify(got)).slice(0, 300) : "")); }
 }
 
+/* W03 — 로그인 · 관리자 경로는 STOREWAY_ACCOUNTS_OPEN=1 일 때만 실제로 돕니다
+   (api/_open.js). 이 검사는 **켜진 쪽**을 봅니다. 꺼진 쪽은 맨 아래 "스위치" 묶음이 봅니다. */
+process.env.STOREWAY_ACCOUNTS_OPEN = "1";
+
 /* ── 가짜 환경 ───────────────────────────────────────────── */
 const URL_ = "https://proj.supabase.co";
 const ANON = "ANONKEY-aaaa";
@@ -1360,7 +1364,9 @@ console.log("\n── /api/admin-health — 값은 안 돌려준다");
      읽어 적은 목록에서 셉니다. 마이그레이션을 늘리면 저절로 따라옵니다. */
   ok("저장소의 판 번호를 손으로 안 적는다", r.body.db.mig.want === TOP, r.body.db.mig);
 
-  svN = TOP - 3; healthMock();
+  /* ⚠️ 번호가 이어지지 않습니다 (0019 다음이 0082 · 운영 DB 의 골프 판 20~81 때문 — W02).
+     "TOP - 3" 으로 빼면 남는 파일이 하나뿐이라, 목록에서 뒤로 세 칸 간 자리를 씁니다. */
+  svN = MIGS_ALL[MIGS_ALL.length - 4][0]; healthMock();
   r = res(); await Hhealth(req({ method:"GET" }), r);
   ok("덜 돌렸으면 남은 파일 이름을 낸다",
      r.body.db.mig.left.length === 3 &&
@@ -1444,6 +1450,53 @@ console.log("\n── /api/admin-health — 값은 안 돌려준다");
   if(keep === undefined) delete process.env.ADMIN_PASSWORD;
   else process.env.ADMIN_PASSWORD = keep;
   envAll();
+}
+
+console.log("\n── W03 스위치 — STOREWAY_ACCOUNTS_OPEN 이 꺼지면 전과 같은 점검본");
+{
+  envAll(); delete process.env.STOREWAY_ACCOUNTS_OPEN;
+  mock([[/./, function(){ return body(200, []); }]]);
+  let r = res(); await Hsession(req({ method:"GET", headers:{ authorization:"Bearer " + TOK } }), r);
+  ok("세션 — 로그인 꺼짐으로만 대답 (200 · restoration)",
+     r.code === 200 && r.body.auth === false && r.body.restoration === true && !r.body.conf, r.body);
+  ok("세션 — 헤더 CTA 용 intake 는 그대로 실림", r.body.intake && r.body.intake.quote === false, r.body);
+  for(const [nm, H, m] of [["me", Hme, "GET"], ["deal", Hdeal, "POST"], ["admin-health", require(path.join(ROOT, "api", "admin-health.js")), "GET"],
+                           ["upload", require(path.join(ROOT, "api", "upload.js")), "POST"], ["auth", require(path.join(ROOT, "api", "auth.js")), "POST"]]){
+    r = res(); await H(req({ method:m, headers:{ authorization:"Bearer " + TOK, origin:"https://storeway.co.kr", host:"storeway.co.kr" }, body:{ op:"otp", email:"a@b.co" } }), r);
+    ok(nm + " — 503 점검본", r.code === 503 && r.body && r.body.restoration === true, r);
+  }
+  ok("꺼져 있으면 바깥 요청 0건 (운영 DB · 메일 · 웹훅을 안 부름)", calls.length === 0, calls.map(c => c.url));
+  ok("upload 의 상한 값이 지워지지 않음 (admin-health 가 읽음)",
+     Array.isArray(require(path.join(ROOT, "api", "upload.js")).OK_MIME), "");
+  process.env.STOREWAY_ACCOUNTS_OPEN = "1";
+}
+
+console.log("\n── W03 /api/auth — 브라우저 대신 Supabase 로 전함 (CSP connect-src 'self')");
+{
+  envAll();
+  const Hauth = require(path.join(ROOT, "api", "auth.js"));
+  const O = { origin:"https://storeway.co.kr", host:"storeway.co.kr" };
+  mock([[/\/auth\/v1\/otp/, function(){ return body(200, {}); }],
+        [/\/auth\/v1\/token/, function(){ return body(200, { access_token:"a.b.c", refresh_token:"rrrrrrrrrr", expires_in:3600, user:{ email:"x@y.z" } }); }],
+        [/\/auth\/v1\/logout/, function(){ return body(204); }]]);
+  let r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"otp", email:"boss@example.com", path:"/my" } }), r);
+  const ob = calls.length ? JSON.parse(calls[0].opt.body) : {};
+  ok("메일 링크 — 공개 키로만 보냄", r.code === 200 && calls.length === 1 && calls[0].h.apikey === ANON && noSvcAnywhere(), calls);
+  ok("메일 링크 — 돌아올 자리는 들어온 출처 + 경로", ob.options && ob.options.email_redirect_to === "https://storeway.co.kr/my", ob);
+  calls = []; r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"otp", email:"boss@example.com", path:"//evil.example/x" } }), r);
+  ok("메일 링크 — 바깥 주소로 못 돌림 (//evil)", JSON.parse(calls[0].opt.body).options.email_redirect_to === "https://storeway.co.kr/my", calls[0].opt.body);
+  calls = []; r = res(); await Hauth(req({ method:"POST", headers:{ origin:"https://evil.example", host:"storeway.co.kr" }, body:{ op:"otp", email:"boss@example.com" } }), r);
+  ok("다른 출처는 403 · 바깥 요청 0", r.code === 403 && calls.length === 0, r);
+  calls = []; r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"admin/users" } }), r);
+  ok("셋 밖의 일은 거절 (열린 중계기가 아님)", r.code === 400 && calls.length === 0, r);
+  calls = []; r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"otp", email:"not-an-email" } }), r);
+  ok("메일 꼴이 아니면 안 보냄", r.code === 400 && calls.length === 0, r);
+  calls = []; r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"refresh", refresh_token:"rrrrrrrrrr" } }), r);
+  ok("갱신 — 토큰 셋만 돌려줌 (user 를 안 실음)", r.code === 200 && r.body.access_token === "a.b.c" && !r.body.user, r.body);
+  calls = []; r = res(); await Hauth(req({ method:"GET", headers:O }), r);
+  ok("POST 만 받음", r.code === 405, r);
+  calls = []; r = res(); await Hauth(req({ method:"POST", headers:Object.assign({ authorization:"Bearer " + TOK }, O), body:{ op:"logout" } }), r);
+  ok("나가기 — 그 사람 토큰으로 알림", r.code === 200 && calls.length === 1 && calls[0].h.authorization === "Bearer " + TOK, calls);
 }
 
 console.log("\n── 시간 제한 (두 층이 같은 8초)");

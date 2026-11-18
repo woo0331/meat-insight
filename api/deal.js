@@ -410,7 +410,7 @@ async function notify(fn, args, role){
   }
 }
 
-module.exports = async function handler(req, res){
+const realHandler = async function handler(req, res){
   if(req.method !== "POST"){
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error:"POST 로 보내 주세요" });
@@ -465,7 +465,10 @@ module.exports = async function handler(req, res){
 };
 
 /* 복구 점검본: 운영 DB·메일·웹훅을 호출하지 않고 종료합니다. */
-module.exports = function restorationClosed(req, res){
-  res.setHeader("Cache-Control", "no-store");
-  return res.status(503).json({ error:"복구 점검 중으로 현재 접수하지 않습니다.", restoration:true });
+/* 복구 점검본 — W03 부터 STOREWAY_ACCOUNTS_OPEN=1 일 때만 실제 경로로 갑니다 (api/_open.js).
+   ⚠️ 꺼져 있으면 전과 같은 503 이고 운영 DB · 메일 · 웹훅을 부르지 않습니다. */
+const { accountsOpen, closed } = require("./_open.js");
+module.exports = function restorationGate(req, res){
+  if(!accountsOpen()) return closed(res);
+  return realHandler(req, res);
 };

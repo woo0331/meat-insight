@@ -151,10 +151,11 @@ window.amAuthHeaders = function(){
 function amAuthRefresh(){
   var t = amAuthLoad(), c = AM_AUTH.conf;
   if(!t || !t.refresh_token || !c) return Promise.resolve(false);
-  return fetch(c.url + "/auth/v1/token?grant_type=refresh_token", {
+  /* W03 — 같은 출처의 /api/auth 를 지납니다 (CSP connect-src 'self' · api/auth.js) */
+  return fetch("/api/auth", {
     method:"POST",
-    headers:{ "content-type":"application/json", apikey:c.anonKey },
-    body: JSON.stringify({ refresh_token: t.refresh_token })
+    headers:{ "content-type":"application/json" },
+    body: JSON.stringify({ op:"refresh", refresh_token: t.refresh_token })
   }).then(function(r){ return r.ok ? r.json() : null; })
     .then(function(d){
       if(!d || !d.access_token){ amAuthClear(); return false; }
@@ -224,15 +225,13 @@ window.amAuthSend = function(email){
   var to = String(email || "").trim();
   if(!/^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(to))
     return Promise.resolve({ ok:false, say:"메일 주소를 확인해 주세요" });
-  return fetch(c.url + "/auth/v1/otp", {
+  /* W03 — 같은 출처의 /api/auth 를 지납니다 (CSP connect-src 'self').
+     돌아올 자리는 **경로만** 보내고 서버가 들어온 출처에 붙입니다 (바깥 주소로 못 보냅니다).
+     ⚠️ Supabase 쪽 Redirect URLs 에 이 주소가 들어 있어야 합니다. */
+  return fetch("/api/auth", {
     method:"POST",
-    headers:{ "content-type":"application/json", apikey:c.anonKey },
-    body: JSON.stringify({
-      email: to,
-      /* ⚠️ 돌아올 자리입니다. Supabase 쪽 **Redirect URLs** 에 이 주소가
-         들어 있어야 합니다 — 안 넣으면 링크가 기본 주소로 갑니다. */
-      options: { email_redirect_to: window.location.origin + window.location.pathname }
-    })
+    headers:{ "content-type":"application/json" },
+    body: JSON.stringify({ op:"otp", email: to, path: window.location.pathname })
   }).then(function(r){
     if(r.ok) return { ok:true, say:"메일로 로그인 링크를 보냈습니다. 받은 편지함을 확인해 주세요." };
     /* 너무 자주 누르면 Supabase 가 429 를 돌려줍니다 — 그건 알려
@@ -256,8 +255,9 @@ window.amAuthOut = function(){
     AM_AUTH.provider = null;
   };
   if(!c || !tk){ done(); return Promise.resolve(); }
-  return fetch(c.url + "/auth/v1/logout", {
+  return fetch("/api/auth", {
     method:"POST",
-    headers:{ apikey:c.anonKey, authorization:"Bearer " + tk }
+    headers:{ "content-type":"application/json", authorization:"Bearer " + tk },
+    body: JSON.stringify({ op:"logout" })
   }).catch(function(){}).then(done);
 };

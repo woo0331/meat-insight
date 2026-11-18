@@ -1049,7 +1049,11 @@ const ADM_DEAL = [
       contentType:"application/json",
       body: JSON.stringify({ auth:true, signedIn:true, role:"customer",
         requests:[], quotes:[], state:null }) }));
-    await pg.route("https://zz.supabase.co/**", r => {
+    /* W03 — 브라우저는 Supabase 를 직접 부르지 않고 같은 출처의 /api/auth 를 지납니다
+       (CSP connect-src 'self'). Supabase 주소로 가는 요청은 따로 세어 0 인지 봅니다. */
+    const direct = [];
+    await pg.route("https://zz.supabase.co/**", r => { direct.push(r.request().url()); r.abort(); });
+    await pg.route("**/api/auth", r => {
       hit.push({ u:r.request().url(), h:r.request().headers(),
                  b:r.request().postData() || "" });
       r.fulfill({ status:200, contentType:"application/json",
@@ -1062,12 +1066,12 @@ const ADM_DEAL = [
       "at:Date.now()-1000}))}catch(e){}");
     await pg.goto(base + "/my", { waitUntil:"networkidle" });
     await pg.waitForTimeout(600);
-    const ref = hit.filter(x => x.u.indexOf("grant_type=refresh_token") >= 0);
-    ok("만료되면 새로 받는다", ref.length === 1, JSON.stringify(hit.map(x => x.u)));
-    /* ⚠️⚠️ **화면에 내려가는 것은 주소와 공개 키 둘뿐입니다** — service
-       key 는 RLS 를 통째로 지나갑니다 (api/_auth.js 의 publicConf). */
-    ok("공개 키를 apikey 로 보낸다 (service key 가 아님)",
-        ref.length === 1 && ref[0].h.apikey === "ZZ-ANON", JSON.stringify(ref[0] && ref[0].h));
+    const ref = hit.filter(x => x.b.indexOf('"op":"refresh"') >= 0);
+    ok("만료되면 새로 받는다 (/api/auth · refresh)", ref.length === 1, JSON.stringify(hit.map(x => x.b)));
+    /* ⚠️⚠️ 키는 서버에만 있습니다 — 브라우저 요청에 apikey 를 싣지 않습니다 */
+    ok("브라우저가 키를 싣지 않고 Supabase 를 직접 부르지 않는다",
+        ref.length === 1 && !ref[0].h.apikey && direct.length === 0,
+        JSON.stringify({ h: ref[0] && ref[0].h.apikey, direct: direct }));
     ok("새 토큰으로 갈아 끼운다", await pg.evaluate(() => {
       try { return JSON.parse(localStorage.getItem("am.auth.v1")).access_token === "NEW"; }
       catch (e) { return false; } }));
@@ -1088,9 +1092,11 @@ const ADM_DEAL = [
     await pg.route("**/api/me**", r => r.fulfill({ status:200,
       contentType:"application/json",
       body: JSON.stringify({ auth:true, signedIn:false }) }));
-    await pg.route("https://zz.supabase.co/**", r => {
+    const direct2 = [];
+    await pg.route("https://zz.supabase.co/**", r => { direct2.push(r.request().url()); r.abort(); });
+    await pg.route("**/api/auth", r => {
       otp.push({ u:r.request().url(), b:r.request().postData() || "" });
-      r.fulfill({ status:200, contentType:"application/json", body:"{}" });
+      r.fulfill({ status:200, contentType:"application/json", body:'{"ok":true}' });
     });
     await pg.goto(base + "/my", { waitUntil:"networkidle" });
     await pg.waitForTimeout(400);
@@ -1122,8 +1128,9 @@ const ADM_DEAL = [
     })());
     /* ⚠️⚠️ 돌아올 자리를 같이 보냅니다 — Supabase 쪽 Redirect URLs 에
        그 주소가 없으면 링크가 기본 주소로 갑니다 */
-    ok("돌아올 자리를 같이 보낸다",
-        otp.length >= 1 && otp[0].b.indexOf("email_redirect_to") >= 0,
+    /* W03 — 돌아올 자리는 **경로만** 보내고 서버가 들어온 출처에 붙입니다 (api/auth.js) */
+    ok("돌아올 자리(경로)를 같이 보낸다 · Supabase 직접 호출 0",
+        otp.length >= 1 && otp[0].b.indexOf('"op":"otp"') >= 0 && otp[0].b.indexOf('"path":"/my"') >= 0 && direct2.length === 0,
         otp[0] && otp[0].b);
     ok("JS 에러 0", errs.length === 0, errs.join(" | "));
     await ctx.close();

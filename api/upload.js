@@ -85,7 +85,7 @@ async function signed(kind, p){
   }finally{ clearTimeout(timer); }
 }
 
-module.exports = async function handler(req, res){
+const realHandler = async function handler(req, res){
   res.setHeader("cache-control", "no-store");
 
   /* ── 올릴 수 있는 상태인가 · 보기 주소 ──────────────────────────── */
@@ -203,12 +203,16 @@ module.exports = async function handler(req, res){
    `api/admin-health.js` 가 버킷 설정(크기 상한 · 허용 형식)이 여기와
    같은지 봅니다. 여기서 늘리고 버킷을 안 고치면 **마지막 자물쇠만
    헐거워지는데** 화면으로는 표가 안 납니다 (GO-LIVE §2). */
+/* 복구 점검본 — STOREWAY_ACCOUNTS_OPEN=1 일 때만 실제 경로 (api/_open.js).
+   ⚠️ 2026-11-17 점검본이 module.exports 를 통째로 갈아 끼워서 아래 세 값이
+   **지워져** 있었습니다 (admin-health 가 읽는 상한). 지금은 함수를 먼저 두고 붙입니다.
+   ⚠️ 사진은 1차 제외 범위이고, 브라우저가 서명 주소로 Supabase Storage 에 바로 올리는
+   길이라 CSP(connect-src 'self')에도 막혀 있습니다 — 여기서 열어도 운영에서는 안 됩니다. */
+const { accountsOpen, closed } = require("./_open.js");
+module.exports = function restorationGate(req, res){
+  if(!accountsOpen()) return closed(res);
+  return realHandler(req, res);
+};
 module.exports.OK_MIME   = OK_MIME;
 module.exports.MAX_BYTES = MAX_BYTES;
 module.exports.bucket    = bucket;
-
-/* 복구 점검본: 운영 DB·메일·웹훅을 호출하지 않고 종료합니다. */
-module.exports = function restorationClosed(req, res){
-  res.setHeader("Cache-Control", "no-store");
-  return res.status(503).json({ error:"복구 점검 중으로 현재 접수하지 않습니다.", restoration:true });
-};

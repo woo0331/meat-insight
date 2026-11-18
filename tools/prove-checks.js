@@ -600,6 +600,9 @@ const CASES = [
       .setAttribute("href", "/tools/zzz-없는계산기");`],
   /* ⚠️ grid 의 stretch 를 덮어야 합니다 — 폭과 높이를 같이 줄입니다. */
   /* ⚠️ 2026-11-18 메인 개편 — 재는 자리가 히어로 두 판입니다. 폐업 판을 낮춥니다. */
+  /* 2026-11-18 — 닫혀 있는데 "견적 신청" 을 같이 보이게 합니다 */
+  ["헤더 공통 CTA 가 견적 접수 상태를 따른다",
+   `document.querySelector(".hd .hd-cta-on").removeAttribute("hidden");`],
   ["창업 · 폐업 두 판의 크기가 같다",
    `const e = document.querySelector(".sw-hp-cl");
    e.style.minHeight = "0"; e.style.height = "120px"; e.style.alignSelf = "start";`],

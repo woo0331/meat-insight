@@ -940,3 +940,57 @@ window.amCopy = function(btn){
     document.body.removeChild(ta);
   }
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   /intake — 접수 안내 (2026-11-18 · 헤더 공통 CTA)
+
+   견적 접수가 닫혀 있을 때 헤더의 "접수 안내" 가 오는 곳입니다.
+   ⚠️⚠️ 잠긴 신청 양식까지 내려가야 중단 사실을 알게 되는 흐름을 피하려고
+   **맨 위에서 상태부터** 말하고, 그 아래에 지금 쓸 수 있는 기능을 냅니다.
+   ⚠️ 상태는 헤더와 **같은 함수**(amQuoteOpen)로 고릅니다 — 둘이 다른 말을
+   하면 안 됩니다. 기본은 닫힘이고, 열림이 확인될 때만 바꿉니다.
+   ⚠️ 재개일을 적지 않습니다 (정해지지 않았습니다 · 절대 규칙 5).
+   ⚠️ 견적 접수 기준입니다 — 매물 등록 · 입점과 섞지 않습니다.
+   ════════════════════════════════════════════════════════════════════ */
+var INTAKE_USE = [
+  ["/providers", "grid",   "서비스 둘러보기",  "분야별로 어떤 업체가 무엇을 하는지 봅니다"],
+  ["/tools",     "calc",   "계산도구",         "창업비 · 손익분기 · 권리금 · 폐업비용을 미리 계산합니다"],
+  ["/content",   "book",   "이용 가이드",      "창업 · 운영 · 양도양수 · 폐업에서 자주 막히는 것을 정리했습니다"],
+  ["/startup",   "check",  "창업 준비 순서",   "업종을 고르면 무엇부터 할지 순서대로 봅니다"],
+  ["/stores",    "store",  "매장 매물 보기",   "올라온 매물이 있으면 조건으로 걸러 봅니다"],
+  ["/faq",       "info",   "자주 묻는 질문",   "비용 · 연락처 전달 · 진행 방법에 대한 답"]
+];
+function PageIntake(){
+  var cards = INTAKE_USE.map(function(x){
+    return '<li><a class="itk-c" href="'+esc(x[0])+'">'+
+      '<span class="itk-i" aria-hidden="true">'+icon(x[1],24)+'</span>'+
+      '<span class="itk-t"><b>'+esc(x[2])+'</b><i>'+esc(x[3])+'</i></span>'+
+      icon("arrow",16)+'</a></li>';
+  }).join("");
+  return PgHero({ kicker:"접수 안내", h1:"견적 접수 안내", tight:true,
+                  lead:"지금 견적 접수를 받고 있는지, 그리고 지금 바로 쓰실 수 있는 기능을 안내합니다." })+
+  '<section class="sec sec-white"><div class="w w-narrow itk">'+
+    '<div class="itk-st itk-off" data-intake="off" role="status">'+
+      '<h2>현재 견적 접수를 받지 않습니다.</h2>'+
+      '<p>지금 신청서를 보내셔도 접수되지 않습니다. 재개 일정은 아직 정해지지 않았습니다. '+
+        '접수가 열리면 화면 위쪽 단추가 <b>견적 신청</b>으로 바뀝니다.</p>'+
+      '<p class="itk-n">이 안내는 견적 접수 기준입니다. 매물 등록 · 업체 입점은 각 화면에서 따로 안내합니다.</p>'+
+    '</div>'+
+    '<div class="itk-st itk-on" data-intake="on" role="status" hidden>'+
+      '<h2>지금 견적 접수를 받고 있습니다.</h2>'+
+      '<p>필요한 서비스와 지역을 한 번만 적어 보내시면 운영자가 확인합니다. 신청은 무료입니다.</p>'+
+      '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">견적 신청하기'+icon("arrow",18)+'</a>'+
+    '</div>'+
+    '<h2 class="itk-h">지금 바로 이용하실 수 있는 기능</h2>'+
+    '<ul class="itk-g">'+cards+'</ul>'+
+  '</div></section>';
+}
+window.intakePaint = function(){
+  if(typeof window.amQuoteOpen !== "function") return;
+  window.amQuoteOpen().then(function(open){
+    els('[data-intake]').forEach(function(e){
+      var mine = e.getAttribute("data-intake") === (open ? "on" : "off");
+      if(mine) e.removeAttribute("hidden"); else e.setAttribute("hidden","");
+    });
+  });
+};

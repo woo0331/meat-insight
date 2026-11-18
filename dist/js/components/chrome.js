@@ -77,7 +77,9 @@ function Header(){
 
       '<a class="hd-txt" href="/my">'+icon("user",18)+'<span>내 기록</span></a>'+
 
-      '<a class="btn btn-nv hd-cta" href="/quote" data-to="/quote">'+
+      '<a class="btn btn-nv hd-cta hd-cta-off" href="/intake" data-cta="off">'+
+        '접수 안내'+icon("arrow",16)+'</a>'+
+      '<a class="btn btn-nv hd-cta hd-cta-on" href="/quote" data-to="/quote" data-cta="on" hidden>'+
         '<span class="hd-cta-w">무료 </span>견적 신청'+icon("arrow",16)+'</a>'+
 
       '<button class="hd-ic hd-mb" type="button" id="hdMb" aria-label="메뉴"'+
@@ -111,6 +113,21 @@ window.hdMenu = function(open){
   if(on) dw.removeAttribute("hidden"); else dw.setAttribute("hidden","");
   bt.setAttribute("aria-expanded", on ? "true" : "false");
 };
+
+window.amQuoteOpen = function(){
+  if(!(window.WOW_BIZ && WOW_BIZ.sosReady)) return Promise.resolve(false);
+  if(typeof window.amAuthAsk !== "function") return Promise.resolve(false);
+  return window.amAuthAsk().then(function(a){ return !!(a && a.quoteOpen); },
+                                 function(){ return false; });
+};
+function hdCtaPaint(){
+  window.amQuoteOpen().then(function(open){
+    els('.hd [data-cta]').forEach(function(a){
+      var mine = a.getAttribute("data-cta") === (open ? "on" : "off");
+      if(mine) a.removeAttribute("hidden"); else a.setAttribute("hidden","");
+    });
+  });
+}
 
 function hdAuthPaint(){
   var box = document.getElementById("hdAuth");
@@ -294,6 +311,7 @@ window.mountChrome = function(){
   paintChrome();
 
   hdAuthPaint();
+  hdCtaPaint();
 };
 
 window.hdSearch = function(e){

@@ -111,6 +111,28 @@ const FAKE_SEND = { INTAKE_WEBHOOK_URL: "https://example.invalid/hook" };
     ok(r.code === 403, "다른 출처는 403");
   }
 
+  /* 2026-11-18 — 헤더 CTA 가 읽는 값(/api/session 의 intake.quote)이
+     접수 API 와 **같은 게이트**를 따르는가. 견적만 보고, 다른 종류와 섞지 않고,
+     까닭(why)은 밖으로 안 내보내는가. 바깥 요청은 0건이어야 합니다. */
+  console.log("\n▶ 헤더 CTA 상태 — /api/session 의 intake.quote");
+  for (const [nm, env, want] of [
+    ["아무것도 없음", {}, false],
+    ["sell · join 만 열림 (견적은 닫힘)", Object.assign({ STOREWAY_INTAKE_OPEN: "sell,join" }, FAKE_DB), false],
+    ["quote 는 적혔지만 DB 없음", { STOREWAY_INTAKE_OPEN: "quote" }, false],
+    ["quote + DB", Object.assign({ STOREWAY_INTAKE_OPEN: "quote" }, FAKE_DB), true]
+  ]){
+    fresh(env);
+    const sh = require(path.join(ROOT, "api", "session.js"));
+    calls.length = 0;
+    const r = res(); await sh({ method: "GET", headers: {} }, r);
+    ok(r.code === 200 && r.body && r.body.intake && r.body.intake.quote === want,
+      nm + " → intake.quote " + want, r.body);
+    ok(calls.length === 0, nm + " → 바깥 요청 0건", calls);
+    ok(!JSON.stringify(r.body).match(/STOREWAY_INTAKE_OPEN|SUPABASE|why/),
+      nm + " → 설정 이름 · 까닭을 내보내지 않음", r.body);
+    ok(Object.keys(r.body.intake).join() === "quote", nm + " → 견적 하나만 담음", r.body.intake);
+  }
+
   global.fetch = realFetch;
   ENV_KEYS.forEach(function(k){ if (SAVED[k] === undefined) delete process.env[k]; else process.env[k] = SAVED[k]; });
   console.log("\n" + (pass + fail) + "건 중 " + pass + "건 통과 · " + fail + "건 실패");

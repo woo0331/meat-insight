@@ -35,7 +35,7 @@ var AM_AUTH_KEY = "am.auth.v1";
    그물을 빠져나갑니다.** 재 보니 화면마다 2번(`/my` 는 3번) 나가고
    있었습니다 — 지금은 돌고 있는 것을 그대로 돌려줍니다. */
 var AM_AUTH = { asked:false, on:false, signedIn:false, role:"", name:"",
-                provider:null, conf:null };
+                provider:null, conf:null, quoteOpen:false };
 var AM_AUTH_FLY = null;
 
 /* ── 저장 ────────────────────────────────────────────────────────
@@ -188,6 +188,8 @@ window.amAuthAsk = function(force){
     return d;
   }).then(function(d){
     AM_AUTH.asked = true;
+    /* 2026-11-18 — 서버 접수 게이트(api/_gate.js)의 견적 상태. 못 읽으면 닫힘입니다. */
+    AM_AUTH.quoteOpen = !!(d && d.intake && d.intake.quote === true);
     if(!d){ AM_AUTH.on = false; return AM_AUTH; }
     AM_AUTH.on       = !!d.auth;
     AM_AUTH.signedIn = !!d.signedIn;
@@ -200,7 +202,7 @@ window.amAuthAsk = function(force){
     /* ⚠️ 운영자에게만 남깁니다 — 손님은 아무 잘못도 안 했습니다
        (절대 규칙 3). */
     try{ console.warn("[auth] /api/session — " + e); }catch(_){}
-    AM_AUTH.asked = true; AM_AUTH.on = false;
+    AM_AUTH.asked = true; AM_AUTH.on = false; AM_AUTH.quoteOpen = false;
     return AM_AUTH;
   });
   /* ⚠️ 답이 오면 놓습니다 — `force` 로 다시 물을 수 있어야 합니다

@@ -520,3 +520,5 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 .q-nt span{ padding-top:2px; }
 .q-nt input{ margin-top:2px; }
 .q-nt b{ color:var(--ink); }
+
+.hd-cta[hidden]{ display:none !important; }

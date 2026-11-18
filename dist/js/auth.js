@@ -3,7 +3,7 @@
 var AM_AUTH_KEY = "am.auth.v1";
 
 var AM_AUTH = { asked:false, on:false, signedIn:false, role:"", name:"",
-                provider:null, conf:null };
+                provider:null, conf:null, quoteOpen:false };
 var AM_AUTH_FLY = null;
 
 function amAuthSave(t){
@@ -112,6 +112,8 @@ window.amAuthAsk = function(force){
     return d;
   }).then(function(d){
     AM_AUTH.asked = true;
+
+    AM_AUTH.quoteOpen = !!(d && d.intake && d.intake.quote === true);
     if(!d){ AM_AUTH.on = false; return AM_AUTH; }
     AM_AUTH.on       = !!d.auth;
     AM_AUTH.signedIn = !!d.signedIn;
@@ -123,7 +125,7 @@ window.amAuthAsk = function(force){
   }).catch(function(e){
 
     try{ console.warn("[auth] /api/session — " + e); }catch(_){}
-    AM_AUTH.asked = true; AM_AUTH.on = false;
+    AM_AUTH.asked = true; AM_AUTH.on = false; AM_AUTH.quoteOpen = false;
     return AM_AUTH;
   });
 

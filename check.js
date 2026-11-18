@@ -115,6 +115,7 @@ const PAGES = [
   ["/tools/labor",       "도구 — 인건비율"],
   ["/tools/vs",          "도구 — 신규 vs 인수"],
   ["/tools/close",       "도구 — 폐업 체크리스트"],
+  ["/intake",            "접수 안내"],
   ["/faq",               "자주 묻는 것"],
   /* ⚠️ 글을 만들었으면 여기 넣으세요. 예전 저장소에서 연구소 글 열두
      편이 한동안 전수 점검에 **아예 안 들어가** 있었습니다 — 제목 검사를
@@ -1715,6 +1716,19 @@ const AUDIT = `(() => {
     const h = a.getAttribute("href");
     if(h.indexOf("i=cafe") < 0 || h.indexOf("r=gyeonggi") < 0)
       return "고른 조건이 주소에 안 실립니다 (" + h + ")";
+    return true;`);
+  await f("헤더 공통 CTA 가 견적 접수 상태를 따른다", "/", `
+    /* 2026-11-18 — 검사 서버에는 /api/session 이 없어 닫힘으로 읽힙니다 (fail-closed).
+       보이는 CTA 가 정확히 하나이고, 닫힘이면 접수 안내로 가야 합니다.
+       열림 쪽은 tools/test-flows.js 의 14번 묶음이 가짜 응답으로 봅니다. 백틱 금지. */
+    await new Promise(r => setTimeout(r, 300));
+    const L = [].slice.call(document.querySelectorAll(".hd .hd-cta"))
+      .filter(function(a){ return !a.hidden && a.getClientRects().length; });
+    if(L.length !== 1) return "헤더 CTA 가 " + L.length + "개 보입니다 (하나만 보여야 합니다)";
+    const open = !!(window.amAuthNow && amAuthNow().quoteOpen) && !!(window.WOW_BIZ && WOW_BIZ.sosReady);
+    const t = L[0].textContent.trim(), h = L[0].getAttribute("href") || "";
+    if(open) return (t.indexOf("견적 신청") >= 0 && h.indexOf("/quote") === 0) ? true : "열렸는데 " + t + " " + h;
+    if(t !== "접수 안내" || h !== "/intake") return "닫혔는데 헤더가 " + t + " → " + h + " 입니다";
     return true;`);
   await f("업종 화면 → 견적 요청에 업종이 실린다", "/startup/hair", `
     const a = document.querySelector('a[href^="/quote"]');

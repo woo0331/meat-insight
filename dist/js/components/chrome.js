@@ -120,9 +120,11 @@ window.amQuoteOpen = function(){
   return window.amAuthAsk().then(function(a){ return !!(a && a.quoteOpen); },
                                  function(){ return false; });
 };
+window.hdCtaPaint = hdCtaPaint;
 function hdCtaPaint(){
   window.amQuoteOpen().then(function(open){
-    els('.hd [data-cta]').forEach(function(a){
+
+    els('[data-cta]').forEach(function(a){
       var mine = a.getAttribute("data-cta") === (open ? "on" : "off");
       if(mine) a.removeAttribute("hidden"); else a.setAttribute("hidden","");
     });

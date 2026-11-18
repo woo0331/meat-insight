@@ -284,7 +284,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
  await pg.reload({waitUntil:"networkidle"});
  const osec=await pg.evaluate(()=>document.querySelectorAll("#view > section").length);
- say(osec===7,"운영 ① 일곱 영역이다 (§2)","지금 "+osec);
+ say(osec===9,"운영 ① 아홉 영역이다 (§2 + 2026-11-18 고민 카드 · 이용 순서)","지금 "+osec);
  const ogr=await pg.evaluate(()=>document.querySelectorAll(".opg-c").length);
  say(ogr===8,"운영 ② 대표 여덟이 나온다 (§4-2)","지금 "+ogr);
  await click(".opg-h");

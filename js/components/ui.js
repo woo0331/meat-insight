@@ -786,3 +786,71 @@ window.HallCalcBand = function(o){
     '</div>'+
   '</div></section>';
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   HallHero — 네 전문관(창업 준비 · 매장 운영 · 매장 양도양수 · 폐업·철거)의 머리
+   (2026-11-18 카테고리 리뉴얼 시안)
+
+   짙은 남색 판 + 오른쪽 사진 + 큰 제목(강조 낱말 하나) + 단추 둘 + 흰 확인 카드.
+   ⚠️⚠️ class 에 pgh 를 그대로 둡니다 — 전수 점검 "전문관 공통 여덟" ① 이 그것을 봅니다.
+   ⚠️⚠️ 주 단추는 **견적 접수 상태를 따릅니다** — 헤더 CTA 와 같은 서버 게이트
+      (amQuoteOpen · data-cta). 닫혀 있으면 "접수 안내" 로 가고, 열렸을 때만 신청으로 갑니다.
+   ⚠️⚠️ 확인 카드에는 **이 화면이 지금 실제로 하는 것**만 적습니다 — 시안의
+      "검증된 전문 업체" · "매출 상승 전략 제안" 같은 말은 근거가 없어 쓰지 않습니다.
+   ⚠️ 짙은 판은 이 머리 한 자리뿐입니다. 어두운 면 검사는 .hh 를 따로 재고
+      (높이 상한), 그 아래 본문은 그대로 15% 한도로 봅니다 (check.js).
+   ⚠️ 사진은 받아 둔 넉 장(hero-startup · hero-ops · kind-pass · hero-closure)뿐이고,
+      없으면 판만 섭니다 (빈 액자를 깔지 않습니다).
+   ════════════════════════════════════════════════════════════════════ */
+window.HallHero = function(o){
+  o = o || {};
+  var ph = o.photo && typeof hasPhoto === "function" && hasPhoto(o.photo);
+  var checks = (o.checks || []).map(function(c){
+    return '<li><span class="hh-ci" aria-hidden="true">'+icon(c[0] || "check", 20)+'</span>'+
+      '<span>'+esc(c[1])+'</span></li>';
+  }).join("");
+  return '<section class="pgh hh hh-'+esc(o.side || "start")+(ph ? ' hh-im-on' : '')+'">'+
+    (ph ? '<span class="hh-ph pgh-im-'+esc(o.photo)+'">'+
+          photoBox(o.photo, "", true, "(max-width:900px) 100vw, 62vw")+'</span>' : '')+
+    '<div class="w hh-in">'+
+      '<div class="hh-tx">'+
+        (o.crumb ? '<nav class="crumb" aria-label="현재 위치">'+o.crumb+'</nav>' : '')+
+        (o.kicker ? '<p class="hh-k">'+esc(o.kicker)+'</p>' : '')+
+        '<h1 class="pg-h1 hh-h1">'+(o.h1raw || esc(o.h1 || ""))+'</h1>'+
+        (o.lead ? '<p class="pg-lead hh-lead">'+esc(o.lead)+'</p>' : '')+
+        '<div class="row-cta hh-cta">'+
+          '<a class="btn btn-lg hh-go" href="/intake" data-cta="off">'+
+            '접수 안내 보기'+icon("arrow",18)+'</a>'+
+          '<a class="btn btn-lg hh-go" href="'+esc(o.quote || "/quote")+'" data-cta="on" hidden>'+
+            esc(o.goName || "상담 신청하기")+icon("arrow",18)+'</a>'+
+          (o.second ? o.second : '')+
+        '</div>'+
+      '</div>'+
+      (checks ? '<div class="hh-card"><p class="hh-card-t">'+esc(o.cardTitle || "이 화면에서 하실 수 있는 것")+'</p>'+
+        '<ul class="hh-cl">'+checks+'</ul></div>' : '')+
+    '</div>'+
+  '</section>';
+};
+
+/* 상담 신청 진행 — 네 전문관 공통 (시안의 "상담 신청 진행 절차").
+   ⚠️ 걸음은 js/data/steps.js 의 AM_STEPS 한 곳입니다 (메인 · 크롤러 본문과 같은 말).
+   ⚠️ 끝 단추는 HallHero 와 같은 data-cta 짝 — 닫혀 있으면 접수 안내. */
+window.HallSteps = function(o){
+  o = o || {};
+  var S = (window.AM_STEPS || []);
+  if(!S.length) return "";
+  return '<section class="sec sec-white hst"><div class="w hst-in">'+
+    '<div class="hst-hd"><h2>'+esc(o.title || "상담 신청은 이렇게 진행됩니다")+'</h2>'+
+      '<p>서비스를 고르시고 한 번만 적어 보내시면 운영자가 확인합니다. 업체에 연락처를 전하기 전에는 따로 동의를 여쭙니다.</p></div>'+
+    '<ol class="hst-g">'+S.map(function(s, i){
+      return '<li><span class="hst-n">'+(i+1)+'</span>'+
+        '<span class="hst-i" aria-hidden="true">'+icon(s.ic || "check", 26)+'</span>'+
+        '<b>'+esc(s.n || "")+'</b></li>';
+    }).join("")+'</ol>'+
+    '<div class="hst-go">'+
+      '<a class="btn btn-lg hh-go" href="/intake" data-cta="off">접수 안내 보기'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-lg hh-go" href="'+esc(o.quote || "/quote")+'" data-cta="on" hidden>'+
+        esc(o.goName || "상담 신청하기")+icon("arrow",18)+'</a>'+
+    '</div>'+
+  '</div></section>';
+};

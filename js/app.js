@@ -631,6 +631,8 @@ function render(){
   if(nowPath() === "/my" && typeof window.myLoadDb === "function") window.myLoadDb();
   if(nowPath() === "/my" && typeof window.myLkInit === "function") window.myLkInit();
   if(nowPath() === "/intake" && typeof window.intakePaint === "function") window.intakePaint();
+  /* 2026-11-18 — 본문의 data-cta 짝(전문관 머리 등)도 견적 접수 상태로 고릅니다 */
+  if(typeof window.hdCtaPaint === "function") window.hdCtaPaint();
   /* 고르신 서비스 — 하단 띠 높이를 재서 본문을 그만큼 비우고, 단추
      글씨의 개수를 맞춥니다 (2026-10-17 창업 준비 §3-3).
      ⚠️ 어느 화면에서나 부릅니다 — 띠가 없는 화면에서는 아무 일도 안

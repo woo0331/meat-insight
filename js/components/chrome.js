@@ -375,9 +375,11 @@ window.amQuoteOpen = function(){
   return window.amAuthAsk().then(function(a){ return !!(a && a.quoteOpen); },
                                  function(){ return false; });
 };
+window.hdCtaPaint = hdCtaPaint;
 function hdCtaPaint(){
   window.amQuoteOpen().then(function(open){
-    els('.hd [data-cta]').forEach(function(a){
+    /* 2026-11-18 — 헤더뿐 아니라 본문(전문관 머리 · 상담 진행 띠)의 짝도 같이 고릅니다 */
+    els('[data-cta]').forEach(function(a){
       var mine = a.getAttribute("data-cta") === (open ? "on" : "off");
       if(mine) a.removeAttribute("hidden"); else a.setAttribute("hidden","");
     });

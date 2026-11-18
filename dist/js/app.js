@@ -473,6 +473,8 @@ function render(){
   if(nowPath() === "/my" && typeof window.myLkInit === "function") window.myLkInit();
   if(nowPath() === "/intake" && typeof window.intakePaint === "function") window.intakePaint();
 
+  if(typeof window.hdCtaPaint === "function") window.hdCtaPaint();
+
   if(typeof window.pickPaint === "function") window.pickPaint();
 
   if(typeof window.amStateSync === "function") window.amStateSync();

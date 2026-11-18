@@ -679,11 +679,22 @@ const AUDIT = `(() => {
     if(ivHome && location.pathname !== "/")
       out.dark.push("메인 밖인데 메인 표시(ivh)가 붙어 있습니다 — " + location.pathname);
     if(!ivHome){
+    /* 2026-11-18 카테고리 리뉴얼 — 네 전문관 머리(.hh)는 시안이 짙은 남색 판으로
+       정했습니다. 메인을 건너뛴 것과 같은 까닭으로 ① ② 에서 그 판 하나만 빼고,
+       대신 **높이 상한**으로 따로 잽니다 (판이 커지면 여기서 걸립니다).
+       그 아래 본문은 그대로 15% 한도입니다. 이 주석에 백틱 금지. */
+    const hhEl = document.querySelector("#view .hh");
+    if(hhEl){
+      const hhH = hhEl.getBoundingClientRect().height;
+      const hhCap = W > 900 ? 480 : 820;
+      if(hhH > hhCap) out.dark.push("전문관 머리(짙은 판) 높이 " + Math.round(hhH) + "px — 상한 " + hhCap + "px");
+    }
     let area = 0, ftArea = 0; const seen = [], big = [];
     document.querySelectorAll("body *").forEach(e => {
       const cs = getComputedStyle(e);
       if(cs.display === "none" || cs.visibility === "hidden") return;
       if(cs.position === "fixed") return;   /* 헤더·아래 네비는 겹침입니다 */
+      if(e.closest(".hh")) return;          /* 전문관 머리는 위 높이 상한이 봅니다 */
       if(!dk(e)) return;
       for(const q of seen) if(q.contains(e)) return;
       seen.push(e);
@@ -744,6 +755,7 @@ const AUDIT = `(() => {
         const cs = getComputedStyle(e);
         if(cs.display === "none" || cs.visibility === "hidden") return;
         if(e.closest(".hd") || e.closest(".mnav")) return;
+        if(e.closest(".hh")) return;        /* 전문관 머리 — 위 높이 상한 */
         if(!dk(e)) return;
         for(const q of s1) if(q.contains(e)) return;
         s1.push(e);
@@ -3108,9 +3120,10 @@ const AUDIT = `(() => {
      같은 분류를 네 군데서 냈는데 전부 **링크**였습니다 — 복수 선택이
      "안 되는" 것이 아니라 **없었습니다** (재서 알았습니다).
      ⚠️ 주석에 백틱을 쓰지 마세요. */
-  await f("매장 운영이 §2 의 일곱 영역이다", "/operation", `
+  await f("매장 운영이 §2 의 아홉 영역이다", "/operation", `
     const secs = document.querySelectorAll("#view > section");
-    if(secs.length !== 7) return "구간이 일곱이 아닙니다 — " + secs.length;
+    /* 2026-11-18 시안으로 고민 카드(OpsWorry)와 이용 순서(HallSteps)가 늘어 아홉입니다 */
+    if(secs.length !== 9) return "구간이 아홉이 아닙니다 — " + secs.length;
     /* 고르는 자리는 **하나**입니다 (§2) */
     const sel = document.querySelectorAll(".pkb-sel");
     if(sel.length !== 1) return "서비스를 고르는 구간이 " + sel.length + "개입니다";

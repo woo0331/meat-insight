@@ -253,18 +253,36 @@ function OpsvcForInd(ind){
 }
 
 function OpsIntro(ind){
-  return PgHero({
-    photo:"hero-ops",
-    kicker:"OPERATION · 매장 운영" + (ind ? " · " + ind.name : ""),
-    h1raw:"매장 운영,<br class=\"br-m\"> 무엇을 도와드릴까요?",
-    lead:"광고 · 홍보, 세금, 직원 채용, 매장 수리까지. "+
-         "필요한 서비스를 선택하고 한 번에 신청하세요.",
-    cta:'<a class="btn btn-b btn-lg" href="#pick">'+
 
-        '필요한 서비스 고르기'+icon("arrow",18)+'</a>'+
-        '<a class="btn btn-o btn-lg" href="'+esc(quoteTo({ side:"ops",
-           industry:(ind ? ind.key : "") }))+'">무엇이 필요한지 모르겠어요</a>'
-  });
+  return HallHero({
+    side:"ops", photo:"hero-ops",
+    kicker:"매장을 더 잘 운영하는 실전 서비스" + (ind ? " · " + ind.name : ""),
+    h1raw:"매장 <em>운영</em>",
+    lead:"광고 · 홍보, 운영비, 시설 수리, 인력 · 세무 · 노무까지. 필요한 운영 서비스를 빠르게 찾고 한 번에 신청하세요.",
+    quote: quoteTo({ side:"ops", industry:(ind ? ind.key : "") }),
+    goName:"운영 상담 신청하기",
+    second:'<a class="btn btn-lg hh-o" href="#pick">운영 서비스 고르기'+icon("arrow",18)+'</a>',
+    cardTitle:"이 화면에서 하실 수 있는 것",
+    checks:[["megaphone","광고 · 홍보 서비스 찾기"],["won","고정비 · 원가율 계산"],
+            ["tool","시설 유지 · 수리 업체 찾기"],["users","인력 · 세무 · 노무 서비스 찾기"]]
+  }) + OpsWorry();
+}
+
+var OPS_WORRY = [
+  ["chart",  "매출을 올리고 싶어요",   [["온라인 홍보","/providers/marketing"],["리뷰 · 플레이스","/providers/marketing?s=review"],["목표 매출 계산","/tools/target"]]],
+  ["won",    "운영비를 줄이고 싶어요", [["고정비 계산","/tools/fixed"],["원가율 · 마진","/tools/margin"],["식자재 · 소모품","/providers/supply"]]],
+  ["tool",   "시설을 고치고 싶어요",   [["설비 수리","/providers/repair"],["정기 점검","/providers/repair?s=check-up"],["청소 · 방역","/providers/clean"]]],
+  ["users",  "인력 · 세무 · 노무가 필요해요", [["직원 채용","/providers/staff"],["세무","/providers/admin?s=tax-agent"],["POS · IT","/providers/it"]]]
+];
+function OpsWorry(){
+  return '<section class="sec sec-white hwr"><div class="w">'+
+    '<div class="sec-hd"><h2>사장님, <em>이런 고민</em>이 있으신가요?</h2>'+
+      '<p>고민에 맞는 화면으로 바로 가실 수 있습니다. 서비스를 여러 개 고르시려면 아래 고르개를 쓰세요.</p></div>'+
+    '<ul class="hwr-g">'+OPS_WORRY.map(function(x){
+      return '<li><div class="hwr-c"><span class="hwr-i" aria-hidden="true">'+icon(x[0], 30)+'</span>'+
+        '<h3>'+esc(x[1])+'</h3><p class="hwr-ch">'+x[2].map(function(c){
+          return '<a href="'+esc(c[1])+'">'+esc(c[0])+'</a>'; }).join("")+'</p></div></li>'; }).join("")+'</ul>'+
+  '</div></section>';
 }
 
 var OCK_KEY = "am.opsck.v1";
@@ -448,6 +466,7 @@ function PageOperation(){
     OpsCheckBand() +
     OpsGuideBand() +
     OpsCalcBand() +
+    HallSteps({ quote:quoteTo({ side:"ops" }) }) +
     JourneyBand({ current:"operation", tone:"sec-white",
       title:"다른 것도 준비하고 계신가요?",
       lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." }) +
@@ -458,20 +477,49 @@ var AQ_CALC      = ["premium", "vs", "rent"];
 var AQ_CALC_TONE = { premium:"t13", vs:"sv2", rent:"sv3" };
 
 function AcqIntro(ind, iq){
-  return PgHero({
 
-    kicker:"TAKE OVER · 인수 · 양도" + (ind ? " · " + ind.name : ""),
-    photo:"kind-pass",
-    h1raw: ind
-      ? esc(ind.name)+" 인수 · 양도를<br class=\"br-m\"> 보고 계시네요."
-      : "한 사장님의 끝이<br class=\"br-m\"> 다른 사장님의 시작이 됩니다.",
-    lead: ind
-      ? "받으시는 분과 넘기시는 분이 같은 화면을 봅니다. 아래에서 어느 쪽인지 고르시면 그 순서로 보여 드립니다."
-      : "있던 가게를 받으면 공사 기간과 초기 비용이 줄고, 넘기면 철거비와 원상복구가 줄어듭니다. 두 분이 같은 화면을 봅니다.",
-    cta:'<a class="btn btn-b btn-lg" href="#pick">필요한 서비스 고르기'+icon("arrow",18)+'</a>'+
-        '<a class="btn btn-o btn-lg" href="/stores'+esc(iq)+'">매장 매물 보기</a>'
-  });
+  var n = (window.AM_STORES || []).length;
+  return HallHero({
+    side:"transfer", photo:"kind-pass",
+    kicker:"사장님의 새로운 시작을 위한" + (ind ? " · " + ind.name : ""),
+    h1raw:"매장 <em>양도양수</em>",
+    lead:"매장을 찾는 분(인수)과 넘기려는 분(양도)의 길을 나눠 안내합니다. 매물에 적힌 값은 올리신 사장님이 적으신 값입니다.",
+    quote: quoteTo({ side:"transfer", cat:"transfer", industry:(ind ? ind.key : "") }),
+    goName:"양도 · 양수 상담 신청하기",
+    second:'<a class="btn btn-lg hh-o" href="/stores'+esc(iq)+'">매장 매물 보기'+icon("arrow",18)+'</a>',
+    cardTitle:"지금 매장 양도양수",
+    checks:[["store", "올라온 매물 " + n + "건 (센 값)"],["search","지역 · 업종 · 금액으로 매물 찾기"],
+            ["handover","내 매장 내놓기 · 집기 처분 길"]]
+  }) + AcqSearch(ind);
 }
+
+function AcqSearch(ind){
+  var rg = function(key){
+    var g = (window.AM_STORE_RANGES || []).filter(function(x){ return x.key === key; })[0];
+    if(!g) return "";
+    return '<div class="f-r"><label for="aq-s-'+key+'">'+esc(g.name)+'</label>'+
+      '<select class="sel" id="aq-s-'+key+'"><option value="">전체</option>'+
+      g.opts.map(function(o){ return '<option value="'+esc(o.k)+'">'+esc(o.name)+'</option>'; }).join("")+'</select></div>';
+  };
+  return '<section class="sec sec-white asr"><div class="w">'+
+    '<form class="asr-f" onsubmit="return aqSearchGo(event)" aria-label="매장 매물 찾기">'+
+      '<div class="f-r"><label for="aq-s-r">지역</label>'+RegionSelect("aq-s-r", "", "", "전체")+'</div>'+
+      '<div class="f-r"><label for="aq-s-i">업종</label>'+IndustrySelect("aq-s-i", ind ? ind.key : "", "", "전체")+'</div>'+
+      rg("pm") + rg("dp") + rg("rt")+
+      '<button class="btn btn-lg asr-go" type="submit">'+icon("search",18)+' 매물 검색</button>'+
+    '</form>'+
+  '</div></section>';
+}
+window.aqSearchGo = function(e){
+  if(e && e.preventDefault) e.preventDefault();
+  var q = [];
+  [["r","aq-s-r"],["i","aq-s-i"],["pm","aq-s-pm"],["dp","aq-s-dp"],["rt","aq-s-rt"]].forEach(function(p){
+    var v = (document.getElementById(p[1]) || {}).value || "";
+    if(v) q.push(p[0] + "=" + encodeURIComponent(v));
+  });
+  go("/stores" + (q.length ? "?" + q.join("&") : ""));
+  return false;
+};
 
 function AcqWhich(t, ind, iq){
   function tab(k, name, lead){
@@ -585,6 +633,7 @@ function PageAcquisition(){
     HallCalcBand({ keys:AQ_CALC, tones:AQ_CALC_TONE,
       title:"받기 전 · 넘기기 전에 숫자부터 보세요",
       lead:"권리금이 몇 달이면 돌아오는지, 새로 만드는 것과 받는 것이 얼마나 다른지 따져 보실 수 있습니다. 적으신 값은 저장하지 않습니다." }) +
+    HallSteps({ quote:quoteTo({ side:"transfer", cat:"transfer" }) }) +
     JourneyBand({ current:"acquisition", tone:"sec-white",
       title:"다른 것도 준비하고 계신가요?",
       lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." }) +

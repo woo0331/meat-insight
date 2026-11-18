@@ -180,7 +180,7 @@ const CASES = [
   /* ══ 2026-10-18 매장 운영 전문관 2차 ═══════════════════════════ */
 
   /* ① 고르는 자리를 **둘**로 만들어 봅니다 (§2 가 "하나" 라고 적었습니다) */
-  ["매장 운영이 §2 의 일곱 영역이다",
+  ["매장 운영이 §2 의 아홉 영역이다",
    `var s = document.querySelector(".pkb-sel");
     if(s && s.parentNode) s.parentNode.insertBefore(s.cloneNode(true), s);`],
 

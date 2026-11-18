@@ -20,7 +20,7 @@
 -- ════════════════════════════════════════════════════════════════════
 
 with
-/* ① 판 번호 — 최댓값이 82 여야 합니다 (0001~0019 + 골프 20~81 + 0082) */
+/* ① 판 번호 — 최댓값이 83 이어야 합니다 (0001~0019 + 골프 20~81 + 0082 + 0083) */
 v_ver as (
   select coalesce(max(n),0)::int n from schema_version
 ),
@@ -40,7 +40,9 @@ v_tab as (
                         'settlement','user_state',
                         'provider_contact',
                         'provider_apply',
-                        'consent_record','notify_job')
+                        'consent_record','notify_job',
+                        /* 0083 — W03 메모 · 본인 조회 */
+                        'request_note','lookup_challenge','lookup_session')
    /* ⚠️ 0013 의 provider_contact 를 provider 에 안 넣은 까닭 —
       0001 의 grant select on provider to authenticated 가 표째라,
       거기 직통 번호를 넣으면 로그인한 손님 전부가 읽습니다.
@@ -119,7 +121,10 @@ v_fn as (
                  /* 0019 — 남의 건을 밀 수 없게 (2026-10-25 §6 · §7) */
                  ('request_scope_check'),
                  /* 0082 — 접수 한 트랜잭션 · 알림 작업 (W02) */
-                 ('submit_intake'),('submit_apply'),('mark_notify'),('due_notify')) w(f)
+                 ('submit_intake'),('submit_apply'),('mark_notify'),('due_notify'),
+                 /* 0083 — 기한 · 메모 · 상태 모으기 · 목록 표시 · 본인 조회 (W03) */
+                 ('set_next_due'),('add_request_note'),('request_rollup'),('admin_inbox_flags'),
+                 ('lookup_start'),('lookup_verify'),('lookup_read')) w(f)
 ),
 /* ⑧ ⚠️⚠️ 가입 트리거가 **auth.users 에** 걸렸는가 (진짜 Supabase 전용).
       이게 없으면 가입해도 account 줄이 안 생겨서, 로그인은 되는데
@@ -166,15 +171,15 @@ v_cust as (
      and pg_get_functiondef(p.oid) like '%''customer''%'
 ),
 rows as (
-  select 1 i, '판 번호 (최댓값)'               t, v_ver.n::text   got, '82' want from v_ver
-  union all select  2, '표 (public)',              v_tab.n::text,  '19' from v_tab
+  select 1 i, '판 번호 (최댓값)'               t, v_ver.n::text   got, '83' want from v_ver
+  union all select  2, '표 (public)',              v_tab.n::text,  '22' from v_tab
   union all select  3, '⚠️ RLS 안 켜진 표: ' || v_rls.who, v_rls.n::text, '0' from v_rls
   union all select  4, '신청 상태 (hold 포함: ' ||
                        case when v_st.has_hold then 'O' else 'X' end || ')',
                        v_st.n::text, '13' from v_st
   union all select  5, '역할',                     v_role.n::text, '4'  from v_role
   union all select  6, '갈 수 있는 길 (deal_move)', v_move.n::text, '70' from v_move
-  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '44' from v_fn
+  union all select  7, '문(함수) · 빠진 것: ' || v_fn.miss, v_fn.n::text, '51' from v_fn
   union all select  8, '⚠️ 가입 트리거 (auth.users)', v_trg.n::text, '1' from v_trg
   union all select  9, '⚠️ auth.uid()',            v_uid.n::text,  '1'  from v_uid
   union all select 10, '⚠️ 돈 칸 쓰기 권한: ' || v_money.who, v_money.n::text, '0' from v_money

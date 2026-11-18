@@ -228,6 +228,7 @@ const STEPS = [
   { n: "접수 게이트 (T01)",    c: ["node", ["tools/test-gate.js"]],               fast: true },
   { n: "접수 저장 · 알림 API", c: ["node", ["tools/test-w02-api.js"]],            fast: true },
   { n: "접수 저장 DB (0082)",  c: ["node", ["tools/test-w02.js"]],                fast: true, skip2: true },
+  { n: "접수함 · 본인 조회 DB (0083)", c: ["node", ["tools/test-w03.js"]],       fast: true, skip2: true },
   { n: "접수번호 · 중복",      c: ["node", ["tools/test-intake.js"]],             fast: true },
   { n: "상태 열셋",            c: ["node", ["tools/test-deal.js"]],               fast: true },
   { n: "수수료 계산",          c: ["node", ["tools/test-fee.js"]],                fast: true },

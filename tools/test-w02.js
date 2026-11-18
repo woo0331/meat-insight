@@ -56,7 +56,7 @@ try{
   file("db/test/00_stub_auth.sql");
   const migs = fs.readdirSync(path.join(ROOT, "db/migrations")).filter(f => /^\d{4}_.*\.sql$/.test(f) && !/_down\.sql$/.test(f)).sort();
   for(const m of migs) file("db/migrations/" + m);
-  ok(psql("select max(n) from schema_version") === "82", "0001~0019 위에 0082 가 올라감 (판 82)");
+  ok(+psql("select max(n) from schema_version") >= 82 && psql("select count(*) from schema_version where n = 82") === "1", "0001~0019 위에 0082 가 올라감 (판 82 · 뒤 번호가 더 있어도 됨)");
   // 두 번 붙여 넣어도 멈추지 않음
   let again = ""; try{ file("db/migrations/0082_storeway_intake.sql"); }catch(e){ again = String(e.stderr || e.message); }
   ok(again === "", "0082 를 두 번 돌려도 멈추지 않음", again);

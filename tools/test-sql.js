@@ -182,7 +182,8 @@ try{
                      있었습니다. §7A-7 을 쓰다 찾았습니다. */
                   "db/migrations/0019_request_scope.sql",
                   /* 2026-11-18 W02 — 운영은 20~81 이 골프 판이라 번호가 건너뜁니다 */
-                  "db/migrations/0082_storeway_intake.sql"];
+                  "db/migrations/0082_storeway_intake.sql",
+                  "db/migrations/0083_storeway_inbox_lookup.sql"];
   for(const f of ["db/test/00_stub_auth.sql"].concat(MIGS)){
     let e = "";
     try{ psqlFile(f); }catch(err){ /* ⚠️⚠️ NOTICE 가 먼저 쏟아져서 앞 세 줄만 보면 **진짜

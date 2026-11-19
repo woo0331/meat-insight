@@ -7517,3 +7517,14 @@ html.ivh .sw2-es-p{ white-space:nowrap; }
 /* 2026-11-19 — 창업 "업종별 창업 준비 과정" 의 전체 업종 펼침 */
 .hsg-ind > .fld-all{ margin-top:var(--s4); }
 .hsg-all-l{ margin-top:var(--s4); }
+
+/* 2026-11-19 대표 피드백 — PC · 태블릿에서 진입 카드 넷이 히어로 아래 끝에 걸쳐 올라와(-92px)
+   사진 띠와 카드가 붙어 보였습니다. 모바일(768px 아래)처럼 **떼어 놓습니다** — 카드는 히어로 아래
+   밝은 바탕 위에서 시작합니다. 걸침용으로 비워 두던 히어로 아래 여백도 같이 줄입니다. */
+@media (min-width:769px){
+  .sw2-in{ padding-top:44px; padding-bottom:48px; }
+  html.ivh #view .sw2-ent, .sw2-ent{ padding-top:32px; }
+  .sw2-eg{ margin-top:0; }
+  /* ⚠️ 떼어 놓은 만큼 카드가 내려가서 1280×800 에서 카드 제목이 첫 화면 밖(854px)이었습니다 — 높이를 줄여 맞춥니다 */
+  .sw2-ec > a{ min-height:210px; }
+}

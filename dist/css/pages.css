@@ -5466,3 +5466,11 @@ html.ivh .sw2-es-p{ white-space:nowrap; }
 
 .hsg-ind > .fld-all{ margin-top:var(--s4); }
 .hsg-all-l{ margin-top:var(--s4); }
+
+@media (min-width:769px){
+  .sw2-in{ padding-top:44px; padding-bottom:48px; }
+  html.ivh #view .sw2-ent, .sw2-ent{ padding-top:32px; }
+  .sw2-eg{ margin-top:0; }
+
+  .sw2-ec > a{ min-height:210px; }
+}

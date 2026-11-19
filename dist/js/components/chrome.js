@@ -314,7 +314,7 @@ function MobileNav(){
     MNAV.map(function(m){
       return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+
 
-        '<span class="mnav-i" aria-hidden="true">'+icon(m.icon,24)+'</span><span class="mnav-t">'+esc(m.name)+'</span></a>';
+        '<span class="mnav-i" data-ic="'+esc(m.icon)+'" aria-hidden="true">'+icon(m.icon,24)+'</span><span class="mnav-t">'+esc(m.name)+'</span></a>';
     }).join("")+
   '</nav>';
 }

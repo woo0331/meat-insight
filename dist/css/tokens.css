@@ -34,7 +34,7 @@
 
   --ink:         #38271F;
   --ink2:        #5A4A40;
-  --ink3:        #6F5E52;
+  --ink3:        #65564B;
 
   --blue:        #584338;
   --blue-600:    #4A372D;
@@ -72,12 +72,12 @@
   --bg-white:    #FFFCF7;
   --bg-cream:    #F5F0E7;
   --bg-ivory2:   #EBE1D2;
-  --bg-gray:     #F1ECE3;
-  --bg-mint:     #EDEEE4;
+  --bg-gray:     #EEE7DD;
+  --bg-mint:     #E9EDE2;
   --bg-peach:    #F7EADC;
-  --bg-sky:      #EDE8E0;
+  --bg-sky:      #E7E5E3;
   --bg-lav:      #F2E9EA;
-  --bg-sand:     #E6DACA;
+  --bg-sand:     #E2D5C3;
 
   --bg-calc:     #F3EDE4;
   --bg-step:     #F7EFE3;
@@ -111,7 +111,7 @@
   --gold-soft:      #F4EDE2;
   --brown-soft:     #F1EBE3;
   --cyan-soft:      #EFEAE2;
-  --slate:          #6F5E52;
+  --slate:          #65564B;
   --slate-soft:     #F0EBE4;
   --indigo:         #6B5A66;
   --indigo-soft:    #F1ECEA;

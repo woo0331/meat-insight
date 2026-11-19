@@ -16,76 +16,58 @@
      ⚠️ **숫자를 넣지 마세요.** 업체 수 · 실적은 지금 0 이고, 공유
      미리보기는 우리 손을 떠나 한참 돌아다닙니다 (절대 규칙 1).
      ════════════════════════════════════════════════════════════════ -->
+<!-- 2026-11-19 — 새 디자인(네이비 · 화이트 · 블루 + 전문관 넷의 색)으로 다시 짰습니다.
+     ⚠️ 사진은 메인 히어로와 같은 hero-start(사장님이 주신 원본)이고 tools/og.js 가 넣습니다
+     (setContent 라 상대 경로로는 안 읽힙니다). 사진 위 글자는 왼쪽 짙은 판 위에만 앉습니다.
+     ⚠️ 문구는 메인 히어로와 같은 말입니다 — 바꾸시면 둘 다 고치세요. -->
 <style>
- html,body{ margin:0; padding:0; background:#fff; }
- .og{
-   position:relative; width:1200px; height:630px; overflow:hidden;
-   box-sizing:border-box;
-   /* ⚠️ **아래 패딩이 브랜드 줄 자리입니다.** 브랜드는 absolute 로
-      bottom:56px 에 붙는데, 가운데 정렬된 본문이 거기까지 내려와서
-      알약과 **9px** 밖에 안 떨어졌습니다 (재서 알았습니다). 아래를
-      넉넉히 비워 두면 본문이 그만큼 올라갑니다. */
-   padding:64px 78px 126px;
-   display:flex; flex-direction:column; justify-content:center;
+ html,body{ margin:0; padding:0; background:#0B2350; }
+ .og{ position:relative; width:1200px; height:630px; overflow:hidden; box-sizing:border-box;
+   padding:58px 72px 110px; display:flex; flex-direction:column; justify-content:center;
    font-family:"Pretendard Variable",Pretendard,system-ui,sans-serif;
-   color:#0F1B33; word-break:keep-all; letter-spacing:-.01em;
-   /* 히어로와 같은 바탕 — 아이보리에 좌 창업 · 우 폐업 번짐.
-      ⚠️⚠️ **여기 값은 css/tokens.css 를 못 읽습니다.** 2026-10-13 에
-      팔레트를 베이지 · 브라운으로 바꿨는데 이 파일만 옛 초록 ·
-      옛 주황 · 옛 남색으로 남아 있었습니다 — 404.html 과 같은
-      자리입니다. **색을 바꾸면 여기도 같이 고치세요.** */
-   background:
-     radial-gradient(52% 70% at 2% 16%,  rgba(72,105,135,.16) 0%, rgba(72,105,135,0) 70%),
-     radial-gradient(52% 70% at 98% 16%, rgba(173,99,63,.16) 0%, rgba(173,99,63,0) 70%),
-     linear-gradient(180deg, #FFFFFF 0%, #F6F8FD 100%);
- }
- /* 샴페인 골드는 이 한 줄까지입니다 (§21) */
- /* ⚠️ 금빛 **글자**는 --gold-text(#1D4ED8) 입니다 — --gold 는 면 전용이라
-    밝은 바탕에서 대비 1.54 입니다 (옛 #D5AA55 도 같은 까닭으로 안 됩니다) */
- .k{ font-size:23px; font-weight:900; letter-spacing:.26em; color:#1D4ED8; }
- h1{ margin:26px 0 0; font-size:96px; font-weight:900; line-height:1.06;
-     letter-spacing:-.045em; color:#0B2350; }
- h1 em{ font-style:normal; }
- .st{ color:#1D4ED8; }   /* 창업 — --start-dark (7.54) */
- .cl{ color:#9A3412; }   /* 폐업 — --close-deep (6.63) */
- p{ margin:26px 0 0; font-size:32px; font-weight:700; color:#0F1B33; }
- .pills{ margin-top:44px; display:flex; gap:16px; }
- .pill{ display:inline-flex; align-items:center; gap:10px;
-        border-radius:16px; padding:18px 34px;
-        font-size:26px; font-weight:800; color:#fff; }
- .pill-st{ background:#2563EB; }   /* 흰 글자 5.76 */
- .pill-cl{ background:#C2410C; }   /* 흰 글자 5.60 */
- /* 브랜드는 아래 왼쪽 한 줄 — 제목이 주인공입니다 */
- .brand{ position:absolute; left:78px; bottom:56px;
-         display:flex; align-items:baseline; gap:14px; }
- .brand b{ font-size:28px; font-weight:900; letter-spacing:-.03em; color:#0F1B33; }
- .brand span{ font-size:21px; color:#566280; }   /* --ink3 (2026-10-15 §2) */
- /* 아래 가장자리에 창업 → 에스프레소 → 폐업 한 줄 */
+   color:#FFFFFF; word-break:keep-all; letter-spacing:-.01em; background:#0B2350; }
+ .ph{ position:absolute; top:0; right:0; height:100%; width:66%; object-fit:cover; object-position:50% 45%; }
+ /* ⚠️ 글이 앉는 왼쪽 600px 은 판이 거의 불투명합니다 — 사진 위 글자는 검사가 못 잽니다 */
+ .shade{ position:absolute; inset:0;
+   background:linear-gradient(90deg, #0B2350 0%, #0B2350 44%, rgba(11,35,80,.78) 60%, rgba(11,35,80,.18) 100%); }
+ .in{ position:relative; max-width:720px; }
+ .k{ display:inline-block; font-size:22px; font-weight:800; color:#FFFFFF;
+     border:1.5px solid rgba(255,255,255,.55); border-radius:999px; padding:9px 20px; }
+ h1{ margin:24px 0 0; font-size:62px; font-weight:900; line-height:1.14; letter-spacing:-.04em; color:#FFFFFF; }
+ h1 em{ font-style:normal; color:#7FA9FF; }   /* --acc — 짙은 판 위 7.1 */
+ p{ margin:20px 0 0; font-size:25px; font-weight:600; line-height:1.5; color:rgba(255,255,255,.9); }
+ .pills{ margin-top:34px; display:flex; flex-wrap:wrap; gap:12px; }
+ .pill{ border-radius:12px; padding:13px 20px; font-size:22px; font-weight:800; color:#FFFFFF; }
+ .p1{ background:#1D4ED8; } .p2{ background:#0B6E4F; } .p3{ background:#5A2FC0; } .p4{ background:#C2410C; }
+ .brand{ position:absolute; left:72px; bottom:46px; display:flex; align-items:baseline; gap:14px; }
+ .brand b{ font-size:30px; font-weight:900; font-style:italic; letter-spacing:-.01em; color:#FFFFFF; }
+ .brand span{ font-size:20px; color:rgba(255,255,255,.82); }
  .edge{ position:absolute; left:0; right:0; bottom:0; height:8px;
-        background:linear-gradient(90deg,#2563EB 0%,#0B2350 52%,#C2410C 100%); }
+   background:linear-gradient(90deg,#1D4ED8 0%,#0B6E4F 33%,#5A2FC0 66%,#C2410C 100%); }
 </style>
 <div class="og" id="og">
-  <div class="k">START &amp; CLOSE</div>
-  <!-- ⚠️ **화면의 히어로와 같은 말이어야 합니다.** 2026-10-01 에 랜딩을
-       없애면서 메인 제목이 "창업부터 폐업까지." 에서 바뀌었는데, 여기만
-       옛말로 남아 있었습니다 — 공유 미리보기는 우리 손을 떠나 한참
-       돌아다니므로 거기만 다른 말을 하면 오래 남습니다.
-       ⚠️ 숫자는 넣지 마세요 (절대 규칙 1). -->
-  <h1><em class="st">창업</em>에 필요한 모든 것.<br>
-      <em class="cl">폐업</em>에 필요한 모든 것.</h1>
-  <p>시작부터 정리까지, 사장님에게 필요한 모든 것을 한곳에서.</p>
-  <div class="pills">
-    <span class="pill pill-st">창업 준비하기 →</span>
-    <span class="pill pill-cl">사업 정리하기 →</span>
+  <img class="ph" id="og-ph" alt="">
+  <div class="shade"></div>
+  <div class="in">
+    <div class="k">창업 · 운영 · 양도양수 · 폐업까지</div>
+    <h1>자영업의 <em>시작과 끝,</em><br><span id="og-h1b"></span> 함께합니다.</h1>
+    <p>필요한 서비스를 한곳에서 찾고 비교하세요.</p>
+    <div class="pills">
+      <span class="pill p1">창업 준비</span><span class="pill p2">매장 운영</span>
+      <span class="pill p3">매장 양도양수</span><span class="pill p4">폐업 · 철거</span>
+    </div>
   </div>
   <div class="brand"><b id="og-brand"></b><span id="og-sub"></span></div>
   <div class="edge"></div>
 </div>
 <script>
-  /* ⚠️ 이름을 여기 적지 않습니다 — tools/og.js 가 js/data/brand.js 를
-     읽어 `data-brand` · `data-sub` 로 넣어 줍니다. 그냥 브라우저로
-     열어 봤을 때만 아래 기본값이 보입니다. */
-  var d = document.documentElement.dataset;
-  document.getElementById("og-brand").textContent = d.brand || "";
-  document.getElementById("og-sub").textContent   = d.sub   || "창업 · 폐업 전문 플랫폼";
+  /* ⚠️ 이름 · 조사를 손으로 적지 않습니다 — 받침이 없거나 한글이 아니면 "가", 있으면 "이" */
+  function ogJosa(n){ var c = (n||"").charCodeAt((n||"").length-1);
+    return (c >= 0xAC00 && c <= 0xD7A3 && (c-0xAC00) % 28) ? "이" : "가"; }
+  window.ogPaint = function(name, sub){
+    document.getElementById("og-brand").textContent = name || "";
+    document.getElementById("og-sub").textContent   = sub || "";
+    document.getElementById("og-h1b").textContent   = (name || "") + ogJosa(name);
+  };
+  var d = document.documentElement.dataset; ogPaint(d.brand, d.sub);
 </script>

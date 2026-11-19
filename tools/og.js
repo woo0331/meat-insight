@@ -75,9 +75,15 @@ function brand(){
     document.documentElement.dataset.brand = v.name;
     document.documentElement.dataset.sub   = v.sub || "";
     /* setContent 뒤라 안에 있던 스크립트는 이미 돌았습니다 — 다시 넣습니다 */
-    document.getElementById("og-brand").textContent = v.name;
-    document.getElementById("og-sub").textContent   = v.sub || "";
-  }, { name:B.name, sub:B.sub });
+    if(window.ogPaint) window.ogPaint(v.name, v.sub || "");
+    else { document.getElementById("og-brand").textContent = v.name;
+           document.getElementById("og-sub").textContent   = v.sub || ""; }
+    /* 2026-11-19 — 사진은 메인 히어로와 같은 원본 (setContent 라 data URI 로 넣습니다) */
+    var im = document.getElementById("og-ph"); if(im && v.ph) im.src = v.ph;
+  }, { name:B.name, sub:B.sub,
+       ph: fs.existsSync(path.join(ROOT,"img/hero-start.jpg"))
+         ? "data:image/jpeg;base64," + fs.readFileSync(path.join(ROOT,"img/hero-start.jpg")).toString("base64") : "" });
+  await pg.waitForFunction(function(){ var i = document.getElementById("og-ph"); return !i || !i.getAttribute("src") || i.complete; });
   await pg.waitForTimeout(250);
 
   /* ⚠️ 글자가 네모(tofu)로 나왔는지 그림에서 직접 봅니다. 글꼴 검사를

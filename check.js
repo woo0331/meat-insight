@@ -3836,7 +3836,11 @@ const AUDIT = `(() => {
     /* WARN bwhy 가 2026-10-25 §1 로 내려가서 그 자리를 히어로가
        받습니다 — §1-01 이 "BRIGHT PREMIUM 디자인 방향을 유지한다" 고
        직접 적은 구간입니다. */
-    for(const q of [[".bhero","히어로"], [".bpass","전국 매장 양도양수"],
+    /* ⚠️⚠️ 2026-11-19 홈페이지 전체 디자인 개편 (승인된 시안 STOREWAY_01) — 히어로가
+       **사진 + 짙은 남색 막**이 됐습니다 (사장님 승인 3 · 시안 그대로). 그래서 반드시 밝아야
+       하는 자리에서 히어로를 빼고 **바로 아래 진입 카드 구간**을 넣었습니다. 면적 검사
+       (아래 · 밝은 면 60% 이상)는 그대로라 "전부 다크로" 는 여전히 잡힙니다. */
+    for(const q of [[".sw2-ent","4대 진입 카드"], [".bpass","전국 매장 양도양수"],
                     [".bcal","계산도구"]]){
       const e = document.querySelector(q[0]);
       if(!e) return q[1] + " 구간이 없습니다";
@@ -4184,7 +4188,7 @@ const AUDIT = `(() => {
     /* 2026-11-18 메인 디자인 개편(대표 확정 시안) — 재는 자리만 새 화면으로.
        옛 판은 git show 2aa1d8d:check.js 에 있습니다. 이 주석에 백틱 금지. */
 
-    const groups = [[".sw-qi", "보조 진입"], [".sw-fi", "네 걸음"],
+    const groups = [[".sw2-ei", "4대 진입 카드"],
                     [".sw-shc", "서비스 바로가기"], [".bcal-i", "계산도구"]];
     for(const g of groups){
       const L = [].slice.call(document.querySelectorAll("#view " + g[0]));

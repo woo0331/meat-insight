@@ -518,7 +518,7 @@ const CASES = [
       칸이 없어졌습니다. 지어낸 수를 박는 자리를 카드의 한 줄로
       옮깁니다 — 없는 요소를 집으면 되돌리기가 터져 "검사가 안
       잡는다" 로 보입니다 (이 저장소에서 열두 번 겪은 자리). */
-   `document.querySelector(".sw-qt em").textContent = "입점 업체 1,200곳";`],
+   `document.querySelector(".sw2-es").textContent = "입점 업체 1,200곳";`],
   /* ⚠️ 2026-11-18 메인 개편 — 카드 한 줄이 .sw-qt em 으로 옮겨갔습니다. */
   /* ⚠️⚠️ **2026-10-13 §5 — 히어로에는 h1 이 없습니다.** 전에는 h1
      글자를 바꿔 되돌렸는데, 지금 검사가 보는 것은 **두 판의 크기 ·
@@ -682,7 +682,8 @@ const CASES = [
    /* ⚠️ 2026-10-25 §1 — .bwhy 가 내려가서 §3-2 가 이름까지 적은
       자리를 **히어로**가 받습니다 (§1-01 "BRIGHT PREMIUM 유지").
       없는 요소를 집으면 되돌리기가 터집니다 (열세 번째). */
-   `document.querySelector(".bhero").style.backgroundColor = "#2E2219";`],
+   /* 2026-11-19 — 히어로는 승인된 짙은 사진 히어로라, 반드시 밝아야 하는 진입 카드 구간을 어둡게 합니다 */
+   `document.querySelector(".sw2-ent").style.backgroundColor = "#2E2219";`],
   /* 짝 검사 — 속화면에 메인 표시가 새면 걸려야 합니다 */
   ["속화면은 그대로 밝고 메인 표시가 안 묻었다",
    `document.documentElement.classList.add("ivh");`],

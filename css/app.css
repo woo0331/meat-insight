@@ -1070,3 +1070,22 @@ html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
   .mnav a.on{ color:var(--start-dark); }
   .mnav a.on .mnav-i{ background:var(--bg-sky); }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-11-19 시안 — 아래 메뉴 선택 표시를 바꿉니다
+   · 아이콘 뒤 하늘색 배경을 걷고, 선택된 탭의 **위쪽 경계 가운데**에 짧은 파란 선(26×3px)
+   · 선택된 탭: 채워진 블루 아이콘 + 파란 글자 / 나머지: 네이비 선 아이콘
+   ⚠️ 채운 아이콘은 같은 선 아이콘에 fill 을 얹어 만듭니다 (아이콘 한 벌 규칙 그대로).
+      안쪽 그림(계산기의 화면 · 버튼, 책의 가운데 접힘)은 흰 선으로 남겨야 칠한 덩어리가 안 됩니다 — data-ic 로 고릅니다.
+   ⚠️ 높이 · 누름 영역 · 링크 · 안전 영역은 위 블록 그대로입니다.
+   ══════════════════════════════════════════════════════════════════ */
+@media (max-width:900px){
+  .mnav a{ position:relative; }
+  .mnav a.on .mnav-i{ background:none; }
+  .mnav a::before{ content:""; position:absolute; top:-1px; left:50%; width:26px; height:3px; margin-left:-13px;
+    border-radius:0 0 3px 3px; background:transparent; }
+  .mnav a.on::before{ background:var(--start-dark); }
+  .mnav a.on .mnav-i svg *{ fill:currentColor; }
+  .mnav a.on .mnav-i[data-ic="calc"] svg path,
+  .mnav a.on .mnav-i[data-ic="book"] svg path:last-child{ fill:none; stroke:#fff; }
+}

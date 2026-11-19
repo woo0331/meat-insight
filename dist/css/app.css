@@ -633,3 +633,14 @@ html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
   .mnav a.on{ color:var(--start-dark); }
   .mnav a.on .mnav-i{ background:var(--bg-sky); }
 }
+
+@media (max-width:900px){
+  .mnav a{ position:relative; }
+  .mnav a.on .mnav-i{ background:none; }
+  .mnav a::before{ content:""; position:absolute; top:-1px; left:50%; width:26px; height:3px; margin-left:-13px;
+    border-radius:0 0 3px 3px; background:transparent; }
+  .mnav a.on::before{ background:var(--start-dark); }
+  .mnav a.on .mnav-i svg *{ fill:currentColor; }
+  .mnav a.on .mnav-i[data-ic="calc"] svg path,
+  .mnav a.on .mnav-i[data-ic="book"] svg path:last-child{ fill:none; stroke:#fff; }
+}

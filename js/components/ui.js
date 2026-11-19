@@ -623,13 +623,15 @@ window.FoldBtn = function(id, shut, open){
    안에 있는 일부만 감추려면 제 클래스를 넘기세요.
    그걸 모르고 `/join` 의 분야 격자에 기본값을 썼다가 **구간이
    통째로 사라졌습니다** (재 보고 알았습니다). */
-window.FoldAll = function(id, shut, open, cls){
+window.FoldAll = function(id, shut, open, cls, opened){
   cls = cls || "is-fold-all";
-  return '<button class="fld-b fld-all" type="button" aria-expanded="false" '+
+  /* 2026-11-19 — opened 면 처음부터 펼친 단추입니다 (주소로 고르신 상황 등).
+     ⚠️ 그때는 짝이 되는 목록에도 접는 클래스를 **안** 붙여야 합니다 (부르는 쪽 몫). */
+  return '<button class="fld-b fld-all'+(opened ? " is-open" : "")+'" type="button" aria-expanded="'+(opened ? "true" : "false")+'" '+
       'aria-controls="'+esc(id)+'" '+
       'data-shut="'+esc(shut)+'" data-open="'+esc(open || "접기")+'" '+
       'onclick="foldToggle(\''+esc(id)+'\',this,\''+esc(cls)+'\')">'+
-    '<span>'+esc(shut)+'</span>'+ icon("chevd", 16) +'</button>';
+    '<span>'+esc(opened ? (open || "접기") : shut)+'</span>'+ icon("chevd", 16) +'</button>';
 };
 
 /* ⚠️ 다시 그리지 않습니다 — DOM 을 바로 건드립니다. 여기서 화면을

@@ -782,8 +782,11 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await clear();
  await pg.goto(B+"/closure",{waitUntil:"networkidle"});
  await pg.waitForTimeout(400);
- const cp = await pg.evaluate(()=>document.querySelectorAll(".clp-c").length);
- say(cp === 2, "3 폐업 — 이용 경로 둘을 먼저 고르게 한다", cp+"개");
+ /* 2026-11-19 — 두 경로 카드(.clp-c)는 첫 화면 세 갈래와 같은 선택의 반복이라 내렸습니다.
+    지키는 것: 첫 화면 세 갈래가 있고, 상황 넷은 "모르겠어요" 안에 접혀 있다. */
+ const cp = await pg.evaluate(()=>({q:[...document.querySelectorAll(".pgh .hh-qa")].filter(a=>a.getClientRects().length).length, clp:document.querySelectorAll(".clp-c").length,
+   want:(document.getElementById("cl-want")||{className:""}).className.indexOf("is-fold-all")>=0}));
+ say(cp.q === 3 && cp.clp === 0 && cp.want, "3 폐업 — 첫 화면 세 갈래 · 상황 넷은 '모르겠어요' 안에 접힘", JSON.stringify(cp));
  const c1 = await pg.$$(".pkq .pk-ck");
  if(c1.length > 1){ await c1[0].check(); await c1[1].check(); }
  await pg.waitForTimeout(350);
@@ -791,11 +794,12 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.goto(B+"/closure?p=all",{waitUntil:"networkidle"});
  await pg.waitForTimeout(400);
  const allFirst = await pg.evaluate(()=>{
+   const r = document.getElementById("cl-road");
    const ss = [].slice.call(document.querySelectorAll("#view > section"));
-   const i = ss.findIndex(x=>x.querySelector(".wnt"));
+   const i = ss.findIndex(x=>x.querySelector("#cl-road"));
    const j = ss.findIndex(x=>x.classList.contains("pkb-sel"));
-   return (i >= 0 && j >= 0) ? (i < j) : false; });
- say(allFirst, "3 폐업 — 전체 절차를 고르면 절차가 먼저 온다");
+   return !!r && r.className.indexOf("is-fold-all") < 0 && i >= 0 && j >= 0 && i < j; });
+ say(allFirst, "3 폐업 — 옛 주소 ?p=all 은 자세한 정리 순서를 펼친 채로 연다 (서비스 고르기보다 위)");
 
  /* 시나리오 4 — 양도양수 두 경로 */
  for(const [q, want, no] of [["", "매장 인수하기", "/sell"],

@@ -7470,3 +7470,18 @@ html.ivh .sw2-hero .sw2-find{ margin-top:22px; }
 /* 2026-11-19 — 분야 상세(/providers/:분야) 업체 0곳 상자의 접수 닫힘 한 줄.
    emg-cta 가 flex 줄이라 한 줄을 통째로 씁니다 (그 아래에 접수 안내 단추). */
 .emg-cta .emg-off{ flex-basis:100%; margin:0; font-size:var(--t-sm); font-weight:700; color:var(--ink); }
+
+/* 2026-11-19 공개 화면 완성도 §1 — /closure 정리 순서 구역 안의 자세한 순서 · 링크 · "모르겠어요".
+   ⚠️ 이 셋은 구간이 아니라 .hfl 구역 **안**입니다 (구간 바탕을 따로 칠하지 않습니다). */
+.hfl-more{ margin-top:var(--s7); display:flex; flex-direction:column; gap:var(--s5); }
+.hfl-road, .hfl-want{ border-top:1px solid var(--line); padding-top:var(--s5); }
+.hfl-road .sec-hd-sub, .hfl-want .sec-hd-sub{ margin:0 0 var(--s3); }
+.hfl-road .sec-hd-sub h3, .hfl-want .sec-hd-sub h3{ font-size:var(--t-lg); }
+.hfl-road .note-box{ margin-bottom:var(--s4); }
+.hfl-links{ margin:0; }
+.hfl-links .btn{ gap:6px; }
+.hfl-want-p{ margin:var(--s3) 0 var(--s4); color:var(--ink2); font-size:var(--t-sm); }
+.hfl-want .wnt-l{ margin-bottom:var(--s4); }
+.hfl-want .cat-g{ margin-top:var(--s3); }
+.cask-in{ margin:0 0 var(--s5); padding:var(--s5); border:1px solid var(--line); border-radius:var(--r-lg, 16px); background:var(--bg-2); }
+.cask-in .sec-hd{ margin-bottom:var(--s3); }

@@ -633,28 +633,27 @@ function PageClosure(){
      카드 바로 아래 또 고르개를 두면 **같은 선택 영역이 둘**이 되어
      (PART 16-3), 기본 차례에서는 절차 쪽으로 내려갑니다. */
   var path  = nowQS("p") === "all" ? "all" : (nowQS("p") === "pick" ? "pick" : "");
-  /* A — 전체 절차 안내 (상황 고르기 + 단계별 순서) */
-  var guide = WantBand(null) + ClosingProcess(null);
-  /* B — 필요한 서비스만 고르고 바로 신청 */
+  /* ⚠️⚠️ 2026-11-19 공개 화면 완성도 개선 §1 — 차례를 **첫 행동 셋 → 핵심 정리 순서 →
+     체크리스트 · 비용 → 서비스 고르기 → 분야별 상세** 로 정리했습니다.
+     전에는 첫 화면 셋 뒤로 정리 순서(여섯) · 두 경로 카드 · 상황 넷 · 서비스 묶음 ·
+     도움 카드가 이어져 "매장 양도" 를 다섯 번 고르게 했습니다.
+     ⚠️ 지운 것이 없습니다 — 상황 넷(?w=) · 진단(?w=lost) · 상황별 로드맵 · 직원 기한 ·
+     분야 열둘 · 업종 열넷 · 폐업 절차(/c/process) · 지원사업(/support) 링크가 전부
+     정리 순서 구역과 분야별 상세 구역으로 옮겨 갔습니다.
+     ⚠️ 두 경로 카드(?p=all · ?p=pick)는 같은 선택의 반복이라 내렸습니다. 밖으로 나간
+     주소는 그대로 열립니다 — ?p=all 은 자세한 순서를 펼친 채로, ?p=pick 은 #pick 으로 갑니다. */
   var sel   = PickGroupBand("closure", "close") + PickBasket("close") +
               PackPickBand("close");
-  /* 2026-11-19 — 첫 화면 선택지(머리) 다음에 **정리 절차(ClosureFlow) → 체크리스트 · 계산도구** 차례입니다.
-     계산도구 구간이 폐업 체크리스트 · 폐업 예상비용 · 권리금 셋을 같이 냅니다. */
-  return ClosureIntro()+
+  return ClosureIntro(path)+
     HallCalcBand({ keys:CLOSE_CALC, tones:CLOSE_CALC_TONE,
       title:"정리하기 전에 체크리스트와 비용부터 보세요",
       lead:"빠뜨린 것과 들 돈을 먼저 보실 수 있습니다. 적으신 값은 저장하지 않습니다." })+
-    ClosurePathBand(path)+
-    (path === "all" ? guide + sel : sel + guide)+
+    sel+
+    ClosureDetailBand()+
     ClosureIndustryBand()+
-    /* ⑥ 가이드 — ⚠️⚠️ **이 구간이 폐업에만 없었습니다.** 창업 · 운영 ·
-       양도양수는 전부 글 카드를 내는데 폐업은 도움 카드 셋(`.help`)만
-       있었습니다. 그 셋은 화면으로 보내는 길이고 **읽을 글이
-       아닙니다** — 전수 점검의 "전문관 공통 여덟" 이 잡았습니다.
-       ⚠️ 맞는 글이 없으면 `ReadBand()` 가 구간째 뺍니다 (절대 규칙 2). */
+    /* ⑥ 가이드 — ⚠️ 맞는 글이 없으면 `ReadBand()` 가 구간째 뺍니다 (절대 규칙 2). */
     ReadBand({ side:"close", limit:4,
                title:"정리하기 전에 알아 두면 좋은 것" })+
-    ClosureHelpBand()+
     HallSteps({ quote:"/quote?mode=close&from=closure-steps", ctaForm:"close",
                 goName:"매장 정리 상담 신청하기" }) +
     JourneyBand({ current:"closing",
@@ -681,7 +680,7 @@ var CLOSE_CALC_TONE = { close:"sv4", closecost:"sv5", premium:"t13" };
    사업입니다" 까지입니다 — 손실 · 실패를 적지 마세요.
    ⚠️ 단추 둘은 창업 · 운영과 **같은 꼴**입니다 (§3 통일) — 하나는
    바로 아래 고르개로, 하나는 **빈손으로 가도 되는 길**입니다. */
-function ClosureIntro(){
+function ClosureIntro(path){
   /* 2026-11-18 카테고리 리뉴얼 — 전문관 머리 + 흐름 띠(ClosureFlow).
      ⚠️⚠️ 흐름의 첫 걸음은 **양도 검토**입니다 — 철거가 맨 앞이 아닙니다
      (넘길 수 있으면 철거비도 원상복구비도 줄어듭니다). */
@@ -710,7 +709,7 @@ function ClosureIntro(){
            { ic:"box", b:"집기 · 설비 처분", d:"주방기기 · 냉장고 · 가구를 정리합니다",
              go:"시설 · 집기 처분 보기", goOn:"집기 처분 상담 신청",
              href:"/assets", on:CLOSE_QUICK_ASSET }]
-  }) + ClosureFlow();
+  }) + ClosureFlow(path);
 }
 
 /* ── 바로 고르는 세 갈래 (2026-11-18 STOREWAY 1차) ─────────────────
@@ -737,8 +736,14 @@ var CLOSE_FLOW = [
   ["doc",      "폐업 신고 · 지원", "신고 순서와 지원사업 찾는 곳",          "/c/process"],
   ["calc",     "세무 정리",        "부가세 · 종합소득세 등 폐업 세무",       "/providers/tax"]
 ];
-function ClosureFlow(){
-  return '<section class="sec sec-white hfl"><div class="w">'+
+function ClosureFlow(path){
+  /* ⚠️⚠️ 2026-11-19 — 핵심 정리 순서는 **이 한 구역**입니다. 여섯 칸(요약) 아래에
+     ① 자세한 순서(상황별 로드맵 · 접힘) ② 직원 기한 ③ 폐업 절차 · 지원사업 링크
+     ④ "어디서부터 시작할지 모르겠어요" (상황 넷 · 진단 · 접힘) 를 모았습니다.
+     주소에 상황(?w=)이나 ?p=all 이 실려 오면 ①④ 를 펼친 채로 냅니다. */
+  var w = nowQS("w"), wSel = (window.amCloseWant ? amCloseWant(w) : null);
+  var openRoad = !!wSel || path === "all";
+  return '<section class="sec sec-white hfl" id="cl-flow"><div class="w">'+
     '<div class="sec-hd sec-hd-c"><p class="eyebrow">CLOSE FLOW</p>'+
       '<h2>폐업도 순서대로, 단계별로 정리하세요</h2>'+
       '<p>앞 걸음이 뒤 걸음의 비용을 줄입니다. 칸을 누르면 그 단계 화면으로 갑니다.</p></div>'+
@@ -747,6 +752,59 @@ function ClosureFlow(){
         '<span class="hfl-i" aria-hidden="true">'+icon(x[0], 28)+'</span>'+
         '<b>'+esc(x[1])+'</b><span class="hfl-d">'+esc(x[2])+'</span></a></li>'; }).join("")+'</ol>'+
   '</div></section>';
+    '<div class="hfl-more">'+
+      ClosingProcess(null, true, openRoad)+
+      '<p class="row-cta hfl-links">'+
+        '<a class="btn btn-o" href="/c/process">'+icon("list",16)+' 폐업 신고 순서 · 필요서류</a>'+
+        '<a class="btn btn-o" href="/support">'+icon("badge",16)+' 철거비 등 폐업 지원사업</a>'+
+      '</p>'+
+      ClosureWantFold(wSel)+
+    '</div>'+
+  '</div></section>';
+}
+/* "어디서부터 시작할지 모르겠어요" — 상황 넷과 진단을 **도움이 필요한 분만** 펼칩니다.
+   ⚠️ 첫 화면의 세 갈래와 같은 질문이라 펼쳐 두면 반복입니다. 고르시면(?w=) 펼친 채로
+   그 상황에 맞는 분야와 위 자세한 순서가 바뀝니다. */
+function ClosureWantFold(sel){
+  var wants = (window.AM_CLOSE_WANTS || []);
+  if(!wants.length) return "";
+  var list = '<ul class="wnt-l">'+ wants.map(function(w){
+      var on = (sel && sel.key === w.key);
+      return '<li><a class="wnt'+(on?" on":"")+'" href="'+
+        esc("/closure?w=" + encodeURIComponent(w.key))+'"'+
+        (on ? ' aria-current="true"' : '')+'>'+
+        '<span class="wnt-ic">'+icon(w.icon,20)+'</span>'+
+        '<b>'+esc(w.name)+'</b>'+
+        '<span class="wnt-l-d">'+esc(w.lead)+'</span>'+
+      '</a></li>'; }).join("")+'</ul>';
+  var hit = "";
+  if(sel){
+    var g = amCloseCatsFor(sel.key, "");
+    hit = (sel.key === "lost" ? CloseAsk("/closure", true) : "")+
+      '<div class="sec-hd sec-hd-sub"><h3 class="pg-h2">'+esc(sel.name.replace(/[.?]$/, ""))+' — 이것부터입니다</h3>'+
+        '<p>'+esc(sel.lead)+' 나머지 분야는 아래 <b>분야별 상세</b>에 그대로 있습니다.</p></div>'+
+      '<div class="cat-g cat-g4">'+g.hit.map(function(c){ return CatCard(c, ""); }).join("")+'</div>';
+  }
+  return '<div class="hfl-want">'+
+    FoldAll("cl-want", "어디서부터 시작할지 모르겠어요", "접기", "", !!sel)+
+    '<div class="'+(sel ? "" : "is-fold-all")+'" id="cl-want">'+
+      '<p class="hfl-want-p">상황을 고르시면 그에 맞는 순서와 분야를 앞으로 꺼내 드립니다.</p>'+
+      list + hit +
+    '</div></div>';
+}
+/* 분야별 상세 — 정리에 필요한 분야 열둘 (전에는 상황 고르기 구간 안에 접혀 있었습니다) */
+function ClosureDetailBand(){
+  var all = (window.amCatsFor ? amCatsFor("", "close") : (window.AM_CLOSE_CATS||[]));
+  return '<section class="sec cl-det"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">분야별 상세</p>'+
+      '<h2>정리에 필요한 것 전부</h2>'+
+      '<p>어느 분야에 무엇이 있는지 보고 싶으시면 펼쳐 보세요. 누르면 그 분야 화면으로 갑니다.</p>'+
+    '</div>'+
+    FoldAll("cl-all", "분야 "+all.length+"개 펼쳐 보기", "접기")+
+    '<div class="cat-g cat-g4 is-fold-all" id="cl-all">'+
+      all.map(function(c){ return CatCard(c, ""); }).join("")+
+    '</div>'+
 }
 
 /* ── 두 가지 이용 경로 카드 (PART 6-2) ───────────────────────────
@@ -936,8 +994,11 @@ var CLOSE_PROC = {
    분께는 안 냅니다 (답을 추측하지 않습니다). */
 function StaffNote(){
   if(nowQS("staff") !== "1") return "";
-  return '<section class="sec sec-white"><div class="w">'+
-    '<div class="note-box">'+
+  return '<section class="sec sec-white"><div class="w">'+StaffNoteBox()+'</div></section>';
+}
+function StaffNoteBox(){
+  if(nowQS("staff") !== "1") return "";
+  return '<div class="note-box">'+
       '<b>직원이 계시면 기한부터 보세요.</b>'+
       '<p>해고예고 · 퇴직금 · 4대보험 상실 신고는 날짜가 정해져 있습니다. '+
         '아래 순서를 다 읽기 전에 먼저 확인하실 자리입니다.</p>'+
@@ -946,10 +1007,9 @@ function StaffNote(){
           '정리할 때 직원 — 무엇을 언제'+icon("arrow",15)+'</a>'+
         '<a class="btn btn-o btn-sm" href="/providers/labor">노무 전문가 찾기</a>'+
       '</p>'+
-    '</div>'+
-  '</div></section>';
+    '</div>';
 }
-function ClosingProcess(ind){
+function ClosingProcess(ind, bare, opened){
   var w = nowQS("w");
   /* ⚠️ "아직 모르겠어요"(lost)는 **진단이 먼저**라 전체 절차를 냅니다 —
      답하신 뒤에 위 셋 중 하나로 갑니다. */
@@ -967,6 +1027,17 @@ function ClosingProcess(ind){
      ⚠️ 머리말에 "읽는 자리이고 신청은 아래에서" 를 적습니다 — 위
      바구니가 신청 단추를 들고 있는 유일한 자리입니다 (§5 · §6). */
   return StaffNote() +
+  /* 2026-11-19 — bare 면 구간 껍데기 없이 /closure 의 정리 순서 구역 안에 들어갑니다. */
+  if(bare){
+    return '<div class="stD hfl-road">'+
+      '<div class="sec-hd sec-hd-sub"><h3 class="pg-h2">'+esc(o.title)+'</h3>'+
+        '<p>'+esc(n + "걸음입니다. " + o.lead)+' 걸음마다 꼭 확인할 것과 기한을 적어 두었습니다.</p></div>'+
+      StaffNoteBox()+
+      FoldAll("cl-road", "자세한 정리 순서 "+n+"걸음 보기", "접기", "", !!opened)+
+      '<div class="'+(opened ? "" : "is-fold-all")+'" id="cl-road">'+
+        ProcessBand({ key:o.key, bare:true, industry:"", note:o.note })+
+      '</div></div>';
+  }
     '<section class="sec sec-white stD"><div class="w">'+
       '<div class="sec-hd sec-hd-c">'+
         '<p class="eyebrow">'+esc(o.kicker)+'</p>'+
@@ -1017,8 +1088,8 @@ window.closeAskGo = function(base){
      같이 냅니다 (`?w=` 와 함께 주소에 실립니다). */
   go(base + "?w=" + encodeURIComponent(w) + (on.staff ? "&staff=1" : ""));
 };
-function CloseAsk(base){
-  return '<section class="sec sec-white cask"><div class="w">'+
+function CloseAsk(base, bare){
+  return (bare ? '<div class="cask cask-in">' : '<section class="sec sec-white cask"><div class="w">')+
     '<div class="sec-hd">'+
       '<p class="eyebrow">짧게 네 가지만</p>'+
       '<h2>지금 상황을 알려 주시면 순서를 맞춰 드립니다</h2>'+
@@ -1038,7 +1109,7 @@ function CloseAsk(base){
          별표가 **글자로 찍힙니다** (전수 점검이 잡습니다). */
       ' 체크하신 내용은 <b>아무 데도 저장되지 않습니다.</b> 어느 순서를 '+
       '먼저 보여 드릴지 고르는 데에만 씁니다.</p>'+
-  '</div></section>';
+  (bare ? '</div>' : '</div></section>');
 }
 
 function PageClosureIndustry(ind){

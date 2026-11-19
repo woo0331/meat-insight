@@ -168,8 +168,9 @@ function StartPickBand(top, rest, ind){
       '<h2>'+(on && indN
         ? esc(indN)+' 창업에 필요한 것'
         : '필요한 서비스를 골라 주세요')+'</h2>'+
-      '<p><b>여러 개를 함께 고르실 수 있습니다.</b> 고르신 것은 '+
-        '아래에 모이고, 한 번만 적어 보내시면 됩니다.</p>'+
+      '<p><b>여러 개를 함께 고르실 수 있습니다.</b> 고르신 것은 아래에 모입니다. '+
+        ctaPair("quote", "한 번만 적어 보내시면 됩니다.",
+          "지금은 견적 접수를 받지 않아, 고르신 서비스는 이 기기의 브라우저에 남습니다.")+'</p>'+
     '</div>'+
     /* ── 업종 고르개 (PART 4-2 ②) ───────────────────────────────
        ⚠️ 칩 열넷을 깔지 않았습니다 — 폰에서 화면 하나를 먹고 그만큼
@@ -632,7 +633,6 @@ function PageClosure(){
      그 값을 들고 있습니다 — `WantBand()` 그대로입니다. 다만 경로
      카드 바로 아래 또 고르개를 두면 **같은 선택 영역이 둘**이 되어
      (PART 16-3), 기본 차례에서는 절차 쪽으로 내려갑니다. */
-  var path  = nowQS("p") === "all" ? "all" : (nowQS("p") === "pick" ? "pick" : "");
   /* ⚠️⚠️ 2026-11-19 공개 화면 완성도 개선 §1 — 차례를 **첫 행동 셋 → 핵심 정리 순서 →
      체크리스트 · 비용 → 서비스 고르기 → 분야별 상세** 로 정리했습니다.
      전에는 첫 화면 셋 뒤로 정리 순서(여섯) · 두 경로 카드 · 상황 넷 · 서비스 묶음 ·
@@ -642,6 +642,7 @@ function PageClosure(){
      정리 순서 구역과 분야별 상세 구역으로 옮겨 갔습니다.
      ⚠️ 두 경로 카드(?p=all · ?p=pick)는 같은 선택의 반복이라 내렸습니다. 밖으로 나간
      주소는 그대로 열립니다 — ?p=all 은 자세한 순서를 펼친 채로, ?p=pick 은 #pick 으로 갑니다. */
+  var path  = nowQS("p") === "all" ? "all" : (nowQS("p") === "pick" ? "pick" : "");
   var sel   = PickGroupBand("closure", "close") + PickBasket("close") +
               PackPickBand("close");
   return ClosureIntro(path)+
@@ -751,7 +752,6 @@ function ClosureFlow(path){
       return '<li><a href="'+esc(x[3])+'"><span class="hfl-n">0'+(i+1)+'</span>'+
         '<span class="hfl-i" aria-hidden="true">'+icon(x[0], 28)+'</span>'+
         '<b>'+esc(x[1])+'</b><span class="hfl-d">'+esc(x[2])+'</span></a></li>'; }).join("")+'</ol>'+
-  '</div></section>';
     '<div class="hfl-more">'+
       ClosingProcess(null, true, openRoad)+
       '<p class="row-cta hfl-links">'+
@@ -805,6 +805,7 @@ function ClosureDetailBand(){
     '<div class="cat-g cat-g4 is-fold-all" id="cl-all">'+
       all.map(function(c){ return CatCard(c, ""); }).join("")+
     '</div>'+
+  '</div></section>';
 }
 
 /* ── 두 가지 이용 경로 카드 (PART 6-2) ───────────────────────────
@@ -1026,7 +1027,6 @@ function ClosingProcess(ind, bare, opened){
      붙는 일이라, 펼치지 않아도 보여야 합니다.
      ⚠️ 머리말에 "읽는 자리이고 신청은 아래에서" 를 적습니다 — 위
      바구니가 신청 단추를 들고 있는 유일한 자리입니다 (§5 · §6). */
-  return StaffNote() +
   /* 2026-11-19 — bare 면 구간 껍데기 없이 /closure 의 정리 순서 구역 안에 들어갑니다. */
   if(bare){
     return '<div class="stD hfl-road">'+
@@ -1038,6 +1038,7 @@ function ClosingProcess(ind, bare, opened){
         ProcessBand({ key:o.key, bare:true, industry:"", note:o.note })+
       '</div></div>';
   }
+  return StaffNote() +
     '<section class="sec sec-white stD"><div class="w">'+
       '<div class="sec-hd sec-hd-c">'+
         '<p class="eyebrow">'+esc(o.kicker)+'</p>'+
@@ -1189,7 +1190,9 @@ function BridgeFor(ind, side){
 /* 막다른 길을 두지 않습니다 — 어디서 막히든 다음 한 걸음을 줍니다 */
 function StartupHelpBand(){
   return '<section class="sec sec-white"><div class="w help-g">'+
-    HelpCard("doc","무엇부터 할지 모르겠다면","견적 요청서를 한 번만 적으시면 조건에 맞는 업체들에 같이 전달합니다.","/quote","견적 요청하기")+
+    /* 2026-11-19 — 접수가 닫혀 있으면 이 카드는 견적 화면이 아니라 접수 안내로 갑니다 (일반 견적 기준). */
+    HelpCard("doc","무엇부터 할지 모르겠다면","견적 요청서를 한 번만 적으시면 조건에 맞는 업체들에 같이 전달합니다.","/quote","견적 요청하기", ' data-cta="on" data-cta-form="quote" hidden')+
+    HelpCard("doc","무엇부터 할지 모르겠다면","지금은 견적 접수를 받지 않습니다. 접수 방법과 지금 쓰실 수 있는 길을 확인하세요.","/intake","접수 안내 보기", ' data-cta="off" data-cta-form="quote"')+
     HelpCard("won","돈이 걱정이라면","창업자금과 정책자금 중 조건에 맞는 것을 모아 둡니다.","/support","지원사업 보기")+
     HelpCard("book","먼저 알아보고 싶다면","창업비용 · 권리금 · 인허가처럼 실제로 막히는 것만 정리했습니다.","/content","정보 보기")+
   '</div></section>';
@@ -1205,8 +1208,8 @@ function ClosureHelpBand(){
     HelpCard("doc","여러 곳 견적을 한 번에","한 번만 적으시면 철거 · 원상복구 · 폐기물 업체에 같이 전달합니다.","#pick","필요한 것 고르기")+
   '</div></section>';
 }
-function HelpCard(ic, t, p, to, label){
-  return '<a class="help" href="'+esc(to)+'">'+
+function HelpCard(ic, t, p, to, label, attr){
+  return '<a class="help" href="'+esc(to)+'"'+(attr || "")+'>'+
     '<span class="help-ic">'+icon(ic,20)+'</span>'+
     '<b>'+esc(t)+'</b><span class="help-p">'+esc(p)+'</span>'+
     '<span class="help-go">'+esc(label)+icon("arrow",15)+'</span></a>';

@@ -364,7 +364,7 @@ window.PickAside = function(side){
    단추 대신 "지금은 받지 않습니다" 를 사실대로 말합니다. */
 window.PickClosedNote = function(side){
   return '<p class="pk-closed pk-closed-n" data-pick-closed="'+esc(side || "start")+'" data-go-form="'+esc(amPickGoForm(side))+'">'+
-    icon("info",15)+' 지금은 이 신청을 받지 않습니다. 고르신 것은 그대로 남습니다. '+
+    icon("info",15)+' 지금은 이 신청을 받지 않습니다. 고르신 서비스는 이 기기의 브라우저에 그대로 남습니다. '+
     '<a href="/intake">접수 안내</a></p>';
 };
 window.PickBar = function(side){
@@ -775,8 +775,11 @@ window.PickGroupBand = function(hallKey, side){
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">필요한 서비스 선택</p>'+
       '<h2>무엇이 필요하신가요?</h2>'+
-      '<p>칸을 누르면 아래에 쌓입니다. <b>여러 개를 함께</b> 고르실 수 있고, '+
-        '한 번만 적어 보내시면 서비스마다 업체를 찾아 드립니다.</p>'+
+      /* 2026-11-19 — 접수가 닫혀 있으면 "찾아 드립니다" 를 약속하지 않습니다 (그 전문관의 양식 기준). */
+      '<p>칸을 누르면 아래에 쌓입니다. <b>여러 개를 함께</b> 고르실 수 있습니다. '+
+        ctaPair(amPickGoForm(side),
+          "한 번만 적어 보내시면 서비스마다 업체를 찾아 드립니다.",
+          "지금은 접수를 받지 않습니다 — 고르신 서비스는 이 기기의 브라우저에 남아, 준비 정보와 업체 분야를 먼저 보실 수 있습니다.")+'</p>'+
     '</div>'+
 
     /* ── 두 칸 (2026-10-20 시안 3) — 왼쪽 고르기 · 오른쪽 요약

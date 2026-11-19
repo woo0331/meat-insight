@@ -819,7 +819,7 @@ function AcqWhich(t, ind, iq){
        ⚠️ 열 줄 전부 **실제로 있는 화면**입니다 (가짜 링크는 절대
        규칙 5). 넘어가는 길은 위의 탭이 그대로 들고 있습니다. */
     '<ul class="aq-m">'+(t === "out" ? [
-      ["/sell",          "handover", "내 매장 내놓기",   "평수 · 보증금 · 권리금을 적어 보내시면 됩니다"],
+      ["/sell",          "handover", "내 매장 내놓기",   "내놓을 때 적는 칸과 순서를 봅니다"],
       ["#pick",          "check",    "넘길 때 필요한 것", "시설 인계 · 계약 · 세무를 골라 보세요"],
       ["/tools/premium", "gauge",    "권리금 알아보기",  "몇 달이면 돌아오는지 따져 봅니다"],
       ["/sell?t=asset",  "boxes",    "시설 · 장비만 내놓기", "매장은 두고 장비만 넘기실 때"],
@@ -864,7 +864,7 @@ function AcqProcess(t, ind){
     '<div class="is-fold-all" id="aq-road">'+
       ProcessBand({ key:key, bare:true, industry: ind ? ind.key : "",
         note: t === "out"
-          ? "매물 등록 기능은 따로 없습니다. 접수로 적어 보내 주시면 사람이 확인하고 올려 드립니다."
+          ? "매물을 올리는 일은 사람이 합니다 — 접수가 열려 있을 때 적어 보내 주시면 확인하고 올립니다."
           : "매물에 적힌 평수 · 보증금 · 월세 · 권리금 · 매출은 올리신 사장님이 적으신 값이고, 저희가 확인하거나 보증하는 값이 아닙니다." })+
     '</div>'+
   '</div></section>';
@@ -883,19 +883,26 @@ function AcqMarket(t, ind, iq){
   return '<section class="sec"><div class="w">'+
     '<div class="sec-hd">'+
       '<p class="eyebrow">'+(out ? "내놓으시려면" : "지금 올라온 것")+'</p>'+
+      /* 2026-11-19 — 매물 등록(sell) 양식이 닫혀 있으면 "올려 드립니다" 를 약속하지 않습니다. */
       '<h2>'+(out
-        ? "한 번만 적어 보내시면 저희가 올려 드립니다"
-        : "매장 매물 "+nStore+"건 · 시설 · 장비 "+nAsset+"건")+'</h2>'+
+        ? ctaPair("sell", "한 번만 적어 보내시면 저희가 올려 드립니다", "지금은 매물 등록 접수를 받지 않습니다")
+        : esc("매장 매물 "+nStore+"건 · 시설 · 장비 "+nAsset+"건"))+'</h2>'+
       '<p>'+(out
-        ? "평수 · 보증금 · 월세 · 권리금을 적는 칸이 따로 있습니다. "+
-          "올리기 전에 한 번 연락드립니다. 지금 올라온 매물은 "+
-          nStore+"건 · 시설 · 장비 "+nAsset+"건입니다."
+        ? ctaPair("sell", "평수 · 보증금 · 월세 · 권리금을 적는 칸이 따로 있습니다. "+
+            "올리기 전에 한 번 연락드립니다. 지금 올라온 매물은 "+
+            nStore+"건 · 시설 · 장비 "+nAsset+"건입니다.",
+            "내놓을 때 적는 칸(평수 · 보증금 · 월세 · 권리금)은 매장 내놓기 화면에서 미리 보실 수 있고, "+
+            "넘기기 전에 맞출 것은 아래 순서와 양도 가이드에 있습니다. 지금 올라온 매물은 "+
+            nStore+"건 · 시설 · 장비 "+nAsset+"건입니다.")
         : "등록된 차례로 냅니다. 광고로 위에 올린 자리는 없습니다.")+'</p>'+
     '</div>'+
     (out
       ? '<div class="row-cta">'+
           '<a class="btn btn-b" href="/sell">내 매장 내놓기'+icon("arrow",16)+'</a>'+
           '<a class="btn btn-o" href="/sell?t=asset">시설 · 장비만 내놓기</a>'+
+          /* 2026-11-19 — 매물 등록이 닫히면 위 둘이 가려집니다(ctaTagLinks · sell). 그때 할 수 있는 것. */
+          '<a class="btn btn-b" href="/content?j=acquisition" data-cta="off" data-cta-form="sell">양도 가이드 보기'+icon("arrow",16)+'</a>'+
+          '<a class="btn btn-o" href="/intake" data-cta="off" data-cta-form="sell">접수 안내 보기</a>'+
         '</div>'
       :
     (nStore || nAsset

@@ -79,8 +79,8 @@
   --bg-lav:      #F2E9EA;
   --bg-sand:     #E2D5C3;
 
-  --bg-calc:     #F3EDE4;
-  --bg-step:     #F7EFE3;
+  --bg-calc:     #F2E4DD;
+  --bg-step:     #FAEEDB;
 
   --step-pt:     #B8956D;
   --step-ink:    #6E4A33;
@@ -143,20 +143,20 @@
   --hall-green:#5E5040;  --hall-green-d:#43392C;
   --hall-purple:#6E4A33; --hall-purple-d:#4E3322;
   --hall-red:#7A5633;    --hall-red-d:#5A3E23;
-  --tn1-ink:#966039; --tn1-bg:#F8F1ED;
-  --tn2-ink:#896247; --tn2-bg:#F9F3EE;
-  --tn3-ink:#935E38; --tn3-bg:#F6ECE6;
-  --tn4-ink:#8B6347; --tn4-bg:#F9F4EF;
-  --tn5-ink:#7E5B41; --tn5-bg:#F8F0EB;
-  --tn6-ink:#C03552; --tn6-bg:#FBEBEE;
-  --tn7-ink:#73523B; --tn7-bg:#F7EFEA;
-  --tn8-ink:#B0476F; --tn8-bg:#FBECF2;
-  --tn9-ink:#845E44; --tn9-bg:#F8F0EB;
-  --tn10-ink:#815D43; --tn10-bg:#F7EFE9;
-  --tn11-ink:#70482B; --tn11-bg:#F6ECE6;
-  --tn12-ink:#74543C; --tn12-bg:#F7F0EA;
-  --tn13-ink:#745C4B; --tn13-bg:#F3F0ED;
-  --tn14-ink:#815C42; --tn14-bg:#F6ECE6;
+  --tn1-ink:#674232; --tn1-bg:#F7EBE6;
+  --tn2-ink:#6A4D39; --tn2-bg:#F5EBE4;
+  --tn3-ink:#795734; --tn3-bg:#F6EADF;
+  --tn4-ink:#625137; --tn4-bg:#F2EADF;
+  --tn5-ink:#6F5D34; --tn5-bg:#F7F2E6;
+  --tn6-ink:#72483B; --tn6-bg:#F5E8E4;
+  --tn7-ink:#5D4B3C; --tn7-bg:#F2EAE3;
+  --tn8-ink:#6A5F39; --tn8-bg:#F3EEDE;
+  --tn9-ink:#7B4B32; --tn9-bg:#F8EBE5;
+  --tn10-ink:#604F39; --tn10-bg:#F4EDE5;
+  --tn11-ink:#6D5B36; --tn11-bg:#F4EEE0;
+  --tn12-ink:#665547; --tn12-bg:#F0E7E1;
+  --tn13-ink:#6A4E2F; --tn13-bg:#F7EFE6;
+  --tn14-ink:#654C3E; --tn14-bg:#F4EAE5;
 
   --font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
           "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;

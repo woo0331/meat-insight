@@ -1890,9 +1890,9 @@ var SW_QUICK = [
   { to:"/about",     ic:"book",      b:"이용 가이드",    s:"신청 방법과 진행 절차" }
 ];
 var SW_FLOW = [
-  { to:"/startup",   ic:"rocket",   b:"창업 준비",     s:"가게 시작을 위한 준비" },
-  { to:"/operation", ic:"store",    b:"매장 운영",     s:"운영 효율화 · 비용 점검" },
-  { to:"/transfer",  ic:"handover", b:"매장 양도양수", s:"넘기고 받는 길 안내" },
+  { to:"/startup",   ic:"rocket",   ia:"bulb",      b:"창업 준비",     s:"가게 시작을 위한 준비" },
+  { to:"/operation", ic:"store",    ia:"chart",     b:"매장 운영",     s:"운영 효율화 · 비용 점검" },
+  { to:"/transfer",  ic:"handover", ia:"handover",  b:"매장 양도양수", s:"넘기고 받는 길 안내" },
   { to:"/closure",   ic:"hammer",   b:"폐업·철거",     s:"정리 · 처분 · 세무까지" }
 ];
 function HomeQuick(){
@@ -2141,8 +2141,8 @@ function HomeEntrySW(){
    ⚠️ 색은 tokens.css 의 브라운 · 아이보리뿐입니다 — 이 블록에 날값 색을 적지 마세요.
    ⚠️⚠️ 사진은 **권한이 확인된 것만**(사장님이 주신 hero-startup · hero-closure ·
       kind-pass)이고, 없으면 액자째 안 그립니다 (빈 액자를 깔지 않습니다).
-   ⚠️⚠️ 검색 칩은 **"인기 검색어" 가 아닙니다** — 검색 기록을 하나도 모으지 않습니다.
-      전부 쳐 보면 결과가 나오는 말입니다 (추천 검색어).
+   ⚠️⚠️ 검색 칩은 **"인기 검색어" 도 "추천" 도 아닙니다** — 검색 기록을 하나도 모으지 않습니다.
+      전부 쳐 보면 결과가 나오는 말이고 딱지는 "이렇게 찾아보세요" 입니다 (check.js 금지 낱말).
    ⚠️ 이용 방법은 **지금 접수 상태**를 따릅니다 — 닫혀 있으면 그렇다고 적고 신청
       단추를 내지 않습니다 (data-cta 짝 · hdCtaPaint).
    ⚠️ 옛 HomeSplitSW · HomeEntrySW · HomeShortcuts · HomeCalc · HomeGuide · HomeCta 는
@@ -2207,7 +2207,7 @@ function HomeWPFind(){
       '<button class="sw-find-b wp-find-b" type="submit">'+icon("search",18)+'<span>검색</span></button>'+
     '</form>'+
     '<p id="wp-msg" class="wp-fmsg" role="status" aria-live="polite"></p>'+
-    '<nav class="wp-sug" aria-label="추천 검색어"><span class="wp-sug-k">추천 검색어</span>'+
+    '<nav class="wp-sug" aria-label="검색 예시"><span class="wp-sug-k">이렇게 찾아보세요</span>'+
       WP_SUGGEST.map(function(t){
         return '<a href="/search?q='+encodeURIComponent(t)+'">'+esc(t)+'</a>'; }).join("")+
     '</nav>'+
@@ -2268,19 +2268,20 @@ function HomeWPPass(){
 
 /* 03 — 서비스 카드 여섯 (같은 크기 · 실제 화면으로) */
 var WP_CARDS = [
-  { to:"/startup",   ic:"rocket",   b:"창업 준비",     s:"업종 · 상권 · 인테리어 · 설비 준비" },
-  { to:"/operation", ic:"store",    b:"매장 운영",     s:"마케팅 · POS · 시설 수리 · 비용 점검" },
-  { to:"/transfer",  ic:"handover", b:"매장 양도양수", s:"매물 찾기 · 권리금 · 넘기는 순서" },
-  { to:"/closure",   ic:"hammer",   b:"폐업·철거",     s:"폐업 절차 · 집기 처분 · 원상복구" },
-  { to:"/providers", ic:"users",    b:"전문가 상담",   s:"분야별 업체 찾기 · 상담 안내" },
-  { to:"/content",   ic:"book",     b:"정보·가이드",   s:"이용 가이드 · 계산도구 · 지원사업" }
+  { to:"/startup",   ic:"rocket",   ia:"bulb",      b:"창업 준비",     s:"업종 · 상권 · 인테리어 · 설비 준비" },
+  { to:"/operation", ic:"store",    ia:"chart",     b:"매장 운영",     s:"마케팅 · POS · 시설 수리 · 비용 점검" },
+  { to:"/transfer",  ic:"handover", ia:"handover",  b:"매장 양도양수", s:"매물 찾기 · 권리금 · 넘기는 순서" },
+  { to:"/closure",   ic:"hammer",   ia:"demolish",  b:"폐업·철거",     s:"폐업 절차 · 집기 처분 · 원상복구" },
+  { to:"/providers", ic:"users",    ia:"staff",     b:"전문가 상담",   s:"분야별 업체 찾기 · 상담 안내" },
+  { to:"/content",   ic:"book",     ia:"permit",    b:"정보·가이드",   s:"이용 가이드 · 계산도구 · 지원사업" }
 ];
 function HomeWPCards(){
   return '<section class="bent wp-cards"><div class="w">'+
     '<div class="wp-sh"><p class="wp-k">서비스</p><h2>필요한 서비스를 바로 찾아보세요</h2></div>'+
     '<ul class="wp-cg">'+WP_CARDS.map(function(c){
       return '<li><a class="wp-cc" href="'+esc(c.to)+'">'+
-        '<span class="wp-ci" aria-hidden="true">'+icon(c.ic,28)+'</span>'+
+        /* 컬러 아이콘(iconArt · 두 톤) — 색은 --ia-1 월넛 · --ia-2 샴페인 두 변수뿐입니다. 없으면 선 아이콘 */
+        '<span class="wp-ci" aria-hidden="true">'+((typeof hasIconArt === "function" && hasIconArt(c.ia)) ? iconArt(c.ia, 40) : icon(c.ic,28))+'</span>'+
         '<span class="wp-ct"><b>'+esc(c.b)+'</b><em>'+esc(c.s)+'</em></span>'+
         '<span class="wp-cgo" aria-hidden="true">'+icon("chev",18)+'</span></a></li>';
     }).join("")+'</ul>'+

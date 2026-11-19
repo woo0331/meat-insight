@@ -5709,3 +5709,7 @@ html.ivh #view .wp-btn-o:hover{ background:var(--navy-soft); }
   .wp-sg > li{ flex-direction:row; align-items:flex-start; padding:16px; }
   .wp-sn{ flex:none; width:42px; height:42px; }
 }
+
+.wp-ci{ --ia-1:var(--navy); --ia-2:#E3D1B9; }
+.wp-ci svg.ia{ width:40px; height:40px; }
+@media (max-width:640px){ .wp-ci svg.ia{ width:34px; height:34px; } }

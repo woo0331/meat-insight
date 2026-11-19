@@ -944,9 +944,9 @@ var SW_QUICK = [
   { to:"/about",     ic:"book",      b:"이용 가이드",    s:"신청 방법과 진행 절차" }
 ];
 var SW_FLOW = [
-  { to:"/startup",   ic:"rocket",   b:"창업 준비",     s:"가게 시작을 위한 준비" },
-  { to:"/operation", ic:"store",    b:"매장 운영",     s:"운영 효율화 · 비용 점검" },
-  { to:"/transfer",  ic:"handover", b:"매장 양도양수", s:"넘기고 받는 길 안내" },
+  { to:"/startup",   ic:"rocket",   ia:"bulb",      b:"창업 준비",     s:"가게 시작을 위한 준비" },
+  { to:"/operation", ic:"store",    ia:"chart",     b:"매장 운영",     s:"운영 효율화 · 비용 점검" },
+  { to:"/transfer",  ic:"handover", ia:"handover",  b:"매장 양도양수", s:"넘기고 받는 길 안내" },
   { to:"/closure",   ic:"hammer",   b:"폐업·철거",     s:"정리 · 처분 · 세무까지" }
 ];
 function HomeQuick(){
@@ -1208,7 +1208,7 @@ function HomeWPFind(){
       '<button class="sw-find-b wp-find-b" type="submit">'+icon("search",18)+'<span>검색</span></button>'+
     '</form>'+
     '<p id="wp-msg" class="wp-fmsg" role="status" aria-live="polite"></p>'+
-    '<nav class="wp-sug" aria-label="추천 검색어"><span class="wp-sug-k">추천 검색어</span>'+
+    '<nav class="wp-sug" aria-label="검색 예시"><span class="wp-sug-k">이렇게 찾아보세요</span>'+
       WP_SUGGEST.map(function(t){
         return '<a href="/search?q='+encodeURIComponent(t)+'">'+esc(t)+'</a>'; }).join("")+
     '</nav>'+
@@ -1267,19 +1267,20 @@ function HomeWPPass(){
 }
 
 var WP_CARDS = [
-  { to:"/startup",   ic:"rocket",   b:"창업 준비",     s:"업종 · 상권 · 인테리어 · 설비 준비" },
-  { to:"/operation", ic:"store",    b:"매장 운영",     s:"마케팅 · POS · 시설 수리 · 비용 점검" },
-  { to:"/transfer",  ic:"handover", b:"매장 양도양수", s:"매물 찾기 · 권리금 · 넘기는 순서" },
-  { to:"/closure",   ic:"hammer",   b:"폐업·철거",     s:"폐업 절차 · 집기 처분 · 원상복구" },
-  { to:"/providers", ic:"users",    b:"전문가 상담",   s:"분야별 업체 찾기 · 상담 안내" },
-  { to:"/content",   ic:"book",     b:"정보·가이드",   s:"이용 가이드 · 계산도구 · 지원사업" }
+  { to:"/startup",   ic:"rocket",   ia:"bulb",      b:"창업 준비",     s:"업종 · 상권 · 인테리어 · 설비 준비" },
+  { to:"/operation", ic:"store",    ia:"chart",     b:"매장 운영",     s:"마케팅 · POS · 시설 수리 · 비용 점검" },
+  { to:"/transfer",  ic:"handover", ia:"handover",  b:"매장 양도양수", s:"매물 찾기 · 권리금 · 넘기는 순서" },
+  { to:"/closure",   ic:"hammer",   ia:"demolish",  b:"폐업·철거",     s:"폐업 절차 · 집기 처분 · 원상복구" },
+  { to:"/providers", ic:"users",    ia:"staff",     b:"전문가 상담",   s:"분야별 업체 찾기 · 상담 안내" },
+  { to:"/content",   ic:"book",     ia:"permit",    b:"정보·가이드",   s:"이용 가이드 · 계산도구 · 지원사업" }
 ];
 function HomeWPCards(){
   return '<section class="bent wp-cards"><div class="w">'+
     '<div class="wp-sh"><p class="wp-k">서비스</p><h2>필요한 서비스를 바로 찾아보세요</h2></div>'+
     '<ul class="wp-cg">'+WP_CARDS.map(function(c){
       return '<li><a class="wp-cc" href="'+esc(c.to)+'">'+
-        '<span class="wp-ci" aria-hidden="true">'+icon(c.ic,28)+'</span>'+
+
+        '<span class="wp-ci" aria-hidden="true">'+((typeof hasIconArt === "function" && hasIconArt(c.ia)) ? iconArt(c.ia, 40) : icon(c.ic,28))+'</span>'+
         '<span class="wp-ct"><b>'+esc(c.b)+'</b><em>'+esc(c.s)+'</em></span>'+
         '<span class="wp-cgo" aria-hidden="true">'+icon("chev",18)+'</span></a></li>';
     }).join("")+'</ul>'+

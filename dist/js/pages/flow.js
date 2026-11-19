@@ -8,7 +8,8 @@ function PageStartup(){
   var top = amPickTop("startup", ind), rest = amPickRest("startup", ind);
 
   return StartIntro(ind) + StartPickBand(top, rest, ind) + PickBasket() +
-    StartIndustryBand() + PackPickBand("start") + StartChecklist(ind) +
+
+    PackPickBand("start") + StartChecklist(ind) +
     StartGuideBand(ind) +
     HallCalcBand({ keys:START_CALC, tones:START_CALC_TONE,
       title:"시작하기 전에 숫자부터 보세요",
@@ -56,11 +57,16 @@ function StartSignature(ind){
       '<button class="btn btn-b btn-lg" type="submit">'+icon("calc",18)+' 예상 창업 비용 따져 보기</button>'+
     '</form>'+
     '<div class="hsg-ind" id="st-ig">'+
-      '<div class="hsg-hd"><h2>업종별 창업 준비 과정</h2>'+
-        '<a class="hsg-all" href="#st-indsel">전체 업종 보기'+icon("chev",16)+'</a></div>'+
+
+      '<div class="hsg-hd"><h2>업종별 창업 준비 과정</h2></div>'+
       '<ul class="hsg-ig">'+L.map(function(x){
         return '<li><a href="/startup/'+esc(x.key)+'"><span class="hsg-ii" aria-hidden="true">'+icon(x.icon || "store", 28)+'</span>'+
           '<b>'+esc(x.name)+'</b>'+icon("chev",16)+'</a></li>'; }).join("")+'</ul>'+
+      FoldAll("st-ind", "전체 업종 "+(window.AM_INDUSTRIES||[]).length+"개 보기", "접기")+
+      '<div class="is-fold-all hsg-all-l" id="st-ind">'+
+        IndustryGroupChips("/startup", nowQS("g"))+
+        IndustryGrid("/startup","", nowQS("g"))+
+      '</div>'+
       '<p class="hsg-note">업종을 고르시면 그 업종에 흔히 필요한 서비스부터 앞에 놓습니다 — 조회수나 신청 건수 같은 통계가 아니라 저희가 추려 둔 차례입니다.</p>'+
     '</div>'+
   '</div></section>';
@@ -82,12 +88,13 @@ function StartPickBand(top, rest, ind){
       '<h2>'+(on && indN
         ? esc(indN)+' 창업에 필요한 것'
         : '필요한 서비스를 골라 주세요')+'</h2>'+
-      '<p><b>여러 개를 함께 고르실 수 있습니다.</b> 고르신 것은 '+
-        '아래에 모이고, 한 번만 적어 보내시면 됩니다.</p>'+
+      '<p><b>여러 개를 함께 고르실 수 있습니다.</b> 고르신 것은 아래에 모입니다. '+
+        ctaPair("quote", "한 번만 적어 보내시면 됩니다.",
+          "지금은 견적 접수를 받지 않아, 고르신 서비스는 이 기기의 브라우저에 남습니다.")+'</p>'+
     '</div>'+
 
     '<div class="stB-ind">'+
-      '<label class="stB-ind-l" for="st-indsel">업종을 고르시면 그 업종에 '+
+      '<label class="stB-ind-l" for="st-indsel">서비스 추천 순서 — 업종을 고르시면 그 업종에 '+
         '흔히 필요한 것부터 보여 드립니다</label>'+
       '<div class="stB-ind-r">'+
 
@@ -413,23 +420,18 @@ function FranchiseHint(fcat, ind){
 function PageClosure(){
 
   var path  = nowQS("p") === "all" ? "all" : (nowQS("p") === "pick" ? "pick" : "");
-
-  var guide = WantBand(null) + ClosingProcess(null);
-
   var sel   = PickGroupBand("closure", "close") + PickBasket("close") +
               PackPickBand("close");
-
-  return ClosureIntro()+
+  return ClosureIntro(path)+
     HallCalcBand({ keys:CLOSE_CALC, tones:CLOSE_CALC_TONE,
       title:"정리하기 전에 체크리스트와 비용부터 보세요",
       lead:"빠뜨린 것과 들 돈을 먼저 보실 수 있습니다. 적으신 값은 저장하지 않습니다." })+
-    ClosurePathBand(path)+
-    (path === "all" ? guide + sel : sel + guide)+
+    sel+
+    ClosureDetailBand()+
     ClosureIndustryBand()+
 
     ReadBand({ side:"close", limit:4,
                title:"정리하기 전에 알아 두면 좋은 것" })+
-    ClosureHelpBand()+
     HallSteps({ quote:"/quote?mode=close&from=closure-steps", ctaForm:"close",
                 goName:"매장 정리 상담 신청하기" }) +
     JourneyBand({ current:"closing",
@@ -441,7 +443,7 @@ function PageClosure(){
 var CLOSE_CALC      = ["close", "closecost", "premium"];
 var CLOSE_CALC_TONE = { close:"sv4", closecost:"sv5", premium:"t13" };
 
-function ClosureIntro(){
+function ClosureIntro(path){
 
   return HallHero({
     side:"close", photo:"hero-closure",
@@ -463,7 +465,7 @@ function ClosureIntro(){
            { ic:"box", b:"집기 · 설비 처분", d:"주방기기 · 냉장고 · 가구를 정리합니다",
              go:"시설 · 집기 처분 보기", goOn:"집기 처분 상담 신청",
              href:"/assets", on:CLOSE_QUICK_ASSET }]
-  }) + ClosureFlow();
+  }) + ClosureFlow(path);
 }
 
 var CLOSE_QUICK_URGENT = "/quote?mode=close&from=closure-urgent&sv=" +
@@ -479,8 +481,11 @@ var CLOSE_FLOW = [
   ["doc",      "폐업 신고 · 지원", "신고 순서와 지원사업 찾는 곳",          "/c/process"],
   ["calc",     "세무 정리",        "부가세 · 종합소득세 등 폐업 세무",       "/providers/tax"]
 ];
-function ClosureFlow(){
-  return '<section class="sec sec-white hfl"><div class="w">'+
+function ClosureFlow(path){
+
+  var w = nowQS("w"), wSel = (window.amCloseWant ? amCloseWant(w) : null);
+  var openRoad = !!wSel || path === "all";
+  return '<section class="sec sec-white hfl" id="cl-flow"><div class="w">'+
     '<div class="sec-hd sec-hd-c"><p class="eyebrow">CLOSE FLOW</p>'+
       '<h2>폐업도 순서대로, 단계별로 정리하세요</h2>'+
       '<p>앞 걸음이 뒤 걸음의 비용을 줄입니다. 칸을 누르면 그 단계 화면으로 갑니다.</p></div>'+
@@ -488,6 +493,57 @@ function ClosureFlow(){
       return '<li><a href="'+esc(x[3])+'"><span class="hfl-n">0'+(i+1)+'</span>'+
         '<span class="hfl-i" aria-hidden="true">'+icon(x[0], 28)+'</span>'+
         '<b>'+esc(x[1])+'</b><span class="hfl-d">'+esc(x[2])+'</span></a></li>'; }).join("")+'</ol>'+
+    '<div class="hfl-more">'+
+      ClosingProcess(null, true, openRoad)+
+      '<p class="row-cta hfl-links">'+
+        '<a class="btn btn-o" href="/c/process">'+icon("list",16)+' 폐업 신고 순서 · 필요서류</a>'+
+        '<a class="btn btn-o" href="/support">'+icon("badge",16)+' 철거비 등 폐업 지원사업</a>'+
+      '</p>'+
+      ClosureWantFold(wSel)+
+    '</div>'+
+  '</div></section>';
+}
+
+function ClosureWantFold(sel){
+  var wants = (window.AM_CLOSE_WANTS || []);
+  if(!wants.length) return "";
+  var list = '<ul class="wnt-l">'+ wants.map(function(w){
+      var on = (sel && sel.key === w.key);
+      return '<li><a class="wnt'+(on?" on":"")+'" href="'+
+        esc("/closure?w=" + encodeURIComponent(w.key))+'"'+
+        (on ? ' aria-current="true"' : '')+'>'+
+        '<span class="wnt-ic">'+icon(w.icon,20)+'</span>'+
+        '<b>'+esc(w.name)+'</b>'+
+        '<span class="wnt-l-d">'+esc(w.lead)+'</span>'+
+      '</a></li>'; }).join("")+'</ul>';
+  var hit = "";
+  if(sel){
+    var g = amCloseCatsFor(sel.key, "");
+    hit = (sel.key === "lost" ? CloseAsk("/closure", true) : "")+
+      '<div class="sec-hd sec-hd-sub"><h3 class="pg-h2">'+esc(sel.name.replace(/[.?]$/, ""))+' — 이것부터입니다</h3>'+
+        '<p>'+esc(sel.lead)+' 나머지 분야는 아래 <b>분야별 상세</b>에 그대로 있습니다.</p></div>'+
+      '<div class="cat-g cat-g4">'+g.hit.map(function(c){ return CatCard(c, ""); }).join("")+'</div>';
+  }
+  return '<div class="hfl-want">'+
+    FoldAll("cl-want", "어디서부터 시작할지 모르겠어요", "접기", "", !!sel)+
+    '<div class="'+(sel ? "" : "is-fold-all")+'" id="cl-want">'+
+      '<p class="hfl-want-p">상황을 고르시면 그에 맞는 순서와 분야를 앞으로 꺼내 드립니다.</p>'+
+      list + hit +
+    '</div></div>';
+}
+
+function ClosureDetailBand(){
+  var all = (window.amCatsFor ? amCatsFor("", "close") : (window.AM_CLOSE_CATS||[]));
+  return '<section class="sec cl-det"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">분야별 상세</p>'+
+      '<h2>정리에 필요한 것 전부</h2>'+
+      '<p>어느 분야에 무엇이 있는지 보고 싶으시면 펼쳐 보세요. 누르면 그 분야 화면으로 갑니다.</p>'+
+    '</div>'+
+    FoldAll("cl-all", "분야 "+all.length+"개 펼쳐 보기", "접기")+
+    '<div class="cat-g cat-g4 is-fold-all" id="cl-all">'+
+      all.map(function(c){ return CatCard(c, ""); }).join("")+
+    '</div>'+
   '</div></section>';
 }
 
@@ -628,8 +684,11 @@ var CLOSE_PROC = {
 
 function StaffNote(){
   if(nowQS("staff") !== "1") return "";
-  return '<section class="sec sec-white"><div class="w">'+
-    '<div class="note-box">'+
+  return '<section class="sec sec-white"><div class="w">'+StaffNoteBox()+'</div></section>';
+}
+function StaffNoteBox(){
+  if(nowQS("staff") !== "1") return "";
+  return '<div class="note-box">'+
       '<b>직원이 계시면 기한부터 보세요.</b>'+
       '<p>해고예고 · 퇴직금 · 4대보험 상실 신고는 날짜가 정해져 있습니다. '+
         '아래 순서를 다 읽기 전에 먼저 확인하실 자리입니다.</p>'+
@@ -638,15 +697,24 @@ function StaffNote(){
           '정리할 때 직원 — 무엇을 언제'+icon("arrow",15)+'</a>'+
         '<a class="btn btn-o btn-sm" href="/providers/labor">노무 전문가 찾기</a>'+
       '</p>'+
-    '</div>'+
-  '</div></section>';
+    '</div>';
 }
-function ClosingProcess(ind){
+function ClosingProcess(ind, bare, opened){
   var w = nowQS("w");
 
   var o = CLOSE_PROC[w] || CLOSE_PROC.fast;
   var n = amProcess(o.key).length;
 
+  if(bare){
+    return '<div class="stD hfl-road">'+
+      '<div class="sec-hd sec-hd-sub"><h3 class="pg-h2">'+esc(o.title)+'</h3>'+
+        '<p>'+esc(n + "걸음입니다. " + o.lead)+' 걸음마다 꼭 확인할 것과 기한을 적어 두었습니다.</p></div>'+
+      StaffNoteBox()+
+      FoldAll("cl-road", "자세한 정리 순서 "+n+"걸음 보기", "접기", "", !!opened)+
+      '<div class="'+(opened ? "" : "is-fold-all")+'" id="cl-road">'+
+        ProcessBand({ key:o.key, bare:true, industry:"", note:o.note })+
+      '</div></div>';
+  }
   return StaffNote() +
     '<section class="sec sec-white stD"><div class="w">'+
       '<div class="sec-hd sec-hd-c">'+
@@ -682,8 +750,8 @@ window.closeAskGo = function(base){
 
   go(base + "?w=" + encodeURIComponent(w) + (on.staff ? "&staff=1" : ""));
 };
-function CloseAsk(base){
-  return '<section class="sec sec-white cask"><div class="w">'+
+function CloseAsk(base, bare){
+  return (bare ? '<div class="cask cask-in">' : '<section class="sec sec-white cask"><div class="w">')+
     '<div class="sec-hd">'+
       '<p class="eyebrow">짧게 네 가지만</p>'+
       '<h2>지금 상황을 알려 주시면 순서를 맞춰 드립니다</h2>'+
@@ -702,7 +770,7 @@ function CloseAsk(base){
 
       ' 체크하신 내용은 <b>아무 데도 저장되지 않습니다.</b> 어느 순서를 '+
       '먼저 보여 드릴지 고르는 데에만 씁니다.</p>'+
-  '</div></section>';
+  (bare ? '</div>' : '</div></section>');
 }
 
 function PageClosureIndustry(ind){
@@ -772,7 +840,9 @@ function BridgeFor(ind, side){
 
 function StartupHelpBand(){
   return '<section class="sec sec-white"><div class="w help-g">'+
-    HelpCard("doc","무엇부터 할지 모르겠다면","견적 요청서를 한 번만 적으시면 조건에 맞는 업체들에 같이 전달합니다.","/quote","견적 요청하기")+
+
+    HelpCard("doc","무엇부터 할지 모르겠다면","견적 요청서를 한 번만 적으시면 조건에 맞는 업체들에 같이 전달합니다.","/quote","견적 요청하기", ' data-cta="on" data-cta-form="quote" hidden')+
+    HelpCard("doc","무엇부터 할지 모르겠다면","지금은 견적 접수를 받지 않습니다. 접수 방법과 지금 쓰실 수 있는 길을 확인하세요.","/intake","접수 안내 보기", ' data-cta="off" data-cta-form="quote"')+
     HelpCard("won","돈이 걱정이라면","창업자금과 정책자금 중 조건에 맞는 것을 모아 둡니다.","/support","지원사업 보기")+
     HelpCard("book","먼저 알아보고 싶다면","창업비용 · 권리금 · 인허가처럼 실제로 막히는 것만 정리했습니다.","/content","정보 보기")+
   '</div></section>';
@@ -785,8 +855,8 @@ function ClosureHelpBand(){
     HelpCard("doc","여러 곳 견적을 한 번에","한 번만 적으시면 철거 · 원상복구 · 폐기물 업체에 같이 전달합니다.","#pick","필요한 것 고르기")+
   '</div></section>';
 }
-function HelpCard(ic, t, p, to, label){
-  return '<a class="help" href="'+esc(to)+'">'+
+function HelpCard(ic, t, p, to, label, attr){
+  return '<a class="help" href="'+esc(to)+'"'+(attr || "")+'>'+
     '<span class="help-ic">'+icon(ic,20)+'</span>'+
     '<b>'+esc(t)+'</b><span class="help-p">'+esc(p)+'</span>'+
     '<span class="help-go">'+esc(label)+icon("arrow",15)+'</span></a>';

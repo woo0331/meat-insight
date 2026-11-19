@@ -379,13 +379,14 @@ window.FoldBtn = function(id, shut, open){
     '<span>'+esc(shut)+'</span>'+ icon("chevd", 16) +'</button>';
 };
 
-window.FoldAll = function(id, shut, open, cls){
+window.FoldAll = function(id, shut, open, cls, opened){
   cls = cls || "is-fold-all";
-  return '<button class="fld-b fld-all" type="button" aria-expanded="false" '+
+
+  return '<button class="fld-b fld-all'+(opened ? " is-open" : "")+'" type="button" aria-expanded="'+(opened ? "true" : "false")+'" '+
       'aria-controls="'+esc(id)+'" '+
       'data-shut="'+esc(shut)+'" data-open="'+esc(open || "접기")+'" '+
       'onclick="foldToggle(\''+esc(id)+'\',this,\''+esc(cls)+'\')">'+
-    '<span>'+esc(shut)+'</span>'+ icon("chevd", 16) +'</button>';
+    '<span>'+esc(opened ? (open || "접기") : shut)+'</span>'+ icon("chevd", 16) +'</button>';
 };
 
 window.foldToggle = function(id, btn, cls){
@@ -497,6 +498,11 @@ window.HallCalcBand = function(o){
 };
 
 function ctaF(o){ return (o && o.ctaForm) ? ' data-cta-form="'+esc(o.ctaForm)+'"' : ""; }
+
+window.ctaPair = function(form, on, off){
+  var f = ' data-cta-form="'+esc(form || "quote")+'"';
+  return '<span data-cta="on"'+f+' hidden>'+esc(on)+'</span><span data-cta="off"'+f+'>'+esc(off)+'</span>';
+};
 window.HallHero = function(o){
   o = o || {};
   var ph = o.photo && typeof hasPhoto === "function" && hasPhoto(o.photo);
@@ -555,7 +561,9 @@ window.HallSteps = function(o){
   if(!S.length) return "";
   return '<section class="sec sec-white hst"><div class="w hst-in">'+
     '<div class="hst-hd"><h2>'+esc(o.title || "상담 신청은 이렇게 진행됩니다")+'</h2>'+
-      '<p>서비스를 고르시고 한 번만 적어 보내시면 운영자가 확인합니다. 업체에 연락처를 전하기 전에는 따로 동의를 여쭙니다.</p></div>'+
+      '<p>'+ctaPair(o.ctaForm || "quote",
+        "서비스를 고르시고 한 번만 적어 보내시면 운영자가 확인합니다. 업체에 연락처를 전하기 전에는 따로 동의를 여쭙니다.",
+        "접수가 열리면 이 순서로 진행합니다. 지금은 접수를 받지 않아, 접수 방법은 접수 안내에서 확인하실 수 있습니다.")+'</p></div>'+
     '<ol class="hst-g">'+S.map(function(s, i){
       return '<li><span class="hst-n">'+(i+1)+'</span>'+
         '<span class="hst-i" aria-hidden="true">'+icon(s.ic || "check", 26)+'</span>'+

@@ -991,20 +991,30 @@ function HomeStores(){
         '</a></li>';
       }).join("") + '</ul>';
   }else{
-    right = '<div class="sw-s0">'+icon("store",40)+
-      '<b>아직 올라온 매물이 없습니다.</b>'+
-      '<p>없는 매물을 지어내지 않습니다 — 확인된 매물만 이 자리에 올라옵니다.</p>'+
 
-      '<a class="sw-s0-go" href="/sell" data-cta="on" data-cta-form="sell" hidden>매장 내놓기 안내'+icon("arrow",15)+'</a>'+
-      '<p class="sw-s0-n" data-cta="off" data-cta-form="sell">매물 등록 접수는 현재 받지 않습니다. 접수가 열리면 이 자리에서 안내드립니다.</p>'+
-    '</div>';
+    right = '<ul class="sw-prep">'+[
+        ["/content?j=startup&cat=store", "doc",   "인수 계약 가이드", "상가 계약 · 권리금, 계약 전에 볼 것"],
+        ["/content?j=acquisition",        "book",  "양도 준비 가이드", "넘기기 전에 맞춰야 할 것"],
+        ["/tools/premium",                "gauge", "권리금 계산",     "몇 달이면 돌아오는지 따져 봅니다"],
+        ["/tools/vs",                     "scale", "신규 vs 인수 비교", "새로 만드는 것과 받는 것"]
+      ].map(function(x){
+        return '<li><a href="'+esc(x[0])+'"><span class="sw-prep-i" aria-hidden="true">'+icon(x[1],22)+'</span>'+
+          '<b>'+esc(x[2])+'</b><span>'+esc(x[3])+'</span></a></li>'; }).join("")+'</ul>'+
+      '<p class="sw-s0-n sw-prep-n">'+icon("info",15)+' 지금 올라온 매물은 0건입니다. 확인된 매물만 올라옵니다.</p>'+
+
+      '<a class="sw-s0-go" href="/sell" data-cta="on" data-cta-form="sell" hidden>매장 내놓기 안내'+icon("arrow",15)+'</a>';
   }
+  var none = !S.length;
   return '<section class="bpass sw-store"><div class="w sw-sw">'+
     '<div class="sw-sl">'+
-      '<p class="sw-ey">전국 매장 양도양수</p>'+
-      '<h2>원하는 매장을<br class="br-m"> 지금 바로 찾아보세요.</h2>'+
-      '<p>지역 · 업종 · 보증금 · 월세 · 권리금으로 매물을 걸러 보실 수 있습니다.</p>'+
-      '<a class="sw-sl-go" href="/stores">매물 전체보기'+icon("arrow",15)+'</a>'+
+      '<p class="sw-ey">'+(none ? "매장 인수 · 양도 준비" : "전국 매장 양도양수")+'</p>'+
+      (none
+        ? '<h2>매장을 받거나 넘기기 전에<br class="br-m"> 먼저 따져 보세요.</h2>'+
+          '<p>계약 · 권리금 가이드와 계산도구는 지금 바로 쓰실 수 있습니다. 매물이 올라오면 지역 · 업종 · 보증금 · 월세 · 권리금으로 걸러 보실 수 있습니다.</p>'+
+          '<a class="sw-sl-go" href="/stores">매물 목록 보기'+icon("arrow",15)+'</a>'
+        : '<h2>원하는 매장을<br class="br-m"> 지금 바로 찾아보세요.</h2>'+
+          '<p>지역 · 업종 · 보증금 · 월세 · 권리금으로 매물을 걸러 보실 수 있습니다.</p>'+
+          '<a class="sw-sl-go" href="/stores">매물 전체보기'+icon("arrow",15)+'</a>')+
       '<span class="sw-pin" aria-hidden="true">'+icon("pin",64)+'</span>'+
     '</div>'+
     '<div class="sw-sr-w">'+right+'</div>'+
@@ -1081,10 +1091,10 @@ function HomeHeroSW(){
 }
 
 var HOME_ENTRY_SW = [
-  { k:"startup",  to:"/startup",   no:"01", ic:"rocket",   ph:"hero-startup", b:"창업 준비",     s:"성공 창업을 위한 준비부터 실행까지" },
-  { k:"ops",      to:"/operation", no:"02", ic:"chart",    ph:"hero-ops",     b:"매장 운영",     s:"매출 향상과 비용 절감, 운영 고민 해결" },
-  { k:"transfer", to:"/transfer",  no:"03", ic:"store",    ph:"kind-pass",    b:"매장 양도양수", s:"좋은 매장을 찾고 안전하게 넘기기" },
-  { k:"closure",  to:"/closure",   no:"04", ic:"hammer",   ph:"hero-closure", b:"폐업·철거",     s:"매장 정리부터 철거 · 원상복구까지" }
+  { k:"startup",  to:"/startup",   no:"01", ic:"rocket",   ph:"hero-startup", b:"창업 준비",     s:["창업비 계산","업종별 준비"] },
+  { k:"ops",      to:"/operation", no:"02", ic:"chart",    ph:"hero-ops",     b:"매장 운영",     s:["비용 절감","홍보","시설 관리"] },
+  { k:"transfer", to:"/transfer",  no:"03", ic:"store",    ph:"kind-pass",    b:"매장 양도양수", s:["매장 찾기","내 매장 넘기기"] },
+  { k:"closure",  to:"/closure",   no:"04", ic:"hammer",   ph:"hero-closure", b:"폐업·철거",     s:["집기 처분","철거","원상복구"] }
 ];
 function HomeEntrySW(){
   return '<section class="bent sw2-ent"><div class="w">'+
@@ -1097,7 +1107,8 @@ function HomeEntrySW(){
           '<span class="sw2-eno bent-no" aria-hidden="true">'+esc(e.no)+'</span>'+
           '<span class="sw2-ei" aria-hidden="true">'+icon(e.ic,34)+'</span>'+
           '<b class="sw2-eb">'+esc(e.b)+'</b>'+
-          '<span class="sw2-es">'+esc(e.s)+'</span>'+
+
+          '<span class="sw2-es">'+[].concat(e.s).map(function(x){ return '<span class="sw2-es-p">'+esc(x)+'</span>'; }).join(" · ")+'</span>'+
           '<span class="sw2-ego" aria-hidden="true">'+icon("arrow",20)+'</span>'+
         '</a></li>';
       }).join("")+

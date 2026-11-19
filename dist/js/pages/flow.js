@@ -437,9 +437,13 @@ function ClosureIntro(){
     quote: "/quote?mode=close&from=closure-hero", ctaForm:"close",
     goName:"매장 정리 상담 신청하기",
     second:'<a class="btn btn-lg hh-o" href="#pick">필요한 서비스 고르기'+icon("arrow",18)+'</a>',
-    cardTitle:"폐업 · 철거, 이 화면에서 하실 수 있는 것",
-    checks:[["handover","매장을 넘길 수 있는지 먼저 확인"],["box","집기 · 설비 처분 길 찾기"],
-            ["hammer","철거 · 원상복구 범위 정리"],["doc","폐업 신고 · 지원 · 세무 순서 확인"]]
+    cardTitle:"상황에 맞게 바로 가기",
+
+    quick:[{ ic:"handover", b:"매장 양도 검토", go:"넘길 수 있는지 먼저 보기", href:"/transfer?t=out" },
+           { ic:"clock", b:"긴급 철거", go:"철거 분야 보기", goOn:"집기 처분 + 철거 상담 신청",
+             href:"/providers/demolish", on:CLOSE_QUICK_URGENT },
+           { ic:"box", b:"집기 · 설비 처분", go:"시설 · 집기 보기", goOn:"집기 처분 상담 신청",
+             href:"/assets", on:CLOSE_QUICK_ASSET }]
   }) + ClosureQuick() + ClosureFlow();
 }
 

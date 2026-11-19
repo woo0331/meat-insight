@@ -828,8 +828,24 @@ window.HallHero = function(o){
           (o.second ? o.second : '')+
         '</div>'+
       '</div>'+
-      (checks ? '<div class="hh-card"><p class="hh-card-t">'+esc(o.cardTitle || "이 화면에서 하실 수 있는 것")+'</p>'+
-        '<ul class="hh-cl">'+checks+'</ul></div>' : '')+
+      /* 2026-11-19 — quick 이 있으면 체크 카드 대신 **바로 가는 카드**입니다 (폐업 · 철거).
+         ⚠️ 칸마다 실제로 있는 화면이고, 접수가 걸린 칸은 data-cta 짝(on 은 hidden)입니다.
+         ⚠️ 폰에서도 접지 않습니다 — 첫 행동 단추 **아래**에 섭니다 (단추를 밀지 않습니다). */
+      (o.quick && o.quick.length
+        ? '<div class="hh-card hh-quick"><p class="hh-card-t">'+esc(o.cardTitle || "바로 가기")+'</p>'+
+          '<ul class="hh-ql">'+o.quick.map(function(q){
+            function a(href, go, attr){
+              return '<a class="hh-qa" href="'+esc(href)+'"'+(attr || "")+'>'+
+                '<span class="hh-ci" aria-hidden="true">'+icon(q.ic || "arrow", 20)+'</span>'+
+                '<span class="hh-qt"><b>'+esc(q.b)+'</b><i>'+esc(go)+'</i></span>'+icon("chev",16)+'</a>';
+            }
+            return '<li>'+(q.on
+              ? a(q.on, q.goOn || q.go, ' data-cta="on" data-cta-form="'+esc(q.form || "close")+'" hidden')+
+                a(q.href, q.go, ' data-cta="off" data-cta-form="'+esc(q.form || "close")+'"')
+              : a(q.href, q.go))+'</li>';
+          }).join("")+'</ul></div>'
+        : (checks ? '<div class="hh-card"><p class="hh-card-t">'+esc(o.cardTitle || "이 화면에서 하실 수 있는 것")+'</p>'+
+        '<ul class="hh-cl">'+checks+'</ul></div>' : ''))+
     '</div>'+
   '</section>';
 };

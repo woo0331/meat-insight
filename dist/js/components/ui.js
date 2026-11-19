@@ -521,8 +521,22 @@ window.HallHero = function(o){
           (o.second ? o.second : '')+
         '</div>'+
       '</div>'+
-      (checks ? '<div class="hh-card"><p class="hh-card-t">'+esc(o.cardTitle || "이 화면에서 하실 수 있는 것")+'</p>'+
-        '<ul class="hh-cl">'+checks+'</ul></div>' : '')+
+
+      (o.quick && o.quick.length
+        ? '<div class="hh-card hh-quick"><p class="hh-card-t">'+esc(o.cardTitle || "바로 가기")+'</p>'+
+          '<ul class="hh-ql">'+o.quick.map(function(q){
+            function a(href, go, attr){
+              return '<a class="hh-qa" href="'+esc(href)+'"'+(attr || "")+'>'+
+                '<span class="hh-ci" aria-hidden="true">'+icon(q.ic || "arrow", 20)+'</span>'+
+                '<span class="hh-qt"><b>'+esc(q.b)+'</b><i>'+esc(go)+'</i></span>'+icon("chev",16)+'</a>';
+            }
+            return '<li>'+(q.on
+              ? a(q.on, q.goOn || q.go, ' data-cta="on" data-cta-form="'+esc(q.form || "close")+'" hidden')+
+                a(q.href, q.go, ' data-cta="off" data-cta-form="'+esc(q.form || "close")+'"')
+              : a(q.href, q.go))+'</li>';
+          }).join("")+'</ul></div>'
+        : (checks ? '<div class="hh-card"><p class="hh-card-t">'+esc(o.cardTitle || "이 화면에서 하실 수 있는 것")+'</p>'+
+        '<ul class="hh-cl">'+checks+'</ul></div>' : ''))+
     '</div>'+
   '</section>';
 };

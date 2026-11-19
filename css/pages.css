@@ -7299,3 +7299,58 @@ html.ivh .sw2-hero .sw2-find{ margin-top:22px; }
 @media (max-width:768px){
   .sw2-ec > a::after{ background:linear-gradient(180deg, rgba(var(--ec),.62) 0%, rgba(var(--ec),.92) 38%, rgba(var(--ec),.98) 62%); }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-11-19 확정 시안 공통 스타일 — 네 전문관 머리를 메인 4대 진입 카드의 색으로
+   ⚠️ 색은 메인 진입 카드(.ent-*)의 --ec 와 같은 값입니다 — 한쪽만 고치면 두 화면이 다른 색이 됩니다.
+      창업 파랑 · 운영 초록 · 양도양수 보라 · 폐업 주황 (흰 글자 대비 5.2 이상).
+   ⚠️ 바탕 판(#0B2A55)은 그대로입니다 — 바꾸는 것은 머리말 알약 · 주 단추 · 아이콘 · 강조 글자뿐.
+   ⚠️ 폐업 주황을 빨강 쪽으로 옮기지 마세요 (check.js 가 폐업 단추의 초록 성분을 봅니다).
+   ══════════════════════════════════════════════════════════════════ */
+.hh-start{ --hc:29,78,216;  --hc-t:#9DC2FF; }
+.hh-ops{ --hc:11,110,79;    --hc-t:#7FE0BC; }
+.hh-transfer{ --hc:90,47,192; --hc-t:#C9B4FF; }
+.hh-close{ --hc:194,65,12;  --hc-t:#FFB88C; }
+#view .hh .hh-k{ background:rgba(var(--hc),.92); border-color:rgba(var(--hc),1); color:#fff; }
+#view .hh .hh-h1 em{ color:var(--hc-t); }
+#view .hh .hh-go, #view .hh .hh-go:visited{ background:rgb(var(--hc)); border-color:rgb(var(--hc)); color:#fff; }
+#view .hh .hh-go:hover{ background:rgba(var(--hc),.86); border-color:rgba(var(--hc),.86); color:#fff; }
+#view .hh .hh-ci{ color:rgb(var(--hc)); }
+.hh-card{ border-top:4px solid rgb(var(--hc,11,35,80)); }
+/* 바로 가는 카드 (폐업 · 철거) */
+.hh-ql{ list-style:none; margin:0; padding:0; }
+.hh-ql li{ border-bottom:1px solid var(--line); }
+.hh-ql li:last-child{ border-bottom:0; }
+.hh-qa{ display:flex; align-items:center; gap:12px; min-height:56px; padding:8px 2px; color:var(--ink); text-decoration:none; }
+.hh-qa[hidden]{ display:none !important; }
+.hh-qa:hover .hh-qt b{ color:rgb(var(--hc)); }
+.hh-qt{ flex:1; min-width:0; display:flex; flex-direction:column; }
+.hh-qt b{ font-size:16px; font-weight:800; color:var(--navy); }
+.hh-qt i{ font-style:normal; font-size:var(--t-cap); color:var(--ink2); }
+.hh-qa > svg:last-child{ flex:none; color:var(--ink3); }
+/* 본문 카드 — 메인 진입 카드처럼 둥근 모서리 · 옅은 그림자 · 위로 뜨는 hover */
+.clq-c, .hsg-calc, .hsg-ig a{ border-radius:16px; }
+.clq-c{ transition:transform .15s ease, box-shadow .15s ease; }
+.clq-c:hover{ transform:translateY(-2px); box-shadow:0 12px 28px rgba(11,35,80,.12); }
+@media (max-width:900px){
+  /* ⚠️ 첫 행동 단추를 아래 네비(360×740 에서 677px) 위로 — 사진 띠를 줄이고 단추를 나란히 둡니다 */
+  .hh-ph{ height:120px; }
+  .hh-in{ gap:16px; padding-top:14px; }
+  #view .hh-h1{ font-size:30px; margin:10px 0 8px; }
+  #view .hh-lead{ font-size:15px; line-height:1.55; margin:0 0 16px; }
+  .hh-cta{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .hh-cta .btn{ min-height:52px; padding:0 10px; font-size:15px; }
+  .hh-cta .btn svg{ display:none; }
+  .hh-card.hh-quick{ display:block; padding:12px 16px; box-shadow:0 8px 24px rgba(0,0,0,.22); }
+}
+@media (max-width:359px){ .hh-cta{ grid-template-columns:1fr; } }
+@media (max-width:900px){
+  /* ⚠️ 폰에서는 바로 가기 셋을 한 줄 세 칸으로 — 세로로 쌓으면 360×740 에서 셋째 칸이 아래 네비 밑으로 들어갔습니다 (재서 알았습니다) */
+  .hh-quick .hh-card-t{ font-size:14px; margin:0 0 8px; }
+  .hh-ql{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+  .hh-ql li{ border:0; }
+  .hh-qa{ flex-direction:column; justify-content:center; text-align:center; gap:4px; min-height:64px; padding:6px 2px;
+    border:1px solid var(--line); border-radius:12px; }
+  .hh-qt i, .hh-qa > svg:last-child{ display:none; }
+  .hh-qt b{ font-size:14px; line-height:1.25; }
+}

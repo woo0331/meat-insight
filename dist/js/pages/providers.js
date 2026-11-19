@@ -520,7 +520,7 @@ function PageJoin(){
     h1raw:"창업과 폐업을 준비하는<br class=\"br-m\"> 사장님이 직접 찾아옵니다.",
     lead:"하시는 일과 지역만 등록해 두시면, 조건이 맞는 요청만 보내 드립니다. 기본 입점은 무료입니다.",
 
-    cta:'<a class="btn btn-b btn-lg" href="#join-form">입점 신청하기'+icon("arrow",18)+'</a>'+
+    cta:'<a class="btn btn-b btn-lg" href="#join-form" data-go-form="join">입점 신청하기'+icon("arrow",18)+'</a>'+
         '<a class="btn btn-o btn-lg" href="#join-fields">어떤 분야를 찾나요</a>'
   })+
   JoinNow(subs)+

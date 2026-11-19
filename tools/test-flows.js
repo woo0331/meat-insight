@@ -1126,5 +1126,42 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    await ctaRun("닫힘(sosReady 꺼짐)",          true,  false, w);
  }
 
+ /* 【13】 2026-11-19 — 매장 정리 상담(close)만 열었을 때 일반 견적 · 매물 등록 · 입점 신청 단추가
+    하나도 안 열리는가. ⚠️ 2026-11-19 검수에서 메인의 "매장 내놓기 안내" 가 구간 CSS 의 display 에
+    hidden 이 져서 보였고, /join 머리의 "입점 신청하기" 는 게이트 표시가 없었습니다. */
+ console.log("\n【13】 매장 정리 상담만 열었을 때 다른 접수 단추");
+ {
+   const cx = await br.newContext({ viewport:{ width:390, height:900 } });
+   const p3 = await cx.newPage();
+   let sellOpen = false;
+   await p3.route("**/api/session", r => r.fulfill({ status:200, contentType:"application/json",
+     body: JSON.stringify({ auth:false, signedIn:false, intake:{ quote:false, close:true, sell:sellOpen, join:sellOpen } }) }));
+   await p3.route("**/dist/js/data/site.js*", async r => {
+     const t = fs.readFileSync(path.join(root, "dist/js/data/site.js"), "utf8").replace(/sosReady:(\s*)false/, "sosReady:$1true");
+     await r.fulfill({ status:200, contentType:"text/javascript", body:t });
+   });
+   const scan = () => p3.evaluate(() => {
+     const vis = e => e.getClientRects().length && getComputedStyle(e).visibility !== "hidden";
+     const o = [];
+     document.querySelectorAll("a[href]").forEach(a => { if(!vis(a)) return;
+       let u; try{ u = new URL(a.getAttribute("href"), location.href); }catch(e){ return; }
+       if(u.origin !== location.origin || u.hash === "#join-fields") return;
+       if(!(a.classList.contains("btn") || a.hasAttribute("data-cta") || a.hasAttribute("data-go-form") || a.closest(".hd-r"))) return;
+       if(u.pathname === "/quote" && u.searchParams.get("mode") === "close") return;
+       if(u.pathname === "/quote" || u.pathname === "/sell" || u.pathname === "/join" || u.hash === "#join-form")
+         o.push(u.pathname + u.search + u.hash + " " + a.textContent.trim().slice(0, 16)); });
+     return o; });
+   for (const u of ["/", "/startup", "/operation", "/transfer?t=out", "/closure", "/stores", "/assets",
+                    "/sell", "/join", "/providers", "/providers/demolish", "/tools/closecost"]){
+     await p3.goto(B + u, { waitUntil:"networkidle" }); await p3.waitForTimeout(300);
+     const o = await scan();
+     say(!o.length, "close 만 열림 · " + u + " — 일반 견적 · 매물 등록 · 입점 신청 단추가 안 보인다", o.join(" | "));
+   }
+   sellOpen = true;
+   await p3.goto(B + "/", { waitUntil:"networkidle" }); await p3.waitForTimeout(300);
+   say(await p3.isVisible(".sw-s0-go"), "매물 등록이 열리면 메인의 '매장 내놓기 안내' 가 다시 보인다 (반대쪽)");
+   await cx.close();
+ }
+
  await br.close(); srv.close(); process.exit(bad?1:0);
 })();

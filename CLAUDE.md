@@ -11905,6 +11905,11 @@ h1       1    1    1    1    1    1    1    1    1    1
   `deal.js` 의 `AM_DEAL_MOVE` 와 0084 insert 가 같아야 하고 `checkDealSql()` 이 0004 **뒤 번호의
   insert 까지** 읽습니다. 기록에는 `by_role = staff` 로 남습니다.
 - 운영 단계 여섯은 `amDealStage()` — 새 상태가 아니라 **묶어 보기**입니다.
+- ⚠️⚠️ **업체 응답과 대리 기록을 섞지 마세요** (2026-11-19 검수).
+  - `intake_funnel.vendor_at` 과 `vendor_response` 는 **업체 역할 기록만** 셉니다. 대리 기록은 `proxy_at` · `proxy_n` 입니다.
+  - 관리자 이력은 그 걸음에 "운영자 대리 기록 · 업체 직접 응답 아님" 을 붙입니다.
+  - 직원은 `audit_staff_req` 로 **신청 · 견적 기록만** 더 읽습니다.
+- ⚠️ 접수 단추 짝의 `hidden` 은 `[data-cta][hidden]{display:none!important}` 가 지킵니다 — 구간 CSS 의 `display` 에 지면 닫힌 양식의 단추가 보입니다 (메인 "매장 내놓기 안내" 에서 겪음 · `test-flows` 【13】).
 - ⚠️ `api/me.js` 는 0084 칸이 없으면(400) 옛 칸으로 **다시 묻습니다** — 배포 순서가 어긋나도
   관리자 접수함이 비지 않게. 그래도 **0084 를 먼저** 돌리세요.
 

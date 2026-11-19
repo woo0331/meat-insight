@@ -532,3 +532,5 @@ html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
 .pk-closed-n{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:10px 0 0;
   font-size:var(--t-cap); color:var(--ink2); }
 .pk-closed-n a{ min-height:40px; display:inline-flex; align-items:center; font-weight:700; }
+
+[data-cta][hidden]{ display:none !important; }

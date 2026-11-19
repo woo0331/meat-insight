@@ -703,7 +703,8 @@ function PageJoin(){
        **3,721px(4.1화면)** 였습니다 — 거기서 닫히면 그 통화가
        버려집니다. 내려가지 않고도 바로 갈 수 있게 둡니다.
        ⚠️ 아래 글을 하나도 안 지웠습니다 — 길을 하나 더한 것입니다. */
-    cta:'<a class="btn btn-b btn-lg" href="#join-form">입점 신청하기'+icon("arrow",18)+'</a>'+
+    /* ⚠️ 2026-11-19 — 입점 접수(join)가 닫혀 있으면 신청 단추를 가립니다 (아래 폼도 잠겨 있습니다) */
+    cta:'<a class="btn btn-b btn-lg" href="#join-form" data-go-form="join">입점 신청하기'+icon("arrow",18)+'</a>'+
         '<a class="btn btn-o btn-lg" href="#join-fields">어떤 분야를 찾나요</a>'
   })+
   JoinNow(subs)+

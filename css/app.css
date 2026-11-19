@@ -936,3 +936,8 @@ html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
 .pk-closed-n{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:10px 0 0;
   font-size:var(--t-cap); color:var(--ink2); }
 .pk-closed-n a{ min-height:40px; display:inline-flex; align-items:center; font-weight:700; }
+
+/* 2026-11-19 검수 — 접수 단추 짝(data-cta)의 hidden 이 구간 CSS 의 display 에 지지 않게.
+   ⚠️ 메인의 "매장 내놓기 안내"(.sw-s0-go · display:inline-flex)가 매물 등록이 닫혀
+   있는데도 보였습니다 — 열린 쪽 짝을 숨긴 hidden 이 안 먹었습니다. */
+[data-cta][hidden]{ display:none !important; }

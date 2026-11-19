@@ -7513,3 +7513,7 @@ html.ivh .sw2-es-p{ white-space:nowrap; }
 .pvz-g b{ align-self:end; font-weight:800; }
 .pvz-g a > span:last-child{ align-self:start; font-size:var(--t-sm); color:var(--ink2); line-height:1.45; }
 @media (max-width:900px){ .pvz-g{ grid-template-columns:1fr; } }
+
+/* 2026-11-19 — 창업 "업종별 창업 준비 과정" 의 전체 업종 펼침 */
+.hsg-ind > .fld-all{ margin-top:var(--s4); }
+.hsg-all-l{ margin-top:var(--s4); }

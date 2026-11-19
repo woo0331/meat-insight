@@ -59,7 +59,8 @@ function PageStartup(){
      했습니다. 둘 다 이미 있던 공통 조각입니다 — 새로 만든 것이
      아닙니다. */
   return StartIntro(ind) + StartPickBand(top, rest, ind) + PickBasket() +
-    StartIndustryBand() + PackPickBand("start") + StartChecklist(ind) +
+    /* StartIndustryBand() — 2026-11-19 위 "업종별 창업 준비 과정" 의 전체 보기로 합쳤습니다 */
+    PackPickBand("start") + StartChecklist(ind) +
     StartGuideBand(ind) +
     HallCalcBand({ keys:START_CALC, tones:START_CALC_TONE,
       title:"시작하기 전에 숫자부터 보세요",
@@ -126,11 +127,19 @@ function StartSignature(ind){
       '<button class="btn btn-b btn-lg" type="submit">'+icon("calc",18)+' 예상 창업 비용 따져 보기</button>'+
     '</form>'+
     '<div class="hsg-ind" id="st-ig">'+
-      '<div class="hsg-hd"><h2>업종별 창업 준비 과정</h2>'+
-        '<a class="hsg-all" href="#st-indsel">전체 업종 보기'+icon("chev",16)+'</a></div>'+
+      /* 2026-11-19 공개 화면 완성도 §4 — "전체 업종 보기" 가 전에는 아래 **서비스 추천 고르개**(#st-indsel)로
+         보냈습니다. 이름과 도착이 달랐고, 그 아래 "업종 고르기 (14개)" 구간이 **같은 목적**(업종별 준비 화면)을
+         한 번 더 물었습니다. 지금은 이 자리에서 열넷을 펼칩니다 — 아래 구간은 내렸습니다(StartIndustryBand 는 그대로).
+         ⚠️ id st-ind 는 그 구간의 것을 그대로 씁니다 (흐름 검사 · 밖으로 나간 동작이 그 이름을 봅니다). */
+      '<div class="hsg-hd"><h2>업종별 창업 준비 과정</h2></div>'+
       '<ul class="hsg-ig">'+L.map(function(x){
         return '<li><a href="/startup/'+esc(x.key)+'"><span class="hsg-ii" aria-hidden="true">'+icon(x.icon || "store", 28)+'</span>'+
           '<b>'+esc(x.name)+'</b>'+icon("chev",16)+'</a></li>'; }).join("")+'</ul>'+
+      FoldAll("st-ind", "전체 업종 "+(window.AM_INDUSTRIES||[]).length+"개 보기", "접기")+
+      '<div class="is-fold-all hsg-all-l" id="st-ind">'+
+        IndustryGroupChips("/startup", nowQS("g"))+
+        IndustryGrid("/startup","", nowQS("g"))+
+      '</div>'+
       '<p class="hsg-note">업종을 고르시면 그 업종에 흔히 필요한 서비스부터 앞에 놓습니다 — 조회수나 신청 건수 같은 통계가 아니라 저희가 추려 둔 차례입니다.</p>'+
     '</div>'+
   '</div></section>';
@@ -177,7 +186,7 @@ function StartPickBand(top, rest, ind){
        서비스 카드가 밀려납니다. 고르개 한 칸이고, 네이티브 피커라
        어르신도 익숙합니다 (PART 14-2). */
     '<div class="stB-ind">'+
-      '<label class="stB-ind-l" for="st-indsel">업종을 고르시면 그 업종에 '+
+      '<label class="stB-ind-l" for="st-indsel">서비스 추천 순서 — 업종을 고르시면 그 업종에 '+
         '흔히 필요한 것부터 보여 드립니다</label>'+
       '<div class="stB-ind-r">'+
         /* ⚠️⚠️ **id 를 `st-ind` 로 짓지 마세요.** 바로 아래 "업종별로

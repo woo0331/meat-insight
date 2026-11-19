@@ -5423,3 +5423,5 @@ html.ivh .sw2-hero .sw2-find{ margin-top:22px; }
   .hwr-ch{ grid-column:1 / -1; margin-top:12px; }
   .hwr-ch a{ min-height:44px; }
 }
+
+.emg-cta .emg-off{ flex-basis:100%; margin:0; font-size:var(--t-sm); font-weight:700; color:var(--ink); }

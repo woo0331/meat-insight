@@ -290,12 +290,26 @@ function SvcPageBands(cat, items){
 }
 
 /* ── /providers/:cat — 그 분류의 업체 ───────────────────────────── */
+/* 2026-11-19 — 접수가 열렸을 때 / 닫혔을 때 글 한 쌍 (data-cta 짝 · 열린 쪽은 처음에 가려 둡니다) */
+function pvCta(form, on, off){
+  return '<span data-cta="on" data-cta-form="'+form+'" hidden>'+esc(on)+'</span>'+
+         '<span data-cta="off" data-cta-form="'+form+'">'+esc(off)+'</span>';
+}
+function pvClosedNote(form){
+  return '<p class="emg-off" data-cta="off" data-cta-form="'+form+'">현재 견적 접수를 받지 않습니다.</p>'+
+         '<a class="btn btn-b" href="/intake" data-cta="off" data-cta-form="'+form+'">접수 안내 보기'+icon("arrow",16)+'</a>';
+}
 function PageProviderCat(cat){
   var sub = nowQS("s"), ind = nowQS("i"), reg = nowQS("r");
   /* 2026-10-05 V2 §11 — 우리가 **실제로 들고 있는 사실**로만 거릅니다 */
   var vf = nowQS("v") === "1", fo = nowQS("f") === "1";
   var side = amCatSide(cat.key);
   var items = amCatItems(cat, ind);
+  /* 2026-11-19 — 이 화면의 견적 단추가 어느 양식을 따르는가.
+     ⚠️ ctaTagLinks() 와 같은 규칙입니다 — 폐업 쪽 정리 분류는 매장 정리 상담(close),
+     나머지는 일반 견적(quote). 둘이 어긋나면 열린 단추 옆에 "닫혔습니다" 가 섭니다. */
+  var pvForm = (side === "close" &&
+    ((window.AM_CLOSE_SCOPE && AM_CLOSE_SCOPE.cats) || []).indexOf(cat.key) >= 0) ? "close" : "quote";
   /* ⚠️⚠️ `cat` 을 꼭 넘깁니다 — 안 넘기면 모든 업체가 모든 분야에 나옵니다. */
   var list = amProviders({ cat:cat.key, sub:sub || null,
                            industry:ind || null, region:reg || null,
@@ -372,7 +386,11 @@ function PageProviderCat(cat){
                all.length+"곳입니다. 업체가 등록되면 이 목록에 나옵니다.",
           cta:'<a class="btn btn-b" href="'+esc(quoteTo({cat:cat.key,sub:sub,industry:ind,region:reg,side:side}))+'">'+
               '원하는 조건 남기기'+icon("arrow",16)+'</a>'+
-              '<a class="btn btn-o" href="/join">'+esc(cat.name)+' 업체라면 입점하기</a>'
+              '<a class="btn btn-o" href="/join">'+esc(cat.name)+' 업체라면 입점하기</a>'+
+              /* 2026-11-19 — 접수가 닫히면 위 신청 단추가 가려집니다(ctaTagLinks).
+                 그 자리에 닫힘 한 줄과 접수 안내를 냅니다. ⚠️ 이 상자가 있는 화면에서는
+                 아래 "한 번만 적으세요" 구간이 통째로 가려져 같은 안내가 두 번 나오지 않습니다. */
+              pvClosedNote(pvForm)
         }))+
   '</div></section>'+
 
@@ -380,13 +398,20 @@ function PageProviderCat(cat){
      ⚠⚠ 내용이 없는 분루는 민 문자열이고 화면은 지금과 같습니다. */
   SvcPageBands(cat, items)+
 
-  '<section class="sec"><div class="w band-cta">'+
-    '<div><p class="eyebrow">한 번만 적으세요</p>'+
-      '<h2>같은 내용을 업체마다 다시 적지 않으셔도 됩니다</h2>'+
-      '<p class="lead">업종 · 지역 · 평수 · 예산 · 일정만 적으시면 조건에 맞는 '+
-        '곳에 같이 전달하고, 받으신 제안을 한 화면에서 비교하실 수 있습니다.</p></div>'+
+  /* 2026-11-19 — 접수가 닫혀 있으면 "적으시면 전달합니다" 를 약속하지 않습니다.
+     ⚠️ 업체 0곳 상자(위)가 이미 닫힘 안내를 냈으면 이 구간은 닫혀 있는 동안 통째로 가립니다
+     (data-cta="on") — 같은 안내 · 같은 단추가 한 화면에 두 번 나오지 않게.
+     업체 목록이 있는 화면에서는 이 구간이 그 안내를 맡습니다 (data-cta 짝). */
+  '<section class="sec"'+(list.length ? '' : ' data-cta="on" data-cta-form="'+pvForm+'" hidden')+'><div class="w band-cta">'+
+    '<div><p class="eyebrow">'+pvCta(pvForm, "한 번만 적으세요", "접수 안내")+'</p>'+
+      '<h2>'+pvCta(pvForm, "같은 내용을 업체마다 다시 적지 않으셔도 됩니다", "현재 견적 접수를 받지 않습니다")+'</h2>'+
+      '<p class="lead">'+pvCta(pvForm, "업종 · 지역 · 평수 · 예산 · 일정만 적으시면 조건에 맞는 "+
+        "곳에 같이 전달하고, 받으신 제안을 한 화면에서 비교하실 수 있습니다.",
+        "업체 정보와 준비 글은 그대로 보실 수 있습니다. 접수 방법과 지금 쓰실 수 있는 길은 접수 안내에서 확인하실 수 있습니다.")+'</p></div>'+
     '<a class="btn btn-b btn-lg" href="'+esc(quoteTo({cat:cat.key,sub:sub,industry:ind,region:reg,side:side}))+'">'+
       '견적 요청하기'+icon("arrow",18)+'</a>'+
+    '<a class="btn btn-b btn-lg" href="/intake" data-cta="off" data-cta-form="'+pvForm+'">'+
+      '접수 안내 보기'+icon("arrow",18)+'</a>'+
   '</div></section>'+
   CmpBar()+
   /* 업체를 부르기 전에 알아 두면 견적이 정확해지는 것들.

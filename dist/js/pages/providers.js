@@ -210,12 +210,23 @@ function SvcPageBands(cat, items){
   return out;
 }
 
+function pvCta(form, on, off){
+  return '<span data-cta="on" data-cta-form="'+form+'" hidden>'+esc(on)+'</span>'+
+         '<span data-cta="off" data-cta-form="'+form+'">'+esc(off)+'</span>';
+}
+function pvClosedNote(form){
+  return '<p class="emg-off" data-cta="off" data-cta-form="'+form+'">현재 견적 접수를 받지 않습니다.</p>'+
+         '<a class="btn btn-b" href="/intake" data-cta="off" data-cta-form="'+form+'">접수 안내 보기'+icon("arrow",16)+'</a>';
+}
 function PageProviderCat(cat){
   var sub = nowQS("s"), ind = nowQS("i"), reg = nowQS("r");
 
   var vf = nowQS("v") === "1", fo = nowQS("f") === "1";
   var side = amCatSide(cat.key);
   var items = amCatItems(cat, ind);
+
+  var pvForm = (side === "close" &&
+    ((window.AM_CLOSE_SCOPE && AM_CLOSE_SCOPE.cats) || []).indexOf(cat.key) >= 0) ? "close" : "quote";
 
   var list = amProviders({ cat:cat.key, sub:sub || null,
                            industry:ind || null, region:reg || null,
@@ -279,19 +290,24 @@ function PageProviderCat(cat){
                all.length+"곳입니다. 업체가 등록되면 이 목록에 나옵니다.",
           cta:'<a class="btn btn-b" href="'+esc(quoteTo({cat:cat.key,sub:sub,industry:ind,region:reg,side:side}))+'">'+
               '원하는 조건 남기기'+icon("arrow",16)+'</a>'+
-              '<a class="btn btn-o" href="/join">'+esc(cat.name)+' 업체라면 입점하기</a>'
+              '<a class="btn btn-o" href="/join">'+esc(cat.name)+' 업체라면 입점하기</a>'+
+
+              pvClosedNote(pvForm)
         }))+
   '</div></section>'+
 
   SvcPageBands(cat, items)+
 
-  '<section class="sec"><div class="w band-cta">'+
-    '<div><p class="eyebrow">한 번만 적으세요</p>'+
-      '<h2>같은 내용을 업체마다 다시 적지 않으셔도 됩니다</h2>'+
-      '<p class="lead">업종 · 지역 · 평수 · 예산 · 일정만 적으시면 조건에 맞는 '+
-        '곳에 같이 전달하고, 받으신 제안을 한 화면에서 비교하실 수 있습니다.</p></div>'+
+  '<section class="sec"'+(list.length ? '' : ' data-cta="on" data-cta-form="'+pvForm+'" hidden')+'><div class="w band-cta">'+
+    '<div><p class="eyebrow">'+pvCta(pvForm, "한 번만 적으세요", "접수 안내")+'</p>'+
+      '<h2>'+pvCta(pvForm, "같은 내용을 업체마다 다시 적지 않으셔도 됩니다", "현재 견적 접수를 받지 않습니다")+'</h2>'+
+      '<p class="lead">'+pvCta(pvForm, "업종 · 지역 · 평수 · 예산 · 일정만 적으시면 조건에 맞는 "+
+        "곳에 같이 전달하고, 받으신 제안을 한 화면에서 비교하실 수 있습니다.",
+        "업체 정보와 준비 글은 그대로 보실 수 있습니다. 접수 방법과 지금 쓰실 수 있는 길은 접수 안내에서 확인하실 수 있습니다.")+'</p></div>'+
     '<a class="btn btn-b btn-lg" href="'+esc(quoteTo({cat:cat.key,sub:sub,industry:ind,region:reg,side:side}))+'">'+
       '견적 요청하기'+icon("arrow",18)+'</a>'+
+    '<a class="btn btn-b btn-lg" href="/intake" data-cta="off" data-cta-form="'+pvForm+'">'+
+      '접수 안내 보기'+icon("arrow",18)+'</a>'+
   '</div></section>'+
   CmpBar()+
 

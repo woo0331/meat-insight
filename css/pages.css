@@ -7466,3 +7466,7 @@ html.ivh .sw2-hero .sw2-find{ margin-top:22px; }
   .hwr-ch{ grid-column:1 / -1; margin-top:12px; }
   .hwr-ch a{ min-height:44px; }
 }
+
+/* 2026-11-19 — 분야 상세(/providers/:분야) 업체 0곳 상자의 접수 닫힘 한 줄.
+   emg-cta 가 flex 줄이라 한 줄을 통째로 씁니다 (그 아래에 접수 안내 단추). */
+.emg-cta .emg-off{ flex-basis:100%; margin:0; font-size:var(--t-sm); font-weight:700; color:var(--ink); }

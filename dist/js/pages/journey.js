@@ -565,13 +565,15 @@ function AcqWhich(t, ind, iq){
       ["#pick",          "check",    "넘길 때 필요한 것", "시설 인계 · 계약 · 세무를 골라 보세요"],
       ["/tools/premium", "gauge",    "권리금 알아보기",  "몇 달이면 돌아오는지 따져 봅니다"],
       ["/sell?t=asset",  "boxes",    "시설 · 장비만 내놓기", "매장은 두고 장비만 넘기실 때"],
-      ["/content?side=close", "book","양도 가이드",      "넘기기 전에 보셔야 하는 것"]
+
+      ["/content?j=acquisition", "book","양도 가이드",      "넘기기 전에 보셔야 하는 것"]
     ] : [
       ["/stores"+iq,     "store",    "매장 인수하기",    "상가 · 점포 · 권리금 매장"],
       ["#pick",          "check",    "인수할 때 필요한 것", "점검 · 임대차 검토 · 승계를 골라 보세요"],
       ["/tools/premium", "gauge",    "권리금 알아보기",  "몇 달이면 돌아오는지 따져 봅니다"],
       ["/tools/vs",      "scale",    "신규 vs 인수 비교", "새로 만드는 것과 받는 것"],
-      ["/content?side=close", "book","인수 가이드",      "계약 전에 보셔야 하는 것"]
+
+      ["/content?j=startup&cat=store", "book","인수 계약 가이드", "상가 계약 · 권리금, 계약 전에 볼 것"]
     ]).map(function(x){
       return '<li><a href="'+esc(x[0])+'">'+
         '<span class="ic-t">'+icon(x[1],22)+'</span>'+

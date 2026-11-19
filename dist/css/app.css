@@ -606,3 +606,17 @@ html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
 @media (max-width:420px){ .hd-lg-t b{ font-size:19px; } }
 
 @media (max-width:600px){ .hd-closed{ font-size:13px !important; padding:8px 12px !important; } .hd-closed-x{ display:none; } }
+
+@media (max-width:900px){
+  body{ padding-bottom:calc(var(--mnav-h) + env(safe-area-inset-bottom, 0px)); }
+  .toast{ bottom:calc(var(--mnav-h) + env(safe-area-inset-bottom, 0px) + 16px); }
+  .sticky-cta, .pk-bar{ bottom:calc(var(--mnav-h) + env(safe-area-inset-bottom, 0px)); }
+
+  .hd .hd-cta, .hd .hd-cta:visited{ background:none; border:0; box-shadow:none; min-height:44px;
+    padding:0 6px; color:var(--blue-600); font-size:14px; font-weight:700; letter-spacing:-.01em; }
+  .hd .hd-cta:hover{ background:none; color:var(--navy); text-decoration:underline; }
+  .hd .hd-cta svg{ display:none; }
+  .hd .hd-cta[hidden]{ display:none; }
+
+  .hd.is-home .hd-ic-s{ display:none; }
+}

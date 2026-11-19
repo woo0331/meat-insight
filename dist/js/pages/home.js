@@ -1060,8 +1060,10 @@ function HomeHeroSW(){
     '<div class="w sw2-in">'+
       '<p class="sw2-k">창업 · 운영 · 양도양수 · 폐업까지</p>'+
       '<h1 class="sw2-h"><span>자영업의 <em>시작과 끝,</em></span> <span>'+esc(who)+' 함께합니다.</span></h1>'+
-      '<p class="sw2-s">창업 준비부터 매장 운영의 고민 해결, 매장 양도양수, 폐업 · 철거까지 '+
-        '자영업자에게 필요한 서비스를 한곳에서 찾고 비교하세요.</p>'+
+
+      '<p class="sw2-s"><span class="sw2-s-l">창업 준비부터 매장 운영의 고민 해결, 매장 양도양수, 폐업 · 철거까지 '+
+        '자영업자에게 필요한 서비스를 한곳에서 찾고 비교하세요.</span>'+
+        '<span class="sw2-s-m">창업부터 폐업까지 필요한 서비스를 한곳에서 찾고 비교하세요.</span></p>'+
       '<form class="sw-find sw2-find" role="search" action="/search" onsubmit="return swFind(event)">'+
         '<label class="sr-only" for="sw-q">서비스 · 매물 · 정보 검색</label>'+
         '<input id="sw-q" name="q" type="search" autocomplete="off" '+

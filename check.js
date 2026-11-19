@@ -54,7 +54,7 @@ const PAGES = [
      한 장 더 답니다. 나머지 셋은 `tools/sweep-rest.js` 가 훑습니다. */
   ["/g/startup",         "단계 01 창업 준비 (분류 밖 카드 한 장)"],
   ["/g/location",        "단계 02 상가 · 입지 (제일 짧음)"],
-  ["/g/closing",         "단계 06 폐업 · 정리 (제일 긺)"],
+  ["/g/closing",         "단계 06 폐업·철거 (제일 긺)"],
   /* 여정 넷 (2026-10-05 V2 §1) — 운영 · 인수/양도는 **새 화면**이라
      표본에 넣습니다. 창업 · 폐업은 이미 아래에 있습니다. */
   ["/operation",         "여정 — 매장 운영 (중립)"],
@@ -914,7 +914,10 @@ const AUDIT = `(() => {
   (function(){
     const g = document.querySelector(".hd .gnb"), r = document.querySelector(".hd .hd-r");
     if(!g || !r || !g.offsetParent) return;
-    const as = [].slice.call(g.querySelectorAll("a"));
+    /* ⚠️ 2026-11-19 — 메뉴에 펼침 칸이 생겼습니다. 숨은 하위 링크(.gnb-m)까지 세면 39칸이
+       "2줄" 로 잡힙니다 (0×0 상자가 맨 위에 앉습니다). 재는 것은 **맨 위 칸 상자**
+       (.gnb 의 바로 아래 자식 — 이름 + 펼침 단추)입니다. */
+    const as = [].slice.call(g.children).filter(function(e){ return e.getClientRects().length; });
     if(!as.length) return;
     const gap = parseFloat(getComputedStyle(g).gap) || 0;
     let need = gap * (as.length - 1), rows = {}, over = 0;
@@ -2148,34 +2151,33 @@ const AUDIT = `(() => {
      ⚠️ 이건 "보기 좋은가" 를 재는 검사가 아닙니다. 나중에 여기에
      큰 배너 · 설명 · 검색창을 하나씩 더하다 보면 카드가 첫 화면
      아래로 밀려나는데, 그걸 막는 것이 목적입니다. */
-  await f("메인은 히어로 다음이 보조 진입 넷이고 네 걸음이 차례대로다", "/", `
-    /* 2026-11-18 메인 디자인 개편(대표 확정 시안) — 뜻은 그대로, 재는 자리만 새 화면으로.
-       옛 판의 사연은 git show 2aa1d8d:check.js 에 있습니다. 이 주석에 백틱 금지. */
-
+  await f("메인은 히어로 다음이 4대 진입 카드이고 창업 → 운영 → 양도양수 → 폐업 차례다", "/", `
+    /* 2026-11-19 홈페이지 전체 디자인 개편 — 01 히어로 · 02 4대 진입 카드 (시안 STOREWAY_01).
+       뜻은 그대로 — 첫 구간이 히어로이고 h1 이 거기 하나 · 다음이 네 기둥 · 차례가 사업의 흐름.
+       옛 판(보조 진입 넷 · 네 걸음 · 두 판)은 git show e1f99c3:check.js 에 있습니다. 이 주석에 백틱 금지. */
     const secs = [].slice.call(document.querySelectorAll("#view > section"));
     if(!secs.length) return "메인에 구간이 없습니다";
     if(!secs[0].classList.contains("bhero"))
       return "첫 구간이 히어로가 아닙니다 — " + (secs[0].className || "").split(" ")[0];
     if(!(secs[1] && secs[1].classList.contains("bent")))
-      return "히어로 다음이 보조 진입이 아닙니다 — " + ((secs[1] || {}).className || "").split(" ")[0];
+      return "히어로 다음이 진입 카드가 아닙니다 — " + ((secs[1] || {}).className || "").split(" ")[0];
     const h1s = document.querySelectorAll("#view h1");
     if(h1s.length !== 1) return "화면의 h1 이 " + h1s.length + "개입니다";
     if(!h1s[0].closest(".bhero")) return "h1 이 히어로 구간에 없습니다";
-    const hrefs = function(q){ return [].slice.call(document.querySelectorAll(q))
-      .map(function(a){ return a.getAttribute("href"); }); };
-    const q = hrefs(".sw-qc"), wq = ["/transfer","/operation","/providers","/about"];
-    if(q.join() !== wq.join()) return "보조 진입이 [" + q.join(" ") + "] 입니다 — [" + wq.join(" ") + "]";
-    const fl = hrefs(".sw-fl"), wf = ["/startup","/operation","/transfer","/closure"];
+    const L = [].slice.call(document.querySelectorAll(".sw2-ec > a"));
+    const fl = L.map(function(a){ return a.getAttribute("href"); }), wf = ["/startup","/operation","/transfer","/closure"];
     if(fl.join() !== wf.join())
-      return "네 걸음이 [" + fl.join(" ") + "] 입니다 — 창업 → 운영 → 양도양수 → 폐업 차례라야 합니다";
-    const st = document.querySelector('.sw-hp-st a[href="/startup"]');
-    const cl = document.querySelector('.sw-hp-cl a[href="/closure"]');
-    if(!st || !cl) return "히어로 두 판이 창업 · 폐업으로 가지 않습니다";
-    for(const k of ["hero-start","hero-close"]){
-      const side = k === "hero-start" ? ".sw-hp-st" : ".sw-hp-cl";
-      if(window.hasPhoto && hasPhoto(k) && !document.querySelector(side + " .sw-hph img"))
-        return k + " 사진이 있는데 안 그려졌습니다";
-    }
+      return "진입 카드가 [" + fl.join(" ") + "] 입니다 — 창업 → 운영 → 양도양수 → 폐업 차례라야 합니다";
+    for(const a of L) if(a.querySelector("a")) return "진입 카드 안에 링크가 또 있습니다";
+    const ks = ["hero-startup","hero-ops","kind-pass","hero-closure"];
+    for(let i = 0; i < 4; i++)
+      if(window.hasPhoto && hasPhoto(ks[i]) && !L[i].querySelector("img"))
+        return ks[i] + " 사진이 있는데 카드에 안 그려졌습니다";
+    if(window.hasPhoto && hasPhoto("hero-start") && !document.querySelector(".bhero img"))
+      return "hero-start 사진이 있는데 히어로에 안 그려졌습니다";
+    /* 옛 보조 진입이 들고 있던 둘이 길을 잃지 않았는가 (헤더 펼침 · 푸터) */
+    const miss = ["/providers","/about"].filter(function(u){ return !document.querySelector('a[href="' + u + '"]'); });
+    if(miss.length) return "메인에서 갈 수 없게 된 곳: " + miss.join(" · ");
     return true;`);
   await f("어느 화면에서나 검색으로 가는 길이 있고 메인이 두 갈래로 갈린다", "/", `
     /* ⚠️⚠️ **2026-10-08 — 떠 있는 검색 패널이 메인에서 내려왔습니다**
@@ -2253,22 +2255,24 @@ const AUDIT = `(() => {
        · 폐업 쪽이 **빨강으로 흘러가지 않는 것** (그 순간 옛 걱정이
          그대로 돌아옵니다 — 이 저장소가 여러 곳에 못박아 둔 것입니다)
        · 두 쪽의 **크기와 무게가 같은 것** (위 히어로 검사가 봅니다) */
-  await f("창업 · 폐업 두 판이 저마다의 색으로 갈리고 폐업이 빨강이 아니다", "/", `
-    /* 2026-11-18 메인 디자인 개편(대표 확정 시안) — 뜻은 그대로, 재는 자리만 새 화면으로.
-       옛 판의 사연은 git show 2aa1d8d:check.js 에 있습니다. 이 주석에 백틱 금지. */
-
+  await f("4대 진입 카드가 저마다의 색으로 갈리고 폐업이 빨강이 아니다", "/", `
+    /* 2026-11-19 개편 — 재는 자리가 4대 진입 카드입니다 (창업 블루 · 운영 그린 · 양도양수 퍼플 ·
+       폐업·철거 오렌지). 지키는 것은 그대로 — 넷이 서로 다르고, 창업은 파랑, 폐업은 주황이지 빨강이 아닙니다.
+       이 주석에 백틱 금지. */
     const bg = function(q){
       const e = document.querySelector(q); if(!e) return null;
       const p = getComputedStyle(e).backgroundColor.replace("rgba(", "").replace("rgb(", "")
         .replace(")", "").split(",").map(Number);
       return p.length >= 3 && !isNaN(p[0]) ? p.slice(0, 3) : null;
     };
-    const st = bg(".sw-hp-st"), cl = bg(".sw-hp-cl");
-    if(!st || !cl) return "두 판의 색을 못 읽습니다";
-    if(st.join() === cl.join()) return "두 판의 색이 같습니다";
-    if(!(st[2] > st[0] && st[2] > st[1])) return "창업 판이 파랑 쪽이 아닙니다 — " + st.join(",");
-    if(!(cl[0] > cl[1] && cl[1] > cl[2])) return "폐업 판이 주황 쪽이 아닙니다 — " + cl.join(",");
-    if(cl[1] < cl[0] * 0.35) return "폐업 판이 빨강으로 흘렀습니다 — " + cl.join(",") + " (폐업은 나쁜 것이 아닙니다)";
+    const st = bg(".ent-startup > a"), op = bg(".ent-ops > a"), tr = bg(".ent-transfer > a"), cl = bg(".ent-closure > a");
+    if(!st || !op || !tr || !cl) return "진입 카드 넷의 색을 못 읽습니다";
+    const all = [st, op, tr, cl].map(function(c){ return c.join(); });
+    if(new Set(all).size !== 4) return "진입 카드 색이 겹칩니다 — " + all.join(" | ");
+    if(!(st[2] > st[0] && st[2] > st[1])) return "창업 카드가 파랑 쪽이 아닙니다 — " + st.join(",");
+    if(!(op[1] > op[0] && op[1] > op[2])) return "운영 카드가 초록 쪽이 아닙니다 — " + op.join(",");
+    if(!(cl[0] > cl[1] && cl[1] > cl[2])) return "폐업 카드가 주황 쪽이 아닙니다 — " + cl.join(",");
+    if(cl[1] < cl[0] * 0.30) return "폐업 카드가 빨강으로 흘렀습니다 — " + cl.join(",") + " (폐업은 나쁜 것이 아닙니다)";
     return true;`);
 
   /* ⑨ 규모감 숫자 — **센 값**이어야 합니다
@@ -3761,9 +3765,9 @@ const AUDIT = `(() => {
        내려갔습니다 (중간 대형 견적 신청 섹션 금지). 되살리시면 그날
        여기에 다시 넣으세요. */
     /* 2026-11-18 시안 — 지금 화면의 표시. 접수가 닫혀 있으면 본문에 신청 단추가 없어야 합니다. */
-    const need = [[".sw-hgrid", "창업 · 폐업 두 판"],
-                  [".sw-qg",    "보조 진입 넷"],
-                  [".sw-flg",   "네 걸음"],
+    const need = [[".sw2-find", "통합 검색"],
+                  [".sw2-chips","바로가기"],
+                  [".sw2-eg",   "4대 진입 카드"],
                   [".sw-sw",    "전국 매장 양도양수"],
                   [".sw-tb",    "왜 일까요 띠"],
                   [".sw-shg",   "서비스 바로가기"],
@@ -3966,25 +3970,20 @@ const AUDIT = `(() => {
       .filter(function(u){ return !document.querySelector('a[href="' + u + '"]'); });
     if(lost.length) return "사이트 안에서 갈 길이 없는 단계 — " + lost.join(" · ");
     return true;`);
-  await f("창업 · 폐업 두 판의 크기가 같다", "/", `
-    /* 2026-11-18 메인 디자인 개편(대표 확정 시안) — 재는 자리만 새 화면으로.
-       옛 판은 git show 2aa1d8d:check.js 에 있습니다. 이 주석에 백틱 금지. */
-
-    const L = [].slice.call(document.querySelectorAll(".sw-hp"));
-    if(L.length !== 2) return "히어로 판이 " + L.length + "개입니다";
+  await f("4대 진입 카드의 크기가 같다", "/", `
+    /* 2026-11-19 개편 — 재는 자리가 4대 진입 카드입니다. 한 줄에 선 카드끼리 폭 · 높이가
+       1px 단위로 같아야 합니다 (어느 쪽이 덜 중요한 것으로 읽히면 안 됩니다). 이 주석에 백틱 금지. */
+    const L = [].slice.call(document.querySelectorAll(".sw2-ec > a"));
+    if(L.length !== 4) return "진입 카드가 " + L.length + "장입니다";
     const R = L.map(function(e){ return e.getBoundingClientRect(); });
-    if(Math.abs(R[0].top - R[1].top) > 2) return true;
-    if(Math.abs(R[0].width - R[1].width) > 2 || Math.abs(R[0].height - R[1].height) > 2)
-      return "창업 " + Math.round(R[0].width) + "×" + Math.round(R[0].height) +
-             " · 폐업 " + Math.round(R[1].width) + "×" + Math.round(R[1].height) +
-             " — 두 쪽의 크기와 무게가 같아야 합니다";
-    for(const e of L){
-      for(const a of e.querySelectorAll("a")){
-        if(a.querySelector("a")) return "히어로 링크 안에 링크가 또 있습니다";
-        const h = a.getAttribute("href") || "";
-        if(!h || h === "#") return "히어로에 가짜 링크가 있습니다";
-      }
+    for(let i = 1; i < 4; i++){
+      if(Math.abs(R[i].top - R[0].top) > 2 && Math.abs(R[i].top - R[i-1].top) > 2) continue;
+      const j = Math.abs(R[i].top - R[i-1].top) <= 2 ? i - 1 : 0;
+      if(Math.abs(R[i].width - R[j].width) > 2 || Math.abs(R[i].height - R[j].height) > 2)
+        return "진입 카드 " + (j+1) + " " + Math.round(R[j].width) + "×" + Math.round(R[j].height) +
+               " · " + (i+1) + " " + Math.round(R[i].width) + "×" + Math.round(R[i].height) + " — 크기와 무게가 같아야 합니다";
     }
+    for(const a of L){ const h = a.getAttribute("href") || ""; if(!h || h === "#") return "진입 카드에 가짜 링크가 있습니다"; }
     return true;`);
   /* ══ 여정 넷 (2026-10-05 V2 지시서 §1 · §2 · §4 · §6 · §7 · §31) ══ */
 
@@ -5113,7 +5112,7 @@ const AUDIT = `(() => {
     /* ⚠️ 2026-10-16 §3 — 진입 카드(.bent-c > a) · 까닭 카드(.bwhy-c) ·
        절차 카드(.bstep-c) · 배너(.bban-c > a)가 생겼습니다. */
     const sel = ".cat,.ind,.pv,.fr,.fc,.mk,.help,.sp,.empty," +
-                ".bent-c > a,.bwhy-c,.bstep-c,.bban-c > a," +
+                ".bent-c > a,.bwhy-c,.bstep-c,.bban-c > a,.sw2-ec > a," +
                 ".bcal-c > a,.bgd-c > a,.bqc," +
                 ".mhall-c,.mcal-g > li,.mstp-g > li," +
                 ".mti-c,.hsv-box,.mlast-h > li > a,.swt-c," +

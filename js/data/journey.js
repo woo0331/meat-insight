@@ -49,7 +49,7 @@ window.AM_JOURNEYS = [
     sub:"매장 매물 · 권리금 · 시설 인수 · 계약 · 승계",
     stages:["transfer"] },
 
-  { key:"closing",  no:"04", name:"폐업 · 정리", short:"폐업",
+  { key:"closing",  no:"04", name:"폐업·철거", short:"폐업",
     icon:"box",     tone:"t13", side:"close", to:"/closure",
     q:"사업을 정리하고 있어요",
     lead:"순서와 기한이 있는 일이라 빠뜨리면 돈이 나갑니다.",

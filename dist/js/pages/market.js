@@ -476,7 +476,7 @@ function PageSell(){
       '<div class="notice-bad" data-cta="off" data-cta-form="sell"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
         '<p>접수처 설정이 끝나면 바로 열립니다. 그동안에는 '+
         '<a href="/stores">지금 나와 있는 매장</a>이나 '+
-        '<a href="/closure">폐업 · 정리에 필요한 것</a>을 먼저 '+
+        '<a href="/closure">폐업·철거에 필요한 것</a>을 먼저 '+
         '보실 수 있습니다.</p></div>')+
 
     '<div class="note-box">'+

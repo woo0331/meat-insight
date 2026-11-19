@@ -428,7 +428,7 @@ function MyPvList(L, d){
 }
 
 function myCond(r, cat){
-  return [ (r.side === "close" ? "폐업 · 정리" : "창업"),
+  return [ (r.side === "close" ? "폐업·철거" : "창업"),
     (cat ? cat.name : ""),
     (r.industry && typeof amIndustryName === "function" ? amIndustryName(r.industry) : ""),
     (r.region && typeof amRegionName === "function" ? amRegionName(r.region) : ""),
@@ -508,7 +508,7 @@ function MyFunnel(L){
     }).join("")+'</ul>'+
     '<dl class="myd-l myd-l3">'+
       '<div><dt>창업 쪽</dt><dd>'+side.start+'건</dd></div>'+
-      '<div><dt>폐업 · 정리 쪽</dt><dd>'+side.close+'건</dd></div>'+
+      '<div><dt>폐업·철거 쪽</dt><dd>'+side.close+'건</dd></div>'+
 
       '<div><dt>계약까지 간 비율</dt><dd>'+
         Math.round(deals / L.length * 100)+'%</dd></div>'+

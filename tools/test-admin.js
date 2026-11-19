@@ -95,7 +95,9 @@ function ok(name, cond, extra) {
     ok("전화 판이 열린다", await mod.count() === 1);
     ok("전화번호가 크게 보인다", (await pg.locator(".sl-big-tel").innerText()).includes("031-000-0000"));
     ok("전화 멘트가 있다", (await pg.locator("#ad-t-sl-first").inputValue()).includes("안녕하세요, 사장님"));
-    ok("멘트에 브랜드 이름이 들어간다", (await pg.locator("#ad-t-sl-first").inputValue()).includes("인수인계입니다"));
+    /* ⚠️ 이름은 brand.js 에서 읽습니다 (2026-11-19 STOREWAY 로 바뀌며 글자로 박아 둔 기대값이 걸렸습니다) */
+    const BN = await pg.evaluate(() => (window.AM_BRAND || {}).name || "");
+    ok("멘트에 브랜드 이름이 들어간다", !!BN && (await pg.locator("#ad-t-sl-first").inputValue()).includes(BN + "입니다"), BN);
     ok("결과 단추가 다섯", await pg.locator(".sl-res-b").count() === 5);
 
     await pg.click(".sl-res-warm");
@@ -525,7 +527,8 @@ function ok(name, cond, extra) {
     const vendor = await pg.locator("#ad-t-vendor").inputValue();
     ok("업체 글에 성함이 안 들어간다", !vendor.includes("홍길동"));
     ok("업체 글에 연락처가 안 들어간다", !vendor.includes("1234-5678"));
-    ok("회신 글에는 브랜드 이름이 있다", (await pg.locator("#ad-t-reply").inputValue()).includes("인수인계"));
+    const BN2 = await pg.evaluate(() => (window.AM_BRAND || {}).name || "");
+    ok("회신 글에는 브랜드 이름이 있다", !!BN2 && (await pg.locator("#ad-t-reply").inputValue()).includes(BN2), BN2);
 
     /* 6번 — 초대 글 (sales.js 가 같은 함수를 씁니다) */
     await pg.selectOption("#ad-icat", "demolish");

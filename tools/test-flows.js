@@ -64,8 +64,8 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     카드 셋의 첫 장이 됐습니다** (전문관 넷 + 전체보기는 내려왔습니다).
     카드 전체가 하나의 링크라 카드를 그대로 누릅니다. */
  /* 2026-11-18 메인 개편 — 창업은 히어로 왼쪽 판의 단추입니다 */
- await click('.sw-hbtn-st');
- say((await url())==="/startup","메인 히어로 창업 준비 → /startup",await url());
+ await click('.sw2-ec.ent-startup > a');
+ say((await url())==="/startup","메인 진입 카드 창업 준비 → /startup",await url());
  /* ⚠️⚠️ **2026-10-17 창업 준비 §2 로 업종 고르개가 접혔습니다.**
     주인공이 **서비스 고르기**(§2-B)이고, 고르는 격자 둘이 나란히 있으면
     "같은 선택 영역의 반복" 입니다 (§11). 길은 그대로이고 **한 번 더
@@ -112,8 +112,17 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  /* ⚠️⚠️ **2026-10-16 §3 — 계산도구 구간이 메인에서 내려왔습니다.**
     길은 **헤더 "계산기"** 가 받습니다 — 끝이 막히지 않았는지 거기서
     눌러 봅니다 (함수는 안 지웠고 /tools 가 열셋을 다 들고 있습니다). */
- await click('.hd .gnb a[href="/tools"]');
- say((await url())==="/tools","헤더 계산기 → 계산도구 목록",await url());
+ /* ⚠️⚠️ 2026-11-19 개편 — 헤더가 여섯 + 펼침 메뉴가 되면서 계산도구는 **정보·가이드 펼침 안**입니다.
+    손님이 실제로 누르는 길 그대로 — 펼침 단추를 누르고(키보드 · 터치와 같은 길) 그 안의 칸을 누릅니다. */
+ await click('.hd .gnb-i:has(> a.gnb-a[href="/content"]) .gnb-x');
+ say(await pg.evaluate(()=>{const b=document.querySelector('.hd .gnb-i:has(> a.gnb-a[href="/content"]) .gnb-x'); return b && b.getAttribute("aria-expanded")==="true";}),
+     "헤더 펼침 단추를 누르면 aria-expanded 가 켜진다");
+ await pg.keyboard.press("Escape");
+ say(await pg.evaluate(()=>!document.querySelector(".hd .gnb-i.open")),"Esc 로 펼침이 닫힌다");
+ await click('.hd .gnb-i:has(> a.gnb-a[href="/content"]) .gnb-x');
+ await click('.hd .gnb-m a[href="/tools"]');
+ say((await url())==="/tools","헤더 정보·가이드 펼침 → 계산도구 목록",await url());
+ say(await pg.evaluate(()=>!document.querySelector(".hd .gnb-i.open")),"화면이 바뀌면 펼침이 닫힌다");
  await click('#view a[href="/tools/cost"]');
  say((await url())==="/tools/cost","계산도구 목록 → 실제 계산기",await url());
  await pg.evaluate(()=>{const i=document.querySelector("#tl-f input");if(i){i.value="1000";i.dispatchEvent(new Event("input",{bubbles:true}));}});
@@ -140,14 +149,14 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     내려왔습니다.** 진입 카드 셋이 전문관 세 화면으로 **바로** 보내고,
     매장 양도양수는 ④ 가로형 배너가 받습니다. 끝이 막힌 길이 생기지
     않았는지 넷 다 눌러 봅니다. */
- await click('.sw-hbtn-cl');
- say((await url())==="/closure","메인 히어로 폐업 · 철거 → /closure",await url());
+ await click('.sw2-ec.ent-closure > a');
+ say((await url())==="/closure","메인 진입 카드 폐업·철거 → /closure",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.sw-qc[href="/operation"]');
- say((await url())==="/operation","메인 보조 진입 매장 운영 → /operation",await url());
+ await click('.sw2-ec.ent-ops > a');
+ say((await url())==="/operation","메인 진입 카드 매장 운영 → /operation",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.sw-qc[href="/transfer"]');
- say((await url())==="/transfer","메인 보조 진입 양도양수 → 전문관",await url());
+ await click('.sw2-ec.ent-transfer > a');
+ say((await url())==="/transfer","메인 진입 카드 양도양수 → 전문관",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  /* ⚠️⚠️ **2026-10-22 — 서비스 배너 둘이 메인에서 내려왔습니다**
     (사장님 시안). 그 길은 ③ 직접 서비스 찾기 여덟이 그대로 받습니다 —
@@ -177,8 +186,26 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  /* ⚠️ 업체찾기로 가는 길도 헤더에 있어야 합니다 (메뉴에서 빠지면
     160개 화면에서 길이 끊깁니다) */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.hd .gnb a[href="/providers"]');
- say((await url())==="/providers","헤더 서비스 · 상품 → 업체찾기",await url());
+ await click('.hd .gnb a.gnb-a[href="/providers"]');
+ say((await url())==="/providers","헤더 전문가 상담 → 업체찾기",await url());
+ /* 2026-11-19 — 폰 서랍의 누르는 아코디언 (승인 6). 맨 위 이름 옆 단추가 하위를 엽니다. */
+ await pg.setViewportSize({ width:390, height:844 });
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('#hdMb');
+ const dwSec = '.hd-dw-sec:has(> .hd-dw-h > a[href="/closure"])';
+ say(await pg.evaluate(s=>{const m=document.querySelector(s+" .hd-dw-m"); return !!m && m.hasAttribute("hidden");}, dwSec),"서랍의 하위 칸은 처음에 접혀 있다");
+ await click(dwSec+' .hd-dw-x');
+ say(await pg.evaluate(s=>{const b=document.querySelector(s+" .hd-dw-x"); return b.getAttribute("aria-expanded")==="true" && !document.querySelector(s+" .hd-dw-m").hasAttribute("hidden");}, dwSec),"서랍에서 폐업·철거를 펼친다");
+ const tapH = await pg.evaluate(s=>Math.min(...[...document.querySelectorAll(s+" .hd-dw-m a")].filter(a=>a.getClientRects().length).map(a=>a.getBoundingClientRect().height)), dwSec);
+ say(tapH >= 44, "서랍 하위 칸이 44px 이상", tapH);
+ await click(dwSec+' .hd-dw-m a[href="/providers/demolish"]');
+ say((await url())==="/providers/demolish","서랍 하위 칸 → 철거 업체 화면",await url());
+ say(await pg.evaluate(()=>document.getElementById("hdMenu").hasAttribute("hidden")),"화면이 바뀌면 서랍이 닫힌다");
+ /* 닫혀 있는 접수는 서랍에서도 안 열립니다 — 견적 · 매장 정리 상담 칸은 닫힘 쪽 주소만 보입니다 */
+ await click('#hdMb');
+ const gateLeak = await pg.evaluate(()=>[...document.querySelectorAll('#hdMenu a[data-cta="on"]')].filter(a=>!a.hasAttribute("hidden")).map(a=>a.getAttribute("href")));
+ say(gateLeak.length===0,"닫힌 접수가 서랍 메뉴에서 열리지 않는다",gateLeak.join(" "));
+ await pg.setViewportSize({ width:1440, height:900 });
  /* ⚠️ 2026-10-11 간소화 지시서 §2-F — 파트너 입점 구간이 메인에서
     내려왔습니다. ⚠️⚠️ **최종 디자인 지시서 §2 로 헤더 CTA 도 "무료
     견적 신청"(`/quote`) 이 됐습니다** — 업체 입점은 이제 **푸터**가
@@ -626,7 +653,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
      });
      say(!!cb && cb.form === "close" && cb.items.length === want, no+"⑦ 한 신청서에 항목 "+want+"개 (form close)", cb && cb.items && cb.items.length);
      say(!!cb && cb.side === "close" && cb.gu === "안양시" && cb.regionKey === "gyeonggi", no+"⑧ 보낼 쪽 · 지역", cb && [cb.side, cb.gu]);
-     say(cb && cb.detail && cb.detail["상황"] === "폐업 · 정리", no+"⑨ 접수 글의 상황 칸이 폐업 · 정리 다", cb && cb.detail);
+     say(cb && cb.detail && cb.detail["상황"] === "폐업·철거", no+"⑨ 접수 글의 상황 칸이 폐업·철거 다", cb && cb.detail);
      await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
      continue;
    }
@@ -658,7 +685,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
       받아 보는 직원이 그것을 보고 엉뚱한 업체를 찾습니다. */
    const says = body && body.detail && body.detail["상황"];
    const WANT_SAY = { start:"창업 · 시작", ops:"운영",
-                      transfer:"인수 · 양도", close:"폐업 · 정리" };
+                      transfer:"인수 · 양도", close:"폐업·철거" };
    say(says === WANT_SAY[side],
        no+"⑨ 접수 글의 상황 칸이 "+WANT_SAY[side]+" 다", says);
    await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
@@ -976,8 +1003,8 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
    await pg.goto(B+"/",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
    /* 2026-11-18 메인 개편 — 네 전문관은 메인의 네 걸음(.sw-flg)이 같은 차례로 보냅니다 */
-   const card = await pg.$('.sw-flg a[href="'+to+'"]');
-   say(!!card, nm+" — 메인 네 걸음이 그 전문관으로 간다", to);
+   const card = await pg.$('.sw2-ec > a[href="'+to+'"]');
+   say(!!card, nm+" — 메인 진입 카드가 그 전문관으로 간다", to);
    if(!card) continue;
    await card.click(); await pg.waitForTimeout(700);
    const at = await url();

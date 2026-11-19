@@ -1044,7 +1044,7 @@ function PageQuoteClose(){
   '<section class="sec sec-white"><div class="w form-wrap cq">'+
     '<div class="notice-bad" data-cta="off" data-cta-form="close" role="status"><b>지금은 매장 정리 상담을 받지 않습니다.</b>'+
       '<p>지금 보내셔도 접수되지 않습니다. 재개 일정은 정해지지 않았습니다. '+
-      '그동안 <a href="/closure">폐업 · 정리 순서</a>와 '+
+      '그동안 <a href="/closure">폐업·철거 순서</a>와 '+
       '<a href="/tools/closecost">폐업 예상비용 계산</a>을 먼저 보실 수 있습니다.</p></div>'+
     /* ⚠️ flex 칸이라 글을 span 하나로 감쌉니다 — 맨글과 b 를 섞으면 b 가 제 칸이 되어 세로로 쪼개집니다 */
     '<p class="note-box cq-area">'+icon("mappin",16)+'<span>지금은 <b>'+esc(SC.gu.join(" · "))+
@@ -1068,7 +1068,7 @@ function PageQuoteClose(){
           '<div class="f-r"><label for="cq-ind">업종 <b>*</b></label>'+IndustrySelect("cq-ind", ind, "", "골라 주세요")+'</div>'+
         '</div>'+
         '<div class="notice-bad cq-out" id="cq-out" hidden role="status"><b>'+esc(window.AM_CLOSE_OUT_SAY || "")+'</b>'+
-          '<p><a href="/closure">폐업 · 정리 순서</a>와 <a href="/tools/closecost">예상비용 계산</a>은 지역과 상관없이 쓰실 수 있습니다.</p></div>'+
+          '<p><a href="/closure">폐업·철거 순서</a>와 <a href="/tools/closecost">예상비용 계산</a>은 지역과 상관없이 쓰실 수 있습니다.</p></div>'+
         '<div class="f-r"><label for="cq-when">정리 희망일 <b>*</b></label>'+
           '<input id="cq-when" type="date" min="'+iso+'"></div>'+
       '</div>'+
@@ -1127,7 +1127,7 @@ window.closeSend = function(ev){
     q:$("cq-q").value.trim(), wantAt:$("cq-when").value,
     items:list.map(function(sv){ return { id:sv.id, detail:{} }; }),
     idem:amIdem("close"),
-    detail:amDropEmpty({ "상황":"폐업 · 정리", "업종":ind ? amIndustryName(ind) : "",
+    detail:amDropEmpty({ "상황":"폐업·철거", "업종":ind ? amIndustryName(ind) : "",
                          "시군구":gu, "정리 희망일":$("cq-when").value,
                          "신청 서비스":list.map(amPickLabel).join(" · ") }),
     src:closeSrc(),

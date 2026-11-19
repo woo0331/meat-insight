@@ -34,155 +34,52 @@
    지운 것이 아닙니다 — 신뢰줄 · 범위 · 진행 방법 · FAQ 가 다 거기
    있습니다. */
 window.AM_GNB = [
-  /* ⚠️⚠️ **일곱입니다.** 2026-10-04 HERO 개편 지시서 §2 는 레퍼런스처럼
-     **열둘**(상가·점포 · 인테리어 · 주방설비 · 가구·집기 · POS·시스템 ·
-     세무·노무 · 마케팅 · 철거·원상복구 · 매장양도 · 커뮤니티 ·
-     프랜차이즈 · 업체찾기)을 적었는데, **재 보니 들어가지 않습니다.**
-
-       1280px 에서 메뉴가 쓸 수 있는 폭   548px
-       열둘이 필요한 폭                   741px   (글자 521 + 간격 220)
-       일곱이 필요한 폭                   429px
-
-     1440px 에서도 708 자리에 742 가 필요해서 넘칩니다. 넘치면 가로
-     스크롤이 나는 것이 아니라 **메뉴가 헤더 오른쪽(검색 · 내 기록 ·
-     입점) 위로 올라앉습니다** — 전수 점검이 못 잡는 종류입니다
-     (`.gnb` 가 `min-width:0` 이라 문서 폭은 그대로입니다).
-
-     ⚠️ 그래서 **분야는 헤더가 아니라 메인의 "분야 바로가기" 열**과
-     `업체찾기` 안에 둡니다 — 한 번 더 누르지만 글자가 겹치지 않습니다.
-     ⚠️ **여덟으로 늘리지 마세요.** 1280 에서는 여덟도 들어가지만
-     900~940px(메뉴가 접히기 직전)에서 오른쪽과 겹칩니다 — 재 봤습니다.
-
-     ⚠️ 일곱 전부 **실제로 있는 화면**입니다 (가짜 링크는 절대 규칙 5).
-     지시서의 `커뮤니티` 는 백엔드가 있어야 하는 게시판이라 넣지
-     않았고, `매장양도` 는 `/stores` 와 같은 화면입니다 — 그 화면의
-     이름을 지시서 말투대로 **상가·점포**로 바꿨습니다. */
-  /* ⚠️⚠️ **2026-10-06 V2 확정 지시서 §23 의 일곱**입니다 — 사업의
-     생애주기 넷(창업 · 운영 · 인수·양도 · 폐업)이 앞에 서고, 그 다음이
-     업체찾기 · 정보센터 · 도구입니다. 전에는 창업 · 폐업 둘뿐이고 그
-     사이(운영 · 인수·양도)로 가는 길이 **메인에만** 있었습니다.
-     ⚠️ 빠진 셋(프랜차이즈 · 상가·점포 · 지원정보)은 **푸터와 여정
-     화면에 그대로 있습니다** — 길을 지운 것이 아니라 한 단계 안으로
-     옮겼습니다. 헤더는 일곱까지만 들어갑니다 (재 본 값, 아래 설명). */
-  /* ⚠️⚠️ **2026-10-08 지시서 §4 의 다섯**입니다 (전에는 일곱).
-     시안의 메뉴 그대로이고, 다섯 전부 **실제로 있는 화면**입니다
-     (가짜 링크는 절대 규칙 5).
-
-     ⚠️ 빠진 둘이 길을 잃지 않는지 확인했습니다 —
-       · `/operation`(매장 운영) → **푸터 첫 칸**(여정 넷)과 05 매장
-         구간, 그리고 `/transfer` 화면 안의 여정 줄이 보냅니다.
-       · `/tools`(사장님 도구)  → **메인 04 구간이 통째로 그것**이고
-         푸터 `서비스` 칸에도 있습니다.
-     ⚠️ `정보 · 도구` 는 시안에서 한 칸이지만 저희 화면은 둘입니다
-     (`/content` · `/tools`). 펼침메뉴를 새로 만들면 폰에서 누르는
-     단계가 하나 늘어서, **글이 예순 편 있는 `/content`** 로 보내고
-     도구는 바로 위 04 구간과 푸터가 받습니다.
-
-     ⚠️⚠️ **여섯으로 늘리지 마세요.** 1280px 에서 메뉴가 쓸 수 있는
-     폭이 548px 이고, 넘치면 **가로 스크롤이 나는 것이 아니라** 메뉴가
-     헤더 오른쪽(검색 · 내 기록 · 입점) 위로 올라앉습니다 — `.gnb` 가
-     `min-width:0` 이라 문서 폭은 그대로여서 **전수 점검이 못 잡습니다.**
-     ⚠️ 900px 아래에서는 메뉴가 통째로 접히고 아래 네비가 받습니다. */
-  /* ⚠️⚠️ 2026-10-09 최종 통합 지시서 §2-2 의 **여덟**입니다 —
-     창업 · 매장 운영 · 폐업·정리 · 서비스 신청 · 매장 인수·양도 ·
-     정보·계산도구 · 파트너 제휴 · 마이페이지. 뒤의 둘은 왼쪽 줄이
-     아니라 **헤더 오른쪽**에 있습니다 (업체 입점 · 내 기록) — 그래서
-     왼쪽은 여섯이고 합치면 여덟입니다.
-     ⚠️⚠️ **`업체찾기` 를 뺀 자리에 `매장 운영` 이 들어왔습니다.**
-     업체찾기는 **지우지 않았습니다** (§12 "기존 기능을 보존한다") —
-     메인 02 서비스 카드 여덟 · 03 탐색 구간 · 푸터 `서비스` 칸 ·
-     아래 네비 다섯 칸이 전부 `/providers` 로 보냅니다 (누르고 확인했습니다).
-     ⚠️ 일곱으로 늘리지 마세요 — 901px 에서 남는 폭을 재서 정한 여섯입니다. */
-  /* ⚠️⚠️ **2026-10-11 최종 디자인 지시서 §2 의 여섯**입니다.
-     여섯 전부 실제로 있는 화면입니다 (가짜 링크는 절대 규칙 5).
-     ⚠️ 지시서의 여섯째는 `고객센터` 인데 **그런 화면이 없습니다** —
-     전화도 채팅도 없는데 그 이름을 걸면 손님이 찾다가 못 찾습니다
-     (이 저장소가 푸터에서 못박아 둔 자리). 실제로 답이 있는
-     `/faq` 로 보내고 이름도 그대로 적습니다.
-     ⚠️ `/content`(정보센터)는 헤더에서 빠졌습니다 — 푸터 `서비스`
-     칸과, 160개 화면의 글 잇기 구간과 헤더 검색이 받습니다. */
-  /* ⚠️⚠️ **2026-10-16 "최종 홈페이지 리뉴얼" §4 의 여덟**입니다.
-     여덟 전부 **실제로 있는 화면**입니다 (가짜 링크는 절대 규칙 5) —
-     지시서가 적은 여덟을 저희 주소로 옮기면 이렇게 됩니다.
-
-       창업 준비     /startup     매장 운영   /operation
-       매장 양도양수 /transfer    폐업 · 정리 /closure
-       서비스 · 상품 /providers   계산기      /tools
-       이용 가이드   /content     도움말      /faq
-
-     ⚠️⚠️ **지시서의 여덟째는 `고객센터` 인데 그렇게 적지 않았습니다.**
-     전화도 채팅도 없고 사업자 전화번호 칸조차 비어 있어서, 그 이름을
-     걸면 손님이 **전화번호를 찾다가 못 찾습니다** — 이 저장소가 푸터
-     에서 못박아 둔 자리이고 §0-8(작동하지 않는 링크)과 같은 결입니다.
-     실제로 답이 있는 `/faq` 로 보내고 이름도 그대로 적습니다. 고객센터
-     기능(전화 · 채팅 · 티켓)이 생기는 날 이 한 줄을 바꿉니다.
-     ⚠️ `서비스 · 상품` 은 `/providers` 입니다 — 분야 26 · 세부 서비스
-     206 이 거기서 갈라지고, `offers.js` 의 수익상품도 **새 주소를 만들지
-     않고** 그 분야 화면으로 보냅니다 (§5 콘텐츠 중복 방지).
-
-     ⚠️⚠️ **여덟은 1100px 아래에서 안 들어갑니다 — 재서 접었습니다.**
-     여섯일 때 901px 에서 남는 폭이 30px 뿐이었습니다. 그래서 메뉴가
-     통째로 접히는 폭을 **900 → 1100px** 으로 올리고, 그 아래는
-     **햄버거 서랍**(`HeaderDrawer`)이 여덟을 전부 받습니다.
-     ⚠️ 서랍도 같이 올렸습니다 (`css/app.css`) — 한쪽만 올리면
-     1001~1100px 에 **메뉴가 아무것도 없게** 됩니다 (이 저장소가
-     `display:none` 을 1040 으로 올렸다가 겪은 자리).
-     ⚠️⚠️ **아홉으로 늘리지 마세요.** 넘치면 가로 스크롤이 나는 것이
-     아니라 메뉴가 헤더 오른쪽 위로 **올라앉고**, `.gnb` 가
-     `min-width:0` 이라 전수 점검이 영원히 통과합니다. 손대실 때는
-     열두 폭에서 재 보세요. */
-  { to:"/startup",   name:"창업 준비" },
-  { to:"/operation", name:"매장 운영" },
-  { to:"/transfer",  name:"매장 양도양수" },
-  { to:"/closure",   name:"폐업 · 정리" },
-  { to:"/providers", name:"서비스 · 상품" },
-  /* ⚠️ 2026-10-17 §5 가 이 칸을 **계산도구**로 적었습니다. 한 글자가
-     늘어 재 봤습니다 — 1441px 이상에서 남는 폭 101 → 88px 입니다
-     (아래 표). */
-  { to:"/tools",     name:"계산도구" },
-  { to:"/content",   name:"이용 가이드" },
-  /* ⚠️⚠️ **2026-10-09 지시서 PART 2 4-1 — 여섯째입니다.** 지시서의 아홉
-     중 다섯이 위에 있고, `파트너 입점` 과 `로그인·마이페이지` 는 헤더
-     **오른쪽**(업체 입점 · 내 기록)에 이미 있습니다. 빠진 것이
-     `서비스 신청` 하나였습니다.
-
-     ⚠️⚠️ **재 보고 넣었습니다.** 이 저장소는 "여섯으로 늘리지 마세요"
-     라고 적어 두었는데, 그 경고는 메뉴가 **일곱**이던 시절 값입니다.
-     다섯으로 줄어든 지금 다시 재 보니 여섯이 들어갑니다 —
-
-         폭      쓰는 폭 / 자리    줄   넘친 칸   가로 스크롤
-         1440    427 / 610        1      0        없음
-         1280    427 / 450        1      0        없음
-         1024    387 / 500        1      0        없음
-          980    352 / 456        1      0        없음
-          901    352 / 377        1      0        없음   ← 제일 좁습니다
-
-     ⚠️⚠️ **남는 폭이 95px 에서 25px 으로 줄었습니다** (901px 기준).
-     일곱으로 늘리거나 메뉴 이름을 길게 하면 그 자리에서 넘칩니다 —
-     넘치면 **가로 스크롤이 나는 것이 아니라** 메뉴가 헤더 오른쪽 위로
-     올라앉고, `.gnb` 가 `min-width:0` 이라 **전수 점검이 영원히
-     통과합니다.** 손대실 때는 위 표처럼 **재 보세요.**
-
-     ⚠️ `/quote` 는 실제로 있는 화면입니다 (견적 · 상담 신청).
-
-     ⚠️⚠️ **2026-10-17 §5 로 다시 쟀습니다** (여덟 · 계산도구) —
-
-         폭        쓰는 폭 / 자리   줄   넘친 칸   가로 스크롤
-         2560~1441  577 / 666      1      0        없음   ← 제일 좁습니다
-         1440       577 / 1001     1      0        없음
-         1280       528 / 841      1      0        없음
-         1180       513 / 741      1      0        없음
-         1101       513 / 662      1      0        없음
-         1100 아래  메뉴가 접히고 햄버거 서랍이 여덟을 받습니다
-
-     ⚠️⚠️ **아홉으로 늘리거나 이름을 더 길게 하지 마세요** — 1441px
-     이상에서 남는 폭이 88px 뿐입니다.
-
-     ⚠️⚠️ **고객센터를 적지 않았습니다** (§5 에 있습니다). 그런 화면이
-     없고 전화도 채팅도 없습니다 — 사업자 전화번호 칸조차 비어 있어서,
-     그 이름을 걸면 손님이 **전화번호를 찾다가 못 찾습니다**. 실제로
-     답이 있는 `/faq` 를 `도움말` 로 냅니다 (절대 규칙 2 · 5). */
-  { to:"/faq",       name:"도움말" }
+  /* ⚠️⚠️ 2026-11-19 홈페이지 전체 디자인 개편 (승인 6) — **여섯 + 펼침 메뉴**입니다.
+     시안의 메뉴 그대로 — 창업 준비 · 매장 운영 · 매장 양도양수 · 폐업·철거 ·
+     전문가 상담 · 정보·가이드. 전에 맨 위에 있던 서비스·상품 · 계산도구 · 이용 가이드 ·
+     도움말 넷은 **펼침 메뉴 안으로** 들어갔습니다 (지운 것이 아닙니다 — 주소도 그대로입니다).
+     ⚠️⚠️ 맨 위 칸(to)은 **그대로 누르면 그 화면**입니다 — 펼침은 덧길입니다. 폰 서랍도
+     같은 목록을 씁니다 (두 곳에 적지 않습니다).
+     ⚠️⚠️ 접수가 걸린 칸(form)은 **짝으로** 그립니다 — 열렸을 때만 신청 화면으로,
+     닫혀 있으면 off 쪽 주소로 갑니다 (hdCtaPaint 가 data-cta 짝을 그대로 켜고 끕니다).
+     닫힌 접수를 메뉴가 열어 주는 길을 만들지 마세요.
+     ⚠️ 하위 주소는 전부 tools/urls.json 에 있는 것입니다 (가짜 링크 금지). */
+  { to:"/startup",   name:"창업 준비", sub:[
+      { to:"/startup",      name:"창업 준비 한눈에" },
+      { to:"/g/startup",    name:"아이템 · 행정 · 자금" },
+      { to:"/g/location",   name:"상권 · 입지" },
+      { to:"/g/build",      name:"인테리어 · 설비" },
+      { to:"/tools/cost",   name:"창업 비용 계산" },
+      { to:"/franchise",    name:"프랜차이즈" } ] },
+  { to:"/operation", name:"매장 운영", sub:[
+      { to:"/operation",            name:"운영 고민 해결" },
+      { to:"/providers/marketing",  name:"매출 · 마케팅" },
+      { to:"/providers/it",         name:"POS · 매장 시스템" },
+      { to:"/providers/repair",     name:"시설 · 설비 수리" },
+      { to:"/tools/bep",            name:"손익분기 계산" } ] },
+  { to:"/transfer",  name:"매장 양도양수", sub:[
+      { to:"/stores",          name:"매장 매물 찾기" },
+      { to:"/assets",          name:"시설 · 장비 매물" },
+      { to:"/sell",            name:"매물 등록", form:"sell", off:"/transfer?t=out", offName:"매장 넘기는 순서" },
+      { to:"/transfer?t=in",   name:"매장 인수 순서" },
+      { to:"/tools/premium",   name:"권리금 계산" } ] },
+  { to:"/closure",   name:"폐업·철거", sub:[
+      { to:"/closure",              name:"정리 방법 찾기" },
+      { to:"/quote?mode=close&from=gnb", name:"매장 정리 상담", form:"close", off:"/closure#pick", offName:"정리 서비스 고르기" },
+      { to:"/providers/demolish",   name:"철거" },
+      { to:"/providers/restore",    name:"원상복구" },
+      { to:"/c/process",            name:"폐업 절차" },
+      { to:"/tools/closecost",      name:"폐업 예상비용" } ] },
+  { to:"/providers", name:"전문가 상담", sub:[
+      { to:"/providers",  name:"분야별 업체 찾기" },
+      { to:"/quote",      name:"견적 · 상담 신청", form:"quote", off:"/intake", offName:"접수 안내" },
+      { to:"/join",       name:"파트너 입점 안내" } ] },
+  { to:"/content",   name:"정보·가이드", sub:[
+      { to:"/content",  name:"이용 가이드" },
+      { to:"/tools",    name:"계산도구 13개" },
+      { to:"/support",  name:"지원사업 찾는 곳" },
+      { to:"/faq",      name:"자주 묻는 질문" },
+      { to:"/about",    name:"플랫폼 소개" } ] }
 ];
 
 /* 폰 아래 네비 — 다섯 칸을 넘기지 마세요. 손가락이 닿는 폭이 줄고
@@ -258,8 +155,15 @@ function Header(){
   return closedBar + '<header class="hd"><div class="w-wide hd-in">'+
     Logo() +
     '<nav class="gnb" id="gnb" aria-label="주요 메뉴">'+
-      AM_GNB.map(function(m){
-        return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+esc(m.name)+'</a>';
+      AM_GNB.map(function(m, i){
+        return '<div class="gnb-i">'+
+          '<a class="gnb-a" href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+esc(m.name)+'</a>'+
+          (m.sub && m.sub.length
+            ? '<button class="gnb-x" type="button" aria-expanded="false" aria-controls="gnb-m-'+i+'" '+
+                'aria-label="'+esc(m.name)+' 하위 메뉴" onclick="gnbOpen('+i+')">'+icon("chevd",16)+'</button>'+
+              '<div class="gnb-m" id="gnb-m-'+i+'" role="group" aria-label="'+esc(m.name)+'">'+gnbSub(m.sub)+'</div>'
+            : '')+
+        '</div>';
       }).join("")+
     '</nav>'+
     '<div class="hd-r">'+
@@ -333,12 +237,49 @@ function Header(){
    적으면 메뉴를 하나 늘릴 때 한쪽만 고치게 되고, 그러면 폰에서만
    조용히 빠집니다 (이 저장소가 아이콘 표 · 랜딩 미니카드로 겪은
    자리입니다). */
+/* 펼침 메뉴 한 칸 — 접수가 걸린 칸은 짝으로 그립니다 (열림 on · 닫힘 off).
+   ⚠️ 기본은 **닫힘 쪽만** 보입니다 (on 은 hidden) — 못 읽으면 닫힘 그대로 (fail-closed). */
+function gnbSub(L){
+  return L.map(function(x){
+    if(!x.form)
+      return '<a href="'+esc(x.to)+'" data-to="'+esc(x.to)+'">'+esc(x.name)+'</a>';
+    return '<a href="'+esc(x.to)+'" data-to="'+esc(x.to.split("?")[0] === "/quote" && x.form === "quote" ? "/quote" : x.to)+'" '+
+        'data-cta="on" data-cta-form="'+esc(x.form)+'" hidden>'+esc(x.name)+'</a>'+
+      '<a href="'+esc(x.off)+'" data-cta="off" data-cta-form="'+esc(x.form)+'">'+esc(x.offName || x.name)+'</a>';
+  }).join("");
+}
+/* PC 펼침 — 마우스를 올리면 CSS(:hover · :focus-within)가 열고, 단추는 **누르는 손 ·
+   키보드**를 위한 것입니다. 하나만 열고, Esc · 바깥 누름 · 주소 바뀜에 닫습니다. */
+window.gnbOpen = function(i, on){
+  els(".gnb-i").forEach(function(g, k){
+    var b = g.querySelector(".gnb-x"); if(!b) return;
+    var want = (k === i) ? (on === undefined ? b.getAttribute("aria-expanded") !== "true" : !!on) : false;
+    b.setAttribute("aria-expanded", want ? "true" : "false");
+    g.classList.toggle("open", want);
+  });
+};
+if(!window.__gnbWired){
+  window.__gnbWired = true;
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape") window.gnbOpen(-1, false); });
+  document.addEventListener("click", function(e){
+    if(!(e.target && e.target.closest && e.target.closest(".gnb-i"))) window.gnbOpen(-1, false);
+  });
+}
+
 function HeaderDrawer(){
+  /* ⚠️⚠️ 2026-11-19 — 폰은 **누르는 아코디언**입니다 (승인 6 · 터치형). 맨 위 이름은
+     그대로 그 화면으로 가고, 옆의 단추가 하위 칸을 엽니다 (48px · aria-expanded). */
   return '<div class="hd-dw" id="hdMenu" hidden>'+
     '<nav class="hd-dw-g" aria-label="전체 메뉴">'+
-      AM_GNB.map(function(m){
-        return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+
-          esc(m.name)+icon("arrow",16)+'</a>';
+      AM_GNB.map(function(m, i){
+        if(!(m.sub && m.sub.length))
+          return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+esc(m.name)+icon("arrow",16)+'</a>';
+        return '<div class="hd-dw-sec">'+
+          '<div class="hd-dw-h"><a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+esc(m.name)+'</a>'+
+            '<button type="button" class="hd-dw-x" aria-expanded="false" aria-controls="hd-dw-m-'+i+'" '+
+              'aria-label="'+esc(m.name)+' 하위 메뉴 펼치기" onclick="hdDwOpen(this)">'+icon("chevd",18)+'</button></div>'+
+          '<div class="hd-dw-m" id="hd-dw-m-'+i+'" hidden>'+gnbSub(m.sub)+'</div>'+
+        '</div>';
       }).join("")+
       '<a href="/my">'+esc("내 기록")+icon("arrow",16)+'</a>'+
       '<a href="/join">'+esc("파트너 입점")+icon("arrow",16)+'</a>'+
@@ -354,6 +295,13 @@ function HeaderDrawer(){
 
 /* 열고 닫기. ⚠️ 주소가 바뀌면 `paintGnb()` 가 닫습니다 — 안 닫으면
    눌러서 넘어간 화면 위에 서랍이 그대로 덮여 있습니다. */
+window.hdDwOpen = function(b){
+  var m = document.getElementById(b.getAttribute("aria-controls")); if(!m) return;
+  var on = b.getAttribute("aria-expanded") !== "true";
+  b.setAttribute("aria-expanded", on ? "true" : "false");
+  if(on) m.removeAttribute("hidden"); else m.setAttribute("hidden","");
+  b.closest(".hd-dw-sec").classList.toggle("open", on);
+};
 window.hdMenu = function(open){
   var dw = document.getElementById("hdMenu"),
       bt = document.getElementById("hdMb");
@@ -511,9 +459,18 @@ function paintGnb(){
   els('a[data-to="/quote"]', document.querySelector(".hd") || document)
     .forEach(function(a){ a.setAttribute("href", gnbQuoteHref()); });
   var g = $("gnb"); if(!g) return;
-  els("a", g).forEach(function(a){
+  if(typeof window.gnbOpen === "function") window.gnbOpen(-1, false);
+  /* 켜지는 맨 위 칸은 **하나**입니다 — 하위 칸이 지금 주소와 같으면 그 칸이 먼저이고
+     (예: /providers/marketing → 매장 운영), 없으면 맨 위 주소가 앞에 붙는 칸입니다. */
+  var best = -1, bestN = 0;
+  (window.AM_GNB || []).forEach(function(m, k){
+    var n = (m.sub || []).some(function(x){ return x.to.split(/[?#]/)[0] === p && x.to.split(/[?#]/)[0] !== m.to; }) ? 2
+          : (p === m.to || p.indexOf(m.to + "/") === 0) ? 1 : 0;
+    if(n > bestN){ bestN = n; best = k; }
+  });
+  els("a.gnb-a", g).forEach(function(a, k){
     var to = a.getAttribute("data-to");
-    var on = (to === "/") ? (p === "/") : (p === to || p.indexOf(to + "/") === 0);
+    var on = k === best;
     a.classList.toggle("on", on);
     if(on) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current");
     /* ⚠️ `data-to` 는 그대로 둡니다 — 지금 화면 표시가 그걸로 갈립니다.

@@ -42,7 +42,7 @@ window.AM_STAGES = [
 
     cats:["transfer","asset","stock"] },
 
-  { key:"closing",  no:"06", name:"폐업 · 정리",   icon:"boxes", tone:"t13",
+  { key:"closing",  no:"06", name:"폐업·철거",   icon:"boxes", tone:"t13",
     side:"close",
     lead:"사업의 마지막까지 안전하게.",
     copy:"사업의 마지막까지<br> 안전하게.",

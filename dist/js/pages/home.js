@@ -57,7 +57,7 @@ var MAIN_CALC = ["cost", "bep", "premium", "closecost"];
 
 function PageMain(){
 
-  return HomeSplitHero()+ HomeQuick()+ HomeStores()+ HomeTrust()+ HomeShortcuts()+
+  return HomeHeroSW()+ HomeEntrySW()+ HomeStores()+ HomeTrust()+ HomeShortcuts()+
          HomeCalc()+ HomeGuide()+ HomeCta();
 }
 
@@ -136,7 +136,7 @@ function HomeHero(){
         '<p class="bhero-k">'+icon("sparkle",14)+'창업부터 폐업까지 사장님의 든든한 파트너</p>'+
 
         '<h1>사장님의 모든 순간, '+esc(with_)+' 함께합니다.</h1>'+
-        '<p class="bhero-s">창업 준비, 매장 운영, 매장 양도양수, 폐업 · 정리에 '+
+        '<p class="bhero-s">창업 준비, 매장 운영, 매장 양도양수, 폐업·철거에 '+
           '필요한 모든 서비스를 한곳에서 찾고, 비교하고, 연결받으세요.</p>'+
         '<div class="bhero-go">'+
           '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">'+
@@ -1041,5 +1041,64 @@ function HomeShortcuts(){
     '<ul class="sw-shg">'+li+'</ul>'+
 
     HomePicked()+
+  '</div></section>';
+}
+
+var HOME_HERO_CHIPS = [
+  { to:"/stores",             name:"매장 매물" },
+  { to:"/tools/cost",         name:"창업 비용" },
+  { to:"/c/area",             name:"상권 · 입지" },
+  { to:"/providers/interior", name:"인테리어" },
+  { to:"/tools/closecost",    name:"폐업 비용" }
+];
+function HomeHeroSW(){
+  var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND || {}).name || ""));
+  var who = (typeof koWith === "function") ? koWith(nm, "이가") : nm + "가";
+  return '<section class="bhero sw2-hero">'+
+    (hasPhoto("hero-start")
+      ? '<div class="sw2-ph" aria-hidden="true">'+photoBox("hero-start", "", true, "100vw")+'</div>' : '')+
+    '<div class="w sw2-in">'+
+      '<p class="sw2-k">창업 · 운영 · 양도양수 · 폐업까지</p>'+
+      '<h1 class="sw2-h"><span>자영업의 <em>시작과 끝,</em></span> <span>'+esc(who)+' 함께합니다.</span></h1>'+
+      '<p class="sw2-s">창업 준비부터 매장 운영의 고민 해결, 매장 양도양수, 폐업 · 철거까지 '+
+        '자영업자에게 필요한 서비스를 한곳에서 찾고 비교하세요.</p>'+
+      '<form class="sw-find sw2-find" role="search" action="/search" onsubmit="return swFind(event)">'+
+        '<label class="sr-only" for="sw-q">서비스 · 매물 · 정보 검색</label>'+
+        '<input id="sw-q" name="q" type="search" autocomplete="off" '+
+          'placeholder="서비스 · 매물 · 정보 검색">'+
+        '<button class="sw-find-b" type="submit" aria-label="검색">'+icon("search",22)+'</button>'+
+      '</form>'+
+      '<nav class="sw2-chips" aria-label="바로가기">'+
+        '<span class="sw2-chips-k">바로가기</span>'+
+        HOME_HERO_CHIPS.map(function(c){
+          return '<a href="'+esc(c.to)+'">#'+esc(c.name.replace(/ · /g, "·"))+'</a>';
+        }).join("")+
+      '</nav>'+
+    '</div>'+
+  '</section>';
+}
+
+var HOME_ENTRY_SW = [
+  { k:"startup",  to:"/startup",   no:"01", ic:"rocket",   ph:"hero-startup", b:"창업 준비",     s:"성공 창업을 위한 준비부터 실행까지" },
+  { k:"ops",      to:"/operation", no:"02", ic:"chart",    ph:"hero-ops",     b:"매장 운영",     s:"매출 향상과 비용 절감, 운영 고민 해결" },
+  { k:"transfer", to:"/transfer",  no:"03", ic:"store",    ph:"kind-pass",    b:"매장 양도양수", s:"좋은 매장을 찾고 안전하게 넘기기" },
+  { k:"closure",  to:"/closure",   no:"04", ic:"hammer",   ph:"hero-closure", b:"폐업·철거",     s:"매장 정리부터 철거 · 원상복구까지" }
+];
+function HomeEntrySW(){
+  return '<section class="bent sw2-ent"><div class="w">'+
+    '<h2 class="sr-only">네 가지 핵심 서비스</h2>'+
+    '<ul class="sw2-eg">'+
+      HOME_ENTRY_SW.map(function(e){
+        return '<li class="sw2-ec ent-'+esc(e.k)+'"><a href="'+esc(e.to)+'">'+
+          (hasPhoto(e.ph) ? '<span class="sw2-eph" aria-hidden="true">'+
+            photoBox(e.ph, "", false, "(max-width:768px) 50vw, 25vw")+'</span>' : '')+
+          '<span class="sw2-eno bent-no" aria-hidden="true">'+esc(e.no)+'</span>'+
+          '<span class="sw2-ei" aria-hidden="true">'+icon(e.ic,34)+'</span>'+
+          '<b class="sw2-eb">'+esc(e.b)+'</b>'+
+          '<span class="sw2-es">'+esc(e.s)+'</span>'+
+          '<span class="sw2-ego" aria-hidden="true">'+icon("arrow",20)+'</span>'+
+        '</a></li>';
+      }).join("")+
+    '</ul>'+
   '</div></section>';
 }

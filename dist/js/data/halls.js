@@ -55,7 +55,7 @@ window.AM_HALLS = [
       { n:"인수 점검",      ia:"permit",   to:"/transfer?t=in", tone:"t4" }
     ] },
 
-  { key:"closure", name:"폐업 · 정리", lead:"깔끔한 마무리를 위한 정리 서비스",
+  { key:"closure", name:"폐업·철거", lead:"깔끔한 마무리를 위한 정리 서비스",
     tone:"close", to:"/closure", ic:"boxes",
     items:[
 

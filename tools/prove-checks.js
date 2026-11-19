@@ -538,8 +538,9 @@ const CASES = [
      ⚠️ .bhero 는 메인에 **없으므로** 그걸 집으면 되돌리기가 터집니다
      (이 저장소에서 열두 번 겪은 자리). */
   /* ⚠️ 2026-11-18 메인 개편 — 네 걸음의 마지막(폐업)을 지워 차례를 끊습니다. */
-  ["메인은 히어로 다음이 보조 진입 넷이고 네 걸음이 차례대로다",
-   `document.querySelector('.sw-fl[href="/closure"]').remove();`],
+  /* 2026-11-19 개편 — 4대 진입 카드의 마지막(폐업)을 지워 차례를 끊습니다. */
+  ["메인은 히어로 다음이 4대 진입 카드이고 창업 → 운영 → 양도양수 → 폐업 차례다",
+   `document.querySelector('.sw2-ec.ent-closure').remove();`],
   /* ⚠️⚠️ 되돌리기는 **검사가 실제로 보는 것**을 망가뜨려야 합니다.
      검색 가는 길을 지울 때 입력칸만 지우고 돋보기를 남겼다가 "검사가
      안 잡는다" 로 보였던 적이 있습니다 — 검사가 아니라 되돌리기가
@@ -570,8 +571,9 @@ const CASES = [
      틀린 자리이고 이 저장소에서 열두 번 겪었습니다. 메인을 전면 리뉴얼
      직전으로 되돌릴 때 이 줄까지 같이 되돌렸다가 실제로 걸렸습니다. */
   /* ⚠️ 2026-11-18 메인 개편 — 재는 자리가 히어로 두 판입니다. 폐업 판을 빨강으로 칠합니다. */
-  ["창업 · 폐업 두 판이 저마다의 색으로 갈리고 폐업이 빨강이 아니다",
-   `document.querySelector(".sw-hp-cl").style.backgroundColor = "rgb(200, 20, 30)";`],
+  /* 2026-11-19 개편 — 재는 자리가 4대 진입 카드입니다. 폐업 카드를 빨강으로 칠합니다. */
+  ["4대 진입 카드가 저마다의 색으로 갈리고 폐업이 빨강이 아니다",
+   `document.querySelector(".ent-closure > a").style.backgroundColor = "rgb(200, 20, 30)";`],
   /* ⚠️ 2026-10-11 간소화 §2 — 연결 구간이 메인에서 내려와 되돌릴
      요소가 없습니다. **없는 요소를 집으면 되돌리기가 터지고**, 그러면
      "검사가 안 잡는다" 로 보입니다 (이 저장소에서 아홉 번 겪은 자리).
@@ -603,9 +605,10 @@ const CASES = [
   /* 2026-11-18 — 닫혀 있는데 "견적 신청" 을 같이 보이게 합니다 */
   ["헤더 공통 CTA 가 견적 접수 상태를 따른다",
    `document.querySelector(".hd .hd-cta-on").removeAttribute("hidden");`],
-  ["창업 · 폐업 두 판의 크기가 같다",
-   `const e = document.querySelector(".sw-hp-cl");
-   e.style.minHeight = "0"; e.style.height = "120px"; e.style.alignSelf = "start";`],
+  /* 2026-11-19 개편 — 폐업 카드를 낮춥니다 (grid 의 stretch 를 덮어야 합니다). */
+  ["4대 진입 카드의 크기가 같다",
+   `const e = document.querySelector(".ent-closure > a"); e.parentElement.style.alignSelf = "start";
+   e.style.minHeight = "0"; e.style.height = "120px";`],
   /* ⚠️⚠️ **아이콘 칸(.stg-i)만 집어야 합니다.** 처음에
      ".mstg-g > li > a svg" 로 적었더니 **화살표까지** 걸려서
      [아이콘0, 화살표0, 아이콘1, …] 이 되고, 0번에 화살표를 넣는 바람에
@@ -1070,14 +1073,11 @@ async function proveAudit(pg){
     await pg.waitForTimeout(260);
     const before = (await pg.evaluate(AUDIT)).mix;
     const did = await pg.evaluate(() => {
-      /* 2026-11-18 메인 개편 — 범위 띠가 메인에서 내려가 히어로 단추(글 + span + 글)로 봅니다 */
-      const p = document.querySelector(".sw-hbtn-st");
+      /* 2026-11-19 개편 — 히어로 머리말 알약(.sw2-k · inline-flex)에 맨글 + <b> + 맨글 을 넣습니다
+         (감싸개 없이 섞으면 flex 가 셋을 칸으로 가르는 그 꼴). */
+      const p = document.querySelector(".sw2-k");
       if(!p) return false;
-      const sp = p.querySelector("span");
-      if(!sp) return false;
-      /* 감싼 태그를 풀어 맨글 + <b> + 맨글 로 되돌립니다 */
-      while(sp.firstChild) p.insertBefore(sp.firstChild, sp);
-      sp.remove();
+      p.innerHTML = "창업 · <b>운영</b> · 양도양수 · 폐업까지";
       return true;
     });
     await pg.waitForTimeout(60);

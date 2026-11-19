@@ -2,16 +2,42 @@
 
 window.AM_GNB = [
 
-  { to:"/startup",   name:"창업 준비" },
-  { to:"/operation", name:"매장 운영" },
-  { to:"/transfer",  name:"매장 양도양수" },
-  { to:"/closure",   name:"폐업 · 정리" },
-  { to:"/providers", name:"서비스 · 상품" },
-
-  { to:"/tools",     name:"계산도구" },
-  { to:"/content",   name:"이용 가이드" },
-
-  { to:"/faq",       name:"도움말" }
+  { to:"/startup",   name:"창업 준비", sub:[
+      { to:"/startup",      name:"창업 준비 한눈에" },
+      { to:"/g/startup",    name:"아이템 · 행정 · 자금" },
+      { to:"/g/location",   name:"상권 · 입지" },
+      { to:"/g/build",      name:"인테리어 · 설비" },
+      { to:"/tools/cost",   name:"창업 비용 계산" },
+      { to:"/franchise",    name:"프랜차이즈" } ] },
+  { to:"/operation", name:"매장 운영", sub:[
+      { to:"/operation",            name:"운영 고민 해결" },
+      { to:"/providers/marketing",  name:"매출 · 마케팅" },
+      { to:"/providers/it",         name:"POS · 매장 시스템" },
+      { to:"/providers/repair",     name:"시설 · 설비 수리" },
+      { to:"/tools/bep",            name:"손익분기 계산" } ] },
+  { to:"/transfer",  name:"매장 양도양수", sub:[
+      { to:"/stores",          name:"매장 매물 찾기" },
+      { to:"/assets",          name:"시설 · 장비 매물" },
+      { to:"/sell",            name:"매물 등록", form:"sell", off:"/transfer?t=out", offName:"매장 넘기는 순서" },
+      { to:"/transfer?t=in",   name:"매장 인수 순서" },
+      { to:"/tools/premium",   name:"권리금 계산" } ] },
+  { to:"/closure",   name:"폐업·철거", sub:[
+      { to:"/closure",              name:"정리 방법 찾기" },
+      { to:"/quote?mode=close&from=gnb", name:"매장 정리 상담", form:"close", off:"/closure#pick", offName:"정리 서비스 고르기" },
+      { to:"/providers/demolish",   name:"철거" },
+      { to:"/providers/restore",    name:"원상복구" },
+      { to:"/c/process",            name:"폐업 절차" },
+      { to:"/tools/closecost",      name:"폐업 예상비용" } ] },
+  { to:"/providers", name:"전문가 상담", sub:[
+      { to:"/providers",  name:"분야별 업체 찾기" },
+      { to:"/quote",      name:"견적 · 상담 신청", form:"quote", off:"/intake", offName:"접수 안내" },
+      { to:"/join",       name:"파트너 입점 안내" } ] },
+  { to:"/content",   name:"정보·가이드", sub:[
+      { to:"/content",  name:"이용 가이드" },
+      { to:"/tools",    name:"계산도구 13개" },
+      { to:"/support",  name:"지원사업 찾는 곳" },
+      { to:"/faq",      name:"자주 묻는 질문" },
+      { to:"/about",    name:"플랫폼 소개" } ] }
 ];
 
 var MNAV = [
@@ -59,8 +85,15 @@ function Header(){
   return closedBar + '<header class="hd"><div class="w-wide hd-in">'+
     Logo() +
     '<nav class="gnb" id="gnb" aria-label="주요 메뉴">'+
-      AM_GNB.map(function(m){
-        return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+esc(m.name)+'</a>';
+      AM_GNB.map(function(m, i){
+        return '<div class="gnb-i">'+
+          '<a class="gnb-a" href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+esc(m.name)+'</a>'+
+          (m.sub && m.sub.length
+            ? '<button class="gnb-x" type="button" aria-expanded="false" aria-controls="gnb-m-'+i+'" '+
+                'aria-label="'+esc(m.name)+' 하위 메뉴" onclick="gnbOpen('+i+')">'+icon("chevd",16)+'</button>'+
+              '<div class="gnb-m" id="gnb-m-'+i+'" role="group" aria-label="'+esc(m.name)+'">'+gnbSub(m.sub)+'</div>'
+            : '')+
+        '</div>';
       }).join("")+
     '</nav>'+
     '<div class="hd-r">'+
@@ -90,12 +123,45 @@ function Header(){
   '</div></header>';
 }
 
+function gnbSub(L){
+  return L.map(function(x){
+    if(!x.form)
+      return '<a href="'+esc(x.to)+'" data-to="'+esc(x.to)+'">'+esc(x.name)+'</a>';
+    return '<a href="'+esc(x.to)+'" data-to="'+esc(x.to.split("?")[0] === "/quote" && x.form === "quote" ? "/quote" : x.to)+'" '+
+        'data-cta="on" data-cta-form="'+esc(x.form)+'" hidden>'+esc(x.name)+'</a>'+
+      '<a href="'+esc(x.off)+'" data-cta="off" data-cta-form="'+esc(x.form)+'">'+esc(x.offName || x.name)+'</a>';
+  }).join("");
+}
+
+window.gnbOpen = function(i, on){
+  els(".gnb-i").forEach(function(g, k){
+    var b = g.querySelector(".gnb-x"); if(!b) return;
+    var want = (k === i) ? (on === undefined ? b.getAttribute("aria-expanded") !== "true" : !!on) : false;
+    b.setAttribute("aria-expanded", want ? "true" : "false");
+    g.classList.toggle("open", want);
+  });
+};
+if(!window.__gnbWired){
+  window.__gnbWired = true;
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape") window.gnbOpen(-1, false); });
+  document.addEventListener("click", function(e){
+    if(!(e.target && e.target.closest && e.target.closest(".gnb-i"))) window.gnbOpen(-1, false);
+  });
+}
+
 function HeaderDrawer(){
+
   return '<div class="hd-dw" id="hdMenu" hidden>'+
     '<nav class="hd-dw-g" aria-label="전체 메뉴">'+
-      AM_GNB.map(function(m){
-        return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+
-          esc(m.name)+icon("arrow",16)+'</a>';
+      AM_GNB.map(function(m, i){
+        if(!(m.sub && m.sub.length))
+          return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+esc(m.name)+icon("arrow",16)+'</a>';
+        return '<div class="hd-dw-sec">'+
+          '<div class="hd-dw-h"><a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+esc(m.name)+'</a>'+
+            '<button type="button" class="hd-dw-x" aria-expanded="false" aria-controls="hd-dw-m-'+i+'" '+
+              'aria-label="'+esc(m.name)+' 하위 메뉴 펼치기" onclick="hdDwOpen(this)">'+icon("chevd",18)+'</button></div>'+
+          '<div class="hd-dw-m" id="hd-dw-m-'+i+'" hidden>'+gnbSub(m.sub)+'</div>'+
+        '</div>';
       }).join("")+
       '<a href="/my">'+esc("내 기록")+icon("arrow",16)+'</a>'+
       '<a href="/join">'+esc("파트너 입점")+icon("arrow",16)+'</a>'+
@@ -105,6 +171,13 @@ function HeaderDrawer(){
   '</div>';
 }
 
+window.hdDwOpen = function(b){
+  var m = document.getElementById(b.getAttribute("aria-controls")); if(!m) return;
+  var on = b.getAttribute("aria-expanded") !== "true";
+  b.setAttribute("aria-expanded", on ? "true" : "false");
+  if(on) m.removeAttribute("hidden"); else m.setAttribute("hidden","");
+  b.closest(".hd-dw-sec").classList.toggle("open", on);
+};
 window.hdMenu = function(open){
   var dw = document.getElementById("hdMenu"),
       bt = document.getElementById("hdMb");
@@ -218,9 +291,17 @@ function paintGnb(){
   els('a[data-to="/quote"]', document.querySelector(".hd") || document)
     .forEach(function(a){ a.setAttribute("href", gnbQuoteHref()); });
   var g = $("gnb"); if(!g) return;
-  els("a", g).forEach(function(a){
+  if(typeof window.gnbOpen === "function") window.gnbOpen(-1, false);
+
+  var best = -1, bestN = 0;
+  (window.AM_GNB || []).forEach(function(m, k){
+    var n = (m.sub || []).some(function(x){ return x.to.split(/[?#]/)[0] === p && x.to.split(/[?#]/)[0] !== m.to; }) ? 2
+          : (p === m.to || p.indexOf(m.to + "/") === 0) ? 1 : 0;
+    if(n > bestN){ bestN = n; best = k; }
+  });
+  els("a.gnb-a", g).forEach(function(a, k){
     var to = a.getAttribute("data-to");
-    var on = (to === "/") ? (p === "/") : (p === to || p.indexOf(to + "/") === 0);
+    var on = k === best;
     a.classList.toggle("on", on);
     if(on) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current");
 

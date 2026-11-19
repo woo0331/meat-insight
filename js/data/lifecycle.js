@@ -79,7 +79,7 @@ window.AM_STAGES = [
        받는 쪽이 같은 화면을 보는** 자리이기 때문입니다 (`/assets`). */
     cats:["transfer","asset","stock"] },
 
-  { key:"closing",  no:"06", name:"폐업 · 정리",   icon:"boxes", tone:"t13",
+  { key:"closing",  no:"06", name:"폐업·철거",   icon:"boxes", tone:"t13",
     side:"close",
     lead:"사업의 마지막까지 안전하게.",
     copy:"사업의 마지막까지<br> 안전하게.",

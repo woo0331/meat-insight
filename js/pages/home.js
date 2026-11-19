@@ -566,7 +566,9 @@ function PageMain(){
      HomeGuide · HomeCta 였고 함수는 하나도 지우지 않았습니다. HomeSteps(이용 절차)
      는 보조 진입 "이용 가이드"(/about)가 받습니다. 되돌리시면 check.js 의 want ·
      build-pages.js 의 메인 크롤러 본문도 같이 고치세요. */
-  return HomeSplitHero()+ HomeQuick()+ HomeStores()+ HomeTrust()+ HomeShortcuts()+
+  /* ⚠️⚠️ 2026-11-19 홈페이지 전체 디자인 개편 — 01 히어로(HomeHeroSW) · 02 4대 진입 카드(HomeEntrySW).
+     옛 HomeSplitHero · HomeQuick 는 **지우지 않았습니다** (되살리기는 이 줄의 두 이름). */
+  return HomeHeroSW()+ HomeEntrySW()+ HomeStores()+ HomeTrust()+ HomeShortcuts()+
          HomeCalc()+ HomeGuide()+ HomeCta();
 }
 
@@ -800,7 +802,7 @@ function HomeHero(){
            본문의 머리말을 **소스에서 글자로** 찾는데 중간에 태그가
            끼면 못 찾아 빌드가 멈춥니다. 줄바꿈은 keep-all 이 합니다. */
         '<h1>사장님의 모든 순간, '+esc(with_)+' 함께합니다.</h1>'+
-        '<p class="bhero-s">창업 준비, 매장 운영, 매장 양도양수, 폐업 · 정리에 '+
+        '<p class="bhero-s">창업 준비, 매장 운영, 매장 양도양수, 폐업·철거에 '+
           '필요한 모든 서비스를 한곳에서 찾고, 비교하고, 연결받으세요.</p>'+
         '<div class="bhero-go">'+
           '<a class="btn btn-ac btn-lg" href="/quote" data-to="/quote">'+
@@ -1980,5 +1982,83 @@ function HomeShortcuts(){
     '<ul class="sw-shg">'+li+'</ul>'+
     /* 고르신 서비스가 있으면 그 자리에서 신청까지 (옛 직접 찾기가 들고 있던 줄 · 0개면 없음) */
     HomePicked()+
+  '</div></section>';
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-11-19 홈페이지 전체 디자인 개편 — 01 메인 히어로 · 02 4대 진입 카드
+   (STOREWAY_01_메인페이지.png · 승인된 범위: 공통 디자인 시스템 + 메인 히어로)
+
+   ⚠️⚠️ 사진은 **사용 권한이 확인된 것만**입니다 (승인 8) — 사장님이 주신 원본
+   hero-start(만들고 있는 매장)과 전문관 머리 넉 장. 시안의 사진은 한 장도 안 썼습니다.
+   ⚠️⚠️ 글자는 전부 HTML 입니다 — 사진 위 글자는 짙은 남색 막(::after)이 받칩니다.
+     사진을 바꾸시면 **픽셀로 다시 재세요** (검사는 사진 위 글자를 못 잽니다).
+   ⚠️ 통합검색은 헤더 검색과 **같은 길**입니다 (swFind → /search).
+     form.sw-find · #sw-q · .sw-find-b 이름을 지우지 마세요 — 흐름 검사가 그 이름을 씁니다.
+   ⚠️⚠️ 바로가기 칩은 **"인기검색어" 가 아닙니다** — 검색 기록을 하나도 모으지 않습니다.
+     전부 실제로 열리는 화면입니다 (tools/urls.json).
+   ⚠️ 브랜드 이름은 brand.js 한 곳 · 조사는 koWith() 가 고릅니다 (손으로 적지 않습니다).
+   ══════════════════════════════════════════════════════════════════ */
+var HOME_HERO_CHIPS = [
+  { to:"/stores",             name:"매장 매물" },
+  { to:"/tools/cost",         name:"창업 비용" },
+  { to:"/c/area",             name:"상권 · 입지" },
+  { to:"/providers/interior", name:"인테리어" },
+  { to:"/tools/closecost",    name:"폐업 비용" }
+];
+function HomeHeroSW(){
+  var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND || {}).name || ""));
+  var who = (typeof koWith === "function") ? koWith(nm, "이가") : nm + "가";
+  return '<section class="bhero sw2-hero">'+
+    (hasPhoto("hero-start")
+      ? '<div class="sw2-ph" aria-hidden="true">'+photoBox("hero-start", "", true, "100vw")+'</div>' : '')+
+    '<div class="w sw2-in">'+
+      '<p class="sw2-k">창업 · 운영 · 양도양수 · 폐업까지</p>'+
+      '<h1 class="sw2-h"><span>자영업의 <em>시작과 끝,</em></span> <span>'+esc(who)+' 함께합니다.</span></h1>'+
+      '<p class="sw2-s">창업 준비부터 매장 운영의 고민 해결, 매장 양도양수, 폐업 · 철거까지 '+
+        '자영업자에게 필요한 서비스를 한곳에서 찾고 비교하세요.</p>'+
+      '<form class="sw-find sw2-find" role="search" action="/search" onsubmit="return swFind(event)">'+
+        '<label class="sr-only" for="sw-q">서비스 · 매물 · 정보 검색</label>'+
+        '<input id="sw-q" name="q" type="search" autocomplete="off" '+
+          'placeholder="서비스 · 매물 · 정보 검색">'+
+        '<button class="sw-find-b" type="submit" aria-label="검색">'+icon("search",22)+'</button>'+
+      '</form>'+
+      '<nav class="sw2-chips" aria-label="바로가기">'+
+        '<span class="sw2-chips-k">바로가기</span>'+
+        HOME_HERO_CHIPS.map(function(c){
+          return '<a href="'+esc(c.to)+'">#'+esc(c.name.replace(/ · /g, "·"))+'</a>';
+        }).join("")+
+      '</nav>'+
+    '</div>'+
+  '</section>';
+}
+
+/* 02 — 4대 진입 카드. ⚠️ 색은 전문관 넷의 뜻 그대로입니다 —
+   창업 블루 · 운영 그린 · 양도양수 퍼플 · 폐업·철거 오렌지 (빨강이 아닙니다).
+   ⚠️⚠️ 카드 전체가 하나의 링크입니다 (안에 또 a 를 넣지 마세요).
+   ⚠️ 흰 글자는 **짙은 쪽 색**이 받칩니다 (재 본 값 — 블루 6.70 · 그린 6.25 · 퍼플 6.26 · 오렌지 5.18). */
+var HOME_ENTRY_SW = [
+  { k:"startup",  to:"/startup",   no:"01", ic:"rocket",   ph:"hero-startup", b:"창업 준비",     s:"성공 창업을 위한 준비부터 실행까지" },
+  { k:"ops",      to:"/operation", no:"02", ic:"chart",    ph:"hero-ops",     b:"매장 운영",     s:"매출 향상과 비용 절감, 운영 고민 해결" },
+  { k:"transfer", to:"/transfer",  no:"03", ic:"store",    ph:"kind-pass",    b:"매장 양도양수", s:"좋은 매장을 찾고 안전하게 넘기기" },
+  { k:"closure",  to:"/closure",   no:"04", ic:"hammer",   ph:"hero-closure", b:"폐업·철거",     s:"매장 정리부터 철거 · 원상복구까지" }
+];
+function HomeEntrySW(){
+  return '<section class="bent sw2-ent"><div class="w">'+
+    '<h2 class="sr-only">네 가지 핵심 서비스</h2>'+
+    '<ul class="sw2-eg">'+
+      HOME_ENTRY_SW.map(function(e){
+        return '<li class="sw2-ec ent-'+esc(e.k)+'"><a href="'+esc(e.to)+'">'+
+          (hasPhoto(e.ph) ? '<span class="sw2-eph" aria-hidden="true">'+
+            photoBox(e.ph, "", false, "(max-width:768px) 50vw, 25vw")+'</span>' : '')+
+          '<span class="sw2-eno bent-no" aria-hidden="true">'+esc(e.no)+'</span>'+
+          '<span class="sw2-ei" aria-hidden="true">'+icon(e.ic,34)+'</span>'+
+          '<b class="sw2-eb">'+esc(e.b)+'</b>'+
+          '<span class="sw2-es">'+esc(e.s)+'</span>'+
+          '<span class="sw2-ego" aria-hidden="true">'+icon("arrow",20)+'</span>'+
+        '</a></li>';
+      }).join("")+
+    '</ul>'+
   '</div></section>';
 }

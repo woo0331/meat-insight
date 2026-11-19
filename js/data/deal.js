@@ -431,7 +431,7 @@ window.AM_SIDES = [
     say:"운영 — 장사하면서 필요합니다" },
   { key:"transfer", name:"인수 · 양도",   short:"양도양수", pick:"/transfer#pick",
     say:"인수 · 양도 — 매장을 받거나 넘깁니다" },
-  { key:"close",    name:"폐업 · 정리",   short:"폐업",   pick:"/closure#pick",
+  { key:"close",    name:"폐업·철거",   short:"폐업",   pick:"/closure#pick",
     say:"폐업 — 정리하려고 합니다" }
 ];
 window.amSide = function(key){

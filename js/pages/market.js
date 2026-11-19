@@ -28,12 +28,16 @@ function PageStores(){
   var f = { industry:ind||null, region:reg||null, parking:pk, kind:kd||null,
             withEquip:eq };
   (window.AM_STORE_RANGES||[]).forEach(function(g){ if(rng[g.key]) f[g.key] = rng[g.key]; });
-  var list = amStores(f);
+  /* 2026-11-19 공개 화면 완성도 §3 — 매물 데이터를 못 읽은 것(스크립트 실패)을 "0건" 으로 말하지 않습니다.
+     ⚠️ 데이터와 함수가 같은 파일(js/data/market.js)이라, 그 파일이 안 오면 amStores 가 없습니다. */
+  var loaded = (typeof amStores === "function") && Array.isArray(window.AM_STORES);
+  var list = loaded ? amStores(f) : [];
   /* ⚠️ 지역 · 업종만 건 수 — 구간 거르개가 몇 건을 숨겼는지 밝히려고 */
-  var all  = amStores(base);
+  var all  = loaded ? amStores(base) : [];
+  var total = loaded ? amStores({}).length : 0;
   return PgHero({
     kicker:"점포 · 상가 · 매장 양도",
-    h1raw:"자리부터 정합니다.",
+    h1raw:"매장 매물 찾기",
     lead:"지역 · 업종 · 평수 · 보증금 · 월세 · 권리금 · 영업기간으로 찾습니다. 시설을 그대로 인수할 수 있는 매장만 따로 보실 수도 있습니다.",
     tight:true,
     cta:'<a class="btn btn-o btn-lg" href="/sell">내 매장 내놓기'+icon("arrow",18)+'</a>'
@@ -65,21 +69,33 @@ function PageStores(){
         MoreBtn(list.length)
       /* 2026-11-19 — 전체 0건과 거르개 결과 0건을 가릅니다 (같은 말이면 조건을 바꿔 볼지 말지를 모릅니다).
          ⚠️ 매물 수를 채우지 않습니다 — 0 은 0 입니다. */
-      : Empty({
+      /* 2026-11-19 — 셋을 가릅니다: ① 불러오지 못함 ② 전체 0건 ③ 거르개 결과 0건.
+         같은 말이면 조건을 바꿔 볼지, 기다릴지, 새로 불러올지를 모릅니다.
+         ⚠️ 매물 수를 채우지 않습니다 — 0 은 0 입니다. */
+      : (!loaded
+        ? Empty({ icon:"info", title:"매물 정보를 불러오지 못했습니다",
+            text:"잠시 뒤 다시 불러와 주세요. 등록된 매물이 없다는 뜻이 아닙니다.",
+            cta:'<button class="btn btn-b" type="button" onclick="location.reload()">다시 불러오기'+icon("arrow",16)+'</button>'+
+                '<a class="btn btn-o" href="/transfer">양도양수 안내 보기</a>' })
+        : total
+        ? Empty({ icon:"sliders", title:"선택한 조건에 맞는 매물이 없습니다",
+            text:"조건을 줄이거나 바꿔 보세요. 지금 올라온 매물은 전체 "+total+"건입니다. 매물에 적힌 값은 올리신 사장님이 적으신 값입니다.",
+            cta:'<a class="btn btn-b" href="/stores" data-keep>조건 모두 풀기'+icon("arrow",16)+'</a>'+
+                (ind || reg ? '<a class="btn btn-o" href="/stores'+esc((ind ? "?i="+encodeURIComponent(ind) : "")+(reg ? (ind ? "&" : "?")+"r="+encodeURIComponent(reg) : ""))+'">지역 · 업종만 남기기</a>' : "") })
+        : Empty({
           icon:"key",
-          title: amStores({}).length ? "선택한 조건에 맞는 매물이 없습니다" : "현재 등록된 매물이 없습니다",
-          text: amStores({}).length
-            ? "조건을 줄이거나 바꿔 보세요. 매물에 적힌 값은 올리신 사장님이 적으신 값입니다."
-            : "없는 매물을 지어내지 않습니다. 매물이 올라오면 이 목록에 나옵니다 "+
-              "(따로 알려 드리는 기능은 아직 없습니다). 그동안 권리금 계산기와 인수 가이드를 보실 수 있습니다.",
+          title:"현재 등록된 매물이 없습니다",
+          text:"없는 매물을 지어내지 않습니다. 매물이 올라오면 이 목록에 나옵니다 "+
+              "(따로 알려 드리는 기능은 아직 없습니다). 그동안 계약 · 권리금부터 따져 보실 수 있습니다.",
           reads: amContentsFor({ cat:"store", side:"start", industry:ind, limit:3 }),
           readTitle:"자리를 보러 가시기 전에",
           cta:'<a class="btn btn-b" href="'+esc(quoteTo({side:"start",industry:ind,region:reg}))+'">'+
               '찾는 조건 남기기'+icon("arrow",16)+'</a>'+
+              '<a class="btn btn-o" href="/content?j=startup&amp;cat=store">인수 계약 가이드</a>'+
               '<a class="btn btn-o" href="/tools/premium">권리금 계산하기</a>'+
-              '<a class="btn btn-o" href="/transfer">인수 가이드 보기</a>'+
+              '<a class="btn btn-o" href="/transfer">양도양수 안내 보기</a>'+
               '<a class="btn btn-o" href="/sell">내 매장 내놓기</a>'
-        }))+
+        })))+
   '</div></section>'+
   BridgeNote()+
   /* 자리를 보러 오신 분께 계약 전에 확인할 것을 냅니다 —

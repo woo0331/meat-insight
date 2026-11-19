@@ -112,10 +112,14 @@ function PageProviders(){
   return PgHero({
     kicker:"업체찾기",
     h1raw:"원하는 조건으로<br class=\"br-m\"> 업체를 찾아보세요.",
-    lead:"지역과 업종을 고르시면 그 조건이 분야 화면까지 그대로 따라갑니다. "+
-         "한 번 적으신 내용으로 여러 곳에 견적을 요청하실 수 있습니다.",
+    /* 2026-11-19 공개 화면 완성도 §2 · §3 — 접수가 닫혀 있으면 "견적을 요청하실 수 있습니다" 를 약속하지 않습니다. */
+    leadRaw:true,
+    lead:esc("지역과 업종을 고르시면 그 조건이 분야 화면까지 그대로 따라갑니다. ")+
+         ctaPair("quote", "한 번 적으신 내용으로 여러 곳에 견적을 요청하실 수 있습니다.",
+           "지금은 견적 접수를 받지 않아, 분야별 설명과 준비 글을 먼저 보실 수 있습니다."),
     cta:'<a class="btn btn-b btn-lg" href="'+esc(quoteTo({industry:ind, region:reg}))+'">'+
         '견적부터 요청하기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-b btn-lg" href="#pv-g" data-cta="off" data-cta-form="quote">분야 먼저 보기'+icon("arrow",18)+'</a>'+
         '<a class="btn btn-o btn-lg" href="/join">업체 입점하기</a>',
     tight:true
   })+
@@ -172,7 +176,29 @@ function PageProviders(){
     '<p class="note note-mid">분야는 정해진 차례로 냅니다. '+
       '광고로 위에 올린 자리는 없습니다.</p>'+
   '</div></section>'+
+  PvZeroBand()+
   SampleBand();
+}
+
+/* 2026-11-19 공개 화면 완성도 §3 — 업체가 0곳일 때, 예시 카드보다 **지금 쓸 수 있는 것**이 먼저입니다.
+   ⚠️ 업체가 한 곳이라도 등록되면 저절로 사라집니다 (SampleBand 와 같은 조건).
+   ⚠️ 접수 상태에 맞춰 끝 칸이 바뀝니다 — 열림: 조건 남기기 / 닫힘: 접수 안내 (일반 견적 기준). */
+function PvZeroBand(){
+  if((window.AM_PROVIDERS||[]).length) return "";
+  var c = function(to, ic, b, d, attr){
+    return '<li'+(attr || "")+'><a href="'+esc(to)+'"><span class="pvz-i" aria-hidden="true">'+icon(ic,22)+'</span>'+
+      '<b>'+esc(b)+'</b><span>'+esc(d)+'</span></a></li>'; };
+  return '<section class="sec sec-white pvz"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">지금 할 수 있는 것</p>'+
+      '<h2>등록된 업체는 아직 0곳입니다</h2>'+
+      '<p>분야를 눌러 무엇을 하는 곳인지, 비용이 무엇으로 갈리는지 먼저 보실 수 있습니다.</p></div>'+
+    '<ul class="pvz-g">'+
+      c("/content", "book", "이용 가이드", "업체를 부르기 전에 알아 두면 좋은 것") +
+      c("/tools", "calc", "계산도구", "창업비 · 손익분기 · 권리금 · 폐업비용") +
+      c(quoteTo({}), "doc", "조건 남기기", "적어 두시면 맞는 업체를 찾아 드립니다", ' data-cta="on" data-cta-form="quote" hidden') +
+      c("/intake", "info", "접수 안내", "지금은 견적 접수를 받지 않습니다 — 접수 방법 보기", ' data-cta="off" data-cta-form="quote"') +
+    '</ul>'+
+  '</div></section>';
 }
 
 /* ⚠️⚠️ **업체가 0곳일 때만 냅니다** (2026-10-06 V2 확정 지시서 §13).

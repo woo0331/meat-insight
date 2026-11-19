@@ -7485,3 +7485,31 @@ html.ivh .sw2-hero .sw2-find{ margin-top:22px; }
 .hfl-want .cat-g{ margin-top:var(--s3); }
 .cask-in{ margin:0 0 var(--s5); padding:var(--s5); border:1px solid var(--line); border-radius:var(--r-lg, 16px); background:var(--bg-2); }
 .cask-in .sec-hd{ margin-bottom:var(--s3); }
+
+/* 2026-11-19 공개 화면 완성도 §3 — 메인 양도양수 구역의 매물 0건 상태(인수 · 양도 준비 넷).
+   ⚠️ 빈 점선 상자 대신 **지금 쓸 수 있는 넷**이 주인공입니다. 흰 카드 · 파란 아이콘 (기존 sw 토큰). */
+html.ivh .sw-prep{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+html.ivh .sw-prep a{ display:grid; grid-template-columns:44px 1fr; grid-template-rows:auto auto; column-gap:12px; row-gap:2px;
+  align-items:center; min-height:88px; padding:16px; background:#fff; border:1px solid var(--sw-line); border-radius:12px;
+  text-decoration:none; color:var(--sw-ink); }
+html.ivh .sw-prep a:hover{ border-color:var(--sw-blue); }
+html.ivh .sw-prep-i{ grid-row:1 / 3; display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px;
+  border-radius:12px; background:#EEF4FF; color:var(--sw-blue); }
+html.ivh .sw-prep b{ font-size:16px; font-weight:800; align-self:end; }
+html.ivh .sw-prep a > span:last-child{ font-size:13px; line-height:1.45; color:var(--sw-ink2); align-self:start; }
+html.ivh .sw-prep-n{ display:flex; align-items:center; gap:6px; margin:14px 0 0; font-size:14px; color:var(--sw-ink2); }
+html.ivh .sw-sr-w > .sw-s0-go{ margin-top:12px; }
+@media (max-width:600px){ html.ivh .sw-prep{ grid-template-columns:1fr; gap:10px; } html.ivh .sw-prep a{ min-height:72px; padding:12px 14px; } }
+
+html.ivh .sw2-es-p{ white-space:nowrap; }
+
+/* 2026-11-19 — 업체 0곳일 때 "지금 할 수 있는 것" (/providers) */
+.pvz-g{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s3); }
+.pvz-g a{ display:grid; grid-template-columns:44px 1fr; column-gap:12px; row-gap:2px; align-items:center; min-height:84px;
+  padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--ink); text-decoration:none; }
+.pvz-g a:hover{ border-color:var(--blue); }
+.pvz-i{ grid-row:1 / 3; display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:12px;
+  background:var(--blue-50); color:var(--blue-600); }
+.pvz-g b{ align-self:end; font-weight:800; }
+.pvz-g a > span:last-child{ align-self:start; font-size:var(--t-sm); color:var(--ink2); line-height:1.45; }
+@media (max-width:900px){ .pvz-g{ grid-template-columns:1fr; } }

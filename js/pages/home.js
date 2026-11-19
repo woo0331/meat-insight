@@ -571,7 +571,7 @@ function PageMain(){
   /* ⚠️⚠️ 2026-11-19 대표 확정 시안 — 창업 준비 / 폐업·철거 **2분할**이 첫 구간입니다.
      차례: 2분할(대표 문구 h1) → 통합 검색 → 카테고리 넷 → 매장 인수·양도 준비 → 주요 서비스 →
      계산도구 → 가이드 → 하단 안내. HomeHeroSW · HomeTrust 는 지우지 않았습니다 (되살리기는 이 줄). */
-  return HomeSplitSW()+ HomeFindSW()+ HomeEntrySW()+ HomeStores()+ HomeShortcuts()+
+  return HomeSplitSW()+ HomeEntrySW()+ HomeStores()+ HomeShortcuts()+
          HomeCalc()+ HomeGuide()+ HomeCta();
 }
 
@@ -2050,18 +2050,20 @@ function HomeSplitSW(){
           '<span class="sw3-p"><span class="sw3-l">'+esc(x.l)+'</span><span class="sw3-m">'+esc(x.m)+'</span></span>'+
           '<span class="sw3-go">'+esc(x.go)+icon("chev",16)+'</span>'+
         '</span></a></li>'; }).join("")+'</ul>'+
+    /* 통합 검색 — 2분할 바로 아래 · ⚠️ 같은 구간 안입니다 (따로 구간이면 같은 바탕이 이어져 한 구간으로 읽힙니다) */
+    HomeFindSW()+
   '</div></section>';
 }
 /* 통합 검색 — 2분할 바로 아래 (헤더 검색과 같은 swFind) */
 function HomeFindSW(){
-  return '<section class="sw3-find-s"><div class="w">'+
+  return '<div class="sw3-find-s">'+
     '<form class="sw-find sw2-find sw3-find" role="search" action="/search" onsubmit="return swFind(event)">'+
       '<span class="sw3-find-i" aria-hidden="true">'+icon("search",20)+'</span>'+
       '<label class="sr-only" for="sw-q">서비스 · 매장 · 가이드 검색</label>'+
       '<input id="sw-q" name="q" type="search" autocomplete="off" placeholder="서비스, 매장, 가이드 검색">'+
       '<button class="sw-find-b sw3-find-b" type="submit">검색</button>'+
     '</form>'+
-  '</div></section>';
+  '</div>';
 }
 
 function HomeHeroSW(){

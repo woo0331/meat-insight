@@ -57,7 +57,7 @@ var MAIN_CALC = ["cost", "bep", "premium", "closecost"];
 
 function PageMain(){
 
-  return HomeSplitSW()+ HomeFindSW()+ HomeEntrySW()+ HomeStores()+ HomeShortcuts()+
+  return HomeSplitSW()+ HomeEntrySW()+ HomeStores()+ HomeShortcuts()+
          HomeCalc()+ HomeGuide()+ HomeCta();
 }
 
@@ -1081,18 +1081,20 @@ function HomeSplitSW(){
           '<span class="sw3-p"><span class="sw3-l">'+esc(x.l)+'</span><span class="sw3-m">'+esc(x.m)+'</span></span>'+
           '<span class="sw3-go">'+esc(x.go)+icon("chev",16)+'</span>'+
         '</span></a></li>'; }).join("")+'</ul>'+
+
+    HomeFindSW()+
   '</div></section>';
 }
 
 function HomeFindSW(){
-  return '<section class="sw3-find-s"><div class="w">'+
+  return '<div class="sw3-find-s">'+
     '<form class="sw-find sw2-find sw3-find" role="search" action="/search" onsubmit="return swFind(event)">'+
       '<span class="sw3-find-i" aria-hidden="true">'+icon("search",20)+'</span>'+
       '<label class="sr-only" for="sw-q">서비스 · 매장 · 가이드 검색</label>'+
       '<input id="sw-q" name="q" type="search" autocomplete="off" placeholder="서비스, 매장, 가이드 검색">'+
       '<button class="sw-find-b sw3-find-b" type="submit">검색</button>'+
     '</form>'+
-  '</div></section>';
+  '</div>';
 }
 
 function HomeHeroSW(){

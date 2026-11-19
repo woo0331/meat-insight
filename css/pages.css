@@ -7534,7 +7534,7 @@ html.ivh .sw2-es-p{ white-space:nowrap; }
    ⚠️ 첫 구간이 밝은 바탕 + 판 둘(창업 네이비·블루 / 폐업 오렌지 · 같은 비중)입니다.
    ⚠️ 판 위 글자는 **짙은 막 위**에 앉습니다 — 왼쪽 55% 는 거의 불투명이라 사진 밝기와 무관합니다.
    ══════════════════════════════════════════════════════════════════ */
-html.ivh #view .sw3{ padding:32px 0 8px; background:var(--hm-bg); color:var(--ink); }
+html.ivh #view .sw3{ padding:32px 0 4px; background:var(--hm-bg); color:var(--ink); }
 .sw3-hd{ text-align:center; margin:0 auto 22px; }
 html.ivh #view .sw3-h{ margin:0; color:var(--navy); font-size:clamp(28px, 3vw, 40px); font-weight:900; letter-spacing:-.035em; line-height:1.25; word-break:keep-all; }
 .sw3-hd p{ margin:8px 0 0; color:var(--ink2); font-size:var(--t-sm); }
@@ -7551,7 +7551,7 @@ html.ivh #view .sw3-h{ margin:0; color:var(--navy); font-size:clamp(28px, 3vw, 4
 .sw3-tx{ position:relative; display:flex; flex-direction:column; align-items:flex-start; max-width:60%; }
 .sw3-tag{ display:inline-flex; align-items:center; min-height:30px; padding:0 14px; border-radius:999px; font-size:var(--t-cap); font-weight:800; color:#fff; }
 .sw3-st .sw3-tag{ background:#1D4ED8; }
-.sw3-cl .sw3-tag{ background:#E0590F; }
+.sw3-cl .sw3-tag{ background:#C2410C; } /* 흰 글자 5.18 (밝은 #E0590F 는 3.75) */
 html.ivh #view .sw3-c h2{ margin:14px 0 0; color:#fff; font-size:clamp(24px, 2.3vw, 32px); font-weight:900; line-height:1.25; letter-spacing:-.03em; }
 .sw3-p{ margin-top:10px; color:rgba(255,255,255,.92); font-size:var(--t-sm); line-height:1.6; }
 .sw3-m{ display:none; }
@@ -7560,7 +7560,7 @@ html.ivh #view .sw3-c h2{ margin:14px 0 0; color:#fff; font-size:clamp(24px, 2.3
 .sw3-st .sw3-go{ color:#1D4ED8; }
 .sw3-cl .sw3-go{ color:#9A3412; }
 /* 통합 검색 */
-html.ivh #view .sw3-find-s{ padding:18px 0 8px; background:var(--hm-bg); }
+html.ivh #view .sw3-find-s{ padding:18px 0 0; }
 html.ivh #view .sw3-find{ max-width:720px; margin:0 auto; padding:5px 5px 5px 18px; border:1.5px solid #C9D6EE; box-shadow:0 10px 26px -18px rgba(11,35,80,.45); }
 .sw3-find-i{ display:inline-flex; color:var(--ink2); }
 html.ivh #view .sw3-find .sw3-find-b{ width:auto; min-width:96px; padding:0 22px; border-radius:999px; font-size:var(--t-sm); font-weight:800; }
@@ -7601,7 +7601,7 @@ html.ivh #view .sw2-ent{ padding:22px 0 30px; }
   .sw3-l{ display:none; } .sw3-m{ display:inline; }
   .sw3-p{ margin-top:6px; font-size:13px; line-height:1.5; }
   .sw3-go{ margin-top:12px; padding:0 14px; font-size:14px; }
-  html.ivh #view .sw3-find-s{ padding:12px 0 4px; }
+  html.ivh #view .sw3-find-s{ padding:12px 0 0; }
   .sw-pb-g{ grid-template-columns:1fr; gap:10px; }
 }
 /* 2026-11-19 — PC 카테고리 타일: 아이콘 한 칸 + (이름 / 설명) 한 칸. 셋을 나란히 두면 이름이 두 줄로 쪼개졌습니다. */
@@ -7615,3 +7615,13 @@ html.ivh #view .sw2-ent{ padding:22px 0 30px; }
   html.ivh #view .sw3-find{ padding-left:14px; }
   html.ivh #view .sw3-find .sw3-find-b{ min-width:0; width:auto; padding:0 16px; }
 }
+/* 2026-11-19 대표 확정 시안 — 구간이 바뀌어 이웃끼리 바탕이 같아졌습니다(ΔE 0). 메인은 paintTones 가 안 돌아
+   여기서 직접 번갈아 칠합니다: 2분할 흰 · 카테고리 옅은 파랑 · 인수양도 흰 · 바로가기 옅은 파랑 · 계산 흰 · 가이드 옅은 파랑 */
+html.ivh #view section.sw3{ background:#FFFFFF; }
+html.ivh #view section.sw2-ent{ background:var(--hm-bg); }
+html.ivh #view section.sw-store{ background:#FFFFFF; }
+html.ivh #view section.sw-short{ background:var(--hm-bg); }
+html.ivh #view section.bcal{ background:#FFFFFF; }
+html.ivh #view section.bgd{ background:var(--hm-bg); }
+html.ivh #view section.sw3{ padding-bottom:28px; }
+@media (max-width:768px){ html.ivh #view section.sw3{ padding-bottom:20px; } }

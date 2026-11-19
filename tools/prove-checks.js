@@ -573,7 +573,7 @@ const CASES = [
   /* ⚠️ 2026-11-18 메인 개편 — 재는 자리가 히어로 두 판입니다. 폐업 판을 빨강으로 칠합니다. */
   /* 2026-11-19 개편 — 재는 자리가 4대 진입 카드입니다. 폐업 카드를 빨강으로 칠합니다. */
   ["4대 진입 카드가 저마다의 색으로 갈리고 폐업이 빨강이 아니다",
-   `document.querySelector(".ent-closure > a").style.backgroundColor = "rgb(200, 20, 30)";`],
+   `document.querySelector(".ent-closure .sw2-ei").style.backgroundColor = "rgb(200, 20, 30)";`],
   /* ⚠️ 2026-10-11 간소화 §2 — 연결 구간이 메인에서 내려와 되돌릴
      요소가 없습니다. **없는 요소를 집으면 되돌리기가 터지고**, 그러면
      "검사가 안 잡는다" 로 보입니다 (이 저장소에서 아홉 번 겪은 자리).
@@ -1076,9 +1076,10 @@ async function proveAudit(pg){
     const did = await pg.evaluate(() => {
       /* 2026-11-19 개편 — 히어로 머리말 알약(.sw2-k · inline-flex)에 맨글 + <b> + 맨글 을 넣습니다
          (감싸개 없이 섞으면 flex 가 셋을 칸으로 가르는 그 꼴). */
-      const p = document.querySelector(".sw2-k");
+      /* 2026-11-19 대표 확정 시안 — 머리말 알약이 내려가서 2분할 판의 딱지(.sw3-tag · inline-flex)에 넣습니다 */
+      const p = document.querySelector(".sw3-tag");
       if(!p) return false;
-      p.innerHTML = "창업 · <b>운영</b> · 양도양수 · 폐업까지";
+      p.innerHTML = "창업 · <b>운영</b> · 준비";
       return true;
     });
     await pg.waitForTimeout(60);

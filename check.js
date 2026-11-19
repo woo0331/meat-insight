@@ -2274,7 +2274,8 @@ const AUDIT = `(() => {
         .replace(")", "").split(",").map(Number);
       return p.length >= 3 && !isNaN(p[0]) ? p.slice(0, 3) : null;
     };
-    const st = bg(".ent-startup > a"), op = bg(".ent-ops > a"), tr = bg(".ent-transfer > a"), cl = bg(".ent-closure > a");
+    /* 2026-11-19 대표 확정 시안 — 카드가 흰 타일이 되어 색은 **아이콘 원판**(.sw2-ei · 그 쪽 색의 옅은 면)에 있습니다. 재는 자리만 옮겼습니다. */
+    const st = bg(".ent-startup .sw2-ei"), op = bg(".ent-ops .sw2-ei"), tr = bg(".ent-transfer .sw2-ei"), cl = bg(".ent-closure .sw2-ei");
     if(!st || !op || !tr || !cl) return "진입 카드 넷의 색을 못 읽습니다";
     const all = [st, op, tr, cl].map(function(c){ return c.join(); });
     if(new Set(all).size !== 4) return "진입 카드 색이 겹칩니다 — " + all.join(" | ");
@@ -4354,7 +4355,8 @@ const AUDIT = `(() => {
        금지해서, 그 카드가 들어 있던 구간을 안 부릅니다. 함수는
        지우지 않았으니 되살리실 수 있습니다 — 그날 bcal 다음에
        bwhy 를 다시 넣으세요. */
-    const want = ["bhero","bent","bpass","bwhy","bdir","bcal","bgd","bcta"];
+    /* 2026-11-19 대표 확정 시안 — "왜 일까요"(bwhy) 띠가 내려왔습니다 */
+    const want = ["bhero","bent","bpass","bdir","bcal","bgd","bcta"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";

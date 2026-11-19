@@ -159,6 +159,10 @@ window.amPickQuoteTo = function(side){
 
   var q = ["side=" + encodeURIComponent(side || "start")];
   if(ids.length) q.push("sv=" + encodeURIComponent(ids.join(",")));
+
+  var ik = (typeof nowQS === "function" && nowQS("i")) ||
+           ((typeof nowPath === "function" ? nowPath() : "").match(/^\/(?:startup|closure)\/([a-z-]+)$/) || [])[1] || "";
+  if(ik && typeof amIndustry === "function" && amIndustry(ik)) q.push("i=" + encodeURIComponent(ik));
   return "/quote?" + q.join("&");
 };
 

@@ -257,6 +257,11 @@ window.amPickQuoteTo = function(side){
      ⚠️ 기본값은 `start` 그대로입니다 — 창업 쪽은 한 글자도 안 바뀝니다. */
   var q = ["side=" + encodeURIComponent(side || "start")];
   if(ids.length) q.push("sv=" + encodeURIComponent(ids.join(",")));
+  /* 2026-11-19 — 같은 화면에서 고르신 **업종**(주소의 ?i= 또는 /startup/:업종)을 신청 화면까지 잇습니다.
+     ⚠️ 있는 업종 key 만 넘깁니다 — 모르는 값을 기본 업종으로 바꿔 넣지 않습니다 (신청 화면이 ?i= 를 읽습니다). */
+  var ik = (typeof nowQS === "function" && nowQS("i")) ||
+           ((typeof nowPath === "function" ? nowPath() : "").match(/^\/(?:startup|closure)\/([a-z-]+)$/) || [])[1] || "";
+  if(ik && typeof amIndustry === "function" && amIndustry(ik)) q.push("i=" + encodeURIComponent(ik));
   return "/quote?" + q.join("&");
 };
 

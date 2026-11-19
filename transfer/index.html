@@ -45,7 +45,7 @@
 
 <link rel="stylesheet" href="/dist/css/tokens.css?v=046536dc">
 <link rel="stylesheet" href="/dist/css/app.css?v=84018c38">
-<link rel="stylesheet" href="/dist/css/pages.css?v=a2ab9c2b">
+<link rel="stylesheet" href="/dist/css/pages.css?v=e2d2ba8c">
 
 <!-- ⚠️ 이 사이 줄은 `node build-pages.js` 가 씁니다. 손으로 고치지
      마세요 — 다음에 돌릴 때 덮어써집니다. 내용은 js/data/faq.js 와
@@ -119,11 +119,11 @@
 <script defer src="/dist/js/data/opscheck.js?v=f6f63146"></script>
 
 <script defer src="/dist/js/components/base.js?v=0df6f5e2"></script>
-<script defer src="/dist/js/components/ui.js?v=4690bfeb"></script>
+<script defer src="/dist/js/components/ui.js?v=24f5d644"></script>
 <!-- 선택한 서비스 (2026-10-17 창업 준비 전문관 §3 · §4-1).
      ⚠️ ui.js 의 amGet/amSet 과 svcpick.js 를 읽으므로 **그 뒤**입니다.
      ⚠️⚠️ 담는 것은 서비스 id 뿐입니다 — 성함 · 연락처를 담지 않습니다. -->
-<script defer src="/dist/js/pick.js?v=e286e864"></script>
+<script defer src="/dist/js/pick.js?v=80357dd7"></script>
 <!-- 로그인 (Supabase Auth) — ⚠️ 설정 전에는 /api/session 이 auth:false 라
      화면이 그 구간째 안 그립니다. 아무것에도 의존하지 않습니다. -->
 <script defer src="/dist/js/auth.js?v=59d3035f"></script>
@@ -134,11 +134,11 @@
 <script defer src="/dist/js/components/chrome.js?v=212059c6"></script>
 
 <script defer src="/dist/js/pages/home.js?v=a1119a1d"></script>
-<script defer src="/dist/js/pages/journey.js?v=dda00bf0"></script>
-<script defer src="/dist/js/pages/flow.js?v=0d257615"></script>
+<script defer src="/dist/js/pages/journey.js?v=046ed87b"></script>
+<script defer src="/dist/js/pages/flow.js?v=325bee02"></script>
 <script defer src="/dist/js/pages/providers.js?v=344bf51f"></script>
 <script defer src="/dist/js/pages/franchise.js?v=a7dcbc4c"></script>
-<script defer src="/dist/js/pages/market.js?v=d0038b6d"></script>
+<script defer src="/dist/js/pages/market.js?v=ae92cf5b"></script>
 <script defer src="/dist/js/pages/quote.js?v=f1e89bca"></script>
 <script defer src="/dist/js/pages/info.js?v=204fd059"></script>
 <script defer src="/dist/js/pages/tools.js?v=de236ab4"></script>
@@ -152,7 +152,7 @@
 <!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가
      이 사이에 **크롤러가 읽을 본문**을 써 넣습니다. 메인은 원본이라
      shell() 이 손대지 않아서, 한동안 여기가 빈 칸으로 나갔습니다. -->
-<main id="view"><div class="pre w"><h1>매장 인수 · 양도 — 받는 쪽과 넘기는 쪽</h1><p>있던 가게를 받으면 공사 기간과 초기 비용이 줄고, 넘기면 철거비와 원상복구가 줄어듭니다. 순서 · 권리금 · 시설 인수 범위 · 임대차 승계까지 짚어 드립니다.</p><h2>받을 때는 이 순서입니다</h2><ul><li>1. 새로 할지, 받을지 — 들어가는 돈과 문 여는 시점이 다릅니다.</li><li>2. 조건 정하기 — 지역 · 업종 · 평수 · 예산을 먼저 좁힙니다.</li><li>3. 매장 찾기 — 보증금 · 월세 · 권리금으로 추립니다.</li><li>4. 현장 확인 — 계약 전에 봐야 할 것이 정해져 있습니다.</li><li>5. 매출 · 비용 확인 — 적힌 매출은 올리신 사장님이 적은 값입니다.</li><li>6. 권리금 · 시설 범위 — 무엇까지 같이 오는지 목록으로 맞춥니다.</li><li>7. 임대차 승계 · 계약 — 건물주 동의가 없으면 승계가 안 됩니다.</li><li>8. 인허가 승계 — 업종에 따라 신고를 새로 해야 합니다.</li><li>9. 운영 준비 — 받은 다음 바로 열 수 있게 맞춥니다.</li></ul><h2>넘길 때는 이 순서입니다</h2><ul><li>1. 매장 기본정보 — 업종 · 지역 · 평수 · 영업기간부터 적습니다.</li><li>2. 임대차 조건 — 남은 기간 · 보증금 · 월세 · 관리비를 정리합니다.</li><li>3. 매출 · 비용자료 — 보여 드릴 자료를 미리 한 벌로 묶습니다.</li><li>4. 권리금 — 얼마가 적정한지가 아니라 무엇이 금액을 가르는지부터.</li><li>5. 시설 · 장비 — 무엇까지 같이 가는지 품목으로 적습니다.</li><li>6. 양도조건 — 권리금 · 시설 포함 범위 · 넘길 시점을 정합니다.</li><li>7. 매장 등록 — 조건을 적어 보내 주시면 사람이 확인하고 올려 드립니다.</li><li>8. 인수 희망자 연결 — 보러 오시는 분과 조건을 맞춥니다.</li><li>9. 계약 검토 — 넘기는 날과 정산 기준일을 맞춥니다.</li><li>10. 인계 — 넘긴 뒤에도 내 이름으로 남는 것이 있습니다.</li></ul><h2>지금 올라온 것</h2><p>매장 매물 0건 · 시설 · 장비 0건. 아직 올라온 매물이 없습니다. 없는 매물을 지어내지 않습니다.</p><p>매물에 적힌 평수 · 보증금 · 월세 · 권리금 · 매출은 올리신 사장님이 적으신 값이고, 저희가 확인하거나 보증하는 값이 아닙니다.</p></div></main>
+<main id="view"><div class="pre w"><h1>매장 인수 · 양도 — 받는 쪽과 넘기는 쪽</h1><p>있던 가게를 받으면 공사 기간과 초기 비용이 줄고, 넘기면 철거비와 원상복구가 줄어듭니다. 순서 · 권리금 · 시설 인수 범위 · 임대차 승계까지 짚어 드립니다.</p><h2>받을 때는 이 순서입니다</h2><ul><li>1. 새로 할지, 받을지 — 들어가는 돈과 문 여는 시점이 다릅니다.</li><li>2. 조건 정하기 — 지역 · 업종 · 평수 · 예산을 먼저 좁힙니다.</li><li>3. 매장 찾기 — 보증금 · 월세 · 권리금으로 추립니다.</li><li>4. 현장 확인 — 계약 전에 봐야 할 것이 정해져 있습니다.</li><li>5. 매출 · 비용 확인 — 적힌 매출은 올리신 사장님이 적은 값입니다.</li><li>6. 권리금 · 시설 범위 — 무엇까지 같이 오는지 목록으로 맞춥니다.</li><li>7. 임대차 승계 · 계약 — 건물주 동의가 없으면 승계가 안 됩니다.</li><li>8. 인허가 승계 — 업종에 따라 신고를 새로 해야 합니다.</li><li>9. 운영 준비 — 받은 다음 바로 열 수 있게 맞춥니다.</li></ul><h2>넘길 때는 이 순서입니다</h2><ul><li>1. 매장 기본정보 — 업종 · 지역 · 평수 · 영업기간부터 적습니다.</li><li>2. 임대차 조건 — 남은 기간 · 보증금 · 월세 · 관리비를 정리합니다.</li><li>3. 매출 · 비용자료 — 보여 드릴 자료를 미리 한 벌로 묶습니다.</li><li>4. 권리금 — 얼마가 적정한지가 아니라 무엇이 금액을 가르는지부터.</li><li>5. 시설 · 장비 — 무엇까지 같이 가는지 품목으로 적습니다.</li><li>6. 양도조건 — 권리금 · 시설 포함 범위 · 넘길 시점을 정합니다.</li><li>7. 매장 등록 — 조건을 적어 보내 주시면 사람이 확인하고 올려 드립니다.</li><li>8. 인수 희망자 연결 — 보러 오시는 분과 조건을 맞춥니다.</li><li>9. 계약 검토 — 넘기는 날과 정산 기준일을 맞춥니다.</li><li>10. 인계 — 넘긴 뒤에도 내 이름으로 남는 것이 있습니다.</li></ul><h2>지금 올라온 것</h2><p>매장 매물 0건 · 시설 · 장비 0건. 현재 등록된 매물이 없습니다. 없는 매물을 지어내지 않습니다.</p><p>매물에 적힌 평수 · 보증금 · 월세 · 권리금 · 매출은 올리신 사장님이 적으신 값이고, 저희가 확인하거나 보증하는 값이 아닙니다.</p></div></main>
 <div id="chrome-b"></div>
 </body>
 </html>

@@ -811,7 +811,10 @@ window.HallHero = function(o){
     return '<li><span class="hh-ci" aria-hidden="true">'+icon(c[0] || "check", 20)+'</span>'+
       '<span>'+esc(c[1])+'</span></li>';
   }).join("");
-  return '<section class="pgh hh hh-'+esc(o.side || "start")+(ph ? ' hh-im-on' : '')+'">'+
+  /* 2026-11-19 — qfirst: 폰에서 바로 가기 카드를 단추 줄보다 **먼저** 둡니다 (그 화면의 첫 행동이 그 카드일 때).
+     leadM: 폰에서만 내는 짧은 설명 (PC 설명은 그대로). */
+  return '<section class="pgh hh hh-'+esc(o.side || "start")+(ph ? ' hh-im-on' : '')+
+    (o.qfirst && o.quick && o.quick.length ? ' hh-qfirst' : '')+'">'+
     (ph ? '<span class="hh-ph pgh-im-'+esc(o.photo)+'">'+
           photoBox(o.photo, "", true, "(max-width:900px) 100vw, 62vw")+'</span>' : '')+
     '<div class="w hh-in">'+
@@ -819,7 +822,11 @@ window.HallHero = function(o){
         (o.crumb ? '<nav class="crumb" aria-label="현재 위치">'+o.crumb+'</nav>' : '')+
         (o.kicker ? '<p class="hh-k">'+esc(o.kicker)+'</p>' : '')+
         '<h1 class="pg-h1 hh-h1">'+(o.h1raw || esc(o.h1 || ""))+'</h1>'+
-        (o.lead ? '<p class="pg-lead hh-lead">'+esc(o.lead)+'</p>' : '')+
+        /* leadHtml — 이미 만든 HTML (접수 상태에 따라 갈리는 data-cta 짝 글 등). 손님 글을 넣지 마세요. */
+        (o.leadHtml ? '<p class="pg-lead hh-lead">'+o.leadHtml+'</p>' : '')+
+        (!o.leadHtml && o.lead ? '<p class="pg-lead hh-lead">'+(o.leadM
+          ? '<span class="hh-lead-l">'+esc(o.lead)+'</span><span class="hh-lead-m">'+esc(o.leadM)+'</span>'
+          : esc(o.lead))+'</p>' : '')+
         '<div class="row-cta hh-cta">'+
           '<a class="btn btn-lg hh-go" href="/intake" data-cta="off"'+ctaF(o)+'>'+
             '접수 안내 보기'+icon("arrow",18)+'</a>'+
@@ -837,7 +844,9 @@ window.HallHero = function(o){
             function a(href, go, attr){
               return '<a class="hh-qa" href="'+esc(href)+'"'+(attr || "")+'>'+
                 '<span class="hh-ci" aria-hidden="true">'+icon(q.ic || "arrow", 20)+'</span>'+
-                '<span class="hh-qt"><b>'+esc(q.b)+'</b><i>'+esc(go)+'</i></span>'+icon("chev",16)+'</a>';
+                '<span class="hh-qt"><b>'+esc(q.b)+'</b>'+
+                  (q.d ? '<small class="hh-qd">'+esc(q.d)+'</small>' : '')+
+                  '<i>'+esc(go)+'</i></span>'+icon("chev",16)+'</a>';
             }
             return '<li>'+(q.on
               ? a(q.on, q.goOn || q.go, ' data-cta="on" data-cta-form="'+esc(q.form || "close")+'" hidden')+

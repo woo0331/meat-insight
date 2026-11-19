@@ -7393,3 +7393,76 @@ html.ivh .sw2-hero .sw2-find{ margin-top:22px; }
   html.ivh #view .sw2-ec .sw2-es{ margin-top:4px; padding-right:0; font-size:13px; line-height:1.45; color:var(--ink2); }
   html.ivh #view .sw2-ec > a:hover{ transform:none; border-color:rgba(var(--ec),.55); }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-11-19 카테고리 넷 정리 — 머리의 바로 가기 · 짧은 설명 · 폰 차례
+   ⚠️ 폰 · 좁은 화면(900px 아래 — 머리가 한 칸으로 쌓이는 폭)에서 qfirst 머리는 **바로 가기 → 단추 줄** 차례입니다 (그 화면의 첫 행동이 그 카드).
+   ⚠️ 바로 가기는 폰에서 **한 줄 한 칸** 목록입니다 — 세 칸 타일에 긴 이름을 넣으면 세 줄로 접히고
+      닫힌 상태의 목적지 글("철거 준비 확인")이 들어갈 자리가 없습니다.
+   ══════════════════════════════════════════════════════════════════ */
+.hh-lead-m{ display:none; }
+.hh-qd{ display:block; margin-top:2px; font-size:var(--t-cap); line-height:1.45; color:var(--ink2); }
+.hh-qt i{ margin-top:2px; color:rgb(var(--hc, 29,78,216)); font-weight:700; }
+.hh-quick .hh-ql{ display:block; }
+@media (max-width:900px){
+  .hh-lead-l{ display:none; }
+  .hh-lead-m{ display:inline; }
+  .hh-qfirst .hh-in{ display:flex; flex-direction:column; gap:14px; }
+  .hh-qfirst .hh-tx{ display:contents; }
+  .hh-qfirst .hh-tx > *{ order:0; }
+  .hh-qfirst .hh-quick{ order:1; }
+  .hh-qfirst .hh-cta{ order:2; }
+  #view .hh-qfirst .hh-lead{ margin-bottom:0; }
+  /* 목록 — 한 칸 48px 이상 · 이름 + 목적지 글 */
+  .hh-quick{ padding:10px 14px; }
+  .hh-quick .hh-card-t{ font-size:14px; margin:0 0 2px; }
+  .hh-quick .hh-ql{ display:block; }
+  .hh-quick .hh-ql li{ border-bottom:1px solid var(--line); }
+  .hh-quick .hh-ql li:last-child{ border-bottom:0; }
+  .hh-quick .hh-qa{ flex-direction:row; justify-content:flex-start; text-align:left; gap:12px;
+    min-height:52px; padding:6px 0; border:0; border-radius:0; }
+  .hh-quick .hh-qd{ display:none; }
+  .hh-quick .hh-qt{ flex-direction:row; flex-wrap:wrap; align-items:baseline; column-gap:8px; }
+  .hh-quick .hh-qt b{ font-size:15px; line-height:1.35; }
+  .hh-quick .hh-qt i{ display:inline; font-size:13px; margin-top:0; }
+  .hh-quick .hh-qa > svg:last-child{ display:inline; }
+}
+@media (max-width:900px){
+  /* flex 로 바꾸면서 가운데로 쏠린 것을 되돌립니다 — 기준선은 왼쪽 20px 하나입니다 */
+  .hh-qfirst .hh-in{ align-items:stretch; text-align:left; }
+  .hh-qfirst .hh-tx > .hh-k, .hh-qfirst .hh-tx > .crumb{ align-self:flex-start; }
+  .hh-qfirst .hh-quick{ align-self:stretch; width:auto; margin:0; }
+  .hh-qfirst .hh-cta{ width:100%; margin:0; }
+}
+
+/* 2026-11-19 양도양수 — 매물 찾기의 가격 조건 접기 (900px 아래만 · PC 는 다섯 칸 그대로) */
+.asr-pxb{ display:none; }
+.asr-px{ display:contents; }
+#aq-find{ scroll-margin-top:calc(var(--hdr-h, 72px) + 12px); }
+@media (max-width:900px){
+  .asr-f{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+  .asr-pxb{ grid-column:1 / -1; display:flex; align-items:center; gap:8px; min-height:48px; padding:0 14px;
+    background:var(--surface); border:1px solid var(--line-sky); color:var(--navy); font-weight:700; justify-content:flex-start; }
+  .asr-pxb > span{ flex:1; text-align:left; }
+  .asr-pxb em{ font-style:normal; font-size:var(--t-cap); font-weight:800; color:#fff; background:#5A2FC0;
+    border-radius:999px; padding:3px 10px; }
+  .asr-pxb em[hidden]{ display:none; }
+  .asr-pxb[aria-expanded="true"] > svg:last-child{ transform:rotate(180deg); }
+  .asr-px{ grid-column:1 / -1; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; }
+  .asr-px.is-fold-px{ display:none; }
+  .asr-go{ grid-column:1 / -1; justify-content:center; }
+}
+@media (max-width:560px){ .asr-px{ grid-template-columns:1fr; } }
+@media (max-width:360px){ .asr-f{ grid-template-columns:1fr; } }
+/* 2026-11-19 매장 운영 — 폰에서 고민 카드가 머리 바로 아래에서 보이게 (위 여백 · 카드 머리만 줄입니다) */
+@media (max-width:900px){
+  #view .sec.hwr{ padding-top:28px; }
+  #view .hwr .sec-hd{ margin-bottom:16px; }
+  #view .hwr .sec-hd p{ font-size:15px; line-height:1.55; }
+  .hwr-c{ padding:16px; }
+  .hwr-c{ display:grid; grid-template-columns:auto 1fr; column-gap:10px; align-items:center; }
+  .hwr-c > .hwr-i{ grid-row:1; }
+  #view .hwr-c h3{ margin:0; font-size:17px; }
+  .hwr-ch{ grid-column:1 / -1; margin-top:12px; }
+  .hwr-ch a{ min-height:44px; }
+}

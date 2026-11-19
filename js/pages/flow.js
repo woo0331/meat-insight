@@ -84,19 +84,30 @@ function PageStartup(){
    필요한지 모르시는 분께 "먼저 고르고 오세요" 라고 하면 거기서
    닫습니다 — 상황만 적으시면 저희가 찾아 드립니다. */
 function StartIntro(ind){
+  var indOk = !!(ind && typeof amIndustry === "function" && amIndustry(ind));
+  var indN  = indOk ? amIndustryName(ind) : "";
   /* 2026-11-18 카테고리 리뉴얼 — 전문관 머리(HallHero) + 계산 · 업종 진입 (StartSignature).
      ⚠️ 주 단추는 견적 접수 상태를 따릅니다 (닫힘이면 접수 안내). 보조 단추는 바로 아래 고르개. */
   return HallHero({
     side:"start", photo:"hero-startup",
     kicker:"창업 준비 · 가게 창업, 막막하지 않게",
     h1raw:"예비 창업자를 위한<br><em>원스톱 창업 준비</em>",
-    lead:"상권 · 인테리어 · 주방기기 · 자금 · 세무까지, 창업에 필요한 것을 한 곳에서 고르고 한 번에 신청하세요.",
+    /* 2026-11-19 — 설명이 **접수 상태를 따릅니다.** 닫혀 있으면 "한 번에 신청" 을 약속하지 않고
+       지금 되는 일(서비스 · 준비 정보 확인)을 말합니다 (data-cta 짝 · 일반 견적 quote). */
+    leadHtml:'<span data-cta="off">창업에 필요한 서비스와 준비 정보를 확인하세요.</span>'+
+             '<span data-cta="on" hidden>창업에 필요한 서비스를 고르고 한 번에 신청하세요.</span>',
     quote: quoteTo({ side:"start", industry:ind || "" }),
     goName:"창업 상담 신청하기",
     second:'<a class="btn btn-lg hh-o" href="#pick">필요한 서비스 고르기'+icon("arrow",18)+'</a>',
-    cardTitle:"이 화면에서 하실 수 있는 것",
-    checks:[["seed","업종을 고르면 그 업종의 준비 순서"],["won","창업비 정리표로 예산 미리 따져 보기"],
-            ["check","필요한 서비스를 여러 개 골라 한 번에 신청"]]
+    /* 2026-11-19 — 첫 화면의 두 행동. 업종을 고르셨으면 **그 업종으로** 이어집니다
+       (/tools/cost 는 ?i= 를 읽고, /startup/:업종 이 그 업종의 준비 순서입니다). */
+    cardTitle:"무엇부터 해 볼까요?", qfirst:true,
+    quick:[{ ic:"calc", b:"창업비 계산하기", d:"업종을 고르면 그 업종의 비용 항목으로 열립니다",
+             go:(indN ? indN + " 예산 따져 보기" : "예산 미리 따져 보기"),
+             href:"/tools/cost" + (indOk ? "?i=" + encodeURIComponent(ind) : "") },
+           { ic:"seed", b:"업종별 준비 보기", d:"업종마다 준비 순서 · 필요한 장비가 다릅니다",
+             go:(indN ? indN + " 준비 순서 보기" : "업종 고르고 순서 보기"),
+             href:(indOk ? "/startup/" + encodeURIComponent(ind) : "#st-ig") }]
   }) + StartSignature(ind);
 }
 
@@ -114,7 +125,7 @@ function StartSignature(ind){
       '<div class="f-r"><label for="st-calc-i">업종</label>'+IndustrySelect("st-calc-i", ind || "", "", "업종을 골라 주세요")+'</div>'+
       '<button class="btn btn-b btn-lg" type="submit">'+icon("calc",18)+' 예상 창업 비용 따져 보기</button>'+
     '</form>'+
-    '<div class="hsg-ind">'+
+    '<div class="hsg-ind" id="st-ig">'+
       '<div class="hsg-hd"><h2>업종별 창업 준비 과정</h2>'+
         '<a class="hsg-all" href="#st-indsel">전체 업종 보기'+icon("chev",16)+'</a></div>'+
       '<ul class="hsg-ig">'+L.map(function(x){
@@ -320,15 +331,20 @@ function StartApplyBand(){
   return '<section class="sec sec-cream stF"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">STEP 02</p>'+
-      '<h2>고르셨으면 한 번만 적어 보내세요</h2>'+
-      '<p>같은 내용을 업체마다 다시 적지 않으셔도 됩니다. '+
+      /* 2026-11-19 — 접수가 닫혀 있으면 "적어 보내세요" 를 약속하지 않습니다 (data-cta 짝 · quote). */
+      '<h2><span data-cta="on" hidden>고르셨으면 한 번만 적어 보내세요</span>'+
+        '<span data-cta="off">고르신 서비스는 이 화면에 남아 있습니다</span></h2>'+
+      '<p><span data-cta="on" hidden>같은 내용을 업체마다 다시 적지 않으셔도 됩니다. '+
         '지역과 연락처만 적어 주시면 서비스마다 맞는 업체가 있는지 '+
-        '운영자가 확인합니다. 무료입니다.</p>'+
+        '운영자가 확인합니다. 무료입니다.</span>'+
+        '<span data-cta="off">지금은 견적 접수를 받지 않습니다. 고르신 서비스와 준비 정보는 '+
+        '그대로 보실 수 있고, 접수 방법은 접수 안내에서 확인하실 수 있습니다.</span></p>'+
     '</div>'+
     '<div class="row-cta">'+
       '<a class="btn btn-b btn-lg" data-pick-go href="'+esc(amPickQuoteTo())+'">'+
         '<span>'+(n ? "선택한 "+n+"개 서비스 견적 신청하기" : "견적 신청하기")+
         '</span>'+icon("arrow",18)+'</a>'+
+      '<a class="btn btn-b btn-lg" href="/intake" data-cta="off">접수 안내 보기'+icon("arrow",18)+'</a>'+
       '<a class="btn btn-o btn-lg" href="/faq">자주 묻는 질문</a>'+
     '</div>'+
     /* ⚠️ 지킬 수 없는 약속을 적지 마세요 — 회신 시점은 업체가 정합니다 */
@@ -622,7 +638,12 @@ function PageClosure(){
   /* B — 필요한 서비스만 고르고 바로 신청 */
   var sel   = PickGroupBand("closure", "close") + PickBasket("close") +
               PackPickBand("close");
+  /* 2026-11-19 — 첫 화면 선택지(머리) 다음에 **정리 절차(ClosureFlow) → 체크리스트 · 계산도구** 차례입니다.
+     계산도구 구간이 폐업 체크리스트 · 폐업 예상비용 · 권리금 셋을 같이 냅니다. */
   return ClosureIntro()+
+    HallCalcBand({ keys:CLOSE_CALC, tones:CLOSE_CALC_TONE,
+      title:"정리하기 전에 체크리스트와 비용부터 보세요",
+      lead:"빠뜨린 것과 들 돈을 먼저 보실 수 있습니다. 적으신 값은 저장하지 않습니다." })+
     ClosurePathBand(path)+
     (path === "all" ? guide + sel : sel + guide)+
     ClosureIndustryBand()+
@@ -633,9 +654,6 @@ function PageClosure(){
        ⚠️ 맞는 글이 없으면 `ReadBand()` 가 구간째 뺍니다 (절대 규칙 2). */
     ReadBand({ side:"close", limit:4,
                title:"정리하기 전에 알아 두면 좋은 것" })+
-    HallCalcBand({ keys:CLOSE_CALC, tones:CLOSE_CALC_TONE,
-      title:"정리하기 전에 숫자부터 보세요",
-      lead:"빠뜨린 것과 들 돈을 먼저 보실 수 있습니다. 적으신 값은 저장하지 않습니다." })+
     ClosureHelpBand()+
     HallSteps({ quote:"/quote?mode=close&from=closure-steps", ctaForm:"close",
                 goName:"매장 정리 상담 신청하기" }) +
@@ -677,15 +695,22 @@ function ClosureIntro(){
     quote: "/quote?mode=close&from=closure-hero", ctaForm:"close",
     goName:"매장 정리 상담 신청하기",
     second:'<a class="btn btn-lg hh-o" href="#pick">필요한 서비스 고르기'+icon("arrow",18)+'</a>',
-    cardTitle:"상황에 맞게 바로 가기",
-    /* 2026-11-19 — 양도 검토 · 긴급 철거 · 집기 처분을 첫 화면에서 바로 (첫 칸이 양도 검토입니다).
-       ⚠️ 긴급 철거 · 집기 처분은 매장 정리 상담이 닫혀 있으면 안내 화면으로 갑니다 (ClosureQuick 과 같은 짝). */
-    quick:[{ ic:"handover", b:"매장 양도 검토", go:"넘길 수 있는지 먼저 보기", href:"/transfer?t=out" },
-           { ic:"clock", b:"긴급 철거", go:"철거 분야 보기", goOn:"집기 처분 + 철거 상담 신청",
+    leadM:"넘길 수 있는 것부터 확인하고, 급한 철거도 바로 준비하세요.",
+    cardTitle:"상황에 맞게 바로 가기", qfirst:true,
+    /* 2026-11-19 — 첫 화면의 선택지는 **이 셋 하나**입니다. 바로 아래 같은 셋을 다시 내던
+       ClosureQuick() 구간은 여기로 합쳤습니다 (그 구간의 설명 · 목적지를 그대로 옮겼습니다).
+       ⚠️ 철거가 급한 분은 양도 단계를 거치지 않습니다 — 닫혀 있으면 철거 준비 정보(/providers/demolish),
+       열려 있으면 기존 매장 정리 상담 경로(CLOSE_QUICK_URGENT · 서버 게이트 그대로)입니다.
+       ⚠️ 닫힌 상태의 글은 **실제 목적지**를 말합니다 — "신청" 이라는 말이 안 나옵니다. */
+    quick:[{ ic:"handover", b:"매장을 넘길 수 있는지 보기", d:"넘기면 철거비 · 원상복구비가 줄어듭니다",
+             go:"양도 순서 보기", href:"/transfer?t=out" },
+           { ic:"clock", b:"철거 일정이 급해요", d:"양도 검토 없이 철거 준비로 바로 갑니다",
+             go:"철거 준비 확인", goOn:"집기 처분 + 철거 상담 신청",
              href:"/providers/demolish", on:CLOSE_QUICK_URGENT },
-           { ic:"box", b:"집기 · 설비 처분", go:"시설 · 집기 보기", goOn:"집기 처분 상담 신청",
+           { ic:"box", b:"집기 · 설비 처분", d:"주방기기 · 냉장고 · 가구를 정리합니다",
+             go:"시설 · 집기 처분 보기", goOn:"집기 처분 상담 신청",
              href:"/assets", on:CLOSE_QUICK_ASSET }]
-  }) + ClosureQuick() + ClosureFlow();
+  }) + ClosureFlow();
 }
 
 /* ── 바로 고르는 세 갈래 (2026-11-18 STOREWAY 1차) ─────────────────
@@ -699,32 +724,7 @@ var CLOSE_QUICK_URGENT = "/quote?mode=close&from=closure-urgent&sv=" +
   encodeURIComponent("asset/kitchen-eq,demolish/full");
 var CLOSE_QUICK_ASSET  = "/quote?mode=close&from=closure-asset&sv=" +
   encodeURIComponent("asset/kitchen-eq,asset/furniture");
-function ClosureQuick(){
-  function card(href, ic, b, i, go, extra){
-    return '<a class="clq-c" href="'+esc(href)+'"'+(extra || "")+'>'+
-      '<span class="clq-i" aria-hidden="true">'+icon(ic, 26)+'</span>'+
-      '<span class="clq-t"><b>'+esc(b)+'</b><i>'+esc(i)+'</i></span>'+
-      '<span class="clq-go">'+esc(go)+icon("arrow",15)+'</span></a>';
-  }
-  var on = ' data-cta="on" data-cta-form="close" hidden', off = ' data-cta="off" data-cta-form="close"';
-  return '<section class="sec sec-white clq"><div class="w">'+
-    '<div class="sec-hd sec-hd-c"><p class="eyebrow">지금 바로</p>'+
-      '<h2>지금 어떤 상황이신가요?</h2>'+
-      '<p>고르시면 그 자리로 바로 갑니다. 아래 정리 순서 · 가이드 · 계산도구는 그대로 있습니다.</p></div>'+
-    '<ul class="clq-g">'+
-      '<li>'+card("/transfer?t=out", "handover", "매장을 넘길 수 있는지 보기",
-          "넘기면 철거비 · 원상복구비가 줄어듭니다. 양도 순서와 권리금 계산부터 봅니다.", "양도 순서 보기")+'</li>'+
-      '<li>'+card(CLOSE_QUICK_URGENT, "clock", "철거 일정이 급해요",
-          "양도 검토 없이 집기 처분과 철거를 한 번에 견적 받습니다.", "집기 처분 + 철거 상담 신청", on)+
-        card("/providers/demolish", "clock", "철거 일정이 급해요",
-          "지금은 매장 정리 상담 접수를 받지 않습니다. 철거에서 무엇을 정해야 하는지 먼저 봅니다.", "철거 분야 보기", off)+'</li>'+
-      '<li>'+card(CLOSE_QUICK_ASSET, "box", "집기 · 설비 처분",
-          "주방기기 · 냉장고 · 가구를 정리할 견적을 받습니다.", "집기 처분 상담 신청", on)+
-        card("/assets", "box", "집기 · 설비 처분",
-          "지금은 매장 정리 상담 접수를 받지 않습니다. 시설 · 집기 정리 화면을 먼저 봅니다.", "시설 · 집기 보기", off)+'</li>'+
-    '</ul>'+
-  '</div></section>';
-}
+/* ClosureQuick() 는 2026-11-19 머리의 바로 가기 셋(ClosureIntro 의 quick)으로 합쳤습니다. */
 
 /* 폐업 — 시안의 "폐업 통합 진행 프로세스" 여섯.
    ⚠️ 차례는 지시대로 **양도 검토 → 집기 처분 → 철거 · 원상복구** 를 앞에 둡니다.

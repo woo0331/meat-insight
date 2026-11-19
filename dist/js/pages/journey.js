@@ -258,21 +258,21 @@ function OpsIntro(ind){
     side:"ops", photo:"hero-ops",
     kicker:"매장을 더 잘 운영하는 실전 서비스" + (ind ? " · " + ind.name : ""),
     h1raw:"매장 <em>운영</em>",
-    lead:"광고 · 홍보, 운영비, 시설 수리, 인력 · 세무 · 노무까지. 필요한 운영 서비스를 빠르게 찾고 한 번에 신청하세요.",
+
+    leadHtml:'<span data-cta="off">비용 절감 · 홍보 · 시설 수리 · 인력 · 세무 · 노무 — 고민에 맞는 서비스와 계산도구를 찾아보세요.</span>'+
+             '<span data-cta="on" hidden>비용 절감 · 홍보 · 시설 수리 · 인력 · 세무 · 노무 — 필요한 운영 서비스를 찾고 한 번에 신청하세요.</span>',
     quote: quoteTo({ side:"ops", industry:(ind ? ind.key : "") }),
     goName:"운영 상담 신청하기",
-    second:'<a class="btn btn-lg hh-o" href="#pick">운영 서비스 고르기'+icon("arrow",18)+'</a>',
-    cardTitle:"이 화면에서 하실 수 있는 것",
-    checks:[["megaphone","광고 · 홍보 서비스 찾기"],["won","고정비 · 원가율 계산"],
-            ["tool","시설 유지 · 수리 업체 찾기"],["users","인력 · 세무 · 노무 서비스 찾기"]]
+    second:'<a class="btn btn-lg hh-o" href="#pick">운영 서비스 고르기'+icon("arrow",18)+'</a>'
+
   }) + OpsWorry();
 }
 
 var OPS_WORRY = [
-  ["chart",  "매출을 올리고 싶어요",   [["온라인 홍보","/providers/marketing"],["리뷰 · 플레이스","/providers/marketing?s=review"],["목표 매출 계산","/tools/target"]]],
-  ["won",    "운영비를 줄이고 싶어요", [["고정비 계산","/tools/fixed"],["원가율 · 마진","/tools/margin"],["식자재 · 소모품","/providers/supply"]]],
-  ["tool",   "시설을 고치고 싶어요",   [["설비 수리","/providers/repair"],["정기 점검","/providers/repair?s=check-up"],["청소 · 방역","/providers/clean"]]],
-  ["users",  "인력 · 세무 · 노무가 필요해요", [["직원 채용","/providers/staff"],["세무","/providers/admin?s=tax-agent"],["POS · IT","/providers/it"]]]
+  ["won",       "비용을 줄이고 싶어요",   [["고정비 계산","/tools/fixed"],["원가율 · 마진","/tools/margin"],["식자재 · 소모품","/providers/supply"],["POS · 매장 시스템","/providers/it"]]],
+  ["megaphone", "홍보 · 매출을 늘리고 싶어요", [["온라인 홍보","/providers/marketing"],["리뷰 · 플레이스","/providers/marketing?s=review"],["목표 매출 계산","/tools/target"]]],
+  ["tool",      "시설을 고치고 싶어요",   [["설비 수리","/providers/repair"],["정기 점검","/providers/repair?s=check-up"],["청소 · 방역","/providers/clean"]]],
+  ["users",     "인력 · 세무 · 노무가 필요해요", [["직원 채용","/providers/staff"],["세무","/providers/admin?s=tax-agent"],["노무","/providers/admin?s=labor-agent"]]]
 ];
 function OpsWorry(){
   return '<section class="sec sec-white hwr"><div class="w">'+
@@ -484,12 +484,17 @@ function AcqIntro(ind, iq){
     kicker:"사장님의 새로운 시작을 위한" + (ind ? " · " + ind.name : ""),
     h1raw:"매장 <em>양도양수</em>",
     lead:"매장을 찾는 분(인수)과 넘기려는 분(양도)의 길을 나눠 안내합니다. 매물에 적힌 값은 올리신 사장님이 적으신 값입니다.",
+    leadM:"매장을 찾는 분과 넘기려는 분의 길을 나눠 안내합니다.",
     quote: quoteTo({ side:"transfer", cat:"transfer", industry:(ind ? ind.key : "") }),
     goName:"양도 · 양수 상담 신청하기",
     second:'<a class="btn btn-lg hh-o" href="/stores'+esc(iq)+'">매장 매물 보기'+icon("arrow",18)+'</a>',
-    cardTitle:"지금 매장 양도양수",
-    checks:[["store", "올라온 매물 " + n + "건 (센 값)"],["search","지역 · 업종 · 금액으로 매물 찾기"],
-            ["handover","내 매장 내놓기 · 집기 처분 길"]]
+
+    cardTitle:"어느 쪽이세요?", qfirst:true,
+    quick:[{ ic:"search", b:"매장 찾기", d:"지역 · 업종 · 가격 조건으로 매물을 봅니다",
+             go:"지역 · 업종으로 찾기", href:"#aq-find" },
+           { ic:"handover", b:"내 매장 넘기기", d:"넘기는 순서와 권리금부터 확인합니다",
+             go:"양도 순서 보기", goOn:"매물 등록하기", form:"sell",
+             href:"/transfer?t=out", on:"/sell" }]
   }) + AcqSearch(ind);
 }
 
@@ -501,15 +506,32 @@ function AcqSearch(ind){
       '<select class="sel" id="aq-s-'+key+'"><option value="">전체</option>'+
       g.opts.map(function(o){ return '<option value="'+esc(o.k)+'">'+esc(o.name)+'</option>'; }).join("")+'</select></div>';
   };
-  return '<section class="sec sec-white asr"><div class="w">'+
+
+  return '<section class="sec sec-white asr" id="aq-find"><div class="w">'+
     '<form class="asr-f" onsubmit="return aqSearchGo(event)" aria-label="매장 매물 찾기">'+
       '<div class="f-r"><label for="aq-s-r">지역</label>'+RegionSelect("aq-s-r", "", "", "전체")+'</div>'+
       '<div class="f-r"><label for="aq-s-i">업종</label>'+IndustrySelect("aq-s-i", ind ? ind.key : "", "", "전체")+'</div>'+
-      rg("pm") + rg("dp") + rg("rt")+
+      '<button class="btn asr-pxb" type="button" aria-expanded="false" aria-controls="aq-px" onclick="aqPxToggle(this)">'+
+        icon("sliders",16)+'<span>가격 조건</span><em id="aq-px-n" hidden></em>'+icon("chevd",16)+'</button>'+
+      '<div class="asr-px is-fold-px" id="aq-px">'+ rg("pm") + rg("dp") + rg("rt") +'</div>'+
       '<button class="btn btn-lg asr-go" type="submit">'+icon("search",18)+' 매물 검색</button>'+
     '</form>'+
   '</div></section>';
 }
+window.aqPxToggle = function(b){
+  var box = document.getElementById("aq-px"); if(!box) return;
+  var open = box.classList.toggle("is-fold-px") === false;
+  b.setAttribute("aria-expanded", open ? "true" : "false");
+};
+window.aqPxPaint = function(){
+  var n = ["aq-s-pm","aq-s-dp","aq-s-rt"].filter(function(id){
+    var e = document.getElementById(id); return e && e.value; }).length;
+  var t = document.getElementById("aq-px-n"); if(!t) return;
+  t.textContent = n + "개 적용"; t.hidden = !n;
+};
+document.addEventListener("change", function(e){
+  if(e.target && /^aq-s-(pm|dp|rt)$/.test(e.target.id || "")) aqPxPaint();
+});
 window.aqSearchGo = function(e){
   if(e && e.preventDefault) e.preventDefault();
   var q = [];
@@ -608,12 +630,13 @@ function AcqMarket(t, ind, iq){
       ? '<div class="row-cta"><a class="btn btn-b" href="/stores'+esc(iq)+'">매장 매물 보기'+icon("arrow",16)+'</a>'+
         '<a class="btn btn-o" href="/assets'+esc(iq)+'">시설 · 장비 보기</a></div>'
 
-      : Empty({ icon:"store", title:"아직 올라온 매물이 없습니다",
-          text:"올라오는 대로 여기에 나옵니다. 그동안 인수 · 양도에서 자주 막히는 것부터 보셔도 됩니다.",
+      : Empty({ icon:"store", title:"현재 등록된 매물이 없습니다",
+          text:"매물이 올라오면 여기에 나옵니다. 그동안 권리금을 따져 보거나 인수할 때 확인할 것부터 보셔도 됩니다.",
           reads: (typeof amContentsFor === "function")
             ? amContentsFor({ cat:"transfer", side:"both", limit:3 }) : [],
-          cta:'<a class="btn btn-b" href="#pick">인수할 때 필요한 것 고르기'+icon("arrow",16)+'</a>'+
-              '<a class="btn btn-o" href="/stores">매물 화면 보기</a>' })))+
+          cta:'<a class="btn btn-b" href="/tools/premium">권리금 계산하기'+icon("arrow",16)+'</a>'+
+              '<a class="btn btn-o" href="/tools/vs">신규 vs 인수 비용 비교</a>'+
+              '<a class="btn btn-o" href="#pick">인수할 때 필요한 것 고르기</a>' })))+
   '</div></section>';
 }
 

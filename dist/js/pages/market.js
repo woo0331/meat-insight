@@ -41,15 +41,20 @@ function PageStores(){
     (list.length
       ? '<div class="mk-g">'+list.slice(0, amShown(list.length)).map(StoreCard).join("")+'</div>'+
         MoreBtn(list.length)
+
       : Empty({
           icon:"key",
-          title:"조건에 맞는 매장이 아직 없습니다",
-          text:"없는 매물을 지어내지 않습니다. 매물이 올라오면 이 목록에 나옵니다 "+
-               "(따로 알려 드리는 기능은 아직 없습니다). 정리하시는 중이라면 매물 등록 화면을 보실 수 있습니다.",
+          title: amStores({}).length ? "선택한 조건에 맞는 매물이 없습니다" : "현재 등록된 매물이 없습니다",
+          text: amStores({}).length
+            ? "조건을 줄이거나 바꿔 보세요. 매물에 적힌 값은 올리신 사장님이 적으신 값입니다."
+            : "없는 매물을 지어내지 않습니다. 매물이 올라오면 이 목록에 나옵니다 "+
+              "(따로 알려 드리는 기능은 아직 없습니다). 그동안 권리금 계산기와 인수 가이드를 보실 수 있습니다.",
           reads: amContentsFor({ cat:"store", side:"start", industry:ind, limit:3 }),
           readTitle:"자리를 보러 가시기 전에",
           cta:'<a class="btn btn-b" href="'+esc(quoteTo({side:"start",industry:ind,region:reg}))+'">'+
               '찾는 조건 남기기'+icon("arrow",16)+'</a>'+
+              '<a class="btn btn-o" href="/tools/premium">권리금 계산하기</a>'+
+              '<a class="btn btn-o" href="/transfer">인수 가이드 보기</a>'+
               '<a class="btn btn-o" href="/sell">내 매장 내놓기</a>'
         }))+
   '</div></section>'+

@@ -7264,3 +7264,38 @@ html.ivh #view .sw2-s, .sw2-s{ max-width:34em; color:#E6ECF7; }
   .sw2-hero::after{ background:linear-gradient(90deg, rgba(7,26,62,.95) 0px, rgba(7,26,62,.90) calc(50vw - 40px), rgba(7,26,62,.40) calc(50vw + 300px), rgba(7,26,62,.10) 100%),
              linear-gradient(0deg, rgba(7,26,62,.55) 0%, rgba(7,26,62,0) 40%); }
 }
+/* ⚠️⚠️ 2026-11-19 검수 — 첫 화면에서 카테고리 진입이 안 보였습니다 (재 본 값).
+     1280×800 첫 카드 제목 829px(화면 밖) · 390×844 785px(아래 네비 밑) · 360×740 카드가 통째로 밖.
+   히어로를 줄여 **카드 제목까지 첫 화면에** 들어오게 합니다. 글 · 검색 · 칩은 그대로입니다. */
+.sw2-in{ padding-top:52px; padding-bottom:118px; }
+html.ivh #view .sw2-h, .sw2-h{ font-size:clamp(32px, 4vw, 54px); }
+html.ivh #view .sw2-s, .sw2-s{ margin-top:14px; }
+html.ivh .sw2-hero .sw2-find{ margin-top:22px; }
+.sw2-chips{ margin-top:12px; }
+.sw2-eg{ margin-top:-92px; }
+.sw2-ec > a{ min-height:250px; padding:22px 22px 20px; }
+@media (max-width:1100px){ .sw2-ec > a{ min-height:220px; } }
+@media (max-width:768px){
+  .sw2-in{ padding-top:24px; padding-bottom:84px; }
+  .sw2-k{ min-height:30px; margin-bottom:12px; font-size:var(--t-cap); }
+  html.ivh #view .sw2-h, .sw2-h{ font-size:28px; }
+  html.ivh #view .sw2-s, .sw2-s{ font-size:15px; line-height:1.6; }
+  html.ivh .sw2-hero .sw2-find{ margin-top:16px; }
+  /* 칩은 한 줄로 두고 그 줄 안에서만 옆으로 밉니다 (문서 폭은 그대로 · 두 줄이면 첫 화면을 100px 먹습니다) */
+  .sw2-chips{ flex-wrap:nowrap; overflow-x:auto; margin-right:calc(-1 * var(--pad)); padding-right:var(--pad);
+    scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+  .sw2-chips::-webkit-scrollbar{ display:none; }
+  .sw2-chips > *{ flex:0 0 auto; }
+  .sw2-eg{ margin-top:-60px; gap:10px; }
+  .sw2-ec > a{ min-height:150px; padding:14px 14px 14px; }
+  .sw2-eno{ top:12px; left:12px; min-height:24px; }
+  .sw2-ei{ margin-bottom:4px; }
+  .sw2-ei svg{ width:24px; height:24px; }
+  .sw2-eb{ font-size:19px; }
+  .sw2-es{ margin-top:4px; }
+}
+@media (max-width:360px){ .sw2-ec > a{ min-height:142px; } .sw2-eb{ font-size:17px; } }
+/* 픽셀로 재 보고 고침 — 폰 카드가 낮아지며 제목이 막의 옅은 쪽에 앉아 360px 에서 3.91(17px 굵게 · 보통 글자 기준 4.5 미달) */
+@media (max-width:768px){
+  .sw2-ec > a::after{ background:linear-gradient(180deg, rgba(var(--ec),.62) 0%, rgba(var(--ec),.92) 38%, rgba(var(--ec),.98) 62%); }
+}

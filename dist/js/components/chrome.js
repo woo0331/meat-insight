@@ -78,10 +78,10 @@ function Logo(where){
 function Header(){
 
   var closedBar = (window.WOW_BIZ && WOW_BIZ.sosReady) ? "" :
-    '<div role="status" style="background:var(--bg-sky,#EFF6FC);color:var(--navy,#0C3D70);'+
+    '<div role="status" class="hd-closed" style="background:var(--bg-sky,#EFF6FC);color:var(--navy,#0C3D70);'+
       'border-bottom:1px solid var(--line,#E2E8F0);text-align:center;padding:10px 16px;font-size:14px">'+
       '현재 견적 · 매물 등록 · 입점 · 로그인 접수를 받지 않습니다. '+
-      '정보 · 계산도구 · 체크리스트는 그대로 이용하실 수 있습니다.</div>';
+      '<span class="hd-closed-x">정보 · 계산도구 · 체크리스트는 그대로 이용하실 수 있습니다.</span></div>';
   return closedBar + '<header class="hd"><div class="w-wide hd-in">'+
     Logo() +
     '<nav class="gnb" id="gnb" aria-label="주요 메뉴">'+

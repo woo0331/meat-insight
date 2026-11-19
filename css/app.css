@@ -1025,3 +1025,6 @@ html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
 .hd-lg .hd-lg-i{ display:none; }
 .hd-lg-t b{ font-size:22px; }
 @media (max-width:420px){ .hd-lg-t b{ font-size:19px; } }
+/* 2026-11-19 — 폰에서 접수 중단 띠가 두 줄(약 100px)이라 첫 화면을 먹었습니다. 뒷문장만 접습니다
+   (접수를 안 받는다는 말은 그대로 남습니다). */
+@media (max-width:600px){ .hd-closed{ font-size:13px !important; padding:8px 12px !important; } .hd-closed-x{ display:none; } }

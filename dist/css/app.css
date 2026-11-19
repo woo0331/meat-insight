@@ -604,3 +604,5 @@ html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
 .hd-lg .hd-lg-i{ display:none; }
 .hd-lg-t b{ font-size:22px; }
 @media (max-width:420px){ .hd-lg-t b{ font-size:19px; } }
+
+@media (max-width:600px){ .hd-closed{ font-size:13px !important; padding:8px 12px !important; } .hd-closed-x{ display:none; } }

@@ -1728,7 +1728,15 @@ const AUDIT = `(() => {
 
   /* ③ 조건이 다음 화면으로 넘어가는가 */
   await f("분류 → 견적 요청으로 조건이 넘어간다", "/providers/interior?i=cafe&r=gyeonggi", `
-    const a = document.querySelector('a[href^="/quote"]');
+    /* 2026-11-19 — 헤더 펼침에 매장 정리 상담(mode=close · 별도 양식) 칸이 생겼습니다. 그건 일반 견적이
+       아니라 제 범위(안양 · 군포 · 의왕 · 정리 분류)를 가진 양식이라 여기서 재지 않습니다.
+       재는 것은 **일반 견적으로 가는 링크**이고, 헤더 펼침의 견적 · 상담 신청 칸도 따로 봅니다. 백틱 금지. */
+    const a = document.querySelector('a[href^="/quote"]:not([href*="mode=close"])');
+    const dd = document.querySelector('.hd .gnb-m a[data-to="/quote"]');
+    if(!dd) return "헤더 펼침에 견적 · 상담 신청 칸이 없습니다";
+    const dh = dd.getAttribute("href") || "";
+    if(dh.indexOf("i=cafe") < 0 || dh.indexOf("r=gyeonggi") < 0)
+      return "헤더 펼침의 견적 칸에 고른 조건이 안 실립니다 (" + dh + ")";
     if(!a) return "견적 요청으로 가는 링크가 없습니다";
     const h = a.getAttribute("href");
     if(h.indexOf("i=cafe") < 0 || h.indexOf("r=gyeonggi") < 0)
@@ -1748,7 +1756,8 @@ const AUDIT = `(() => {
     if(t !== "접수 안내" || h !== "/intake") return "닫혔는데 헤더 CTA: " + t + " → " + h;
     return true;`);
   await f("업종 화면 → 견적 요청에 업종이 실린다", "/startup/hair", `
-    const a = document.querySelector('a[href^="/quote"]');
+    /* 2026-11-19 — 매장 정리 상담(mode=close) 칸은 별도 양식이라 재지 않습니다 (위 검사와 같은 까닭). 백틱 금지. */
+    const a = document.querySelector('a[href^="/quote"]:not([href*="mode=close"])');
     if(!a) return "견적 요청 링크가 없습니다";
     return a.getAttribute("href").indexOf("i=hair") >= 0 ? true
          : "업종이 안 실립니다 (" + a.getAttribute("href") + ")";`);

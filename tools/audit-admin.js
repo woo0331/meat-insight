@@ -358,6 +358,20 @@ function SESS(sess, me){
         await pg.locator("#rq .rq-s-rq button", { hasText:"이력 보기" }).click();
         await pg.waitForTimeout(300);
       }, SESS(ADMIN, ME)],
+    /* ⚠️⚠️ 2026-11-19 — 견적 비교표(최소 420px)가 펼친 줄 안에 서는 꼴.
+       .rq-g 가 grid 라 칸이 표를 따라 넓어져 390px 에서 84px 넘쳤는데,
+       위 상태들에는 견적이 없어서 **아무도 그 꼴을 안 재고** 있었습니다. */
+    ["견적 비교 판", async pg => {
+        await pg.locator("#rq .rq-s-rq .rq-hd", { hasText:"SW-EF56-GH78" }).click();
+        await pg.waitForTimeout(200);
+      }, SESS(ADMIN, Object.assign({}, ME, { quotes:[
+        { id:"qz1", request_id:"22222222-2222-2222-2222-222222222222", provider_id:"pv-one",
+          amount:3300000, vat:"add", scope:"주방 · 홀 전체 철거", waste:"포함 (5톤 1대)",
+          restore:"바닥 · 벽 원상복구 포함", excludes:"간판", extra:"폐기물 초과 시 1톤당 추가",
+          days:3, state:"open", src:"staff", created_at:"2026-10-10T05:00:00+00:00" },
+        { id:"qz2", request_id:"22222222-2222-2222-2222-222222222222", provider_id:"pv-two",
+          amount:2900000, vat:"incl", scope:"주방 철거 (홀 제외)", state:"open", src:"provider",
+          created_at:"2026-10-10T06:00:00+00:00" }] }))],
     /* ⚠️ 직원 — 돈 구간이 **안 와서** 안 그려지는 쪽입니다 */
     ["직원", async pg => {},
       SESS({ auth:true, signedIn:true, role:"staff", name:"직원" },

@@ -701,6 +701,9 @@ body.sl-locked{ overflow:hidden; }
 .rq-g{ display:grid; gap:10px; }
 
 .rq-r{ background:#fff; border:1px solid var(--line); border-radius:10px; }
+/* ⚠️ 2026-11-19 — .rq-g 가 grid 라 칸의 기본 min-width:auto 가 안쪽 비교표(최소 420px)를 따라
+   줄 하나를 넓혀 390px 에서 가로로 84px 넘쳤습니다. 표는 .rq-qt-w 안에서만 옆으로 밉니다. */
+.rq-g > .rq-r{ min-width:0; }
 .rq-r.on{ border-color:var(--blue, #806047); }
 
 /* ⚠️ 줄 전체가 눌립니다. `padding` 만으로 높이를 만들면 짧은 이름에서

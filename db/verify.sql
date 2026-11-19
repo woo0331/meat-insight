@@ -172,6 +172,16 @@ v_cust as (
      and p.pronamespace = 'public'::regnamespace
      and pg_get_functiondef(p.oid) like '%''customer''%'
 ),
+/* ⑭ ⚠️⚠️ 로그인한 사람이 RLS 를 지날 수 있는가 — 2026-11-19 시험용 Supabase 에서 찾았습니다.
+      새 Supabase 프로젝트는 새 함수의 실행 권한을 PUBLIC 에 안 줘서, RLS 정책이 부르는
+      my_role() · my_provider() 가 막히면 직원 · 관리자 · 고객 · 업체가 신청을 **하나도
+      못 읽습니다** (permission denied for function my_role). 2 가 아니면 0084 를 돌리세요. */
+v_rlsfn as (
+  select count(*) filter (where has_function_privilege('authenticated', p.oid, 'execute'))::int n
+    from pg_proc p
+   where p.pronamespace = 'public'::regnamespace
+     and p.proname in ('my_role','my_provider')
+),
 rows as (
   select 1 i, '판 번호 (최댓값)'               t, v_ver.n::text   got, '84' want from v_ver
   union all select  2, '표 (public)',              v_tab.n::text,  '22' from v_tab
@@ -188,6 +198,7 @@ rows as (
   union all select 11, '⚠️ 감사 기록 수정·삭제 정책', v_audit.n::text, '0' from v_audit
   union all select 12, '⚠️ anon 권한: ' || v_anon.who, v_anon.n::text, '0' from v_anon
   union all select 13, '가입 시 역할을 customer 로 박음', v_cust.n::text, '1' from v_cust
+  union all select 14, '⚠️ 로그인한 사람이 my_role · my_provider 실행', v_rlsfn.n::text, '2' from v_rlsfn
 )
 select i "#", t "검사", got "지금", want "기대",
        case when got = want then '✅' else '❌ 고쳐야 합니다' end "판정"

@@ -600,6 +600,8 @@ body.sl-locked{ overflow:hidden; }
 .rq-g{ display:grid; gap:10px; }
 
 .rq-r{ background:#fff; border:1px solid var(--line); border-radius:10px; }
+
+.rq-g > .rq-r{ min-width:0; }
 .rq-r.on{ border-color:var(--blue, #806047); }
 
 .rq-hd{ display:flex; align-items:center; justify-content:space-between;

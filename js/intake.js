@@ -2432,6 +2432,22 @@ function rqAt(at){
   return k.getUTCFullYear() + ". " + p(k.getUTCMonth() + 1) + ". " + p(k.getUTCDate()) +
          " " + p(k.getUTCHours()) + ":" + p(k.getUTCMinutes());
 }
+/* 이력 한 줄의 이름 — 2026-11-19 시험용 Supabase 의 실제 기록으로 그려 보고 고쳤습니다.
+   ⚠️ 상태가 아닌 기록이 섞여 옵니다 — 담당자(owner:*) · 연락처 열람(contact:open) ·
+   견적(obj=quote) · 결과 기록(set_outcome: from 이 비고 to 가 지금 상태). 상태 이름표에
+   맡기면 앞의 셋은 **이름 없는 줄**이 되고, 결과 기록은 **계약이 두 번 선 것처럼** 읽힙니다. */
+var RQ_HIST_SYS = { intake:1 };   /* 서버가 남긴 표시 — 사람 글이 아닙니다 */
+var RQ_HIST_TAG = { "owner:set":"담당자 지정", "owner:none":"담당자 해제", "contact:open":"연락처 열람" };
+var RQ_HIST_Q   = { open:"견적 기록", chosen:"고객이 견적 선택", passed:"다른 견적이 선택됨", withdrawn:"견적 철회" };
+function rqHistLabel(h){
+  var nm = function(k){ return (window.amDealStName && amDealStName(k)) || ""; };
+  if(h.obj === "quote") return RQ_HIST_Q[h.to_state] || "견적";
+  if(RQ_HIST_TAG[h.to_state]) return RQ_HIST_TAG[h.to_state];
+  var to = nm(h.to_state), fr = nm(h.from_state);
+  if(!h.from_state && h.to_state !== "new" && to) return "결과 기록 · " + to;
+  return (fr ? fr + " → " : "") + (to || h.to_state || "");
+}
+
 function rqHist(r){
   if(RQ.histOf !== r.id) return '';
   if(RQ.hist === null)
@@ -2442,11 +2458,10 @@ function rqHist(r){
   return '<div class="rq-as rq-hist"><b>이력</b><ol>'+
     RQ.hist.map(function(h){
       var d = rqAt(h.at);
-      var to = window.amDealStName ? amDealStName(h.to_state) : h.to_state;
-      var fr = window.amDealStName ? amDealStName(h.from_state) : h.from_state;
+      var lab = rqHistLabel(h);
       return '<li>'+
         (d ? '<em>'+esc(d)+'</em>' : '')+
-        '<span>'+esc((fr ? fr + " → " : "") + (to || ""))+'</span>'+
+        '<span>'+esc(lab)+'</span>'+
         /* ⚠️ 가운뎃점으로 가릅니다 — 띄어쓰기만 두었더니 "정보 확인 중
            직원" 으로 읽혀 상태 이름의 일부처럼 보였습니다 (찍어 보고
            알았습니다). 상태 이름에 띄어쓰기가 들어 있어서 그렇습니다. */
@@ -2455,7 +2470,7 @@ function rqHist(r){
         /* ⚠️⚠️ 업체가 넘겨야 할 걸음을 직원 · 관리자가 넘겼으면 **업체 응답이 아닙니다** —
            상태 이름("업체 수락")만 두면 업체가 스스로 응답한 것으로 읽힙니다. */
         (rqProxy(h) ? ' <b class="rq-proxy">운영자 대리 기록 · 업체 직접 응답 아님</b>' : '')+
-        (h.why ? '<p>'+esc(h.why)+'</p>' : '')+
+        (h.why && !RQ_HIST_SYS[h.why] ? '<p>'+esc(h.why)+'</p>' : '')+
       '</li>';
     }).join("") +'</ol>'+
     '<p class="rq-none">⚠️ 기록은 <b>고치거나 지울 수 없습니다</b> — '+

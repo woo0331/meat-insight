@@ -279,6 +279,14 @@ select provider_id,
 revoke all on vendor_response from public, anon;
 grant select on vendor_response to authenticated, service_role;
 
+-- ⑧ 로그인한 사람이 RLS 를 지날 수 있게 (따라잡기) ──────────────────
+-- ⚠️⚠️ 2026-11-19 시험용 Supabase 에서 찾았습니다 — 새 프로젝트는 새 함수의 실행
+--   권한을 PUBLIC 에 주지 않아서, RLS 정책이 부르는 my_role() · my_provider() 가
+--   로그인한 사람에게 막혀 **직원 · 관리자 · 고객 · 업체가 신청을 하나도 못 읽었습니다.**
+--   0001 에도 같은 줄을 넣었고, 이미 돌린 DB 는 여기서 받습니다 (두 번 줘도 같습니다).
+grant execute on function my_role()     to authenticated, service_role;
+grant execute on function my_provider() to authenticated, service_role;
+
 insert into schema_version (n, name) values (84, '0084_storeway_close_consult')
 on conflict (n) do nothing;
 

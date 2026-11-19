@@ -1006,7 +1006,16 @@ function ok(name, cond, extra) {
           from_state:"new", to_state:"check", why:null },
         { at:"2026-10-06T02:00:00+00:00", by_role:"admin", obj:"request",
           from_state:"check", to_state:"assigned",
-          why:"안양 업체로 배정했습니다" }
+          why:"안양 업체로 배정했습니다" },
+        /* 2026-11-19 — 상태가 아닌 기록 넷 (시험용 Supabase 의 실제 꼴 그대로) */
+        { at:"2026-10-06T03:00:00+00:00", by_role:null, obj:"request",
+          from_state:null, to_state:"new", why:"intake" },
+        { at:"2026-10-06T04:00:00+00:00", by_role:"staff", obj:"request",
+          from_state:"owner:none", to_state:"owner:set", why:"담당자 배정" },
+        { at:"2026-10-06T05:00:00+00:00", by_role:"staff", obj:"quote",
+          from_state:"none", to_state:"open", why:null },
+        { at:"2026-10-06T06:00:00+00:00", by_role:"staff", obj:"request",
+          from_state:null, to_state:"signed", why:"철거 계약 · 12/20 착공" }
       ] : undefined;
       return r.fulfill({ status:200, contentType:"application/json",
         body: JSON.stringify({
@@ -1306,6 +1315,13 @@ function ok(name, cond, extra) {
        hv.includes("안양 업체로 배정했습니다"), hv.slice(0, 220));
     ok("상태 이름이 한글로 나온다",
        hv.includes("정보 확인 중") && hv.includes("업체 배정"), hv.slice(0, 220));
+    /* ⚠️⚠️ 2026-11-19 — 상태가 아닌 기록이 **이름 없는 줄**로 서고, 결과 기록이
+       "계약 완료" 로 한 번 더 서서 **계약이 두 번 선 것처럼** 읽혔습니다.
+       서버가 남긴 표시(intake)도 사람 글처럼 찍혔습니다. */
+    ok("담당자 · 견적 · 결과 기록에 이름이 붙는다",
+       hv.includes("담당자 지정") && hv.includes("견적 기록") && hv.includes("결과 기록 · 계약 완료"),
+       hv.slice(0, 400));
+    ok("서버 표시(intake)를 사람 글처럼 안 찍는다", !/\bintake\b/.test(hv), hv.slice(0, 200));
     ok("고칠 수 없는 기록이라고 밝힌다",
        hv.includes("고치거나 지울 수 없습니다"), hv.slice(-120));
 

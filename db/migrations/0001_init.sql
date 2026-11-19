@@ -75,6 +75,14 @@ create or replace function my_provider() returns text
   select provider_id from account where id = auth.uid()
 $$;
 
+-- ⚠️⚠️ 2026-11-19 — RLS 정책이 이 둘을 **로그인한 사람의 권한으로** 부릅니다.
+-- 새 Supabase 프로젝트는 새 함수의 실행 권한을 PUBLIC 에 안 줘서, 이 줄이
+-- 없으면 로그인한 사람이 신청 · 견적을 **하나도 못 읽습니다**
+-- ("permission denied for function my_role"). 이미 돌린 DB 는 0084 가 따라잡습니다.
+-- ⚠️ 둘 다 **자기 역할 · 자기 업체**만 돌려줍니다 — 남의 것이 보이지 않습니다.
+grant execute on function my_role()     to authenticated, service_role;
+grant execute on function my_provider() to authenticated, service_role;
+
 
 -- ── 업체 (§7) ────────────────────────────────────────────────────────
 -- ⚠️ 칸 이름을 js/data/providers.js 와 같게 두었습니다. 파일에 있던

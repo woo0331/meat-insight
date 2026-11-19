@@ -1927,6 +1927,19 @@ function rqAt(at){
   return k.getUTCFullYear() + ". " + p(k.getUTCMonth() + 1) + ". " + p(k.getUTCDate()) +
          " " + p(k.getUTCHours()) + ":" + p(k.getUTCMinutes());
 }
+
+var RQ_HIST_SYS = { intake:1 };
+var RQ_HIST_TAG = { "owner:set":"담당자 지정", "owner:none":"담당자 해제", "contact:open":"연락처 열람" };
+var RQ_HIST_Q   = { open:"견적 기록", chosen:"고객이 견적 선택", passed:"다른 견적이 선택됨", withdrawn:"견적 철회" };
+function rqHistLabel(h){
+  var nm = function(k){ return (window.amDealStName && amDealStName(k)) || ""; };
+  if(h.obj === "quote") return RQ_HIST_Q[h.to_state] || "견적";
+  if(RQ_HIST_TAG[h.to_state]) return RQ_HIST_TAG[h.to_state];
+  var to = nm(h.to_state), fr = nm(h.from_state);
+  if(!h.from_state && h.to_state !== "new" && to) return "결과 기록 · " + to;
+  return (fr ? fr + " → " : "") + (to || h.to_state || "");
+}
+
 function rqHist(r){
   if(RQ.histOf !== r.id) return '';
   if(RQ.hist === null)
@@ -1937,17 +1950,16 @@ function rqHist(r){
   return '<div class="rq-as rq-hist"><b>이력</b><ol>'+
     RQ.hist.map(function(h){
       var d = rqAt(h.at);
-      var to = window.amDealStName ? amDealStName(h.to_state) : h.to_state;
-      var fr = window.amDealStName ? amDealStName(h.from_state) : h.from_state;
+      var lab = rqHistLabel(h);
       return '<li>'+
         (d ? '<em>'+esc(d)+'</em>' : '')+
-        '<span>'+esc((fr ? fr + " → " : "") + (to || ""))+'</span>'+
+        '<span>'+esc(lab)+'</span>'+
 
         (h.by_role ? ' <i>· '+esc(window.amRoleName ? amRoleName(h.by_role) : h.by_role)+
           (h.by_user && (h.by_role === "staff" || h.by_role === "admin") ? ' '+esc(rqStaffName(h.by_user)) : '')+'</i>' : '')+
 
         (rqProxy(h) ? ' <b class="rq-proxy">운영자 대리 기록 · 업체 직접 응답 아님</b>' : '')+
-        (h.why ? '<p>'+esc(h.why)+'</p>' : '')+
+        (h.why && !RQ_HIST_SYS[h.why] ? '<p>'+esc(h.why)+'</p>' : '')+
       '</li>';
     }).join("") +'</ol>'+
     '<p class="rq-none">⚠️ 기록은 <b>고치거나 지울 수 없습니다</b> — '+

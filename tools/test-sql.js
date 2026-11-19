@@ -2774,12 +2774,12 @@ try{
       /* ⚠️ 2026-11-18 — 번호가 0019 → 0082 로 건너뛰므로 "개수" 가 아니라 **마지막 파일의 번호**와 견줍니다 */
       const LAST = String(Number(path.basename(MIGS[MIGS.length - 1]).slice(0, 4)));
       ok("판 번호가 " + LAST + "까지 올라간다", top === LAST, top);
-      /* 돌린 뒤 사장님이 보는 것은 verify.sql 열세 줄입니다 */
+      /* 돌린 뒤 사장님이 보는 것은 verify.sql 열네 줄입니다 (⑭ 2026-11-19 — 로그인한 사람의 RLS 함수 실행) */
       let vout = "";
       try{ vout = psqlFile("db/verify.sql", "swpaste"); }catch(err){ vout = String(err.stdout || ""); }
       const vrows = vout.split("\n").filter(l => /✅|❌/.test(l));
-      ok("verify.sql 열세 줄이 전부 OK 로 나온다",
-         vrows.length === 13 && !vrows.some(l => l.includes("❌")),
+      ok("verify.sql 열네 줄이 전부 OK 로 나온다",
+         vrows.length === 14 && !vrows.some(l => l.includes("❌")),
          vrows.filter(l => l.includes("❌")).join(" | ") || ("줄 " + vrows.length));
     }
   }

@@ -49,3 +49,14 @@ grant select on auth.users to authenticated, service_role;
 grant insert on auth.users to service_role;
 grant execute on function auth.uid() to anon, authenticated, service_role;
 grant execute on function become(uuid) to anon, authenticated, service_role;
+
+-- ⚠️⚠️ 2026-11-19 — **Supabase 의 함수 기본 권한을 흉내냅니다.**
+-- 새로 만든 Supabase 프로젝트는 public 스키마에 새로 만드는 함수의 실행 권한을
+-- PUBLIC 에 주지 않습니다 (postgres · service_role 만). 맨 Postgres 는 PUBLIC 에
+-- 줘서, 여기서는 RLS 가 부르는 my_role() 이 그냥 돌고 **시험용 Supabase 에서만**
+-- "permission denied for function my_role" 로 로그인한 사람이 아무것도 못 읽었습니다.
+-- 흉내가 Supabase 와 같아야 그 자리가 여기서 걸립니다.
+-- ⚠️ 스키마를 붙이면 안 됩니다 — PUBLIC 의 실행 권한은 **전역** 기본값이라
+-- `in schema public` 으로는 못 거둡니다 (Supabase 도 전역 줄 `{postgres=X/postgres}` 를 둡니다).
+alter default privileges revoke execute on functions from public;
+alter default privileges in schema public grant execute on functions to service_role;

@@ -1050,3 +1050,23 @@ html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
   /* 메인에서는 본문 통합검색과 겹쳐서 헤더 돋보기를 접습니다 (폰만). 다른 화면은 그대로 헤더가 받습니다. */
   .hd.is-home .hd-ic-s{ display:none; }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   2026-11-19 아래 메뉴 가독성 — 아이콘 24px · 선 2px · 아이콘↔글자 간격 4px 하나 · 글자 13px 한 줄
+   · 활성: 아이콘 뒤 연한 파랑(#E3EEFF = --bg-sky) + 브랜드 블루(#1D4ED8 = --start-dark)
+   · 비활성: 흰 메뉴 위 진한 네이비(--navy)
+   ⚠️ 높이는 --mnav-h(62px) 그대로이고 안전 영역(padding-bottom:env(...))은 위 .mnav 규칙이 그대로 지킵니다.
+   ⚠️ 차례 · 링크는 MNAV 그대로입니다 (chrome.js). 칸 다섯은 1fr 씩 같은 폭입니다.
+   ══════════════════════════════════════════════════════════════════ */
+@media (max-width:900px){
+  .mnav{ grid-template-columns:repeat(5, minmax(0,1fr)); }
+  .mnav a{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    min-width:0; min-height:var(--mnav-h); padding:6px 2px; color:var(--navy);
+    font-size:13px; font-weight:700; letter-spacing:-.02em; line-height:1.25; }
+  .mnav-i{ display:flex; align-items:center; justify-content:center; width:52px; height:30px; border-radius:999px;
+    transition:background-color .15s; }
+  .mnav-i svg{ width:24px; height:24px; stroke-width:2; }
+  .mnav-t{ white-space:nowrap; }
+  .mnav a.on{ color:var(--start-dark); }
+  .mnav a.on .mnav-i{ background:var(--bg-sky); }
+}

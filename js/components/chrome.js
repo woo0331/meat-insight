@@ -483,7 +483,8 @@ function MobileNav(){
   return '<nav class="mnav" id="mnav" aria-label="아래 메뉴">'+
     MNAV.map(function(m){
       return '<a href="'+esc(m.to)+'" data-to="'+esc(m.to)+'">'+
-        icon(m.icon,21)+'<span>'+esc(m.name)+'</span></a>';
+        /* 2026-11-19 — 아이콘을 감싸는 칸(.mnav-i)이 활성 탭의 연한 파랑 배경을 받습니다. 24px · 선 2px 는 CSS 가 맞춥니다. */
+        '<span class="mnav-i" aria-hidden="true">'+icon(m.icon,24)+'</span><span class="mnav-t">'+esc(m.name)+'</span></a>';
     }).join("")+
   '</nav>';
 }

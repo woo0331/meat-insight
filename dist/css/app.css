@@ -620,3 +620,16 @@ html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
 
   .hd.is-home .hd-ic-s{ display:none; }
 }
+
+@media (max-width:900px){
+  .mnav{ grid-template-columns:repeat(5, minmax(0,1fr)); }
+  .mnav a{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    min-width:0; min-height:var(--mnav-h); padding:6px 2px; color:var(--navy);
+    font-size:13px; font-weight:700; letter-spacing:-.02em; line-height:1.25; }
+  .mnav-i{ display:flex; align-items:center; justify-content:center; width:52px; height:30px; border-radius:999px;
+    transition:background-color .15s; }
+  .mnav-i svg{ width:24px; height:24px; stroke-width:2; }
+  .mnav-t{ white-space:nowrap; }
+  .mnav a.on{ color:var(--start-dark); }
+  .mnav a.on .mnav-i{ background:var(--bg-sky); }
+}

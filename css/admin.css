@@ -1004,3 +1004,7 @@ body.sl-locked{ overflow:hidden; }
 .rq-sq .btn, .rq-oc .btn{ min-height:44px; }
 .rq-oc-now{ margin:6px 0 10px; padding:10px 12px; background:var(--bg-2, #F5F7F9); border-radius:10px; font-size:14px; }
 @media (max-width:600px){ .rq-sq-g{ grid-template-columns:1fr; } }
+
+/* 2026-11-19 — 업체 대신 넘긴 기록 표시 (업체 직접 응답과 가릅니다) */
+.rq-hist .rq-proxy{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;
+  background:var(--warn-bg);color:var(--warn-dark);font-size:var(--t-cap,13px);font-weight:700}

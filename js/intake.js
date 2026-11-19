@@ -1058,6 +1058,7 @@ function rqLoad(){
       /* 업체 담당자 · 기간별 정산 (P1 ⑬⑭) — ⚠️ 담당자는 직원 ·
          관리자에게만, 정산은 **관리자에게만** 옵니다 (api/me.js).
          화면이 숨기는 것이 아니라 서버가 안 보냅니다. */
+      RQ.vresp    = d.vresp    || [];
       RQ.contacts = d.contacts || [];
       RQ.settles  = d.settles  || [];
       /* 업체 입점 신청 (P1-7) — ⚠️ 직원 · 관리자에게만 옵니다
@@ -2066,6 +2067,26 @@ function rqProvs(){
   '</section>';
 }
 
+/* 업체 응답 — ⚠️⚠️ **업체가 스스로 응답한 것만** 응답률 · 응답 시간에 셉니다.
+   직원 · 관리자 대리 기록은 따로 적습니다 (0084 vendor_response).
+   배정이 0건이면 줄째 뺍니다 — "응답률 0%" 는 비율이 아닙니다. */
+function rqVresp(id){
+  var L = RQ.vresp || [], v = null, i;
+  for(i = 0; i < L.length; i++) if(L[i].provider_id === id) v = L[i];
+  if(!v || !+v.assigned_n) return '';
+  var t = v.vendor_median_min != null && +v.vendor_n
+    ? " · 응답 시간(중앙값) " + rqMin(+v.vendor_median_min) : "";
+  return '<span class="rq-m rq-vr">업체 직접 응답 '+esc(String(v.vendor_n))+' / 배정 '+
+    esc(String(v.assigned_n))+'건'+
+    (v.vendor_rate != null ? ' ('+esc(String(v.vendor_rate))+'%)' : '')+esc(t)+
+    (+v.proxy_n ? ' · 운영자 대리 기록 '+esc(String(v.proxy_n))+'건(응답률에 안 셈)' : '')+
+    (+v.none_n ? ' · 응답 없음 '+esc(String(v.none_n))+'건' : '')+'</span>';
+}
+function rqMin(m){
+  if(m < 60) return Math.round(m) + "분";
+  if(m < 1440) return (Math.round(m / 6) / 10) + "시간";
+  return (Math.round(m / 144) / 10) + "일";
+}
 function rqProvRow(p){
   var subs = (p.subs || []).length, regs = (p.regions || []).length;
   var c = rqPvCon(p.id);
@@ -2077,6 +2098,7 @@ function rqProvRow(p){
           esc([subs ? "하는 일 " + subs : "", regs ? "지역 " + regs : "",
                (p.industries || []).length ? "업종 " + p.industries.length : ""]
               .filter(Boolean).join(" · "))+'</span>'+
+        rqVresp(p.id)+
       '</span>'+
       '<span class="rq-hd-r">'+
         '<i class="myq-st myq-'+(p.listed ? "ok" : "gray")+'">'+
@@ -2398,6 +2420,18 @@ function rqHistRow(r){
     '</div>'+ rqHist(r);
 }
 
+/* 업체 대신 넘긴 걸음인가 — 길 표에서 업체가 넘기는 네 걸음을 직원 · 관리자가 넘긴 것 */
+var RQ_VENDOR_STEP = { accepted:1, consult:1, quoted:1, nego:1 };
+function rqProxy(h){
+  return !!(h && RQ_VENDOR_STEP[h.to_state] && (h.by_role === "staff" || h.by_role === "admin"));
+}
+/* 한국시간 "2026. 11. 19 14:05" — ⚠️ 날짜만 두면 같은 날 두 번 넘긴 차례가 안 보입니다 */
+function rqAt(at){
+  var t = Date.parse(at || ""); if(isNaN(t)) return "";
+  var k = new Date(t + 9 * 3600e3), p = function(n){ return (n < 10 ? "0" : "") + n; };
+  return k.getUTCFullYear() + ". " + p(k.getUTCMonth() + 1) + ". " + p(k.getUTCDate()) +
+         " " + p(k.getUTCHours()) + ":" + p(k.getUTCMinutes());
+}
 function rqHist(r){
   if(RQ.histOf !== r.id) return '';
   if(RQ.hist === null)
@@ -2407,7 +2441,7 @@ function rqHist(r){
 
   return '<div class="rq-as rq-hist"><b>이력</b><ol>'+
     RQ.hist.map(function(h){
-      var d = amDate(String(h.at || "").slice(0, 10));
+      var d = rqAt(h.at);
       var to = window.amDealStName ? amDealStName(h.to_state) : h.to_state;
       var fr = window.amDealStName ? amDealStName(h.from_state) : h.from_state;
       return '<li>'+
@@ -2416,7 +2450,11 @@ function rqHist(r){
         /* ⚠️ 가운뎃점으로 가릅니다 — 띄어쓰기만 두었더니 "정보 확인 중
            직원" 으로 읽혀 상태 이름의 일부처럼 보였습니다 (찍어 보고
            알았습니다). 상태 이름에 띄어쓰기가 들어 있어서 그렇습니다. */
-        (h.by_role ? ' <i>· '+esc(window.amRoleName ? amRoleName(h.by_role) : h.by_role)+'</i>' : '')+
+        (h.by_role ? ' <i>· '+esc(window.amRoleName ? amRoleName(h.by_role) : h.by_role)+
+          (h.by_user && (h.by_role === "staff" || h.by_role === "admin") ? ' '+esc(rqStaffName(h.by_user)) : '')+'</i>' : '')+
+        /* ⚠️⚠️ 업체가 넘겨야 할 걸음을 직원 · 관리자가 넘겼으면 **업체 응답이 아닙니다** —
+           상태 이름("업체 수락")만 두면 업체가 스스로 응답한 것으로 읽힙니다. */
+        (rqProxy(h) ? ' <b class="rq-proxy">운영자 대리 기록 · 업체 직접 응답 아님</b>' : '')+
         (h.why ? '<p>'+esc(h.why)+'</p>' : '')+
       '</li>';
     }).join("") +'</ol>'+

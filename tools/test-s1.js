@@ -147,7 +147,32 @@ function dbPart(){
   const cols = psql("select string_agg(column_name, ',' order by ordinal_position) from information_schema.columns where table_name='intake_funnel'");
   ok(!/\b(name|tel|email|body|detail|tel_key)\b/.test(cols), "뷰에 성함 · 연락처 · 원문 칸이 없음", cols);
   const fn = as(STAFF, "select concat_ws('|', channel, (intake_at is not null), (assigned_at is not null), (vendor_at is not null), (quote_at is not null), (signed_at is not null), (closed_at is not null)) from intake_funnel where id='" + RID + "'");
-  ok(fn === "close|t|t|t|t|t|t", "접수 · 연결 · 업체 응답 · 견적 · 계약 · 완료 시각이 다 잡힘", fn);
+  ok(fn === "close|t|t|f|t|t|t", "접수 · 연결 · 견적 · 계약 · 완료 시각이 잡히고, 업체 응답(vendor_at)은 비어 있음 — 직원이 대신 넘겼기 때문", fn);
+  const px = as(STAFF, "select concat_ws('|', (proxy_at is not null), vendor_via, (vendor_quote_at is null)) from intake_funnel where id='" + RID + "'");
+  ok(px === "t|staff|t", "대리 기록은 proxy_at · vendor_via=staff 로 따로 잡히고, 업체가 낸 견적 시각도 비어 있음", px);
+
+  console.log("\n▶ 대리 기록 — 실제 변경자 · 시각 · 업체 응답 집계에서 빠짐");
+  const who = psql("select string_agg(to_state||':'||by_role||':'||(by_user='" + STAFF + "')||':'||(at is not null), ',' order by id) from audit_log where obj='request' and obj_id='" + RID + "' and to_state in ('accepted','consult','quoted','nego')");
+  ok(who === "accepted:staff:true:true,consult:staff:true:true,quoted:staff:true:true,nego:staff:true:true",
+     "업체가 넘길 네 걸음 모두 실제 변경자(직원 계정) · 역할 staff · 시각이 남음", who);
+  ok(psql("select count(*) from audit_log where obj='request' and obj_id='" + RID + "' and by_role='provider'") === "0", "그 건에 업체 역할로 남은 기록은 0 — 업체가 응답한 것처럼 안 남음");
+  /* 세 번째 건 — 업체가 스스로 받음 */
+  const P3 = Object.assign({}, P, { no:"SW-CLS3-0003", idem:"s1-c", tel:"010-6666-7777" });
+  svc("select submit_intake(" + lit(P3) + ")");
+  const RID3 = psql("select id from request where no='SW-CLS3-0003'");
+  as(STAFF, "select move_state('" + RID3 + "','check','{}'::jsonb)");
+  as(STAFF, "select move_state('" + RID3 + "','assigned','{\"providerId\":\"syn-demo\",\"agree3rd\":true}'::jsonb)");
+  as(PVU, "select move_state('" + RID3 + "','accepted','{}'::jsonb)");
+  ok(as(STAFF, "select vendor_via||'|'||(vendor_at is not null)||'|'||(proxy_at is null) from intake_funnel where id='" + RID3 + "'") === "provider|true|true", "업체가 스스로 받은 건은 vendor_via=provider · vendor_at 이 잡힘", as(STAFF, "select vendor_via||'|'||(vendor_at is not null)||'|'||(proxy_at is null) from intake_funnel where id='" + RID3 + "'"));
+  ok(as(STAFF, "select count(*) from audit_log where obj='request' and obj_id='" + RID3 + "' and by_role='provider'") === "1", "직원도 업체가 스스로 넘긴 이력을 봄 (그래야 대리 기록과 가를 수 있음)");
+  psql("insert into audit_log (by_user, by_role, obj, obj_id, to_state, why) values ('" + ADMIN + "','admin','deal','syn-deal','fee_wait','합성 기록')");
+  ok(as(STAFF, "select count(*) from audit_log where obj not in ('request','quote') and by_user <> '" + STAFF + "'") === "0" &&
+     psql("select count(*) from audit_log where obj='deal' and obj_id='syn-deal'") === "1", "직원에게 계약 · 정산 · 업체 기록은 그대로 안 열림");
+  const vr = as(STAFF, "select concat_ws('|',assigned_n,vendor_n,proxy_n,none_n,vendor_rate,(vendor_median_min is not null)) from vendor_response where provider_id='syn-demo'");
+  ok(vr === "2|1|1|0|50.0|t", "업체 응답률은 업체 직접 응답만 셈 (배정 2 · 직접 1 · 대리 1 → 50%) · 응답 시간도 직접 응답만", vr);
+  ok(as(STAFF, "select count(*) from vendor_response where provider_id='syn-other'") === "0", "배정 없는 업체는 줄이 없음 (0% 를 만들지 않음)");
+  ok(as(CUST, "select count(*) from vendor_response") === "0" && as(PVU, "select count(*) from vendor_response") === "0", "고객 · 업체는 응답 집계를 못 봄 (직원 · 관리자만)");
+  ok(/permission denied/.test(err("set role anon; select count(*) from vendor_response")), "로그인 안 한 쪽은 응답 집계를 못 읽음");
   ok(as(PVU2, "select count(*) from intake_funnel") === "0", "다른 업체는 뷰에서도 0줄 (RLS 를 그대로 거침)");
   ok(/permission denied/.test(err("set role anon; select count(*) from intake_funnel")), "로그인 안 한 쪽은 뷰를 못 읽음");
 }

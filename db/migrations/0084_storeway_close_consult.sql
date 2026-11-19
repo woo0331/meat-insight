@@ -13,6 +13,8 @@
 --   ④ deal_move — 직원 · 관리자가 업체 대신 넘기는 네 걸음 (초기 수동 운영)
 --   ⑤ staff_record_quote() · set_outcome() · note_intake_meta()
 --   ⑥ intake_funnel 뷰 — 접수 · 배정 · 업체 응답 · 견적 · 계약 · 종료 시각 (개인정보 없음)
+--      ⚠️ 업체 응답과 운영자 대리 기록을 갈라 둡니다 (vendor_at · proxy_at · vendor_via)
+--   ⑦ vendor_response 뷰 — 업체 응답률 · 응답 시간 (대리 기록은 세지 않음)
 
 begin;
 
@@ -204,15 +206,35 @@ grant execute on function staff_record_quote(uuid, text, jsonb, text) to authent
 grant execute on function set_outcome(uuid, text, date, text)          to authenticated;
 grant execute on function note_intake_meta(text, text, text)           to service_role;
 
+-- ⑥-0 직원이 신청 · 견적 이력을 읽습니다 ───────────────────────────
+-- ⚠️⚠️ 0001 의 audit_read 는 직원에게 **자기가 쓴 줄만** 줍니다. 그대로 두면
+--   업체가 스스로 응답한 기록이 직원 화면 · 시각 뷰에서 안 보여서, 대리 기록과
+--   업체 직접 응답을 **가를 수가 없습니다.** 신청(request) · 견적(quote) 줄만
+--   더 엽니다 — 계약 · 정산 · 업체 · 정책 기록은 그대로 관리자만입니다.
+-- ⚠️ 고치거나 지우는 정책은 여전히 없습니다 (읽기만).
+drop policy if exists audit_staff_req on audit_log;
+create policy audit_staff_req on audit_log for select
+  using (my_role() = 'staff' and obj in ('request','quote'));
+
 -- ⑥ 시각만 모은 뷰 — 성함 · 연락처 · 원문 없음 ─────────────────────
 -- ⚠️ security_invoker — 부른 사람의 RLS 를 그대로 거칩니다 (직원 · 관리자만 줄이 보입니다).
+-- ⚠️⚠️ 업체 응답(vendor_at)은 **업체 계정이 스스로 넘긴 기록만** 셉니다.
+--   직원 · 관리자가 대신 넘긴 것은 proxy_at 으로 따로 두고, vendor_via 가
+--   provider | staff | null 로 가릅니다 — 섞으면 업체 응답률이 부풀려집니다.
 create or replace view intake_funnel with (security_invoker = true) as
 select r.id, r.no, r.channel, r.src, r.side, r.region, r.gu, r.state,
        r.created_at                                              as intake_at,
        (select min(a.created_at) from assignment a where a.request_id = r.id) as assigned_at,
        (select min(l.at) from audit_log l where l.obj = 'request' and l.obj_id = r.id::text
-          and l.to_state = 'accepted')                           as vendor_at,
+          and l.to_state = 'accepted' and l.by_role = 'provider') as vendor_at,
+       (select min(l.at) from audit_log l where l.obj = 'request' and l.obj_id = r.id::text
+          and l.to_state = 'accepted' and l.by_role in ('staff','admin')) as proxy_at,
+       (select case when bool_or(l.by_role = 'provider') then 'provider'
+                    when bool_or(l.by_role in ('staff','admin')) then 'staff' end
+          from audit_log l where l.obj = 'request' and l.obj_id = r.id::text
+           and l.to_state = 'accepted')                          as vendor_via,
        (select min(q.created_at) from quote q where q.request_id = r.id) as quote_at,
+       (select min(q.created_at) from quote q where q.request_id = r.id and q.src = 'provider') as vendor_quote_at,
        (select d.signed_at from deal d where d.request_id = r.id) as signed_at,
        (select max(l.at) from audit_log l where l.obj = 'request' and l.obj_id = r.id::text
           and l.to_state in ('done','lost'))                     as closed_at,
@@ -220,6 +242,42 @@ select r.id, r.no, r.channel, r.src, r.side, r.region, r.gu, r.state,
   from request r;
 revoke all on intake_funnel from public, anon;
 grant select on intake_funnel to authenticated, service_role;
+
+-- ⑦ 업체 응답률 · 응답 시간 — **업체가 스스로 응답한 것만** ──────────
+-- ⚠️⚠️ 직원 · 관리자 대리 기록(proxy_n)은 응답으로 세지 않습니다.
+--   응답률 = vendor_n / assigned_n · 응답 시간 = 업체 응답만의 중앙값 · 평균.
+--   배정 줄마다 그 업체 계정(account.provider_id)이 넘긴 기록을 찾습니다 —
+--   같은 신청에 업체가 둘이면 서로의 응답이 섞이지 않습니다.
+-- ⚠️ 표본이 0이면 비율 · 시간을 null 로 둡니다 (0% 가 아닙니다).
+-- ⚠️⚠️ security_invoker 를 **일부러 안 씁니다** — 직원은 account 에서 업체 계정 줄을
+--   못 읽어서(0012 account_staff) 업체 응답이 늘 0 으로 나옵니다. 대신 뷰 안에서
+--   my_role() 로 직원 · 관리자만 줄을 받게 막습니다 (성함 · 연락처는 애초에 없습니다).
+create or replace view vendor_response as
+with a as (
+  select a.provider_id, a.request_id, a.created_at as assigned_at,
+         (select min(l.at) from audit_log l join account ac on ac.id = l.by_user
+           where l.obj = 'request' and l.obj_id = a.request_id::text
+             and l.to_state = 'accepted' and l.by_role = 'provider'
+             and ac.provider_id = a.provider_id)                 as vendor_at,
+         (select min(l.at) from audit_log l
+           where l.obj = 'request' and l.obj_id = a.request_id::text
+             and l.to_state = 'accepted' and l.by_role in ('staff','admin')) as proxy_at
+    from assignment a
+   where my_role() in ('staff','admin')
+)
+select provider_id,
+       count(*)                                                      as assigned_n,
+       count(vendor_at)                                              as vendor_n,
+       count(*) filter (where vendor_at is null and proxy_at is not null) as proxy_n,
+       count(*) filter (where vendor_at is null and proxy_at is null)     as none_n,
+       case when count(*) > 0 then round(100.0 * count(vendor_at) / count(*), 1) end as vendor_rate,
+       round(avg(extract(epoch from vendor_at - assigned_at)) / 60.0, 1)   as vendor_avg_min,
+       round((percentile_cont(0.5) within group (order by extract(epoch from vendor_at - assigned_at))
+              filter (where vendor_at is not null))::numeric / 60.0, 1)    as vendor_median_min
+  from a
+ group by provider_id;
+revoke all on vendor_response from public, anon;
+grant select on vendor_response to authenticated, service_role;
 
 insert into schema_version (n, name) values (84, '0084_storeway_close_consult')
 on conflict (n) do nothing;

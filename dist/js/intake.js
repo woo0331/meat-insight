@@ -772,6 +772,7 @@ function rqLoad(){
       RQ.staff  = d.staff  || [];
       RQ.me     = d.me || "";
 
+      RQ.vresp    = d.vresp    || [];
       RQ.contacts = d.contacts || [];
       RQ.settles  = d.settles  || [];
 
@@ -1627,6 +1628,23 @@ function rqProvs(){
   '</section>';
 }
 
+function rqVresp(id){
+  var L = RQ.vresp || [], v = null, i;
+  for(i = 0; i < L.length; i++) if(L[i].provider_id === id) v = L[i];
+  if(!v || !+v.assigned_n) return '';
+  var t = v.vendor_median_min != null && +v.vendor_n
+    ? " · 응답 시간(중앙값) " + rqMin(+v.vendor_median_min) : "";
+  return '<span class="rq-m rq-vr">업체 직접 응답 '+esc(String(v.vendor_n))+' / 배정 '+
+    esc(String(v.assigned_n))+'건'+
+    (v.vendor_rate != null ? ' ('+esc(String(v.vendor_rate))+'%)' : '')+esc(t)+
+    (+v.proxy_n ? ' · 운영자 대리 기록 '+esc(String(v.proxy_n))+'건(응답률에 안 셈)' : '')+
+    (+v.none_n ? ' · 응답 없음 '+esc(String(v.none_n))+'건' : '')+'</span>';
+}
+function rqMin(m){
+  if(m < 60) return Math.round(m) + "분";
+  if(m < 1440) return (Math.round(m / 6) / 10) + "시간";
+  return (Math.round(m / 144) / 10) + "일";
+}
 function rqProvRow(p){
   var subs = (p.subs || []).length, regs = (p.regions || []).length;
   var c = rqPvCon(p.id);
@@ -1638,6 +1656,7 @@ function rqProvRow(p){
           esc([subs ? "하는 일 " + subs : "", regs ? "지역 " + regs : "",
                (p.industries || []).length ? "업종 " + p.industries.length : ""]
               .filter(Boolean).join(" · "))+'</span>'+
+        rqVresp(p.id)+
       '</span>'+
       '<span class="rq-hd-r">'+
         '<i class="myq-st myq-'+(p.listed ? "ok" : "gray")+'">'+
@@ -1897,6 +1916,17 @@ function rqHistRow(r){
     '</div>'+ rqHist(r);
 }
 
+var RQ_VENDOR_STEP = { accepted:1, consult:1, quoted:1, nego:1 };
+function rqProxy(h){
+  return !!(h && RQ_VENDOR_STEP[h.to_state] && (h.by_role === "staff" || h.by_role === "admin"));
+}
+
+function rqAt(at){
+  var t = Date.parse(at || ""); if(isNaN(t)) return "";
+  var k = new Date(t + 9 * 3600e3), p = function(n){ return (n < 10 ? "0" : "") + n; };
+  return k.getUTCFullYear() + ". " + p(k.getUTCMonth() + 1) + ". " + p(k.getUTCDate()) +
+         " " + p(k.getUTCHours()) + ":" + p(k.getUTCMinutes());
+}
 function rqHist(r){
   if(RQ.histOf !== r.id) return '';
   if(RQ.hist === null)
@@ -1906,14 +1936,17 @@ function rqHist(r){
 
   return '<div class="rq-as rq-hist"><b>이력</b><ol>'+
     RQ.hist.map(function(h){
-      var d = amDate(String(h.at || "").slice(0, 10));
+      var d = rqAt(h.at);
       var to = window.amDealStName ? amDealStName(h.to_state) : h.to_state;
       var fr = window.amDealStName ? amDealStName(h.from_state) : h.from_state;
       return '<li>'+
         (d ? '<em>'+esc(d)+'</em>' : '')+
         '<span>'+esc((fr ? fr + " → " : "") + (to || ""))+'</span>'+
 
-        (h.by_role ? ' <i>· '+esc(window.amRoleName ? amRoleName(h.by_role) : h.by_role)+'</i>' : '')+
+        (h.by_role ? ' <i>· '+esc(window.amRoleName ? amRoleName(h.by_role) : h.by_role)+
+          (h.by_user && (h.by_role === "staff" || h.by_role === "admin") ? ' '+esc(rqStaffName(h.by_user)) : '')+'</i>' : '')+
+
+        (rqProxy(h) ? ' <b class="rq-proxy">운영자 대리 기록 · 업체 직접 응답 아님</b>' : '')+
         (h.why ? '<p>'+esc(h.why)+'</p>' : '')+
       '</li>';
     }).join("") +'</ol>'+

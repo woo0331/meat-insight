@@ -597,7 +597,10 @@ function myqText(q){
            ["A/S · 보증", q.warranty], ["메모", q.note]];
   return L.filter(function(r){ return r[1]; }).map(function(r){
     return '<p class="myq-b"><b>'+esc(r[0])+'</b> '+esc(String(r[1]))+'</p>';
-  }).join("");
+  }).join("") +
+
+  (q.src === "staff"
+    ? '<p class="myq-b"><b>적은 사람</b> 운영자가 업체에게 받아 적은 견적입니다 (업체가 직접 낸 것이 아닙니다)</p>' : '');
 }
 
 function MyQuoteCompare(d, r){

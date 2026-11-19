@@ -292,6 +292,15 @@ const realHandler = async function handler(req, res){
        돌아오는 것은 **업체 id 뿐**입니다 (사람 정보가 아닙니다).
        ⚠️ 실패해도 목록은 그대로 냅니다 — 연결 표시만 안 보입니다
        (배정 자체는 DB 가 막습니다). */
+    /* 2026-11-19 — 업체 응답률 · 응답 시간 (0084 vendor_response).
+       ⚠️⚠️ **업체가 스스로 응답한 것만** 셉니다 — 직원 · 관리자 대리 기록은
+       proxy_n 으로 따로 옵니다. 0084 가 아직 없으면 조용히 비웁니다. */
+    const vr = await dbSelectAs(s.token, "vendor_response",
+      "?select=" + encodeURIComponent("provider_id,assigned_n,vendor_n,proxy_n,none_n,vendor_rate,vendor_avg_min,vendor_median_min") +
+      "&limit=" + PROV_LIMIT);
+    if(vr.ok) out.vresp = vr.rows;
+    else console.warn("[me] vendor_response — " + vr.why);
+
     const lk = await dbRpc(s.token, "linked_providers", {});
     if(lk.ok && Array.isArray(lk.data)) out.linked = lk.data;
     else console.warn("[me] linked_providers — " + (lk.why || "모양이 다릅니다"));
@@ -435,7 +444,10 @@ const realHandler = async function handler(req, res){
      ⚠️ 거르는 일은 RLS 가 합니다 — `audit_read` 가 자기 것만 줍니다. */
   if(one){
     const h = await dbSelectAs(s.token, "audit_log",
-      "?select=" + encodeURIComponent("at,by_role,obj,from_state,to_state,why") +
+      /* ⚠️ by_user(누가 바꿨나)는 **직원 · 관리자에게만** — 업체 대신 넘긴
+         기록을 그 직원 이름으로 보여야 "업체가 응답한 것" 으로 안 읽힙니다.
+         고객 · 업체에게 직원 계정 id 를 내려보낼 까닭이 없습니다. */
+      "?select=" + encodeURIComponent((role === "staff" ? "by_user," : "") + "at,by_role,obj,from_state,to_state,why") +
       "&obj=eq.request&obj_id=eq." + encodeURIComponent(one) +
       "&order=at.asc&limit=" + HIST_LIMIT);
     if(h.ok) out.history = h.rows;

@@ -57,8 +57,7 @@ var MAIN_CALC = ["cost", "bep", "premium", "closecost"];
 
 function PageMain(){
 
-  return HomeSplitSW()+ HomeEntrySW()+ HomeStores()+ HomeShortcuts()+
-         HomeCalc()+ HomeGuide()+ HomeCta();
+  return HomeWPHero()+ HomeWPPass()+ HomeWPCards()+ HomeWPSteps();
 }
 
 var HOME_ENTER = [
@@ -1149,5 +1148,164 @@ function HomeEntrySW(){
         '</a></li>';
       }).join("")+
     '</ul>'+
+  '</div></section>';
+}
+
+var WP_TYPES = [
+  { k:"",          name:"전체 서비스",   to:"",           kw:"" },
+  { k:"startup",   name:"창업 준비",     to:"/startup",   kw:"창업" },
+  { k:"ops",       name:"매장 운영",     to:"/operation", kw:"운영" },
+  { k:"transfer",  name:"매장 양도양수", to:"/transfer",  kw:"양도" },
+  { k:"closure",   name:"폐업·철거",     to:"/closure",   kw:"철거" },
+  { k:"pro",       name:"전문가 상담",   to:"/providers", kw:"업체" },
+  { k:"guide",     name:"정보·가이드",   to:"/content",   kw:"가이드" }
+];
+
+var WP_SUGGEST = ["인테리어", "철거", "권리금", "원상복구", "POS", "폐업신고"];
+
+var WP_HERO = [
+  { k:"st", to:"/startup", ph:"hero-startup", tag:"창업 준비", h:"창업 준비",
+    p:"업종 선택부터 상권 · 인테리어 · 설비까지, 시작에 필요한 준비를 한곳에서.", go:"창업 준비 바로가기" },
+  { k:"cl", to:"/closure", ph:"hero-closure", tag:"폐업·철거", h:"폐업·철거",
+    p:"폐업 절차부터 집기 처분 · 철거 · 원상복구까지, 정리에 필요한 순서를 안내합니다.", go:"폐업·철거 바로가기" }
+];
+function HomeWPHero(){
+  var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND || {}).name || ""));
+  var who = (typeof koWith === "function") ? koWith(nm, "이가") : nm + "가";
+  return '<section class="bhero wp-hero"><div class="w">'+
+    '<div class="wp-hg">'+
+      '<div class="wp-msg">'+
+        '<span class="wp-orn" aria-hidden="true"></span>'+
+        '<p class="wp-k">창업 · 운영 · 양도양수 · 폐업까지</p>'+
+        '<h1 class="wp-h">자영업의 모든 순간을<br>'+esc(who)+' 연결합니다.</h1>'+
+        '<p class="wp-s">창업 준비부터 매장 운영, 양도양수, 폐업 · 철거까지 한곳에서 쉽고 빠르게 해결하세요.</p>'+
+      '</div>'+
+      WP_HERO.map(function(x){
+        return '<a class="wp-hc wp-hc-'+x.k+'" href="'+esc(x.to)+'">'+
+          (hasPhoto(x.ph) ? '<span class="wp-hph" aria-hidden="true">'+
+            photoBox(x.ph, "", true, "(max-width:1023px) 92vw, 30vw")+'</span>' : '')+
+          '<span class="wp-htx">'+
+            '<span class="wp-tag">'+esc(x.tag)+'</span>'+
+            '<h2>'+esc(x.h)+'</h2>'+
+            '<span class="wp-hp">'+esc(x.p)+'</span>'+
+            '<span class="wp-go">'+esc(x.go)+icon("arrow",16)+'</span>'+
+          '</span></a>';
+      }).join("")+
+    '</div>'+
+    HomeWPFind()+
+  '</div></section>';
+}
+
+function HomeWPFind(){
+  return '<div class="wp-find-s">'+
+    '<form class="sw-find wp-find" role="search" action="/search" onsubmit="return wpFind(event)" novalidate>'+
+      '<label class="sr-only" for="wp-t">찾을 분야</label>'+
+      '<select id="wp-t" class="sel wp-t">'+WP_TYPES.map(function(t){
+        return '<option value="'+esc(t.k)+'">'+esc(t.name)+'</option>'; }).join("")+'</select>'+
+      '<label class="sr-only" for="sw-q">서비스 · 매장 · 가이드 검색</label>'+
+      '<input id="sw-q" name="q" type="search" autocomplete="off" maxlength="60" '+
+        'placeholder="필요한 서비스를 검색해 보세요 (예: 인테리어, 철거, 권리금)" aria-describedby="wp-msg">'+
+      '<button class="sw-find-b wp-find-b" type="submit">'+icon("search",18)+'<span>검색</span></button>'+
+    '</form>'+
+    '<p id="wp-msg" class="wp-fmsg" role="status" aria-live="polite"></p>'+
+    '<nav class="wp-sug" aria-label="추천 검색어"><span class="wp-sug-k">추천 검색어</span>'+
+      WP_SUGGEST.map(function(t){
+        return '<a href="/search?q='+encodeURIComponent(t)+'">'+esc(t)+'</a>'; }).join("")+
+    '</nav>'+
+  '</div>';
+}
+window.wpFind = function(e){
+  if(e) e.preventDefault();
+  var el = document.getElementById("sw-q"), tl = document.getElementById("wp-t");
+  var msg = document.getElementById("wp-msg");
+  var say = function(t){ if(msg) msg.textContent = t; return false; };
+  var q = el ? el.value.trim().replace(/\s+/g, " ") : "";
+  var t = null;
+  for(var i = 0; i < WP_TYPES.length; i++) if(tl && WP_TYPES[i].k === tl.value) t = WP_TYPES[i];
+  if(!q){
+    if(t && t.to){ say(""); go(t.to); return false; }
+    if(el) el.focus();
+    return say("찾으실 말을 적어 주시거나, 분야를 골라 주세요.");
+  }
+  if(!/[0-9A-Za-zㄱ-ㆎ가-힣]/.test(q)){
+    if(el) el.focus();
+    return say("글자나 숫자로 적어 주세요. 예: 인테리어, 철거, 권리금");
+  }
+  if(q.length > 40){
+    if(el) el.focus();
+    return say("검색어가 너무 깁니다. 40자 안으로 줄여 주세요.");
+  }
+  say("");
+
+  var go2 = q;
+  if(t && t.kw && typeof amSearch === "function"){
+    try{ var r = amSearch(q + " " + t.kw); if(r && r.total) go2 = q + " " + t.kw; }catch(x){}
+  }
+  go("/search?q=" + encodeURIComponent(go2));
+  return false;
+};
+
+function HomeWPPass(){
+  var n = (window.AM_STORES || []).length;
+  return '<section class="bpass wp-pass"><div class="w">'+
+    '<div class="wp-pb">'+
+      (hasPhoto("kind-pass") ? '<span class="wp-pph" aria-hidden="true">'+
+        photoBox("kind-pass", "", false, "(max-width:900px) 92vw, 46vw")+'</span>' : '')+
+      '<div class="wp-ptx">'+
+        '<p class="wp-k">매장 양도양수</p>'+
+        '<h2>매장을 넘기실 때도,<br class="br-m"> 받으실 때도 한곳에서.</h2>'+
+        '<p>지역 · 업종 · 보증금 · 월세 · 권리금으로 매물을 걸러 보시고, 넘기는 순서와 권리금까지 미리 확인하세요.</p>'+
+        '<p class="wp-pn">'+icon("info",15)+'<span>'+(n ? '지금 등록된 매물 '+n+'건' : '현재 등록된 매물이 없습니다 — 등록되는 대로 이곳에 보입니다.')+'</span></p>'+
+        '<div class="wp-pgo">'+
+          '<a class="btn wp-btn" href="/stores">매물 바로보기'+icon("arrow",16)+'</a>'+
+          '<a class="btn wp-btn-o" href="/sell" data-cta="on" data-cta-form="sell" hidden>내 매장 등록하기</a>'+
+          '<a class="btn wp-btn-o" href="/transfer?t=out" data-cta="off" data-cta-form="sell">내 매장 넘기는 순서</a>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+  '</div></section>';
+}
+
+var WP_CARDS = [
+  { to:"/startup",   ic:"rocket",   b:"창업 준비",     s:"업종 · 상권 · 인테리어 · 설비 준비" },
+  { to:"/operation", ic:"store",    b:"매장 운영",     s:"마케팅 · POS · 시설 수리 · 비용 점검" },
+  { to:"/transfer",  ic:"handover", b:"매장 양도양수", s:"매물 찾기 · 권리금 · 넘기는 순서" },
+  { to:"/closure",   ic:"hammer",   b:"폐업·철거",     s:"폐업 절차 · 집기 처분 · 원상복구" },
+  { to:"/providers", ic:"users",    b:"전문가 상담",   s:"분야별 업체 찾기 · 상담 안내" },
+  { to:"/content",   ic:"book",     b:"정보·가이드",   s:"이용 가이드 · 계산도구 · 지원사업" }
+];
+function HomeWPCards(){
+  return '<section class="bent wp-cards"><div class="w">'+
+    '<div class="wp-sh"><p class="wp-k">서비스</p><h2>필요한 서비스를 바로 찾아보세요</h2></div>'+
+    '<ul class="wp-cg">'+WP_CARDS.map(function(c){
+      return '<li><a class="wp-cc" href="'+esc(c.to)+'">'+
+        '<span class="wp-ci" aria-hidden="true">'+icon(c.ic,28)+'</span>'+
+        '<span class="wp-ct"><b>'+esc(c.b)+'</b><em>'+esc(c.s)+'</em></span>'+
+        '<span class="wp-cgo" aria-hidden="true">'+icon("chev",18)+'</span></a></li>';
+    }).join("")+'</ul>'+
+
+    HomePicked()+
+  '</div></section>';
+}
+
+var WP_STEPS = [
+  { ic:"check", b:"서비스 선택", s:"필요한 서비스를 고르세요." },
+  { ic:"edit",  b:"정보 입력",   s:"지역 · 업종 · 필요한 일을 한 번만 적습니다." },
+  { ic:"chat",  b:"상담 진행",   s:"운영자가 내용을 확인하고 연락드립니다." },
+  { ic:"users", b:"업체 연결",   s:"업체가 정해지면 상호를 알리고 연락처 전달 동의를 다시 받습니다." }
+];
+function HomeWPSteps(){
+  return '<section class="bstep wp-steps"><div class="w">'+
+    '<div class="wp-sh"><p class="wp-k">이용 방법</p><h2>이용 방법은 간단합니다</h2></div>'+
+    '<ol class="wp-sg">'+WP_STEPS.map(function(s, i){
+      return '<li><span class="wp-sn" aria-hidden="true">'+icon(s.ic,24)+'</span>'+
+        '<span class="wp-st"><i>'+('0'+(i+1))+'</i><b>'+esc(s.b)+'</b><em>'+esc(s.s)+'</em></span></li>';
+    }).join("")+'</ol>'+
+    '<p class="wp-snote" data-cta="off" data-cta-form="quote">'+icon("info",16)+
+      '<span>지금은 신청 접수를 잠시 받지 않고 있습니다. 필요한 서비스와 준비 순서는 그대로 보실 수 있습니다.</span>'+
+      '<a href="/intake">접수 안내 보기'+icon("chev",14)+'</a></p>'+
+    '<p class="wp-snote wp-snote-on" data-cta="on" data-cta-form="quote" hidden>'+icon("info",16)+
+      '<span>한 번만 적어 보내시면 운영자가 확인하고 연락드립니다.</span>'+
+      '<a class="btn wp-btn" href="/quote">상담 신청하기'+icon("arrow",16)+'</a></p>'+
   '</div></section>';
 }

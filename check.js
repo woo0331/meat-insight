@@ -2160,7 +2160,7 @@ const AUDIT = `(() => {
      ⚠️ 이건 "보기 좋은가" 를 재는 검사가 아닙니다. 나중에 여기에
      큰 배너 · 설명 · 검색창을 하나씩 더하다 보면 카드가 첫 화면
      아래로 밀려나는데, 그걸 막는 것이 목적입니다. */
-  await f("메인은 히어로 다음이 4대 진입 카드이고 창업 → 운영 → 양도양수 → 폐업 차례다", "/", `
+  await f("메인은 히어로 다음이 양도양수 배너이고 서비스가 창업 → 운영 → 양도양수 → 폐업 차례다", "/", `
     /* 2026-11-19 홈페이지 전체 디자인 개편 — 01 히어로 · 02 4대 진입 카드 (시안 STOREWAY_01).
        뜻은 그대로 — 첫 구간이 히어로이고 h1 이 거기 하나 · 다음이 네 기둥 · 차례가 사업의 흐름.
        옛 판(보조 진입 넷 · 네 걸음 · 두 판)은 git show e1f99c3:check.js 에 있습니다. 이 주석에 백틱 금지. */
@@ -2168,22 +2168,25 @@ const AUDIT = `(() => {
     if(!secs.length) return "메인에 구간이 없습니다";
     if(!secs[0].classList.contains("bhero"))
       return "첫 구간이 히어로가 아닙니다 — " + (secs[0].className || "").split(" ")[0];
-    if(!(secs[1] && secs[1].classList.contains("bent")))
-      return "히어로 다음이 진입 카드가 아닙니다 — " + ((secs[1] || {}).className || "").split(" ")[0];
+    /* 2026-11-19 Warm Premium — 히어로 다음이 양도양수 배너(bpass)이고 서비스 여섯(bent)이 그 뒤입니다 */
+    if(!(secs[1] && secs[1].classList.contains("bpass")))
+      return "히어로 다음이 양도양수 배너가 아닙니다 — " + ((secs[1] || {}).className || "").split(" ")[0];
     const h1s = document.querySelectorAll("#view h1");
     if(h1s.length !== 1) return "화면의 h1 이 " + h1s.length + "개입니다";
     if(!h1s[0].closest(".bhero")) return "h1 이 히어로 구간에 없습니다";
-    const L = [].slice.call(document.querySelectorAll(".sw2-ec > a"));
-    const fl = L.map(function(a){ return a.getAttribute("href"); }), wf = ["/startup","/operation","/transfer","/closure"];
+    /* 2026-11-19 Warm Premium — 히어로의 두 카드(창업 준비 · 폐업·철거) + 서비스 여섯 */
+    const H = [].slice.call(document.querySelectorAll(".wp-hc"));
+    if(H.map(function(a){ return a.getAttribute("href"); }).join() !== "/startup,/closure")
+      return "히어로 카드가 창업 준비 · 폐업·철거 둘이 아닙니다";
+    const L = [].slice.call(document.querySelectorAll(".wp-cc"));
+    const fl = L.map(function(a){ return a.getAttribute("href"); }),
+          wf = ["/startup","/operation","/transfer","/closure","/providers","/content"];
     if(fl.join() !== wf.join())
-      return "진입 카드가 [" + fl.join(" ") + "] 입니다 — 창업 → 운영 → 양도양수 → 폐업 차례라야 합니다";
-    for(const a of L) if(a.querySelector("a")) return "진입 카드 안에 링크가 또 있습니다";
-    const ks = ["hero-startup","hero-ops","kind-pass","hero-closure"];
-    for(let i = 0; i < 4; i++)
-      if(window.hasPhoto && hasPhoto(ks[i]) && !L[i].querySelector("img"))
-        return ks[i] + " 사진이 있는데 카드에 안 그려졌습니다";
-    if(window.hasPhoto && hasPhoto("hero-start") && !document.querySelector(".bhero img"))
-      return "hero-start 사진이 있는데 히어로에 안 그려졌습니다";
+      return "서비스 카드가 [" + fl.join(" ") + "] 입니다 — 창업 → 운영 → 양도양수 → 폐업 → 상담 → 가이드 차례라야 합니다";
+    for(const a of H.concat(L)) if(a.querySelector("a")) return "카드 안에 링크가 또 있습니다";
+    if(window.hasPhoto && hasPhoto("hero-startup") && !H[0].querySelector("img")) return "hero-startup 사진이 카드에 안 그려졌습니다";
+    if(window.hasPhoto && hasPhoto("hero-closure") && !H[1].querySelector("img")) return "hero-closure 사진이 카드에 안 그려졌습니다";
+    if(window.hasPhoto && hasPhoto("kind-pass") && !document.querySelector(".wp-pass img")) return "kind-pass 사진이 양도양수 배너에 안 그려졌습니다";
     /* 옛 보조 진입이 들고 있던 둘이 길을 잃지 않았는가 (헤더 펼침 · 푸터) */
     const miss = ["/providers","/about"].filter(function(u){ return !document.querySelector('a[href="' + u + '"]'); });
     if(miss.length) return "메인에서 갈 수 없게 된 곳: " + miss.join(" · ");
@@ -2264,25 +2267,32 @@ const AUDIT = `(() => {
        · 폐업 쪽이 **빨강으로 흘러가지 않는 것** (그 순간 옛 걱정이
          그대로 돌아옵니다 — 이 저장소가 여러 곳에 못박아 둔 것입니다)
        · 두 쪽의 **크기와 무게가 같은 것** (위 히어로 검사가 봅니다) */
-  await f("4대 진입 카드가 저마다의 색으로 갈리고 폐업이 빨강이 아니다", "/", `
-    /* 2026-11-19 개편 — 재는 자리가 4대 진입 카드입니다 (창업 블루 · 운영 그린 · 양도양수 퍼플 ·
-       폐업·철거 오렌지). 지키는 것은 그대로 — 넷이 서로 다르고, 창업은 파랑, 폐업은 주황이지 빨강이 아닙니다.
+  await f("메인은 브라운 · 아이보리이고 블루 · 그린 · 퍼플 · 오렌지 면이 없다", "/", `
+    /* 2026-11-19 Warm Premium 지시서 — "기존 블루 · 오렌지 스타일을 혼합하지 말 것 · 불필요한
+       블루 · 그린 · 퍼플 · 오렌지를 제거한다 (상태 표시는 예외)". 옛 검사(창업 파랑 · 폐업 주황)는
+       git show b52d72641:check.js 에 있습니다. 폐업이 빨강으로 흐르지 않는 것은 그대로 봅니다.
        이 주석에 백틱 금지. */
-    const bg = function(q){
-      const e = document.querySelector(q); if(!e) return null;
-      const p = getComputedStyle(e).backgroundColor.replace("rgba(", "").replace("rgb(", "")
-        .replace(")", "").split(",").map(Number);
-      return p.length >= 3 && !isNaN(p[0]) ? p.slice(0, 3) : null;
-    };
-    /* 2026-11-19 대표 확정 시안 — 카드가 흰 타일이 되어 색은 **아이콘 원판**(.sw2-ei · 그 쪽 색의 옅은 면)에 있습니다. 재는 자리만 옮겼습니다. */
-    const st = bg(".ent-startup .sw2-ei"), op = bg(".ent-ops .sw2-ei"), tr = bg(".ent-transfer .sw2-ei"), cl = bg(".ent-closure .sw2-ei");
-    if(!st || !op || !tr || !cl) return "진입 카드 넷의 색을 못 읽습니다";
-    const all = [st, op, tr, cl].map(function(c){ return c.join(); });
-    if(new Set(all).size !== 4) return "진입 카드 색이 겹칩니다 — " + all.join(" | ");
-    if(!(st[2] > st[0] && st[2] > st[1])) return "창업 카드가 파랑 쪽이 아닙니다 — " + st.join(",");
-    if(!(op[1] > op[0] && op[1] > op[2])) return "운영 카드가 초록 쪽이 아닙니다 — " + op.join(",");
-    if(!(cl[0] > cl[1] && cl[1] > cl[2])) return "폐업 카드가 주황 쪽이 아닙니다 — " + cl.join(",");
-    if(cl[1] < cl[0] * 0.30) return "폐업 카드가 빨강으로 흘렀습니다 — " + cl.join(",") + " (폐업은 나쁜 것이 아닙니다)";
+    const rgb = function(c){ const m = (c || "").match(/(\\d+), ?(\\d+), ?(\\d+)(, ?([\\d.]+))?/);
+      if(!m) return null; if(m[5] !== undefined && +m[5] < 0.2) return null; return [+m[1], +m[2], +m[3]]; };
+    const hsl = function(c){ const r = c[0]/255, g = c[1]/255, b = c[2]/255;
+      const mx = Math.max(r,g,b), mn = Math.min(r,g,b), l = (mx+mn)/2, d = mx - mn;
+      if(!d) return [0, 0, l];
+      const s2 = l > .5 ? d/(2-mx-mn) : d/(mx+mn);
+      let h = mx === r ? ((g-b)/d + (g < b ? 6 : 0)) : mx === g ? ((b-r)/d + 2) : ((r-g)/d + 4);
+      return [h*60, s2, l]; };
+    const bad = [];
+    document.querySelectorAll("#view *").forEach(function(e){
+      const r = e.getBoundingClientRect(); if(r.width * r.height < 1500) return;
+      const c = rgb(getComputedStyle(e).backgroundColor); if(!c) return;
+      const h = hsl(c);
+      if(h[1] > 0.30 && h[2] > 0.08 && h[2] < 0.97 && (h[0] < 8 || h[0] > 50))
+        bad.push((e.className || e.tagName).toString().split(" ")[0] + " " + c.join(","));
+    });
+    if(bad.length) return "브라운 · 아이보리 밖의 면: " + bad.slice(0, 3).join(" | ");
+    const go = rgb(getComputedStyle(document.querySelector(".wp-hc .wp-go") || document.body).backgroundColor);
+    if(!go || !(go[0] >= go[1] && go[1] >= go[2])) return "히어로 단추가 브라운이 아닙니다 — " + go;
+    const g2 = [].slice.call(document.querySelectorAll(".wp-hc .wp-go")).map(function(e){ return getComputedStyle(e).backgroundColor; });
+    if(g2.length !== 2 || g2[0] !== g2[1]) return "창업 · 폐업 단추의 색이 다릅니다 (같은 무게라야 합니다) — " + g2.join(" | ");
     return true;`);
 
   /* ⑨ 규모감 숫자 — **센 값**이어야 합니다
@@ -3776,15 +3786,15 @@ const AUDIT = `(() => {
        여기에 다시 넣으세요. */
     /* 2026-11-18 시안 — 지금 화면의 표시. 접수가 닫혀 있으면 본문에 신청 단추가 없어야 합니다. */
     /* 2026-11-19 대표 확정 시안 — 2분할(.sw3-g) 이 첫 구간 · 바로가기 칩과 "왜 일까요" 띠는 내려왔습니다. */
-    const need = [[".sw3-g",    "창업 / 폐업 2분할"],
-                  [".sw2-find", "통합 검색"],
-                  [".sw2-eg",   "4대 진입 카드"],
-                  [".sw-sw",    "매장 인수 · 양도"],
-                  [".sw-shg",   "서비스 바로가기"],
-                  [".bcal-g",   "계산도구 넷"],
-                  [".bgd-g",    "이용 가이드"],
-                  [".bcta-go",  "하단 안내"]];
-    if(!(window.WOW_BIZ && WOW_BIZ.sosReady) && v.querySelector('a[href="/quote"]'))
+    /* 2026-11-19 Warm Premium 대표 확정 시안 */
+    const need = [[".wp-hg",   "히어로 세 칸"],
+                  [".wp-find", "통합 검색"],
+                  [".wp-sug",  "추천 검색어"],
+                  [".wp-pb",   "양도양수 배너"],
+                  [".wp-cg",   "서비스 여섯"],
+                  [".wp-sg",   "이용 방법 넷"]];
+    /* 숨겨 둔 짝(data-cta=on · hidden)은 닫혀 있을 때 안 보이는 것이 맞습니다 — 보이는 것만 셉니다 */
+    if(!(window.WOW_BIZ && WOW_BIZ.sosReady) && [].slice.call(v.querySelectorAll('a[href="/quote"]')).some(function(a){ return !a.closest("[hidden]") && a.getClientRects().length; }))
       return "접수가 닫혀 있는데 메인 본문에 견적 신청 단추가 있습니다 (W01)";
     for(const q of need)
       if(!v.querySelector(q[0])) return q[1] + " 가 메인에 없습니다";
@@ -3850,8 +3860,8 @@ const AUDIT = `(() => {
        **사진 + 짙은 남색 막**이 됐습니다 (사장님 승인 3 · 시안 그대로). 그래서 반드시 밝아야
        하는 자리에서 히어로를 빼고 **바로 아래 진입 카드 구간**을 넣었습니다. 면적 검사
        (아래 · 밝은 면 60% 이상)는 그대로라 "전부 다크로" 는 여전히 잡힙니다. */
-    for(const q of [[".sw2-ent","4대 진입 카드"], [".bpass","전국 매장 양도양수"],
-                    [".bcal","계산도구"]]){
+    for(const q of [[".wp-hero","히어로"], [".wp-pass","매장 양도양수"],
+                    [".wp-cards","서비스 여섯"], [".wp-steps","이용 방법"]]){
       const e = document.querySelector(q[0]);
       if(!e) return q[1] + " 구간이 없습니다";
       const L = bgL(e);
@@ -3984,20 +3994,20 @@ const AUDIT = `(() => {
       .filter(function(u){ return !document.querySelector('a[href="' + u + '"]'); });
     if(lost.length) return "사이트 안에서 갈 길이 없는 단계 — " + lost.join(" · ");
     return true;`);
-  await f("4대 진입 카드의 크기가 같다", "/", `
-    /* 2026-11-19 개편 — 재는 자리가 4대 진입 카드입니다. 한 줄에 선 카드끼리 폭 · 높이가
+  await f("히어로의 창업 준비 · 폐업·철거 두 카드의 크기가 같다", "/", `
+    /* 2026-11-19 Warm Premium — 재는 자리가 히어로의 두 카드입니다. 한 줄에 서면 폭 · 높이가
        1px 단위로 같아야 합니다 (어느 쪽이 덜 중요한 것으로 읽히면 안 됩니다). 이 주석에 백틱 금지. */
-    const L = [].slice.call(document.querySelectorAll(".sw2-ec > a"));
-    if(L.length !== 4) return "진입 카드가 " + L.length + "장입니다";
+    const L = [].slice.call(document.querySelectorAll(".wp-hc"));
+    if(L.length !== 2) return "히어로 카드가 " + L.length + "장입니다";
     const R = L.map(function(e){ return e.getBoundingClientRect(); });
-    for(let i = 1; i < 4; i++){
-      if(Math.abs(R[i].top - R[0].top) > 2 && Math.abs(R[i].top - R[i-1].top) > 2) continue;
-      const j = Math.abs(R[i].top - R[i-1].top) <= 2 ? i - 1 : 0;
-      if(Math.abs(R[i].width - R[j].width) > 2 || Math.abs(R[i].height - R[j].height) > 2)
-        return "진입 카드 " + (j+1) + " " + Math.round(R[j].width) + "×" + Math.round(R[j].height) +
-               " · " + (i+1) + " " + Math.round(R[i].width) + "×" + Math.round(R[i].height) + " — 크기와 무게가 같아야 합니다";
-    }
-    for(const a of L){ const h = a.getAttribute("href") || ""; if(!h || h === "#") return "진입 카드에 가짜 링크가 있습니다"; }
+    if(Math.abs(R[1].top - R[0].top) <= 2 &&
+       (Math.abs(R[1].width - R[0].width) > 2 || Math.abs(R[1].height - R[0].height) > 2))
+      return "히어로 카드 " + Math.round(R[0].width) + "×" + Math.round(R[0].height) + " · " +
+             Math.round(R[1].width) + "×" + Math.round(R[1].height) + " — 크기와 무게가 같아야 합니다";
+    const C = [].slice.call(document.querySelectorAll(".wp-cc")).map(function(e){ return e.getBoundingClientRect(); });
+    for(let i = 1; i < C.length; i++)
+      if(Math.abs(C[i].top - C[i-1].top) <= 2 && Math.abs(C[i].height - C[i-1].height) > 2)
+        return "서비스 카드 높이가 한 줄 안에서 다릅니다";
     return true;`);
   /* ══ 여정 넷 (2026-10-05 V2 지시서 §1 · §2 · §4 · §6 · §7 · §31) ══ */
 
@@ -4198,8 +4208,7 @@ const AUDIT = `(() => {
     /* 2026-11-18 메인 디자인 개편(대표 확정 시안) — 재는 자리만 새 화면으로.
        옛 판은 git show 2aa1d8d:check.js 에 있습니다. 이 주석에 백틱 금지. */
 
-    const groups = [[".sw2-ei", "4대 진입 카드"],
-                    [".sw-shc", "서비스 바로가기"], [".bcal-i", "계산도구"]];
+    const groups = [[".wp-ci", "서비스 여섯"], [".wp-sn", "이용 방법"]];
     for(const g of groups){
       const L = [].slice.call(document.querySelectorAll("#view " + g[0]));
       if(!L.length) return g[1] + " 아이콘이 하나도 없습니다";
@@ -4356,7 +4365,8 @@ const AUDIT = `(() => {
        지우지 않았으니 되살리실 수 있습니다 — 그날 bcal 다음에
        bwhy 를 다시 넣으세요. */
     /* 2026-11-19 대표 확정 시안 — "왜 일까요"(bwhy) 띠가 내려왔습니다 */
-    const want = ["bhero","bent","bpass","bdir","bcal","bgd","bcta"];
+    /* 2026-11-19 Warm Premium — 히어로(+검색) · 양도양수 배너 · 서비스 여섯 · 이용 방법 */
+    const want = ["bhero","bpass","bent","bstep"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";
@@ -5127,7 +5137,7 @@ const AUDIT = `(() => {
     /* ⚠️ 2026-10-16 §3 — 진입 카드(.bent-c > a) · 까닭 카드(.bwhy-c) ·
        절차 카드(.bstep-c) · 배너(.bban-c > a)가 생겼습니다. */
     const sel = ".cat,.ind,.pv,.fr,.fc,.mk,.help,.sp,.empty," +
-                ".bent-c > a,.bwhy-c,.bstep-c,.bban-c > a,.sw2-ec > a," +
+                ".bent-c > a,.bwhy-c,.bstep-c,.bban-c > a,.sw2-ec > a,.wp-hc,.wp-cc,.wp-sg > li,.wp-pb," +
                 ".bcal-c > a,.bgd-c > a,.bqc," +
                 ".mhall-c,.mcal-g > li,.mstp-g > li," +
                 ".mti-c,.hsv-box,.mlast-h > li > a,.swt-c," +

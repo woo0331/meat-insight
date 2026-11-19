@@ -64,8 +64,8 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     카드 셋의 첫 장이 됐습니다** (전문관 넷 + 전체보기는 내려왔습니다).
     카드 전체가 하나의 링크라 카드를 그대로 누릅니다. */
  /* 2026-11-18 메인 개편 — 창업은 히어로 왼쪽 판의 단추입니다 */
- await click('.sw2-ec.ent-startup > a');
- say((await url())==="/startup","메인 진입 카드 창업 준비 → /startup",await url());
+ await click('.wp-hc-st');
+ say((await url())==="/startup","메인 히어로 창업 준비 → /startup",await url());
  /* ⚠️⚠️ **2026-10-17 창업 준비 §2 로 업종 고르개가 접혔습니다.**
     주인공이 **서비스 고르기**(§2-B)이고, 고르는 격자 둘이 나란히 있으면
     "같은 선택 영역의 반복" 입니다 (§11). 길은 그대로이고 **한 번 더
@@ -149,20 +149,23 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     내려왔습니다.** 진입 카드 셋이 전문관 세 화면으로 **바로** 보내고,
     매장 양도양수는 ④ 가로형 배너가 받습니다. 끝이 막힌 길이 생기지
     않았는지 넷 다 눌러 봅니다. */
- await click('.sw2-ec.ent-closure > a');
- say((await url())==="/closure","메인 진입 카드 폐업·철거 → /closure",await url());
+ await click('.wp-hc-cl');
+ say((await url())==="/closure","메인 히어로 폐업·철거 → /closure",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.sw2-ec.ent-ops > a');
+ await click('.wp-cc[href="/operation"]');
  say((await url())==="/operation","메인 진입 카드 매장 운영 → /operation",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.sw2-ec.ent-transfer > a');
+ await click('.wp-cc[href="/transfer"]');
  say((await url())==="/transfer","메인 진입 카드 양도양수 → 전문관",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  /* ⚠️⚠️ **2026-10-22 — 서비스 배너 둘이 메인에서 내려왔습니다**
     (사장님 시안). 그 길은 ③ 직접 서비스 찾기 여덟이 그대로 받습니다 —
     함수는 안 지웠으니 되살리시면 여기에 .bban-c 를 다시 넣으세요. */
- await click('.sw-shg li:nth-child(1) .sw-shc');
- say((await url()).startsWith("/providers/"),"서비스 바로가기 → 분야 화면",await url());
+ await click('.wp-cc[href="/providers"]');
+ say((await url()).startsWith("/providers"),"서비스 카드 전문가 상담 → 업체찾기",await url());
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.wp-pgo a[href="/stores"]');
+ say((await url())==="/stores","양도양수 배너 매물 바로보기 → /stores",await url());
  /* ⚠️⚠️ **2026-10-25 §1-01 — 히어로가 01 구간으로 돌아왔습니다.**
     첫 화면에서 바로 신청으로 가는 길이 다시 생겼습니다 — 그쪽을 먼저
     눌러 봅니다. ⚠️ 히어로를 다시 빼실 때는 여기도 같이 고치세요
@@ -218,14 +221,16 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  /* 2026-11-18 메인 개편 · W01 — 접수가 닫혀 있으면 마지막 구간은 신청 단추 대신
     계산도구 · 자주 묻는 질문으로 보냅니다. 열려 있으면 견적 신청으로 갑니다. */
+ /* 2026-11-19 Warm Premium — 이용 방법 구간이 접수 상태를 따릅니다 (닫히면 안내 · 열리면 신청) */
  const ctaOpen = await pg.evaluate(()=>!!(window.WOW_BIZ && WOW_BIZ.sosReady));
  if(ctaOpen){
-   await click('.bcta-go a[href="/quote"]');
-   say((await url()).startsWith("/quote"),"마지막 구간 → 견적 · 상담 신청",await url());
+   await click('.wp-snote-on a[href="/quote"]');
+   say((await url()).startsWith("/quote"),"이용 방법 → 상담 신청",await url());
  } else {
-   say(!(await pg.$('.bcta-go a[href^="/quote"]')),"접수 중단 — 마지막 구간에 신청 단추가 없다");
-   await click('.bcta-go a[href="/tools"]');
-   say((await url())==="/tools","접수 중단 — 마지막 구간 → 계산도구",await url());
+   say(await pg.evaluate(()=>[].slice.call(document.querySelectorAll('#view a[href^="/quote"]')).every(a=>!a.getClientRects().length)),
+       "접수 중단 — 메인 본문에 보이는 신청 단추가 없다");
+   await click('.wp-snote a[href="/intake"]');
+   say((await url())==="/intake","접수 중단 — 이용 방법 → 접수 안내",await url());
  }
  /* ⚠️⚠️ 2026-10-25 §1-07 · §11 — **중간 대형 무료 견적 신청 섹션이
     없어야 합니다.** 그래서 `.bqc`(견적 안내 카드)를 더 안 냅니다 —
@@ -234,14 +239,18 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  say((await pg.locator('#view .bqc').count())===0,
      "중간 대형 견적 신청 섹션이 없다 (§1-07)", "bqc 개수");
- /* ⚠️ §12 — 계산도구 넷이 실제로 열려야 합니다 */
+ /* 2026-11-19 Warm Premium — 계산도구 · 가이드 구간은 메인에서 내려왔습니다 (서비스 카드 정보·가이드가 받습니다) */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bcal-g > li:nth-child(1) > a');
- say((await url()).startsWith("/tools/"),"계산도구 카드 → 계산기",await url());
- /* ⚠️ §13 — 이용 가이드가 실제 글로 열려야 합니다 */
+ await click('.wp-cc[href="/content"]');
+ say((await url())==="/content","서비스 카드 정보·가이드 → 이용 가이드",await url());
+ /* 통합 검색 — 빈 칸 · 기호 · 분야만 */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.bgd-g > li:nth-child(1) > a');
- say((await url()).startsWith("/content/"),"이용 가이드 카드 → 글",await url());
+ await click('.wp-find-b');
+ say(/적어 주시거나/.test(await pg.textContent('#wp-msg')),"빈 검색 — 그 자리에서 안내한다");
+ await pg.fill('#sw-q','@@@'); await click('.wp-find-b');
+ say(/글자나 숫자/.test(await pg.textContent('#wp-msg')),"기호만 — 그 자리에서 안내한다");
+ await pg.fill('#sw-q',''); await pg.selectOption('#wp-t','transfer'); await click('.wp-find-b');
+ say((await url())==="/transfer","빈 검색 + 분야 → 그 전문관",await url());
 
 
  /* ══════════════════════════════════════════════════════════════
@@ -1007,7 +1016,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
    await pg.goto(B+"/",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
    /* 2026-11-18 메인 개편 — 네 전문관은 메인의 네 걸음(.sw-flg)이 같은 차례로 보냅니다 */
-   const card = await pg.$('.sw2-ec > a[href="'+to+'"]');
+   const card = await pg.$('.wp-cc[href="'+to+'"]');
    say(!!card, nm+" — 메인 진입 카드가 그 전문관으로 간다", to);
    if(!card) continue;
    await card.click(); await pg.waitForTimeout(700);
@@ -1190,7 +1199,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    }
    sellOpen = true;
    await p3.goto(B + "/", { waitUntil:"networkidle" }); await p3.waitForTimeout(300);
-   say(await p3.isVisible(".sw-s0-go"), "매물 등록이 열리면 메인의 '매장 내놓기 안내' 가 다시 보인다 (반대쪽)");
+   say(await p3.isVisible('.wp-pgo a[href="/sell"]'), "매물 등록이 열리면 메인의 '내 매장 등록하기' 가 다시 보인다 (반대쪽)");
    await cx.close();
  }
 

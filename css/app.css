@@ -72,9 +72,9 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
    (전에는 순백 96%). 글자는 딥 브라운(`--ink` 계열)이고 견적 단추만
    에스프레소로 채웁니다. */
 .hd{ position:sticky; top:0; z-index:50;
-  background:rgba(255,252,247,.96); backdrop-filter:blur(12px);
+  background:rgba(253,252,251,.96); backdrop-filter:blur(12px);
   border-bottom:1px solid var(--line); }
-.sc .hd{ box-shadow:0 1px 0 var(--line), 0 6px 20px -14px rgba(15,27,45,.35); }
+.sc .hd{ box-shadow:0 1px 0 var(--line), 0 6px 20px -14px rgba(34,24,18,.35); }
 /* ⚠️ 간격이 24 → 20 입니다 (2026-10-16 §4). 메뉴가 여덟이 되어
    1441px 이상에서 남는 폭이 13px 뿐이었고, 두 간격에서 8px 을
    돌려받았습니다. 더 줄이면 로고와 메뉴가 붙어 읽힙니다. */
@@ -250,8 +250,8 @@ input::placeholder, textarea::placeholder{ color:var(--ink3); opacity:1; }
 .btn-gh:hover{ border-color:#fff; }
 /* §5 — 창업 초록 · 폐업 주황. 두 단추는 **같은 크기**입니다. */
 /* ⚠️⚠️ **흰 글자를 얹는 면은 짙은 쪽입니다** (2026-10-01 지시서 §4
-   "CTA Contrast 개선"). 그때 `--start`(당시 #08A875) 위의 흰 글자는
-   대비 3.06, `--close`(당시 #F36B38) 위는 3.01 이었습니다 — 이 사이트에서 제일 많이
+   "CTA Contrast 개선"). 그때 `--start`(당시 #B48B6E) 위의 흰 글자는
+   대비 3.06, `--close`(당시 #C2875E) 위는 3.01 이었습니다 — 이 사이트에서 제일 많이
    눌리는 두 단추가 기준(4.5) 바닥에 있었습니다.
    ⚠️ **색을 바꾼 것이 아닙니다** — 같은 초록 · 같은 주황의 짙은 단계이고,
    원래 hover 에 쓰던 값입니다. 옅은 쪽(`--start` · `--close`)은 테두리 ·
@@ -424,7 +424,7 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 /* ⚠️ `>` 를 빼지 마세요. `.notice-bad b` 로 두면 **문장 안의 `<b>` 까지**
    덩어리가 되어 그 낱말만 딴 줄에 앉습니다. */
 .notice-bad > b,.notice-ok > b{ display:block; font-size:var(--t-base); margin-bottom:4px; }
-.notice-bad{ color:#7A1F1F; } .notice-ok{ color:#0B5E42; }
+.notice-bad{ color:#7A1F1F; } .notice-ok{ color:#6A4C36; }
 
 /* ── 푸터 ────────────────────────────────────────────────────────── */
 /* ⚠️⚠️ **푸터는 밝습니다** (2026-10-01 §1).
@@ -622,17 +622,17 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
    전부 같은 색**으로 섭니다 (찍어 보고 알았습니다). 기본값은 쓰는
    자리에 `var(--ia-1, …)` 로 둡니다. */
 .ia{ display:block; flex:0 0 auto; }
-.ia .a1{  fill:var(--ia-1, #2160D9); }
-.ia .a2{  fill:var(--ia-2, #DCE6FA); }
+.ia .a1{  fill:var(--ia-1, #856045); }
+.ia .a2{  fill:var(--ia-2, #F1E3DA); }
 .ia .aw{  fill:#fff; }
-.ia .a1o{ fill:none; stroke:var(--ia-1, #2160D9); stroke-width:2.8; }
+.ia .a1o{ fill:none; stroke:var(--ia-1, #856045); stroke-width:2.8; }
 .ia .awo{ fill:none; stroke:#fff; stroke-width:2.6; }
 /* 아이콘이 앉는 원판 — 크기 · 그림자 · 바탕 모양이 여덟 장 모두
    같아야 합니다 (지시서 §3 "동일한 크기 · 스타일 · 그림자 · 배경"). */
 .ia-t{ display:inline-flex; align-items:center; justify-content:center;
   width:76px; height:76px; border-radius:22px;
   background:var(--ia-bg, var(--blue-50));
-  box-shadow:0 6px 16px rgba(16,42,86,.08); }
+  box-shadow:0 6px 16px rgba(55,40,29,.08); }
 /* ⚠️⚠️ **`photoBox()` 를 쓰는 자리에는 `object-fit:cover` 를 주세요.**
    `<img class="ph">` 라 기본값이 `fill` 이라, 안 주면 사진이 비율을
    무시하고 **늘어납니다.** `check.js` 가 **규칙 자체**를 보고 —
@@ -730,7 +730,7 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
   .hd-mb{ display:inline-flex; }
   .hd-dw{ display:block; position:absolute; left:0; right:0; top:100%;
     background:var(--bg-cream); border-bottom:1px solid var(--line);
-    box-shadow:0 12px 24px -16px rgba(15,35,80,.45); }
+    box-shadow:0 12px 24px -16px rgba(48,35,25,.45); }
   .hd-dw[hidden]{ display:none; }
   .hd-dw-g{ display:grid; grid-template-columns:1fr 1fr;
     gap:0; padding:var(--s3) var(--s4) var(--s5); }
@@ -750,7 +750,7 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 /* ══════════════════════════════════════════════════════════════════
    푸터 — 짙은 에스프레소 (2026-10-13 §12)
    ══════════════════════════════════════════════════════════════════
-   §12 — "푸터 배경은 에스프레소 브라운 #071A3E. 텍스트는 밝은 아이보리."
+   §12 — "푸터 배경은 에스프레소 브라운 #241A12. 텍스트는 밝은 아이보리."
 
    ⚠️⚠️ **이 저장소는 한 번 반대로 갔던 자리입니다.** 2026-10-01 에
    푸터가 짙은 남색이었는데 높이가 547px 이라 **짧은 화면에서는 그
@@ -772,28 +772,28 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
    보니 푸터 링크 대비가 **4.33** 으로 AA 미달이었습니다 — 이 저장소가
    `.sec-hd p` ↔ `.eyebrow`, `.read li` ↔ `.rd-sum ul` 로 겪은 특정도
    함정입니다. 화면으로는 "대충 밝아" 보였고 **재서** 알았습니다. */
-.ft{ color:rgba(255,252,247,.86); border-top:0; }
-.ft-col a{ color:rgba(255,252,247,.86); }
-.ft-b p{ color:rgba(255,252,247,.78); }
-.ft-biz, .ft-role{ color:rgba(255,252,247,.78); }
+.ft{ color:rgba(253,252,251,.86); border-top:0; }
+.ft-col a{ color:rgba(253,252,251,.86); }
+.ft-b p{ color:rgba(253,252,251,.78); }
+.ft-biz, .ft-role{ color:rgba(253,252,251,.78); }
 /* 칸 머리말 — 밝은 아이보리 (남색은 짙은 바탕에서 안 보입니다) */
-.ft-col h2, .ft-fold{ color:#F6F8FD; }
+.ft-col h2, .ft-fold{ color:#FBF8F5; }
 .ft-col a:hover, .ft-tail a:hover{ color:#FFFFFF; }
-.ft-fold svg{ color:rgba(255,252,247,.66); }
-.ft-tail a{ color:rgba(255,252,247,.82); }
+.ft-fold svg{ color:rgba(253,252,251,.66); }
+.ft-tail a{ color:rgba(253,252,251,.82); }
 /* 선 — 바탕이 짙어서 밝은 쪽으로 뒤집습니다 */
-.ft-end{ border-color:rgba(255,252,247,.16); }
-.ft-col a{ border-color:rgba(255,252,247,.10); }
+.ft-end{ border-color:rgba(253,252,251,.16); }
+.ft-col a{ border-color:rgba(253,252,251,.10); }
 /* 로고 — 짙은 바탕 위에서는 밝은 글자입니다.
    ⚠️ 클래스가 `.lg-ft` 이고 안쪽이 `b`(이름) · `i`(서브문구)입니다 —
    `.lg-t` 는 **헤더 쪽**(`.hd-lg-t`)이라 여기에 적으면 아무 일도 안
    납니다. 처음에 그렇게 적었고, 찍어 보니 푸터 로고가 거의 안
    보였습니다. */
-.ft .lg-ft b{ color:#F6F8FD; }
-.ft .lg-ft i, .ft .lg span{ color:rgba(255,252,247,.68); }
+.ft .lg-ft b{ color:#FBF8F5; }
+.ft .lg-ft i, .ft .lg span{ color:rgba(253,252,251,.68); }
 /* 입점 단추 — 짙은 바탕 위라 **밝은 면 + 짙은 글자**로 뒤집습니다
    (남색 채움은 바탕에 묻힙니다) */
-.ft .btn-nv{ background:#F6F8FD; color:var(--ink); border-color:#F6F8FD; }
+.ft .btn-nv{ background:#FBF8F5; color:var(--ink); border-color:#FBF8F5; }
 .ft .btn-nv:hover{ background:#FFFFFF; color:var(--ink); }
 
 /* ⚠️⚠️ 짧은 화면에서 푸터가 **첫 화면으로 올라오지 않게** 합니다.
@@ -810,7 +810,7 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 /* ════════════════════════════════════════════════════════════════════
    헤더가 **다크**입니다 (2026-10-17 "메인페이지 최종 디자인 리뉴얼" §3-2)
 
-   > §3-2 — "헤더 · 푸터 #0B1B3A."
+   > §3-2 — "헤더 · 푸터 #241A13."
 
    ⚠️⚠️ **2026-10-17 로 본문이 다시 밝아졌습니다** — 다크로 남는 것은
    머리와 꼬리뿐입니다. 메인도 본문은 웜 아이보리입니다 (`html.ivh`).
@@ -823,11 +823,11 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
    아닙니다 — 푸터를 짙게 바꿀 때 `.ft a`(0,1,1)가 `.ft-col a`(0,2,0)에
    져서 링크 대비가 4.33 이었던 자리입니다. **선택자를 원래 규칙과
    똑같이** 적습니다.
-   ⚠️ 재 본 값(#0B1B3A 바탕) — 흰 16.88 · 보조 #E8DDD1 13.10 ·
-   크림 #FFFFFF 16.61 · 포인트 #7FA9FF 7.03. 전부 AA 한참 위입니다.
+   ⚠️ 재 본 값(#241A13 바탕) — 흰 16.88 · 보조 #E9DCD3 13.10 ·
+   크림 #FFFFFF 16.61 · 포인트 #CFA080 7.03. 전부 AA 한참 위입니다.
    ⚠️ 되돌리시려면 이 블록만 지우고 `--bg-foot` 를 밝은 값으로.
    ════════════════════════════════════════════════════════════════════ */
-.hd{ background:rgba(11,27,58,.96); border-bottom:1px solid var(--dk-line); }
+.hd{ background:rgba(36,26,19,.96); border-bottom:1px solid var(--dk-line); }
 .sc .hd{ box-shadow:0 1px 0 var(--dk-line), 0 10px 26px -16px rgba(0,0,0,.8); }
 .lg b{ color:var(--on-dk); }
 .lg span{ color:var(--on-dk2); }
@@ -837,22 +837,22 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 .gnb a:hover{ color:var(--acc); }
 .gnb a.on{ color:var(--acc); }
 .hd-ic{ color:var(--on-dk2); }
-.hd-ic:hover{ background:rgba(211,221,240,.12); color:var(--cream); }
+.hd-ic:hover{ background:rgba(236,218,204,.12); color:var(--cream); }
 .hd-txt{ color:var(--on-dk2); }
 .hd-txt:hover{ color:var(--cream); }
 .hd-sep{ background:var(--dk-line); }
 /* 통합검색 — 짙은 바탕 위라 면을 **밝은 쪽으로 옅게** 깝니다.
    ⚠️ 흰 면을 깔면 헤더에 흰 알약이 떠서 머리가 두 층으로 읽힙니다. */
-.hd-s{ background:rgba(211,221,240,.10); border-color:var(--dk-line2); }
-.hd-s:focus-within{ background:rgba(211,221,240,.16); border-color:var(--acc); }
+.hd-s{ background:rgba(236,218,204,.10); border-color:var(--dk-line2); }
+.hd-s:focus-within{ background:rgba(236,218,204,.16); border-color:var(--acc); }
 .hd-s-i{ color:var(--on-dk2); }
 .hd-s input{ color:var(--cream); }
-.hd-s input::placeholder{ color:rgba(211,221,240,.70); }
+.hd-s input::placeholder{ color:rgba(236,218,204,.70); }
 /* 무료 견적 신청 — §4 가 오른쪽에 둔 **하나뿐인 채운 단추**입니다.
-   ⚠️ 골드 면에 **짙은 글자**입니다 (흰 글자는 #D99647 위에서 2.2) —
-   #0B1B3A 글자로 7.03 입니다. */
-.hd-cta{ background:var(--acc); border-color:var(--acc); color:#0B1B3A; font-weight:800; }
-.hd-cta:hover{ background:#9DBDFF; border-color:#9DBDFF; color:#0B1B3A; }
+   ⚠️ 골드 면에 **짙은 글자**입니다 (흰 글자는 #CB9A76 위에서 2.2) —
+   #241A13 글자로 7.03 입니다. */
+.hd-cta{ background:var(--acc); border-color:var(--acc); color:#241A13; font-weight:800; }
+.hd-cta:hover{ background:#DAB69C; border-color:#DAB69C; color:#241A13; }
 /* 햄버거 · 서랍도 같이 뒤집습니다 (900px 아래에서 메뉴가 거기로 갑니다).
    ⚠️⚠️ **선택자를 원래 규칙과 똑같이** 적습니다 — 서랍 규칙이
    `@media (max-width:900px)` 안의 `.hd-dw-g a`(0,2,0)라, `.hd-dw a`
@@ -863,7 +863,7 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
 @media (max-width:1100px){
   .hd-dw{ background:var(--dk-chrome); border-bottom:1px solid var(--dk-line); }
   .hd-dw-g a{ color:var(--on-dk2); border-bottom-color:var(--dk-line); }
-  .hd-dw-g a svg{ color:rgba(211,221,240,.72); }
+  .hd-dw-g a svg{ color:rgba(236,218,204,.72); }
   .hd-dw-g a:hover{ color:var(--acc); }
 }
 /* 아래 네비도 머리 · 꼬리와 같은 식구입니다 (`#view` 밖 · 폰 전용).
@@ -871,7 +871,7 @@ input:focus,textarea:focus,.sel:focus{ outline:0; border-color:var(--blue);
    흰 선이 떠서** 한 사이트로 안 읽힙니다.
    ⚠️ 선택자를 원래와 똑같이 미디어 안에 둡니다 (`.mnav a` 가
    `@media` 안이라, 밖에 적으면 색만 조용히 안 먹습니다).
-   ⚠️ 재 본 값(#0B1B3A 바탕) — 보조 #E8DDD1 13.10 · 포인트 7.03. */
+   ⚠️ 재 본 값(#241A13 바탕) — 보조 #E9DCD3 13.10 · 포인트 7.03. */
 @media (max-width:900px){
   .mnav{ background:var(--dk-chrome); border-top:1px solid var(--dk-line); }
   .mnav a{ color:var(--on-dk2); }
@@ -948,10 +948,10 @@ html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
    그쪽으로 통일합니다 (메인 시안만 짙은 남색 띠 — 한 사이트로 읽히게 하나로 갑니다).
    ⚠️ 위의 2026-10-17 다크 머리 블록을 **이 블록이 덮습니다** (맨 뒤라야 이깁니다).
    ⚠️ 푸터는 그대로 짙은 면입니다 (--bg-foot 가 짙은 남색이 됐습니다).
-   재 본 값(흰 바탕) — 메뉴 #0F1B33 14.05+ · 켜진 칸 #1D4ED8 5.49+ · 보조 #3A4660 7.73+.
+   재 본 값(흰 바탕) — 메뉴 #241A12 14.05+ · 켜진 칸 #76543D 5.49+ · 보조 #564234 7.73+.
    ══════════════════════════════════════════════════════════════════ */
-.hd{ background:rgba(255,255,255,.97); border-bottom:1px solid var(--line); }
-.sc .hd{ box-shadow:0 1px 0 var(--line), 0 8px 24px -16px rgba(15,35,80,.28); }
+.hd{ background:rgba(255,252,247,.97); border-bottom:1px solid var(--line); }
+.sc .hd{ box-shadow:0 1px 0 var(--line), 0 8px 24px -16px rgba(48,35,25,.28); }
 .hd-lg-t b{ color:var(--navy); font-style:italic; font-weight:900; letter-spacing:-.01em; }
 .hd-lg-t i{ color:var(--ink3); }
 .hd-lg .hd-lg-i{ background:var(--navy); color:#fff; }
@@ -986,7 +986,7 @@ html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
 .gnb-i.open .gnb-x svg, .gnb-i:hover .gnb-x svg{ transform:rotate(180deg); color:var(--start-dark); }
 .gnb-m{ display:none; position:absolute; top:100%; left:-14px; z-index:60; min-width:208px;
   padding:8px; background:#fff; border:1px solid var(--line); border-radius:14px;
-  box-shadow:0 18px 40px -18px rgba(15,35,80,.35); }
+  box-shadow:0 18px 40px -18px rgba(48,35,25,.35); }
 .gnb-i:hover > .gnb-m, .gnb-i:focus-within > .gnb-m, .gnb-i.open > .gnb-m{ display:grid; gap:2px; }
 .gnb-m a{ display:flex; align-items:center; min-height:44px; padding:0 14px; border-radius:10px;
   font-size:var(--t-sm); font-weight:600; color:var(--ink); white-space:nowrap; letter-spacing:-.02em; }
@@ -999,7 +999,7 @@ html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
    ⚠️ 위의 서랍 규칙이 @media (max-width:1100px) 안의 .hd-dw-g a(0,2,0)라 같은 폭 ·
    같은 특정도로 덮습니다. 칸은 한 줄에 하나 · 48px. */
 @media (max-width:1100px){
-  .hd-dw{ background:#fff; border-bottom:1px solid var(--line); box-shadow:0 18px 30px -20px rgba(15,35,80,.35);
+  .hd-dw{ background:#fff; border-bottom:1px solid var(--line); box-shadow:0 18px 30px -20px rgba(48,35,25,.35);
     max-height:calc(100vh - var(--hdr-h)); overflow-y:auto; }
   .hd-dw-g{ grid-template-columns:1fr; }
   .hd-dw-g a{ color:var(--ink); border-bottom-color:var(--line); }
@@ -1053,7 +1053,7 @@ html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
 
 /* ══════════════════════════════════════════════════════════════════
    2026-11-19 아래 메뉴 가독성 — 아이콘 24px · 선 2px · 아이콘↔글자 간격 4px 하나 · 글자 13px 한 줄
-   · 활성: 아이콘 뒤 연한 파랑(#E3EEFF = --bg-sky) + 브랜드 블루(#1D4ED8 = --start-dark)
+   · 활성: 아이콘 뒤 연한 파랑(#F5ECE5 = --bg-sky) + 브랜드 블루(#76543D = --start-dark)
    · 비활성: 흰 메뉴 위 진한 네이비(--navy)
    ⚠️ 높이는 --mnav-h(62px) 그대로이고 안전 영역(padding-bottom:env(...))은 위 .mnav 규칙이 그대로 지킵니다.
    ⚠️ 차례 · 링크는 MNAV 그대로입니다 (chrome.js). 칸 다섯은 1fr 씩 같은 폭입니다.

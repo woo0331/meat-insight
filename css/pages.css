@@ -176,12 +176,12 @@
    §2 로 토큰을 전부 갈았는데 이 두 줄만 옛 파랑 · 옛 주황으로
    번지고 있었습니다 (이 저장소가 금빛에서 세 자리를 놓쳤던 그
    자리입니다). 토큰의 rgb 채널을 따로 들고 씁니다. */
-.side-start{ --pgh-tint: 37,99,235; }    /* = --start  #976139 */
-.side-close{ --pgh-tint: 234,106,31; }     /* = --close  #BF8257 */
+.side-start{ --pgh-tint: 88,67,56; }    /* = --start  #976139 */
+.side-close{ --pgh-tint: 154,123,90; }     /* = --close  #BF8257 */
 /* ⚠️ `rgba()` 안에는 색을 var() 로 통째로 못 넣습니다 — 채널만
    토큰처럼 들고 있습니다. 토큰을 바꾸시면 **같이** 고치세요. */
-.side-ops{   --pgh-tint: 15,138,99; }     /* = --ops   #9C7050 */
-.side-pass{  --pgh-tint: 109,63,216; }    /* = --pass  #865533 */
+.side-ops{   --pgh-tint: 107,84,70; }     /* = --ops   #9C7050 */
+.side-pass{  --pgh-tint: 138,106,76; }    /* = --pass  #865533 */
 .side-start .pgh{
   background:
     radial-gradient(60% 120% at 0% 0%,
@@ -7205,10 +7205,10 @@ html.ivh #view .sw2-ent, .sw2-ent{ position:relative; z-index:2; padding:0 0 56p
 .sw2-eph .ph, .sw2-eph img{ width:100%; height:100%; object-fit:cover; display:block; }
 .sw2-ec > a::after{ content:""; position:absolute; inset:0; z-index:-1;
   background:linear-gradient(180deg, rgba(var(--ec),.30) 0%, rgba(var(--ec),.82) 46%, rgba(var(--ec),.97) 72%); }
-.ent-startup{  --ec:29,78,216;  }  /* #76543D — 흰 글자 6.70 */
-.ent-ops{      --ec:11,110,79;  }  /* #7B5940 — 6.25 */
-.ent-transfer{ --ec:90,47,192;  }  /* #674A35 — 6.26 */
-.ent-closure{  --ec:194,65,12;  }  /* #8C6548 — 5.18 · 오렌지이지 빨강이 아닙니다 */
+.ent-startup{  --ec:88,67,56;  }  /* #76543D — 흰 글자 6.70 */
+.ent-ops{      --ec:94,80,64;  }  /* #7B5940 — 6.25 */
+.ent-transfer{ --ec:122,86,51;  }  /* #674A35 — 6.26 */
+.ent-closure{  --ec:110,74,51;  }  /* #8C6548 — 5.18 · 오렌지이지 빨강이 아닙니다 */
 .sw2-ec > a{ background-color:rgb(var(--ec)); }
 .sw2-eno{ position:absolute; top:18px; left:20px; display:inline-flex; align-items:center; min-height:28px; padding:0 10px;
   border-radius:8px; background:rgba(36,26,18,.72); color:#fff; font-size:var(--t-cap); font-weight:800; letter-spacing:.04em; }
@@ -7307,10 +7307,10 @@ html.ivh .sw2-hero .sw2-find{ margin-top:22px; }
    ⚠️ 바탕 판(#37281C)은 그대로입니다 — 바꾸는 것은 머리말 알약 · 주 단추 · 아이콘 · 강조 글자뿐.
    ⚠️ 폐업 주황을 빨강 쪽으로 옮기지 마세요 (check.js 가 폐업 단추의 초록 성분을 봅니다).
    ══════════════════════════════════════════════════════════════════ */
-.hh-start{ --hc:29,78,216;  --hc-t:#DCBAA2; }
-.hh-ops{ --hc:11,110,79;    --hc-t:#E3C9B6; }
-.hh-transfer{ --hc:90,47,192; --hc-t:#DBB9A0; }
-.hh-close{ --hc:194,65,12;  --hc-t:#E0C2AC; }
+.hh-start{ --hc:88,67,56;  --hc-t:#DCBAA2; }
+.hh-ops{ --hc:94,80,64;    --hc-t:#E3C9B6; }
+.hh-transfer{ --hc:122,86,51; --hc-t:#DBB9A0; }
+.hh-close{ --hc:110,74,51;  --hc-t:#E0C2AC; }
 #view .hh .hh-k{ background:rgba(var(--hc),.92); border-color:rgba(var(--hc),1); color:#fff; }
 #view .hh .hh-h1 em{ color:var(--hc-t); }
 #view .hh .hh-go, #view .hh .hh-go:visited{ background:rgb(var(--hc)); border-color:rgb(var(--hc)); color:#fff; }

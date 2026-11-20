@@ -89,10 +89,10 @@ window.WOW_PHOTO_SLOTS = [
     note:"밝은 매장 · 상담하는 장면. ⚠️ 한 업종이 드러나면 안 됩니다. 정리 · 철거 현장 금지" },
 
   { key:"main-start", sizes:"(max-width:768px) 92vw, 640px",
-    where:"메인 첫 화면 · 창업 준비 카드 (비어 있으면 자체 일러스트)", min:[1400,788], ratio:[1.6,1.9], maxKB:220,
+    where:"메인 첫 화면 · 창업 준비 카드 — 자체 제작 3D 렌더(2026-11-20 · 출처: 자체 · 사용 범위 제한 없음)", min:[1400,788], ratio:[1.6,1.9], maxKB:220,
     note:"밝은 카페 · 문 여는 매장. 자연광 · 따뜻한 나무 · 깨끗한 카운터. ⚠️ 상호 · 간판 · 로고 · 알아볼 수 있는 얼굴 금지" },
   { key:"main-close", sizes:"(max-width:768px) 92vw, 640px",
-    where:"메인 첫 화면 · 폐업·철거 카드 (비어 있으면 자체 일러스트)", min:[1400,788], ratio:[1.6,1.9], maxKB:220,
+    where:"메인 첫 화면 · 폐업·철거 카드 — 자체 제작 3D 렌더(2026-11-20 · 출처: 자체 · 사용 범위 제한 없음)", min:[1400,788], ratio:[1.6,1.9], maxKB:220,
     note:"짐을 뺀 밝은 빈 매장 · 통창으로 햇빛. ⚠️ 처연하면 안 됩니다 — 불 꺼진 가게 · 고개 숙인 사람 · 부서진 집기 금지" },
 
   { key:"main-pass", sizes:"(max-width:900px) 92vw, 640px",
@@ -157,7 +157,16 @@ window.WOW_PHOTOS = {
     webp:"/img/kind-asset-sm.webp?v=d6f4fc74 560w, /img/kind-asset.webp?v=64cc0fe1 1120w",
     jpg:"/img/kind-asset-sm.jpg?v=428937df 560w, /img/kind-asset.jpg?v=449ec642 1120w",
     alt:"스테인리스 조리대와 장비가 늘어선 상업용 주방" },
-
+  "main-start": { src:"/img/main-start.jpg?v=abd18b07",
+    w:1890, h:1063,
+    webp:"/img/main-start-sm.webp?v=8a441914 1040w, /img/main-start.webp?v=ecaf8953 1890w",
+    jpg:"/img/main-start-sm.jpg?v=83c59bc2 1040w, /img/main-start.jpg?v=abd18b07 1890w",
+    alt:"햇빛이 드는 밝은 매장 안 — 나무 카운터와 의자, 테이블이 갖춰진 오픈 준비 공간" },
+  "main-close": { src:"/img/main-close.jpg?v=7826fde6",
+    w:1890, h:1063,
+    webp:"/img/main-close-sm.webp?v=96493dd6 1040w, /img/main-close.webp?v=b9b85dda 1890w",
+    jpg:"/img/main-close-sm.jpg?v=0c2e2f35 1040w, /img/main-close.jpg?v=7826fde6 1890w",
+    alt:"집기를 모두 뺀 밝고 정돈된 빈 매장 — 통창으로 햇빛이 드는 바닥" }
 };
 
 window.wowPhoto = function(key){

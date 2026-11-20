@@ -399,7 +399,14 @@ function OpsIntro(ind){
              '<span data-cta="on" hidden>비용 절감 · 홍보 · 시설 수리 · 인력 · 세무 · 노무 — 필요한 운영 서비스를 찾고 한 번에 신청하세요.</span>',
     quote: quoteTo({ side:"ops", industry:(ind ? ind.key : "") }),
     goName:"운영 상담 신청하기",
-    second:'<a class="btn btn-lg hh-o" href="#pick">운영 서비스 고르기'+icon("arrow",18)+'</a>'
+    second:'<a class="btn btn-lg hh-o" href="#pick">운영 서비스 고르기'+icon("arrow",18)+'</a>',
+    /* 2026-11-20 카테고리 통합 개선 §4 — 첫 화면에서 고민 넷을 바로 고릅니다. 누르면 바로 아래 그 고민의
+       카드(서비스 · 계산도구)로 갑니다 — 카드의 목적지는 전부 실제 화면입니다(tools/urls.json · 하위 key 확인). */
+    cardTitle:"어떤 고민이세요?", qfirst:true,
+    quick:OPS_WORRY.map(function(x){
+      /* ⚠️ 설명 줄(d)을 안 붙입니다 — 넷에 두 줄씩 붙으면 PC 머리가 짙은 판 상한(480px)을 넘습니다(check.js).
+         무엇으로 이어지는지는 바로 아래 고민 카드가 칸 이름으로 보여 줍니다. */
+      return { ic:x[0], b:x[1], go:"해결 방법 보기", href:"#"+x[3] }; })
     /* 2026-11-19 — "이 화면에서 하실 수 있는 것" 넷(체크 카드)은 바로 아래 고민 카드 넷과 같은 말이라
        뺐습니다. 고민 카드가 머리 바로 다음 구간입니다. */
   }) + OpsWorry();
@@ -414,17 +421,17 @@ function OpsIntro(ind){
       **비용 절감** 칸으로 옮겼습니다 — 매장 시스템은 사람 문제가 아니라 운영비 문제입니다.
    ⚠️ 노무는 실제 경로(/providers/admin?s=labor-agent · 노무사)가 있어 제목을 그대로 둡니다. */
 var OPS_WORRY = [
-  ["won",       "비용을 줄이고 싶어요",   [["고정비 계산","/tools/fixed"],["원가율 · 마진","/tools/margin"],["식자재 · 소모품","/providers/supply"],["POS · 매장 시스템","/providers/it"]]],
-  ["megaphone", "홍보 · 매출을 늘리고 싶어요", [["온라인 홍보","/providers/marketing"],["리뷰 · 플레이스","/providers/marketing?s=review"],["목표 매출 계산","/tools/target"]]],
-  ["tool",      "시설을 고치고 싶어요",   [["설비 수리","/providers/repair"],["정기 점검","/providers/repair?s=check-up"],["청소 · 방역","/providers/clean"]]],
-  ["users",     "인력 · 세무 · 노무가 필요해요", [["직원 채용","/providers/staff"],["세무","/providers/admin?s=tax-agent"],["노무","/providers/admin?s=labor-agent"]]]
+  ["won",       "비용을 줄이고 싶어요",   [["고정비 계산","/tools/fixed"],["원가율 · 마진 계산","/tools/margin"],["식자재 · 소모품 업체","/providers/supply"],["POS · 매장 시스템","/providers/it"]], "ow-cost"],
+  ["megaphone", "홍보 · 매출을 늘리고 싶어요", [["온라인 홍보 업체","/providers/marketing"],["리뷰 · 플레이스 관리","/providers/marketing?s=review"],["목표 매출 계산","/tools/target"]], "ow-mkt"],
+  ["tool",      "시설을 고치고 싶어요",   [["설비 수리 업체","/providers/repair"],["정기 점검","/providers/repair?s=check-up"],["청소 · 방역","/providers/clean"]], "ow-fix"],
+  ["users",     "인력 · 세무 · 노무가 필요해요", [["직원 채용","/providers/staff"],["세무 대리","/providers/admin?s=tax-agent"],["노무 대리","/providers/admin?s=labor-agent"]], "ow-hr"]
 ];
 function OpsWorry(){
   return '<section class="sec sec-white hwr"><div class="w">'+
     '<div class="sec-hd"><h2>사장님, <em>이런 고민</em>이 있으신가요?</h2>'+
       '<p>고민에 맞는 화면으로 바로 가실 수 있습니다. 서비스를 여러 개 고르시려면 아래 고르개를 쓰세요.</p></div>'+
     '<ul class="hwr-g">'+OPS_WORRY.map(function(x){
-      return '<li><div class="hwr-c"><span class="hwr-i" aria-hidden="true">'+icon(x[0], 30)+'</span>'+
+      return '<li id="'+x[3]+'"><div class="hwr-c"><span class="hwr-i" aria-hidden="true">'+icon(x[0], 30)+'</span>'+
         '<h3>'+esc(x[1])+'</h3><p class="hwr-ch">'+x[2].map(function(c){
           return '<a href="'+esc(c[1])+'">'+esc(c[0])+'</a>'; }).join("")+'</p></div></li>'; }).join("")+'</ul>'+
   '</div></section>';

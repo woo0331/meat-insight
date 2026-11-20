@@ -263,23 +263,28 @@ function OpsIntro(ind){
              '<span data-cta="on" hidden>비용 절감 · 홍보 · 시설 수리 · 인력 · 세무 · 노무 — 필요한 운영 서비스를 찾고 한 번에 신청하세요.</span>',
     quote: quoteTo({ side:"ops", industry:(ind ? ind.key : "") }),
     goName:"운영 상담 신청하기",
-    second:'<a class="btn btn-lg hh-o" href="#pick">운영 서비스 고르기'+icon("arrow",18)+'</a>'
+    second:'<a class="btn btn-lg hh-o" href="#pick">운영 서비스 고르기'+icon("arrow",18)+'</a>',
+
+    cardTitle:"어떤 고민이세요?", qfirst:true,
+    quick:OPS_WORRY.map(function(x){
+
+      return { ic:x[0], b:x[1], go:"해결 방법 보기", href:"#"+x[3] }; })
 
   }) + OpsWorry();
 }
 
 var OPS_WORRY = [
-  ["won",       "비용을 줄이고 싶어요",   [["고정비 계산","/tools/fixed"],["원가율 · 마진","/tools/margin"],["식자재 · 소모품","/providers/supply"],["POS · 매장 시스템","/providers/it"]]],
-  ["megaphone", "홍보 · 매출을 늘리고 싶어요", [["온라인 홍보","/providers/marketing"],["리뷰 · 플레이스","/providers/marketing?s=review"],["목표 매출 계산","/tools/target"]]],
-  ["tool",      "시설을 고치고 싶어요",   [["설비 수리","/providers/repair"],["정기 점검","/providers/repair?s=check-up"],["청소 · 방역","/providers/clean"]]],
-  ["users",     "인력 · 세무 · 노무가 필요해요", [["직원 채용","/providers/staff"],["세무","/providers/admin?s=tax-agent"],["노무","/providers/admin?s=labor-agent"]]]
+  ["won",       "비용을 줄이고 싶어요",   [["고정비 계산","/tools/fixed"],["원가율 · 마진 계산","/tools/margin"],["식자재 · 소모품 업체","/providers/supply"],["POS · 매장 시스템","/providers/it"]], "ow-cost"],
+  ["megaphone", "홍보 · 매출을 늘리고 싶어요", [["온라인 홍보 업체","/providers/marketing"],["리뷰 · 플레이스 관리","/providers/marketing?s=review"],["목표 매출 계산","/tools/target"]], "ow-mkt"],
+  ["tool",      "시설을 고치고 싶어요",   [["설비 수리 업체","/providers/repair"],["정기 점검","/providers/repair?s=check-up"],["청소 · 방역","/providers/clean"]], "ow-fix"],
+  ["users",     "인력 · 세무 · 노무가 필요해요", [["직원 채용","/providers/staff"],["세무 대리","/providers/admin?s=tax-agent"],["노무 대리","/providers/admin?s=labor-agent"]], "ow-hr"]
 ];
 function OpsWorry(){
   return '<section class="sec sec-white hwr"><div class="w">'+
     '<div class="sec-hd"><h2>사장님, <em>이런 고민</em>이 있으신가요?</h2>'+
       '<p>고민에 맞는 화면으로 바로 가실 수 있습니다. 서비스를 여러 개 고르시려면 아래 고르개를 쓰세요.</p></div>'+
     '<ul class="hwr-g">'+OPS_WORRY.map(function(x){
-      return '<li><div class="hwr-c"><span class="hwr-i" aria-hidden="true">'+icon(x[0], 30)+'</span>'+
+      return '<li id="'+x[3]+'"><div class="hwr-c"><span class="hwr-i" aria-hidden="true">'+icon(x[0], 30)+'</span>'+
         '<h3>'+esc(x[1])+'</h3><p class="hwr-ch">'+x[2].map(function(c){
           return '<a href="'+esc(c[1])+'">'+esc(c[0])+'</a>'; }).join("")+'</p></div></li>'; }).join("")+'</ul>'+
   '</div></section>';

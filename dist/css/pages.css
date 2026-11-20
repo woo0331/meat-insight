@@ -5739,3 +5739,43 @@ html.ivh #view .wp-s{ margin:0 auto; max-width:36em; }
   html.ivh #view .wp-msg .wp-k::after{ display:none; }
   html.ivh #view .wp-s{ margin:0; }
 }
+
+.wp-hp-m{ display:none; }
+html.ivh #view section.wp-hero{ padding:24px 0 28px; }
+.wp-msg{ margin:0 0 18px; padding:0; }
+html.ivh #view .wp-msg .wp-k{ margin-bottom:8px; }
+html.ivh #view .wp-h{ margin:0 0 8px; font-size:clamp(28px, 2.8vw, 40px); }
+.wp-hph{ aspect-ratio:2.6/1; }
+.wp-htx{ padding:16px 22px 20px; }
+.wp-tag{ margin-bottom:6px; padding:3px 10px; }
+html.ivh #view .wp-hc h2{ margin:0 0 4px; }
+.wp-hp{ margin-bottom:12px; }
+.wp-find-s{ margin-top:16px; padding:14px 18px 12px; }
+.wp-sug{ margin-top:10px; }
+
+@media (max-width:768px){
+  html.ivh #view section.wp-hero{ padding:14px 0 20px; }
+  .wp-msg{ margin:0 0 12px; }
+  html.ivh #view .wp-msg .wp-k{ display:none; }
+  html.ivh #view .wp-h{ margin:0 0 4px; font-size:23px; line-height:1.3; }
+  html.ivh #view .wp-s{ font-size:var(--t-cap); line-height:1.55; }
+  .wp-hg{ gap:10px; }
+
+  .wp-hc{ flex-direction:row; align-items:stretch; min-height:0; }
+  .wp-hph{ flex:none; width:31%; aspect-ratio:auto; }
+  .wp-htx{ padding:12px 14px 12px; min-width:0; }
+  .wp-tag{ display:none; }
+  html.ivh #view .wp-hc h2{ font-size:var(--t-lg); margin:0 0 2px; }
+  .wp-hp{ font-size:var(--t-cap); line-height:1.5; margin-bottom:8px; }
+  .wp-hp-l{ display:none; } .wp-hp-m{ display:inline; }
+  .wp-go{ min-height:44px; padding:0 14px; font-size:var(--t-cap); }
+
+  .wp-find-s{ margin-top:10px; padding:10px; }
+  html.ivh #view .wp-find{ grid-template-columns:1fr auto; gap:8px; }
+  html.ivh #view .wp-find .wp-t{ grid-column:1 / -1; height:44px; min-height:44px; font-size:var(--t-sm); }
+  html.ivh #view .wp-find input{ height:48px; min-height:48px; font-size:var(--t-sm); }
+  html.ivh #view .wp-find-b{ width:auto; height:48px; min-height:48px; padding:0 16px; }
+  .wp-sug{ margin-top:8px; gap:6px; }
+  .wp-sug-k{ display:none; }
+  .wp-sug a{ min-height:40px; padding:0 12px; font-size:var(--t-cap); }
+}

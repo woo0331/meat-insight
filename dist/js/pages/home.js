@@ -1165,9 +1165,9 @@ var WP_SUGGEST = ["인테리어", "철거", "권리금", "원상복구", "POS", 
 
 var WP_HERO = [
   { k:"st", to:"/startup", ph:["main-start","hero-startup"], tag:"창업 준비", h:"창업 준비",
-    p:"업종 선택부터 상권 · 인테리어 · 설비까지, 시작에 필요한 준비를 한곳에서.", go:"창업 준비 바로가기" },
+    p:"업종 선택부터 상권 · 인테리어 · 설비까지, 시작에 필요한 준비를 한곳에서.", m:"상권 · 인테리어 · 설비 준비를 한곳에서", go:"창업 준비 바로가기" },
   { k:"cl", to:"/closure", ph:["main-close","kind-take"], tag:"폐업·철거", h:"폐업·철거",
-    p:"폐업 절차부터 집기 처분 · 철거 · 원상복구까지, 정리에 필요한 순서를 안내합니다.", go:"폐업·철거 바로가기" }
+    p:"폐업 절차부터 집기 처분 · 철거 · 원상복구까지, 정리에 필요한 순서를 안내합니다.", m:"폐업 절차 · 집기 처분 · 철거 · 원상복구", go:"폐업·철거 바로가기" }
 ];
 function wpPh(list){
   for(var i = 0; i < list.length; i++) if(hasPhoto(list[i])) return list[i];
@@ -1189,7 +1189,8 @@ function HomeWPHero(){
           '<span class="wp-htx">'+
             '<span class="wp-tag">'+esc(x.tag)+'</span>'+
             '<h2>'+esc(x.h)+'</h2>'+
-            '<span class="wp-hp">'+esc(x.p)+'</span>'+
+
+            '<span class="wp-hp"><span class="wp-hp-l">'+esc(x.p)+'</span><span class="wp-hp-m">'+esc(x.m)+'</span></span>'+
             '<span class="wp-go">'+esc(x.go)+icon("arrow",16)+'</span>'+
           '</span></a>';
       }).join("")+
@@ -1206,7 +1207,7 @@ function HomeWPFind(){
         return '<option value="'+esc(t.k)+'">'+esc(t.name)+'</option>'; }).join("")+'</select>'+
       '<label class="sr-only" for="sw-q">서비스 · 매장 · 가이드 검색</label>'+
       '<input id="sw-q" name="q" type="search" autocomplete="off" maxlength="60" '+
-        'placeholder="필요한 서비스를 검색해 보세요" aria-describedby="wp-msg">'+
+        'placeholder="필요한 서비스 검색" aria-describedby="wp-msg">'+
       '<button class="sw-find-b wp-find-b" type="submit">'+icon("search",18)+'<span>검색</span></button>'+
     '</form>'+
     '<p id="wp-msg" class="wp-fmsg" role="status" aria-live="polite"></p>'+

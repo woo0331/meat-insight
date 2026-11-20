@@ -62,10 +62,8 @@ function PageStartup(){
     /* StartIndustryBand() — 2026-11-19 위 "업종별 창업 준비 과정" 의 전체 보기로 합쳤습니다 */
     PackPickBand("start") + StartChecklist(ind) +
     StartGuideBand(ind) +
-    HallCalcBand({ keys:START_CALC, tones:START_CALC_TONE,
-      title:"시작하기 전에 숫자부터 보세요",
-      lead:"얼마가 드는지 · 새로 만드는 것과 받는 것이 어떻게 다른지 "+
-           "따져 보실 수 있습니다. 적으신 값은 저장하지 않습니다." }) +
+    /* 2026-11-20 — 아래쪽 계산도구 구간(HallCalcBand)은 위 '창업 비용 계산기' 와 같은 소개의 반복이라
+       내렸습니다. 그 구간에만 있던 신규vs인수 · 권리금 · 임대료 비율은 계산기 아래 '다른 계산도구' 줄로 옮겼습니다. */
     StartApplyBand() +
     JourneyBand({ current:"startup", tone:"sec-white",
       title:"다른 것도 준비하고 계신가요?",
@@ -90,7 +88,8 @@ function StartIntro(ind){
   /* 2026-11-18 카테고리 리뉴얼 — 전문관 머리(HallHero) + 계산 · 업종 진입 (StartSignature).
      ⚠️ 주 단추는 견적 접수 상태를 따릅니다 (닫힘이면 접수 안내). 보조 단추는 바로 아래 고르개. */
   return HallHero({
-    side:"start", photo:"hero-startup",
+    /* 2026-11-20 — 출처가 확인되지 않은 hero-startup 사진 대신 자체 일러스트(아이디어 → 매장 오픈) */
+    side:"start", photo:"", art:hhFlowArt("bulb", "창업 준비", "store", "매장 오픈"),
     kicker:"창업 준비 · 가게 창업, 막막하지 않게",
     h1raw:"예비 창업자를 위한<br><em>원스톱 창업 준비</em>",
     /* 2026-11-19 — 설명이 **접수 상태를 따릅니다.** 닫혀 있으면 "한 번에 신청" 을 약속하지 않고
@@ -103,7 +102,7 @@ function StartIntro(ind){
     /* 2026-11-19 — 첫 화면의 두 행동. 업종을 고르셨으면 **그 업종으로** 이어집니다
        (/tools/cost 는 ?i= 를 읽고, /startup/:업종 이 그 업종의 준비 순서입니다). */
     cardTitle:"무엇부터 해 볼까요?", qfirst:true,
-    quick:[{ ic:"calc", b:"창업비 계산하기", d:"업종을 고르면 그 업종의 비용 항목으로 열립니다",
+    quick:[{ ic:"calc", b:"창업비 계산하기", d:"빠뜨리기 쉬운 비용 항목을 늘어놓고 받은 견적을 더해 봅니다",
              go:(indN ? indN + " 예산 따져 보기" : "예산 미리 따져 보기"),
              href:"/tools/cost" + (indOk ? "?i=" + encodeURIComponent(ind) : "") },
            { ic:"seed", b:"업종별 준비 보기", d:"업종마다 준비 순서 · 필요한 장비가 다릅니다",
@@ -122,9 +121,14 @@ function StartSignature(ind){
   return '<section class="sec sec-white hsg"><div class="w hsg-in">'+
     '<form class="hsg-calc" onsubmit="return stCalcGo(event)">'+
       '<h2>창업 비용 계산기</h2>'+
-      '<p>업종을 고르시면 창업비 정리표가 그 업종으로 열립니다. 적으신 값은 저장하지 않습니다.</p>'+
-      '<div class="f-r"><label for="st-calc-i">업종</label>'+IndustrySelect("st-calc-i", ind || "", "", "업종을 골라 주세요")+'</div>'+
-      '<button class="btn btn-b btn-lg" type="submit">'+icon("calc",18)+' 예상 창업 비용 따져 보기</button>'+
+      /* 2026-11-20 — 정리표의 항목은 업종과 관계없이 같습니다 (AM_COST_GROUPS). 업종은 결과 아래
+         '다음에 볼 준비 순서 · 업체 · 가이드' 를 그 업종으로 이어 주는 데 쓰입니다 — 열넷 + 기타 전부 됩니다.
+         ⚠️ 업종 고르개는 이 화면 안에서 **한 값**(?i=)입니다 — 여기서 고르시면 아래 서비스 추천 순서도 같은 업종으로 바뀝니다. */
+      '<p>빠뜨리기 쉬운 창업 비용 항목을 늘어놓고, 받으신 견적을 적으면 합계를 보여 드립니다. 항목은 업종과 관계없이 같고, 고르신 업종은 결과 아래 준비 순서 · 업체 · 가이드를 그 업종으로 이어 드립니다. 적으신 값은 저장하지 않습니다.</p>'+
+      '<div class="f-r"><label for="st-calc-i">업종 <small>(모든 업종 선택 가능 · 서비스 추천 순서와 함께 쓰입니다)</small></label>'+IndustrySelect("st-calc-i", ind || "", "stIndSync(this.value)", "업종을 고르지 않음")+'</div>'+
+      '<button class="btn btn-b btn-lg" type="submit">'+icon("calc",18)+' 창업비 정리표 열기</button>'+
+      '<p class="hsg-tl"><span>다른 계산도구</span>'+
+        '<a href="/tools/vs">새로 차리기 vs 인수</a><a href="/tools/premium">권리금 회수</a><a href="/tools/rent">임대료 비율</a></p>'+
     '</form>'+
     '<div class="hsg-ind" id="st-ig">'+
       /* 2026-11-19 공개 화면 완성도 §4 — "전체 업종 보기" 가 전에는 아래 **서비스 추천 고르개**(#st-indsel)로
@@ -144,6 +148,10 @@ function StartSignature(ind){
     '</div>'+
   '</div></section>';
 }
+/* 계산기 업종 = 서비스 추천 업종 — 같은 값(?i=) 하나로 잇습니다 (보던 자리는 지킵니다) */
+window.stIndSync = function(v){
+  go("/startup" + (v ? "?i=" + encodeURIComponent(v) : ""), { keepScroll:true });
+};
 window.stCalcGo = function(e){
   if(e && e.preventDefault) e.preventDefault();
   var v = (document.getElementById("st-calc-i") || {}).value || "";

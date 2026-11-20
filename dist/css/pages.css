@@ -5880,3 +5880,8 @@ html.ivh #view .wp-hc h2{ margin:0 0 4px; }
 @media (max-width:640px){ .cld-go .btn{ flex:1 1 100%; justify-content:center; } }
 
 #cl-demo, #aq-steps, #aq-prep, #aq-path, #pick, #st-ig, #st-calc{ scroll-margin-top:calc(var(--hdr-h, 64px) + 8px); }
+
+.hsg-tl{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; margin:2px 0 0; font-size:14px; }
+.hsg-tl span{ color:var(--ink2); font-weight:700; }
+.hsg-tl a{ display:inline-flex; align-items:center; min-height:44px; font-weight:700; color:var(--navy); text-decoration:underline; text-underline-offset:3px; }
+.hsg-calc label small{ font-weight:500; color:var(--ink2); font-size:13px; }

@@ -2921,7 +2921,7 @@ const AUDIT = `(() => {
     /* ⑥ 가이드 */
     if(!document.querySelector(".rd-l")) return "가이드 글 줄이 없습니다";
     /* ⑦ 계산도구 */
-    const cal = document.querySelectorAll(".sec-calc a[href^='/tools/']");
+    const cal = document.querySelectorAll(".sec-calc a[href^='/tools/'], .hsg-calc a[href^='/tools/']");
     if(!cal.length) return "계산도구 구간이 없습니다";
     /* ⑧ 다른 전문관 */
     if(!document.querySelector(".jyb")) return "다른 전문관으로 가는 줄이 없습니다";
@@ -2962,7 +2962,7 @@ const AUDIT = `(() => {
     /* ⑥ 가이드 */
     if(!document.querySelector(".rd-l")) return "가이드 글 줄이 없습니다";
     /* ⑦ 계산도구 */
-    const cal = document.querySelectorAll(".sec-calc a[href^='/tools/']");
+    const cal = document.querySelectorAll(".sec-calc a[href^='/tools/'], .hsg-calc a[href^='/tools/']");
     if(!cal.length) return "계산도구 구간이 없습니다";
     /* ⑧ 다른 전문관 */
     if(!document.querySelector(".jyb")) return "다른 전문관으로 가는 줄이 없습니다";
@@ -3003,7 +3003,7 @@ const AUDIT = `(() => {
     /* ⑥ 가이드 */
     if(!document.querySelector(".rd-l")) return "가이드 글 줄이 없습니다";
     /* ⑦ 계산도구 */
-    const cal = document.querySelectorAll(".sec-calc a[href^='/tools/']");
+    const cal = document.querySelectorAll(".sec-calc a[href^='/tools/'], .hsg-calc a[href^='/tools/']");
     if(!cal.length) return "계산도구 구간이 없습니다";
     /* ⑧ 다른 전문관 */
     if(!document.querySelector(".jyb")) return "다른 전문관으로 가는 줄이 없습니다";
@@ -3044,7 +3044,7 @@ const AUDIT = `(() => {
     /* ⑥ 가이드 */
     if(!document.querySelector(".rd-l")) return "가이드 글 줄이 없습니다";
     /* ⑦ 계산도구 */
-    const cal = document.querySelectorAll(".sec-calc a[href^='/tools/']");
+    const cal = document.querySelectorAll(".sec-calc a[href^='/tools/'], .hsg-calc a[href^='/tools/']");
     if(!cal.length) return "계산도구 구간이 없습니다";
     /* ⑧ 다른 전문관 */
     if(!document.querySelector(".jyb")) return "다른 전문관으로 가는 줄이 없습니다";

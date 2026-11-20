@@ -7978,3 +7978,8 @@ html.ivh #view .wp-hc h2{ margin:0 0 4px; }
 @media (max-width:640px){ .cld-go .btn{ flex:1 1 100%; justify-content:center; } }
 /* 같은 화면 안으로 옮겨 가는 구역 — 고정 헤더 밑에 머리말이 깔리지 않게 */
 #cl-demo, #aq-steps, #aq-prep, #aq-path, #pick, #st-ig, #st-calc{ scroll-margin-top:calc(var(--hdr-h, 64px) + 8px); }
+/* 창업 — 계산기 아래 다른 계산도구 줄 · 고민 카드로 옮겨 가는 자리 */
+.hsg-tl{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; margin:2px 0 0; font-size:14px; }
+.hsg-tl span{ color:var(--ink2); font-weight:700; }
+.hsg-tl a{ display:inline-flex; align-items:center; min-height:44px; font-weight:700; color:var(--navy); text-decoration:underline; text-underline-offset:3px; }
+.hsg-calc label small{ font-weight:500; color:var(--ink2); font-size:13px; }

@@ -6028,3 +6028,8 @@ html.ivh #view .wp-sbx .wp-sh h2{ font-size:var(--t-xl); margin:0 0 6px; }
   .wp-htx{ max-width:66%; }
   .wp-hph::after{ background:linear-gradient(90deg, rgba(255,250,242,.97) 0, rgba(255,250,242,.95) 68%, rgba(255,250,242,.45) 80%, rgba(255,250,242,0) 94%); }
 }
+
+html.ivh #view section.wp-pass{ background:var(--hm-bg2); padding:28px 0; }
+html.ivh #view section.wp-cards{ background:var(--hm-bg); padding:28px 0; }
+html.ivh #view section.wp-steps{ background:var(--hm-bg2); padding:28px 0 36px; }
+.wp-sbx{ background:var(--hm-card); }

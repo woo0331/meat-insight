@@ -8133,3 +8133,9 @@ html.ivh #view .wp-sbx .wp-sh h2{ font-size:var(--t-xl); margin:0 0 6px; }
   .wp-htx{ max-width:66%; }
   .wp-hph::after{ background:linear-gradient(90deg, rgba(255,250,242,.97) 0, rgba(255,250,242,.95) 68%, rgba(255,250,242,.45) 80%, rgba(255,250,242,0) 94%); }
 }
+/* 구간 바탕 번갈아 — 히어로(아이보리) · 양도양수(샌드) · 서비스(아이보리) · 이용 방법(샌드, 안쪽 띠는 크림)
+   ⚠️ 이웃 구간이 같은 색이면 한 구간으로 읽힙니다 (check.js "이웃한 두 구간" · ΔE 2.5) */
+html.ivh #view section.wp-pass{ background:var(--hm-bg2); padding:28px 0; }
+html.ivh #view section.wp-cards{ background:var(--hm-bg); padding:28px 0; }
+html.ivh #view section.wp-steps{ background:var(--hm-bg2); padding:28px 0 36px; }
+.wp-sbx{ background:var(--hm-card); }

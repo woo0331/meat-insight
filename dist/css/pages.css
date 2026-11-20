@@ -5861,3 +5861,5 @@ html.ivh #view .wp-hc h2{ margin:0 0 4px; }
   .hh-art .wp-pa-x{ width:34px; height:34px; }
   .hh-art .wp-pa-x svg{ width:20px; height:20px; }
 }
+
+#cl-demo, #aq-steps, #aq-prep, #aq-path, #pick, #st-ig, #st-calc{ scroll-margin-top:calc(var(--hdr-h, 64px) + 8px); }

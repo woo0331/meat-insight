@@ -503,6 +503,23 @@ window.ctaPair = function(form, on, off){
   var f = ' data-cta-form="'+esc(form || "quote")+'"';
   return '<span data-cta="on"'+f+' hidden>'+esc(on)+'</span><span data-cta="off"'+f+'>'+esc(off)+'</span>';
 };
+
+window.hhFlowArt = function(a, la, b, lb){
+  var ia = function(n){ return (typeof hasIconArt === "function" && hasIconArt(n)) ? iconArt(n, 96) : icon(n, 56); };
+  return '<span class="wp-pa">'+
+    '<span class="wp-pa-c">'+ia(a)+'<i>'+esc(la)+'</i></span>'+
+    '<span class="wp-pa-x">'+icon("arrow",28)+'</span>'+
+    '<span class="wp-pa-c">'+ia(b)+'<i>'+esc(lb)+'</i></span>'+
+  '</span>';
+};
+
+window.hhJump = function(id){
+  var sec = document.getElementById(id);
+  if(!sec) return true;
+  sec.scrollIntoView({ behavior:"auto", block:"start" });
+  var h = sec.querySelector("h2"); if(h){ h.setAttribute("tabindex","-1"); try{ h.focus({preventScroll:true}); }catch(e){} }
+  return false;
+};
 window.HallHero = function(o){
   o = o || {};
   var ph = o.photo && typeof hasPhoto === "function" && hasPhoto(o.photo);
@@ -540,7 +557,9 @@ window.HallHero = function(o){
         ? '<div class="hh-card hh-quick"><p class="hh-card-t">'+esc(o.cardTitle || "바로 가기")+'</p>'+
           '<ul class="hh-ql">'+o.quick.map(function(q){
             function a(href, go, attr){
-              return '<a class="hh-qa" href="'+esc(href)+'"'+(attr || "")+'>'+
+
+              var jump = href.charAt(0) === "#" ? ' onclick="return hhJump(\''+esc(href.slice(1))+'\')"' : "";
+              return '<a class="hh-qa" href="'+esc(href)+'"'+jump+(attr || "")+'>'+
                 '<span class="hh-ci" aria-hidden="true">'+icon(q.ic || "arrow", 20)+'</span>'+
                 '<span class="hh-qt"><b>'+esc(q.b)+'</b>'+
                   (q.d ? '<small class="hh-qd">'+esc(q.d)+'</small>' : '')+

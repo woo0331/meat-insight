@@ -7955,3 +7955,6 @@ html.ivh #view .wp-hc h2{ margin:0 0 4px; }
   .hh-art .wp-pa-x{ width:34px; height:34px; }
   .hh-art .wp-pa-x svg{ width:20px; height:20px; }
 }
+
+/* 같은 화면 안으로 옮겨 가는 구역 — 고정 헤더 밑에 머리말이 깔리지 않게 */
+#cl-demo, #aq-steps, #aq-prep, #aq-path, #pick, #st-ig, #st-calc{ scroll-margin-top:calc(var(--hdr-h, 64px) + 8px); }

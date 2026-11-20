@@ -813,6 +813,24 @@ window.ctaPair = function(form, on, off){
   var f = ' data-cta-form="'+esc(form || "quote")+'"';
   return '<span data-cta="on"'+f+' hidden>'+esc(on)+'</span><span data-cta="off"'+f+'>'+esc(off)+'</span>';
 };
+/* 2026-11-20 — 전문관 머리의 자체 일러스트 (A → B). 메인 양도양수 배너(wpPassArt)와 같은 꼴 · 같은 클래스.
+   ⚠️ iconArt 로 직접 그린 그림만 씁니다 (외부 자산 없음). 그림이 없으면 선 아이콘으로 받습니다. */
+window.hhFlowArt = function(a, la, b, lb){
+  var ia = function(n){ return (typeof hasIconArt === "function" && hasIconArt(n)) ? iconArt(n, 96) : icon(n, 56); };
+  return '<span class="wp-pa">'+
+    '<span class="wp-pa-c">'+ia(a)+'<i>'+esc(la)+'</i></span>'+
+    '<span class="wp-pa-x">'+icon("arrow",28)+'</span>'+
+    '<span class="wp-pa-c">'+ia(b)+'<i>'+esc(lb)+'</i></span>'+
+  '</span>';
+};
+/* 같은 화면 안의 구역으로 — 접힌 칸이면 펼치고 그 자리로 옮깁니다 */
+window.hhJump = function(id){
+  var sec = document.getElementById(id);
+  if(!sec) return true;
+  sec.scrollIntoView({ behavior:"auto", block:"start" });
+  var h = sec.querySelector("h2"); if(h){ h.setAttribute("tabindex","-1"); try{ h.focus({preventScroll:true}); }catch(e){} }
+  return false;
+};
 window.HallHero = function(o){
   o = o || {};
   var ph = o.photo && typeof hasPhoto === "function" && hasPhoto(o.photo);
@@ -855,7 +873,10 @@ window.HallHero = function(o){
         ? '<div class="hh-card hh-quick"><p class="hh-card-t">'+esc(o.cardTitle || "바로 가기")+'</p>'+
           '<ul class="hh-ql">'+o.quick.map(function(q){
             function a(href, go, attr){
-              return '<a class="hh-qa" href="'+esc(href)+'"'+(attr || "")+'>'+
+              /* 2026-11-20 — 같은 화면 안의 구역(#id)으로 가는 칸은 라우터를 거치지 않고 그 자리로 갑니다
+                 (# 주소는 popstate 로 화면을 다시 그립니다 — aqJump 와 같은 까닭). */
+              var jump = href.charAt(0) === "#" ? ' onclick="return hhJump(\''+esc(href.slice(1))+'\')"' : "";
+              return '<a class="hh-qa" href="'+esc(href)+'"'+jump+(attr || "")+'>'+
                 '<span class="hh-ci" aria-hidden="true">'+icon(q.ic || "arrow", 20)+'</span>'+
                 '<span class="hh-qt"><b>'+esc(q.b)+'</b>'+
                   (q.d ? '<small class="hh-qd">'+esc(q.d)+'</small>' : '')+

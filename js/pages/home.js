@@ -2161,13 +2161,15 @@ var WP_SUGGEST = ["인테리어", "철거", "권리금", "원상복구", "POS", 
 
 /* 2026-11-20 — 첫 화면 구도: **공통 제목이 위**, 그 아래 창업 준비 · 폐업·철거 두 카드가
    **같은 비중**(PC 좌우 1fr 1fr · 모바일 위아래), 바로 아래 통합 검색.
-   ⚠️ 사진은 최종 자리(main-start · main-close)가 채워지면 그것을, 비어 있는 동안은
-      권리가 확인된 기존 자산(hero-startup 밝은 카페 · kind-take 통창 빈 매장)을 씁니다.
+   ⚠️⚠️ 2026-11-20 배포 후보 — 메인 세 자리(창업 · 폐업 · 양도양수 배너)는 **자체 일러스트**입니다.
+      출처가 기록에 없는 hero-startup · kind-take · kind-pass 를 메인에서 쓰지 않습니다
+      (check.js 가 메인에서 그 파일이 하나도 안 불리는지 봅니다).
+      권리가 확인된 최종 사진이 오면 main-start · main-close · main-pass 자리에 넣으면 그것이 먼저입니다.
       최종 사진은 photos.js 에 줄만 더하면 됩니다 (이 코드는 안 고칩니다). */
 var WP_HERO = [
-  { k:"st", to:"/startup", ph:["main-start","hero-startup"], ia:"store", tag:"창업 준비", h:"창업 준비",
+  { k:"st", to:"/startup", ph:["main-start"], ia:"store", tag:"창업 준비", h:"창업 준비",
     p:"업종 선택부터 상권 · 인테리어 · 설비까지, 시작에 필요한 준비를 한곳에서.", m:"상권 · 인테리어 · 설비 준비를 한곳에서", go:"창업 준비 바로가기" },
-  { k:"cl", to:"/closure", ph:["main-close","kind-take"], ia:"demolish", tag:"폐업·철거", h:"폐업·철거",
+  { k:"cl", to:"/closure", ph:["main-close"], ia:"demolish", tag:"폐업·철거", h:"폐업·철거",
     p:"폐업 절차부터 집기 처분 · 철거 · 원상복구까지, 정리에 필요한 순서를 안내합니다.", m:"폐업 절차 · 집기 처분 · 철거 · 원상복구", go:"폐업·철거 바로가기" }
 ];
 function wpPh(list){
@@ -2256,13 +2258,26 @@ window.wpFind = function(e){
   return false;
 };
 
+/* 양도양수 배너의 자체 일러스트 — 넘기는 가게 → 받는 가게 (직접 그린 iconArt 둘 + 화살표 · 외부 자산 없음) */
+function wpPassArt(){
+  var ia = function(n){ return (typeof hasIconArt === "function" && hasIconArt(n)) ? iconArt(n, 96) : icon("store", 56); };
+  return '<span class="wp-pa">'+
+    '<span class="wp-pa-c">'+ia("store")+'<i>넘기는 매장</i></span>'+
+    '<span class="wp-pa-x">'+icon("arrow",28)+'</span>'+
+    '<span class="wp-pa-c">'+ia("handover")+'<i>받는 사장님</i></span>'+
+  '</span>';
+}
+
 /* 02 — 매장 양도양수 가로 배너 (사진 왼쪽 · 소개 오른쪽) */
 function HomeWPPass(){
   var n = (window.AM_STORES || []).length;
   return '<section class="bpass wp-pass"><div class="w">'+
     '<div class="wp-pb">'+
-      (hasPhoto("kind-pass") ? '<span class="wp-pph" aria-hidden="true">'+
-        photoBox("kind-pass", "", false, "(max-width:900px) 92vw, 46vw")+'</span>' : '')+
+      /* 2026-11-20 배포 후보 — 출처가 확인되지 않은 kind-pass 대신 자체 일러스트 판.
+         최종 사진(main-pass)이 권리 확인 뒤 들어오면 그것이 먼저입니다. */
+      (hasPhoto("main-pass") ? '<span class="wp-pph" aria-hidden="true">'+
+        photoBox("main-pass", "", false, "(max-width:900px) 92vw, 46vw")+'</span>'
+       : '<span class="wp-pph wp-pph-n" aria-hidden="true">'+wpPassArt()+'</span>')+
       '<div class="wp-ptx">'+
         '<p class="wp-k">매장 양도양수</p>'+
         '<h2>매장을 넘기실 때도,<br class="br-m"> 받으실 때도 한곳에서.</h2>'+

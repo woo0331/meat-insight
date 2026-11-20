@@ -2184,9 +2184,16 @@ const AUDIT = `(() => {
     if(fl.join() !== wf.join())
       return "서비스 카드가 [" + fl.join(" ") + "] 입니다 — 창업 → 운영 → 양도양수 → 폐업 → 상담 → 가이드 차례라야 합니다";
     for(const a of H.concat(L)) if(a.querySelector("a")) return "카드 안에 링크가 또 있습니다";
-    if(window.hasPhoto && hasPhoto("hero-startup") && !H[0].querySelector("img")) return "hero-startup 사진이 카드에 안 그려졌습니다";
-    if(window.hasPhoto && hasPhoto("hero-closure") && !H[1].querySelector("img")) return "hero-closure 사진이 카드에 안 그려졌습니다";
-    if(window.hasPhoto && hasPhoto("kind-pass") && !document.querySelector(".wp-pass img")) return "kind-pass 사진이 양도양수 배너에 안 그려졌습니다";
+    /* 2026-11-20 배포 후보 — 출처가 기록에 없는 사진 셋은 메인에서 안 불려야 하고, 세 자리는 자체 일러스트(또는 권리 확인된 main-* 사진)로 섭니다 */
+    const used = [].slice.call(document.querySelectorAll("#view img, #view source")).map(function(e){ return (e.getAttribute("src") || "") + " " + (e.getAttribute("srcset") || ""); }).join(" ");
+    const leak = ["hero-startup","kind-take","kind-pass"].filter(function(k){ return used.indexOf("/img/" + k) >= 0; });
+    if(leak.length) return "출처 미확인 사진이 메인에 불립니다 — " + leak.join(" · ");
+    const spot = [[H[0], "main-start", "창업 카드"], [H[1], "main-close", "폐업 카드"], [document.querySelector(".wp-pb"), "main-pass", "양도양수 배너"]];
+    for(const x of spot){
+      if(!x[0]) return x[2] + " 가 없습니다";
+      const ok = (window.hasPhoto && hasPhoto(x[1])) ? !!x[0].querySelector("img") : !!x[0].querySelector(".wp-hph-n svg, .wp-pph-n svg");
+      if(!ok) return x[2] + " 에 그림이 없습니다 (일러스트 판도 사진도 아님)";
+    }
     /* 옛 보조 진입이 들고 있던 둘이 길을 잃지 않았는가 (헤더 펼침 · 푸터) */
     const miss = ["/providers","/about"].filter(function(u){ return !document.querySelector('a[href="' + u + '"]'); });
     if(miss.length) return "메인에서 갈 수 없게 된 곳: " + miss.join(" · ");

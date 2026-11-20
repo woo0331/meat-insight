@@ -336,7 +336,7 @@ window.opsCheckPick = function(id){
   toast(add ? ((s ? amPickLabel(s) : "서비스") + " 를 선택에 담았습니다")
             : "이미 고르신 것입니다");
   var sec = document.getElementById("pick");
-  if(sec) sec.scrollIntoView({ behavior:"smooth", block:"start" });
+  if(sec) sec.scrollIntoView({ behavior:"auto", block:"start" });
 };
 
 window.opsCheckPaint = function(){
@@ -476,12 +476,14 @@ function PageOperation(){
 var AQ_CALC      = ["premium", "vs", "rent"];
 var AQ_CALC_TONE = { premium:"t13", vs:"sv2", rent:"sv3" };
 
-function AcqIntro(ind, iq){
+function AcqIntro(ind, iq, picked){
 
   var n = (window.AM_STORES || []).length;
+
+  var compact = picked === "in" || picked === "out";
   return HallHero({
-    side:"transfer", photo:"kind-pass",
-    kicker:"사장님의 새로운 시작을 위한" + (ind ? " · " + ind.name : ""),
+    side:"transfer", photo:(compact ? "" : "kind-pass"),
+    kicker:(compact ? (picked === "out" ? "내 매장을 넘기고 싶어요" : "매장을 인수하고 싶어요") : "사장님의 새로운 시작을 위한") + (ind ? " · " + ind.name : ""),
     h1raw:"매장 <em>양도양수</em>",
     lead:"매장을 찾는 분(인수)과 넘기려는 분(양도)의 길을 나눠 안내합니다. 매물에 적힌 값은 올리신 사장님이 적으신 값입니다.",
     leadM:"매장을 찾는 분과 넘기려는 분의 길을 나눠 안내합니다.",
@@ -489,13 +491,12 @@ function AcqIntro(ind, iq){
     goName:"양도 · 양수 상담 신청하기",
     second:'<a class="btn btn-lg hh-o" href="/stores'+esc(iq)+'">매장 매물 보기'+icon("arrow",18)+'</a>',
 
-    cardTitle:"어느 쪽이세요?", qfirst:true,
-    quick:[{ ic:"search", b:"매장 찾기", d:"지역 · 업종 · 가격 조건으로 매물을 봅니다",
-             go:"지역 · 업종으로 찾기", href:"#aq-find" },
-           { ic:"handover", b:"내 매장 넘기기", d:"넘기는 순서와 권리금부터 확인합니다",
-             go:"양도 순서 보기", goOn:"매물 등록하기", form:"sell",
-             href:"/transfer?t=out", on:"/sell" }]
-  }) + AcqSearch(ind);
+    cardTitle:"어느 쪽이세요?", qfirst:!compact,
+    quick:compact ? [] : [{ ic:"search", b:"매장을 인수하고 싶어요", d:"권리금 · 인수 비용, 인수 계약 가이드, 매물 찾기",
+             go:"인수 경로 보기", href:"/transfer?t=in"+(ind ? "&i="+encodeURIComponent(ind.key) : "") },
+           { ic:"handover", b:"내 매장을 넘기고 싶어요", d:"넘기는 순서, 준비 자료, 양도 가이드",
+             go:"양도 경로 보기", href:"/transfer?t=out"+(ind ? "&i="+encodeURIComponent(ind.key) : "") }]
+  });
 }
 
 function AcqSearch(ind){
@@ -544,48 +545,88 @@ window.aqSearchGo = function(e){
 };
 
 function AcqWhich(t, ind, iq){
+
   function tab(k, name, lead){
     return '<a class="aq-t'+(t===k?" on":"")+'" href="/transfer?t='+k+
       (ind ? "&i="+encodeURIComponent(ind.key) : "")+'"'+
       (t===k?' aria-current="page"':'')+'>'+
       '<b>'+esc(name)+'</b><em>'+esc(lead)+'</em></a>';
   }
-  return '<section class="sec sec-white"><div class="w">'+
-    '<div class="sec-hd">'+
-      '<p class="eyebrow">어느 쪽이세요?</p>'+
-      '<h2>받으시는 분과 넘기시는 분은 순서가 다릅니다</h2>'+
-    '</div>'+
-    '<div class="aq-tb">'+
-      tab("in",  "매장을 인수합니다", "있던 가게를 받습니다")+
-      tab("out", "매장을 넘깁니다",   "하던 가게를 넘깁니다")+
-    '</div>'+
-
-    '<ul class="aq-m">'+(t === "out" ? [
-      ["/sell",          "handover", "내 매장 내놓기",   "내놓을 때 적는 칸과 순서를 봅니다"],
-      ["#pick",          "check",    "넘길 때 필요한 것", "시설 인계 · 계약 · 세무를 골라 보세요"],
-      ["/tools/premium", "gauge",    "권리금 알아보기",  "몇 달이면 돌아오는지 따져 봅니다"],
-      ["/sell?t=asset",  "boxes",    "시설 · 장비만 내놓기", "매장은 두고 장비만 넘기실 때"],
-
-      ["/content?j=acquisition", "book","양도 가이드",      "넘기기 전에 보셔야 하는 것"]
+  var P = window.AM_PROCESS || {};
+  var nIn = (P["acq-in"] || []).length, nOut = (P["acq-out"] || []).length;
+  var nStore = (typeof amStores === "function") ? amStores({}).length : 0;
+  var jump = function(id){ return ' onclick="return aqJump(\''+id+'\')"'; };
+  var L = (t === "out") ? [
+      ["#aq-steps",            "handover", "넘기는 순서",        "넘길 때 거치는 "+nOut+"걸음 — 조건 정하기부터 인계까지", "aq-steps"],
+      ["#aq-prep",             "doc",      "준비 자료",          "매장 정보 · 임대차 · 매출 자료 · 권리금 · 시설 목록", "aq-prep"],
+      ["/content?j=acquisition","book",    "양도 가이드",        "넘기기 전에 보셔야 하는 글"],
+      ["/tools/premium",       "gauge",    "권리금 알아보기",    "인수하시는 분이 먼저 하는 계산을 미리 해 봅니다"],
+      ["#pick",                "check",    "넘길 때 필요한 것",  "시설 인계 · 계약 · 세무를 골라 보세요"]
     ] : [
-      ["/stores"+iq,     "store",    "매장 인수하기",    "상가 · 점포 · 권리금 매장"],
-      ["#pick",          "check",    "인수할 때 필요한 것", "점검 · 임대차 검토 · 승계를 골라 보세요"],
-      ["/tools/premium", "gauge",    "권리금 알아보기",  "몇 달이면 돌아오는지 따져 봅니다"],
-      ["/tools/vs",      "scale",    "신규 vs 인수 비교", "새로 만드는 것과 받는 것"],
-
-      ["/content?j=startup&cat=store", "book","인수 계약 가이드", "상가 계약 · 권리금, 계약 전에 볼 것"]
-    ]).map(function(x){
-      return '<li><a href="'+esc(x[0])+'">'+
+      ["/tools/premium",       "gauge",    "권리금 · 인수 비용", "권리금이 몇 달이면 돌아오는지 따져 봅니다"],
+      ["/tools/vs",            "scale",    "새로 차리기 vs 인수", "같은 매장을 새로 만들 때와 비용을 비교합니다"],
+      ["/content?j=startup&cat=store", "book", "인수 계약 가이드", "상가 계약 · 권리금, 계약 전에 볼 것"],
+      ["/stores"+iq,           "store",    "매물 찾기",          nStore ? "지금 올라온 매장 매물 "+nStore+"건" : "현재 등록된 매물이 없습니다"],
+      ["#aq-steps",            "doc",      "받는 순서",          "인수할 때 거치는 "+nIn+"걸음", "aq-steps"],
+      ["#pick",                "check",    "인수할 때 필요한 것", "점검 · 임대차 검토 · 승계를 골라 보세요"]
+    ];
+  return '<section class="sec sec-white aq-path" id="aq-path"><div class="w">'+
+    '<div class="aq-tb">'+
+      tab("in",  "매장을 인수하고 싶어요",  "있던 가게를 받습니다")+
+      tab("out", "내 매장을 넘기고 싶어요", "하던 가게를 넘깁니다")+
+    '</div>'+
+    '<div class="sec-hd aq-ph">'+
+      '<p class="eyebrow">'+(t === "out" ? "넘기시는 분" : "받으시는 분")+'</p>'+
+      '<h2>'+(t === "out" ? "넘기기 전에 이것부터 보세요" : "인수하기 전에 이것부터 보세요")+'</h2>'+
+    '</div>'+
+    '<ul class="aq-m">'+L.map(function(x){
+      return '<li><a href="'+esc(x[0])+'"'+(x[4] ? jump(x[4]) : "")+'>'+
         '<span class="ic-t">'+icon(x[1],22)+'</span>'+
         '<b>'+esc(x[2])+'</b><i>'+esc(x[3])+'</i></a></li>';
     }).join("")+'</ul>'+
   '</div></section>';
 }
 
+window.aqJump = function(id){
+  var sec = document.getElementById(id); if(!sec) return true;
+  var road = document.getElementById("aq-road");
+  if(id === "aq-steps" && road && road.classList.contains("is-fold-all")){
+    var b = document.querySelector('[aria-controls="aq-road"]');
+    if(b && typeof foldToggle === "function") foldToggle("aq-road", b, "is-fold-all");
+  }
+  sec.scrollIntoView({ behavior:"auto", block:"start" });
+  return false;
+};
+
+function AcqPrep(ind){
+  var S = ((window.AM_PROCESS || {})["acq-out"] || []).slice(0, 5);
+  if(!S.length) return "";
+  return '<section class="sec sec-gray aq-prep" id="aq-prep"><div class="w">'+
+    '<div class="sec-hd">'+
+      '<p class="eyebrow">준비 자료</p>'+
+      '<h2>넘기기 전에 챙겨 둘 다섯 가지</h2>'+
+      '<p>인수하시는 분이 제일 먼저 묻는 것들입니다. 미리 한 벌로 묶어 두면 이야기가 빨라집니다.</p>'+
+    '</div>'+
+    '<ol class="aq-pl">'+S.map(function(st, i){
+      var c = (st.read && typeof amContent === "function") ? amContent(st.read) : null;
+      return '<li><span class="aq-pn">'+(i+1)+'</span><span class="aq-pt"><b>'+esc(st.name)+'</b>'+
+        '<em>'+esc(st.lead || "")+'</em>'+
+        (c ? '<a href="/content/'+esc(c.slug)+'">'+icon("book",14)+'<span>'+esc(c.title)+'</span></a>' : '')+
+        '</span></li>';
+    }).join("")+'</ol>'+
+    '<p class="aq-sell" data-cta="on" data-cta-form="sell" hidden>'+icon("info",16)+
+      '<span>준비가 됐으면 매물 등록 양식에 적어 보내 주세요. 올리기 전에 한 번 연락드립니다.</span>'+
+      '<a class="btn btn-b" href="/sell">내 매장 내놓기'+icon("arrow",16)+'</a></p>'+
+    '<p class="aq-sell" data-cta="off" data-cta-form="sell">'+icon("info",16)+
+      '<span>지금은 매물 등록 접수를 받지 않습니다. 위 자료와 넘기는 순서로 먼저 준비해 두시면, 접수가 열릴 때 바로 내놓으실 수 있습니다.</span>'+
+      '<a href="#aq-steps" onclick="return aqJump(\'aq-steps\')">넘기는 순서 보기'+icon("chev",14)+'</a></p>'+
+  '</div></section>';
+}
+
 function AcqProcess(t, ind){
   var key = (t === "out") ? "acq-out" : "acq-in";
   var n   = ((window.AM_PROCESS || {})[key] || []).length;
-  return '<section class="sec sec-gray stD"><div class="w">'+
+  return '<section class="sec sec-gray stD" id="aq-steps"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">'+(t === "out" ? "넘기는 순서" : "받는 순서")+'</p>'+
       '<h2>'+esc((ind ? ind.name + " — " : "")+
@@ -639,13 +680,9 @@ function AcqMarket(t, ind, iq){
       ? '<div class="row-cta"><a class="btn btn-b" href="/stores'+esc(iq)+'">매장 매물 보기'+icon("arrow",16)+'</a>'+
         '<a class="btn btn-o" href="/assets'+esc(iq)+'">시설 · 장비 보기</a></div>'
 
-      : Empty({ icon:"store", title:"현재 등록된 매물이 없습니다",
-          text:"매물이 올라오면 여기에 나옵니다. 그동안 권리금을 따져 보거나 인수할 때 확인할 것부터 보셔도 됩니다.",
-          reads: (typeof amContentsFor === "function")
-            ? amContentsFor({ cat:"transfer", side:"both", limit:3 }) : [],
-          cta:'<a class="btn btn-b" href="/tools/premium">권리금 계산하기'+icon("arrow",16)+'</a>'+
-              '<a class="btn btn-o" href="/tools/vs">신규 vs 인수 비용 비교</a>'+
-              '<a class="btn btn-o" href="#pick">인수할 때 필요한 것 고르기</a>' })))+
+      : '<p class="aq-zero">'+icon("info",16)+'<span>현재 등록된 매물이 없습니다.</span></p>'+
+        '<div class="row-cta"><a class="btn btn-b" href="/content?j=startup&cat=store">인수 계약 가이드'+icon("arrow",16)+'</a>'+
+        '<a class="btn btn-o" href="/tools/premium">권리금 계산</a></div>'))+
   '</div></section>';
 }
 
@@ -656,9 +693,10 @@ function PageAcquisition(){
 
   var sel = PickGroupBand("transfer", "transfer") + PickBasket("transfer");
   var mkt = AcqMarket(t, ind, iq);
-  return AcqIntro(ind, iq) +
+
+  return AcqIntro(ind, iq, nowQS("t")) +
     AcqWhich(t, ind, iq) +
-    (t === "in" ? mkt + sel : sel + mkt) +
+    (t === "in" ? AcqSearch(ind) + mkt + sel : AcqPrep(ind) + sel + mkt) +
     AcqProcess(t, ind) +
     ReadBand({ cat:"transfer", side:"both", limit:3,
                title:"인수 · 양도에서 자주 막히는 것" }) +

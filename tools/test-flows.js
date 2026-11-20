@@ -811,8 +811,8 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  say(allFirst, "3 폐업 — 옛 주소 ?p=all 은 자세한 정리 순서를 펼친 채로 연다 (서비스 고르기보다 위)");
 
  /* 시나리오 4 — 양도양수 두 경로 */
- for(const [q, want, no] of [["", "매장 인수하기", "/sell"],
-                             ["?t=out", "내 매장 내놓기", "/stores"]]){
+ for(const [q, want, no] of [["", "권리금 · 인수 비용", "/sell"],
+                             ["?t=out", "넘기는 순서", "/stores"]]){
    await pg.goto(B+"/transfer"+q,{waitUntil:"networkidle"});
    await pg.waitForTimeout(400);
    const m = await pg.evaluate(()=>

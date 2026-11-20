@@ -482,7 +482,9 @@ function AcqIntro(ind, iq, picked){
 
   var compact = picked === "in" || picked === "out";
   return HallHero({
-    side:"transfer", photo:(compact ? "" : "kind-pass"),
+
+    side:"transfer", photo:"",
+    art:(compact || typeof wpPassArt !== "function") ? "" : wpPassArt(),
     kicker:(compact ? (picked === "out" ? "내 매장을 넘기고 싶어요" : "매장을 인수하고 싶어요") : "사장님의 새로운 시작을 위한") + (ind ? " · " + ind.name : ""),
     h1raw:"매장 <em>양도양수</em>",
     lead:"매장을 찾는 분(인수)과 넘기려는 분(양도)의 길을 나눠 안내합니다. 매물에 적힌 값은 올리신 사장님이 적으신 값입니다.",

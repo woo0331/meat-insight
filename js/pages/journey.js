@@ -718,7 +718,10 @@ function AcqIntro(ind, iq, picked){
      바로 아래 경로 탭 · 그 경로의 정보가 첫 화면에 오게 합니다 (고르는 일은 그 탭이 그대로 합니다). */
   var compact = picked === "in" || picked === "out";
   return HallHero({
-    side:"transfer", photo:(compact ? "" : "kind-pass"),
+    /* 2026-11-20 — 출처가 확인되지 않은 kind-pass 사진 대신 메인과 같은 자체 일러스트
+       (넘기는 매장 → 받는 사장님 · wpPassArt). 경로를 고른 화면은 머리를 줄이므로 판을 안 냅니다. */
+    side:"transfer", photo:"",
+    art:(compact || typeof wpPassArt !== "function") ? "" : wpPassArt(),
     kicker:(compact ? (picked === "out" ? "내 매장을 넘기고 싶어요" : "매장을 인수하고 싶어요") : "사장님의 새로운 시작을 위한") + (ind ? " · " + ind.name : ""),
     h1raw:"매장 <em>양도양수</em>",
     lead:"매장을 찾는 분(인수)과 넘기려는 분(양도)의 길을 나눠 안내합니다. 매물에 적힌 값은 올리신 사장님이 적으신 값입니다.",

@@ -511,10 +511,12 @@ window.HallHero = function(o){
       '<span>'+esc(c[1])+'</span></li>';
   }).join("");
 
-  return '<section class="pgh hh hh-'+esc(o.side || "start")+(ph ? ' hh-im-on' : '')+
+  var art = !ph && o.art ? o.art : "";
+  return '<section class="pgh hh hh-'+esc(o.side || "start")+(ph ? ' hh-im-on' : '')+(art ? ' hh-art-on' : '')+
     (o.qfirst && o.quick && o.quick.length ? ' hh-qfirst' : '')+'">'+
     (ph ? '<span class="hh-ph pgh-im-'+esc(o.photo)+'">'+
           photoBox(o.photo, "", true, "(max-width:900px) 100vw, 62vw")+'</span>' : '')+
+    (art ? '<span class="hh-ph hh-art" aria-hidden="true">'+art+'</span>' : '')+
     '<div class="w hh-in">'+
       '<div class="hh-tx">'+
         (o.crumb ? '<nav class="crumb" aria-label="현재 위치">'+o.crumb+'</nav>' : '')+

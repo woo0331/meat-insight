@@ -7927,3 +7927,31 @@ html.ivh #view .wp-hc h2{ margin:0 0 4px; }
 /* 2026-11-20 /transfer — 경로를 고르고 들어온 줄인 머리(사진 없음)는 여백도 줄입니다 (PC 1440×900 에서 첫 정보가 첫 화면 안) */
 #view .hh.hh-transfer:not(.hh-im-on){ padding:36px 0 36px; }
 @media (max-width:640px){ #view .hh.hh-transfer:not(.hh-im-on){ padding:24px 0 24px; } }
+
+/* ════════════════════════════════════════════════════════════════════
+   2026-11-20 /transfer 머리 — kind-pass 사진 대신 자체 일러스트 판 (.hh-art)
+   ⚠️ 메인 양도양수 배너와 같은 그림(wpPassArt)이고 외부 자산이 없습니다.
+   ⚠️ background-color 를 따로 적습니다 (그라디언트만 적으면 검사가 투명으로 읽습니다).
+   ⚠️ z-index:0 으로 판을 자기 쌓임 맥락에 가둡니다 — 안 가두면 그림이 오른쪽 경로 카드 **위로** 올라옵니다.
+   ⚠️ PC 에서는 설명 글 끝과 경로 카드 사이 빈자리(57vw 둘레)에만 섭니다. 그 자리가 좁아지는
+      1300px 아래(~901px)는 그림을 빼고 판 색만 둡니다 — 재서 정했습니다.
+   ⚠️ 폰에서는 띠 높이를 사진 때와 같게(120px) 두어 두 경로 카드가 첫 화면에 남습니다.
+   ════════════════════════════════════════════════════════════════════ */
+.hh-art{ z-index:0; background-color:#E8D9C6;
+  background-image:radial-gradient(circle at 40% 45%, #F6EEE2 0, #E8D9C6 45%, #CDB596 100%); }
+.hh-art::after{ background:linear-gradient(90deg, #37281C 0%, rgba(55,40,28,.75) 9%, rgba(55,40,28,0) 15%); }
+.hh-art .wp-pa{ position:absolute; z-index:1; top:50%; left:calc(19vw - 134px); transform:translateY(-50%); gap:20px; }
+.hh-art .wp-pa-c svg.ia{ width:88px; }
+#view .hh.hh-transfer.hh-art-on{ padding:56px 0 60px; }
+@media (max-width:1299px) and (min-width:901px){ .hh-art .wp-pa{ display:none; } }
+@media (max-width:900px){
+  #view .hh.hh-transfer.hh-art-on{ padding:0 0 28px; }
+  .hh-art{ height:120px; }
+  .hh-art::after{ background:linear-gradient(180deg, rgba(55,40,28,0) 70%, #37281C 100%); }
+  .hh-art .wp-pa{ left:50%; transform:translate(-50%, -56%); gap:12px; }
+  .hh-art .wp-pa-c{ gap:4px; }
+  .hh-art .wp-pa-c svg.ia{ width:56px; }
+  .hh-art .wp-pa-c i{ font-size:12px; padding:2px 8px; white-space:nowrap; }
+  .hh-art .wp-pa-x{ width:34px; height:34px; }
+  .hh-art .wp-pa-x svg{ width:20px; height:20px; }
+}

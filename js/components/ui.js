@@ -822,10 +822,14 @@ window.HallHero = function(o){
   }).join("");
   /* 2026-11-19 — qfirst: 폰에서 바로 가기 카드를 단추 줄보다 **먼저** 둡니다 (그 화면의 첫 행동이 그 카드일 때).
      leadM: 폰에서만 내는 짧은 설명 (PC 설명은 그대로). */
-  return '<section class="pgh hh hh-'+esc(o.side || "start")+(ph ? ' hh-im-on' : '')+
+  /* 2026-11-20 — art: 사진 대신 자체 일러스트(HTML) 판. 사진이 있으면 사진이 먼저입니다.
+     ⚠️ 외부 그림이 아니라 iconArt 로 직접 그린 것만 넘기세요 (양도양수 — wpPassArt). */
+  var art = !ph && o.art ? o.art : "";
+  return '<section class="pgh hh hh-'+esc(o.side || "start")+(ph ? ' hh-im-on' : '')+(art ? ' hh-art-on' : '')+
     (o.qfirst && o.quick && o.quick.length ? ' hh-qfirst' : '')+'">'+
     (ph ? '<span class="hh-ph pgh-im-'+esc(o.photo)+'">'+
           photoBox(o.photo, "", true, "(max-width:900px) 100vw, 62vw")+'</span>' : '')+
+    (art ? '<span class="hh-ph hh-art" aria-hidden="true">'+art+'</span>' : '')+
     '<div class="w hh-in">'+
       '<div class="hh-tx">'+
         (o.crumb ? '<nav class="crumb" aria-label="현재 위치">'+o.crumb+'</nav>' : '')+

@@ -337,6 +337,11 @@ function paintMnav(){
   });
 }
 
+function ftWith(w, pair){
+  if(typeof koWith === "function") return koWith(w, pair);
+  var t = String(w || ""), c = t.charCodeAt(t.length - 1) - 0xAC00;
+  return t + ((c >= 0 && c < 11172 && c % 28) ? pair.charAt(0) : pair.charAt(1));
+}
 function Footer(){
 
   var stages = (window.AM_STAGES || []).map(function(st){
@@ -387,7 +392,7 @@ function Footer(){
       '<ul class="ft-tail">'+tail.map(function(l){
         return '<li><a href="'+esc(l[0])+'">'+esc(l[1])+'</a></li>'; }).join("")+'</ul>'+
 
-      '<p class="ft-role">'+esc(koWith(brandName(),"은는"))+' 통신판매중개자이며 '+
+      '<p class="ft-role">'+esc(ftWith(brandName(),"은는"))+' 통신판매중개자이며 '+
         '입점 업체와 이용자 사이의 거래 당사자가 아닙니다. '+
         '상품 · 서비스 · 거래 조건에 대한 책임은 각 업체에 있습니다.</p>'+
       '<div class="ft-biz" id="ft-biz"></div>'+

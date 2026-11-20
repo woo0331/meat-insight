@@ -1203,5 +1203,30 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    await cx.close();
  }
 
+ /* ══ 【16】 2026-11-20 — korean.js 가 못 실려도 /transfer 본문이 선다 ══
+    배포 직후 운영에서 한 번 'koWith is not defined' 로 첫 화면 카드와 푸터가 통째로 안 섰습니다.
+    격리 환경에서 korean.js 요청을 끊으면 같은 증상이 재현됐고, 멈춘 자리는 chrome.js 의 푸터(중개자 고지)였습니다.
+    그래서 푸터의 조사(ftWith)가 koWith 없이도 고르게 했고, 여기서 **실패 경로와 정상 경로를 둘 다** 봅니다.
+    ⚠️ 업종 지정 경로(?i=)도 같이 봅니다 — 그 경로에서 koWith 를 부르던 OpsvcForInd() 는 지금 안 불립니다. */
+ console.log("\n【16】 korean.js 실패에도 /transfer 본문이 선다");
+ for (const fail of [false, true]){
+   const cx = await br.newContext({ viewport:{ width:390, height:844 } });
+   const p4 = await cx.newPage(); const errs = [];
+   p4.on("pageerror", e => errs.push(e.message));
+   if(fail) await p4.route(/\/dist\/js\/data\/korean\.js/, r => r.abort());
+   for (const u of ["/transfer", "/transfer?i=cafe", "/transfer?t=in&i=cafe", "/transfer?t=out&i=cafe"]){
+     errs.length = 0;
+     await p4.goto(B + u, { waitUntil:"networkidle" }); await p4.waitForTimeout(300);
+     const r = await p4.evaluate(() => ({
+       body: document.querySelectorAll(".hh-quick .hh-qa, .aq-path .aq-m a").length,
+       role: ((document.querySelector(".ft-role") || {}).textContent || "").trim().slice(0, 18),
+       ko: typeof koWith }));
+     say(r.body > 0 && r.role.indexOf(" 통신판매중개자") > 0 && !errs.length,
+       (fail ? "korean.js 실패 · " : "정상 · ") + u + " — 본문 " + r.body + "칸 · 푸터 '" + r.role + "' · koWith " + r.ko,
+       errs.join(" | "));
+   }
+   await cx.close();
+ }
+
  await br.close(); srv.close(); process.exit(bad?1:0);
 })();

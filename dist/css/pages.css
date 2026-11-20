@@ -5862,4 +5862,21 @@ html.ivh #view .wp-hc h2{ margin:0 0 4px; }
   .hh-art .wp-pa-x svg{ width:20px; height:20px; }
 }
 
+.cld-g{ list-style:none; margin:0 0 20px; padding:0; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:16px; }
+.cld-c{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:20px 22px; display:flex; flex-direction:column; gap:10px; }
+.cld-c > b{ font-size:17px; color:var(--navy); }
+.cld-c ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.cld-c ul li{ display:grid; grid-template-columns:18px minmax(0,1fr); gap:8px; align-items:start; font-size:15px; line-height:1.55; color:var(--ink2); }
+.cld-c ul li svg{ margin-top:4px; color:var(--blue-600); }
+.cld-r{ margin-top:auto; display:flex; align-items:center; gap:8px; min-height:44px; font-weight:700; font-size:14px; color:var(--navy); }
+.cld-r span{ text-decoration:underline; text-underline-offset:3px; }
+.cld-go{ gap:10px; }
+.cld-n{ display:flex; gap:8px; align-items:flex-start; margin:14px 0 0; color:var(--ink2); font-size:14px; }
+.cld-n[hidden]{ display:none; }
+.clm-f{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:16px; }
+.clm-f > *{ margin:0 !important; }
+#cl-all{ margin-bottom:16px; }
+@media (max-width:900px){ .cld-g{ grid-template-columns:1fr; } }
+@media (max-width:640px){ .cld-go .btn{ flex:1 1 100%; justify-content:center; } }
+
 #cl-demo, #aq-steps, #aq-prep, #aq-path, #pick, #st-ig, #st-calc{ scroll-margin-top:calc(var(--hdr-h, 64px) + 8px); }

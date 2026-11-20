@@ -427,8 +427,7 @@ function PageClosure(){
       title:"정리하기 전에 체크리스트와 비용부터 보세요",
       lead:"빠뜨린 것과 들 돈을 먼저 보실 수 있습니다. 적으신 값은 저장하지 않습니다." })+
     sel+
-    ClosureDetailBand()+
-    ClosureIndustryBand()+
+    ClosureMoreBand()+
 
     ReadBand({ side:"close", limit:4,
                title:"정리하기 전에 알아 두면 좋은 것" })+
@@ -460,12 +459,40 @@ function ClosureIntro(path){
     quick:[{ ic:"handover", b:"매장을 넘길 수 있는지 보기", d:"넘기면 철거비 · 원상복구비가 줄어듭니다",
              go:"양도 순서 보기", href:"/transfer?t=out" },
            { ic:"clock", b:"철거 일정이 급해요", d:"양도 검토 없이 철거 준비로 바로 갑니다",
-             go:"철거 준비 확인", goOn:"집기 처분 + 철거 상담 신청",
-             href:"/providers/demolish", on:CLOSE_QUICK_URGENT },
+             go:"철거 준비 보기", goOn:"집기 처분 + 철거 상담 신청",
+             href:"#cl-demo", on:CLOSE_QUICK_URGENT },
            { ic:"box", b:"집기 · 설비 처분", d:"주방기기 · 냉장고 · 가구를 정리합니다",
              go:"시설 · 집기 처분 보기", goOn:"집기 처분 상담 신청",
              href:"/assets", on:CLOSE_QUICK_ASSET }]
-  }) + ClosureFlow(path);
+  }) + ClosureFlow(path) + ClosureDemoBand();
+}
+
+var CLOSE_DEMO_READ = ["cheolgeo-gyeonjeok-gareuneun-geot", "wonsang-bokgu-beomwi", "pyegimul-jeungmyeong"];
+var CLOSE_DEMO_HEAD = { "cheolgeo-gyeonjeok-gareuneun-geot":"철거 범위 · 견적",
+                        "wonsang-bokgu-beomwi":"원상복구 범위", "pyegimul-jeungmyeong":"폐기물 처리 · 증빙" };
+function ClosureDemoBand(){
+  var C = (window.AM_CONTENTS || []);
+  var cards = CLOSE_DEMO_READ.map(function(slug){
+    var c = C.filter(function(x){ return x.slug === slug; })[0];
+    if(!c || !c.check || !c.check.length) return "";
+    return '<li class="cld-c"><b>'+esc(CLOSE_DEMO_HEAD[slug] || c.title)+'</b>'+
+      '<ul>'+c.check.slice(0, 3).map(function(t){ return '<li>'+icon("check",15)+'<span>'+esc(t)+'</span></li>'; }).join("")+'</ul>'+
+      '<a class="cld-r" href="/content/'+esc(slug)+'">'+icon("book",15)+'<span>'+esc(c.title)+'</span></a></li>';
+  }).join("");
+  if(!cards) return "";
+  return '<section class="sec sec-white cld" id="cl-demo"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">철거가 급할 때</p>'+
+      '<h2>철거 전에 이것만 정리해 두세요</h2>'+
+      '<p>견적이 갈리는 것은 평수보다 <b>무엇을 뜯고 어떻게 내보내는가</b>입니다. 업체에 묻기 전에 아래를 먼저 적어 두시면 견적을 비교하기 쉽습니다.</p></div>'+
+    '<ul class="cld-g">'+cards+'</ul>'+
+    '<div class="row-cta cld-go">'+
+      '<a class="btn btn-b" href="'+esc(CLOSE_QUICK_URGENT)+'" data-cta="on" data-cta-form="close" hidden>철거 · 집기 처분 상담 신청'+icon("arrow",16)+'</a>'+
+      '<a class="btn btn-b" href="/tools/closecost" data-cta="off" data-cta-form="close">폐업 예상비용 계산'+icon("arrow",16)+'</a>'+
+      '<a class="btn btn-o" href="/providers/demolish">철거 분야 보기</a>'+
+      '<a class="btn btn-o" href="/providers/restore">원상복구 분야 보기</a>'+
+    '</div>'+
+    '<p class="cld-n" data-cta="off" data-cta-form="close">'+icon("info",15)+'<span>지금은 매장 정리 상담을 받지 않습니다. 위 항목과 비용 계산으로 먼저 준비해 두세요.</span></p>'+
+  '</div></section>';
 }
 
 var CLOSE_QUICK_URGENT = "/quote?mode=close&from=closure-urgent&sv=" +
@@ -532,17 +559,24 @@ function ClosureWantFold(sel){
     '</div></div>';
 }
 
-function ClosureDetailBand(){
+function ClosureMoreBand(){
   var all = (window.amCatsFor ? amCatsFor("", "close") : (window.AM_CLOSE_CATS||[]));
-  return '<section class="sec cl-det"><div class="w">'+
+  return '<section class="sec cl-det stI"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
-      '<p class="eyebrow">분야별 상세</p>'+
-      '<h2>정리에 필요한 것 전부</h2>'+
-      '<p>어느 분야에 무엇이 있는지 보고 싶으시면 펼쳐 보세요. 누르면 그 분야 화면으로 갑니다.</p>'+
+      '<p class="eyebrow">분야 · 업종별로 자세히</p>'+
+      '<h2>정리할 것을 분야와 업종으로 보기</h2>'+
+      '<p>분야를 누르면 그 분야 화면으로, 업종을 고르면 그 업종의 정리 목록으로 갑니다. 헬스장은 운동기구와 락커가, 음식점은 주방과 닥트가 남습니다.</p>'+
     '</div>'+
-    FoldAll("cl-all", "분야 "+all.length+"개 펼쳐 보기", "접기")+
+    '<div class="clm-f">'+
+      FoldAll("cl-all", "분야 "+all.length+"개 펼쳐 보기", "분야 접기")+
+      FoldAll("cl-ind", "업종 고르기 ("+(window.AM_INDUSTRIES||[]).length+"개)", "업종 접기")+
+    '</div>'+
     '<div class="cat-g cat-g4 is-fold-all" id="cl-all">'+
       all.map(function(c){ return CatCard(c, ""); }).join("")+
+    '</div>'+
+    '<div class="is-fold-all" id="cl-ind">'+
+      IndustryGroupChips("/closure", nowQS("g"))+
+      IndustryGrid("/closure","", nowQS("g"))+
     '</div>'+
   '</div></section>';
 }
@@ -578,21 +612,6 @@ function ClosurePathBand(path){
           icon("arrow",15)+'</span>'+
       '</a></li>';
     }).join("")+'</ul>'+
-  '</div></section>';
-}
-
-function ClosureIndustryBand(){
-  return '<section class="sec sec-white stI"><div class="w">'+
-    '<div class="sec-hd sec-hd-c">'+
-      '<p class="eyebrow">업종별로 자세히</p>'+
-      '<h2>업종마다 정리할 것이 다릅니다</h2>'+
-      '<p>헬스장은 운동기구와 락커가, 음식점은 주방과 닥트가 남습니다.</p>'+
-    '</div>'+
-    FoldAll("cl-ind", "업종 고르기 ("+(window.AM_INDUSTRIES||[]).length+"개)", "접기")+
-    '<div class="is-fold-all" id="cl-ind">'+
-      IndustryGroupChips("/closure", nowQS("g"))+
-      IndustryGrid("/closure","", nowQS("g"))+
-    '</div>'+
   '</div></section>';
 }
 

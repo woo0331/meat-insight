@@ -7984,3 +7984,25 @@ html.ivh #view .wp-hc h2{ margin:0 0 4px; }
 .hsg-tl a{ display:inline-flex; align-items:center; min-height:44px; font-weight:700; color:var(--navy); text-decoration:underline; text-underline-offset:3px; }
 .hsg-calc label small{ font-weight:500; color:var(--ink2); font-size:13px; }
 #ow-cost, #ow-mkt, #ow-fix, #ow-hr{ scroll-margin-top:calc(var(--hdr-h, 64px) + 8px); }
+
+/* ════════════════════════════════════════════════════════════════════
+   2026-11-20 이미지 개선
+   ① 메인 폐업·철거 카드 — 사진(hero-close)의 밝은 빈 바닥 · 통창 쪽을 남깁니다 (왼쪽 폐자재 더미를 덜 보이게)
+   ② 전문관 머리 사진(/closure · /operation) — PC 에서 "갈색으로만 보인다" 의 원인:
+      사진 판이 오른쪽 62% 인데 ⓐ 판 왼쪽 22% 를 막이 82~100% 로 덮고 ⓑ 판 오른쪽 340px 를 흰 바로 가기 카드가
+      덮어서, 사진이 보이는 자리는 가운데 좁은 띠뿐이었고 그마저 막 30~60% 아래였습니다.
+      글자가 사진 위에 걸치는 판 왼쪽 끝(설명 줄 끝 ≈ 판 폭의 10%)까지만 짙게 두고 나머지를 거의 걷습니다.
+      ⚠️ 폰(900px 아래)은 사진이 글 위 띠라 그대로입니다.
+   ════════════════════════════════════════════════════════════════════ */
+.wp-hc-cl .wp-hph .ph{ object-position:72% 55%; }
+/* ⚠️ 막은 **px** 로 겁니다 — 설명 줄이 판 안으로 걸치는 거리는 폭마다 다릅니다(재 본 값: 901px 258 · 1024px 211 ·
+      1280px 114 · 1440px 93px). 그 거리까지는 짙게(글자 대비 4.5 이상) 두고 그 뒤로 걷습니다.
+      재는 법: 글자를 투명하게 해 놓고 글자 자리 픽셀의 최악 대비 (scratchpad/wp/hhc.js 와 같은 방식). */
+@media (min-width:1280px){
+  .hh-im-on .hh-ph::after{
+    background:linear-gradient(90deg, #37281C 0, rgba(55,40,28,.9) 150px, rgba(55,40,28,.4) 250px, rgba(55,40,28,.1) 360px, rgba(55,40,28,0) 480px); }
+}
+@media (min-width:901px) and (max-width:1279px){
+  .hh-im-on .hh-ph::after{
+    background:linear-gradient(90deg, #37281C 0, rgba(55,40,28,.92) 280px, rgba(55,40,28,.45) 380px, rgba(55,40,28,.12) 480px, rgba(55,40,28,0) 580px); }
+}

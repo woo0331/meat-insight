@@ -5886,3 +5886,14 @@ html.ivh #view .wp-hc h2{ margin:0 0 4px; }
 .hsg-tl a{ display:inline-flex; align-items:center; min-height:44px; font-weight:700; color:var(--navy); text-decoration:underline; text-underline-offset:3px; }
 .hsg-calc label small{ font-weight:500; color:var(--ink2); font-size:13px; }
 #ow-cost, #ow-mkt, #ow-fix, #ow-hr{ scroll-margin-top:calc(var(--hdr-h, 64px) + 8px); }
+
+.wp-hc-cl .wp-hph .ph{ object-position:72% 55%; }
+
+@media (min-width:1280px){
+  .hh-im-on .hh-ph::after{
+    background:linear-gradient(90deg, #37281C 0, rgba(55,40,28,.9) 150px, rgba(55,40,28,.4) 250px, rgba(55,40,28,.1) 360px, rgba(55,40,28,0) 480px); }
+}
+@media (min-width:901px) and (max-width:1279px){
+  .hh-im-on .hh-ph::after{
+    background:linear-gradient(90deg, #37281C 0, rgba(55,40,28,.92) 280px, rgba(55,40,28,.45) 380px, rgba(55,40,28,.12) 480px, rgba(55,40,28,0) 580px); }
+}

@@ -2,11 +2,11 @@
 
 window.WOW_PHOTO_SLOTS = [
 
-  { key:"hero-start", sizes:"100vw", where:"메인 01 히어로 바탕 (2026-11-19 개편 — 다시 나옵니다)",
+  { key:"hero-start", sizes:"100vw", where:"메인 첫 화면 · 창업 준비 카드 (main-start 가 비어 있는 동안 · 2026-11-20) · 출처: 사장님 제공 원본(2026-10-04)",
     min:[1400,560], ratio:[1.3,2.6], maxKB:300, anchor:"center",
     note:"실제 한국에서 운영될 법한 상업공간 · 자연광 · 고해상도. ⚠️ 위에 짙은 남색 막이 덮이고 글이 판 가운데 높이에 앉습니다 — 주인공을 거기 두지 마세요. ⚠️ 사진 안에 글자 · 상호 · 로고가 보이면 안 됩니다" },
 
-  { key:"hero-close", sizes:"(max-width:900px) 52vw, (max-width:1100px) 48vw, 44vw", where:"(지금 안 나옴) 옛 히어로 오른쪽 판",
+  { key:"hero-close", sizes:"(max-width:900px) 52vw, (max-width:1100px) 48vw, 44vw", where:"메인 첫 화면 · 폐업·철거 카드 (main-close 가 비어 있는 동안 · 2026-11-20) · 출처: 사장님 제공 원본(2026-10-04)",
     min:[1400,560], ratio:[1.3,2.6], maxKB:300, anchor:"center",
     note:"같은 공간이 정리되는 듯한 장면이면 가장 좋습니다. 밝은 샌드 막이 덮입니다. ⚠️ 실패한 장면이 아니라 다음을 준비하는 장면입니다 — 불 꺼진 가게 · 고개 숙인 사람 금지" },
 

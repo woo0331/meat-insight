@@ -2191,7 +2191,12 @@ const AUDIT = `(() => {
     const spot = [[H[0], "main-start", "창업 카드"], [H[1], "main-close", "폐업 카드"], [document.querySelector(".wp-pb"), "main-pass", "양도양수 배너"]];
     for(const x of spot){
       if(!x[0]) return x[2] + " 가 없습니다";
-      const ok = (window.hasPhoto && hasPhoto(x[1])) ? !!x[0].querySelector("img") : !!x[0].querySelector(".wp-hph-n svg, .wp-pph-n svg");
+      /* 2026-11-20 — 사진은 main-* 가 먼저이고, 비어 있으면 사장님 제공 원본(hero-start · hero-close), 그것도 없으면 일러스트 */
+      const im = x[0].querySelector(".wp-hph img, .wp-pph img");
+      const isrc = im ? (im.getAttribute("src") || "") : "";
+      const ok = im ? (isrc.indexOf("/img/main-") >= 0 || isrc.indexOf("/img/hero-start.") >= 0 || isrc.indexOf("/img/hero-start-") >= 0 ||
+                       isrc.indexOf("/img/hero-close.") >= 0 || isrc.indexOf("/img/hero-close-") >= 0)
+                    : !!x[0].querySelector(".wp-hph-n svg, .wp-pph-n svg");
       if(!ok) return x[2] + " 에 그림이 없습니다 (일러스트 판도 사진도 아님)";
     }
     /* 옛 보조 진입이 들고 있던 둘이 길을 잃지 않았는가 (헤더 펼침 · 푸터) */

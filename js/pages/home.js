@@ -2165,11 +2165,15 @@ var WP_SUGGEST = ["인테리어", "철거", "권리금", "원상복구", "POS", 
       출처가 기록에 없는 hero-startup · kind-take · kind-pass 를 메인에서 쓰지 않습니다
       (check.js 가 메인에서 그 파일이 하나도 안 불리는지 봅니다).
       권리가 확인된 최종 사진이 오면 main-start · main-close · main-pass 자리에 넣으면 그것이 먼저입니다.
-      최종 사진은 photos.js 에 줄만 더하면 됩니다 (이 코드는 안 고칩니다). */
+      최종 사진은 photos.js 에 줄만 더하면 됩니다 (이 코드는 안 고칩니다).
+   ⚠️ 2026-11-20 이미지 개선 — main-* 가 비어 있는 동안은 사장님이 주신 원본 한 쌍(2026-10-04 · CLAUDE.md 사진 절)을
+      씁니다: 창업 = hero-start(밝은 매장 · 작업자 · 통창), 폐업 = hero-close(짐을 뺀 밝은 빈 매장 · 통창).
+      둘 다 메인에서 내려간 옛 히어로의 사진이라 **새 자산이 아니고** 같은 파일을 두 자리에 쓰지도 않습니다.
+      ⚠️ 출처 미확인 셋(hero-startup · kind-take · kind-pass)은 여전히 안 씁니다 (check.js). */
 var WP_HERO = [
-  { k:"st", to:"/startup", ph:["main-start"], ia:"store", tag:"창업 준비", h:"창업 준비",
+  { k:"st", to:"/startup", ph:["main-start","hero-start"], ia:"store", tag:"창업 준비", h:"창업 준비",
     p:"업종 선택부터 상권 · 인테리어 · 설비까지, 시작에 필요한 준비를 한곳에서.", m:"상권 · 인테리어 · 설비 준비를 한곳에서", go:"창업 준비 바로가기" },
-  { k:"cl", to:"/closure", ph:["main-close"], ia:"demolish", tag:"폐업·철거", h:"폐업·철거",
+  { k:"cl", to:"/closure", ph:["main-close","hero-close"], ia:"demolish", tag:"폐업·철거", h:"폐업·철거",
     p:"폐업 절차부터 집기 처분 · 철거 · 원상복구까지, 정리에 필요한 순서를 안내합니다.", m:"폐업 절차 · 집기 처분 · 철거 · 원상복구", go:"폐업·철거 바로가기" }
 ];
 function wpPh(list){

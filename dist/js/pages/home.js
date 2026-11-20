@@ -1164,9 +1164,9 @@ var WP_TYPES = [
 var WP_SUGGEST = ["인테리어", "철거", "권리금", "원상복구", "POS", "폐업신고"];
 
 var WP_HERO = [
-  { k:"st", to:"/startup", ph:["main-start"], ia:"store", tag:"창업 준비", h:"창업 준비",
+  { k:"st", to:"/startup", ph:["main-start","hero-start"], ia:"store", tag:"창업 준비", h:"창업 준비",
     p:"업종 선택부터 상권 · 인테리어 · 설비까지, 시작에 필요한 준비를 한곳에서.", m:"상권 · 인테리어 · 설비 준비를 한곳에서", go:"창업 준비 바로가기" },
-  { k:"cl", to:"/closure", ph:["main-close"], ia:"demolish", tag:"폐업·철거", h:"폐업·철거",
+  { k:"cl", to:"/closure", ph:["main-close","hero-close"], ia:"demolish", tag:"폐업·철거", h:"폐업·철거",
     p:"폐업 절차부터 집기 처분 · 철거 · 원상복구까지, 정리에 필요한 순서를 안내합니다.", m:"폐업 절차 · 집기 처분 · 철거 · 원상복구", go:"폐업·철거 바로가기" }
 ];
 function wpPh(list){

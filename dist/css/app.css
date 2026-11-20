@@ -644,3 +644,11 @@ html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
   .mnav a.on .mnav-i[data-ic="calc"] svg path,
   .mnav a.on .mnav-i[data-ic="book"] svg path:last-child{ fill:none; stroke:#fff; }
 }
+
+@media (max-width:900px){
+  .mnav{ background:var(--surface); }
+  .mnav a{ color:#7A6A5E; font-weight:500; }
+  .mnav a.on{ color:var(--navy-dark); font-weight:800; }
+  .mnav a.on::before{ background:var(--navy-dark); width:30px; margin-left:-15px; }
+  .mnav a:not(.on) .mnav-i svg{ stroke-width:1.8; }
+}

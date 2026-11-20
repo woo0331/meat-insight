@@ -1089,3 +1089,15 @@ html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
   .mnav a.on .mnav-i[data-ic="calc"] svg path,
   .mnav a.on .mnav-i[data-ic="book"] svg path:last-child{ fill:none; stroke:#fff; }
 }
+
+/* 2026-11-20 Warm Premium — 아래 메뉴 활성 · 비활성 구분
+   ⚠️ 팔레트를 브라운으로 바꾼 뒤 활성(#4A372D)과 비활성(#584338)이 거의 같은 색이었습니다.
+   활성: 에스프레소 #38271F · 굵게 · 채운 아이콘 · 위쪽 선 (13.88) / 비활성: 웜 그레이 #7A6A5E · 보통 굵기 (5.07)
+   ⚠️ 순서 · 링크 · 높이(--mnav-h) · 안전 영역은 위 규칙 그대로입니다 — 색 · 굵기만 고칩니다. */
+@media (max-width:900px){
+  .mnav{ background:var(--surface); }
+  .mnav a{ color:#7A6A5E; font-weight:500; }
+  .mnav a.on{ color:var(--navy-dark); font-weight:800; }
+  .mnav a.on::before{ background:var(--navy-dark); width:30px; margin-left:-15px; }
+  .mnav a:not(.on) .mnav-i svg{ stroke-width:1.8; }
+}

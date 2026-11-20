@@ -74,7 +74,7 @@ window.WOW_PHOTO_SLOTS = [
   { key:"svc-clean", sizes:"92px",     where:"(지금 안 나옴) 서비스 · 청소 · 방역",      min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"청소 · 방역 장비" },
 
   { key:"kind-take", sizes:"(max-width:520px) 94vw, (max-width:600px) 480px, (max-width:900px) 47vw, (max-width:1280px) 31vw, 387px",
-    where:"(지금 안 나옴) 자산 카드 01 · 매장 인수하기", min:[1120,840], ratio:[1.25,1.45], maxKB:140,
+    where:"메인 첫 화면 · 폐업·철거 카드 (main-close 가 비어 있는 동안 대신)", min:[1120,840], ratio:[1.25,1.45], maxKB:140,
     note:"문 여는 상업공간 · 빈 점포 내부. ⚠️ 상호 · 간판 · 업종이 읽히면 안 됩니다" },
 
   { key:"kind-pass", sizes:"(max-width:900px) 96vw, (max-width:1100px) 42vw, 40vw",
@@ -86,7 +86,14 @@ window.WOW_PHOTO_SLOTS = [
 
   { key:"cta-consult", sizes:"(max-width:1024px) 92vw, 40vw",
     where:"(지금 안 나옴) 메인 06 · 견적 · 상담 신청 오른쪽", min:[1120,840], ratio:[1.25,1.45], maxKB:150,
-    note:"밝은 매장 · 상담하는 장면. ⚠️ 한 업종이 드러나면 안 됩니다. 정리 · 철거 현장 금지" }
+    note:"밝은 매장 · 상담하는 장면. ⚠️ 한 업종이 드러나면 안 됩니다. 정리 · 철거 현장 금지" },
+
+  { key:"main-start", sizes:"(max-width:768px) 92vw, 640px",
+    where:"메인 첫 화면 · 창업 준비 카드 (비어 있으면 hero-startup)", min:[1400,788], ratio:[1.6,1.9], maxKB:220,
+    note:"밝은 카페 · 문 여는 매장. 자연광 · 따뜻한 나무 · 깨끗한 카운터. ⚠️ 상호 · 간판 · 로고 · 알아볼 수 있는 얼굴 금지" },
+  { key:"main-close", sizes:"(max-width:768px) 92vw, 640px",
+    where:"메인 첫 화면 · 폐업·철거 카드 (비어 있으면 kind-take)", min:[1400,788], ratio:[1.6,1.9], maxKB:220,
+    note:"짐을 뺀 밝은 빈 매장 · 통창으로 햇빛. ⚠️ 처연하면 안 됩니다 — 불 꺼진 가게 · 고개 숙인 사람 · 부서진 집기 금지" }
 ];
 
 window.WOW_PHOTOS = {

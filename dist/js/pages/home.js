@@ -1164,26 +1164,28 @@ var WP_TYPES = [
 var WP_SUGGEST = ["인테리어", "철거", "권리금", "원상복구", "POS", "폐업신고"];
 
 var WP_HERO = [
-  { k:"st", to:"/startup", ph:"hero-startup", tag:"창업 준비", h:"창업 준비",
+  { k:"st", to:"/startup", ph:["main-start","hero-startup"], tag:"창업 준비", h:"창업 준비",
     p:"업종 선택부터 상권 · 인테리어 · 설비까지, 시작에 필요한 준비를 한곳에서.", go:"창업 준비 바로가기" },
-  { k:"cl", to:"/closure", ph:"hero-closure", tag:"폐업·철거", h:"폐업·철거",
+  { k:"cl", to:"/closure", ph:["main-close","kind-take"], tag:"폐업·철거", h:"폐업·철거",
     p:"폐업 절차부터 집기 처분 · 철거 · 원상복구까지, 정리에 필요한 순서를 안내합니다.", go:"폐업·철거 바로가기" }
 ];
+function wpPh(list){
+  for(var i = 0; i < list.length; i++) if(hasPhoto(list[i])) return list[i];
+  return "";
+}
 function HomeWPHero(){
-  var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND || {}).name || ""));
-  var who = (typeof koWith === "function") ? koWith(nm, "이가") : nm + "가";
   return '<section class="bhero wp-hero"><div class="w">'+
+    '<div class="wp-msg">'+
+      '<p class="wp-k">창업 · 운영 · 양도양수 · 폐업까지</p>'+
+      '<h1 class="wp-h">자영업의 모든 순간을 연결합니다.</h1>'+
+      '<p class="wp-s">창업 준비부터 매장 운영, 양도양수, 폐업 · 철거까지 한곳에서 쉽고 빠르게 해결하세요.</p>'+
+    '</div>'+
     '<div class="wp-hg">'+
-      '<div class="wp-msg">'+
-        '<span class="wp-orn" aria-hidden="true"></span>'+
-        '<p class="wp-k">창업 · 운영 · 양도양수 · 폐업까지</p>'+
-        '<h1 class="wp-h">자영업의 모든 순간을<br>'+esc(who)+' 연결합니다.</h1>'+
-        '<p class="wp-s">창업 준비부터 매장 운영, 양도양수, 폐업 · 철거까지 한곳에서 쉽고 빠르게 해결하세요.</p>'+
-      '</div>'+
       WP_HERO.map(function(x){
+        var k = wpPh(x.ph);
         return '<a class="wp-hc wp-hc-'+x.k+'" href="'+esc(x.to)+'">'+
-          (hasPhoto(x.ph) ? '<span class="wp-hph" aria-hidden="true">'+
-            photoBox(x.ph, "", true, "(max-width:1023px) 92vw, 30vw")+'</span>' : '')+
+          (k ? '<span class="wp-hph" data-ph="'+esc(k)+'" aria-hidden="true">'+
+            photoBox(k, "", true, "(max-width:768px) 92vw, 640px")+'</span>' : '')+
           '<span class="wp-htx">'+
             '<span class="wp-tag">'+esc(x.tag)+'</span>'+
             '<h2>'+esc(x.h)+'</h2>'+
@@ -1204,7 +1206,7 @@ function HomeWPFind(){
         return '<option value="'+esc(t.k)+'">'+esc(t.name)+'</option>'; }).join("")+'</select>'+
       '<label class="sr-only" for="sw-q">서비스 · 매장 · 가이드 검색</label>'+
       '<input id="sw-q" name="q" type="search" autocomplete="off" maxlength="60" '+
-        'placeholder="필요한 서비스를 검색해 보세요 (예: 인테리어, 철거, 권리금)" aria-describedby="wp-msg">'+
+        'placeholder="필요한 서비스를 검색해 보세요" aria-describedby="wp-msg">'+
       '<button class="sw-find-b wp-find-b" type="submit">'+icon("search",18)+'<span>검색</span></button>'+
     '</form>'+
     '<p id="wp-msg" class="wp-fmsg" role="status" aria-live="polite"></p>'+
@@ -1255,7 +1257,11 @@ function HomeWPPass(){
         '<p class="wp-k">매장 양도양수</p>'+
         '<h2>매장을 넘기실 때도,<br class="br-m"> 받으실 때도 한곳에서.</h2>'+
         '<p>지역 · 업종 · 보증금 · 월세 · 권리금으로 매물을 걸러 보시고, 넘기는 순서와 권리금까지 미리 확인하세요.</p>'+
-        '<p class="wp-pn">'+icon("info",15)+'<span>'+(n ? '지금 등록된 매물 '+n+'건' : '현재 등록된 매물이 없습니다 — 등록되는 대로 이곳에 보입니다.')+'</span></p>'+
+        '<p class="wp-pn">'+icon("info",15)+'<span>'+(n ? '지금 등록된 매물 '+n+'건' : '현재 등록된 매물이 없습니다.')+'</span></p>'+
+
+        '<ul class="wp-pnx">'+[["/content?j=acquisition","인수 · 양도 가이드","book"],["/tools/premium","권리금 계산","calc"],
+          ["/transfer?t=in","매장 인수 순서","handover"]].map(function(x){
+          return '<li><a href="'+esc(x[0])+'">'+icon(x[2],16)+'<span>'+esc(x[1])+'</span>'+icon("chev",14)+'</a></li>'; }).join("")+'</ul>'+
         '<div class="wp-pgo">'+
           '<a class="btn wp-btn" href="/stores">매물 바로보기'+icon("arrow",16)+'</a>'+
           '<a class="btn wp-btn-o" href="/sell" data-cta="on" data-cta-form="sell" hidden>내 매장 등록하기</a>'+

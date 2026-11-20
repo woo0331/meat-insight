@@ -652,3 +652,34 @@ html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
   .mnav a.on::before{ background:var(--navy-dark); width:30px; margin-left:-15px; }
   .mnav a:not(.on) .mnav-i svg{ stroke-width:1.8; }
 }
+
+.hd-lg .hd-lg-i{ display:grid; place-items:center; width:40px; height:40px; border-radius:10px;
+  background:transparent; color:var(--navy); border:0; }
+.hd-lg .hd-lg-i svg{ width:30px; height:30px; }
+.hd-lg-t{ display:flex; align-items:center; gap:12px; }
+.hd-lg-t b{ font-style:normal; font-size:24px; font-weight:900; letter-spacing:-.04em; color:var(--navy-dark); }
+.hd-lg-t i{ display:block; max-width:9.5em; padding-left:12px; border-left:1px solid var(--line);
+  font-size:12px; line-height:1.35; color:var(--ink2); white-space:normal; }
+@media (max-width:1499px){ .hd-lg-t i{ display:none; } }
+@media (max-width:420px){ .hd-lg .hd-lg-i{ display:none; } .hd-lg-t b{ font-size:20px; } }
+.ft-band{ background:var(--navy); color:#fff; }
+.ft-bw{ display:grid; grid-template-columns:1.1fr repeat(4, minmax(0,1fr)); gap:0; align-items:stretch; }
+.ft-bb, .ft-bi{ display:flex; align-items:center; gap:12px; margin:0; padding:18px 18px; min-height:76px;
+  border-left:1px solid rgba(255,252,247,.18); color:#fff; text-decoration:none; }
+.ft-bb{ flex-direction:column; align-items:flex-start; justify-content:center; gap:2px; border-left:0; padding-left:0; }
+.ft-bb b{ font-size:22px; font-weight:900; letter-spacing:-.03em; }
+.ft-bb span{ font-size:var(--t-cap); color:#EFE3D2; }
+.ft-bi > svg{ flex:none; color:#E8D7BF; }
+.ft-bi span{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.ft-bi b{ font-size:var(--t-sm); font-weight:800; }
+.ft-bi i{ font-style:normal; font-size:var(--t-cap); color:#EFE3D2; }
+a.ft-bi:hover b{ text-decoration:underline; }
+@media (max-width:1100px){
+  .ft-bw{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+  .ft-bb{ grid-column:1 / -1; padding:16px 0 4px; min-height:0; }
+  .ft-bi{ border-left:0; padding:10px 0; min-height:56px; }
+}
+
+.ft:has(.ft-band){ padding-top:0; }
+.ft-band + .w{ padding-top:44px; }
+.ft-band ~ .w .ft-b .lg-ft{ display:none; }

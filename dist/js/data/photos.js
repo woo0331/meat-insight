@@ -96,7 +96,7 @@ window.WOW_PHOTO_SLOTS = [
     note:"짐을 뺀 밝은 빈 매장 · 통창으로 햇빛. ⚠️ 처연하면 안 됩니다 — 불 꺼진 가게 · 고개 숙인 사람 · 부서진 집기 금지" },
 
   { key:"main-pass", sizes:"(max-width:900px) 92vw, 640px",
-    where:"메인 양도양수 가로 배너 (비어 있으면 자체 일러스트)", min:[1280,840], ratio:[1.3,1.9], maxKB:220,
+    where:"메인 양도양수 가로 배너 — 자체 제작 3D 렌더(2026-11-20 · 출처: 자체 · 사용 범위 제한 없음)", min:[1280,840], ratio:[1.3,1.9], maxKB:220,
     note:"밝은 매장 카운터 · 좌석 — 넘기고 받는 장면. ⚠️ 상호 · 간판 · 얼굴 금지 · 처연하면 안 됩니다" }
 ];
 
@@ -166,7 +166,12 @@ window.WOW_PHOTOS = {
     w:1890, h:1063,
     webp:"/img/main-close-sm.webp?v=96493dd6 1040w, /img/main-close.webp?v=b9b85dda 1890w",
     jpg:"/img/main-close-sm.jpg?v=0c2e2f35 1040w, /img/main-close.jpg?v=7826fde6 1890w",
-    alt:"집기를 모두 뺀 밝고 정돈된 빈 매장 — 통창으로 햇빛이 드는 바닥" }
+    alt:"집기를 모두 뺀 밝고 정돈된 빈 매장 — 통창으로 햇빛이 드는 바닥" },
+  "main-pass": { src:"/img/main-pass.jpg?v=1899ff5b",
+    w:1728, h:972,
+    webp:"/img/main-pass-sm.webp?v=dc2a5a04 950w, /img/main-pass.webp?v=0314969d 1728w",
+    jpg:"/img/main-pass-sm.jpg?v=8b5df192 950w, /img/main-pass.jpg?v=1899ff5b 1728w",
+    alt:"통창으로 햇빛이 드는 매장의 테이블 자리 — 운영 중인 매장 안" }
 };
 
 window.wowPhoto = function(key){

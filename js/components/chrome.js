@@ -134,7 +134,7 @@ function Logo(where){
      그때부터 서로 다른 서비스 둘로 읽힙니다 (brand.js 의 `en`). */
   return '<a class="lg hd-lg" href="/" aria-label="'+esc(nm)+' 홈">'+
     (mark ? mark :
-      '<span class="hd-lg-i" aria-hidden="true">'+icon("home",20)+'</span>'+
+      '<span class="hd-lg-i" aria-hidden="true">'+icon("store",20)+'</span>'+
       '<span class="hd-lg-t"><b>'+esc(nm)+'</b>'+
         (logoSub() ? '<i>'+esc(logoSub())+'</i>' : '')+'</span>')+
   '</a>';
@@ -605,7 +605,24 @@ function Footer(){
      방침 · FAQ 는 전부 위 칸으로 올라갔습니다. */
   var tail = [["/search","통합검색"],["/my","내 기록"]];
 
-  return '<footer class="ft"><div class="w">'+
+  /* 2026-11-20 대표 확정 시안 — 푸터 위 짙은 띠 (브랜드 · 약속 셋 · 문의).
+     ⚠️⚠️ 시안의 "검증된 업체 연결" · "고객센터 1588-0000 · 평일 09~18" 은 **안 씁니다** —
+        검증 기능이 없고(표시광고법 제3조), 번호 · 운영시간이 확인되지 않았습니다.
+        전화번호는 WOW_BIZ.phone 이 채워지면 그 값이 그대로 나오고, 비어 있으면 /faq 로 보냅니다.
+     ⚠️ .ft .w **밖**에 둡니다 — 푸터를 가르는 가로줄은 .ft .w 안에서 하나라야 합니다(check.js). */
+  var telNo = (typeof bizVal === "function") ? String(bizVal("phone") || "") : "";
+  var band = '<div class="ft-band"><div class="w ft-bw">'+
+    '<p class="ft-bb"><b>'+esc(brandName())+'</b><span>'+esc(brandSub())+'</span></p>'+
+    [["layers","한 번에 여러 서비스","필요한 서비스를 골라 한 번에 신청"],
+     ["calc","계산도구 · 가이드","비용과 준비 순서를 미리 확인"],
+     ["users","창업부터 폐업까지","단계마다 필요한 서비스를 한곳에서"]].map(function(x){
+      return '<p class="ft-bi">'+icon(x[0],26)+'<span><b>'+esc(x[1])+'</b><i>'+esc(x[2])+'</i></span></p>';
+    }).join("")+
+    (telNo ? '<a class="ft-bi ft-bc" href="tel:'+esc(telNo.replace(/[^0-9]/g,""))+'">'+icon("phone",26)+'<span><b>고객센터 '+esc(telNo)+'</b><i>전화로 문의하기</i></span></a>'
+        : '<a class="ft-bi ft-bc" href="/faq">'+icon("chat",26)+'<span><b>문의 · 도움말</b><i>자주 묻는 질문 보기</i></span></a>')+
+  '</div></div>';
+
+  return '<footer class="ft">'+band+'<div class="w">'+
     '<div class="ft-g">'+
       '<div class="ft-b">'+
         Logo("ft") +

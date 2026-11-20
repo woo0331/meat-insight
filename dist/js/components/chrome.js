@@ -69,7 +69,7 @@ function Logo(where){
 
   return '<a class="lg hd-lg" href="/" aria-label="'+esc(nm)+' 홈">'+
     (mark ? mark :
-      '<span class="hd-lg-i" aria-hidden="true">'+icon("home",20)+'</span>'+
+      '<span class="hd-lg-i" aria-hidden="true">'+icon("store",20)+'</span>'+
       '<span class="hd-lg-t"><b>'+esc(nm)+'</b>'+
         (logoSub() ? '<i>'+esc(logoSub())+'</i>' : '')+'</span>')+
   '</a>';
@@ -364,7 +364,19 @@ function Footer(){
 
   var tail = [["/search","통합검색"],["/my","내 기록"]];
 
-  return '<footer class="ft"><div class="w">'+
+  var telNo = (typeof bizVal === "function") ? String(bizVal("phone") || "") : "";
+  var band = '<div class="ft-band"><div class="w ft-bw">'+
+    '<p class="ft-bb"><b>'+esc(brandName())+'</b><span>'+esc(brandSub())+'</span></p>'+
+    [["layers","한 번에 여러 서비스","필요한 서비스를 골라 한 번에 신청"],
+     ["calc","계산도구 · 가이드","비용과 준비 순서를 미리 확인"],
+     ["users","창업부터 폐업까지","단계마다 필요한 서비스를 한곳에서"]].map(function(x){
+      return '<p class="ft-bi">'+icon(x[0],26)+'<span><b>'+esc(x[1])+'</b><i>'+esc(x[2])+'</i></span></p>';
+    }).join("")+
+    (telNo ? '<a class="ft-bi ft-bc" href="tel:'+esc(telNo.replace(/[^0-9]/g,""))+'">'+icon("phone",26)+'<span><b>고객센터 '+esc(telNo)+'</b><i>전화로 문의하기</i></span></a>'
+        : '<a class="ft-bi ft-bc" href="/faq">'+icon("chat",26)+'<span><b>문의 · 도움말</b><i>자주 묻는 질문 보기</i></span></a>')+
+  '</div></div>';
+
+  return '<footer class="ft">'+band+'<div class="w">'+
     '<div class="ft-g">'+
       '<div class="ft-b">'+
         Logo("ft") +

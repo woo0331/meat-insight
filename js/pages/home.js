@@ -2167,23 +2167,27 @@ var WP_SUGGEST = ["인테리어", "철거", "권리금", "원상복구", "POS", 
       권리가 확인된 최종 사진이 오면 main-start · main-close · main-pass 자리에 넣으면 그것이 먼저입니다.
       최종 사진은 photos.js 에 줄만 더하면 됩니다 (이 코드는 안 고칩니다). */
 var WP_HERO = [
-  { k:"st", to:"/startup", ph:["main-start"], ia:"store", tag:"창업 준비", h:"창업 준비",
-    p:"업종 선택부터 상권 · 인테리어 · 설비까지, 시작에 필요한 준비를 한곳에서.", m:"상권 · 인테리어 · 설비 준비를 한곳에서", go:"창업 준비 바로가기" },
-  { k:"cl", to:"/closure", ph:["main-close"], ia:"demolish", tag:"폐업·철거", h:"폐업·철거",
-    p:"폐업 절차부터 집기 처분 · 철거 · 원상복구까지, 정리에 필요한 순서를 안내합니다.", m:"폐업 절차 · 집기 처분 · 철거 · 원상복구", go:"폐업·철거 바로가기" }
+  { k:"st", to:"/startup", ph:["main-start"], ia:"store", tag:"창업 준비", h:"새로운 시작을 준비하시나요?",
+    p:"상권 분석, 인테리어, 시설 · 장비 등 창업에 필요한 모든 준비를 도와드립니다.", m:"상권 · 인테리어 · 설비 준비를 한곳에서", go:"창업 준비 바로가기" },
+  { k:"cl", to:"/closure", ph:["main-close"], ia:"demolish", tag:"폐업·철거", h:"매장 정리를 고민하시나요?",
+    p:"폐업 절차부터 철거, 원상복구, 집기 처분, 세무 정리까지 마무리 과정을 지원합니다.", m:"폐업 절차 · 집기 처분 · 철거 · 원상복구", go:"폐업·철거 바로가기" }
 ];
 function wpPh(list){
   for(var i = 0; i < list.length; i++) if(hasPhoto(list[i])) return list[i];
   return "";
 }
 function HomeWPHero(){
+  /* 2026-11-20 대표 확정 시안(1:1) — 세 칸: 왼쪽 대표 메시지 · 가운데 창업 준비 · 오른쪽 폐업·철거.
+     ⚠️ 브랜드 이름과 조사는 brand.js · koWith 에서 옵니다 (손으로 적지 않습니다). */
+  var nm = (typeof brandName === "function") ? brandName() : "인수인계";
+  var nmJ = (typeof koWith === "function") ? koWith(nm, "이가") : nm + "가";
   return '<section class="bhero wp-hero"><div class="w">'+
-    '<div class="wp-msg">'+
-      '<p class="wp-k">창업 · 운영 · 양도양수 · 폐업까지</p>'+
-      '<h1 class="wp-h">자영업의 모든 순간을 연결합니다.</h1>'+
-      '<p class="wp-s">창업 준비부터 매장 운영, 양도양수, 폐업 · 철거까지 한곳에서 쉽고 빠르게 해결하세요.</p>'+
-    '</div>'+
     '<div class="wp-hg">'+
+    '<div class="wp-msg">'+
+      '<h1 class="wp-h">자영업의 모든 순간을<br> '+esc(nmJ)+' 연결합니다.</h1>'+
+      '<span class="wp-sw" aria-hidden="true"></span>'+
+      '<p class="wp-s">창업 준비부터 매장 운영, 양도양수,<br class="br-p"> 폐업 · 철거까지 쉽고 빠르게 해결하세요.</p>'+
+    '</div>'+
       WP_HERO.map(function(x){
         var k = wpPh(x.ph);
         return '<a class="wp-hc wp-hc-'+x.k+'" href="'+esc(x.to)+'">'+
@@ -2280,8 +2284,8 @@ function HomeWPPass(){
        : '<span class="wp-pph wp-pph-n" aria-hidden="true">'+wpPassArt()+'</span>')+
       '<div class="wp-ptx">'+
         '<p class="wp-k">매장 양도양수</p>'+
-        '<h2>매장을 넘기실 때도,<br class="br-m"> 받으실 때도 한곳에서.</h2>'+
-        '<p>지역 · 업종 · 보증금 · 월세 · 권리금으로 매물을 걸러 보시고, 넘기는 순서와 권리금까지 미리 확인하세요.</p>'+
+        '<h2>지금 운영 중인 매장을 넘기거나, 새로운 매장을 찾고 있나요?</h2>'+
+        '<p>지역별 매물부터 권리금, 계약까지 순서대로 확인하고 안전하게 진행하세요.</p>'+
         '<p class="wp-pn">'+icon("info",15)+'<span>'+(n ? '지금 등록된 매물 '+n+'건' : '현재 등록된 매물이 없습니다.')+'</span></p>'+
         /* 매물이 없어도 지금 바로 쓸 수 있는 길 (실제 화면 · tools/urls.json) */
         '<ul class="wp-pnx">'+[["/content?j=acquisition","인수 · 양도 가이드","book"],["/tools/premium","권리금 계산","calc"],
@@ -2299,16 +2303,16 @@ function HomeWPPass(){
 
 /* 03 — 서비스 카드 여섯 (같은 크기 · 실제 화면으로) */
 var WP_CARDS = [
-  { to:"/startup",   ic:"rocket",   ia:"bulb",      b:"창업 준비",     s:"업종 · 상권 · 인테리어 · 설비 준비" },
-  { to:"/operation", ic:"store",    ia:"chart",     b:"매장 운영",     s:"마케팅 · POS · 시설 수리 · 비용 점검" },
-  { to:"/transfer",  ic:"handover", ia:"handover",  b:"매장 양도양수", s:"매물 찾기 · 권리금 · 넘기는 순서" },
-  { to:"/closure",   ic:"hammer",   ia:"demolish",  b:"폐업·철거",     s:"폐업 절차 · 집기 처분 · 원상복구" },
-  { to:"/providers", ic:"users",    ia:"staff",     b:"전문가 상담",   s:"분야별 업체 찾기 · 상담 안내" },
-  { to:"/content",   ic:"book",     ia:"permit",    b:"정보·가이드",   s:"이용 가이드 · 계산도구 · 지원사업" }
+  { to:"/startup",   ic:"rocket",   ia:"bulb",      b:"창업 준비",     s:"창업에 필요한 모든 준비" },
+  { to:"/operation", ic:"store",    ia:"chart",     b:"매장 운영",     s:"운영 효율을 높이는 실무 서비스" },
+  { to:"/transfer",  ic:"handover", ia:"handover",  b:"매장 양도양수", s:"매장 매매 · 인수 · 양도 거래 안내" },
+  { to:"/closure",   ic:"hammer",   ia:"demolish",  b:"폐업·철거",     s:"폐업 절차부터 철거 · 원상복구" },
+  { to:"/providers", ic:"users",    ia:"staff",     b:"전문가 상담",   s:"분야별 업체 찾기와 상담 안내" },
+  { to:"/content",   ic:"book",     ia:"permit",    b:"정보·가이드",   s:"창업 · 운영 · 폐업까지 실전 가이드" }
 ];
 function HomeWPCards(){
   return '<section class="bent wp-cards"><div class="w">'+
-    '<div class="wp-sh"><p class="wp-k">서비스</p><h2>필요한 서비스를 바로 찾아보세요</h2></div>'+
+    '<div class="wp-sh wp-sh-q"><h2>필요한 서비스를 바로 찾아보세요</h2></div>'+
     '<ul class="wp-cg">'+WP_CARDS.map(function(c){
       return '<li><a class="wp-cc" href="'+esc(c.to)+'">'+
         /* 컬러 아이콘(iconArt · 두 톤) — 색은 --ia-1 월넛 · --ia-2 샴페인 두 변수뿐입니다. 없으면 선 아이콘 */
@@ -2323,18 +2327,22 @@ function HomeWPCards(){
 
 /* 04 — 이용 방법 넷. ⚠️ 접수가 닫혀 있으면 그렇다고 적습니다 (신청 단추를 내지 않습니다). */
 var WP_STEPS = [
-  { ic:"check", b:"서비스 선택", s:"필요한 서비스를 고르세요." },
+  { ic:"grid",  b:"서비스 선택", s:"필요한 서비스를 고르세요." },
   { ic:"edit",  b:"정보 입력",   s:"지역 · 업종 · 필요한 일을 한 번만 적습니다." },
   { ic:"chat",  b:"상담 진행",   s:"운영자가 내용을 확인하고 연락드립니다." },
   { ic:"users", b:"업체 연결",   s:"업체가 정해지면 상호를 알리고 연락처 전달 동의를 다시 받습니다." }
 ];
 function HomeWPSteps(){
+  var nm = (typeof brandName === "function") ? brandName() : "인수인계";
   return '<section class="bstep wp-steps"><div class="w">'+
-    '<div class="wp-sh"><p class="wp-k">이용 방법</p><h2>이용 방법은 간단합니다</h2></div>'+
+    '<div class="wp-sbx">'+
+    '<div class="wp-sh"><h2>'+esc(nm)+' 이용 방법</h2>'+
+      '<p>간단한 절차로 필요한 서비스를 전문가와 연결해 드립니다. 업체가 정해지면 상호를 알리고 연락처 전달 동의를 다시 받습니다.</p></div>'+
     '<ol class="wp-sg">'+WP_STEPS.map(function(s, i){
       return '<li><span class="wp-sn" aria-hidden="true">'+icon(s.ic,24)+'</span>'+
         '<span class="wp-st"><i>'+('0'+(i+1))+'</i><b>'+esc(s.b)+'</b><em>'+esc(s.s)+'</em></span></li>';
     }).join("")+'</ol>'+
+    '</div>'+
     '<p class="wp-snote" data-cta="off" data-cta-form="quote">'+icon("info",16)+
       '<span>지금은 신청 접수를 잠시 받지 않고 있습니다. 필요한 서비스와 준비 순서는 그대로 보실 수 있습니다.</span>'+
       '<a href="/intake">접수 안내 보기'+icon("chev",14)+'</a></p>'+

@@ -7984,3 +7984,152 @@ html.ivh #view .wp-hc h2{ margin:0 0 4px; }
 .hsg-tl a{ display:inline-flex; align-items:center; min-height:44px; font-weight:700; color:var(--navy); text-decoration:underline; text-underline-offset:3px; }
 .hsg-calc label small{ font-weight:500; color:var(--ink2); font-size:13px; }
 #ow-cost, #ow-mkt, #ow-fix, #ow-hr{ scroll-margin-top:calc(var(--hdr-h, 64px) + 8px); }
+
+/* ═════════════════════════════════════════════════════════════════
+   2026-11-20 대표 확정 시안 1:1 — 메인 (Warm Premium)
+   01 세 칸: 왼쪽 대표 메시지 · 가운데 창업 준비 · 오른쪽 폐업·철거 (글이 사진 위 왼쪽)
+   02 검색 한 줄 · 03 양도양수 가로 띠 · 04 서비스 여섯 한 줄 · 05 이용 방법 띠
+   ⚠️ 색은 토큰뿐 · 이 블록은 파일 맨 뒤라야 이깁니다 (위 메인 블록들과 특정도가 같습니다).
+   ⚠️ 사진 위 글자는 검사가 못 잽니다 — 카드 왼쪽에 크림 막을 깔고 픽셀로 재서 정했습니다.
+   ═════════════════════════════════════════════════════════════════ */
+html.ivh #view section.wp-hero{ padding:28px 0 24px; }
+.wp-hg{ grid-template-columns:minmax(0,.82fr) minmax(0,1fr) minmax(0,1fr); gap:18px; }
+.wp-msg{ margin:0; padding:8px 8px 8px 4px; text-align:left; align-items:flex-start; justify-content:center; }
+html.ivh #view .wp-h{ margin:0 0 6px; font-size:clamp(28px, 2.5vw, 40px); line-height:1.32; letter-spacing:-.045em; font-weight:800; }
+.wp-sw{ display:block; width:170px; height:14px; margin:4px 0 16px -6px;
+  border-bottom:3px solid var(--gold); border-radius:0 0 60% 40% / 0 0 100% 100%; transform:rotate(-3deg); opacity:.85; }
+html.ivh #view .wp-s{ margin:0; max-width:none; font-size:var(--t-md); line-height:1.75; }
+.br-p{ display:inline; }
+/* 카드 — 사진이 꽉 차고 글은 왼쪽 위에 */
+.wp-hc{ position:relative; display:block; min-height:300px; }
+.wp-hph{ position:absolute; inset:0; aspect-ratio:auto; }
+.wp-hph::after{ content:""; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(90deg, rgba(255,250,242,.97) 0, rgba(255,250,242,.93) 34%, rgba(255,250,242,.55) 56%, rgba(255,250,242,0) 74%); }
+.wp-hc-st .wp-hph .ph{ object-position:70% 50%; }
+.wp-hc-cl .wp-hph .ph{ object-position:62% 55%; }
+.wp-htx{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:flex-start;
+  height:100%; min-height:300px; max-width:64%; padding:28px 26px 26px; }
+.wp-tag{ margin-bottom:14px; padding:5px 14px; font-size:var(--t-cap); background:var(--hm-card); }
+html.ivh #view .wp-hc h2{ margin:0 0 12px; font-size:clamp(22px, 1.9vw, 30px); line-height:1.32; letter-spacing:-.04em; }
+.wp-hp{ margin-bottom:18px; font-size:var(--t-sm); line-height:1.65; color:var(--hm-ink2); }
+.wp-go{ margin-top:auto; min-height:46px; padding:0 22px; }
+/* 검색 — 한 줄(분야 · 적는 칸 · 단추 · 바로가기) */
+.wp-find-s{ margin-top:18px; padding:0; background:none; border:0; box-shadow:none;
+  display:grid; grid-template-columns:minmax(0,1.5fr) auto; align-items:center; gap:10px 24px; }
+html.ivh #view .wp-find{ grid-template-columns:170px 1fr auto; gap:10px; }
+html.ivh #view .wp-find .wp-t, html.ivh #view .wp-find input{ background:var(--hm-card); border-radius:var(--r-pill); height:50px; min-height:50px; }
+html.ivh #view .wp-find-b{ border-radius:var(--r-pill); height:50px; min-height:50px; }
+.wp-fmsg{ grid-column:1 / -1; margin:0; }
+.wp-sug{ margin:0; flex-wrap:nowrap; }
+.wp-sug a{ background:var(--hm-card); white-space:nowrap; }
+/* 양도양수 — 가로 띠 */
+html.ivh #view section.wp-pass{ background:var(--hm-bg); padding:8px 0 22px; }
+.wp-pb{ grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); border-radius:var(--r-lg); }
+.wp-pph{ min-height:230px; position:relative; }
+.wp-pph .ph{ object-position:50% 60%; }
+.wp-ptx{ padding:28px 40px; }
+html.ivh #view .wp-pass h2{ margin:0 0 10px; font-size:clamp(22px, 1.9vw, 30px); line-height:1.38; }
+html.ivh #view .wp-ptx > p:not(.wp-k):not(.wp-pn){ margin:0 0 10px; font-size:var(--t-sm); }
+.wp-pn{ margin:0 0 8px; }
+.wp-pnx{ margin:0 0 14px; }
+.wp-pnx a{ min-height:40px; }
+html.ivh #view .wp-btn, html.ivh #view .wp-btn-o{ min-height:46px; }
+/* 서비스 여섯 — 한 줄 · 가운데 */
+html.ivh #view section.wp-cards{ background:var(--hm-bg); padding:4px 0 20px; }
+.wp-sh-q{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+.wp-cg{ grid-template-columns:repeat(6, minmax(0,1fr)); gap:14px; }
+.wp-cc{ flex-direction:column; justify-content:flex-start; align-items:center; text-align:center; gap:10px;
+  min-height:150px; padding:22px 14px 18px; }
+.wp-ci{ width:58px; height:58px; background:transparent; border:0; }
+.wp-ci svg.ia{ width:46px; height:46px; }
+.wp-ct{ align-items:center; flex:none; gap:6px; }
+.wp-ct b{ font-size:var(--t-lg); }
+.wp-ct em{ font-size:var(--t-sm); line-height:1.5; word-break:keep-all; }
+.wp-cgo{ display:none; }
+/* 이용 방법 — 띠 */
+html.ivh #view section.wp-steps{ background:var(--hm-bg); padding:0 0 32px; }
+.wp-sbx{ display:grid; grid-template-columns:minmax(220px,.62fr) minmax(0,2.4fr); gap:24px; align-items:center;
+  padding:18px 26px; border-radius:var(--r-lg); background:var(--hm-bg2); border:1px solid var(--hm-line); }
+.wp-sbx .wp-sh{ margin:0; padding-right:22px; border-right:1px solid var(--hm-line); }
+html.ivh #view .wp-sbx .wp-sh h2{ font-size:var(--t-xl); margin:0 0 6px; }
+.wp-sbx .wp-sh p{ margin:0; font-size:var(--t-sm); line-height:1.6; color:var(--hm-ink2); }
+.wp-sg{ gap:34px; }
+.wp-sg > li{ flex-direction:row; align-items:center; gap:12px; padding:14px 16px; border-radius:var(--r-pill); box-shadow:none; }
+.wp-sg > li:not(:last-child)::after{ right:-21px; }
+.wp-sn{ flex:none; width:40px; height:40px; background:transparent; color:var(--navy); border:1px solid var(--hm-line); }
+.wp-st{ min-width:0; }
+.wp-st i{ display:none; }
+.wp-st b{ font-size:var(--t-md); }
+.wp-st em{ font-size:var(--t-cap); line-height:1.45; }
+.wp-snote{ margin-top:14px; }
+@media (max-width:1279px){
+  .wp-hg{ grid-template-columns:1fr 1fr; }
+  .wp-msg{ grid-column:1 / -1; padding:0; }
+  .wp-find-s{ grid-template-columns:1fr; }
+  .wp-sug{ flex-wrap:wrap; }
+  .wp-cg{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+  .wp-sbx{ grid-template-columns:1fr; }
+  .wp-sbx .wp-sh{ border-right:0; padding-right:0; }
+}
+@media (max-width:900px){
+  .wp-sg{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+  .wp-sg > li{ border-radius:var(--r-lg); }
+  .wp-pb{ grid-template-columns:1fr; }
+  .wp-pph{ min-height:0; aspect-ratio:2.4/1; }
+}
+@media (max-width:768px){
+  html.ivh #view section.wp-hero{ padding:14px 0 18px; }
+  .wp-hg{ grid-template-columns:1fr; gap:10px; }
+  .wp-msg{ margin-bottom:2px; }
+  html.ivh #view .wp-h{ font-size:23px; margin:0 0 2px; }
+  .wp-sw{ width:120px; height:10px; margin:0 0 8px -4px; }
+  html.ivh #view .wp-s{ font-size:var(--t-cap); }
+  .br-p{ display:none; }
+  /* 폰 — 카드는 사진이 배경인 가로 띠 (글 왼쪽 · 단추) */
+  .wp-hc{ min-height:0; }
+  .wp-hph{ width:auto; }
+  .wp-hph::after{ background:linear-gradient(90deg, rgba(255,250,242,.97) 0, rgba(255,250,242,.94) 52%, rgba(255,250,242,.4) 74%, rgba(255,250,242,0) 92%); }
+  .wp-htx{ min-height:0; max-width:74%; padding:14px 16px; }
+  html.ivh #view .wp-hc h2{ font-size:var(--t-lg); margin:0 0 4px; }
+  html.ivh #view .wp-hc h2 br{ display:none; }
+  .wp-hp{ margin-bottom:8px; }
+  .wp-go{ min-height:44px; }
+  html.ivh #view .wp-find{ grid-template-columns:1fr auto; }
+  .wp-find-s{ margin-top:10px; gap:8px; }
+  .wp-ptx{ padding:20px 18px 22px; }
+  .wp-cg{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+  .wp-cc{ min-height:0; padding:16px 10px 14px; }
+  .wp-sbx{ padding:16px; }
+  .wp-sg{ grid-template-columns:1fr; }
+  .wp-sg > li{ padding:12px 14px; }
+}
+.wp-pass h2{ max-width:17em; }
+/* 2026-11-20 시안 1:1 — 두 번째 맞춤: 사진이 주인공이 되게 (막을 왼쪽 글 자리까지만) */
+@media (min-width:1280px){ .wp-htx{ max-width:56%; } }
+.wp-hph::after{ background:linear-gradient(90deg, rgba(255,250,242,.96) 0, rgba(255,250,242,.9) 36%, rgba(255,250,242,.38) 56%, rgba(255,250,242,0) 70%); }
+/* 창업 사진은 카운터가 왼쪽에 있어 글에 가려집니다 — 좌우를 뒤집어 카운터를 오른쪽으로 (자체 렌더라 뒤집어도 글자 · 상표가 없습니다) */
+.wp-hc-st .wp-hph .ph{ transform:scaleX(-1); object-position:60% 62%; }
+.wp-hc-cl .wp-hph .ph{ object-position:58% 64%; }
+@media (min-width:1280px){ .wp-st em{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; } }
+@media (max-width:1279px){ .wp-htx{ max-width:60%; } }
+@media (max-width:768px){ .wp-htx{ max-width:74%; } }
+/* 세 번째 맞춤 — 대표 문구 두 줄 · 양도양수 띠를 낮게 · 이용 방법 왼쪽 칸 넓게 */
+@media (min-width:1280px){
+  .wp-hg{ grid-template-columns:minmax(0,.84fr) minmax(0,1fr) minmax(0,1fr); }
+  html.ivh #view .wp-h{ font-size:clamp(26px, 2.15vw, 36px); }
+  .wp-pb{ grid-template-columns:minmax(0,.78fr) minmax(0,1.22fr); }
+  .wp-pph{ min-height:0; }
+  .wp-ptx{ padding:24px 40px; }
+  .wp-pgo{ display:inline-flex; }
+  .wp-pnx{ margin:0 0 12px; }
+  .wp-sbx{ grid-template-columns:minmax(0,1fr) minmax(0,2.6fr); }
+}
+/* 사진 위 글자 대비 — 글이 서는 폭까지 막을 짙게 두고 그 뒤에서만 사진이 드러나게 (픽셀로 재서 정했습니다) */
+@media (min-width:769px){
+  .wp-htx{ max-width:54%; }
+  .wp-hph::after{ background:linear-gradient(90deg, rgba(255,250,242,.96) 0, rgba(255,250,242,.94) 56%, rgba(255,250,242,.5) 68%, rgba(255,250,242,0) 82%); }
+}
+@media (max-width:768px){
+  .wp-htx{ max-width:66%; }
+  .wp-hph::after{ background:linear-gradient(90deg, rgba(255,250,242,.97) 0, rgba(255,250,242,.95) 68%, rgba(255,250,242,.45) 80%, rgba(255,250,242,0) 94%); }
+}

@@ -8241,7 +8241,7 @@ html.ivh #view .ih .wp-sug a:hover{ background:rgba(255,252,247,.26); color:#fff
 html.ivh #view .ih .wp-fmsg{ color:#FFD9C4; }
 .ih-go{ display:flex; flex-wrap:wrap; gap:10px; }
 html.ivh #view .ih .ih-b{ background:#FFFCF7; border-color:#FFFCF7; color:var(--charcoal); }
-html.ivh #view .ih .ih-b:hover{ background:var(--sand); border-color:var(--sand); }
+html.ivh #view .ih .ih-b:hover{ background:var(--sand-pt); border-color:var(--sand-pt); }
 html.ivh #view .ih .ih-b-o{ border-color:rgba(255,252,247,.7); color:#fff; }
 html.ivh #view .ih .ih-b-o:hover{ background:rgba(255,252,247,.14); }
 
@@ -8268,7 +8268,7 @@ html.ivh #view .ihc h3{ margin:0 0 12px; font-family:"IIS Serif","Noto Serif KR"
 .iind-c{ display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto; column-gap:14px; row-gap:4px; align-items:center;
   min-height:96px; padding:20px 22px; border-radius:16px; background:var(--hm-card); border:1px solid var(--hm-line); color:inherit; text-decoration:none; }
 .iind-c:hover{ border-color:var(--walnut); }
-.iind-i{ grid-row:1 / 3; display:grid; place-items:center; width:48px; height:48px; border-radius:50%; border:1px solid var(--sand); color:var(--navy); }
+.iind-i{ grid-row:1 / 3; display:grid; place-items:center; width:48px; height:48px; border-radius:50%; border:1px solid var(--sand-pt); color:var(--navy); }
 .iind-c > b{ font-family:"IIS Serif","Noto Serif KR",serif; font-weight:600; font-size:var(--t-lg); color:var(--hm-ink); }
 .iind-c > em{ font-style:normal; font-size:var(--t-cap); line-height:1.5; color:var(--hm-ink2); }
 

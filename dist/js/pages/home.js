@@ -1374,6 +1374,8 @@ function HomeIHelp(){
           '<h3>'+esc(x.h)+'</h3><span class="ihc-p">'+esc(x.p)+'</span>'+
           '<span class="wp-go">'+esc(x.go)+icon("arrow",16)+'</span></span></a>';
     }).join("")+'</div>'+
+
+    HomePicked()+
   '</div></section>';
 }
 

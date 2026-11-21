@@ -2402,6 +2402,8 @@ function HomeIHelp(){
           '<h3>'+esc(x.h)+'</h3><span class="ihc-p">'+esc(x.p)+'</span>'+
           '<span class="wp-go">'+esc(x.go)+icon("arrow",16)+'</span></span></a>';
     }).join("")+'</div>'+
+    /* 고르신 서비스가 있으면 그 자리에서 신청까지 (0개면 줄째 없음 · 옛 서비스 여섯 구간이 들고 있던 줄) */
+    HomePicked()+
   '</div></section>';
 }
 

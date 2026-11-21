@@ -8353,3 +8353,5 @@ html.ivh #view .ih .wp-sug a{ background:rgba(40,34,30,.62); border-color:rgba(2
 @media (max-width:640px){ .ih-ph::after{ background:rgba(40,34,30,.84); } }
 #ihelp{ scroll-margin-top:84px; }
 .ihelp .bdir-pk{ margin-top:24px; }
+/* 번호 원 — 흰 글자는 월넛 위에서만 (샌드 위 2.78 이라 AA 미달이었습니다) */
+.wp-sno{ background:var(--navy); color:#fff; }

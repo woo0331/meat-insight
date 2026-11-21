@@ -57,7 +57,7 @@ var MAIN_CALC = ["cost", "bep", "premium", "closecost"];
 
 function PageMain(){
 
-  return HomeWPHero()+ HomeWPPass()+ HomeWPCards()+ HomeWPSteps();
+  return HomeIHero()+ HomeIHelp()+ HomeIInd()+ HomeIOps()+ HomeITransfer()+ HomeIClose()+ HomeWPSteps();
 }
 
 var HOME_ENTER = [
@@ -1212,9 +1212,10 @@ function HomeWPFind(){
       '<select id="wp-t" class="sel wp-t">'+WP_TYPES.map(function(t){
         return '<option value="'+esc(t.k)+'">'+esc(t.name)+'</option>'; }).join("")+'</select>'+
       '<label class="sr-only" for="sw-q">서비스 · 매장 · 가이드 검색</label>'+
+      '<span class="wp-fbox">'+icon("search",20)+
       '<input id="sw-q" name="q" type="search" autocomplete="off" maxlength="60" '+
-        'placeholder="필요한 서비스 검색" aria-describedby="wp-msg">'+
-      '<button class="sw-find-b wp-find-b" type="submit">'+icon("search",18)+'<span>검색</span></button>'+
+        'placeholder="필요한 서비스, 매장, 정보를 검색해 보세요." aria-describedby="wp-msg">'+
+      '<button class="sw-find-b wp-find-b" type="submit"><span>검색</span></button></span>'+
     '</form>'+
     '<p id="wp-msg" class="wp-fmsg" role="status" aria-live="polite"></p>'+
     '<nav class="wp-sug" aria-label="검색 예시"><span class="wp-sug-k">이렇게 찾아보세요</span>'+
@@ -1277,9 +1278,6 @@ function HomeWPPass(){
         '<p>지역별 매물부터 권리금, 계약까지 순서대로 확인하고 안전하게 진행하세요.</p>'+
         '<p class="wp-pn">'+icon("info",15)+'<span>'+(n ? '지금 등록된 매물 '+n+'건' : '현재 등록된 매물이 없습니다.')+'</span></p>'+
 
-        '<ul class="wp-pnx">'+[["/content?j=acquisition","인수 · 양도 가이드","book"],["/tools/premium","권리금 계산","calc"],
-          ["/transfer?t=in","매장 인수 순서","handover"]].map(function(x){
-          return '<li><a href="'+esc(x[0])+'">'+icon(x[2],16)+'<span>'+esc(x[1])+'</span>'+icon("chev",14)+'</a></li>'; }).join("")+'</ul>'+
         '<div class="wp-pgo">'+
           '<a class="btn wp-btn" href="/stores">매물 바로보기'+icon("arrow",16)+'</a>'+
           '<a class="btn wp-btn-o" href="/sell" data-cta="on" data-cta-form="sell" hidden>내 매장 등록하기</a>'+
@@ -1291,11 +1289,11 @@ function HomeWPPass(){
 }
 
 var WP_CARDS = [
-  { to:"/startup",   ic:"rocket",   ia:"bulb",      b:"창업 준비",     s:"창업에 필요한 모든 준비" },
+  { to:"/startup",   ic:"seed",     ia:"bulb",      b:"창업 준비",     s:"창업에 필요한 모든 준비" },
   { to:"/operation", ic:"store",    ia:"chart",     b:"매장 운영",     s:"운영 효율을 높이는 실무 서비스" },
-  { to:"/transfer",  ic:"handover", ia:"handover",  b:"매장 양도양수", s:"매장 매매 · 인수 · 양도 거래 안내" },
+  { to:"/transfer",  ic:"compare",  ia:"handover",  b:"매장 양도양수", s:"매장 매매 · 인수 · 양도 거래 안내" },
   { to:"/closure",   ic:"hammer",   ia:"demolish",  b:"폐업·철거",     s:"폐업 절차부터 철거 · 원상복구" },
-  { to:"/providers", ic:"users",    ia:"staff",     b:"전문가 상담",   s:"분야별 업체 찾기와 상담 안내" },
+  { to:"/providers", ic:"chat",     ia:"staff",     b:"전문가 상담",   s:"분야별 업체 찾기와 상담 안내" },
   { to:"/content",   ic:"book",     ia:"permit",    b:"정보·가이드",   s:"창업 · 운영 · 폐업까지 실전 가이드" }
 ];
 function HomeWPCards(){
@@ -1304,7 +1302,7 @@ function HomeWPCards(){
     '<ul class="wp-cg">'+WP_CARDS.map(function(c){
       return '<li><a class="wp-cc" href="'+esc(c.to)+'">'+
 
-        '<span class="wp-ci" aria-hidden="true">'+((typeof hasIconArt === "function" && hasIconArt(c.ia)) ? iconArt(c.ia, 40) : icon(c.ic,28))+'</span>'+
+        '<span class="wp-ci" aria-hidden="true">'+icon(c.ic,40)+'</span>'+
         '<span class="wp-ct"><b>'+esc(c.b)+'</b><em>'+esc(c.s)+'</em></span>'+
         '<span class="wp-cgo" aria-hidden="true">'+icon("chev",18)+'</span></a></li>';
     }).join("")+'</ul>'+
@@ -1316,8 +1314,8 @@ function HomeWPCards(){
 var WP_STEPS = [
   { ic:"grid",  b:"서비스 선택", s:"필요한 서비스를 고르세요." },
   { ic:"edit",  b:"정보 입력",   s:"지역 · 업종 · 필요한 일을 한 번만 적습니다." },
-  { ic:"chat",  b:"상담 진행",   s:"운영자가 내용을 확인하고 연락드립니다." },
-  { ic:"users", b:"업체 연결",   s:"업체가 정해지면 상호를 알리고 연락처 전달 동의를 다시 받습니다." }
+  { ic:"phone", b:"상담 진행",   s:"운영자가 내용을 확인하고 연락드립니다." },
+  { ic:"hand",  b:"업체 연결",   s:"업체가 정해지면 상호를 알리고 연락처 전달 동의를 다시 받습니다." }
 ];
 function HomeWPSteps(){
   var nm = (typeof brandName === "function") ? brandName() : "인수인계";
@@ -1326,7 +1324,7 @@ function HomeWPSteps(){
     '<div class="wp-sh"><h2>'+esc(nm)+' 이용 방법</h2>'+
       '<p>간단한 절차로 필요한 서비스를 전문가와 연결해 드립니다. 업체가 정해지면 상호를 알리고 연락처 전달 동의를 다시 받습니다.</p></div>'+
     '<ol class="wp-sg">'+WP_STEPS.map(function(s, i){
-      return '<li><span class="wp-sn" aria-hidden="true">'+icon(s.ic,24)+'</span>'+
+      return '<li><span class="wp-sno" aria-hidden="true">'+(i+1)+'</span><span class="wp-sn" aria-hidden="true">'+icon(s.ic,26)+'</span>'+
         '<span class="wp-st"><i>'+('0'+(i+1))+'</i><b>'+esc(s.b)+'</b><em>'+esc(s.s)+'</em></span></li>';
     }).join("")+'</ol>'+
     '</div>'+
@@ -1336,5 +1334,141 @@ function HomeWPSteps(){
     '<p class="wp-snote wp-snote-on" data-cta="on" data-cta-form="quote" hidden>'+icon("info",16)+
       '<span>한 번만 적어 보내시면 운영자가 확인하고 연락드립니다.</span>'+
       '<a class="btn wp-btn" href="/quote">상담 신청하기'+icon("arrow",16)+'</a></p>'+
+  '</div></section>';
+}
+
+function ihPhoto(key, cls, eager, sizes){
+  return hasPhoto(key) ? photoBox(key, cls || "", !!eager, sizes || "") : "";
+}
+
+function HomeIHero(){
+  return '<section class="bhero ih">'+
+    '<div class="ih-ph" aria-hidden="true">'+ihPhoto("insu-hero", "", true, "100vw")+'</div>'+
+    '<div class="w ih-in">'+
+      '<p class="ih-k">창업 · 운영 · 양도양수 · 폐업까지</p>'+
+      '<h1 class="ih-h">자영업의 모든 순간을<br class="br-p"> 연결합니다.</h1>'+
+      '<p class="ih-s">창업 준비부터 매장 운영, 양도양수, 폐업 · 철거까지 필요한 서비스와 정보를 한곳에서 찾으세요.</p>'+
+      HomeWPFind()+
+      '<div class="ih-go">'+
+        '<a class="btn ih-b" href="#ihelp">서비스 둘러보기'+icon("arrow",16)+'</a>'+
+        '<a class="btn ih-b-o" href="/providers">전문가 · 업체 찾기</a>'+
+        '<a class="btn ih-b-o" href="/content">정보 · 가이드</a>'+
+      '</div>'+
+    '</div>'+
+  '</section>';
+}
+
+var IH_HELP = [
+  { k:"st", to:"/startup", ph:"insu-startup", tag:"창업 준비", h:"새로운 시작을 준비하시나요?",
+    p:"업종 선택부터 상권 · 인테리어 · 설비 · 비용과 절차까지, 오픈에 필요한 준비를 순서대로 안내합니다.", go:"창업 준비 바로가기" },
+  { k:"cl", to:"/closure", ph:"insu-closure", tag:"폐업 · 철거", h:"매장 정리를 고민하시나요?",
+    p:"철거 전에 양도 가능성부터 확인하고, 원상복구 · 집기 처분 · 세무 정리까지 마무리 순서를 안내합니다.", go:"폐업·철거 바로가기" }
+];
+function HomeIHelp(){
+  return '<section class="ihelp" id="ihelp"><div class="w">'+
+    '<div class="ih-sh"><p class="ih-kk">SERVICE</p><h2>지금 어떤 도움이 필요하신가요?</h2></div>'+
+    '<div class="ihelp-g">'+IH_HELP.map(function(x){
+      return '<a class="wp-hc ihc wp-hc-'+x.k+'" href="'+esc(x.to)+'">'+
+        '<span class="ihc-ph" aria-hidden="true">'+ihPhoto(x.ph, "", false, "(max-width:900px) 92vw, 50vw")+'</span>'+
+        '<span class="ihc-tx"><span class="ihc-tag">'+esc(x.tag)+'</span>'+
+          '<h3>'+esc(x.h)+'</h3><span class="ihc-p">'+esc(x.p)+'</span>'+
+          '<span class="wp-go">'+esc(x.go)+icon("arrow",16)+'</span></span></a>';
+    }).join("")+'</div>'+
+  '</div></section>';
+}
+
+function HomeIInd(){
+
+  var L = (window.AM_INDUSTRIES || []).filter(function(i){ return i.key !== "etc"; }).slice(0, 11);
+  return '<section class="iind"><div class="w">'+
+    '<div class="ih-sh ih-sh-r"><div><p class="ih-kk">BY INDUSTRY</p><h2>업종별 서비스 탐색</h2>'+
+      '<p>업종을 고르시면 그 업종에서 먼저 챙길 서비스와 준비 순서를 보여 드립니다.</p></div>'+
+      '<a class="ih-all" href="/startup">전체 업종 보기'+icon("chev",14)+'</a></div>'+
+    '<ul class="iind-g">'+L.map(function(i){
+      return '<li><a class="iind-c" href="/startup/'+esc(i.key)+'">'+
+        '<span class="iind-i" aria-hidden="true">'+icon(i.icon || "store", 26)+'</span>'+
+        '<b>'+esc(i.name)+'</b>'+(i.lead ? '<em>'+esc(i.lead)+'</em>' : '')+'</a></li>';
+    }).join("")+
+    '<li><a class="iind-c iind-all" href="/startup"><span class="iind-i" aria-hidden="true">'+icon("grid",24)+'</span>'+
+      '<b>전체 업종 보기</b><em>기타 업종 · 온라인 판매까지</em></a></li></ul>'+
+  '</div></section>';
+}
+
+function HomeIOps(){
+  var G = (window.AM_PICK_GROUP || {}).operation || [];
+  var link = function(any){
+    var a = String(any || "").split("/"), c = (window.AM_CATS || []).filter(function(x){ return x.key === a[0]; })[0];
+    return c && typeof catSubTo === "function" ? catSubTo(c, a[1] || "") : "/operation";
+  };
+  return '<section class="iops"><div class="w iops-in">'+
+    '<div class="iops-ph" aria-hidden="true">'+ihPhoto("insu-operations", "", false, "(max-width:900px) 92vw, 50vw")+'</div>'+
+    '<div class="iops-tx">'+
+      '<p class="ih-kk">OPERATION</p><h2>매장 운영 지원</h2>'+
+      '<p class="iops-s">문을 연 뒤에도 필요한 일은 계속됩니다. 홍보부터 세무, 시설 수리, POS까지 분야별로 찾아보세요.</p>'+
+      '<ul class="iops-l">'+G.map(function(g){
+        return '<li><a href="'+esc(link(g.any))+'"><span>'+esc(g.name)+'</span>'+icon("chev",14)+'</a></li>';
+      }).join("")+'</ul>'+
+      '<a class="btn ih-b" href="/operation">매장 운영 전체 보기'+icon("arrow",16)+'</a>'+
+    '</div>'+
+  '</div></section>';
+}
+
+window.ihStoreFind = function(e){
+  if(e) e.preventDefault();
+  var q = [], v = function(id){ var el = document.getElementById(id); return el ? el.value : ""; };
+  if(v("itr-r")) q.push("r=" + encodeURIComponent(v("itr-r")));
+  if(v("itr-i")) q.push("i=" + encodeURIComponent(v("itr-i")));
+  if(v("itr-dp")) q.push("dp=" + encodeURIComponent(v("itr-dp")));
+  go("/stores" + (q.length ? "?" + q.join("&") : ""));
+  return false;
+};
+function HomeITransfer(){
+  var S = (window.AM_STORES || []);
+  var dp = ((window.AM_STORE_RANGES || window.AM_MK_RANGES || []).filter(function(g){ return g.key === "dp"; })[0] || {}).opts || [];
+  return '<section class="bpass itr"><div class="w">'+
+    '<div class="itr-b">'+
+      '<div class="itr-ph" aria-hidden="true">'+ihPhoto("insu-transfer", "", false, "(max-width:900px) 92vw, 50vw")+'</div>'+
+      '<div class="itr-tx"><p class="ih-kk">TRANSFER</p>'+
+        '<h2>지금 운영 중인 매장을 넘기거나, 새로운 매장을 찾고 있나요?</h2>'+
+        '<p>지역 · 업종 · 보증금으로 매물을 찾고, 권리금과 계약 순서까지 미리 확인하세요.</p>'+
+        '<form class="itr-f" onsubmit="return ihStoreFind(event)" aria-label="매물 찾기">'+
+          '<label class="sr-only" for="itr-r">지역</label>'+RegionSelect("itr-r", "", "", "지역 전체")+
+          '<label class="sr-only" for="itr-i">업종</label>'+IndustrySelect("itr-i", "", "", "업종 전체")+
+          '<label class="sr-only" for="itr-dp">보증금</label><select id="itr-dp" class="sel"><option value="">보증금 전체</option>'+
+            dp.map(function(o){ return '<option value="'+esc(o.k)+'">'+esc(o.name)+'</option>'; }).join("")+'</select>'+
+          '<button class="btn ih-b" type="submit">'+icon("search",16)+'매물 찾기</button>'+
+        '</form>'+
+        '<div class="wp-pgo itr-go">'+
+          '<a class="btn ih-b-o" href="/stores">매물 바로보기</a>'+
+          '<a class="btn ih-b-o" href="/transfer">양도양수 안내</a>'+
+          '<a class="btn ih-b-o" href="/sell" data-cta="on" data-cta-form="sell" hidden>내 매장 등록하기</a>'+
+          '<a class="btn ih-b-o" href="/transfer?t=out" data-cta="off" data-cta-form="sell">내 매장 넘기는 순서</a>'+
+          '<a class="btn ih-b-o" href="/tools/premium">권리금 계산</a>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    (S.length
+      ? '<div class="itr-l"><h3>최근 등록된 매물</h3><div class="itr-g">'+S.slice(0,3).map(function(s){ return StoreCard(s); }).join("")+'</div></div>'
+      : '<p class="itr-empty">'+icon("info",16)+'<span>현재 등록된 매물이 없습니다. 매물이 올라오면 이 자리에 실제 매물이 나옵니다.</span>'+
+        '<a href="/transfer?t=in">매장 인수 순서 보기'+icon("chev",14)+'</a></p>')+
+  '</div></section>';
+}
+
+function HomeIClose(){
+  return '<section class="iclose"><div class="w iclose-in">'+
+    '<div class="iclose-tx"><p class="ih-kk">CLOSURE</p>'+
+      '<h2>철거하기 전에, 넘길 수 있는지부터 확인하세요.</h2>'+
+      '<ol class="iclose-l">'+
+        '<li><b>양도 가능성 검토</b><span>매장을 그대로 넘기면 철거비와 원상복구 부담이 줄어듭니다.</span></li>'+
+        '<li><b>시설 · 집기 처분</b><span>쓸 만한 장비는 따로 팔 수 있습니다.</span></li>'+
+        '<li><b>철거 · 원상복구 · 폐업 신고</b><span>범위와 순서를 정한 뒤 견적을 받습니다.</span></li>'+
+      '</ol>'+
+      '<div class="iclose-go">'+
+        '<a class="btn ih-b" href="/closure">폐업·철거 안내 보기'+icon("arrow",16)+'</a>'+
+        '<a class="btn ih-b-o" href="/quote?mode=close&from=home" data-cta="on" data-cta-form="close" hidden>정리 상담 신청</a>'+
+        '<a class="btn ih-b-o" href="/intake" data-cta="off" data-cta-form="close">접수 안내</a>'+
+      '</div>'+
+    '</div>'+
+    '<div class="iclose-ph" aria-hidden="true">'+ihPhoto("insu-closure", "", false, "(max-width:900px) 92vw, 50vw")+'</div>'+
   '</div></section>';
 }

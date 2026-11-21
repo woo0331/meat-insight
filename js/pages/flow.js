@@ -89,7 +89,7 @@ function StartIntro(ind){
      ⚠️ 주 단추는 견적 접수 상태를 따릅니다 (닫힘이면 접수 안내). 보조 단추는 바로 아래 고르개. */
   return HallHero({
     /* 2026-11-20 — 출처가 확인되지 않은 hero-startup 사진 대신 자체 일러스트(아이디어 → 매장 오픈) */
-    side:"start", photo:"", art:hhFlowArt("bulb", "창업 준비", "store", "매장 오픈"),
+    side:"start", photo:"insu-startup", /* 2026-11-21 ZIP 01_startup (옛 자체 일러스트 hhFlowArt 는 지우지 않았습니다) */
     kicker:"창업 준비 · 가게 창업, 막막하지 않게",
     h1raw:"예비 창업자를 위한<br><em>원스톱 창업 준비</em>",
     /* 2026-11-19 — 설명이 **접수 상태를 따릅니다.** 닫혀 있으면 "한 번에 신청" 을 약속하지 않고
@@ -702,7 +702,7 @@ function ClosureIntro(path){
      ⚠️⚠️ 흐름의 첫 걸음은 **양도 검토**입니다 — 철거가 맨 앞이 아닙니다
      (넘길 수 있으면 철거비도 원상복구비도 줄어듭니다). */
   return HallHero({
-    side:"close", photo:"hero-closure",
+    side:"close", photo:"insu-closure",
     kicker:"매장 정리부터 철거, 세무까지 한 번에",
     h1raw:"폐업 · 철거<br><em>통합 서비스</em>",
     lead:"바로 철거하기 전에 넘길 수 있는 것부터 확인하세요. 양도 검토 → 집기 처분 → 철거 · 원상복구 → 신고 · 세무 순서로 짚어 드립니다.",

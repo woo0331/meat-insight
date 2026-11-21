@@ -255,7 +255,7 @@ function OpsvcForInd(ind){
 function OpsIntro(ind){
 
   return HallHero({
-    side:"ops", photo:"hero-ops",
+    side:"ops", photo:"insu-operations",
     kicker:"매장을 더 잘 운영하는 실전 서비스" + (ind ? " · " + ind.name : ""),
     h1raw:"매장 <em>운영</em>",
 
@@ -488,7 +488,7 @@ function AcqIntro(ind, iq, picked){
   var compact = picked === "in" || picked === "out";
   return HallHero({
 
-    side:"transfer", photo:"",
+    side:"transfer", photo:(compact ? "" : "insu-transfer"),
     art:(compact || typeof wpPassArt !== "function") ? "" : wpPassArt(),
     kicker:(compact ? (picked === "out" ? "내 매장을 넘기고 싶어요" : "매장을 인수하고 싶어요") : "사장님의 새로운 시작을 위한") + (ind ? " · " + ind.name : ""),
     h1raw:"매장 <em>양도양수</em>",

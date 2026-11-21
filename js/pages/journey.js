@@ -391,7 +391,7 @@ function OpsvcForInd(ind){
 function OpsIntro(ind){
   /* 2026-11-18 카테고리 리뉴얼 — 전문관 머리 + "이런 고민" 넷(OpsWorry). */
   return HallHero({
-    side:"ops", photo:"hero-ops",
+    side:"ops", photo:"insu-operations",
     kicker:"매장을 더 잘 운영하는 실전 서비스" + (ind ? " · " + ind.name : ""),
     h1raw:"매장 <em>운영</em>",
     /* 2026-11-19 — 접수 상태를 따르는 설명 (닫혀 있으면 "신청" 을 약속하지 않습니다). */
@@ -727,7 +727,7 @@ function AcqIntro(ind, iq, picked){
   return HallHero({
     /* 2026-11-20 — 출처가 확인되지 않은 kind-pass 사진 대신 메인과 같은 자체 일러스트
        (넘기는 매장 → 받는 사장님 · wpPassArt). 경로를 고른 화면은 머리를 줄이므로 판을 안 냅니다. */
-    side:"transfer", photo:"",
+    side:"transfer", photo:(compact ? "" : "insu-transfer"), /* 2026-11-21 ZIP 03_transfer — 경로를 고른 줄인 머리에는 안 냅니다 */
     art:(compact || typeof wpPassArt !== "function") ? "" : wpPassArt(),
     kicker:(compact ? (picked === "out" ? "내 매장을 넘기고 싶어요" : "매장을 인수하고 싶어요") : "사장님의 새로운 시작을 위한") + (ind ? " · " + ind.name : ""),
     h1raw:"매장 <em>양도양수</em>",

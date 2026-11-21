@@ -351,25 +351,25 @@ window.WOW_PHOTO_SLOTS = [
   { key:"cta-consult", sizes:"(max-width:1024px) 92vw, 40vw",
     where:"(지금 안 나옴) 메인 06 · 견적 · 상담 신청 오른쪽", min:[1120,840], ratio:[1.25,1.45], maxKB:150,
     note:"밝은 매장 · 상담하는 장면. ⚠️ 한 업종이 드러나면 안 됩니다. 정리 · 철거 현장 금지" },
-  /* ⚠️⚠️ 2026-11-20 Warm Premium 메인 첫 화면 — 창업 준비 · 폐업·철거 두 카드의 **최종 사진 자리**.
-     비어 있는 동안은 자체 일러스트가 섭니다.
-     ⚠️⚠️ 2026-11-20 — 두 장은 **자체 제작 3D 렌더**입니다 (외부 사진 · 스톡 · 생성형 AI 없음).
-     three.js 로 만든 장면을 이 저장소 밖에서 그려 jpg 로 옮겼고, 사람 · 상호 · 간판 · 로고가
-     없습니다. 두 장의 밝기 · 색을 맞췄습니다(평균 밝기 157 · 163). 바꾸실 때는 같은 쌍으로.
-     최종 사진이 오면 img/raw/main-start.jpg · main-close.jpg 에 넣고
-     node tools/fit-photos.js --write → 이 두 줄의 where 만 고치면 됩니다 (화면 코드는 안 고칩니다).
-     재 본 값 — 카드 사진 칸 1440px 630×354 · 390px 348×196 (16:9). 2배 화면을 생각해 최소 1400×788. */
-  { key:"main-start", sizes:"(max-width:768px) 92vw, 640px",
-    where:"메인 첫 화면 · 창업 준비 카드 — 자체 제작 3D 렌더(2026-11-20 · 출처: 자체 · 사용 범위 제한 없음)", min:[1400,788], ratio:[1.6,1.9], maxKB:220,
-    note:"밝은 카페 · 문 여는 매장. 자연광 · 따뜻한 나무 · 깨끗한 카운터. ⚠️ 상호 · 간판 · 로고 · 알아볼 수 있는 얼굴 금지" },
-  { key:"main-close", sizes:"(max-width:768px) 92vw, 640px",
-    where:"메인 첫 화면 · 폐업·철거 카드 — 자체 제작 3D 렌더(2026-11-20 · 출처: 자체 · 사용 범위 제한 없음)", min:[1400,788], ratio:[1.6,1.9], maxKB:220,
-    note:"짐을 뺀 밝은 빈 매장 · 통창으로 햇빛. ⚠️ 처연하면 안 됩니다 — 불 꺼진 가게 · 고개 숙인 사람 · 부서진 집기 금지" },
-  /* 2026-11-20 — 메인 양도양수 가로 배너의 최종 사진 자리. 비어 있는 동안은 자체 일러스트(wpPassArt).
-     재 본 값 — 1440px 628×409 · 390px 348×196. ⚠️ 권리가 확인된 사진만 넣습니다. */
-  { key:"main-pass", sizes:"(max-width:900px) 92vw, 640px",
-    where:"메인 양도양수 가로 배너 — 자체 제작 3D 렌더(2026-11-20 · 출처: 자체 · 사용 범위 제한 없음)", min:[1280,840], ratio:[1.3,1.9], maxKB:220,
-    note:"밝은 매장 카운터 · 좌석 — 넘기고 받는 장면. ⚠️ 상호 · 간판 · 얼굴 금지 · 처연하면 안 됩니다" }
+  /* ⚠️⚠️ 2026-11-21 Warm Premium 사진 중심 리디자인 — 대표님이 주신 insu_premium_assets.zip 다섯 장.
+     README 그대로: 모두 AI 생성 연출 이미지이고 실제 고객 · 거래 · 매물 · 제휴업체 사진이 아닙니다 —
+     그렇게 소개하지 마세요. 01~04 는 4분할에서 잘라 768×512 라 최소 크기에 못 미칩니다(temp:true).
+     ⚠️ 03_transfer 를 매물 썸네일로 쓰지 마세요 (매물 목록은 실제 매물 사진만). */
+  { key:"insu-hero", sizes:"100vw",
+    where:"메인 브랜드 히어로 (전체 폭) — ZIP 00_hero_brand.jpg", min:[1600,900], ratio:[1.5,2.0], maxKB:400,
+    note:"넓은 상업 공간 · 글은 HTML 로 위에 얹습니다" },
+  { key:"insu-startup", sizes:"(max-width:900px) 92vw, 50vw",
+    where:"메인 '지금 어떤 도움' 창업 준비 카드 · /startup 머리 — ZIP 01_startup.jpg", min:[1200,800], ratio:[1.3,1.8], maxKB:220, temp:true,
+    note:"밝은 카페 오픈 준비 현장" },
+  { key:"insu-operations", sizes:"(max-width:900px) 92vw, 50vw",
+    where:"메인 '매장 운영 지원' · /operation 머리 — ZIP 02_operations.jpg", min:[1200,800], ratio:[1.3,1.8], maxKB:220, temp:true,
+    note:"사람 없는 준비된 음식점 내부" },
+  { key:"insu-transfer", sizes:"(max-width:900px) 92vw, 50vw",
+    where:"메인 '매장 양도양수' 배너 · /transfer 머리 — ZIP 03_transfer.jpg (매물 사진 아님)", min:[1200,800], ratio:[1.3,1.8], maxKB:220, temp:true,
+    note:"매장 외관과 상담 테이블 · 매물 썸네일 금지" },
+  { key:"insu-closure", sizes:"(max-width:900px) 92vw, 50vw",
+    where:"메인 '지금 어떤 도움' 폐업·철거 카드 · 메인 '폐업·철거' · /closure 머리 — ZIP 04_closure.jpg", min:[1200,800], ratio:[1.3,1.8], maxKB:220, temp:true,
+    note:"집기 정리 중인 빈 공간" }
 ];
 
 
@@ -450,21 +450,31 @@ window.WOW_PHOTOS = {
     webp:"/img/kind-asset-sm.webp?v=d6f4fc74 560w, /img/kind-asset.webp?v=64cc0fe1 1120w",
     jpg:"/img/kind-asset-sm.jpg?v=428937df 560w, /img/kind-asset.jpg?v=449ec642 1120w",
     alt:"스테인리스 조리대와 장비가 늘어선 상업용 주방" },
-  "main-start": { src:"/img/main-start.jpg?v=abd18b07",
-    w:1890, h:1063,
-    webp:"/img/main-start-sm.webp?v=8a441914 1040w, /img/main-start.webp?v=ecaf8953 1890w",
-    jpg:"/img/main-start-sm.jpg?v=83c59bc2 1040w, /img/main-start.jpg?v=abd18b07 1890w",
-    alt:"햇빛이 드는 밝은 매장 안 — 나무 카운터와 의자, 테이블이 갖춰진 오픈 준비 공간" },
-  "main-close": { src:"/img/main-close.jpg?v=7826fde6",
-    w:1890, h:1063,
-    webp:"/img/main-close-sm.webp?v=96493dd6 1040w, /img/main-close.webp?v=b9b85dda 1890w",
-    jpg:"/img/main-close-sm.jpg?v=0c2e2f35 1040w, /img/main-close.jpg?v=7826fde6 1890w",
-    alt:"집기를 모두 뺀 밝고 정돈된 빈 매장 — 통창으로 햇빛이 드는 바닥" },
-  "main-pass": { src:"/img/main-pass.jpg?v=1899ff5b",
-    w:1728, h:972,
-    webp:"/img/main-pass-sm.webp?v=dc2a5a04 950w, /img/main-pass.webp?v=0314969d 1728w",
-    jpg:"/img/main-pass-sm.jpg?v=8b5df192 950w, /img/main-pass.jpg?v=1899ff5b 1728w",
-    alt:"통창으로 햇빛이 드는 매장의 테이블 자리 — 운영 중인 매장 안" }
+  "insu-hero": { src:"/img/insu/00_hero_brand.jpg?v=467534fc",
+    w:1672, h:941,
+    webp:"/img/insu/00_hero_brand-sm.webp?v=30af4ab3 960w, /img/insu/00_hero_brand.webp?v=aa50872f 1672w",
+    jpg:"/img/insu/00_hero_brand-sm.jpg?v=9029a9d5 960w, /img/insu/00_hero_brand.jpg?v=467534fc 1672w",
+    alt:"햇빛이 드는 넓은 상업 공간 — 카페 · 매장 · 미용 공간이 이어진 실내" },
+  "insu-startup": { src:"/img/insu/01_startup.jpg?v=b0f67322",
+    w:768, h:512,
+    webp:"/img/insu/01_startup.webp?v=c66c129f 768w",
+    jpg:"/img/insu/01_startup.jpg?v=b0f67322 768w",
+    alt:"햇빛이 드는 카페 오픈 준비 현장 — 나무 카운터와 커피 머신, 상자와 사다리" },
+  "insu-operations": { src:"/img/insu/02_operations.jpg?v=87744a96",
+    w:768, h:512,
+    webp:"/img/insu/02_operations.webp?v=77775207 768w",
+    jpg:"/img/insu/02_operations.jpg?v=87744a96 768w",
+    alt:"영업 준비를 마친 음식점 내부 — 사람 없는 테이블과 주방" },
+  "insu-transfer": { src:"/img/insu/03_transfer.jpg?v=980076c3",
+    w:768, h:512,
+    webp:"/img/insu/03_transfer.webp?v=bec533d9 768w",
+    jpg:"/img/insu/03_transfer.jpg?v=980076c3 768w",
+    alt:"매장 외관과 상담 테이블 — 서류와 노트북이 놓인 야외 자리" },
+  "insu-closure": { src:"/img/insu/04_closure.jpg?v=bf49facc",
+    w:768, h:512,
+    webp:"/img/insu/04_closure.webp?v=9a463fcb 768w",
+    jpg:"/img/insu/04_closure.jpg?v=bf49facc 768w",
+    alt:"집기를 정리하는 빈 매장 — 쌓아 둔 의자와 사다리, 통창" }
 };
 
 window.wowPhoto = function(key){

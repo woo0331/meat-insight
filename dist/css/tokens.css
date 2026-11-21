@@ -265,3 +265,24 @@
 @media (max-width:420px){
   :root{ --t-hero: 36px; --t-sig: 28px; --t-3xl: 24px; }
 }
+
+:root{
+  --iv:        #F5F1E9;
+  --sand:      #D9C6AD;
+  --walnut:    #6A4B3B;
+  --charcoal:  #28221E;
+  --ter:       #C66A34;
+  --ter-ink:   #9A4C22;
+  --bg:        #F5F1E9;
+  --bg-cream:  #F5F1E9;
+  --navy:      #6A4B3B;
+  --navy-2:    #5B3F31;
+  --ink:       #28221E;
+  --hm-bg:     #F5F1E9;
+  --hm-bg2:    #EDE4D6;
+  --hm-card:   #FFFCF7;
+  --hm-line:   #E2D5C2;
+  --hm-ink:    #28221E;
+  --hm-btn:    #6A4B3B;
+  --hm-btn-h:  #28221E;
+}

@@ -25,7 +25,7 @@ function StartIntro(ind){
 
   return HallHero({
 
-    side:"start", photo:"", art:hhFlowArt("bulb", "창업 준비", "store", "매장 오픈"),
+    side:"start", photo:"insu-startup",
     kicker:"창업 준비 · 가게 창업, 막막하지 않게",
     h1raw:"예비 창업자를 위한<br><em>원스톱 창업 준비</em>",
 
@@ -450,7 +450,7 @@ var CLOSE_CALC_TONE = { close:"sv4", closecost:"sv5", premium:"t13" };
 function ClosureIntro(path){
 
   return HallHero({
-    side:"close", photo:"hero-closure",
+    side:"close", photo:"insu-closure",
     kicker:"매장 정리부터 철거, 세무까지 한 번에",
     h1raw:"폐업 · 철거<br><em>통합 서비스</em>",
     lead:"바로 철거하기 전에 넘길 수 있는 것부터 확인하세요. 양도 검토 → 집기 처분 → 철거 · 원상복구 → 신고 · 세무 순서로 짚어 드립니다.",

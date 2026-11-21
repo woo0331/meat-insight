@@ -985,7 +985,7 @@ const AUDIT = `(() => {
   document.querySelectorAll("#view .ic-t, #view .stg-i, #view .ia-t," +
                             " #view .mhall-i, #view .mstp-i," +
                             " #view .bent-i, #view .bwhy-i, #view .bban-i," +
-                            " #view .bstep-i, #view .bcal-i, #view .wp-ci, #view .wp-sn").forEach(e => {
+                            " #view .bstep-i, #view .bcal-i, #view .wp-ci, #view .wp-sn, #view .iind-i").forEach(e => {
     if(e.querySelector("svg")) return;
     const own = (e.parentElement || e);
     out.ico.push((own.textContent || "").trim().slice(0, 14) || "(이름 없음)");
@@ -2169,8 +2169,9 @@ const AUDIT = `(() => {
     if(!secs[0].classList.contains("bhero"))
       return "첫 구간이 히어로가 아닙니다 — " + (secs[0].className || "").split(" ")[0];
     /* 2026-11-19 Warm Premium — 히어로 다음이 양도양수 배너(bpass)이고 서비스 여섯(bent)이 그 뒤입니다 */
-    if(!(secs[1] && secs[1].classList.contains("bpass")))
-      return "히어로 다음이 양도양수 배너가 아닙니다 — " + ((secs[1] || {}).className || "").split(" ")[0];
+    /* 2026-11-21 Warm Premium 사진 중심 리디자인 — 히어로 다음이 '지금 어떤 도움'(ihelp · 창업 준비 / 폐업·철거 두 사진 카드) */
+    if(!(secs[1] && secs[1].classList.contains("ihelp")))
+      return "히어로 다음이 '지금 어떤 도움이 필요하신가요' 가 아닙니다 — " + ((secs[1] || {}).className || "").split(" ")[0];
     const h1s = document.querySelectorAll("#view h1");
     if(h1s.length !== 1) return "화면의 h1 이 " + h1s.length + "개입니다";
     if(!h1s[0].closest(".bhero")) return "h1 이 히어로 구간에 없습니다";
@@ -2178,22 +2179,29 @@ const AUDIT = `(() => {
     const H = [].slice.call(document.querySelectorAll(".wp-hc"));
     if(H.map(function(a){ return a.getAttribute("href"); }).join() !== "/startup,/closure")
       return "히어로 카드가 창업 준비 · 폐업·철거 둘이 아닙니다";
-    const L = [].slice.call(document.querySelectorAll(".wp-cc"));
-    const fl = L.map(function(a){ return a.getAttribute("href"); }),
-          wf = ["/startup","/operation","/transfer","/closure","/providers","/content"];
-    if(fl.join() !== wf.join())
-      return "서비스 카드가 [" + fl.join(" ") + "] 입니다 — 창업 → 운영 → 양도양수 → 폐업 → 상담 → 가이드 차례라야 합니다";
-    for(const a of H.concat(L)) if(a.querySelector("a")) return "카드 안에 링크가 또 있습니다";
+    /* 2026-11-21 — 서비스 여섯 카드가 내려가고 네 기둥이 저마다 구간을 가집니다. 그 넷으로 가는 길이 메인 본문에 있어야 합니다 */
+    const L = [];
+    const lost4 = ["/startup","/operation","/transfer","/closure","/providers","/content"].filter(function(u){
+      return !document.querySelector('a[href="' + u + '"]'); });
+    if(lost4.length) return "메인에서 갈 길이 없는 기둥: " + lost4.join(" · ");
+    for(const a of H) if(a.querySelector("a")) return "카드 안에 링크가 또 있습니다";
     /* 2026-11-20 배포 후보 — 출처가 기록에 없는 사진 셋은 메인에서 안 불려야 하고, 세 자리는 자체 일러스트(또는 권리 확인된 main-* 사진)로 섭니다 */
     const used = [].slice.call(document.querySelectorAll("#view img, #view source")).map(function(e){ return (e.getAttribute("src") || "") + " " + (e.getAttribute("srcset") || ""); }).join(" ");
     const leak = ["hero-startup","kind-take","kind-pass"].filter(function(k){ return used.indexOf("/img/" + k) >= 0; });
     if(leak.length) return "출처 미확인 사진이 메인에 불립니다 — " + leak.join(" · ");
-    const spot = [[H[0], "main-start", "창업 카드"], [H[1], "main-close", "폐업 카드"], [document.querySelector(".wp-pb"), "main-pass", "양도양수 배너"]];
+    /* 2026-11-21 — 지시서가 정한 자리에 ZIP 사진 다섯 장이 정확히 앉았는가 (다른 사진으로 바꿔 끼우면 잡습니다) */
+    const spot = [[document.querySelector(".ih-ph"), "00_hero_brand", "브랜드 히어로"], [H[0], "01_startup", "창업 카드"],
+                  [H[1], "04_closure", "폐업 카드"], [document.querySelector(".iops-ph"), "02_operations", "매장 운영 지원"],
+                  [document.querySelector(".itr-ph"), "03_transfer", "양도양수 배너"], [document.querySelector(".iclose-ph"), "04_closure", "폐업·철거 구간"]];
     for(const x of spot){
       if(!x[0]) return x[2] + " 가 없습니다";
-      const ok = (window.hasPhoto && hasPhoto(x[1])) ? !!x[0].querySelector("img") : !!x[0].querySelector(".wp-hph-n svg, .wp-pph-n svg");
-      if(!ok) return x[2] + " 에 그림이 없습니다 (일러스트 판도 사진도 아님)";
+      const im = x[0].querySelector("img");
+      if(!im) return x[2] + " 에 사진이 없습니다";
+      if((im.getAttribute("src") || "").indexOf("/img/insu/" + x[1]) < 0) return x[2] + " 사진이 " + x[1] + " 가 아닙니다";
     }
+    /* 03_transfer 는 매물 썸네일이 아닙니다 */
+    if([].slice.call(document.querySelectorAll(".itr-g img")).some(function(i){ return (i.getAttribute("src") || "").indexOf("/img/insu/") >= 0; }))
+      return "ZIP 연출 사진이 매물 목록에 쓰였습니다";
     /* 옛 보조 진입이 들고 있던 둘이 길을 잃지 않았는가 (헤더 펼침 · 푸터) */
     const miss = ["/providers","/about"].filter(function(u){ return !document.querySelector('a[href="' + u + '"]'); });
     if(miss.length) return "메인에서 갈 수 없게 된 곳: " + miss.join(" · ");
@@ -3794,11 +3802,14 @@ const AUDIT = `(() => {
     /* 2026-11-18 시안 — 지금 화면의 표시. 접수가 닫혀 있으면 본문에 신청 단추가 없어야 합니다. */
     /* 2026-11-19 대표 확정 시안 — 2분할(.sw3-g) 이 첫 구간 · 바로가기 칩과 "왜 일까요" 띠는 내려왔습니다. */
     /* 2026-11-19 Warm Premium 대표 확정 시안 */
-    const need = [[".wp-hg",   "히어로 세 칸"],
-                  [".wp-find", "통합 검색"],
-                  [".wp-sug",  "추천 검색어"],
-                  [".wp-pb",   "양도양수 배너"],
-                  [".wp-cg",   "서비스 여섯"],
+    /* 2026-11-21 Warm Premium 사진 중심 리디자인 */
+    const need = [[".ih-in .wp-find", "히어로 통합 검색"],
+                  [".wp-sug",  "검색 예시"],
+                  [".ihelp-g", "지금 어떤 도움 두 카드"],
+                  [".iind-g",  "업종별 서비스 탐색"],
+                  [".iops-l",  "매장 운영 지원 목록"],
+                  [".itr-f",   "매물 찾기 (지역 · 업종 · 예산)"],
+                  [".iclose-l","폐업·철거 안내"],
                   [".wp-sg",   "이용 방법 넷"]];
     /* 숨겨 둔 짝(data-cta=on · hidden)은 닫혀 있을 때 안 보이는 것이 맞습니다 — 보이는 것만 셉니다 */
     if(!(window.WOW_BIZ && WOW_BIZ.sosReady) && [].slice.call(v.querySelectorAll('a[href="/quote"]')).some(function(a){ return !a.closest("[hidden]") && a.getClientRects().length; }))
@@ -3867,8 +3878,9 @@ const AUDIT = `(() => {
        **사진 + 짙은 남색 막**이 됐습니다 (사장님 승인 3 · 시안 그대로). 그래서 반드시 밝아야
        하는 자리에서 히어로를 빼고 **바로 아래 진입 카드 구간**을 넣었습니다. 면적 검사
        (아래 · 밝은 면 60% 이상)는 그대로라 "전부 다크로" 는 여전히 잡힙니다. */
-    for(const q of [[".wp-hero","히어로"], [".wp-pass","매장 양도양수"],
-                    [".wp-cards","서비스 여섯"], [".wp-steps","이용 방법"]]){
+    /* 2026-11-21 — 히어로는 대형 사진(어두운 막)이라 빼고, 나머지 여섯 구간은 반드시 밝아야 합니다 */
+    for(const q of [[".ihelp","지금 어떤 도움"], [".iind","업종별"], [".iops","매장 운영 지원"],
+                    [".itr","매장 양도양수"], [".iclose","폐업·철거"], [".wp-steps","이용 방법"]]){
       const e = document.querySelector(q[0]);
       if(!e) return q[1] + " 구간이 없습니다";
       const L = bgL(e);
@@ -3960,7 +3972,9 @@ const AUDIT = `(() => {
                   ".ia-t .ph", ".msvc-bg .ph", ".mbr-p .ph",
                   ".mk-k-ph .ph", ".mhall-bg .ph",
                   ".bent-ph .ph",
-                  ".bpass-ph .ph", ".bban-ph .ph"];
+                  ".bpass-ph .ph", ".bban-ph .ph",
+                  /* 2026-11-21 사진 중심 리디자인의 자리 다섯 */
+                  ".ih-ph .ph", ".ihc-ph .ph", ".iops-ph .ph", ".itr-ph .ph"];
     const bad = [];
     for(const q of want){
       let ok = false;
@@ -4215,7 +4229,7 @@ const AUDIT = `(() => {
     /* 2026-11-18 메인 디자인 개편(대표 확정 시안) — 재는 자리만 새 화면으로.
        옛 판은 git show 2aa1d8d:check.js 에 있습니다. 이 주석에 백틱 금지. */
 
-    const groups = [[".wp-ci", "서비스 여섯"], [".wp-sn", "이용 방법"]];
+    const groups = [[".iind-i", "업종별"], [".wp-sn", "이용 방법"]];
     for(const g of groups){
       const L = [].slice.call(document.querySelectorAll("#view " + g[0]));
       if(!L.length) return g[1] + " 아이콘이 하나도 없습니다";
@@ -4373,7 +4387,8 @@ const AUDIT = `(() => {
        bwhy 를 다시 넣으세요. */
     /* 2026-11-19 대표 확정 시안 — "왜 일까요"(bwhy) 띠가 내려왔습니다 */
     /* 2026-11-19 Warm Premium — 히어로(+검색) · 양도양수 배너 · 서비스 여섯 · 이용 방법 */
-    const want = ["bhero","bpass","bent","bstep"];
+    /* 2026-11-21 Warm Premium 사진 중심 리디자인 — 히어로 · 도움 · 업종 · 운영 · 양도양수 · 폐업 · 이용 방법 */
+    const want = ["bhero","ihelp","iind","iops","bpass","iclose","bstep"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";
@@ -4383,7 +4398,7 @@ const AUDIT = `(() => {
          합니다 ("?3" 이 아니라). */
       /* ⚠️ 앞 지시서의 이름들을 **빼지 않습니다** — 되살아나면
          "차례가 … 입니다" 로 이름을 내야 합니다 ("?3" 이 아니라). */
-      for(const m of ["bent","bdir","bpass","bwhy","bstep","bban","bcal","bgd","bcta",
+      for(const m of ["ihelp","iind","iops","iclose","bent","bdir","bpass","bwhy","bstep","bban","bcal","bgd","bcta",
                       "bhero","mh","mbr","mhall","msvc","mexp","pkg","mind",
                       "mti","mstp","mopsv","mjn","mlast"])
         if(e.classList.contains(m)) return m;
@@ -4947,7 +4962,8 @@ const AUDIT = `(() => {
      여러 번 겪은 자리).
      ⚠️ 선(stroke)까지 들어간 **보이는 네모**를 잽니다 — 서른셋 중
      열셋이 선을 쓰고 그 굵기가 보이는 크기에 들어갑니다. */
-  await f("컬러 아이콘이 모두 같은 크기로 그려진다", "/", `
+  await f("컬러 아이콘이 모두 같은 크기로 그려진다", "/startup", `
+    /* 2026-11-21 — 메인이 사진 중심이 되며 컬러 아이콘이 없어져 /startup(서비스 고르개 열여덟)에서 잽니다. 이 주석에 백틱 금지. */
     const svgs = Array.from(document.querySelectorAll("#view svg.ia"));
     if(svgs.length < 4) return "컬러 아이콘이 " + svgs.length + "개뿐입니다";
     const bad = [], seen = {};

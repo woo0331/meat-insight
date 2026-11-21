@@ -152,16 +152,16 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await click('.wp-hc-cl');
  say((await url())==="/closure","메인 히어로 폐업·철거 → /closure",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.wp-cc[href="/operation"]');
+ await click('.iops-tx a[href="/operation"]');
  say((await url())==="/operation","메인 진입 카드 매장 운영 → /operation",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.wp-cc[href="/transfer"]');
+ await click('.itr-go a[href="/transfer"]');
  say((await url())==="/transfer","메인 진입 카드 양도양수 → 전문관",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  /* ⚠️⚠️ **2026-10-22 — 서비스 배너 둘이 메인에서 내려왔습니다**
     (사장님 시안). 그 길은 ③ 직접 서비스 찾기 여덟이 그대로 받습니다 —
     함수는 안 지웠으니 되살리시면 여기에 .bban-c 를 다시 넣으세요. */
- await click('.wp-cc[href="/providers"]');
+ await click('.ih-go a[href="/providers"]');
  say((await url()).startsWith("/providers"),"서비스 카드 전문가 상담 → 업체찾기",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  await click('.wp-pgo a[href="/stores"]');
@@ -241,7 +241,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
      "중간 대형 견적 신청 섹션이 없다 (§1-07)", "bqc 개수");
  /* 2026-11-19 Warm Premium — 계산도구 · 가이드 구간은 메인에서 내려왔습니다 (서비스 카드 정보·가이드가 받습니다) */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.wp-cc[href="/content"]');
+ await click('.ih-go a[href="/content"]');
  say((await url())==="/content","서비스 카드 정보·가이드 → 이용 가이드",await url());
  /* 통합 검색 — 빈 칸 · 기호 · 분야만 */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
@@ -1016,7 +1016,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
    await pg.goto(B+"/",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
    /* 2026-11-18 메인 개편 — 네 전문관은 메인의 네 걸음(.sw-flg)이 같은 차례로 보냅니다 */
-   const card = await pg.$('.wp-cc[href="'+to+'"]');
+   const card = await pg.$('#view a[href="'+to+'"]'); /* 2026-11-21 — 사진 카드 · 구간 단추 · 배너 단추 중 첫 길 */
    say(!!card, nm+" — 메인 진입 카드가 그 전문관으로 간다", to);
    if(!card) continue;
    await card.click(); await pg.waitForTimeout(700);

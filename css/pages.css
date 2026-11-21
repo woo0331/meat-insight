@@ -8139,3 +8139,215 @@ html.ivh #view section.wp-pass{ background:var(--hm-bg2); padding:28px 0; }
 html.ivh #view section.wp-cards{ background:var(--hm-bg); padding:28px 0; }
 html.ivh #view section.wp-steps{ background:var(--hm-bg2); padding:28px 0 36px; }
 .wp-sbx{ background:var(--hm-card); }
+/* ═════════════════════════════════════════════════════════════════
+   2026-11-20 시안 1:1 — 네 번째 맞춤 (대표님 비교 지적)
+   ① 제목 글꼴 — 시안의 명조 계열: Noto Serif KR 600 (OFL · /fonts 에 **메인 글자만 추린** 34KB)
+      ⚠️ 메인 화면에 있는 글자 188자만 들어 있습니다. 메인 제목 글을 바꾸시면 새 글자가
+         Pretendard 로 섞여 보일 수 있습니다 — 그날 pyftsubset 으로 다시 추리세요.
+   ② 서비스 여섯 — 선 아이콘(시안) · ③ 검색 — 칸 안 돋보기 · 단추가 칸 오른쪽 안
+   ④ 양도양수 띠 — 낮게 · ⑤ 이용 방법 — 번호 원 + 아이콘 + 이름
+   ═════════════════════════════════════════════════════════════════ */
+@font-face{ font-family:"IIS Serif"; src:url("/fonts/noto-serif-kr-600-main.woff2?v=b70930a0") format("woff2");
+  font-weight:600; font-style:normal; font-display:swap; }
+html.ivh #view .wp-h, html.ivh #view .wp-hc h2, html.ivh #view .wp-pass h2,
+html.ivh #view .wp-ct b, html.ivh #view .wp-sbx .wp-sh h2, html.ivh #view .wp-st b{
+  font-family:"IIS Serif", "Noto Serif KR", "Nanum Myeongjo", serif; font-weight:600; letter-spacing:-.02em; }
+html.ivh #view .wp-h{ font-size:clamp(26px, 2.3vw, 40px); line-height:1.38; }
+html.ivh #view .wp-hc h2{ font-size:clamp(22px, 1.85vw, 30px); line-height:1.36; }
+/* 서비스 여섯 — 선 아이콘 */
+.wp-ci{ width:56px; height:56px; color:var(--navy); background:transparent; border:0; }
+.wp-ci svg{ width:44px; height:44px; stroke-width:1.35; }
+.wp-cc{ border-color:var(--hm-line); box-shadow:none; }
+/* 검색 */
+.wp-fbox{ position:relative; display:flex; align-items:center; min-width:0; }
+.wp-fbox > svg{ position:absolute; left:20px; color:var(--hm-ink2); pointer-events:none; }
+html.ivh #view .wp-find{ grid-template-columns:170px minmax(0,1fr); }
+html.ivh #view .wp-fbox input{ padding:0 108px 0 52px; border-radius:var(--r-pill); }
+html.ivh #view .wp-fbox .wp-find-b{ position:absolute; right:4px; top:4px; bottom:4px; height:auto; min-height:44px; padding:0 30px; }
+/* 양도양수 띠 — 낮게 */
+@media (min-width:1280px){
+  .wp-pb{ grid-template-columns:minmax(0,.86fr) minmax(0,1.14fr); }
+  .wp-ptx{ padding:26px 48px; }
+  html.ivh #view .wp-pass h2{ margin:0 0 8px; }
+  .wp-pn{ margin:0 0 14px; }
+}
+/* 이용 방법 — 번호 원 + 아이콘 + 이름 */
+.wp-sg > li{ display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto; column-gap:14px; row-gap:2px;
+  align-items:center; justify-items:center; padding:12px 18px; }
+.wp-sno{ grid-row:1 / 3; display:grid; place-items:center; width:36px; height:36px; border-radius:50%;
+  background:var(--gold); color:#fff; font-weight:800; font-size:var(--t-md); }
+.wp-sg .wp-sn{ width:auto; height:auto; border:0; background:none; color:var(--navy); }
+.wp-sg .wp-sn svg{ width:28px; height:28px; stroke-width:1.5; }
+.wp-sg .wp-st{ align-items:center; text-align:center; }
+@media (max-width:1279px){
+  .wp-sg > li{ justify-items:start; }
+  .wp-sg .wp-st{ align-items:flex-start; text-align:left; }
+}
+@media (max-width:768px){
+  html.ivh #view .wp-find{ grid-template-columns:1fr; }
+  html.ivh #view .wp-fbox input{ padding:0 90px 0 46px; }
+  .wp-fbox > svg{ left:16px; }
+  html.ivh #view .wp-fbox .wp-find-b{ padding:0 18px; }
+}
+/* 2026-11-20 — 시안에서 잘라 낸 사진: 사진의 주인공이 오른쪽에 있어 뒤집지 않습니다 (3D 렌더 때의 scaleX 를 되돌림) */
+.wp-hc-st .wp-hph .ph{ transform:none; object-position:100% 50%; }
+.wp-hc-cl .wp-hph .ph{ object-position:100% 55%; }
+.wp-pph .ph{ object-position:35% 50%; }
+@media (min-width:769px){ .wp-hc-cl .wp-hph .ph{ object-position:62% 55%; } }
+
+/* ═════════════════════════════════════════════════════════════════
+   2026-11-21 Warm Premium 사진 중심 리디자인 — 메인 (home.js 맨 아래 배너)
+   대형 사진 · 넓은 여백 · 명조 제목. 색은 tokens.css 의 다섯 색뿐입니다.
+   구간 바탕은 직접 번갈아 칠합니다 (메인에서는 paintTones 가 안 돕니다):
+     히어로(사진) · 도움(아이보리) · 업종(베이지) · 운영(아이보리) · 양도양수(베이지) · 폐업(아이보리) · 이용 방법(베이지)
+   ⚠️ 사진 위 글자는 검사가 못 잽니다 — 히어로만 사진 위에 글이 있고 픽셀로 재서 막을 정했습니다.
+   ⚠️ 이 블록은 파일 맨 뒤라야 이깁니다 (위 wp-* 블록들과 특정도가 같습니다).
+   ═════════════════════════════════════════════════════════════════ */
+html.ivh #view section.ihelp, html.ivh #view section.iops, html.ivh #view section.iclose{ background:var(--hm-bg); padding:96px 0; }
+html.ivh #view section.iind, html.ivh #view section.itr, html.ivh #view section.wp-steps{ background:var(--hm-bg2); padding:96px 0; }
+html.ivh #view .ih-kk{ margin:0 0 14px; font-size:var(--t-cap); font-weight:800; letter-spacing:.22em; color:var(--ter-ink); }
+html.ivh #view .ihelp h2, html.ivh #view .iind h2, html.ivh #view .iops h2, html.ivh #view .itr h2, html.ivh #view .iclose h2{
+  margin:0 0 14px; font-family:"IIS Serif","Noto Serif KR",serif; font-weight:600; letter-spacing:-.03em;
+  font-size:clamp(26px, 2.6vw, 40px); line-height:1.32; color:var(--hm-ink); }
+.ih-sh{ margin-bottom:44px; }
+.ih-sh > p:not(.ih-kk), .ih-sh div > p:not(.ih-kk){ margin:0; max-width:40em; font-size:var(--t-md); line-height:1.75; color:var(--hm-ink2); }
+.ih-sh-r{ display:flex; align-items:flex-end; justify-content:space-between; gap:24px; }
+.ih-all{ display:inline-flex; align-items:center; gap:6px; min-height:44px; font-weight:800; color:var(--navy); white-space:nowrap; }
+html.ivh #view .ih-b, html.ivh #view .ih-b:visited{ display:inline-flex; align-items:center; gap:8px; min-height:52px; padding:0 26px;
+  border-radius:var(--r-pill); background:var(--navy); border:1px solid var(--navy); color:#fff; font-weight:800; font-size:var(--t-sm); }
+html.ivh #view .ih-b:hover{ background:var(--charcoal); border-color:var(--charcoal); }
+html.ivh #view .ih-b-o, html.ivh #view .ih-b-o:visited{ display:inline-flex; align-items:center; gap:8px; min-height:52px; padding:0 24px;
+  border-radius:var(--r-pill); background:transparent; border:1px solid var(--navy); color:var(--navy); font-weight:800; font-size:var(--t-sm); }
+html.ivh #view .ih-b-o:hover{ background:var(--hm-card); }
+
+/* 2 브랜드 히어로 — 사진 전체 폭 · 아래쪽 왼편에 글 */
+html.ivh #view section.ih{ position:relative; padding:0; background:var(--charcoal); overflow:hidden; }
+.ih-ph{ position:absolute; inset:0; }
+.ih-ph img, .ih-ph picture{ display:block; width:100%; height:100%; }
+.ih-ph .ph{ width:100%; height:100%; object-fit:cover; object-position:50% 55%; }
+.ih-ph::after{ content:""; position:absolute; inset:0;
+  background:linear-gradient(90deg, rgba(40,34,30,.78) 0, rgba(40,34,30,.62) 42%, rgba(40,34,30,.28) 72%, rgba(40,34,30,.18) 100%); }
+.ih-in{ position:relative; z-index:1; display:flex; flex-direction:column; justify-content:center; min-height:clamp(480px, 46vw, 640px); padding-top:56px; padding-bottom:56px; }
+html.ivh #view .ih-k{ margin:0 0 16px; font-size:var(--t-sm); font-weight:700; letter-spacing:.18em; color:#EFE3D2; }
+html.ivh #view .ih-h{ margin:0 0 18px; max-width:13em; font-family:"IIS Serif","Noto Serif KR",serif; font-weight:600;
+  font-size:clamp(34px, 4.2vw, 62px); line-height:1.24; letter-spacing:-.035em; color:#fff; }
+html.ivh #view .ih-s{ margin:0 0 30px; max-width:34em; font-size:var(--t-md); line-height:1.75; color:#F2EAE0; }
+html.ivh #view .ih .wp-find-s{ max-width:760px; margin:0 0 22px; display:block; }
+html.ivh #view .ih .wp-find .wp-t, html.ivh #view .ih .wp-fbox input{ background:#FFFCF7; border-color:transparent; }
+html.ivh #view .ih .wp-sug{ margin-top:12px; flex-wrap:wrap; }
+html.ivh #view .ih .wp-sug-k{ color:#EFE3D2; }
+html.ivh #view .ih .wp-sug a{ background:rgba(255,252,247,.14); border-color:rgba(255,252,247,.4); color:#fff; }
+html.ivh #view .ih .wp-sug a:hover{ background:rgba(255,252,247,.26); color:#fff; }
+html.ivh #view .ih .wp-fmsg{ color:#FFD9C4; }
+.ih-go{ display:flex; flex-wrap:wrap; gap:10px; }
+html.ivh #view .ih .ih-b{ background:#FFFCF7; border-color:#FFFCF7; color:var(--charcoal); }
+html.ivh #view .ih .ih-b:hover{ background:var(--sand); border-color:var(--sand); }
+html.ivh #view .ih .ih-b-o{ border-color:rgba(255,252,247,.7); color:#fff; }
+html.ivh #view .ih .ih-b-o:hover{ background:rgba(255,252,247,.14); }
+
+/* 3 지금 어떤 도움 — 큰 사진 카드 둘 */
+.ihelp-g{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:28px; }
+.ihc.wp-hc{ position:static; display:flex; flex-direction:column; min-height:0; border-radius:20px; overflow:hidden;
+  background:var(--hm-card); border:1px solid var(--hm-line); box-shadow:none; color:inherit; text-decoration:none; }
+.ihc.wp-hc:hover{ transform:translateY(-3px); box-shadow:var(--hm-shadow2); }
+.ihc-ph{ display:block; aspect-ratio:3/2; overflow:hidden; background:var(--hm-bg2); }
+.ihc-ph img, .ihc-ph picture{ display:block; width:100%; height:100%; }
+.ihc-ph .ph{ width:100%; height:100%; object-fit:cover; transition:transform .6s ease; }
+.ihc:hover .ihc-ph .ph{ transform:scale(1.03); }
+.wp-hc-st .ihc-ph .ph{ object-position:50% 50%; }
+.wp-hc-cl .ihc-ph .ph{ object-position:60% 55%; }
+.ihc-tx{ display:flex; flex-direction:column; align-items:flex-start; padding:32px 34px 34px; }
+.ihc-tag{ margin-bottom:12px; font-size:var(--t-cap); font-weight:800; letter-spacing:.14em; color:var(--ter-ink); }
+html.ivh #view .ihc h3{ margin:0 0 12px; font-family:"IIS Serif","Noto Serif KR",serif; font-weight:600; font-size:clamp(22px, 1.9vw, 30px); line-height:1.35; letter-spacing:-.03em; color:var(--hm-ink); }
+.ihc-p{ margin-bottom:24px; font-size:var(--t-md); line-height:1.75; color:var(--hm-ink2); }
+.ihc .wp-go{ margin-top:auto; display:inline-flex; align-items:center; gap:8px; min-height:48px; padding:0 22px; border-radius:var(--r-pill); background:var(--navy); color:#fff; font-size:var(--t-sm); font-weight:800; }
+.ihc:hover .wp-go{ background:var(--charcoal); }
+
+/* 4 업종별 — 글자 카드 (사진 없음) */
+.iind-g{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:14px; margin:0; padding:0; list-style:none; }
+.iind-c{ display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto; column-gap:14px; row-gap:4px; align-items:center;
+  min-height:96px; padding:20px 22px; border-radius:16px; background:var(--hm-card); border:1px solid var(--hm-line); color:inherit; text-decoration:none; }
+.iind-c:hover{ border-color:var(--walnut); }
+.iind-i{ grid-row:1 / 3; display:grid; place-items:center; width:48px; height:48px; border-radius:50%; border:1px solid var(--sand); color:var(--navy); }
+.iind-c > b{ font-family:"IIS Serif","Noto Serif KR",serif; font-weight:600; font-size:var(--t-lg); color:var(--hm-ink); }
+.iind-c > em{ font-style:normal; font-size:var(--t-cap); line-height:1.5; color:var(--hm-ink2); }
+
+/* 5 매장 운영 지원 — 사진 왼쪽 · 목록 오른쪽 */
+.iops-in, .iclose-in{ display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:64px; align-items:center; }
+.iops-ph, .iclose-ph{ border-radius:20px; overflow:hidden; aspect-ratio:3/2; background:var(--hm-bg2); }
+.iops-ph img, .iops-ph picture, .iclose-ph img, .iclose-ph picture{ display:block; width:100%; height:100%; }
+.iops-ph .ph, .iclose-ph .ph{ width:100%; height:100%; object-fit:cover; }
+.iops-ph .ph{ object-position:50% 50%; }
+.iclose-ph .ph{ object-position:62% 55%; }
+.iops-s{ margin:0 0 24px; font-size:var(--t-md); line-height:1.75; color:var(--hm-ink2); }
+.iops-l{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:0 24px; margin:0 0 30px; padding:0; list-style:none; border-top:1px solid var(--hm-line); }
+.iops-l a{ display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:56px; border-bottom:1px solid var(--hm-line);
+  color:var(--hm-ink); font-weight:700; font-size:var(--t-sm); text-decoration:none; }
+.iops-l a svg{ color:var(--ter-ink); flex:none; }
+.iops-l a:hover{ color:var(--navy); }
+
+/* 6 매장 양도양수 — 가로 배너 + 검색 + 매물 */
+.itr-b{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); border-radius:20px; overflow:hidden; background:var(--hm-card); border:1px solid var(--hm-line); }
+.itr-ph{ min-height:420px; background:var(--hm-bg2); }
+.itr-ph img, .itr-ph picture{ display:block; width:100%; height:100%; }
+.itr-ph .ph{ width:100%; height:100%; object-fit:cover; object-position:45% 50%; }
+.itr-tx{ padding:52px 52px; display:flex; flex-direction:column; justify-content:center; }
+html.ivh #view .itr-tx > p:not(.ih-kk){ margin:0 0 22px; font-size:var(--t-md); line-height:1.75; color:var(--hm-ink2); }
+.itr-f{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; margin:0 0 16px; }
+.itr-f .sel{ min-height:50px; }
+.itr-f button{ grid-column:1 / -1; justify-content:center; }
+.itr-go{ display:flex; flex-wrap:wrap; gap:8px; }
+.itr-go .ih-b-o{ min-height:44px; padding:0 16px; }
+.itr-l{ margin-top:36px; }
+html.ivh #view .itr-l h3{ margin:0 0 16px; font-size:var(--t-lg); color:var(--hm-ink); }
+.itr-g{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:16px; }
+.itr-empty{ display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin:22px 0 0; padding:18px 22px; border-radius:16px;
+  background:var(--hm-card); border:1px solid var(--hm-line); font-size:var(--t-sm); color:var(--hm-ink2); }
+.itr-empty > svg{ flex:none; color:var(--ter-ink); }
+.itr-empty > span{ flex:1; min-width:14em; }
+.itr-empty > a{ display:inline-flex; align-items:center; gap:4px; min-height:44px; font-weight:800; color:var(--navy); }
+
+/* 7 폐업 · 철거 — 글 왼쪽 · 사진 오른쪽 */
+.iclose-l{ margin:6px 0 30px; padding:0; list-style:none; counter-reset:icl; border-top:1px solid var(--hm-line); }
+.iclose-l li{ counter-increment:icl; display:grid; grid-template-columns:44px 1fr; grid-template-rows:auto auto; column-gap:14px; padding:18px 0; border-bottom:1px solid var(--hm-line); }
+.iclose-l li::before{ content:"0" counter(icl); grid-row:1 / 3; font-family:"IIS Serif","Noto Serif KR",serif; font-size:22px; color:var(--ter-ink); }
+.iclose-l b{ font-size:var(--t-md); color:var(--hm-ink); }
+.iclose-l span{ font-size:var(--t-sm); line-height:1.6; color:var(--hm-ink2); }
+.iclose-go{ display:flex; flex-wrap:wrap; gap:10px; }
+
+@media (max-width:1100px){
+  .iind-g{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+  .iops-in, .iclose-in{ gap:40px; }
+  .itr-b{ grid-template-columns:1fr; }
+  .itr-ph{ min-height:0; aspect-ratio:2.2/1; }
+}
+@media (max-width:900px){
+  html.ivh #view section.ihelp, html.ivh #view section.iops, html.ivh #view section.iclose,
+  html.ivh #view section.iind, html.ivh #view section.itr, html.ivh #view section.wp-steps{ padding:64px 0; }
+  .ihelp-g{ grid-template-columns:1fr; gap:20px; }
+  .iops-in, .iclose-in{ grid-template-columns:1fr; gap:28px; }
+  .iclose-ph{ order:-1; }
+  .iind-g{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+  .itr-g{ grid-template-columns:1fr; }
+  .ih-sh-r{ flex-direction:column; align-items:flex-start; }
+}
+@media (max-width:640px){
+  .ih-in{ min-height:0; padding-top:44px; padding-bottom:40px; }
+  .ih-ph::after{ background:linear-gradient(180deg, rgba(40,34,30,.55) 0, rgba(40,34,30,.72) 60%, rgba(40,34,30,.82) 100%); }
+  html.ivh #view .ih-h{ font-size:30px; }
+  html.ivh #view .ih-s{ font-size:var(--t-sm); margin-bottom:20px; }
+  .ihc-tx{ padding:22px 20px 24px; }
+  .iind-c{ grid-template-columns:1fr; grid-template-rows:auto; min-height:0; padding:16px; row-gap:6px; }
+  .iind-i{ grid-row:auto; width:40px; height:40px; }
+  .iops-l{ grid-template-columns:1fr; }
+  .itr-tx{ padding:28px 20px; }
+  .itr-f{ grid-template-columns:1fr; }
+  .ih-go .btn, .iclose-go .btn{ flex:1 1 auto; justify-content:center; }
+}
+.iops-ph .ph{ object-fit:cover; }
+.iclose-ph .ph{ object-fit:cover; }
+/* 2026-11-21 히어로 막 — 사진 위 글자 최저 대비 4.5 이상 (픽셀로 재서 정했습니다 · 글이 서는 왼쪽만 짙게) */
+.ih-ph::after{ background:linear-gradient(90deg, rgba(40,34,30,.86) 0, rgba(40,34,30,.8) 48%, rgba(40,34,30,.5) 74%, rgba(40,34,30,.32) 100%); }
+html.ivh #view .ih .wp-sug a{ background:rgba(40,34,30,.62); border-color:rgba(255,252,247,.45); }
+@media (max-width:1100px){ .ih-ph::after{ background:linear-gradient(90deg, rgba(40,34,30,.88) 0, rgba(40,34,30,.84) 62%, rgba(40,34,30,.6) 100%); } }
+@media (max-width:640px){ .ih-ph::after{ background:rgba(40,34,30,.84); } }

@@ -8502,3 +8502,7 @@ html.ivh #view{ --ip-bg:#F5F1E9; --ip-card:#FFFCF7; --ip-wal:#584338; --ip-dk:#3
   html.ivh #view .bdir-c .bdir-i{ width:56px; height:56px; }
   html.ivh #view .bdir-c .bdir-tx > b{ font-size:14px; }
 }
+/* 2026-11-22 — 구간 바탕을 번갈아 (메인은 paintTones() 가 안 돕니다 · 이웃이 같은 색이면 한 구간으로 읽힙니다)
+   히어로 · 업종 · 매장 운영 · 이용 방법 = 아이보리 #F5F1E9 / 네 기둥 · 양도양수 · 세부 서비스 = 베이지 #EDE4D6 */
+html.ivh #view > .bhero, html.ivh #view > .iind, html.ivh #view > .iops, html.ivh #view > .bstep{ background:#F5F1E9; }
+html.ivh #view > .ipil, html.ivh #view > .bpass, html.ivh #view > .bdir{ background:#EDE4D6; }

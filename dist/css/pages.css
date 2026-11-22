@@ -6360,3 +6360,6 @@ html.ivh #view{ --ip-bg:#F5F1E9; --ip-card:#FFFCF7; --ip-wal:#584338; --ip-dk:#3
   html.ivh #view .bdir-c .bdir-i{ width:56px; height:56px; }
   html.ivh #view .bdir-c .bdir-tx > b{ font-size:14px; }
 }
+
+html.ivh #view > .bhero, html.ivh #view > .iind, html.ivh #view > .iops, html.ivh #view > .bstep{ background:#F5F1E9; }
+html.ivh #view > .ipil, html.ivh #view > .bpass, html.ivh #view > .bdir{ background:#EDE4D6; }

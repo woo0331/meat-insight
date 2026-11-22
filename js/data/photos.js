@@ -374,7 +374,21 @@ window.WOW_PHOTO_SLOTS = [
      위 히어로의 폐업 카드(04 전체 · 의자 더미가 주인공)와 구도가 겹치지 않게 했습니다. 새 사진이 아닙니다 — 원본은 ZIP 그대로. */
   { key:"insu-closure-in", sizes:"(max-width:900px) 92vw, 50vw",
     where:"메인 '폐업·철거' 구간 — ZIP 04_closure.jpg 의 통창 쪽 잘라 낸 것", min:[1200,800], ratio:[1.3,1.8], maxKB:220, temp:true,
-    note:"햇빛 드는 통창 · 정리된 빈 바닥" }
+    note:"햇빛 드는 통창 · 정리된 빈 바닥" },
+  /* 2026-11-22 — 메인 사진 넷 (대표가 준 insu_main_images · 원본은 img/home/0X_*.webp 그대로 보관).
+     ⚠️ AI 로 만든 연출 사진입니다 — 소개용으로만. 매물 목록 · 거래 실적 · 후기 자리에 쓰지 마세요. */
+  { key:"home-startup", sizes:"(max-width:900px) 92vw, 50vw",
+    where:"메인 맨 위 창업 준비 카드 — 대표가 준 사진 01_hero_startup (2026-11-22)", min:[1600,800], ratio:[1.7,2.1], maxKB:220,
+    note:"AI 연출 사진 — 소개용 · 실제 매물 · 거래 실적으로 쓰지 않습니다" },
+  { key:"home-closure", sizes:"(max-width:900px) 92vw, 50vw",
+    where:"메인 맨 위 폐업·철거 카드 — 대표가 준 사진 02_hero_closure (2026-11-22)", min:[1600,800], ratio:[1.7,2.1], maxKB:220,
+    note:"AI 연출 사진 — 소개용 · 실제 매물 · 거래 실적으로 쓰지 않습니다" },
+  { key:"home-ops", sizes:"(max-width:900px) 92vw, 50vw",
+    where:"메인 '매장 운영' 구간 — 대표가 준 사진 03_section_operations (2026-11-22)", min:[1600,800], ratio:[1.7,2.1], maxKB:220,
+    note:"AI 연출 사진 — 소개용 · 실제 매물 · 거래 실적으로 쓰지 않습니다" },
+  { key:"home-transfer", sizes:"(max-width:900px) 92vw, 50vw",
+    where:"메인 '매장 양도양수' 구간 — 대표가 준 사진 04_section_transfer (2026-11-22)", min:[1600,800], ratio:[1.7,2.1], maxKB:220,
+    note:"AI 연출 사진 — 소개용 · 실제 매물 · 거래 실적으로 쓰지 않습니다" }
 ];
 
 
@@ -484,7 +498,27 @@ window.WOW_PHOTOS = {
     w:568, h:380,
     webp:"/img/insu/04_closure-in.webp?v=5be0ac8b 568w",
     jpg:"/img/insu/04_closure-in.jpg?v=b93df345 568w",
-    alt:"햇빛이 드는 통창과 정리된 빈 매장 바닥 — 사다리와 상자 몇 개" }
+    alt:"햇빛이 드는 통창과 정리된 빈 매장 바닥 — 사다리와 상자 몇 개" },
+  "home-startup": { src:"/img/home/01_hero_startup-1600.jpg?v=9fbaaff4",
+    w:1600, h:900,
+    webp:"/img/home/01_hero_startup-900.webp?v=18bea77f 900w, /img/home/01_hero_startup-1600.webp?v=4086e554 1600w, /img/home/01_hero_startup.webp?v=47ae86aa 1672w",
+    jpg:"/img/home/01_hero_startup-900.jpg?v=2e9c5cf0 900w, /img/home/01_hero_startup-1600.jpg?v=9fbaaff4 1600w",
+    alt:"햇빛 드는 카페 오픈 준비 현장 — 커피 머신 앞의 사장님과 정리 중인 상자" },
+  "home-closure": { src:"/img/home/02_hero_closure-1600.jpg?v=d85dee55",
+    w:1600, h:800,
+    webp:"/img/home/02_hero_closure-900.webp?v=c490d32d 900w, /img/home/02_hero_closure-1600.webp?v=e665b70c 1600w, /img/home/02_hero_closure.webp?v=03ba6da5 1774w",
+    jpg:"/img/home/02_hero_closure-900.jpg?v=413b3255 900w, /img/home/02_hero_closure-1600.jpg?v=d85dee55 1600w",
+    alt:"정리 중인 빈 매장 — 집기를 상자에 담는 사장님과 쌓아 둔 의자" },
+  "home-ops": { src:"/img/home/03_section_operations-1600.jpg?v=ddee35f2",
+    w:1600, h:800,
+    webp:"/img/home/03_section_operations-900.webp?v=a25e96cd 900w, /img/home/03_section_operations-1600.webp?v=b4b73d58 1600w, /img/home/03_section_operations.webp?v=65da49c3 1774w",
+    jpg:"/img/home/03_section_operations-900.jpg?v=a5d23f44 900w, /img/home/03_section_operations-1600.jpg?v=ddee35f2 1600w",
+    alt:"손님으로 붐비는 식당 영업 현장 — 홀과 주방, 계산대" },
+  "home-transfer": { src:"/img/home/04_section_transfer-1600.jpg?v=77115932",
+    w:1600, h:800,
+    webp:"/img/home/04_section_transfer-900.webp?v=0f40d78c 900w, /img/home/04_section_transfer-1600.webp?v=4afb07e0 1600w, /img/home/04_section_transfer.webp?v=ca5dcdd9 1774w",
+    jpg:"/img/home/04_section_transfer-900.jpg?v=47b20e20 900w, /img/home/04_section_transfer-1600.jpg?v=77115932 1600w",
+    alt:"카페 테이블에서 계약 서류를 두고 악수하는 두 사람 — 소개용 연출 사진" }
 };
 
 window.wowPhoto = function(key){

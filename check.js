@@ -2171,8 +2171,9 @@ const AUDIT = `(() => {
     /* 2026-11-19 Warm Premium — 히어로 다음이 양도양수 배너(bpass)이고 서비스 여섯(bent)이 그 뒤입니다 */
     /* 2026-11-21 Warm Premium 사진 중심 리디자인 — 히어로 다음이 '지금 어떤 도움'(ihelp · 창업 준비 / 폐업·철거 두 사진 카드) */
     /* 2026-11-22 대표 확정 시안 — 창업 · 폐업 두 사진 카드가 히어로 안(한 줄 세 칸)으로 올라와서 다음은 업종별 탐색입니다 */
-    if(!(secs[1] && secs[1].classList.contains("iind")))
-      return "히어로 다음이 업종별 서비스 탐색이 아닙니다 — " + ((secs[1] || {}).className || "").split(" ")[0];
+    /* 2026-11-22 대표 지시서(메인 사진 넷) — 히어로 다음은 네 기둥(ipil) 탐색 */
+    if(!(secs[1] && secs[1].classList.contains("ipil")))
+      return "히어로 다음이 네 기둥 서비스 탐색이 아닙니다 — " + ((secs[1] || {}).className || "").split(" ")[0];
     if(!(H0ok())) return "창업 · 폐업 사진 카드가 히어로 안에 없습니다";
     function H0ok(){ return document.querySelectorAll(".bhero .wp-hc").length === 2; }
     const h1s = document.querySelectorAll("#view h1");
@@ -2194,17 +2195,18 @@ const AUDIT = `(() => {
     if(leak.length) return "출처 미확인 사진이 메인에 불립니다 — " + leak.join(" · ");
     /* 2026-11-21 — 지시서가 정한 자리에 ZIP 사진 다섯 장이 정확히 앉았는가 (다른 사진으로 바꿔 끼우면 잡습니다) */
     /* 2026-11-22 — 히어로가 밝은 세 칸이 되면서 00_hero_brand 는 메인에 안 나옵니다 (파일과 자리는 그대로) */
-    const spot = [[H[0], "01_startup", "창업 카드"],
-                  [H[1], "04_closure", "폐업 카드"], [document.querySelector(".iops-ph"), "02_operations", "매장 운영 지원"],
-                  [document.querySelector(".itr-ph"), "03_transfer", "양도양수 배너"], [document.querySelector(".iclose-ph"), "04_closure", "폐업·철거 구간"]];
+    /* 2026-11-22 대표 지시서 — 사진 넷이 img/home/ 의 대표 지정 파일이어야 합니다 (폐업 구간은 히어로 카드와 겹쳐 내려왔습니다) */
+    const spot = [[H[0], "home/01_hero_startup", "창업 카드"],
+                  [H[1], "home/02_hero_closure", "폐업 카드"], [document.querySelector(".iops-ph"), "home/03_section_operations", "매장 운영"],
+                  [document.querySelector(".itr-ph"), "home/04_section_transfer", "양도양수"]];
     for(const x of spot){
       if(!x[0]) return x[2] + " 가 없습니다";
       const im = x[0].querySelector("img");
       if(!im) return x[2] + " 에 사진이 없습니다";
-      if((im.getAttribute("src") || "").indexOf("/img/insu/" + x[1]) < 0) return x[2] + " 사진이 " + x[1] + " 가 아닙니다";
+      if((im.getAttribute("src") || "").indexOf("/img/" + x[1]) < 0) return x[2] + " 사진이 " + x[1] + " 가 아닙니다";
     }
     /* 03_transfer 는 매물 썸네일이 아닙니다 */
-    if([].slice.call(document.querySelectorAll(".itr-g img")).some(function(i){ return (i.getAttribute("src") || "").indexOf("/img/insu/") >= 0; }))
+    if([].slice.call(document.querySelectorAll(".itr-g img")).some(function(i){ var u = i.getAttribute("src") || ""; return u.indexOf("/img/insu/") >= 0 || u.indexOf("/img/home/") >= 0; }))
       return "ZIP 연출 사진이 매물 목록에 쓰였습니다";
     /* 옛 보조 진입이 들고 있던 둘이 길을 잃지 않았는가 (헤더 펼침 · 푸터) */
     const miss = ["/providers","/about"].filter(function(u){ return !document.querySelector('a[href="' + u + '"]'); });
@@ -3810,10 +3812,11 @@ const AUDIT = `(() => {
     const need = [[".ih-in .wp-find", "히어로 통합 검색"],
                   [".wp-sug",  "검색 예시"],
                   [".ih3-g", "히어로 세 칸 (문구 · 창업 · 폐업)"],
+                  [".ipil-g",  "네 기둥 서비스 탐색"],
                   [".iind-g",  "업종별 서비스 탐색"],
-                  [".iops-l",  "매장 운영 지원 목록"],
+                  [".iops-l",  "매장 운영 목록"],
                   [".itr-f",   "매물 찾기 (지역 · 업종 · 예산)"],
-                  [".iclose-l","폐업·철거 안내"],
+                  [".bdir-g",  "세부 서비스"],
                   [".wp-sg",   "이용 방법 넷"]];
     /* 숨겨 둔 짝(data-cta=on · hidden)은 닫혀 있을 때 안 보이는 것이 맞습니다 — 보이는 것만 셉니다 */
     if(!(window.WOW_BIZ && WOW_BIZ.sosReady) && [].slice.call(v.querySelectorAll('a[href="/quote"]')).some(function(a){ return !a.closest("[hidden]") && a.getClientRects().length; }))
@@ -3884,8 +3887,8 @@ const AUDIT = `(() => {
        (아래 · 밝은 면 60% 이상)는 그대로라 "전부 다크로" 는 여전히 잡힙니다. */
     /* 2026-11-21 — 히어로는 대형 사진(어두운 막)이라 빼고, 나머지 여섯 구간은 반드시 밝아야 합니다 */
     /* 2026-11-22 — 히어로가 밝은 아이보리 세 칸이 되어 이제 히어로도 밝아야 합니다 */
-    for(const q of [[".ih3","히어로"], [".iind","업종별"], [".iops","매장 운영 지원"],
-                    [".itr","매장 양도양수"], [".iclose","폐업·철거"], [".wp-steps","이용 방법"]]){
+    for(const q of [[".ih3","히어로"], [".ipil","네 기둥"], [".iind","업종별"], [".iops","매장 운영"],
+                    [".itr","매장 양도양수"], [".bdir","세부 서비스"], [".wp-steps","이용 방법"]]){
       const e = document.querySelector(q[0]);
       if(!e) return q[1] + " 구간이 없습니다";
       const L = bgL(e);
@@ -4394,7 +4397,8 @@ const AUDIT = `(() => {
     /* 2026-11-19 Warm Premium — 히어로(+검색) · 양도양수 배너 · 서비스 여섯 · 이용 방법 */
     /* 2026-11-21 Warm Premium 사진 중심 리디자인 — 히어로 · 도움 · 업종 · 운영 · 양도양수 · 폐업 · 이용 방법 */
     /* 2026-11-22 대표 확정 시안 — 창업 · 폐업 카드가 히어로 안으로 올라와 '지금 어떤 도움' 구간이 내려왔습니다 */
-    const want = ["bhero","iind","iops","bpass","iclose","bstep"];
+    /* 2026-11-22 대표 지시서(메인 사진 넷) — 히어로 · 네 기둥 · 업종 · 양도양수 · 매장 운영 · 세부 서비스 · 이용 방법 */
+    const want = ["bhero","ipil","iind","bpass","iops","bdir","bstep"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";
@@ -4404,7 +4408,7 @@ const AUDIT = `(() => {
          합니다 ("?3" 이 아니라). */
       /* ⚠️ 앞 지시서의 이름들을 **빼지 않습니다** — 되살아나면
          "차례가 … 입니다" 로 이름을 내야 합니다 ("?3" 이 아니라). */
-      for(const m of ["ihelp","iind","iops","iclose","bent","bdir","bpass","bwhy","bstep","bban","bcal","bgd","bcta",
+      for(const m of ["ipil","ihelp","iind","iops","iclose","bent","bdir","bpass","bwhy","bstep","bban","bcal","bgd","bcta",
                       "bhero","mh","mbr","mhall","msvc","mexp","pkg","mind",
                       "mti","mstp","mopsv","mjn","mlast"])
         if(e.classList.contains(m)) return m;

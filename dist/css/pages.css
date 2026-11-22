@@ -6330,3 +6330,33 @@ html.ivh #view .ih3 .wp-fmsg{ color:var(--ter-ink); }
 .iind-g > li{ display:flex; }
 .iind-c{ flex:1 1 auto; width:100%; align-items:start; align-content:start; }
 .iind-c > b{ line-height:1.35; padding-top:2px; }
+
+html.ivh #view{ --ip-bg:#F5F1E9; --ip-card:#FFFCF7; --ip-wal:#584338; --ip-dk:#38271F; --ip-sand:#DCCBB5; --ip-acc:#B8956D; }
+.ipil{ padding:56px 0; background:var(--ip-bg, #F5F1E9); }
+.ipil-g{ list-style:none; margin:20px 0 0; padding:0; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+.ipil-g > li{ display:flex; }
+.ipil-c{ flex:1 1 auto; display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:14px;
+  min-height:96px; padding:18px 18px; border-radius:16px; background:var(--ip-card, #FFFCF7); border:1px solid var(--ip-sand, #DCCBB5);
+  color:var(--ip-dk, #38271F); text-decoration:none; box-shadow:0 1px 2px rgba(56,39,31,.06); transition:border-color .15s, box-shadow .15s; }
+.ipil-c:hover{ border-color:var(--ip-acc, #B8956D); box-shadow:0 6px 18px rgba(56,39,31,.10); }
+.ipil-c > svg{ color:var(--ip-wal, #584338); }
+.ipil-i{ width:56px; height:56px; border-radius:14px; display:flex; align-items:center; justify-content:center; flex:none;
+  background:linear-gradient(160deg,#F3EADC,#E6D6C0); --ia-1:#584338; --ia-2:#C9AE8C; color:#584338; }
+.ipil-t{ display:flex; flex-direction:column; gap:4px; min-width:0; }
+.ipil-t > b{ font-size:17px; font-weight:800; color:var(--ip-dk, #38271F); }
+.ipil-t > i{ font-style:normal; font-size:13px; line-height:1.45; color:#5E4C40; }
+@media (max-width:1100px){ .ipil-g{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:640px){
+  .ipil{ padding:36px 0; }
+  .ipil-g{ grid-template-columns:minmax(0,1fr); gap:10px; }
+  .ipil-c{ min-height:80px; padding:14px; }
+  .ipil-i{ width:48px; height:48px; }
+}
+
+@media (max-width:640px){
+  html.ivh #view .bdir-g{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  html.ivh #view .bdir-c{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px; padding:14px 8px; min-height:118px; }
+  html.ivh #view .bdir-c .bdir-tx > em, html.ivh #view .bdir-c .bdir-go{ display:none; }
+  html.ivh #view .bdir-c .bdir-i{ width:56px; height:56px; }
+  html.ivh #view .bdir-c .bdir-tx > b{ font-size:14px; }
+}

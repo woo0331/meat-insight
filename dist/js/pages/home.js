@@ -57,7 +57,7 @@ var MAIN_CALC = ["cost", "bep", "premium", "closecost"];
 
 function PageMain(){
 
-  return HomeIHero()+ HomeIInd()+ HomeIOps()+ HomeITransfer()+ HomeIClose()+ HomeWPSteps();
+  return HomeIHero()+ HomePillars()+ HomeIInd()+ HomeITransfer()+ HomeIOps()+ HomeDirect(true)+ HomeWPSteps();
 }
 
 var HOME_ENTER = [
@@ -224,7 +224,7 @@ function homeDirDesc(c){
   return c.lead || "";
 }
 
-function HomeDirect(){
+function HomeDirect(noPick){
   var C = window.AM_CATS || [];
   var cards = HOME_DIRECT.map(function(k){
     var c = null, i;
@@ -248,14 +248,16 @@ function HomeDirect(){
   return '<section class="bdir"><div class="w">'+
     '<div class="sec-hd hm-hd">'+
       '<div class="hm-hd-t">'+
-        '<h2>직접 서비스를 찾아보세요.</h2>'+
+
+        (noPick ? '<h2>세부 서비스로 바로 찾아보세요.</h2>' : '<h2>직접 서비스를 찾아보세요.</h2>')+
         '<p>무엇이 필요하신지 이미 정해져 있으시면 여기서 바로 가세요.</p>'+
       '</div>'+
       '<a class="btn btn-ac hm-more" href="/providers">전체 서비스 보기'+
         icon("arrow",16)+'</a>'+
     '</div>'+
     '<ul class="bdir-g">'+cards+'</ul>'+
-    HomePicked()+
+
+    (noPick ? "" : HomePicked())+
 
     MainScopeStrip()+
   '</div></section>';
@@ -1369,9 +1371,9 @@ function HomeIHero(){
 }
 
 var IH_HELP = [
-  { k:"st", to:"/startup", ph:"insu-startup", tag:"창업 준비", h:"새로운 시작을 준비하시나요?",
+  { k:"st", to:"/startup", ph:"home-startup", tag:"창업 준비", h:"새로운 시작을 준비하시나요?",
     p:"업종 선택부터 상권 · 인테리어 · 설비 · 비용과 절차까지, 오픈에 필요한 준비를 순서대로 안내합니다.", go:"창업 준비 바로가기" },
-  { k:"cl", to:"/closure", ph:"insu-closure", tag:"폐업 · 철거", h:"매장 정리를 고민하시나요?",
+  { k:"cl", to:"/closure", ph:"home-closure", tag:"폐업 · 철거", h:"매장 정리를 고민하시나요?",
     p:"철거 전에 양도 가능성부터 확인하고, 원상복구 · 집기 처분 · 세무 정리까지 마무리 순서를 안내합니다.", go:"폐업·철거 바로가기" }
 ];
 function HomeIHelp(){
@@ -1387,6 +1389,23 @@ function HomeIHelp(){
 
     HomePicked()+
   '</div></section>';
+}
+
+var HOME_PILLARS = [
+  { k:"startup",  to:"/startup",   ic:"bulb",     n:"창업 준비",     d:"상권 · 인테리어 · 인허가 · 자금" },
+  { k:"ops",      to:"/operation", ic:"chart",    n:"매장 운영",     d:"POS · 세무 · 청소 · 유지보수" },
+  { k:"transfer", to:"/transfer",  ic:"handover", n:"매장 양도양수", d:"매물 찾기 · 내 매장 넘기기 · 권리금" },
+  { k:"closure",  to:"/closure",   ic:"demolish", n:"폐업 · 철거",   d:"철거 · 원상복구 · 시설 처분 · 신고" }
+];
+function HomePillars(){
+  var art = function(n){ return typeof hasIconArt === "function" && hasIconArt(n) ? iconArt(n, 44) : icon(n, 26); };
+  return '<section class="ipil"><div class="w">'+
+    '<div class="ih-sh"><div><p class="ih-kk">SERVICE</p><h2>필요한 서비스를 단계별로 찾아보세요</h2>'+
+      '<p>창업부터 운영, 양도양수, 폐업까지 지금 하시려는 일을 고르세요.</p></div></div>'+
+    '<ul class="ipil-g">'+HOME_PILLARS.map(function(p){
+      return '<li><a class="ipil-c ipil-'+p.k+'" href="'+p.to+'"><span class="ipil-i" aria-hidden="true">'+art(p.ic)+'</span>'+
+        '<span class="ipil-t"><b>'+esc(p.n)+'</b><i>'+esc(p.d)+'</i></span>'+icon("arrow",16)+'</a></li>';
+    }).join("")+'</ul></div></section>';
 }
 
 function HomeIInd(){
@@ -1419,21 +1438,25 @@ window.ihIndToggle = function(btn){
   if(shut){ var d = btn.getBoundingClientRect().top - before; if(Math.abs(d) > 1) window.scrollBy(0, d); }
 }
 
+var IOPS_SIX = [
+  { any:"interior", name:"인테리어" }, { any:"equip", name:"시설 · 장비" }, { any:"it/pos", name:"POS · 매장 시스템" },
+  { any:"admin/tax-agent", name:"세무 · 회계" }, { any:"clean", name:"청소 · 방역" }, { any:"repair", name:"유지보수 · 수리" }
+];
 function HomeIOps(){
-  var G = (window.AM_PICK_GROUP || {}).operation || [];
+  var G = IOPS_SIX;
   var link = function(any){
     var a = String(any || "").split("/"), c = (window.AM_CATS || []).filter(function(x){ return x.key === a[0]; })[0];
     return c && typeof catSubTo === "function" ? catSubTo(c, a[1] || "") : "/operation";
   };
   return '<section class="iops"><div class="w iops-in">'+
-    '<div class="iops-ph" aria-hidden="true">'+ihPhoto("insu-operations", "", false, "(max-width:900px) 92vw, 50vw")+'</div>'+
+    '<div class="iops-ph" aria-hidden="true">'+ihPhoto("home-ops", "", false, "(max-width:900px) 92vw, 50vw")+'</div>'+
     '<div class="iops-tx">'+
-      '<p class="ih-kk">OPERATION</p><h2>매장 운영 지원</h2>'+
-      '<p class="iops-s">문을 연 뒤에도 필요한 일은 계속됩니다. 홍보부터 세무, 시설 수리, POS까지 분야별로 찾아보세요.</p>'+
+      '<p class="ih-kk">OPERATION</p><h2>매장 운영에 필요한 모든 서비스</h2>'+
+      '<p class="iops-s">문을 연 뒤에도 필요한 일은 계속됩니다. 인테리어부터 시설 · 장비, POS, 세무, 청소, 유지보수까지 분야별로 찾아보세요.</p>'+
       '<ul class="iops-l">'+G.map(function(g){
         return '<li><a href="'+esc(link(g.any))+'"><span>'+esc(g.name)+'</span>'+icon("chev",14)+'</a></li>';
       }).join("")+'</ul>'+
-      '<a class="btn ih-b" href="/operation">매장 운영 전체 보기'+icon("arrow",16)+'</a>'+
+      '<a class="btn ih-b" href="/operation">운영 서비스 보기'+icon("arrow",16)+'</a>'+
     '</div>'+
   '</div></section>';
 }
@@ -1459,9 +1482,9 @@ function HomeITransfer(){
   var dp = ((window.AM_STORE_RANGES || window.AM_MK_RANGES || []).filter(function(g){ return g.key === "dp"; })[0] || {}).opts || [];
   return '<section class="bpass itr"><div class="w">'+
     '<div class="itr-b">'+
-      '<div class="itr-ph" aria-hidden="true">'+ihPhoto("insu-transfer", "", false, "(max-width:900px) 92vw, 50vw")+'</div>'+
+      '<div class="itr-ph" aria-hidden="true">'+ihPhoto("home-transfer", "", false, "(max-width:900px) 92vw, 50vw")+'</div>'+
       '<div class="itr-tx"><p class="ih-kk">TRANSFER</p>'+
-        '<h2>지금 운영 중인 매장을 넘기거나, 새로운 매장을 찾고 있나요?</h2>'+
+        '<h2>새로운 매장을 찾거나, 운영 중인 매장을 넘기고 싶으신가요?</h2>'+
         '<p>지역 · 업종 · 보증금으로 매물을 찾고, 권리금과 계약 순서까지 미리 확인하세요.</p>'+
         '<form class="itr-f" onsubmit="return ihStoreFind(event)" aria-label="매물 찾기">'+
           '<label class="sr-only" for="itr-r">지역</label>'+RegionSelect("itr-r", "", "", "지역 전체")+
@@ -1471,10 +1494,10 @@ function HomeITransfer(){
           '<button class="btn ih-b" type="submit">'+icon("search",16)+'매물 찾기</button>'+
         '</form>'+
         '<div class="wp-pgo itr-go">'+
-          '<a class="btn ih-b-o" href="/stores">매물 바로보기</a>'+
+
+          '<a class="btn ih-b-o" href="/sell" data-cta="on" data-cta-form="sell" hidden>내 매장 넘기기</a>'+
+          '<a class="btn ih-b-o" href="/transfer?t=out" data-cta="off" data-cta-form="sell">내 매장 넘기기</a>'+
           '<a class="btn ih-b-o" href="/transfer">양도양수 안내</a>'+
-          '<a class="btn ih-b-o" href="/sell" data-cta="on" data-cta-form="sell" hidden>내 매장 등록하기</a>'+
-          '<a class="btn ih-b-o" href="/transfer?t=out" data-cta="off" data-cta-form="sell">내 매장 넘기는 순서</a>'+
           '<a class="btn ih-b-o" href="/tools/premium">권리금 계산</a>'+
         '</div>'+
       '</div>'+

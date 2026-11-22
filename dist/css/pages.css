@@ -6284,3 +6284,27 @@ html.ivh #view .ih3 .wp-fmsg{ color:var(--ter-ink); }
   .ih3-go-m{ display:inline; }
   html.ivh #view .ih3 .wp-sug{ margin-top:8px; }
 }
+
+.itr-ph, .iclose-ph, .iops-ph{ background:linear-gradient(135deg, #EFE6DA 0%, #F5F1E9 100%); }
+.itr-ph.ph-fail, .iclose-ph.ph-fail, .iops-ph.ph-fail, .ih3-ph.ph-fail{ display:none; }
+.iclose-ph .ph{ object-position:50% 50%; }
+.iclose-tx{ display:flex; flex-direction:column; }
+@media (max-width:640px){
+  html.ivh #view section.itr, html.ivh #view section.iclose{ padding:24px 0 36px; }
+  .itr-ph{ aspect-ratio:auto; height:160px; min-height:0; }
+  .itr-ph .ph{ object-position:40% 38%; }
+  .itr-tx{ padding:18px 18px 22px; }
+  html.ivh #view .itr h2, html.ivh #view .iclose h2{ font-size:22px; line-height:1.4; margin-bottom:14px; }
+  html.ivh #view .itr-tx > p:not(.ih-kk){ display:none; }
+  html.ivh #view .itr .ih-kk, html.ivh #view .iclose .ih-kk{ margin-bottom:6px; }
+  .itr-f{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; margin-bottom:14px; }
+  .itr-f .sel{ min-height:48px; }
+  .itr-f button{ grid-column:auto; min-height:48px; }
+  .iclose-in{ gap:16px; }
+  .iclose-ph{ aspect-ratio:auto; height:160px; border-radius:16px; }
+  .iclose-go{ order:1; margin-bottom:18px; }
+  .iclose-l{ order:2; margin-bottom:0; }
+  .iclose-go .btn{ min-height:48px; }
+}
+
+@media (max-width:359px){ .itr-f{ grid-template-columns:1fr; } }

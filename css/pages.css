@@ -8415,3 +8415,30 @@ html.ivh #view .ih3 .wp-fmsg{ color:var(--ter-ink); }
   .ih3-go-m{ display:inline; }
   html.ivh #view .ih3 .wp-sug{ margin-top:8px; }
 }
+
+/* 2026-11-22 메인 양도양수 · 폐업 구간 — 폰에서 사진 · 제목 · 검색(또는 주요 단추)을 한 화면에.
+   ⚠️ 사진이 늦게 오는 동안은 옅은 결 무늬 · 못 내려오면 액자째 접힙니다 (.ph-fail · home.js 의 error 받기).
+   ⚠️ 폐업 구간 사진은 insu-closure-in(04 의 통창 쪽) — 위 히어로 폐업 카드와 구도가 겹치지 않게. */
+.itr-ph, .iclose-ph, .iops-ph{ background:linear-gradient(135deg, #EFE6DA 0%, #F5F1E9 100%); }
+.itr-ph.ph-fail, .iclose-ph.ph-fail, .iops-ph.ph-fail, .ih3-ph.ph-fail{ display:none; }
+.iclose-ph .ph{ object-position:50% 50%; }
+.iclose-tx{ display:flex; flex-direction:column; }
+@media (max-width:640px){
+  html.ivh #view section.itr, html.ivh #view section.iclose{ padding:24px 0 36px; }
+  .itr-ph{ aspect-ratio:auto; height:160px; min-height:0; }
+  .itr-ph .ph{ object-position:40% 38%; }
+  .itr-tx{ padding:18px 18px 22px; }
+  html.ivh #view .itr h2, html.ivh #view .iclose h2{ font-size:22px; line-height:1.4; margin-bottom:14px; }
+  html.ivh #view .itr-tx > p:not(.ih-kk){ display:none; }
+  html.ivh #view .itr .ih-kk, html.ivh #view .iclose .ih-kk{ margin-bottom:6px; }
+  .itr-f{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; margin-bottom:14px; }
+  .itr-f .sel{ min-height:48px; }
+  .itr-f button{ grid-column:auto; min-height:48px; }
+  .iclose-in{ gap:16px; }
+  .iclose-ph{ aspect-ratio:auto; height:160px; border-radius:16px; }
+  .iclose-go{ order:1; margin-bottom:18px; }
+  .iclose-l{ order:2; margin-bottom:0; }
+  .iclose-go .btn{ min-height:48px; }
+}
+/* 2026-11-22 — 320px 처럼 아주 좁은 폰에서는 두 칸이면 고르개 딱지('보증금 전체')가 칸보다 길어 잘립니다 · 한 칸으로 */
+@media (max-width:359px){ .itr-f{ grid-template-columns:1fr; } }

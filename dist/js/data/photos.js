@@ -102,7 +102,11 @@ window.WOW_PHOTO_SLOTS = [
     note:"매장 외관과 상담 테이블 · 매물 썸네일 금지" },
   { key:"insu-closure", sizes:"(max-width:900px) 92vw, 50vw",
     where:"메인 '지금 어떤 도움' 폐업·철거 카드 · 메인 '폐업·철거' · /closure 머리 — ZIP 04_closure.jpg", min:[1200,800], ratio:[1.3,1.8], maxKB:220, temp:true,
-    note:"집기 정리 중인 빈 공간" }
+    note:"집기 정리 중인 빈 공간" },
+
+  { key:"insu-closure-in", sizes:"(max-width:900px) 92vw, 50vw",
+    where:"메인 '폐업·철거' 구간 — ZIP 04_closure.jpg 의 통창 쪽 잘라 낸 것", min:[1200,800], ratio:[1.3,1.8], maxKB:220, temp:true,
+    note:"햇빛 드는 통창 · 정리된 빈 바닥" }
 ];
 
 window.WOW_PHOTOS = {
@@ -186,7 +190,12 @@ window.WOW_PHOTOS = {
     w:768, h:512,
     webp:"/img/insu/04_closure.webp?v=9a463fcb 768w",
     jpg:"/img/insu/04_closure.jpg?v=bf49facc 768w",
-    alt:"집기를 정리하는 빈 매장 — 쌓아 둔 의자와 사다리, 통창" }
+    alt:"집기를 정리하는 빈 매장 — 쌓아 둔 의자와 사다리, 통창" },
+  "insu-closure-in": { src:"/img/insu/04_closure-in.jpg?v=b93df345",
+    w:568, h:380,
+    webp:"/img/insu/04_closure-in.webp?v=5be0ac8b 568w",
+    jpg:"/img/insu/04_closure-in.jpg?v=b93df345 568w",
+    alt:"햇빛이 드는 통창과 정리된 빈 매장 바닥 — 사다리와 상자 몇 개" }
 };
 
 window.wowPhoto = function(key){

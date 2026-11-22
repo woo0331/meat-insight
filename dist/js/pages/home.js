@@ -1425,6 +1425,13 @@ function HomeIOps(){
   '</div></section>';
 }
 
+if(!window.__ihPhFail){ window.__ihPhFail = true;
+  document.addEventListener("error", function(e){
+    var t = e.target; if(!t || t.tagName !== "IMG" || !t.closest) return;
+    var box = t.closest(".itr-ph, .iclose-ph, .iops-ph, .ih3-ph"); if(box) box.classList.add("ph-fail");
+  }, true);
+}
+
 window.ihStoreFind = function(e){
   if(e) e.preventDefault();
   var q = [], v = function(id){ var el = document.getElementById(id); return el ? el.value : ""; };
@@ -1481,6 +1488,6 @@ function HomeIClose(){
         '<a class="btn ih-b-o" href="/intake" data-cta="off" data-cta-form="close">접수 안내</a>'+
       '</div>'+
     '</div>'+
-    '<div class="iclose-ph" aria-hidden="true">'+ihPhoto("insu-closure", "", false, "(max-width:900px) 92vw, 50vw")+'</div>'+
+    '<div class="iclose-ph" aria-hidden="true">'+ihPhoto("insu-closure-in", "", false, "(max-width:900px) 92vw, 50vw")+'</div>'+
   '</div></section>';
 }

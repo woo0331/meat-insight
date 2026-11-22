@@ -2462,6 +2462,15 @@ function HomeIOps(){
   '</div></section>';
 }
 
+/* 2026-11-22 — 메인 사진이 못 내려오면 빈 베이지 액자를 남기지 않고 액자째 접습니다 (절대 규칙 2).
+   이미지 error 는 버블링이 안 돼서 캡처 단계에서 받습니다 · 한 번만 겁니다. */
+if(!window.__ihPhFail){ window.__ihPhFail = true;
+  document.addEventListener("error", function(e){
+    var t = e.target; if(!t || t.tagName !== "IMG" || !t.closest) return;
+    var box = t.closest(".itr-ph, .iclose-ph, .iops-ph, .ih3-ph"); if(box) box.classList.add("ph-fail");
+  }, true);
+}
+
 /* 6 — 매장 양도양수: 03_transfer 배너 + 지역 · 업종 · 예산 검색 + 실제 매물(없으면 빈 상태) */
 window.ihStoreFind = function(e){
   if(e) e.preventDefault();
@@ -2520,6 +2529,6 @@ function HomeIClose(){
         '<a class="btn ih-b-o" href="/intake" data-cta="off" data-cta-form="close">접수 안내</a>'+
       '</div>'+
     '</div>'+
-    '<div class="iclose-ph" aria-hidden="true">'+ihPhoto("insu-closure", "", false, "(max-width:900px) 92vw, 50vw")+'</div>'+
+    '<div class="iclose-ph" aria-hidden="true">'+ihPhoto("insu-closure-in", "", false, "(max-width:900px) 92vw, 50vw")+'</div>'+
   '</div></section>';
 }

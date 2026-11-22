@@ -1348,9 +1348,14 @@ function HomeIHero(){
       '<p class="ih-k">창업 · 운영 · 양도양수 · 폐업까지</p>'+
       '<h1 class="ih-h">자영업의 모든 순간을<br class="br-p"> 연결합니다.</h1>'+
       '<p class="ih-s">창업 준비부터 매장 운영, 양도양수, 폐업 · 철거까지 필요한 서비스와 정보를 한곳에서 찾으세요.</p>'+
+
+      '<nav class="ih-pick" aria-label="창업 · 폐업 바로가기">'+
+        '<a class="btn ih-pk ih-pk-st" href="/startup">'+icon("store",18)+'<span>창업 준비</span>'+icon("arrow",16)+'</a>'+
+        '<a class="btn ih-pk ih-pk-cl" href="/closure">'+icon("handover",18)+'<span>폐업 · 철거</span>'+icon("arrow",16)+'</a>'+
+      '</nav>'+
       HomeWPFind()+
       '<div class="ih-go">'+
-        '<a class="btn ih-b" href="#ihelp">서비스 둘러보기'+icon("arrow",16)+'</a>'+
+        '<a class="btn ih-b-o" href="#ihelp">서비스 둘러보기'+icon("arrow",16)+'</a>'+
         '<a class="btn ih-b-o" href="/providers">전문가 · 업체 찾기</a>'+
         '<a class="btn ih-b-o" href="/content">정보 · 가이드</a>'+
       '</div>'+

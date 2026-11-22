@@ -8463,3 +8463,9 @@ html.ivh #view .ih3 .wp-fmsg{ color:var(--ter-ink); }
   .iind-i{ width:36px; height:36px; }
 }
 @media (prefers-reduced-motion:reduce){ .iind-more svg{ transition:none; } }
+/* 2026-11-22 업종 카드 — 같은 줄의 카드가 제일 긴 카드에 맞춰 늘어나고, 아이콘과 제목의 윗선을 맞춥니다.
+   전에는 a 가 제 내용 높이만 차지하고(align-items:center) 설명이 두 줄인 카드('무인매장')만 혼자 높았습니다.
+   ⚠️ 카드 전체(a)가 칸을 다 채워야 늘어난 자리까지 눌립니다 — li 를 flex 로 두고 a 를 늘립니다. */
+.iind-g > li{ display:flex; }
+.iind-c{ flex:1 1 auto; width:100%; align-items:start; align-content:start; }
+.iind-c > b{ line-height:1.35; padding-top:2px; }

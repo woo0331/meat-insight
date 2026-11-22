@@ -153,11 +153,11 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  say((await url())==="/closure","메인 히어로 폐업·철거 → /closure",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  /* 2026-11-22 — 히어로 소개 문구 아래 창업 · 폐업 두 단추 (첫 화면에서 바로 두 전문관으로) */
- await click('.ih-pick a[href="/startup"]');
- say((await url())==="/startup","메인 히어로 단추 창업 준비 → /startup",await url());
+ await click('.wp-hc-st .wp-go');
+ say((await url())==="/startup","메인 히어로 창업 카드 안 바로가기 → /startup",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.ih-pick a[href="/closure"]');
- say((await url())==="/closure","메인 히어로 단추 폐업 · 철거 → /closure",await url());
+ await click('.wp-hc-cl .wp-go');
+ say((await url())==="/closure","메인 히어로 폐업 카드 안 바로가기 → /closure",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  await click('.iops-tx a[href="/operation"]');
  say((await url())==="/operation","메인 진입 카드 매장 운영 → /operation",await url());

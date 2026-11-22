@@ -2170,8 +2170,11 @@ const AUDIT = `(() => {
       return "첫 구간이 히어로가 아닙니다 — " + (secs[0].className || "").split(" ")[0];
     /* 2026-11-19 Warm Premium — 히어로 다음이 양도양수 배너(bpass)이고 서비스 여섯(bent)이 그 뒤입니다 */
     /* 2026-11-21 Warm Premium 사진 중심 리디자인 — 히어로 다음이 '지금 어떤 도움'(ihelp · 창업 준비 / 폐업·철거 두 사진 카드) */
-    if(!(secs[1] && secs[1].classList.contains("ihelp")))
-      return "히어로 다음이 '지금 어떤 도움이 필요하신가요' 가 아닙니다 — " + ((secs[1] || {}).className || "").split(" ")[0];
+    /* 2026-11-22 대표 확정 시안 — 창업 · 폐업 두 사진 카드가 히어로 안(한 줄 세 칸)으로 올라와서 다음은 업종별 탐색입니다 */
+    if(!(secs[1] && secs[1].classList.contains("iind")))
+      return "히어로 다음이 업종별 서비스 탐색이 아닙니다 — " + ((secs[1] || {}).className || "").split(" ")[0];
+    if(!(H0ok())) return "창업 · 폐업 사진 카드가 히어로 안에 없습니다";
+    function H0ok(){ return document.querySelectorAll(".bhero .wp-hc").length === 2; }
     const h1s = document.querySelectorAll("#view h1");
     if(h1s.length !== 1) return "화면의 h1 이 " + h1s.length + "개입니다";
     if(!h1s[0].closest(".bhero")) return "h1 이 히어로 구간에 없습니다";
@@ -2190,7 +2193,8 @@ const AUDIT = `(() => {
     const leak = ["hero-startup","kind-take","kind-pass"].filter(function(k){ return used.indexOf("/img/" + k) >= 0; });
     if(leak.length) return "출처 미확인 사진이 메인에 불립니다 — " + leak.join(" · ");
     /* 2026-11-21 — 지시서가 정한 자리에 ZIP 사진 다섯 장이 정확히 앉았는가 (다른 사진으로 바꿔 끼우면 잡습니다) */
-    const spot = [[document.querySelector(".ih-ph"), "00_hero_brand", "브랜드 히어로"], [H[0], "01_startup", "창업 카드"],
+    /* 2026-11-22 — 히어로가 밝은 세 칸이 되면서 00_hero_brand 는 메인에 안 나옵니다 (파일과 자리는 그대로) */
+    const spot = [[H[0], "01_startup", "창업 카드"],
                   [H[1], "04_closure", "폐업 카드"], [document.querySelector(".iops-ph"), "02_operations", "매장 운영 지원"],
                   [document.querySelector(".itr-ph"), "03_transfer", "양도양수 배너"], [document.querySelector(".iclose-ph"), "04_closure", "폐업·철거 구간"]];
     for(const x of spot){
@@ -3805,7 +3809,7 @@ const AUDIT = `(() => {
     /* 2026-11-21 Warm Premium 사진 중심 리디자인 */
     const need = [[".ih-in .wp-find", "히어로 통합 검색"],
                   [".wp-sug",  "검색 예시"],
-                  [".ihelp-g", "지금 어떤 도움 두 카드"],
+                  [".ih3-g", "히어로 세 칸 (문구 · 창업 · 폐업)"],
                   [".iind-g",  "업종별 서비스 탐색"],
                   [".iops-l",  "매장 운영 지원 목록"],
                   [".itr-f",   "매물 찾기 (지역 · 업종 · 예산)"],
@@ -3879,7 +3883,8 @@ const AUDIT = `(() => {
        하는 자리에서 히어로를 빼고 **바로 아래 진입 카드 구간**을 넣었습니다. 면적 검사
        (아래 · 밝은 면 60% 이상)는 그대로라 "전부 다크로" 는 여전히 잡힙니다. */
     /* 2026-11-21 — 히어로는 대형 사진(어두운 막)이라 빼고, 나머지 여섯 구간은 반드시 밝아야 합니다 */
-    for(const q of [[".ihelp","지금 어떤 도움"], [".iind","업종별"], [".iops","매장 운영 지원"],
+    /* 2026-11-22 — 히어로가 밝은 아이보리 세 칸이 되어 이제 히어로도 밝아야 합니다 */
+    for(const q of [[".ih3","히어로"], [".iind","업종별"], [".iops","매장 운영 지원"],
                     [".itr","매장 양도양수"], [".iclose","폐업·철거"], [".wp-steps","이용 방법"]]){
       const e = document.querySelector(q[0]);
       if(!e) return q[1] + " 구간이 없습니다";
@@ -3974,7 +3979,7 @@ const AUDIT = `(() => {
                   ".bent-ph .ph",
                   ".bpass-ph .ph", ".bban-ph .ph",
                   /* 2026-11-21 사진 중심 리디자인의 자리 다섯 */
-                  ".ih-ph .ph", ".ihc-ph .ph", ".iops-ph .ph", ".itr-ph .ph"];
+                  ".ih3-ph .ph", ".iops-ph .ph", ".itr-ph .ph"];
     const bad = [];
     for(const q of want){
       let ok = false;
@@ -4388,7 +4393,8 @@ const AUDIT = `(() => {
     /* 2026-11-19 대표 확정 시안 — "왜 일까요"(bwhy) 띠가 내려왔습니다 */
     /* 2026-11-19 Warm Premium — 히어로(+검색) · 양도양수 배너 · 서비스 여섯 · 이용 방법 */
     /* 2026-11-21 Warm Premium 사진 중심 리디자인 — 히어로 · 도움 · 업종 · 운영 · 양도양수 · 폐업 · 이용 방법 */
-    const want = ["bhero","ihelp","iind","iops","bpass","iclose","bstep"];
+    /* 2026-11-22 대표 확정 시안 — 창업 · 폐업 카드가 히어로 안으로 올라와 '지금 어떤 도움' 구간이 내려왔습니다 */
+    const want = ["bhero","iind","iops","bpass","iclose","bstep"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";

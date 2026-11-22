@@ -578,7 +578,7 @@ function PageMain(){
      옛: HomeSplitSW()+ HomeEntrySW()+ HomeStores()+ HomeShortcuts()+ HomeCalc()+ HomeGuide()+ HomeCta() */
   /* ⚠️⚠️ 2026-11-21 Warm Premium 사진 중심 리디자인 — 히어로 → 도움 둘 → 업종 → 운영 → 양도양수 → 폐업·철거 → 이용 방법.
      옛 차례(지우지 않았습니다): HomeWPHero()+ HomeWPPass()+ HomeWPCards()+ HomeWPSteps() */
-  return HomeIHero()+ HomeIHelp()+ HomeIInd()+ HomeIOps()+ HomeITransfer()+ HomeIClose()+ HomeWPSteps();
+  return HomeIHero()+ HomeIInd()+ HomeIOps()+ HomeITransfer()+ HomeIClose()+ HomeWPSteps();
 }
 
 
@@ -2367,27 +2367,39 @@ function ihPhoto(key, cls, eager, sizes){
   return hasPhoto(key) ? photoBox(key, cls || "", !!eager, sizes || "") : "";
 }
 
-/* 2 — 브랜드 히어로: 00_hero_brand 전체 폭 + 어두운 막 + HTML 문구 + 검색 / 서비스 탐색 */
+/* 2 — 브랜드 히어로 (2026-11-22 대표 확정 시안 image(20261120-172435) — 한 줄 세 칸)
+   PC: 밝은 아이보리 바탕 · 왼쪽 소개 문구 · 가운데 창업 사진 카드 · 오른쪽 폐업 사진 카드 → 바로 아래 통합 검색.
+   폰: 문구 위 · 두 카드 나란히(사진 띠 + 이름 + 바로가기) · 검색. 390×844 첫 화면에서 두 카드 진입과 검색창이
+       아래 네비 위에 섭니다 (재서 정한 높이 — 사진 띠를 키우면 검색창이 네비 밑으로 들어갑니다).
+   ⚠️ 창업 · 폐업은 **카드 전체가 하나의 링크**입니다 — 안에 또 a 를 넣지 마세요.
+   ⚠️ 아래 '지금 어떤 도움이 필요하신가요' 두 카드는 같은 것의 반복이라 메인에서 내려왔습니다
+      (HomeIHelp 는 지우지 않았습니다 · 고르신 서비스 줄 HomePicked 는 이 히어로가 받습니다).
+   ⚠️ 사진 자리는 insu-startup · insu-closure — 고해상도 원본은 photos.js 의 줄만 바꾸면 그대로 들어갑니다. */
 function HomeIHero(){
-  return '<section class="bhero ih">'+
-    '<div class="ih-ph" aria-hidden="true">'+ihPhoto("insu-hero", "", true, "100vw")+'</div>'+
-    '<div class="w ih-in">'+
-      '<p class="ih-k">창업 · 운영 · 양도양수 · 폐업까지</p>'+
-      '<h1 class="ih-h">자영업의 모든 순간을<br class="br-p"> 연결합니다.</h1>'+
-      '<p class="ih-s">창업 준비부터 매장 운영, 양도양수, 폐업 · 철거까지 필요한 서비스와 정보를 한곳에서 찾으세요.</p>'+
-      /* 2026-11-22 — 소개 문구 바로 아래 창업 · 폐업 두 단추 (같은 크기 · 같은 무게 · 아래 사진 카드는 그대로) */
-      '<nav class="ih-pick" aria-label="창업 · 폐업 바로가기">'+
-        '<a class="btn ih-pk ih-pk-st" href="/startup">'+icon("store",18)+'<span>창업 준비</span>'+icon("arrow",16)+'</a>'+
-        '<a class="btn ih-pk ih-pk-cl" href="/closure">'+icon("handover",18)+'<span>폐업 · 철거</span>'+icon("arrow",16)+'</a>'+
-      '</nav>'+
-      HomeWPFind()+
-      '<div class="ih-go">'+
-        '<a class="btn ih-b-o" href="#ihelp">서비스 둘러보기'+icon("arrow",16)+'</a>'+
-        '<a class="btn ih-b-o" href="/providers">전문가 · 업체 찾기</a>'+
-        '<a class="btn ih-b-o" href="/content">정보 · 가이드</a>'+
+  return '<section class="bhero ih ih3"><div class="w ih-in">'+
+    '<div class="ih3-g">'+
+      '<div class="ih3-msg">'+
+        '<p class="ih-k">창업 · 운영 · 양도양수 · 폐업까지</p>'+
+        '<h1 class="ih-h">자영업의 모든 순간을<br class="br-p"> 연결합니다.</h1>'+
+        '<span class="ih3-sw" aria-hidden="true"></span>'+
+        '<p class="ih-s">창업 준비부터 매장 운영, 양도양수, 폐업 · 철거까지 필요한 서비스와 정보를 한곳에서 찾으세요.</p>'+
+        '<div class="ih-go">'+
+          '<a class="ih3-l" href="/providers">전문가 · 업체 찾기'+icon("arrow",14)+'</a>'+
+          '<a class="ih3-l" href="/content">정보 · 가이드'+icon("arrow",14)+'</a>'+
+        '</div>'+
       '</div>'+
+      IH_HELP.map(function(x){
+        return '<a class="wp-hc ih3-c wp-hc-'+x.k+'" href="'+esc(x.to)+'">'+
+          '<span class="ih3-ph" aria-hidden="true">'+ihPhoto(x.ph, "", true, "(max-width:900px) 46vw, 460px")+'</span>'+
+          '<span class="ih3-tx"><span class="ih3-tag">'+esc(x.tag)+'</span>'+
+            '<h2>'+esc(x.h)+'</h2><span class="ihc-p">'+esc(x.p)+'</span>'+
+            '<span class="wp-go"><span class="ih3-go-l">'+esc(x.go)+'</span><span class="ih3-go-m">바로가기</span>'+icon("arrow",16)+'</span></span></a>';
+      }).join("")+
     '</div>'+
-  '</section>';
+    HomeWPFind()+
+    /* 고르신 서비스가 있으면 그 자리에서 신청까지 (0개면 줄째 없음) */
+    HomePicked()+
+  '</div></section>';
 }
 
 /* 3 — 지금 어떤 도움이 필요하신가요: 창업 준비(01) · 폐업·철거(04) 큰 사진 카드 둘 */

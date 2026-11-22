@@ -57,7 +57,7 @@ var MAIN_CALC = ["cost", "bep", "premium", "closecost"];
 
 function PageMain(){
 
-  return HomeIHero()+ HomeIHelp()+ HomeIInd()+ HomeIOps()+ HomeITransfer()+ HomeIClose()+ HomeWPSteps();
+  return HomeIHero()+ HomeIInd()+ HomeIOps()+ HomeITransfer()+ HomeIClose()+ HomeWPSteps();
 }
 
 var HOME_ENTER = [
@@ -1342,25 +1342,30 @@ function ihPhoto(key, cls, eager, sizes){
 }
 
 function HomeIHero(){
-  return '<section class="bhero ih">'+
-    '<div class="ih-ph" aria-hidden="true">'+ihPhoto("insu-hero", "", true, "100vw")+'</div>'+
-    '<div class="w ih-in">'+
-      '<p class="ih-k">창업 · 운영 · 양도양수 · 폐업까지</p>'+
-      '<h1 class="ih-h">자영업의 모든 순간을<br class="br-p"> 연결합니다.</h1>'+
-      '<p class="ih-s">창업 준비부터 매장 운영, 양도양수, 폐업 · 철거까지 필요한 서비스와 정보를 한곳에서 찾으세요.</p>'+
-
-      '<nav class="ih-pick" aria-label="창업 · 폐업 바로가기">'+
-        '<a class="btn ih-pk ih-pk-st" href="/startup">'+icon("store",18)+'<span>창업 준비</span>'+icon("arrow",16)+'</a>'+
-        '<a class="btn ih-pk ih-pk-cl" href="/closure">'+icon("handover",18)+'<span>폐업 · 철거</span>'+icon("arrow",16)+'</a>'+
-      '</nav>'+
-      HomeWPFind()+
-      '<div class="ih-go">'+
-        '<a class="btn ih-b-o" href="#ihelp">서비스 둘러보기'+icon("arrow",16)+'</a>'+
-        '<a class="btn ih-b-o" href="/providers">전문가 · 업체 찾기</a>'+
-        '<a class="btn ih-b-o" href="/content">정보 · 가이드</a>'+
+  return '<section class="bhero ih ih3"><div class="w ih-in">'+
+    '<div class="ih3-g">'+
+      '<div class="ih3-msg">'+
+        '<p class="ih-k">창업 · 운영 · 양도양수 · 폐업까지</p>'+
+        '<h1 class="ih-h">자영업의 모든 순간을<br class="br-p"> 연결합니다.</h1>'+
+        '<span class="ih3-sw" aria-hidden="true"></span>'+
+        '<p class="ih-s">창업 준비부터 매장 운영, 양도양수, 폐업 · 철거까지 필요한 서비스와 정보를 한곳에서 찾으세요.</p>'+
+        '<div class="ih-go">'+
+          '<a class="ih3-l" href="/providers">전문가 · 업체 찾기'+icon("arrow",14)+'</a>'+
+          '<a class="ih3-l" href="/content">정보 · 가이드'+icon("arrow",14)+'</a>'+
+        '</div>'+
       '</div>'+
+      IH_HELP.map(function(x){
+        return '<a class="wp-hc ih3-c wp-hc-'+x.k+'" href="'+esc(x.to)+'">'+
+          '<span class="ih3-ph" aria-hidden="true">'+ihPhoto(x.ph, "", true, "(max-width:900px) 46vw, 460px")+'</span>'+
+          '<span class="ih3-tx"><span class="ih3-tag">'+esc(x.tag)+'</span>'+
+            '<h2>'+esc(x.h)+'</h2><span class="ihc-p">'+esc(x.p)+'</span>'+
+            '<span class="wp-go"><span class="ih3-go-l">'+esc(x.go)+'</span><span class="ih3-go-m">바로가기</span>'+icon("arrow",16)+'</span></span></a>';
+      }).join("")+
     '</div>'+
-  '</section>';
+    HomeWPFind()+
+
+    HomePicked()+
+  '</div></section>';
 }
 
 var IH_HELP = [

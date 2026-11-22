@@ -40,6 +40,10 @@ function hasPretendard(){
 }
 
 /* ── ② 브랜드 이름 ───────────────────────────────────────────── */
+function dataUri(rel, type){
+  const f = path.join(ROOT, rel);
+  return fs.existsSync(f) ? "data:" + type + ";base64," + fs.readFileSync(f).toString("base64") : "";
+}
 function brand(){
   const sandbox = { window:{} };
   const src = fs.readFileSync(path.join(ROOT, "js/data/brand.js"), "utf8");
@@ -78,12 +82,19 @@ function brand(){
     if(window.ogPaint) window.ogPaint(v.name, v.sub || "");
     else { document.getElementById("og-brand").textContent = v.name;
            document.getElementById("og-sub").textContent   = v.sub || ""; }
-    /* 2026-11-19 — 사진은 메인 히어로와 같은 원본 (setContent 라 data URI 로 넣습니다) */
-    var im = document.getElementById("og-ph"); if(im && v.ph) im.src = v.ph;
-  }, { name:B.name, sub:B.sub,
-       ph: fs.existsSync(path.join(ROOT,"img/hero-start.jpg"))
-         ? "data:image/jpeg;base64," + fs.readFileSync(path.join(ROOT,"img/hero-start.jpg")).toString("base64") : "" });
-  await pg.waitForFunction(function(){ var i = document.getElementById("og-ph"); return !i || !i.getAttribute("src") || i.complete; });
+    /* 2026-11-22 — 사진은 승인된 ZIP 두 장(01 창업 준비 · 04 폐업·철거) · 명조 제목은 메인과 같은 글꼴 (둘 다 data URI) */
+    if(v.ph1) document.getElementById("og-ph1").src = v.ph1;
+    if(v.ph2) document.getElementById("og-ph2").src = v.ph2;
+    if(v.serif){ var st = document.createElement("style");
+      st.textContent = '@font-face{font-family:"IIS Serif";font-weight:600;src:url(' + v.serif + ') format("woff2");}';
+      document.head.appendChild(st); }
+  }, { name:B.name, sub:B.sub, ph1:dataUri("img/insu/01_startup.jpg","image/jpeg"),
+       ph2:dataUri("img/insu/04_closure.jpg","image/jpeg"), serif:dataUri("fonts/noto-serif-kr-600-main.woff2","font/woff2") });
+  await pg.waitForFunction(function(){ return [].slice.call(document.querySelectorAll("#og img")).every(function(i){ return !i.getAttribute("src") || (i.complete && i.naturalWidth > 0); }); });
+  await pg.evaluate(function(){ return document.fonts.ready; });
+  /* ⚠️ 사진 두 장이 실제로 들어갔는가 — 빠지면 빈 베이지 액자가 공유 카드에 나갑니다 */
+  const nimg = await pg.evaluate(function(){ return [].slice.call(document.querySelectorAll("#og img")).filter(function(i){ return i.naturalWidth > 0; }).length; });
+  if(nimg !== 2){ console.error("❌ 사진이 " + nimg + "장만 들어갔습니다 — img/insu/01_startup.jpg · 04_closure.jpg 를 보세요"); await b.close(); process.exit(1); }
   await pg.waitForTimeout(250);
 
   /* ⚠️ 글자가 네모(tofu)로 나왔는지 그림에서 직접 봅니다. 글꼴 검사를

@@ -33,10 +33,14 @@
 
 <link rel="manifest" href="/manifest.json">
 <!-- ⚠️ rel="icon" 을 안 적으면 브라우저가 /favicon.ico 를 찾습니다.
-     파일이 없으면 모든 화면에서 404 가 한 번씩 납니다. -->
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+     파일이 없으면 모든 화면에서 404 가 한 번씩 납니다.
+     2026-11-22 — 악수형 심볼로 바꿨습니다 (tools/icons.js 가 만듭니다).
+     ⚠️ 주소 끝의 버전 값은 build-pages.js 가 파일 내용으로 붙입니다 — 손으로 적지 마세요. -->
+<link rel="icon" href="/favicon.ico?v=7339ed72" sizes="any">
+<link rel="icon" href="/favicon-32.png?v=cd406c1b" type="image/png" sizes="32x32">
+<link rel="icon" href="/favicon-16.png?v=3f65399f" type="image/png" sizes="16x16">
+<link rel="icon" href="/icon-192.png?v=f232111b" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=0b9b0ec9" sizes="180x180">
 
 <!-- 글꼴은 CDN 이 막혀도 사이트가 멈추지 않습니다 — 대체 사슬에
      윈도우(맑은 고딕)·맥(애플 SD 산돌) 기본 한글 글꼴이 들어 있습니다. -->
@@ -44,7 +48,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 
 <link rel="stylesheet" href="/dist/css/tokens.css?v=45177f3e">
-<link rel="stylesheet" href="/dist/css/app.css?v=f7b7bb13">
+<link rel="stylesheet" href="/dist/css/app.css?v=7833d031">
 <link rel="stylesheet" href="/dist/css/pages.css?v=528f3c39">
 
 <!-- ⚠️ 이 사이 줄은 `node build-pages.js` 가 씁니다. 손으로 고치지
@@ -72,7 +76,7 @@
      상대 경로면 /start/cost 같은 깊은 주소에서 /start/js/… 를 찾아
      스크립트가 통째로 404 가 됩니다. -->
 <script defer src="/dist/js/data/korean.js?v=122651cb"></script>
-<script defer src="/dist/js/data/brand.js?v=92fc2b52"></script>
+<script defer src="/dist/js/data/brand.js?v=a5fbabc5"></script>
 <script defer src="/dist/js/data/site.js?v=c763545a"></script>
 <script defer src="/dist/js/data/regions.js?v=b7a0090c"></script>
 <script defer src="/dist/js/data/industries.js?v=103f2861"></script>
@@ -133,7 +137,7 @@
      꺼져 있으면 fetch 를 한 번도 안 보냅니다 (js/state.js 머리말) -->
 <script defer src="/dist/js/state.js?v=95e250a7"></script>
 <script defer src="/dist/js/photo.js?v=fb4d7968"></script>
-<script defer src="/dist/js/components/chrome.js?v=6eb24298"></script>
+<script defer src="/dist/js/components/chrome.js?v=6d011553"></script>
 
 <script defer src="/dist/js/pages/home.js?v=4c4a77ea"></script>
 <script defer src="/dist/js/pages/journey.js?v=f30975a5"></script>
@@ -148,7 +152,7 @@
 <script defer src="/dist/js/pages/search.js?v=75dcd044"></script>
 <script defer src="/dist/js/pages/legal.js?v=0792185d"></script>
 
-<script defer src="/dist/js/app.js?v=3e2b326b"></script>
+<script defer src="/dist/js/app.js?v=6154afa8"></script>
 
 <div id="chrome-t"></div>
 <!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가

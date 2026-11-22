@@ -119,6 +119,20 @@ function logoSub(){
    ⚠️ 그림을 넣으실 때 `alt` 는 **브랜드 이름**입니다. 빈 alt 로 두면
    읽어 주는 프로그램에서 로고 자리가 통째로 사라집니다.
    ⚠️ 높이는 CSS(`.lg-img`)가 잡습니다 — 파일 크기에 기대지 마세요. */
+/* 2026-11-22 — 악수형 심볼 (brand.js 의 mark). 글자 대신 쓰지 않고 **글자 옆**에 섭니다.
+   ⚠️ 그라디언트 id 가 화면 안에서 겹치면 둘째 것이 첫째 것을 가져다 씁니다 — 자리마다 이름을 따로.
+   ⚠️ 장식입니다(aria-hidden) — 이름은 바로 옆 글자와 링크의 aria-label 이 말합니다. */
+function brandMark(where){
+  var B = window.AM_BRAND || {};
+  if(!B.mark) return "";
+  var id = "bmg-" + (where || "hd");
+  var st = where === "ft"
+    ? '<stop offset="0" stop-color="#DCCBB5"/><stop offset="1" stop-color="#B8956D"/>'
+    : '<stop offset="0" stop-color="#B8956D"/><stop offset=".55" stop-color="#7A5633"/><stop offset="1" stop-color="#6A4B3B"/>';
+  return '<svg class="bmark" viewBox="'+esc(B.markBox || "0 0 500 420")+'" aria-hidden="true" focusable="false">'+
+    '<defs><linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="1">'+st+'</linearGradient></defs>'+
+    '<path fill="url(#'+id+')" fill-rule="evenodd" d="'+esc(B.mark)+'"/></svg>';
+}
 function Logo(where){
   var B = window.AM_BRAND || {}, nm = brandName();
   var mark = B.logo
@@ -126,15 +140,15 @@ function Logo(where){
       'width="120" height="28">'
     : "";
   if(where === "ft"){
-    return '<a class="lg lg-ft" href="/">'+
-      (mark || '<b>'+esc(nm)+'</b><i>'+esc(brandSub())+'</i>')+'</a>';
+    return '<a class="lg lg-ft" href="/" aria-label="'+esc(nm)+' 홈">'+
+      (mark || '<span class="lg-ft-i" aria-hidden="true">'+brandMark("ft")+'</span><b>'+esc(nm)+'</b><i>'+esc(brandSub())+'</i>')+'</a>';
   }
   /* 헤더 — 마크 타일 + 이름 + (이름과 다를 때만) 영문 작은 줄.
      ⚠️ 작은 줄은 **로고 한 덩어리 안**입니다. 떼어서 따로 내면
      그때부터 서로 다른 서비스 둘로 읽힙니다 (brand.js 의 `en`). */
   return '<a class="lg hd-lg" href="/" aria-label="'+esc(nm)+' 홈">'+
     (mark ? mark :
-      '<span class="hd-lg-i" aria-hidden="true">'+icon("store",20)+'</span>'+
+      '<span class="hd-lg-i" aria-hidden="true">'+(brandMark("hd") || icon("store",20))+'</span>'+
       '<span class="hd-lg-t"><b>'+esc(nm)+'</b>'+
         (logoSub() ? '<i>'+esc(logoSub())+'</i>' : '')+'</span>')+
   '</a>';
@@ -612,7 +626,8 @@ function Footer(){
      ⚠️ .ft .w **밖**에 둡니다 — 푸터를 가르는 가로줄은 .ft .w 안에서 하나라야 합니다(check.js). */
   var telNo = (typeof bizVal === "function") ? String(bizVal("phone") || "") : "";
   var band = '<div class="ft-band"><div class="w ft-bw">'+
-    '<p class="ft-bb"><b>'+esc(brandName())+'</b><span>'+esc(brandSub())+'</span></p>'+
+    /* 2026-11-22 — 푸터에 실제로 보이는 브랜드 자리는 이 띠입니다(Logo("ft") 는 접혀 있습니다) · 같은 악수형 심볼 */
+    '<p class="ft-bb"><span class="ft-bb-i" aria-hidden="true">'+brandMark("ft")+'</span><span class="ft-bb-t"><b>'+esc(brandName())+'</b><span>'+esc(brandSub())+'</span></span></p>'+
     [["layers","한 번에 여러 서비스","필요한 서비스를 골라 한 번에 신청"],
      ["calc","계산도구 · 가이드","비용과 준비 순서를 미리 확인"],
      ["users","창업부터 폐업까지","단계마다 필요한 서비스를 한곳에서"]].map(function(x){

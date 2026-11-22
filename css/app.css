@@ -1134,3 +1134,30 @@ a.ft-bi:hover b{ text-decoration:underline; }
 .ft:has(.ft-band){ padding-top:0; }
 .ft-band + .w{ padding-top:44px; }
 .ft-band ~ .w .ft-b .lg-ft{ display:none; }
+
+/* ════════════════════════════════════════════════════════════════════
+   2026-11-22 로고 — 악수형 심볼 + '인수인계' (헤더 · 폰 헤더 · 푸터 한 벌)
+   ⚠️ 심볼은 타일(네모 바탕) 없이 그대로 섭니다 — 위의 옛 규칙(.hd-lg-i 남색 타일 ·
+      420px 아래 숨김)을 여기서 덮습니다. 이 블록이 **맨 뒤**라야 이깁니다.
+   ⚠️ 폰에서도 심볼을 숨기지 않습니다 (지시: PC · 모바일 · 푸터 같은 브랜드).
+   ════════════════════════════════════════════════════════════════════ */
+.hd-lg .hd-lg-i{ display:inline-flex; width:auto; height:auto; padding:0; border-radius:0; background:none; color:inherit; flex:0 0 auto; }
+.hd-lg .hd-lg-i .bmark{ display:block; width:44px; height:auto; }
+.hd-lg{ gap:10px; }
+.hd-lg-t b{ color:#28221E; letter-spacing:-.03em; }
+.lg-ft{ align-items:center; }
+.lg-ft-i{ display:inline-flex; flex:0 0 auto; }
+.lg-ft-i .bmark{ display:block; width:40px; height:auto; }
+@media (max-width:420px){
+  .hd-lg .hd-lg-i{ display:inline-flex; }
+  .hd-lg .hd-lg-i .bmark{ width:36px; }
+  .hd-lg{ gap:7px; }
+}
+@media (max-width:340px){ .hd-lg .hd-lg-i .bmark{ width:32px; } }
+/* 푸터 띠의 브랜드 — 심볼 + 이름 · 서브 (짙은 띠 위라 밝은 그라디언트) */
+.ft-bb{ flex-direction:row; align-items:center; gap:12px; }
+.ft-bb-i{ display:inline-flex; flex:0 0 auto; }
+.ft-bb-i .bmark{ display:block; width:44px; height:auto; }
+.ft-bb-t{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.ft-bb-t b{ font-size:22px; font-weight:900; letter-spacing:-.03em; }
+.ft-bb-t span{ font-size:var(--t-cap); color:#EFE3D2; }

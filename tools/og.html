@@ -35,7 +35,8 @@
  .in{ position:absolute; left:72px; top:0; bottom:0; width:600px; display:flex; flex-direction:column; justify-content:center; }
  .brand{ display:flex; align-items:center; gap:14px; }
  .mk{ width:52px; height:52px; border-radius:14px; background:#6A4B3B; display:flex; align-items:center; justify-content:center; }
- .mk svg{ width:30px; height:30px; fill:none; stroke:#FFFCF7; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+ .mk svg{ width:38px; height:38px; }
+ .mk path{ fill:#FFFCF7; fill-rule:evenodd; }
  .brand b{ font-size:44px; font-weight:900; letter-spacing:-.03em; color:#28221E; }
  .sub{ margin:14px 0 0; font-size:21px; font-weight:600; color:#6B5A4E; }
  .rule{ width:56px; height:3px; margin:34px 0 30px; background:#D9C6AD; }
@@ -52,7 +53,7 @@
 </style>
 <div class="og" id="og">
   <div class="in">
-    <div class="brand"><span class="mk"><svg viewBox="0 0 24 24"><path d="M3.5 9 5 4h14l1.5 5"/><path d="M3.5 9a2.8 2.8 0 0 0 5.6 0 2.8 2.8 0 0 0 5.8 0 2.8 2.8 0 0 0 5.6 0"/><path d="M5 11.5V20h14v-8.5"/><path d="M10 20v-5h4v5"/></svg></span><b id="og-brand"></b></div>
+    <div class="brand"><span class="mk"><svg id="og-mk" viewBox="0 0 24 24"><path id="og-mkp" d=""/></svg></span><b id="og-brand"></b></div>
     <p class="sub" id="og-sub"></p>
     <span class="rule"></span>
     <h1>자영업의 <em>모든 순간을</em><br>연결합니다</h1>

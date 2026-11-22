@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>인수인계 | 자영업의 모든 순간을 연결합니다</title>
-<meta name="description" content="창업부터 매장 운영, 양도양수, 폐업 · 철거까지 필요한 정보와 서비스를 한곳에서 준비하세요.">
+<title>인수인계 | 창업부터 폐업까지</title>
+<meta name="description" content="창업 준비부터 매장 운영, 양도양수, 폐업·철거까지. 자영업의 모든 순간을 연결하는 인수인계.">
 <meta name="theme-color" content="#FFFCF7">
 <meta name="color-scheme" content="only light">
 
 <meta property="og:type" content="website">
-<meta property="og:title" content="인수인계 | 자영업의 모든 순간을 연결합니다">
-<meta property="og:description" content="창업부터 매장 운영, 양도양수, 폐업 · 철거까지 필요한 정보와 서비스를 한곳에서 준비하세요.">
+<meta property="og:title" content="인수인계 | 창업부터 폐업까지">
+<meta property="og:description" content="창업 준비부터 매장 운영, 양도양수, 폐업·철거까지. 자영업의 모든 순간을 연결하는 인수인계.">
 <!-- ⚠️ og:image 는 **주소 전체**여야 합니다. "/og.jpg" 로 두면 크롤러가
      우리 도메인을 모르는 채로 읽어 카카오톡·페이스북 미리보기에 안 뜹니다. -->
 <meta property="og:image" content="https://storeway.co.kr/og.jpg">
@@ -20,8 +20,8 @@
 <meta property="og:site_name" content="인수인계">
 <meta property="og:locale" content="ko_KR">
 <meta property="og:url" content="https://storeway.co.kr/">
-<meta name="twitter:title" content="인수인계 | 자영업의 모든 순간을 연결합니다">
-<meta name="twitter:description" content="창업부터 매장 운영, 양도양수, 폐업 · 철거까지 필요한 정보와 서비스를 한곳에서 준비하세요.">
+<meta name="twitter:title" content="인수인계 | 창업부터 폐업까지">
+<meta name="twitter:description" content="창업 준비부터 매장 운영, 양도양수, 폐업·철거까지. 자영업의 모든 순간을 연결하는 인수인계.">
 <meta name="twitter:image" content="https://storeway.co.kr/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
 
@@ -33,10 +33,14 @@
 
 <link rel="manifest" href="/manifest.json">
 <!-- ⚠️ rel="icon" 을 안 적으면 브라우저가 /favicon.ico 를 찾습니다.
-     파일이 없으면 모든 화면에서 404 가 한 번씩 납니다. -->
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+     파일이 없으면 모든 화면에서 404 가 한 번씩 납니다.
+     2026-11-22 — 악수형 심볼로 바꿨습니다 (tools/icons.js 가 만듭니다).
+     ⚠️ 주소 끝의 버전 값은 build-pages.js 가 파일 내용으로 붙입니다 — 손으로 적지 마세요. -->
+<link rel="icon" href="/favicon.ico?v=7339ed72" sizes="any">
+<link rel="icon" href="/favicon-32.png?v=cd406c1b" type="image/png" sizes="32x32">
+<link rel="icon" href="/favicon-16.png?v=3f65399f" type="image/png" sizes="16x16">
+<link rel="icon" href="/icon-192.png?v=f232111b" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=0b9b0ec9" sizes="180x180">
 
 <!-- 글꼴은 CDN 이 막혀도 사이트가 멈추지 않습니다 — 대체 사슬에
      윈도우(맑은 고딕)·맥(애플 SD 산돌) 기본 한글 글꼴이 들어 있습니다. -->
@@ -44,7 +48,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 
 <link rel="stylesheet" href="/dist/css/tokens.css?v=45177f3e">
-<link rel="stylesheet" href="/dist/css/app.css?v=f7b7bb13">
+<link rel="stylesheet" href="/dist/css/app.css?v=7833d031">
 <link rel="stylesheet" href="/dist/css/pages.css?v=528f3c39">
 
 <!-- ⚠️ 이 사이 줄은 `node build-pages.js` 가 씁니다. 손으로 고치지
@@ -72,7 +76,7 @@
      상대 경로면 /start/cost 같은 깊은 주소에서 /start/js/… 를 찾아
      스크립트가 통째로 404 가 됩니다. -->
 <script defer src="/dist/js/data/korean.js?v=122651cb"></script>
-<script defer src="/dist/js/data/brand.js?v=92fc2b52"></script>
+<script defer src="/dist/js/data/brand.js?v=a5fbabc5"></script>
 <script defer src="/dist/js/data/site.js?v=c763545a"></script>
 <script defer src="/dist/js/data/regions.js?v=b7a0090c"></script>
 <script defer src="/dist/js/data/industries.js?v=103f2861"></script>
@@ -133,7 +137,7 @@
      꺼져 있으면 fetch 를 한 번도 안 보냅니다 (js/state.js 머리말) -->
 <script defer src="/dist/js/state.js?v=95e250a7"></script>
 <script defer src="/dist/js/photo.js?v=fb4d7968"></script>
-<script defer src="/dist/js/components/chrome.js?v=6eb24298"></script>
+<script defer src="/dist/js/components/chrome.js?v=6d011553"></script>
 
 <script defer src="/dist/js/pages/home.js?v=4c4a77ea"></script>
 <script defer src="/dist/js/pages/journey.js?v=f30975a5"></script>
@@ -148,13 +152,13 @@
 <script defer src="/dist/js/pages/search.js?v=75dcd044"></script>
 <script defer src="/dist/js/pages/legal.js?v=0792185d"></script>
 
-<script defer src="/dist/js/app.js?v=3e2b326b"></script>
+<script defer src="/dist/js/app.js?v=6154afa8"></script>
 
 <div id="chrome-t"></div>
 <!-- ⚠️ crawl:start / crawl:end 표시를 지우지 마세요. build-pages.js 가
      이 사이에 **크롤러가 읽을 본문**을 써 넣습니다. 메인은 원본이라
      shell() 이 손대지 않아서, 한동안 여기가 빈 칸으로 나갔습니다. -->
-<main id="view"><!-- crawl:start --><div class="pre w"><h1>자영업의 모든 순간을 연결합니다</h1><p>창업부터 매장 운영, 양도양수, 폐업 · 철거까지 필요한 정보와 서비스를 한곳에서 준비하세요.</p><p>창업 · 운영 · 양도양수 · 폐업까지. 자영업의 모든 순간을 연결합니다. 창업 준비부터 매장 운영, 양도양수, 폐업 · 철거까지 필요한 서비스와 정보를 한곳에서 찾으세요.</p><ul><li>창업 준비 — 새로운 시작을 준비하시나요? 업종 선택부터 상권 · 인테리어 · 설비 · 비용과 절차까지, 오픈에 필요한 준비를 순서대로 안내합니다.</li><li>폐업 · 철거 — 매장 정리를 고민하시나요? 철거 전에 양도 가능성부터 확인하고, 원상복구 · 집기 처분 · 세무 정리까지 마무리 순서를 안내합니다.</li></ul><p>통합 검색 — 분야를 고르고 필요한 서비스를 검색해 보세요. 이렇게 찾아보세요: 인테리어 · 철거 · 권리금 · 원상복구 · POS · 폐업신고.</p><h2>업종별 서비스 탐색</h2><p>업종을 고르시면 그 업종에서 먼저 챙길 서비스와 준비 순서를 보여 드립니다.</p><ul><li>음식점 — 한식 · 중식 · 일식 · 양식 · 분식 · 고깃집</li><li>카페 · 디저트 — 카페 · 베이커리 · 디저트 · 브런치</li><li>주점 · 바 — 호프 · 이자카야 · 와인바 · 칵테일바</li><li>미용 · 헤어 — 미용실 · 헤어샵 · 바버샵 · 두피관리</li><li>네일 · 뷰티 — 네일 · 속눈썹 · 왁싱 · 피부관리</li><li>헬스 · PT — 헬스장 · PT샵 · 필라테스 · 요가</li><li>학원 · 교육 — 교습소 · 공부방 · 예체능 · 직업교육</li><li>반려동물 — 펫샵 · 애견미용 · 애견호텔 · 동물병원</li><li>소매 · 편의점 — 편의점 · 마트 · 전문소매 · 잡화</li><li>무인매장 — 무인카페 · 무인점포 · 스터디카페 · 셀프세탁</li><li>숙박 — 모텔 · 펜션 · 게스트하우스 · 공유숙박</li><li>전체 업종 보기</li></ul><h2>매장 운영 지원</h2><p>문을 연 뒤에도 필요한 일은 계속됩니다. 홍보부터 세무, 시설 수리, POS까지 분야별로 찾아보세요.</p><ul><li>가게 광고 · 홍보</li><li>세금 · 회계</li><li>직원 구하기 · 노무 상담</li><li>매장 기계 · 시설 수리</li><li>POS · 인터넷 · 카드 단말기</li><li>식자재 · 매장 물품</li><li>매장 청소 · 방역</li><li>매장 보험 · 운영 상담</li></ul><h2>지금 운영 중인 매장을 넘기거나, 새로운 매장을 찾고 있나요?</h2><p>매장 양도양수 — 지역 · 업종 · 보증금으로 매물을 찾고, 권리금과 계약 순서까지 미리 확인하세요. 현재 등록된 매물이 없습니다. 매물 바로보기 · 권리금 계산.</p><h2>철거하기 전에, 넘길 수 있는지부터 확인하세요.</h2><ul><li>01 양도 가능성 검토 — 매장을 그대로 넘기면 철거비와 원상복구 부담이 줄어듭니다.</li><li>02 시설 · 집기 처분 — 쓸 만한 장비는 따로 팔 수 있습니다.</li><li>03 철거 · 원상복구 · 폐업 신고 — 범위와 순서를 정한 뒤 견적을 받습니다.</li></ul><h2>인수인계 이용 방법</h2><p>간단한 절차로 필요한 서비스를 전문가와 연결해 드립니다. 업체가 정해지면 상호를 알리고 연락처 전달 동의를 다시 받습니다.</p><ul><li>01 서비스 선택 — 필요한 서비스를 고르세요.</li><li>02 정보 입력 — 지역 · 업종 · 필요한 일을 한 번만 적습니다.</li><li>03 상담 진행 — 운영자가 내용을 확인하고 연락드립니다.</li><li>04 업체 연결 — 업체가 정해지면 상호를 알리고 연락처 전달 동의를 다시 받습니다.</li></ul><p>지금은 신청 접수를 잠시 받지 않고 있습니다. 필요한 서비스와 준비 순서는 그대로 보실 수 있습니다. 접수 안내 보기.</p></div><!-- crawl:end --></main>
+<main id="view"><!-- crawl:start --><div class="pre w"><h1>창업부터 폐업까지</h1><p>창업 준비부터 매장 운영, 양도양수, 폐업·철거까지. 자영업의 모든 순간을 연결하는 인수인계.</p><p>창업 · 운영 · 양도양수 · 폐업까지. 자영업의 모든 순간을 연결합니다. 창업 준비부터 매장 운영, 양도양수, 폐업 · 철거까지 필요한 서비스와 정보를 한곳에서 찾으세요.</p><ul><li>창업 준비 — 새로운 시작을 준비하시나요? 업종 선택부터 상권 · 인테리어 · 설비 · 비용과 절차까지, 오픈에 필요한 준비를 순서대로 안내합니다.</li><li>폐업 · 철거 — 매장 정리를 고민하시나요? 철거 전에 양도 가능성부터 확인하고, 원상복구 · 집기 처분 · 세무 정리까지 마무리 순서를 안내합니다.</li></ul><p>통합 검색 — 분야를 고르고 필요한 서비스를 검색해 보세요. 이렇게 찾아보세요: 인테리어 · 철거 · 권리금 · 원상복구 · POS · 폐업신고.</p><h2>업종별 서비스 탐색</h2><p>업종을 고르시면 그 업종에서 먼저 챙길 서비스와 준비 순서를 보여 드립니다.</p><ul><li>음식점 — 한식 · 중식 · 일식 · 양식 · 분식 · 고깃집</li><li>카페 · 디저트 — 카페 · 베이커리 · 디저트 · 브런치</li><li>주점 · 바 — 호프 · 이자카야 · 와인바 · 칵테일바</li><li>미용 · 헤어 — 미용실 · 헤어샵 · 바버샵 · 두피관리</li><li>네일 · 뷰티 — 네일 · 속눈썹 · 왁싱 · 피부관리</li><li>헬스 · PT — 헬스장 · PT샵 · 필라테스 · 요가</li><li>학원 · 교육 — 교습소 · 공부방 · 예체능 · 직업교육</li><li>반려동물 — 펫샵 · 애견미용 · 애견호텔 · 동물병원</li><li>소매 · 편의점 — 편의점 · 마트 · 전문소매 · 잡화</li><li>무인매장 — 무인카페 · 무인점포 · 스터디카페 · 셀프세탁</li><li>숙박 — 모텔 · 펜션 · 게스트하우스 · 공유숙박</li><li>전체 업종 보기</li></ul><h2>매장 운영 지원</h2><p>문을 연 뒤에도 필요한 일은 계속됩니다. 홍보부터 세무, 시설 수리, POS까지 분야별로 찾아보세요.</p><ul><li>가게 광고 · 홍보</li><li>세금 · 회계</li><li>직원 구하기 · 노무 상담</li><li>매장 기계 · 시설 수리</li><li>POS · 인터넷 · 카드 단말기</li><li>식자재 · 매장 물품</li><li>매장 청소 · 방역</li><li>매장 보험 · 운영 상담</li></ul><h2>지금 운영 중인 매장을 넘기거나, 새로운 매장을 찾고 있나요?</h2><p>매장 양도양수 — 지역 · 업종 · 보증금으로 매물을 찾고, 권리금과 계약 순서까지 미리 확인하세요. 현재 등록된 매물이 없습니다. 매물 바로보기 · 권리금 계산.</p><h2>철거하기 전에, 넘길 수 있는지부터 확인하세요.</h2><ul><li>01 양도 가능성 검토 — 매장을 그대로 넘기면 철거비와 원상복구 부담이 줄어듭니다.</li><li>02 시설 · 집기 처분 — 쓸 만한 장비는 따로 팔 수 있습니다.</li><li>03 철거 · 원상복구 · 폐업 신고 — 범위와 순서를 정한 뒤 견적을 받습니다.</li></ul><h2>인수인계 이용 방법</h2><p>간단한 절차로 필요한 서비스를 전문가와 연결해 드립니다. 업체가 정해지면 상호를 알리고 연락처 전달 동의를 다시 받습니다.</p><ul><li>01 서비스 선택 — 필요한 서비스를 고르세요.</li><li>02 정보 입력 — 지역 · 업종 · 필요한 일을 한 번만 적습니다.</li><li>03 상담 진행 — 운영자가 내용을 확인하고 연락드립니다.</li><li>04 업체 연결 — 업체가 정해지면 상호를 알리고 연락처 전달 동의를 다시 받습니다.</li></ul><p>지금은 신청 접수를 잠시 받지 않고 있습니다. 필요한 서비스와 준비 순서는 그대로 보실 수 있습니다. 접수 안내 보기.</p></div><!-- crawl:end --></main>
 <div id="chrome-b"></div>
 </body>
 </html>

@@ -56,6 +56,17 @@ function logoSub(){
   return (sb && sb !== (B.name || "")) ? sb : "";
 }
 
+function brandMark(where){
+  var B = window.AM_BRAND || {};
+  if(!B.mark) return "";
+  var id = "bmg-" + (where || "hd");
+  var st = where === "ft"
+    ? '<stop offset="0" stop-color="#DCCBB5"/><stop offset="1" stop-color="#B8956D"/>'
+    : '<stop offset="0" stop-color="#B8956D"/><stop offset=".55" stop-color="#7A5633"/><stop offset="1" stop-color="#6A4B3B"/>';
+  return '<svg class="bmark" viewBox="'+esc(B.markBox || "0 0 500 420")+'" aria-hidden="true" focusable="false">'+
+    '<defs><linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="1">'+st+'</linearGradient></defs>'+
+    '<path fill="url(#'+id+')" fill-rule="evenodd" d="'+esc(B.mark)+'"/></svg>';
+}
 function Logo(where){
   var B = window.AM_BRAND || {}, nm = brandName();
   var mark = B.logo
@@ -63,13 +74,13 @@ function Logo(where){
       'width="120" height="28">'
     : "";
   if(where === "ft"){
-    return '<a class="lg lg-ft" href="/">'+
-      (mark || '<b>'+esc(nm)+'</b><i>'+esc(brandSub())+'</i>')+'</a>';
+    return '<a class="lg lg-ft" href="/" aria-label="'+esc(nm)+' 홈">'+
+      (mark || '<span class="lg-ft-i" aria-hidden="true">'+brandMark("ft")+'</span><b>'+esc(nm)+'</b><i>'+esc(brandSub())+'</i>')+'</a>';
   }
 
   return '<a class="lg hd-lg" href="/" aria-label="'+esc(nm)+' 홈">'+
     (mark ? mark :
-      '<span class="hd-lg-i" aria-hidden="true">'+icon("store",20)+'</span>'+
+      '<span class="hd-lg-i" aria-hidden="true">'+(brandMark("hd") || icon("store",20))+'</span>'+
       '<span class="hd-lg-t"><b>'+esc(nm)+'</b>'+
         (logoSub() ? '<i>'+esc(logoSub())+'</i>' : '')+'</span>')+
   '</a>';
@@ -366,7 +377,8 @@ function Footer(){
 
   var telNo = (typeof bizVal === "function") ? String(bizVal("phone") || "") : "";
   var band = '<div class="ft-band"><div class="w ft-bw">'+
-    '<p class="ft-bb"><b>'+esc(brandName())+'</b><span>'+esc(brandSub())+'</span></p>'+
+
+    '<p class="ft-bb"><span class="ft-bb-i" aria-hidden="true">'+brandMark("ft")+'</span><span class="ft-bb-t"><b>'+esc(brandName())+'</b><span>'+esc(brandSub())+'</span></span></p>'+
     [["layers","한 번에 여러 서비스","필요한 서비스를 골라 한 번에 신청"],
      ["calc","계산도구 · 가이드","비용과 준비 순서를 미리 확인"],
      ["users","창업부터 폐업까지","단계마다 필요한 서비스를 한곳에서"]].map(function(x){

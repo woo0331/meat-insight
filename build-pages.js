@@ -1473,7 +1473,26 @@ function assetVer(p){
 }
 /* ⚠️ 이미 `/dist/...` 로 바뀐 것도 받습니다 — index.html 은 빌드가
    **제자리에서** 고치는 파일이라 두 번 지나갑니다. */
+/* 2026-11-22 — 파비콘 · 앱 아이콘에도 내용 값을 붙입니다. 브라우저는 파비콘을 따로 오래 들고 있어서
+   파일만 바꾸면 **옛 아이콘이 탭에 남습니다** — 주소가 바뀌어야 새로 받습니다. */
+const ICON_FILES = ["favicon.ico","favicon-16.png","favicon-32.png","apple-touch-icon.png","icon-192.png","icon-512.png","icon-maskable.png"];
+function iconVer(f){
+  return crypto.createHash("sha1").update(fs.readFileSync(path.join(ROOT, f))).digest("hex").slice(0, 8);
+}
+function stampIcons(html){
+  return html.replace(/(href=")\/(favicon\.ico|favicon-16\.png|favicon-32\.png|apple-touch-icon\.png|icon-192\.png|icon-512\.png)(?:\?v=[0-9a-f]+)?(")/g,
+    function(_, a, f, b){ return a + "/" + f + "?v=" + iconVer(f) + b; });
+}
+/* manifest.json 의 아이콘 주소도 같은 값으로 (JSON 이라 다시 씁니다 · 바뀐 것이 없으면 안 씁니다) */
+function stampManifest(){
+  const f = path.join(ROOT, "manifest.json");
+  const raw = fs.readFileSync(f, "utf8"), m = JSON.parse(raw);
+  (m.icons || []).forEach(function(i){ const n = i.src.replace(/^\//, "").replace(/\?.*$/, ""); if(ICON_FILES.indexOf(n) >= 0) i.src = "/" + n + "?v=" + iconVer(n); });
+  const out = JSON.stringify(m, null, 2) + "\n";
+  if(out !== raw) fs.writeFileSync(f, out);
+}
 function stampAssets(html){
+  html = stampIcons(html);
   return html.replace(
     /((?:href|src)=")(?:\/dist)?(\/(?:css|js)\/[^"?]+\.(?:css|js))(?:\?v=[0-9a-f]+)?(")/g,
     function(_, a, p, b){ return a + "/" + DIST + p + "?v=" + assetVer(p) + b; });
@@ -4462,6 +4481,7 @@ function checkOgPalette(){
   console.log("   공유 미리보기 색 " + hex.length + "가지가 전부 토큰에 있습니다");
 }
 checkOgPalette();
+stampManifest();
 
 /* ════════════════════════════════════════════════════════════════════
    checkMainH2() — 메인 크롤러 본문의 머리말이 **화면과 같은가**

@@ -83,12 +83,14 @@ function brand(){
     else { document.getElementById("og-brand").textContent = v.name;
            document.getElementById("og-sub").textContent   = v.sub || ""; }
     /* 2026-11-22 — 사진은 승인된 ZIP 두 장(01 창업 준비 · 04 폐업·철거) · 명조 제목은 메인과 같은 글꼴 (둘 다 data URI) */
+    /* 2026-11-22 — 브랜드 옆 심볼은 brand.js 의 악수형(mark) 그대로 · 월넛 타일 위 크림 */
+    if(v.mark){ document.getElementById("og-mk").setAttribute("viewBox", v.markBox); document.getElementById("og-mkp").setAttribute("d", v.mark); }
     if(v.ph1) document.getElementById("og-ph1").src = v.ph1;
     if(v.ph2) document.getElementById("og-ph2").src = v.ph2;
     if(v.serif){ var st = document.createElement("style");
       st.textContent = '@font-face{font-family:"IIS Serif";font-weight:600;src:url(' + v.serif + ') format("woff2");}';
       document.head.appendChild(st); }
-  }, { name:B.name, sub:B.sub, ph1:dataUri("img/insu/01_startup.jpg","image/jpeg"),
+  }, { name:B.name, sub:B.sub, mark:B.mark || "", markBox:B.markBox || "0 0 24 24", ph1:dataUri("img/insu/01_startup.jpg","image/jpeg"),
        ph2:dataUri("img/insu/04_closure.jpg","image/jpeg"), serif:dataUri("fonts/noto-serif-kr-600-main.woff2","font/woff2") });
   await pg.waitForFunction(function(){ return [].slice.call(document.querySelectorAll("#og img")).every(function(i){ return !i.getAttribute("src") || (i.complete && i.naturalWidth > 0); }); });
   await pg.evaluate(function(){ return document.fonts.ready; });

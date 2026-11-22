@@ -171,8 +171,12 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await click('.ih-go a[href="/providers"]');
  say((await url()).startsWith("/providers"),"서비스 카드 전문가 상담 → 업체찾기",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.wp-pgo a[href="/stores"]');
- say((await url())==="/stores","양도양수 배너 매물 바로보기 → /stores",await url());
+ /* 2026-11-22 — '매물 바로보기' 링크가 빠지고 검색 단추 '매물 찾기' 가 실제 검색(/stores)으로 보냅니다 */
+ await click('.itr-f button[type="submit"]');
+ say((await url()).startsWith("/stores"),"양도양수 매물 찾기(검색) → /stores",await url());
+ await pg.goto(B+"/",{waitUntil:"networkidle"});
+ await click('.itr-go a[data-cta-form="sell"]:not([hidden])');
+ say(/^\/(sell|transfer)/.test(await url()),"양도양수 내 매장 넘기기 → /sell 또는 넘기는 순서",await url());
  /* ⚠️⚠️ **2026-10-25 §1-01 — 히어로가 01 구간으로 돌아왔습니다.**
     첫 화면에서 바로 신청으로 가는 길이 다시 생겼습니다 — 그쪽을 먼저
     눌러 봅니다. ⚠️ 히어로를 다시 빼실 때는 여기도 같이 고치세요

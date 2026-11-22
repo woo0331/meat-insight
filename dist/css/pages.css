@@ -6308,3 +6308,21 @@ html.ivh #view .ih3 .wp-fmsg{ color:var(--ter-ink); }
 }
 
 @media (max-width:359px){ .itr-f{ grid-template-columns:1fr; } }
+
+.iind-more{ display:none; }
+@media (max-width:640px){
+  .iind-g.is-fold > li:nth-child(n+7){ display:none; }
+  .iind .ih-all{ display:none; }
+  .iind-more{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:48px; margin:12px 0 0; padding:0 18px;
+    border:1px solid var(--hm-line); border-radius:999px; background:var(--hm-card); color:var(--navy); font:inherit; font-size:var(--t-sm); font-weight:800; cursor:pointer; }
+  .iind-more:hover{ border-color:var(--walnut); }
+  .iind-more:focus-visible{ outline:3px solid var(--walnut); outline-offset:2px; }
+  .iind-more svg{ transition:transform .2s; }
+  .iind-more.is-open svg{ transform:rotate(180deg); }
+  html.ivh #view section.iind{ padding:24px 0 28px; }
+  .iind .ih-sh{ margin-bottom:16px; }
+  .iind-g{ gap:8px; }
+  .iind-c{ padding:14px; row-gap:4px; }
+  .iind-i{ width:36px; height:36px; }
+}
+@media (prefers-reduced-motion:reduce){ .iind-more svg{ transition:none; } }

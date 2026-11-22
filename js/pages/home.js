@@ -2432,14 +2432,29 @@ function HomeIInd(){
     '<div class="ih-sh ih-sh-r"><div><p class="ih-kk">BY INDUSTRY</p><h2>업종별 서비스 탐색</h2>'+
       '<p>업종을 고르시면 그 업종에서 먼저 챙길 서비스와 준비 순서를 보여 드립니다.</p></div>'+
       '<a class="ih-all" href="/startup">전체 업종 보기'+icon("chev",14)+'</a></div>'+
-    '<ul class="iind-g">'+L.map(function(i){
+    /* 2026-11-22 — 폰(640px 아래)에서는 앞 여섯만 두고 나머지는 '전체 업종 보기' 로 펼칩니다.
+       ⚠️ 접는 것은 CSS 의 @media 안에서만 걸립니다 — PC · 태블릿은 클래스가 있어도 전부 보입니다.
+       ⚠️ 접어도 DOM 에 그대로 있습니다 (링크 · 크롤러 · 검사가 그대로 셉니다). */
+    '<ul class="iind-g is-fold" id="iind-g">'+L.map(function(i){
       return '<li><a class="iind-c" href="/startup/'+esc(i.key)+'">'+
         '<span class="iind-i" aria-hidden="true">'+icon(i.icon || "store", 26)+'</span>'+
         '<b>'+esc(i.name)+'</b>'+(i.lead ? '<em>'+esc(i.lead)+'</em>' : '')+'</a></li>';
     }).join("")+
     '<li><a class="iind-c iind-all" href="/startup"><span class="iind-i" aria-hidden="true">'+icon("grid",24)+'</span>'+
       '<b>전체 업종 보기</b><em>기타 업종 · 온라인 판매까지</em></a></li></ul>'+
+    '<button type="button" class="iind-more" aria-expanded="false" aria-controls="iind-g" onclick="ihIndToggle(this)">'+
+      '<span>전체 업종 보기</span>'+icon("chevd",16)+'</button>'+
   '</div></section>';
+}
+/* 펼치기 · 접기 — 접을 때는 단추가 화면에서 같은 자리에 머물게 스크롤을 맞춥니다 (위로 튀지 않게) */
+window.ihIndToggle = function(btn){
+  var ul = document.getElementById("iind-g"); if(!ul || !btn) return;
+  var before = btn.getBoundingClientRect().top;
+  var shut = ul.classList.toggle("is-fold");
+  btn.setAttribute("aria-expanded", shut ? "false" : "true");
+  btn.classList.toggle("is-open", !shut);
+  var t = btn.querySelector("span"); if(t) t.textContent = shut ? "전체 업종 보기" : "업종 접기";
+  if(shut){ var d = btn.getBoundingClientRect().top - before; if(Math.abs(d) > 1) window.scrollBy(0, d); }
 }
 
 /* 5 — 매장 운영 지원: 02_operations + 실제로 고를 수 있는 운영 서비스(AM_PICK_GROUP.operation) */

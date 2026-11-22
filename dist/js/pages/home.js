@@ -1396,14 +1396,27 @@ function HomeIInd(){
     '<div class="ih-sh ih-sh-r"><div><p class="ih-kk">BY INDUSTRY</p><h2>업종별 서비스 탐색</h2>'+
       '<p>업종을 고르시면 그 업종에서 먼저 챙길 서비스와 준비 순서를 보여 드립니다.</p></div>'+
       '<a class="ih-all" href="/startup">전체 업종 보기'+icon("chev",14)+'</a></div>'+
-    '<ul class="iind-g">'+L.map(function(i){
+
+    '<ul class="iind-g is-fold" id="iind-g">'+L.map(function(i){
       return '<li><a class="iind-c" href="/startup/'+esc(i.key)+'">'+
         '<span class="iind-i" aria-hidden="true">'+icon(i.icon || "store", 26)+'</span>'+
         '<b>'+esc(i.name)+'</b>'+(i.lead ? '<em>'+esc(i.lead)+'</em>' : '')+'</a></li>';
     }).join("")+
     '<li><a class="iind-c iind-all" href="/startup"><span class="iind-i" aria-hidden="true">'+icon("grid",24)+'</span>'+
       '<b>전체 업종 보기</b><em>기타 업종 · 온라인 판매까지</em></a></li></ul>'+
+    '<button type="button" class="iind-more" aria-expanded="false" aria-controls="iind-g" onclick="ihIndToggle(this)">'+
+      '<span>전체 업종 보기</span>'+icon("chevd",16)+'</button>'+
   '</div></section>';
+}
+
+window.ihIndToggle = function(btn){
+  var ul = document.getElementById("iind-g"); if(!ul || !btn) return;
+  var before = btn.getBoundingClientRect().top;
+  var shut = ul.classList.toggle("is-fold");
+  btn.setAttribute("aria-expanded", shut ? "false" : "true");
+  btn.classList.toggle("is-open", !shut);
+  var t = btn.querySelector("span"); if(t) t.textContent = shut ? "전체 업종 보기" : "업종 접기";
+  if(shut){ var d = btn.getBoundingClientRect().top - before; if(Math.abs(d) > 1) window.scrollBy(0, d); }
 }
 
 function HomeIOps(){

@@ -252,6 +252,37 @@ function OpsvcForInd(ind){
   '</div></section>';
 }
 
+function OpsKpSvc(ind){
+  var q = ind ? "i=" + encodeURIComponent(ind.key || ind) : "";
+  var L = [
+    kxSvc("supply", "", "식자재 · 납품", "원재료 · 포장재 · 소모품 거래처", "supply"),
+    kxSvc("staff", "", "인력 · 노무", "채용 · 아르바이트 · 노무 상담", "staff", "home-ops"),
+    kxSvc("it", "pos", "POS · 결제", "POS · 키오스크 · 결제 단말", "pos", "svc-it"),
+    kxSvc("repair", "", "시설 · 수리", "냉장 · 냉난방 · 전기 고장과 점검", "repair", "svc-equip")
+  ].filter(Boolean);
+  if(q) L.forEach(function(x){ x.href += (x.href.indexOf("?") >= 0 ? "&" : "?") + q; });
+  return KpServices({ id:"op-svc", tone:"sec-white", kicker:"매장 운영 핵심 서비스",
+    title:"운영에 꼭 필요한 서비스", lead:"분야를 누르면 그 일을 하는 업체 · 정보로 바로 갑니다.", items:L,
+    after:'<p class="kp-all"><a class="btn btn-o" href="#pick" onclick="return hhJump(\'pick\')">운영 서비스 전체 보기'+icon("chev",15)+'</a></p>' });
+}
+function OpsKpRoad(){
+  return KpProcess({ id:"op-road", tone:"sec-ivory", kicker:"운영 서비스 이용 절차",
+    title:"운영 서비스는 이렇게 이용합니다",
+    lead:"고르신 서비스는 한 번의 신청으로 함께 보내실 수 있습니다.",
+    steps:[{ n:"필요한 서비스 고르기", d:"분야별 서비스를 여러 개 함께 고릅니다", ia:"grid", ic:"grid", href:"#pick" },
+           { n:"매장 점검", d:"운영 점검표로 놓치는 것을 확인합니다", ia:"calc", ic:"check", href:"#ops-check" },
+           { n:"업체 연결", d:"조건에 맞는 업체를 찾아 상호를 알려 드립니다", ph:"home-ops", ia:"staff" },
+           { n:"진행 · 관리", d:"조건을 비교해 고르시고 진행합니다", ph:"svc-clean", ia:"clean" }] });
+}
+function OpsKpDiag(){
+  return KpBanner({ id:"op-diag", kicker:"운영 진단", photo:"home-ops",
+    title:"우리 매장, 어디서 새고 있을까요?",
+    lead:"숫자 몇 개만 적으면 고정비 · 인건비 · 원가 비율을 그 자리에서 계산합니다. 적으신 값은 저장하지 않습니다.",
+    btns:[{ href:"/tools/fixed", t:"월 고정비 계산하기", ic:"calc" }, { href:"#ops-check", t:"운영 점검표 보기" }],
+    note:"계산 결과는 적으신 값으로 낸 참고값입니다. 절감 효과나 매출 변화를 약속하지 않습니다.",
+    card:{ title:"이런 것을 따져 봅니다", list:["월 고정비 — 임대료 · 관리비 · 구독료", "인건비율 — 직원 · 아르바이트 비용", "원가율 · 마진 — 상품 하나에서 남는 돈", "손익분기 — 본전 매출"] } });
+}
+
 function OpsKxServices(ind){
   var q = ind ? "i=" + encodeURIComponent(ind.key || ind) : "";
   var L = [
@@ -307,7 +338,7 @@ function OpsIntro(ind){
 
       return { ic:x[0], b:x[1], go:"해결 방법 보기", href:"#"+x[3] }; })
 
-  }) + OpsWorry();
+  });
 }
 
 var OPS_WORRY = [
@@ -502,13 +533,16 @@ function OpsCalcBand(){
 function PageOperation(){
   var ind = (typeof amIndustry === "function") ? amIndustry(nowQS("i")) : null;
 
-  return OpsIntro(ind) + OpsKxServices(ind) + OpsKxDiag() +
+  return OpsIntro(ind) + OpsKpSvc(ind) + OpsKpRoad() + OpsKpDiag() + OpsWorry() +
     PickGroupBand("operation", "ops") +
     PickBasket("ops") +
     OpsCheckBand() +
     OpsGuideBand() +
     OpsCalcBand() +
-    HallSteps({ quote:quoteTo({ side:"ops" }) }) + OpsKxCta(ind) +
+    KpWhy({ photo:"insu-hero", title:"운영 중 생기는 일, 맡길 곳을 한곳에서", items:KP_WHY }) +
+    KpCta({ title:"운영 고민, 맞는 업체를 찾아 드립니다",
+      lead:"필요한 서비스를 고르거나 상황만 적어 주시면 그 일을 하는 업체를 찾아 드립니다.",
+      second:{ href:"/providers", t:"업체 둘러보기" }, quote:quoteTo({ side:"ops", industry:(ind && ind.key) || "" }), goName:"운영 상담 신청하기" }) +
     JourneyBand({ current:"operation", tone:"sec-white",
       title:"다른 것도 준비하고 계신가요?",
       lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." }) +
@@ -730,6 +764,55 @@ function AcqMarket(t, ind, iq){
   '</div></section>';
 }
 
+function AcqKpSvc(ind, iq){
+  var nStore = (typeof amStores === "function") ? amStores({}).length : 0;
+  return KpServices({ id:"aq-svc", tone:"sec-white", kicker:"양도양수 핵심 서비스",
+    title:"매장을 넘기고 받을 때 필요한 것", lead:"넘기시는 분과 받으시는 분이 같은 곳에서 시작합니다.",
+    items:[{ n:"매물 찾기", d:nStore ? "지금 올라온 매장 "+nStore+"건" : "현재 등록된 매물이 없습니다", href:"/stores"+(iq || ""), ph:"insu-hero", ia:"store" },
+           { n:"내 매장 넘기기", d:"내놓을 때 적는 칸 · 넘기는 순서", href:"/sell", ph:"insu-operations", ia:"handover" },
+           { n:"권리금 계산", d:"몇 달이면 돌아오는지 참고값으로 따져 봅니다", href:"/tools/premium", ia:"won", ic:"gauge" },
+           { n:"계약 가이드", d:"상가 계약 · 권리금, 계약 전에 볼 것", href:"/content?j=startup&cat=store", ph:"home-transfer", ia:"contract" }] });
+}
+function AcqKpRoad(t){
+  var out = (t === "out");
+  var steps = out
+    ? [{ n:"조건 정하기", d:"권리금 · 시설 · 넘길 시점을 정합니다", ia:"won", ic:"gauge" },
+       { n:"자료 준비", d:"임대차 · 매출 자료 · 시설 목록을 챙깁니다", ph:"insu-closure-in", ia:"doc", ic:"doc" },
+       { n:"다음 사장님 찾기", d:"매물로 내놓고 조건을 맞춰 봅니다", ia:"handover" },
+       { n:"계약 · 인계", d:"계약 · 명의 정리 · 시설 인계를 마칩니다", ia:"contract" }]
+    : [{ n:"매장 탐색", d:"업종 · 지역 · 조건으로 매물을 봅니다", ia:"store" },
+       { n:"현장 확인", d:"시설 상태 · 매출 자료 · 임대 조건을 확인합니다", ph:"insu-closure-in", ia:"mappin" },
+       { n:"조건 협의", d:"권리금 · 시설 · 인수 시점을 맞춥니다", ia:"won", ic:"gauge" },
+       { n:"인수 준비", d:"계약 · 승계 · 영업 신고를 준비합니다", ia:"contract" }];
+  return KpProcess({ id:"aq-road-sec", tone:"sec-ivory", kicker:out ? "양도 진행 절차" : "인수 진행 절차",
+    title:out ? "매장 양도는 이렇게 진행됩니다" : "매장 인수는 이렇게 진행됩니다",
+    lead:"권리금과 시설이 같이 오는지, 임대차가 승계되는지가 금액을 가릅니다.",
+    moreHtml:'<a class="btn btn-o" href="#aq-steps" onclick="return aqJump(\'aq-steps\')">상세 진행 과정 보기'+icon("chev",15)+'</a>',
+    steps:steps });
+}
+function AcqKpCalc(t){
+  return KpBanner({ id:"aq-calc", kicker:"권리금 계산기", photo:"home-transfer",
+    title:"권리금, 몇 달이면 돌아올까요?",
+    lead:"권리금과 월 순이익을 적으면 회수 기간을 그 자리에서 계산합니다. 적으신 값은 저장하지 않습니다.",
+    btns:[{ href:"/tools/premium", t:"권리금 계산하기", ic:"calc" }, { href:"/tools/vs", t:"새로 차리기 vs 인수" }],
+    note:"계산 결과는 참고값입니다 — 실제 권리금은 당사자 협의와 계약 조건으로 정해집니다.",
+    card:{ title:"이런 것을 따져 봅니다", list:["권리금 회수 기간", "새로 차리기와 인수 비용 비교", "임대료가 매출에서 차지하는 몫", "시설 인수비 · 보증금"] } });
+}
+function AcqKpPros(ind){
+  var q = ind ? "i=" + encodeURIComponent(ind.key) : "";
+  var L = [
+    kxSvc("law", "lease", "임대차 · 계약 법률", "임대차 승계 · 양도 계약서 검토", "law"),
+    kxSvc("admin", "tax-agent", "양도 세무", "권리금 · 시설 대금의 세금 정리", "tax"),
+    kxSvc("labor", "consult", "직원 · 노무 승계", "넘기거나 받을 때 직원 문제 상담", "staff"),
+    kxSvc("contract", "", "계약 · 명의 정리", "인터넷 · POS · 렌탈 명의 이전 · 해지", "contract")
+  ].filter(Boolean);
+  if(q) L.forEach(function(x){ x.href += (x.href.indexOf("?") >= 0 ? "&" : "?") + q; });
+  return KpCards({ id:"aq-pro", tone:"sec-white", kicker:"전문가 연결",
+    title:"계약 · 세무 · 법률, 혼자 하지 마세요",
+    lead:"권리금 · 임대차 승계 · 세금은 거래가 끝난 뒤에 문제가 됩니다.", items:L.map(function(x){ x.go = "업체 · 정보 보기"; return x; }),
+    note:"전문가는 거래 당사자가 아닙니다. 저희도 거래의 당사자가 아니라 연결해 드리는 자리입니다." });
+}
+
 function AcqKxPros(ind){
   var q = ind ? "i=" + encodeURIComponent(ind.key) : "";
   var L = [
@@ -763,16 +846,18 @@ function PageAcquisition(){
   var sel = PickGroupBand("transfer", "transfer") + PickBasket("transfer");
   var mkt = AcqMarket(t, ind, iq);
 
-  return AcqIntro(ind, iq, nowQS("t")) +
+  return AcqIntro(ind, iq, nowQS("t")) + AcqKpSvc(ind, iq) + AcqKpRoad(t) + AcqKpCalc(t) +
     AcqWhich(t, ind, iq) +
     (t === "in" ? AcqSearch(ind) + mkt + sel : AcqPrep(ind) + sel + mkt) +
-    AcqProcess(t, ind) + AcqKxPros(ind) +
+    AcqProcess(t, ind) + AcqKpPros(ind) +
     ReadBand({ cat:"transfer", side:"both", limit:3,
                title:"인수 · 양도에서 자주 막히는 것" }) +
-    HallCalcBand({ keys:AQ_CALC, tones:AQ_CALC_TONE,
-      title:"받기 전 · 넘기기 전에 숫자부터 보세요",
-      lead:"권리금이 몇 달이면 돌아오는지, 새로 만드는 것과 받는 것이 얼마나 다른지 따져 보실 수 있습니다. 적으신 값은 저장하지 않습니다." }) +
-    HallSteps({ quote:quoteTo({ side:"transfer", cat:"transfer" }) }) + AcqKxCta(t) +
+    KpWhy({ photo:"home-startup", title:"넘기시는 분과 받으시는 분이 같은 화면을 봅니다", items:KP_WHY }) +
+    KpCta({ title:t === "out" ? "내 매장, 다음 사장님께 넘기세요" : "좋은 매장, 조건부터 확인하세요",
+      lead:t === "out" ? "넘길 때 필요한 서비스를 고르거나 상황만 적어 주시면 함께 정리해 드립니다."
+                       : "권리금 · 임대 조건 · 시설 상태를 따져 보고, 계약 전 필요한 전문가를 찾아 드립니다.",
+      second:t === "out" ? { href:"/sell", t:"매물 등록 안내" } : { href:"/stores", t:"매물 보러 가기" },
+      quote:quoteTo({ side:"transfer", cat:"transfer" }), goName:"양도양수 상담 신청하기" }) +
     JourneyBand({ current:"acquisition", tone:"sec-white",
       title:"다른 것도 준비하고 계신가요?",
       lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." }) +

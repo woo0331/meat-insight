@@ -267,13 +267,13 @@ window.WOW_PHOTO_SLOTS = [
   /* ⚠️ 2026-10-16 §3-7 — 배너 둘의 왼쪽 네모입니다 (재 본 값 104px ·
      폰 76px). 나머지 svc-* 는 지금 화면에 안 나옵니다 — 분류 여덟
      구간(MainServices)을 되살리면 바로 붙습니다. */
-  { key:"svc-interior", sizes:"104px", where:"(지금 안 나옴) 서비스 · 인테리어 · 시공",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"시공 중인 상업공간 · 도면" },
-  { key:"svc-equip", sizes:"92px",     where:"(지금 안 나옴) 서비스 · 시설 · 장비",     min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"업소용 장비. ⚠️ 한 업종으로 읽히지 않게" },
-  { key:"svc-it", sizes:"104px",       where:"(지금 안 나옴) 서비스 · POS · CCTV · 매장시스템",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"POS · 키오스크 · CCTV. ⚠️ 브랜드가 보이면 안 됩니다" },
+  { key:"svc-interior", sizes:"104px", where:"창업 사진형 핵심 서비스(인테리어 · 설계) (2026-11-23)",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"시공 중인 상업공간 · 도면" },
+  { key:"svc-equip", sizes:"92px",     where:"창업 · 운영 · 폐업 사진형 핵심 서비스(설비 · 수리 · 집기 매각) (2026-11-23)",     min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"업소용 장비. ⚠️ 한 업종으로 읽히지 않게" },
+  { key:"svc-it", sizes:"104px",       where:"운영 사진형 핵심 서비스(POS · 결제) (2026-11-23)",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"POS · 키오스크 · CCTV. ⚠️ 브랜드가 보이면 안 됩니다" },
   { key:"svc-admin", sizes:"92px",     where:"(지금 안 나옴) 서비스 · 행정 · 전문가",    min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"서류 · 상담 책상. ⚠️ 실제 서류 글자가 읽히면 안 됩니다" },
   { key:"svc-marketing", sizes:"92px", where:"(지금 안 나옴) 서비스 · 마케팅 · 디자인",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"디자인 작업 · 촬영" },
   { key:"svc-demolish", sizes:"92px",  where:"(지금 안 나옴) 서비스 · 철거",            min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"철거 · 원상복구 현장" },
-  { key:"svc-clean", sizes:"92px",     where:"(지금 안 나옴) 서비스 · 청소 · 방역",      min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"청소 · 방역 장비" },
+  { key:"svc-clean", sizes:"92px",     where:"운영 사진형 진행 절차(진행 · 관리) (2026-11-23)",      min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"청소 · 방역 장비" },
 
   /* ── 매장 · 시설 · 장비 세 카드 (2026-10-11 사장님 지시 3 · 4 · 5) ──
      사장님 지시 — "각 카드에는 실제 상업공간 및 장비를 촬영한 듯한

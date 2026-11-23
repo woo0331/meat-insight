@@ -3180,9 +3180,11 @@ const AUDIT = `(() => {
     /* 2026-11-18 시안으로 고민 카드(OpsWorry)와 이용 순서(HallSteps)가 늘어 아홉입니다 */
     /* 2026-11-23 4개 카테고리 시안 — 서비스 카드 · 운영 진단 · 상담 CTA 셋(class kx)을 더했습니다.
        그 셋을 빼고 센 옛 구간이 아홉 그대로인지 봅니다 (지운 구간이 없다는 것). */
-    const kx = document.querySelectorAll("#view > section.kx").length;
-    if(kx !== 3) return "시안 구간이 셋이 아닙니다 — " + kx;
-    if(secs.length - kx !== 9) return "구간이 아홉이 아닙니다 — " + (secs.length - kx);
+    /* 2026-11-23 사진형 시안 — 사진 서비스 · 사진 절차 · 사진 배너 · 왜 · 하단 안내 다섯(class kp).
+       이용 순서(HallSteps)는 사진 절차와 같은 말이라 내려서 옛 구간은 여덟입니다. */
+    const kx = document.querySelectorAll("#view > section.kp").length;
+    if(kx !== 5) return "시안 구간이 다섯이 아닙니다 — " + kx;
+    if(secs.length - kx !== 8) return "구간이 여덟이 아닙니다 — " + (secs.length - kx);
     /* 고르는 자리는 **하나**입니다 (§2) */
     const sel = document.querySelectorAll(".pkb-sel");
     if(sel.length !== 1) return "서비스를 고르는 구간이 " + sel.length + "개입니다";

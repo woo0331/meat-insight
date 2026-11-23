@@ -8679,3 +8679,129 @@ html.ivh #view .wp-find input:focus-visible, html.ivh #view .wp-find .wp-t:focus
 }
 /* 2026-11-23 — 같은 화면 이동 자리가 붙박이 머리 밑으로 안 들어가게 (위 #cl-demo 와 같은 값) */
 #cl-cost, #cl-sup, #cl-flow, #st-road-sec, #ops-check, #op-diag, #op-svc, #aq-pro{ scroll-margin-top:calc(var(--hdr-h, 64px) + 8px); }
+
+/* ══ 2026-11-23 사진형 시안 — Kp* (js/components/ui.js) ════════════════════════════════════
+   아이보리 · 월넛. 사진이 카드 위쪽 60% · 큰 제목 · 넓은 여백. 짙은 면은 사진 배너와 하단 상담 띠 둘.
+   ⚠️ 바탕은 톤 클래스가 칠합니다(sec-white · sec-ivory) — 배너 · 하단 띠만 직접 칠합니다. */
+.kp{ padding-block:clamp(44px,5.5vw,72px); }
+.kp-k{ font-size:13px; font-weight:800; letter-spacing:.08em; color:#7A5633; margin:0 0 8px; }
+.kp-h{ font-size:clamp(23px,2.4vw,32px); line-height:1.3; font-weight:800; color:var(--ink); margin:0; letter-spacing:-.02em; }
+.kp-lead{ margin:10px 0 0; font-size:15px; line-height:1.65; color:var(--ink2); }
+.kp-note{ margin:16px 0 0; font-size:14px; line-height:1.6; color:var(--ink2); }
+.kp-more{ min-height:44px; border-radius:999px; gap:4px; font-size:14px; }
+
+/* 카드 공통 — 사진 위 · 글 아래 · 오른쪽 화살표 */
+.kp-svc-in{ display:grid; grid-template-columns:minmax(0,250px) minmax(0,1fr); gap:clamp(20px,3vw,40px); align-items:center; }
+.kp-hd .kp-more{ margin-top:18px; }
+.kp-svc-g, .kp-pro-g{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+.kp-svc-g.kp-g3{ grid-template-columns:repeat(3,minmax(0,1fr)); }
+.kp-c{ position:relative; display:flex; flex-direction:column; height:100%; background:#fff; border:1px solid var(--line);
+  border-radius:14px; overflow:hidden; color:var(--ink); text-decoration:none; box-shadow:0 2px 10px rgba(56,39,31,.06);
+  transition:transform .2s, box-shadow .2s; }
+a.kp-c:hover{ transform:translateY(-3px); box-shadow:0 12px 26px rgba(56,39,31,.13); }
+.kp-ph{ display:block; position:relative; aspect-ratio:16/11; overflow:hidden; background:linear-gradient(145deg,#EADBC7,#D9C2A6); }
+.kp-ph .ph{ width:100%; height:100%; object-fit:cover; display:block; }
+.kp-art{ position:absolute; inset:0; display:grid; place-items:center; --ia-1:#6F5039; --ia-2:#F3E6D4; color:#6F5039; }
+.kp-art svg{ width:68px; height:68px; filter:drop-shadow(0 6px 10px rgba(80,55,35,.2)); }
+.kp-tx{ display:flex; flex-direction:column; gap:4px; padding:14px 48px 16px 16px; flex:1; }
+.kp-tx > b{ font-size:17px; font-weight:800; line-height:1.35; }
+.kp-tx > small{ font-size:14px; line-height:1.5; color:var(--ink2); }
+.kp-tx > i{ margin-top:auto; padding-top:6px; font-style:normal; font-size:14px; font-weight:700; color:#7A5633; display:inline-flex; align-items:center; gap:4px; }
+.kp-go{ position:absolute; right:14px; bottom:18px; width:26px; height:26px; border-radius:50%; display:grid; place-items:center; background:#7A5633; color:#fff; }
+.kp-pro .kp-go{ background:none; color:#7A5633; }
+.kp-tag{ font-style:normal; font-size:12px; font-weight:700; padding:2px 8px; border-radius:999px; background:#F1E5D5; color:#5A4434; vertical-align:2px; }
+
+/* ② 절차 */
+.kp-pro-hd{ display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:12px 32px; align-items:end; margin-bottom:22px; }
+.kp-pro-hd .kp-lead{ margin:0 0 4px; }
+.kp-pro-g .kp-c{ overflow:visible; }
+.kp-pro-g .kp-ph{ border-radius:14px 14px 0 0; aspect-ratio:16/9; }
+.kp-pro-g .kp-n{ position:relative; display:grid; place-items:center; width:40px; height:40px; margin:-20px 0 0 14px; border-radius:50%;
+  background:#6F5039; color:#fff; font-weight:800; font-size:15px; border:3px solid #fff; z-index:1; }
+.kp-pro-g .kp-tx{ padding-top:6px; }
+
+/* ③ 사진 배너 — 짙은 브라운 · 사진은 오른쪽에서 왼쪽으로 녹아듦 */
+.kp-ban{ position:relative; overflow:hidden; background-color:#3B2A1E; color:#fff; padding-block:clamp(40px,5vw,64px); }
+.kp-ban-ph{ position:absolute; top:0; right:0; bottom:0; width:62%; }
+.kp-ban-ph .ph{ width:100%; height:100%; object-fit:cover; display:block; }
+.kp-ban-ph::after{ content:""; position:absolute; inset:0; background:linear-gradient(90deg,#3B2A1E 0%,rgba(59,42,30,.86) 26%,rgba(59,42,30,.25) 62%,rgba(59,42,30,.15) 100%); }
+.kp-ban-in{ position:relative; display:flex; justify-content:space-between; align-items:center; gap:28px; }
+.kp-ban-tx{ max-width:560px; }
+.kp-ban .kp-k{ color:#E9CFA9; }
+.kp-ban .kp-h{ color:#fff; }
+.kp-ban .kp-h em, .kp-cta .kp-h em{ font-style:normal; color:#F2C98F; }
+.kp-ban .kp-lead{ color:#F3E8DA; }
+.kp-ban-go{ margin-top:22px; gap:10px; flex-wrap:wrap; }
+.kp-btn, .kp-btn:visited{ background:#A0724A; border-color:#A0724A; color:#fff; }
+.kp-btn:hover{ background:#8A5F3C; border-color:#8A5F3C; color:#fff; }
+.kp-btn-o, .kp-btn-o:visited{ background:transparent; border-color:rgba(255,255,255,.7); color:#fff; }
+.kp-btn-o:hover{ border-color:#fff; color:#fff; }
+.kp-btn-w, .kp-btn-w:visited{ background:#FBF3E8; border-color:#FBF3E8; color:#3B2A1E; }
+.kp-btn-w:hover{ background:#fff; color:#3B2A1E; }
+.kp-btn-w[hidden], .kp-btn[hidden]{ display:none !important; }
+.kp-ban-n{ display:flex; gap:6px; align-items:flex-start; margin:14px 0 0; font-size:14px; line-height:1.55; color:#F3E8DA; }
+.kp-ban-n > svg{ flex:none; margin-top:3px; }
+.kp-ban-card{ flex:none; width:300px; background:rgba(255,252,247,.96); color:var(--ink); border-radius:16px; padding:18px 20px; box-shadow:0 14px 30px rgba(0,0,0,.18); }
+.kp-ban-card > p{ margin:0 0 10px; font-weight:800; font-size:15px; }
+.kp-ban-card ul{ list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.kp-ban-card li{ display:flex; gap:8px; font-size:14px; line-height:1.5; }
+.kp-ban-card li > svg{ flex:none; margin-top:3px; color:#7A5633; }
+
+/* ⑤ 왜 · ⑥ 하단 띠 */
+.kp-why{ position:relative; padding:0; display:grid; grid-template-columns:minmax(0,38%) minmax(0,1fr); align-items:stretch; }
+.kp-why:not(.kp-on){ grid-template-columns:minmax(0,1fr); }
+.kp-why-ph{ position:relative; min-height:260px; }
+.kp-why-ph .ph{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.kp-why-in{ padding:clamp(32px,4vw,52px) clamp(20px,4vw,56px); text-align:center; }
+.kp-pill{ display:inline-block; margin:0 0 10px; padding:4px 12px; border:1px solid #CBB59E; border-radius:999px; font-size:13px; font-weight:800; color:#7A5633; }
+.kp-why-g{ list-style:none; margin:24px 0 0; padding:0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; text-align:left; }
+.kp-why-g > li{ display:flex; gap:12px; align-items:flex-start; }
+.kp-why-i{ flex:none; color:#7A5633; }
+.kp-why-g b{ display:block; font-size:16px; font-weight:800; color:var(--ink); }
+.kp-why-g small{ display:block; margin-top:4px; font-size:14px; line-height:1.55; color:var(--ink2); }
+.kp-cta{ background:#3B2A1E; color:#fff; padding-block:clamp(28px,3.5vw,40px); }
+.kp-cta-in{ display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; }
+.kp-cta .kp-h{ color:#fff; font-size:clamp(21px,2.2vw,28px); }
+.kp-cta .kp-lead{ color:#F3E8DA; margin-top:6px; }
+.kp-cta-go{ gap:12px; flex-wrap:wrap; }
+
+@media (max-width:1100px){
+  .kp-svc-in{ grid-template-columns:minmax(0,1fr); }
+  .kp-svc-g, .kp-pro-g{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .kp-pro-hd{ grid-template-columns:minmax(0,1fr) auto; }
+  .kp-pro-hd .kp-lead{ grid-column:1 / -1; grid-row:2; }
+  .kp-ban-card{ display:none; }
+}
+@media (max-width:900px){
+  .kp-ban-ph{ width:100%; }
+  .kp-ban-ph::after{ background:linear-gradient(180deg,rgba(59,42,30,.72) 0%,rgba(59,42,30,.9) 100%); }
+  .kp-why{ grid-template-columns:minmax(0,1fr); }
+  .kp-why-ph{ min-height:180px; }
+  .kp-why-g{ grid-template-columns:minmax(0,1fr); }
+  .kp-svc-g.kp-g3{ grid-template-columns:minmax(0,1fr); }
+}
+@media (max-width:600px){
+  .kp{ padding-block:36px; }
+  .kp-svc-g, .kp-pro-g{ gap:10px; }
+  .kp-ph{ aspect-ratio:4/3; }
+  .kp-pro-g .kp-ph{ aspect-ratio:4/3; }
+  .kp-tx{ padding:10px 12px 12px; }
+  .kp-tx > b{ font-size:16px; }
+  .kp-tx > small{ font-size:13px; }
+  .kp-go{ display:none; }
+  .kp-pro-g .kp-n{ width:34px; height:34px; margin:-17px 0 0 10px; font-size:13px; }
+  .kp-art svg{ width:52px; height:52px; }
+  .kp-pro-hd{ grid-template-columns:minmax(0,1fr); align-items:start; }
+  .kp-pro-hd .kp-lead{ grid-row:auto; }
+  .kp-more{ justify-self:start; }
+  .kp-ban-go .btn, .kp-cta-go .btn{ width:100%; }
+  .kp-cta-go{ width:100%; }
+}
+/* 2026-11-23 사진형 시안 — 접힌 상세 절차 · 전체 보기 줄 · 머리말 오른쪽 단추 자리 */
+span.kp-more{ display:flex; align-items:center; min-height:0; border-radius:0; }
+span.kp-more .fld-b{ margin:0; }
+.kp-fold{ margin-top:24px; }
+.kp-all{ grid-column:1 / -1; margin:22px 0 0; text-align:center; }
+.kp-all .fld-b{ margin:0 auto; }
+.kp-all .hsg-all-l{ text-align:left; margin-top:18px; }
+.kp-svc-in > .kp-note{ grid-column:1 / -1; }

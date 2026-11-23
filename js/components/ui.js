@@ -1020,3 +1020,97 @@ window.kxSvc = function(cat, sub, n, d, ia, ph){
   var href = sub ? base + (base.indexOf("?") >= 0 ? "&" : "?") + "s=" + encodeURIComponent(sub) : base;
   return { n:n || c.name, d:d || "", href:href, ia:ia || cat, ph:ph || "" };
 };
+
+/* ══ 2026-11-23 사진형 시안(창업 · 운영 · 양도양수 · 폐업) — 본문 공통 조각 (Kp*) ═════════════════
+   흐름: 큰 대표 사진(HallHero) → 사진형 핵심 서비스 4 → 사진형 진행 절차 4 → 사진 배너 + 실제 도구
+        → (페이지별 사진 카드 구간) → 기존 고르기 · 신청 → 왜 인수인계 → 하단 상담 띠.
+   ⚠️⚠️ 사진은 권리 확인된 것만(photos.js 의 insu-* · home-* · hero-start/close · svc-*). 없는 장면은
+      **큰 컬러 아이콘 판**으로 같은 자리 · 같은 크기를 지킵니다 (빈 액자 · "준비 중" 금지).
+   ⚠️ 시안의 카페는 연출 예시 — 문구는 업종을 특정하지 않습니다. 보장 · 실적 문구 없음.
+   ⚠️ 카드 전체가 하나의 a 입니다 — 안에 또 a 를 넣지 마세요. 클래스는 kp-* 입니다. */
+function kpPh(key, sz){ return (key && typeof hasPhoto === "function" && hasPhoto(key)) ? photoBox(key, "", false, sz || "(max-width:600px) 46vw, 300px") : ""; }
+function kpArt(ia, ic){ return '<span class="kp-art">'+((typeof hasIconArt === "function" && hasIconArt(ia)) ? iconArt(ia, 72) : icon(ic || "grid", 44))+'</span>'; }
+function kpJump(href){ return href && href.charAt(0) === "#" ? ' onclick="return hhJump(\''+esc(href.slice(1))+'\')"' : ""; }
+function kpKicker(t){ return t ? '<p class="kp-k">'+esc(t)+'</p>' : ""; }
+/* ① 사진형 핵심 서비스 — 왼쪽 머리말 + 오른쪽 카드 넷 */
+window.KpServices = function(o){
+  var L = (o.items || []).filter(function(x){ return x && x.href; });
+  if(!L.length) return "";
+  return '<section class="sec '+esc(o.tone || "sec-white")+' kp kp-svc'+(o.cls ? ' '+esc(o.cls) : '')+'"'+(o.id ? ' id="'+esc(o.id)+'"' : '')+'><div class="w kp-svc-in">'+
+    '<div class="kp-hd">'+kpKicker(o.kicker || "SERVICE")+'<h2 class="kp-h">'+(o.titleHtml || esc(o.title))+'</h2>'+(o.lead ? '<p class="kp-lead">'+esc(o.lead)+'</p>' : '')+'</div>'+
+    '<ul class="kp-svc-g">'+L.map(function(x){
+      var ph = kpPh(x.ph);
+      return '<li><a class="kp-c" href="'+esc(x.href)+'"'+kpJump(x.href)+'>'+
+        '<span class="kp-ph" aria-hidden="true">'+(ph || kpArt(x.ia, x.ic))+'</span>'+
+        '<span class="kp-tx"><b>'+esc(x.n)+'</b><small>'+esc(x.d || "")+'</small></span>'+
+        '<span class="kp-go" aria-hidden="true">'+icon("arrow",16)+'</span></a></li>';
+    }).join("")+'</ul>'+
+  '</div></section>';
+};
+/* ② 사진형 진행 절차 — 번호 배지가 사진 아래 끝에 걸칩니다 */
+window.KpProcess = function(o){
+  var S = o.steps || []; if(!S.length) return "";
+  return '<section class="sec '+esc(o.tone || "sec-ivory")+' kp kp-pro'+(o.cls ? ' '+esc(o.cls) : '')+'"'+(o.id ? ' id="'+esc(o.id)+'"' : '')+'><div class="w">'+
+    '<div class="kp-pro-hd"><div>'+kpKicker(o.kicker || "PROCESS")+'<h2 class="kp-h">'+esc(o.title)+'</h2></div>'+
+      (o.lead ? '<p class="kp-lead">'+esc(o.lead)+'</p>' : '')+
+      (o.moreHtml ? '<span class="kp-more">'+o.moreHtml+'</span>' : o.more ? '<a class="btn btn-o kp-more" href="'+esc(o.more.href)+'"'+kpJump(o.more.href)+'>'+esc(o.more.t)+icon("chev",15)+'</a>' : '')+
+    '</div>'+
+    '<ol class="kp-pro-g">'+S.map(function(s, i){
+      var ph = kpPh(s.ph), inner =
+        '<span class="kp-ph" aria-hidden="true">'+(ph || kpArt(s.ia, s.ic))+'</span>'+
+        '<span class="kp-n" aria-hidden="true">'+String(i+1).padStart(2,"0")+'</span>'+
+        '<span class="kp-tx"><b>'+esc(s.n)+'</b><small>'+esc(s.d || "")+'</small></span>';
+      return '<li>'+(s.href ? '<a class="kp-c" href="'+esc(s.href)+'"'+kpJump(s.href)+'>'+inner+'<span class="kp-go" aria-hidden="true">'+icon("chev",16)+'</span></a>' : '<div class="kp-c">'+inner+'</div>')+'</li>';
+    }).join("")+'</ol>'+(o.after || '')+
+  '</div></section>';
+};
+/* ③ 사진 배너 + 실제 도구 — 짙은 브라운 면 · 오른쪽 사진. ⚠️ 금액을 적지 않습니다(도구가 그 자리에서 셈) */
+window.KpBanner = function(o){
+  var ph = kpPh(o.photo, "(max-width:900px) 100vw, 60vw");
+  return '<section class="sec-calc kp kp-ban'+(ph ? ' kp-on' : '')+'"'+(o.id ? ' id="'+esc(o.id)+'"' : '')+'>'+
+    (ph ? '<span class="kp-ban-ph" aria-hidden="true">'+ph+'</span>' : '')+
+    '<div class="w kp-ban-in"><div class="kp-ban-tx">'+kpKicker(o.kicker)+
+      '<h2 class="kp-h">'+(o.titleHtml || esc(o.title))+'</h2>'+
+      (o.lead ? '<p class="kp-lead">'+esc(o.lead)+'</p>' : '')+
+      '<div class="row-cta kp-ban-go">'+(o.btns || []).map(function(b, i){
+        return '<a class="btn btn-lg '+(i ? 'kp-btn-o' : 'kp-btn')+'" href="'+esc(b.href)+'"'+kpJump(b.href)+'>'+(b.ic ? icon(b.ic,18)+' ' : '')+esc(b.t)+icon("chev",16)+'</a>'; }).join("")+'</div>'+
+      (o.note ? '<p class="kp-ban-n">'+icon("info",15)+'<span>'+esc(o.note)+'</span></p>' : '')+
+    '</div>'+
+    (o.card ? '<div class="kp-ban-card"><p>'+esc(o.card.title)+'</p><ul>'+o.card.list.map(function(t){ return '<li>'+icon("check",16)+'<span>'+esc(t)+'</span></li>'; }).join("")+'</ul></div>' : '')+
+  '</div></section>';
+};
+/* ④ 페이지별 사진 카드 구간 (업종별 안내 · 분야별 운영 안내 · 지원사업 찾는 곳) */
+window.KpCards = function(o){
+  var L = (o.items || []).filter(function(x){ return x && x.href; });
+  if(!L.length) return "";
+  return '<section class="sec '+esc(o.tone || "sec-white")+' kp kp-cards'+(o.cls ? ' '+esc(o.cls) : '')+'"'+(o.id ? ' id="'+esc(o.id)+'"' : '')+'><div class="w kp-svc-in">'+
+    '<div class="kp-hd">'+kpKicker(o.kicker)+'<h2 class="kp-h">'+esc(o.title)+'</h2>'+(o.lead ? '<p class="kp-lead">'+esc(o.lead)+'</p>' : '')+
+      (o.more ? '<a class="btn btn-o kp-more" href="'+esc(o.more.href)+'"'+kpJump(o.more.href)+'>'+esc(o.more.t)+icon("chev",15)+'</a>' : '')+'</div>'+
+    '<ul class="kp-svc-g'+(L.length === 3 ? ' kp-g3' : '')+'">'+L.map(function(x){
+      var ph = kpPh(x.ph), ext = /^https?:/.test(x.href);
+      return '<li><a class="kp-c" href="'+esc(x.href)+'"'+(ext ? ' target="_blank" rel="noopener"' : kpJump(x.href))+'>'+
+        '<span class="kp-ph" aria-hidden="true">'+(ph || kpArt(x.ia, x.ic))+'</span>'+
+        '<span class="kp-tx"><b>'+esc(x.n)+(x.tag ? ' <em class="kp-tag">'+esc(x.tag)+'</em>' : '')+'</b><small>'+esc(x.d || "")+'</small><i>'+esc(x.go || "자세히 보기")+icon("chev",14)+'</i></span></a></li>';
+    }).join("")+'</ul>'+(o.after || '')+
+    (o.note ? '<p class="kp-note">'+esc(o.note)+'</p>' : '')+
+  '</div></section>';
+};
+/* ⑤ 왜 인수인계 — 사진 왼쪽 · 셋. ⚠️ "검증된" · 실적 숫자를 쓰지 않습니다 */
+window.KpWhy = function(o){
+  var ph = kpPh(o.photo, "(max-width:900px) 100vw, 36vw");
+  return '<section class="sec sec-ivory kp kp-why'+(ph ? ' kp-on' : '')+'">'+
+    (ph ? '<span class="kp-why-ph" aria-hidden="true">'+ph+'</span>' : '')+
+    '<div class="kp-why-in"><p class="kp-pill">WHY '+esc(typeof amBrand === "function" ? amBrand() : "")+'?</p>'+
+      '<h2 class="kp-h">'+esc(o.title)+'</h2>'+
+      '<ul class="kp-why-g">'+(o.items || []).map(function(x){ return '<li><span class="kp-why-i" aria-hidden="true">'+icon(x.ic || "check", 26)+'</span><span><b>'+esc(x.b)+'</b><small>'+esc(x.d)+'</small></span></li>'; }).join("")+'</ul>'+
+    '</div></section>';
+};
+/* ⑥ 하단 상담 띠 — 주 단추는 접수 상태를 따릅니다(data-cta 짝). ⚠️ 없는 전화번호를 적지 않습니다 */
+window.KpCta = function(o){
+  return '<section class="kp kp-cta"><div class="w kp-cta-in"><div><h2 class="kp-h">'+esc(o.title)+'</h2>'+(o.lead ? '<p class="kp-lead">'+esc(o.lead)+'</p>' : '')+'</div>'+
+    '<div class="row-cta kp-cta-go">'+
+      (o.second ? '<a class="btn btn-lg kp-btn-o" href="'+esc(o.second.href)+'"'+kpJump(o.second.href)+'>'+esc(o.second.t)+icon("chev",16)+'</a>' : '')+
+      '<a class="btn btn-lg kp-btn-w" href="/intake" data-cta="off"'+ctaF(o)+'>'+icon("calendar",18)+' 접수 안내 보기</a>'+
+      '<a class="btn btn-lg kp-btn-w" href="'+esc(o.quote || "/quote")+'" data-cta="on"'+ctaF(o)+' hidden>'+icon("calendar",18)+' '+esc(o.goName || "무료 상담신청")+'</a>'+
+    '</div></div></section>';
+};

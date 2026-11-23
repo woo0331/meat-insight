@@ -65,13 +65,13 @@ window.WOW_PHOTO_SLOTS = [
 
   { key:"svc-store", sizes:"92px",     where:"(지금 안 나옴) 서비스 · 상가 · 점포",     min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"빈 상가 · 상권 거리. ⚠️ 상호 · 간판이 읽히면 안 됩니다" },
 
-  { key:"svc-interior", sizes:"104px", where:"(지금 안 나옴) 서비스 · 인테리어 · 시공",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"시공 중인 상업공간 · 도면" },
-  { key:"svc-equip", sizes:"92px",     where:"(지금 안 나옴) 서비스 · 시설 · 장비",     min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"업소용 장비. ⚠️ 한 업종으로 읽히지 않게" },
-  { key:"svc-it", sizes:"104px",       where:"(지금 안 나옴) 서비스 · POS · CCTV · 매장시스템",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"POS · 키오스크 · CCTV. ⚠️ 브랜드가 보이면 안 됩니다" },
+  { key:"svc-interior", sizes:"104px", where:"창업 사진형 핵심 서비스(인테리어 · 설계) (2026-11-23)",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"시공 중인 상업공간 · 도면" },
+  { key:"svc-equip", sizes:"92px",     where:"창업 · 운영 · 폐업 사진형 핵심 서비스(설비 · 수리 · 집기 매각) (2026-11-23)",     min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"업소용 장비. ⚠️ 한 업종으로 읽히지 않게" },
+  { key:"svc-it", sizes:"104px",       where:"운영 사진형 핵심 서비스(POS · 결제) (2026-11-23)",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"POS · 키오스크 · CCTV. ⚠️ 브랜드가 보이면 안 됩니다" },
   { key:"svc-admin", sizes:"92px",     where:"(지금 안 나옴) 서비스 · 행정 · 전문가",    min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"서류 · 상담 책상. ⚠️ 실제 서류 글자가 읽히면 안 됩니다" },
   { key:"svc-marketing", sizes:"92px", where:"(지금 안 나옴) 서비스 · 마케팅 · 디자인",  min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"디자인 작업 · 촬영" },
   { key:"svc-demolish", sizes:"92px",  where:"(지금 안 나옴) 서비스 · 철거",            min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"철거 · 원상복구 현장" },
-  { key:"svc-clean", sizes:"92px",     where:"(지금 안 나옴) 서비스 · 청소 · 방역",      min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"청소 · 방역 장비" },
+  { key:"svc-clean", sizes:"92px",     where:"운영 사진형 진행 절차(진행 · 관리) (2026-11-23)",      min:[240,240], ratio:[0.95,1.08], maxKB:40, note:"청소 · 방역 장비" },
 
   { key:"kind-take", sizes:"(max-width:520px) 94vw, (max-width:600px) 480px, (max-width:900px) 47vw, (max-width:1280px) 31vw, 387px",
     where:"(지금 안 나옴) 2026-11-20 출처 미확인으로 메인에서 뺌 — 옛 자산 카드 01", min:[1120,840], ratio:[1.25,1.45], maxKB:140,

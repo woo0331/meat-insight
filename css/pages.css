@@ -5252,7 +5252,17 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
   .pk-ck{ grid-column:2; }
   .pk-t{ grid-column:1 / -1; }
 }
-@media (max-width:380px){ .pk-g{ grid-template-columns:1fr; } }
+/* 2026-11-23 — 380px 아래는 한 칸이라 카드가 320px 로 넓은데, 위 620px 규칙의 '세로로 쌓기'(2열용)가
+   그대로 남아 카드 하나가 164px 이었습니다(390px 은 두 칸이라 괜찮음). 한 칸일 때는 넓은 화면처럼
+   가로로 눕힙니다 — 글씨(18px) · 아이콘(46px) · 누름(카드 전체 · 92px 이상)은 그대로입니다. */
+@media (max-width:380px){
+  .pk-g{ grid-template-columns:1fr; }
+  .pk-c{ grid-template-columns:46px 1fr auto; grid-template-rows:auto; align-items:center;
+    min-height:92px; padding:var(--s3) var(--s4); gap:var(--s3); }
+  .pk-i{ grid-column:1; }
+  .pk-t{ grid-column:2; }
+  .pk-ck{ grid-column:3; }
+}
 
 /* ── C. 선택한 서비스 확인 (§2-C) ─────────────────────────────────── */
 .pkb-box{ max-width:760px; margin:0 auto; padding:var(--s5);

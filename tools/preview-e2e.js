@@ -18,6 +18,10 @@
      TEST_REF               시험 프로젝트 ref (예: gxjzlkvdbafzfjuunvyx)
      TEST_SB_URL            https://<TEST_REF>.supabase.co
      TEST_SB_SERVICE_KEY    시험 프로젝트 service_role 키 — 시험 계정 로그인 링크를 만들 때만 씀
+                            ⚠️ 비우고 SB_KEY_VIA_PROXY=1 이면 키를 이 스크립트가 들고 있지 않고,
+                               작업 환경의 Network secret 이 그 호스트 요청에 Authorization 을 넣어 줍니다
+     TEST_SB_ANON_KEY       시험 프로젝트 공개(anon) 키 — 프록시 모드에서 apikey 머리에 씀 (비밀 아님)
+     PREVIEW_ADMIN_PASSWORD (선택) Preview 전용 시험 관리자 비밀번호 — 있으면 /admin 화면까지 검수, 없으면 미검증
      E_CUST E_CUST2 E_PVA E_PVB E_STAFF   시험 계정 메일 다섯 (역할 · 업체 연결이 시험 DB 에 되어 있어야 함)
      PVA_ID                 업체 A 의 id (배정 가능 · 계정 연결된 시험 업체)
      SERVICE                신청 서비스 id (기본 demolish/full)
@@ -29,7 +33,11 @@ let pass = 0, bad = 0;
 const ok = (c, n, got) => { if(c){ pass++; console.log("  ✅ " + n); } else { bad++; console.log("  ❌ " + n + (got !== undefined ? "  →  " + String(typeof got === "string" ? got : JSON.stringify(got)).slice(0, 240) : "")); } };
 const die = m => { console.log("⛔ " + m); process.exit(2); };
 
-const BASE = E("PREVIEW_URL").replace(/\/+$/, ""), REF = E("TEST_REF"), SB = E("TEST_SB_URL").replace(/\/+$/, ""), SK = E("TEST_SB_SERVICE_KEY");
+const BASE = E("PREVIEW_URL").replace(/\/+$/, ""), REF = E("TEST_REF"), SB = E("TEST_SB_URL").replace(/\/+$/, "");
+const VIA = E("SB_KEY_VIA_PROXY") === "1";
+const SK = E("TEST_SB_SERVICE_KEY") || (VIA ? "proxy-injected" : "");   /* 프록시 모드에서는 자리표시 값 — 진짜 키는 프록시가 넣습니다 */
+const AK = VIA ? E("TEST_SB_ANON_KEY") : SK;
+const adm = () => ({ "content-type":"application/json", apikey:AK, authorization:"Bearer " + SK });
 const PVA = E("PVA_ID"), SVC = E("SERVICE") || "demolish/full";
 const MAIL = { cust:E("E_CUST"), cust2:E("E_CUST2"), pva:E("E_PVA"), pvb:E("E_PVB"), staff:E("E_STAFF") };
 
@@ -39,7 +47,7 @@ const refOf = u => { const m = /^https:\/\/([a-z0-9]{20})\.supabase\.co/.exec(St
 
 async function guard(){
   console.log("\n▶ 안전장치");
-  if(!BASE || !REF || !SB || !SK || !PVA || Object.values(MAIL).some(v => !v)) die("필요한 환경변수가 비었습니다 (파일 맨 위 목록)");
+  if(!BASE || !REF || !SB || !SK || !AK || !PVA || Object.values(MAIL).some(v => !v)) die("필요한 환경변수가 비었습니다 (파일 맨 위 목록)");
   const host = new URL(BASE).host;
   if(/(^|\.)storeway\.co\.kr$/.test(host) || host === "meat-insight.vercel.app") die("운영 주소입니다 — 멈춥니다");
   if(refOf(SB) !== REF) die("TEST_SB_URL 의 ref 가 TEST_REF 와 다릅니다");
@@ -51,15 +59,22 @@ async function guard(){
   ok(s.j.intake && s.j.intake.quote === true, "Preview 견적 접수 열림 (STOREWAY_INTAKE_OPEN)", s.j.intake);
 }
 
+/* 시험 계정 만들기 — 있으면 그대로 (메일 확인을 건너뛰고 만들어서 메일이 나가지 않습니다) */
+async function ensureUser(email){
+  const r = await fetch(SB + "/auth/v1/admin/users", { method:"POST", headers:adm(), body:JSON.stringify({ email, email_confirm:true }) });
+  if(r.ok) return "new";
+  const j = await r.json().catch(() => ({}));
+  if(r.status === 422 || /already|registered|exists/i.test(JSON.stringify(j))) return "had";
+  throw new Error("시험 계정을 못 만들었습니다 (" + r.status + ")");
+}
 /* 시험 계정 로그인 — 매직링크를 메일로 보내지 않고 관리 API 로 만들어 바로 검증 */
 async function tokenFor(email){
   const g = await fetch(SB + "/auth/v1/admin/generate_link", { method:"POST",
-    headers:{ "content-type":"application/json", apikey:SK, authorization:"Bearer " + SK },
-    body:JSON.stringify({ type:"magiclink", email }) });
+    headers:adm(), body:JSON.stringify({ type:"magiclink", email }) });
   const gj = await g.json().catch(() => ({}));
   const th = gj.hashed_token || (gj.properties && gj.properties.hashed_token);
   if(!th) throw new Error("로그인 링크를 못 만들었습니다 — " + email.replace(/(.).+@/, "$1***@") + " (" + g.status + ")");
-  const v = await fetch(SB + "/auth/v1/verify", { method:"POST", headers:{ "content-type":"application/json", apikey:SK },
+  const v = await fetch(SB + "/auth/v1/verify", { method:"POST", headers:{ "content-type":"application/json", apikey:AK },
     body:JSON.stringify({ type:"magiclink", token_hash:th }) });
   const vj = await v.json().catch(() => ({}));
   if(!vj.access_token) throw new Error("로그인 검증 실패 (" + v.status + ")");
@@ -80,6 +95,11 @@ async function shot(browser, t, p, name){
 (async () => {
   await guard();
   fs.mkdirSync(OUT, { recursive:true });
+  if(E("SETUP_USERS") === "1"){
+    console.log("\n▶ 시험 계정 만들기 (SETUP_USERS=1)");
+    for(const k of Object.keys(MAIL)) console.log("   " + k + " " + await ensureUser(MAIL[k]));
+    console.log("   → 이제 db/test/preview-seed.sql 로 역할 · 업체 연결을 넣고 SETUP_USERS 없이 다시 돌리세요"); return done();
+  }
   console.log("\n▶ 시험 계정 로그인 (메일 발송 없음)");
   const T = {}; for(const k of Object.keys(MAIL)) T[k] = await tokenFor(MAIL[k]);
   ok(true, "다섯 계정 세션");
@@ -144,6 +164,17 @@ async function shot(browser, t, p, name){
   const { chromium } = require("playwright");
   const br = await chromium.launch();
   await shot(br, T.cust, "/my", "고객-my"); await shot(br, T.pva, "/my", "업체A-my"); await shot(br, T.pvb, "/my", "업체B-my");
+  /* /admin 화면 — Preview 전용 시험 비밀번호가 있을 때만. 없으면 미검증으로 남깁니다 (서버 호출 검사와 섞지 않음) */
+  if(E("PREVIEW_ADMIN_PASSWORD")){
+    const ctx = await br.newContext({ viewport:{ width:1440, height:900 }, httpCredentials:{ username:"admin", password:E("PREVIEW_ADMIN_PASSWORD") },
+      extraHTTPHeaders:E("VERCEL_BYPASS") ? { "x-vercel-protection-bypass":E("VERCEL_BYPASS") } : {} });
+    await ctx.addInitScript(v => { try{ localStorage.setItem("am.auth.v1", v); }catch(e){} }, JSON.stringify(T.staff));
+    const pg = await ctx.newPage(); await pg.goto(BASE + "/admin", { waitUntil:"networkidle" }); await pg.waitForTimeout(1500);
+    const txt = await pg.evaluate(() => (document.getElementById("rq") || document.body).innerText);
+    ok(txt.indexOf(NO) >= 0, "/admin 화면 접수 목록에 시험 신청이 보임");
+    ok(!/010-0000-/.test(txt), "/admin 목록에 연락처가 깔리지 않음");
+    await pg.screenshot({ path:path.join(OUT, "관리자-admin.png"), fullPage:true }); await ctx.close();
+  } else console.log("  ⚪ /admin 화면 — PREVIEW_ADMIN_PASSWORD 가 없어 **미검증** (배정은 서버 호출로만 검사)");
   await br.close(); ok(true, "캡처 → out/preview-e2e/");
   console.log("\n   시험 접수번호: " + NO + " · " + NO2 + " (정리할 때 이 둘)");
   done();

@@ -90,15 +90,17 @@ function StartIntro(ind){
   return HallHero({
     /* 2026-11-20 — 출처가 확인되지 않은 hero-startup 사진 대신 자체 일러스트(아이디어 → 매장 오픈) */
     side:"start", photo:"insu-startup", /* 2026-11-21 ZIP 01_startup (옛 자체 일러스트 hhFlowArt 는 지우지 않았습니다) */
-    kicker:"창업 준비 · 가게 창업, 막막하지 않게",
-    h1raw:"예비 창업자를 위한<br><em>원스톱 창업 준비</em>",
+    /* 2026-11-23 4개 카테고리 시안 — 머리말 · 제목. ⚠️ 브랜드 이름과 조사는 손으로 적지 않습니다 (koWith) */
+    kicker:"창업 준비 서비스",
+    h1raw:"성공하는 창업,<br><em>"+esc((typeof koWith === "function" ? koWith(amBrand(), "와과") : amBrand()))+" 함께</em><br>시작하세요.",
     /* 2026-11-19 — 설명이 **접수 상태를 따릅니다.** 닫혀 있으면 "한 번에 신청" 을 약속하지 않고
        지금 되는 일(서비스 · 준비 정보 확인)을 말합니다 (data-cta 짝 · 일반 견적 quote). */
-    leadHtml:'<span data-cta="off">창업에 필요한 서비스와 준비 정보를 확인하세요.</span>'+
-             '<span data-cta="on" hidden>창업에 필요한 서비스를 고르고 한 번에 신청하세요.</span>',
+    leadHtml:'<span data-cta="off">상권 분석부터 인테리어, 설비, 인허가까지 창업에 필요한 서비스와 준비 정보를 확인하세요.</span>'+
+             '<span data-cta="on" hidden>상권 분석부터 인테리어, 설비, 인허가까지 창업에 필요한 서비스를 고르고 한 번에 신청하세요.</span>',
     quote: quoteTo({ side:"start", industry:ind || "" }),
-    goName:"창업 상담 신청하기",
-    second:'<a class="btn btn-lg hh-o" href="#pick">필요한 서비스 고르기'+icon("arrow",18)+'</a>',
+    goName:"무료 상담 신청하기",
+    /* 시안의 보조 단추 '창업 비용 계산하기' — 실제 창업비 정리표(/tools/cost)로 갑니다. 서비스 고르기는 바로 아래 칸이 받습니다 */
+    second:'<a class="btn btn-lg hh-o" href="/tools/cost'+(indOk ? "?i=" + encodeURIComponent(ind) : "")+'">'+icon("calc",18)+' 창업 비용 계산하기</a>',
     /* 2026-11-19 — 첫 화면의 두 행동. 업종을 고르셨으면 **그 업종으로** 이어집니다
        (/tools/cost 는 ?i= 를 읽고, /startup/:업종 이 그 업종의 준비 순서입니다). */
     cardTitle:"무엇부터 해 볼까요?", qfirst:true,
@@ -703,16 +705,18 @@ function ClosureIntro(path){
      (넘길 수 있으면 철거비도 원상복구비도 줄어듭니다). */
   return HallHero({
     side:"close", photo:"insu-closure",
-    kicker:"매장 정리부터 철거, 세무까지 한 번에",
-    h1raw:"폐업 · 철거<br><em>통합 서비스</em>",
-    lead:"바로 철거하기 전에 넘길 수 있는 것부터 확인하세요. 양도 검토 → 집기 처분 → 철거 · 원상복구 → 신고 · 세무 순서로 짚어 드립니다.",
+    kicker:"폐업 · 철거 서비스",
+    h1raw:"매장 정리부터 철거까지<br>폐업의 모든 과정을<br><em>"+esc((typeof koWith === "function" ? koWith(amBrand(), "이가") : amBrand()))+" 함께합니다.</em>",
+    lead:"복잡하고 부담스러운 폐업 절차, 철거 · 원상복구 · 집기 정리 · 세무까지 순서대로 짚어 드립니다. 바로 철거하기 전에 넘길 수 있는 것부터 확인하세요.",
     /* ⚠️ 2026-11-18 — 매장 정리 상담(close) 양식을 따릅니다. 일반 견적이
        닫혀 있어도 매장 정리 상담만 열 수 있습니다. */
     quote: "/quote?mode=close&from=closure-hero", ctaForm:"close",
-    goName:"매장 정리 상담 신청하기",
-    second:'<a class="btn btn-lg hh-o" href="#pick">필요한 서비스 고르기'+icon("arrow",18)+'</a>',
-    leadM:"넘길 수 있는 것부터 확인하고, 급한 철거도 바로 준비하세요.",
-    cardTitle:"상황에 맞게 바로 가기", qfirst:true,
+    goName:"무료 상담 신청하기",
+    /* 시안의 '예상 비용 계산하기' — 실제 폐업 예상비용 계산기(/tools/closecost). 결과는 참고값이라고 그 화면이 밝힙니다 */
+    second:'<a class="btn btn-lg hh-o" href="/tools/closecost">'+icon("calc",18)+' 예상 비용 계산하기</a>',
+    leadM:"철거 · 원상복구 · 집기 정리 · 세무까지, 넘길 수 있는 것부터 확인하세요.",
+    /* 시안 오른쪽 '이런 고민이 있으신가요?' — 꾸밈 목록이 아니라 실제로 가는 칸 셋 그대로입니다 */
+    cardTitle:"이런 고민이 있으신가요?",
     /* 2026-11-19 — 첫 화면의 선택지는 **이 셋 하나**입니다. 바로 아래 같은 셋을 다시 내던
        ClosureQuick() 구간은 여기로 합쳤습니다 (그 구간의 설명 · 목적지를 그대로 옮겼습니다).
        ⚠️ 철거가 급한 분은 양도 단계를 거치지 않습니다 — 닫혀 있으면 철거 준비 정보(/providers/demolish),

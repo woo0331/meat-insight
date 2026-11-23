@@ -392,14 +392,15 @@ function OpsIntro(ind){
   /* 2026-11-18 카테고리 리뉴얼 — 전문관 머리 + "이런 고민" 넷(OpsWorry). */
   return HallHero({
     side:"ops", photo:"insu-operations",
-    kicker:"매장을 더 잘 운영하는 실전 서비스" + (ind ? " · " + ind.name : ""),
-    h1raw:"매장 <em>운영</em>",
+    kicker:"매장 운영 서비스" + (ind ? " · " + ind.name : ""),
+    h1raw:"지금 운영 중인 매장,<br><em>더 효율적으로</em><br>관리해보세요.",
     /* 2026-11-19 — 접수 상태를 따르는 설명 (닫혀 있으면 "신청" 을 약속하지 않습니다). */
-    leadHtml:'<span data-cta="off">비용 절감 · 홍보 · 시설 수리 · 인력 · 세무 · 노무 — 고민에 맞는 서비스와 계산도구를 찾아보세요.</span>'+
-             '<span data-cta="on" hidden>비용 절감 · 홍보 · 시설 수리 · 인력 · 세무 · 노무 — 필요한 운영 서비스를 찾고 한 번에 신청하세요.</span>',
+    leadHtml:'<span data-cta="off">인력, 비용, 마케팅, 시설관리까지 고민에 맞는 서비스와 계산도구를 찾아보세요.</span>'+
+             '<span data-cta="on" hidden>인력, 비용, 마케팅, 시설관리까지 필요한 운영 서비스를 찾고 한 번에 신청하세요.</span>',
     quote: quoteTo({ side:"ops", industry:(ind ? ind.key : "") }),
-    goName:"운영 상담 신청하기",
-    second:'<a class="btn btn-lg hh-o" href="#pick">운영 서비스 고르기'+icon("arrow",18)+'</a>',
+    goName:"무료 상담 신청하기",
+    /* 시안의 '운영 진단 받기' — 저희가 진단해 드리는 서비스는 없습니다. 실제로 있는 운영 점검표(체크리스트)로 갑니다 */
+    second:'<a class="btn btn-lg hh-o" href="#ops-check" onclick="return hhJump(\'ops-check\')">'+icon("check",18)+' 운영 점검하기</a>',
     /* 2026-11-20 카테고리 통합 개선 §4 — 첫 화면에서 고민 넷을 바로 고릅니다. 누르면 바로 아래 그 고민의
        카드(서비스 · 계산도구)로 갑니다 — 카드의 목적지는 전부 실제 화면입니다(tools/urls.json · 하위 key 확인). */
     cardTitle:"어떤 고민이세요?", qfirst:true,
@@ -566,7 +567,7 @@ function OpsCheckBand(){
   var rest = (typeof amOpsCheckRest === "function") ? amOpsCheckRest() : [];
   if(!top.length) return "";
   var all = top.length + rest.length;
-  return '<section class="sec sec-white opsck"><div class="w">'+
+  return '<section class="sec sec-white opsck" id="ops-check"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">운영 체크리스트</p>'+
       '<h2>이번 달, 빠뜨린 것이 없는지 보세요</h2>'+
@@ -729,13 +730,13 @@ function AcqIntro(ind, iq, picked){
        (넘기는 매장 → 받는 사장님 · wpPassArt). 경로를 고른 화면은 머리를 줄이므로 판을 안 냅니다. */
     side:"transfer", photo:(compact ? "" : "insu-transfer"), /* 2026-11-21 ZIP 03_transfer — 경로를 고른 줄인 머리에는 안 냅니다 */
     art:(compact || typeof wpPassArt !== "function") ? "" : wpPassArt(),
-    kicker:(compact ? (picked === "out" ? "내 매장을 넘기고 싶어요" : "매장을 인수하고 싶어요") : "사장님의 새로운 시작을 위한") + (ind ? " · " + ind.name : ""),
-    h1raw:"매장 <em>양도양수</em>",
+    kicker:(compact ? (picked === "out" ? "내 매장을 넘기고 싶어요" : "매장을 인수하고 싶어요") : "매장 양도양수 서비스") + (ind ? " · " + ind.name : ""),
+    h1raw:(compact ? "매장 <em>양도양수</em>" : "좋은 매장을 찾고,<br><em>안전하게</em><br>넘기세요."),
     lead:"매장을 찾는 분(인수)과 넘기려는 분(양도)의 길을 나눠 안내합니다. 매물에 적힌 값은 올리신 사장님이 적으신 값입니다.",
     leadM:"매장을 찾는 분과 넘기려는 분의 길을 나눠 안내합니다.",
     quote: quoteTo({ side:"transfer", cat:"transfer", industry:(ind ? ind.key : "") }),
-    goName:"양도 · 양수 상담 신청하기",
-    second:'<a class="btn btn-lg hh-o" href="/stores'+esc(iq)+'">매장 매물 보기'+icon("arrow",18)+'</a>',
+    goName:"무료 상담 신청하기",
+    second:'<a class="btn btn-lg hh-o" href="/stores'+esc(iq)+'">'+icon("search",18)+' 매장 찾기</a>',
     /* 2026-11-19 — 두 경로를 첫 화면에. ⚠️ "올라온 매물 n건 (센 값)" 줄은 뺐습니다 — 건수는
        아래 매물 구간이 사실대로 냅니다. ⚠️ '내 매장 넘기기' 는 매물 등록(sell) 접수가 닫혀 있으면
        기존 양도 안내(/transfer?t=out)로 갑니다 — data-cta 짝이라 열리면 /sell 입니다. */

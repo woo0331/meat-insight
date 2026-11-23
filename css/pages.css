@@ -8529,3 +8529,22 @@ html.ivh #view .wp-find input:focus-visible, html.ivh #view .wp-find .wp-t:focus
   width:24px; height:24px; border-radius:50%;
   background:var(--navy); color:#fff; box-shadow:0 0 0 2px var(--surface);
   font:800 14px/24px var(--font); text-align:center; pointer-events:none; }
+
+/* ══ 2026-11-23 4개 카테고리 시안 — 히어로 ════════════════════════════════
+   폰에서는 사진이 글 **위 띠**가 아니라 글 **뒤**에 꽉 찹니다 (시안 01~03).
+   ⚠️ 글이 사진 위에 앉으므로 막을 짙게 둡니다 — 위 .64 → 가운데 .80 → 글 끝 .90 → 바닥 진한 갈색.
+   ⚠️ 사진 위 글자는 검사가 못 잽니다 — 픽셀로 재서 적었습니다(보고서). 사진을 바꾸면 다시 재세요.
+   ⚠️ PC 는 그대로입니다 (오른쪽 사진 + 왼쪽 짙은 판 — 시안 04 와 같은 짜임). */
+@media (max-width:900px){
+  .hh.hh-im-on{ padding-top:28px; }
+  .hh.hh-im-on .hh-ph{ position:absolute; top:0; left:0; right:0; bottom:0; width:100%; height:auto; }
+  .hh.hh-im-on .hh-ph::after{
+    background:linear-gradient(180deg, rgba(40,29,20,.64) 0%, rgba(40,29,20,.80) 38%, rgba(40,29,20,.90) 62%, #37281C 82%); }
+  .hh.hh-im-on .hh-in{ padding-top:0; }
+}
+/* 시안 01~03(폰) — 히어로 안에는 제목 · 설명 · 단추 둘만. 바로 가기 카드의 칸은 바로 아래 구간이 그대로 받습니다
+   (창업: 계산기 · 업종 준비 / 운영: 고민 카드 넷 / 양도양수: 인수 · 양도 탭 — 다른 자리에 있는지 재서 확인했습니다).
+   ⚠️ 폐업은 접지 않습니다 — '철거 일정이 급해요' 가 그 카드에서 시작하는 길입니다. */
+@media (max-width:900px){
+  .hh-start .hh-card.hh-quick, .hh-ops .hh-card.hh-quick, .hh-transfer .hh-card.hh-quick{ display:none; }
+}

@@ -6379,3 +6379,15 @@ html.ivh #view .wp-find input:focus-visible, html.ivh #view .wp-find .wp-t:focus
   width:24px; height:24px; border-radius:50%;
   background:var(--navy); color:#fff; box-shadow:0 0 0 2px var(--surface);
   font:800 14px/24px var(--font); text-align:center; pointer-events:none; }
+
+@media (max-width:900px){
+  .hh.hh-im-on{ padding-top:28px; }
+  .hh.hh-im-on .hh-ph{ position:absolute; top:0; left:0; right:0; bottom:0; width:100%; height:auto; }
+  .hh.hh-im-on .hh-ph::after{
+    background:linear-gradient(180deg, rgba(40,29,20,.64) 0%, rgba(40,29,20,.80) 38%, rgba(40,29,20,.90) 62%, #37281C 82%); }
+  .hh.hh-im-on .hh-in{ padding-top:0; }
+}
+
+@media (max-width:900px){
+  .hh-start .hh-card.hh-quick, .hh-ops .hh-card.hh-quick, .hh-transfer .hh-card.hh-quick{ display:none; }
+}

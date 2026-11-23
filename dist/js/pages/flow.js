@@ -26,14 +26,16 @@ function StartIntro(ind){
   return HallHero({
 
     side:"start", photo:"insu-startup",
-    kicker:"창업 준비 · 가게 창업, 막막하지 않게",
-    h1raw:"예비 창업자를 위한<br><em>원스톱 창업 준비</em>",
 
-    leadHtml:'<span data-cta="off">창업에 필요한 서비스와 준비 정보를 확인하세요.</span>'+
-             '<span data-cta="on" hidden>창업에 필요한 서비스를 고르고 한 번에 신청하세요.</span>',
+    kicker:"창업 준비 서비스",
+    h1raw:"성공하는 창업,<br><em>"+esc((typeof koWith === "function" ? koWith(amBrand(), "와과") : amBrand()))+" 함께</em><br>시작하세요.",
+
+    leadHtml:'<span data-cta="off">상권 분석부터 인테리어, 설비, 인허가까지 창업에 필요한 서비스와 준비 정보를 확인하세요.</span>'+
+             '<span data-cta="on" hidden>상권 분석부터 인테리어, 설비, 인허가까지 창업에 필요한 서비스를 고르고 한 번에 신청하세요.</span>',
     quote: quoteTo({ side:"start", industry:ind || "" }),
-    goName:"창업 상담 신청하기",
-    second:'<a class="btn btn-lg hh-o" href="#pick">필요한 서비스 고르기'+icon("arrow",18)+'</a>',
+    goName:"무료 상담 신청하기",
+
+    second:'<a class="btn btn-lg hh-o" href="/tools/cost'+(indOk ? "?i=" + encodeURIComponent(ind) : "")+'">'+icon("calc",18)+' 창업 비용 계산하기</a>',
 
     cardTitle:"무엇부터 해 볼까요?", qfirst:true,
     quick:[{ ic:"calc", b:"창업비 계산하기", d:"빠뜨리기 쉬운 비용 항목을 늘어놓고 받은 견적을 더해 봅니다",
@@ -451,15 +453,17 @@ function ClosureIntro(path){
 
   return HallHero({
     side:"close", photo:"insu-closure",
-    kicker:"매장 정리부터 철거, 세무까지 한 번에",
-    h1raw:"폐업 · 철거<br><em>통합 서비스</em>",
-    lead:"바로 철거하기 전에 넘길 수 있는 것부터 확인하세요. 양도 검토 → 집기 처분 → 철거 · 원상복구 → 신고 · 세무 순서로 짚어 드립니다.",
+    kicker:"폐업 · 철거 서비스",
+    h1raw:"매장 정리부터 철거까지<br>폐업의 모든 과정을<br><em>"+esc((typeof koWith === "function" ? koWith(amBrand(), "이가") : amBrand()))+" 함께합니다.</em>",
+    lead:"복잡하고 부담스러운 폐업 절차, 철거 · 원상복구 · 집기 정리 · 세무까지 순서대로 짚어 드립니다. 바로 철거하기 전에 넘길 수 있는 것부터 확인하세요.",
 
     quote: "/quote?mode=close&from=closure-hero", ctaForm:"close",
-    goName:"매장 정리 상담 신청하기",
-    second:'<a class="btn btn-lg hh-o" href="#pick">필요한 서비스 고르기'+icon("arrow",18)+'</a>',
-    leadM:"넘길 수 있는 것부터 확인하고, 급한 철거도 바로 준비하세요.",
-    cardTitle:"상황에 맞게 바로 가기", qfirst:true,
+    goName:"무료 상담 신청하기",
+
+    second:'<a class="btn btn-lg hh-o" href="/tools/closecost">'+icon("calc",18)+' 예상 비용 계산하기</a>',
+    leadM:"철거 · 원상복구 · 집기 정리 · 세무까지, 넘길 수 있는 것부터 확인하세요.",
+
+    cardTitle:"이런 고민이 있으신가요?",
 
     quick:[{ ic:"handover", b:"매장을 넘길 수 있는지 보기", d:"넘기면 철거비 · 원상복구비가 줄어듭니다",
              go:"양도 순서 보기", href:"/transfer?t=out" },

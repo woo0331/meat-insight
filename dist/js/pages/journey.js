@@ -256,14 +256,15 @@ function OpsIntro(ind){
 
   return HallHero({
     side:"ops", photo:"insu-operations",
-    kicker:"매장을 더 잘 운영하는 실전 서비스" + (ind ? " · " + ind.name : ""),
-    h1raw:"매장 <em>운영</em>",
+    kicker:"매장 운영 서비스" + (ind ? " · " + ind.name : ""),
+    h1raw:"지금 운영 중인 매장,<br><em>더 효율적으로</em><br>관리해보세요.",
 
-    leadHtml:'<span data-cta="off">비용 절감 · 홍보 · 시설 수리 · 인력 · 세무 · 노무 — 고민에 맞는 서비스와 계산도구를 찾아보세요.</span>'+
-             '<span data-cta="on" hidden>비용 절감 · 홍보 · 시설 수리 · 인력 · 세무 · 노무 — 필요한 운영 서비스를 찾고 한 번에 신청하세요.</span>',
+    leadHtml:'<span data-cta="off">인력, 비용, 마케팅, 시설관리까지 고민에 맞는 서비스와 계산도구를 찾아보세요.</span>'+
+             '<span data-cta="on" hidden>인력, 비용, 마케팅, 시설관리까지 필요한 운영 서비스를 찾고 한 번에 신청하세요.</span>',
     quote: quoteTo({ side:"ops", industry:(ind ? ind.key : "") }),
-    goName:"운영 상담 신청하기",
-    second:'<a class="btn btn-lg hh-o" href="#pick">운영 서비스 고르기'+icon("arrow",18)+'</a>',
+    goName:"무료 상담 신청하기",
+
+    second:'<a class="btn btn-lg hh-o" href="#ops-check" onclick="return hhJump(\'ops-check\')">'+icon("check",18)+' 운영 점검하기</a>',
 
     cardTitle:"어떤 고민이세요?", qfirst:true,
     quick:OPS_WORRY.map(function(x){
@@ -395,7 +396,7 @@ function OpsCheckBand(){
   var rest = (typeof amOpsCheckRest === "function") ? amOpsCheckRest() : [];
   if(!top.length) return "";
   var all = top.length + rest.length;
-  return '<section class="sec sec-white opsck"><div class="w">'+
+  return '<section class="sec sec-white opsck" id="ops-check"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
       '<p class="eyebrow">운영 체크리스트</p>'+
       '<h2>이번 달, 빠뜨린 것이 없는지 보세요</h2>'+
@@ -490,13 +491,13 @@ function AcqIntro(ind, iq, picked){
 
     side:"transfer", photo:(compact ? "" : "insu-transfer"),
     art:(compact || typeof wpPassArt !== "function") ? "" : wpPassArt(),
-    kicker:(compact ? (picked === "out" ? "내 매장을 넘기고 싶어요" : "매장을 인수하고 싶어요") : "사장님의 새로운 시작을 위한") + (ind ? " · " + ind.name : ""),
-    h1raw:"매장 <em>양도양수</em>",
+    kicker:(compact ? (picked === "out" ? "내 매장을 넘기고 싶어요" : "매장을 인수하고 싶어요") : "매장 양도양수 서비스") + (ind ? " · " + ind.name : ""),
+    h1raw:(compact ? "매장 <em>양도양수</em>" : "좋은 매장을 찾고,<br><em>안전하게</em><br>넘기세요."),
     lead:"매장을 찾는 분(인수)과 넘기려는 분(양도)의 길을 나눠 안내합니다. 매물에 적힌 값은 올리신 사장님이 적으신 값입니다.",
     leadM:"매장을 찾는 분과 넘기려는 분의 길을 나눠 안내합니다.",
     quote: quoteTo({ side:"transfer", cat:"transfer", industry:(ind ? ind.key : "") }),
-    goName:"양도 · 양수 상담 신청하기",
-    second:'<a class="btn btn-lg hh-o" href="/stores'+esc(iq)+'">매장 매물 보기'+icon("arrow",18)+'</a>',
+    goName:"무료 상담 신청하기",
+    second:'<a class="btn btn-lg hh-o" href="/stores'+esc(iq)+'">'+icon("search",18)+' 매장 찾기</a>',
 
     cardTitle:"어느 쪽이세요?", qfirst:!compact,
     quick:compact ? [] : [{ ic:"search", b:"매장을 인수하고 싶어요", d:"권리금 · 인수 비용, 인수 계약 가이드, 매물 찾기",

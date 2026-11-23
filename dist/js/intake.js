@@ -398,7 +398,9 @@ function rqNeed(m, r){
         'oninput="rqCtx(\'amount\',this.value)" '+
         'value="'+esc(RQ.ctx.amount == null ? "" : RQ.ctx.amount)+'" '+
         'placeholder="10000000">'+
-      '<p class="f-h">⚠️ 수수료는 여기서 <b>확정되지 않습니다</b>. '+
+      rqAmtRef(r)+
+      '<p class="f-h">원 단위 정수 · 0 이상 (필수). '+
+        '⚠️ 수수료는 여기서 <b>확정되지 않습니다</b>. '+
         '증빙을 보고 관리자가 따로 확정합니다 (§8 마지막 문장).</p>'+
     '</div>';
 
@@ -421,6 +423,22 @@ function rqNeed(m, r){
 
   return out;
 }
+
+function rqAmtRef(r){
+  var q = (RQ.quotes || []).filter(function(x){
+    return x.request_id === r.id && x.state === "chosen" && x.amount != null; })[0];
+  if(!q) return "";
+  var vat = typeof amQuoteVat === "function" ? amQuoteVat(q.vat) : "";
+  return '<p class="f-h rq-amt-ref">고객이 고른 견적: <b>'+esc(won(q.amount))+'원</b>'+
+      (vat ? ' · '+esc(vat) : '')+' '+
+    '<button class="btn btn-o rq-amt-fill" type="button" '+
+      'onclick="rqAmtFill('+Number(q.amount)+')">이 금액 넣기</button></p>';
+}
+window.rqAmtFill = function(v){
+  RQ.ctx.amount = String(v);
+  var el = document.getElementById("rq-amt");
+  if(el) el.value = String(v);
+};
 
 function rqPvLinked(id){
   var L = RQ.linked;
@@ -716,6 +734,11 @@ window.rqGo = function(id){
     k = need[i]; v = RQ.ctx[k];
     if(v === undefined || v === null || v === "") continue;
     ctx[k] = (k === "amount" || k === "paid") ? Number(v) : v;
+  }
+
+  if(need.indexOf("amount") >= 0 && ctx.amount !== undefined &&
+     !(Number.isInteger(ctx.amount) && ctx.amount >= 0)){
+    toast("계약금액은 0 이상의 원 단위 정수로 적어 주세요"); return;
   }
 
   var pre = window.amDealMove && window.amDealMove(row && row.state, to,

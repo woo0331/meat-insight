@@ -560,7 +560,10 @@ function PageJoin(){
     lead:"하시는 일과 지역만 등록해 두시면, 조건이 맞는 요청만 보내 드립니다. 기본 입점은 무료입니다.",
 
     cta:'<a class="btn btn-b btn-lg" href="#join-form" data-go-form="join">입점 신청하기'+icon("arrow",18)+'</a>'+
-        '<a class="btn btn-o btn-lg" href="#join-fields">어떤 분야를 찾나요</a>'
+        '<a class="btn btn-o btn-lg" href="#join-fields">어떤 분야를 찾나요</a>'+
+
+        '<p class="join-cn" data-cta="off" data-cta-form="join">'+icon("info",15)+
+          '<span>지금은 입점 신청을 받지 않고 있습니다. 아래에서 조건과 진행 방식을 미리 보실 수 있습니다.</span></p>'
   })+
   JoinNow(subs)+
 

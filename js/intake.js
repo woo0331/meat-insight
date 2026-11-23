@@ -539,7 +539,9 @@ function rqNeed(m, r){
         'oninput="rqCtx(\'amount\',this.value)" '+
         'value="'+esc(RQ.ctx.amount == null ? "" : RQ.ctx.amount)+'" '+
         'placeholder="10000000">'+
-      '<p class="f-h">⚠️ 수수료는 여기서 <b>확정되지 않습니다</b>. '+
+      rqAmtRef(r)+
+      '<p class="f-h">원 단위 정수 · 0 이상 (필수). '+
+        '⚠️ 수수료는 여기서 <b>확정되지 않습니다</b>. '+
         '증빙을 보고 관리자가 따로 확정합니다 (§8 마지막 문장).</p>'+
     '</div>';
 
@@ -564,6 +566,26 @@ function rqNeed(m, r){
 
   return out;
 }
+
+/* 계약금액 참고 — 고객이 고른 견적 (2026-11-23 계약 화면 마무리)
+   ⚠️⚠️ **저절로 넣지 않습니다.** 계약금액은 업체와 조건을 맞춘 뒤의
+   금액이라 견적과 다를 수 있습니다 — 운영자가 보고 **눌러서** 넣습니다.
+   ⚠️ 고른 견적이 없으면 줄째 뺍니다 (절대 규칙 2). */
+function rqAmtRef(r){
+  var q = (RQ.quotes || []).filter(function(x){
+    return x.request_id === r.id && x.state === "chosen" && x.amount != null; })[0];
+  if(!q) return "";
+  var vat = typeof amQuoteVat === "function" ? amQuoteVat(q.vat) : "";
+  return '<p class="f-h rq-amt-ref">고객이 고른 견적: <b>'+esc(won(q.amount))+'원</b>'+
+      (vat ? ' · '+esc(vat) : '')+' '+
+    '<button class="btn btn-o rq-amt-fill" type="button" '+
+      'onclick="rqAmtFill('+Number(q.amount)+')">이 금액 넣기</button></p>';
+}
+window.rqAmtFill = function(v){
+  RQ.ctx.amount = String(v);
+  var el = document.getElementById("rq-amt");
+  if(el) el.value = String(v);
+};
 
 /* ── 배정할 업체 ─────────────────────────────────────────────────
    ⚠️⚠️ **없는 업체를 지어내지 않습니다** (절대 규칙 1). 0곳이면 0곳이라고
@@ -994,6 +1016,14 @@ window.rqGo = function(id){
      번 아끼고 같은 말로 먼저 알려 주는** 것까지입니다.
      ⚠️ 두 곳이 어긋날 수는 없습니다 — `checkDealSql()` 이 `deal.js` 의
      길 표와 DB 의 `deal_move` 를 빌드마다 맞춰 봅니다. */
+  /* 계약금액 — ⚠️ 서버 규칙 그대로 먼저 알려 줍니다 (bigint · 0 이상 ·
+     deal_amount_sign). 막는 것은 DB 이고 여기는 왕복을 아끼는 것까지입니다.
+     소수 · 음수 · 숫자 아닌 값을 보내면 DB 형변환 오류 글이 그대로 뜹니다. */
+  if(need.indexOf("amount") >= 0 && ctx.amount !== undefined &&
+     !(Number.isInteger(ctx.amount) && ctx.amount >= 0)){
+    toast("계약금액은 0 이상의 원 단위 정수로 적어 주세요"); return;
+  }
+
   var pre = window.amDealMove && window.amDealMove(row && row.state, to,
     Object.assign({ role: RQ.role, by: "me" }, ctx));
   if(pre && !pre.ok){ toast(pre.why); return; }

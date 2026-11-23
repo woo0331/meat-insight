@@ -32,7 +32,7 @@ window.myLoadDb = function(){
     .catch(function(e){ console.warn("[my] 신청 내역을 못 불러왔습니다 — " + e); });
 };
 
-var MYQ = { d:null, open:"", draft:{}, busy:false };
+var MYQ = { d:null, open:"", draft:{}, busy:false, act:null, actMsg:null };
 
 function myDbPaint(d){
   var box = document.getElementById("my-db");
@@ -423,6 +423,7 @@ function MyPvList(L, d){
         : "")+
       (r.body ? '<p class="myq-b">'+esc(String(r.body).slice(0, 160))+'</p>' : "")+
 
+      MyActRow(r, "provider")+
       (d ? MyQuoteMine(d, r) : "")+
     '</li>'; }).join("")+'</ul>';
 }
@@ -571,8 +572,89 @@ function MyReqList(L, d){
       (pv ? '<p class="myq-pv">'+icon("users",15)+esc(pv)+'</p>' : "")+
 
       (d ? MyQuoteCompare(d, r) : "")+
+      MyActRow(r, "customer")+
     '</li>'; }).join("")+'</ul>';
 }
+
+var MY_ACT = {
+  accept:  { fn:"answer_assignment", to:"accepted", role:"provider",
+             label:"배정 수락", busy:"수락하는 중…",
+             ok:"배정을 수락했습니다",
+             args:function(rid){ return { p_request:rid, p_yes:true }; } },
+  consult: { fn:"move_state", to:"consult", role:"provider",
+             label:"상담 시작", busy:"시작하는 중…",
+             ok:"상담을 시작했습니다. 이제 견적을 내실 수 있습니다",
+             args:function(rid){ return { p_request:rid, p_to:"consult", p_ctx:{} }; } },
+  cancel:  { fn:"move_state", to:"lost", role:"customer",
+             label:"신청 취소", busy:"취소하는 중…",
+             ok:"신청을 취소했습니다",
+             ask:"이 신청을 취소하시겠습니까?\n취소하시면 업체 연결과 견적 진행이 멈추고, 되돌릴 수 없습니다.",
+
+             args:function(rid){ return { p_request:rid, p_to:"lost",
+                                          p_ctx:{ why:"고객이 /my 에서 직접 취소" } }; } }
+};
+
+function myActKinds(r, role){
+  var moves = (typeof amDealMoves === "function") ? amDealMoves(r.state, role) : [];
+  var to = moves.map(function(m){ return m[1]; });
+  return Object.keys(MY_ACT).filter(function(k){
+    return MY_ACT[k].role === role && to.indexOf(MY_ACT[k].to) >= 0;
+  });
+}
+
+function MyActRow(r, role){
+  var ks = myActKinds(r, role);
+  var msg = MYQ.actMsg && MYQ.actMsg.id === r.id ? MYQ.actMsg : null;
+  if(!ks.length && !msg) return "";
+  var any = !!MYQ.act || MYQ.busy;
+  var btns = ks.map(function(k){
+    var a = MY_ACT[k];
+    var mine = MYQ.act && MYQ.act.id === r.id && MYQ.act.kind === k;
+
+    return '<button class="btn '+(k === "cancel" ? "btn-o my-act-x" : "btn-b")+'" type="button"'+
+      ' data-act="'+esc(k)+'" onclick="myAct(\''+esc(r.id)+'\',\''+esc(k)+'\')"'+
+      (any ? ' disabled' : '')+(mine ? ' aria-busy="true"' : '')+'>'+
+      esc(mine ? a.busy : a.label)+'</button>';
+  }).join("");
+  return '<div class="my-act">'+
+    (btns ? '<div class="row-cta">'+btns+'</div>' : '')+
+    '<p class="my-in-n'+(msg ? (msg.ok ? " ok" : " bad") : "")+'" role="status">'+
+      (msg ? esc(msg.text) : "")+'</p>'+
+  '</div>';
+}
+
+window.myAct = function(rid, kind){
+  var a = MY_ACT[kind];
+  if(!a || MYQ.act || MYQ.busy) return;
+
+  if(a.ask && typeof confirm === "function" && !confirm(a.ask)) return;
+  MYQ.act = { id:rid, kind:kind }; MYQ.actMsg = null; myDbPaint();
+  fetch("/api/deal", {
+    method:"POST",
+    headers: Object.assign({ "content-type":"application/json",
+      accept:"application/json" },
+      (typeof amAuthHeaders === "function") ? amAuthHeaders() : {}),
+    body: JSON.stringify({ fn:a.fn, args:a.args(rid) })
+  }).then(function(r){
+    return r.json().catch(function(){ return {}; })
+      .then(function(j){ return { ok:r.ok, j:j }; });
+  }).then(function(x){
+    MYQ.act = null;
+    if(!x.ok){
+
+      MYQ.actMsg = { id:rid, ok:false, text:(x.j && x.j.error) || "처리하지 못했습니다. 상태는 그대로입니다" };
+      myDbPaint(); return;
+    }
+    MYQ.actMsg = { id:rid, ok:true, text:a.ok };
+    toast(a.ok);
+    window.myLoadDb();
+  }).catch(function(e){
+    MYQ.act = null;
+    try{ console.warn("[my] " + a.fn + " — " + e); }catch(_){}
+    MYQ.actMsg = { id:rid, ok:false, text:"연결이 끊겼습니다. 상태는 그대로입니다 — 잠시 뒤 다시 눌러 주세요" };
+    myDbPaint();
+  });
+};
 
 function myqOf(d, rid){
   return (d.quotes || []).filter(function(q){ return q.request_id === rid; });

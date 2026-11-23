@@ -810,6 +810,11 @@ window.amSend = function(failId, body, again, done){
   var opt = { method:"POST", headers:{ "content-type":"application/json" },
               body: JSON.stringify(body) };
   if(ctl) opt.signal = ctl.signal;
+  /* 2026-11-23 로컬 실제 브라우저 검수 — 로그인한 채로 보내도 토큰을 안 실어서, 서버가 그 신청을
+     계정에 잇지 못했습니다(user_id 비어 있음) → 고객 /my 에 안 보이고 · 견적을 못 고르고 · 취소를 못 했습니다.
+     로그인했을 때만 붙입니다 (안 했으면 전과 같음). 토큰 꼴은 amAuthToken() 이 거릅니다. */
+  var tk = (typeof amAuthToken === "function") ? amAuthToken() : "";
+  if(tk) opt.headers.authorization = "Bearer " + tk;
 
   fetch("/api/quote", opt)
     .then(function(r){ clearTimeout(late);

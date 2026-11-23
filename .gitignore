@@ -13,3 +13,7 @@ img/raw/
 node_modules/
 package-lock.json
 .DS_Store
+
+# 로컬 시험 스택 · 배포 출력 (만들어지는 것 — 저장소에 넣지 않습니다)
+restore-public/
+out/

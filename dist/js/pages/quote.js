@@ -563,6 +563,9 @@ window.amSend = function(failId, body, again, done){
               body: JSON.stringify(body) };
   if(ctl) opt.signal = ctl.signal;
 
+  var tk = (typeof amAuthToken === "function") ? amAuthToken() : "";
+  if(tk) opt.headers.authorization = "Bearer " + tk;
+
   fetch("/api/quote", opt)
     .then(function(r){ clearTimeout(late);
       return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })

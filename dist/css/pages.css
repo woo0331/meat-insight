@@ -6480,3 +6480,24 @@ html.ivh #view .wp-find input:focus-visible, html.ivh #view .wp-find .wp-t:focus
 }
 
 @media (min-width:901px){ #view .pgh.hh{ padding:36px 0 40px; } }
+
+.hfl-job{ margin:20px 0 0; padding:16px 18px; border:1px solid var(--line); border-radius:14px; background:#FBF7F1; }
+.hfl-job > b{ display:block; font-size:15px; font-weight:800; color:var(--ink); margin-bottom:10px; }
+.hfl-job ol{ list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:8px 18px; }
+.hfl-job li{ display:inline-flex; align-items:center; gap:8px; font-size:15px; font-weight:700; color:var(--ink); }
+.hfl-job li > span{ width:26px; height:26px; border-radius:50%; display:grid; place-items:center; background:#6F5039; color:#fff; font-size:13px; font-weight:800; }
+.hfl-job > small{ display:block; margin-top:10px; font-size:14px; line-height:1.55; color:var(--ink2); }
+.kx-more{ margin-top:20px; }
+.kx-more .is-fold-all{ margin-top:12px; }
+
+@media (max-width:600px){
+  .hfl-g{ gap:10px; row-gap:14px; }
+  .hfl-g a{ gap:4px; padding-top:22px; padding-bottom:14px; }
+  .hfl-g .hfl-i{ display:none; }
+  .hfl-links{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px; }
+  .hfl-links .btn{ width:100%; padding:0 10px; font-size:14px; min-height:48px; }
+  .kx-sup-g{ gap:10px; }
+  .kx-sup-c > small{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+}
+
+#cl-cost, #cl-sup, #cl-flow, #st-road-sec, #ops-check, #op-diag, #op-svc, #aq-pro{ scroll-margin-top:calc(var(--hdr-h, 64px) + 8px); }

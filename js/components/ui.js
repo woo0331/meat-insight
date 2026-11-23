@@ -962,7 +962,7 @@ window.KxProcess = function(o){
   o = o || {};
   var S = o.steps || []; if(!S.length) return "";
   var ph = kxPh(o.photo);
-  return '<section class="sec '+esc(o.tone || "sec-ivory")+' kx kx-pro'+(ph ? ' kx-on' : '')+'"><div class="w kx-split">'+
+  return '<section class="sec '+esc(o.tone || "sec-ivory")+' kx kx-pro'+(ph ? ' kx-on' : '')+(o.cls ? ' '+esc(o.cls) : '')+'"'+(o.id ? ' id="'+esc(o.id)+'"' : '')+'><div class="w kx-split">'+
     (ph ? '<div class="kx-fig" aria-hidden="true">'+ph+'</div>' : '')+
     '<div class="kx-body">'+kxHd(o)+
       '<ol class="kx-pro-l">'+S.map(function(s, i){
@@ -970,6 +970,7 @@ window.KxProcess = function(o){
           '<span class="kx-pro-tx"><b>'+esc(s[0])+'</b>'+(s[1] ? '<small>'+esc(s[1])+'</small>' : '')+'</span></li>';
       }).join("")+'</ol>'+
       (o.foot ? '<p class="kx-note">'+esc(o.foot)+'</p>' : '')+
+      (o.more || '')+   /* 2026-11-23 — 자세한 순서(접힘) · 관련 링크를 대표 절차 한 곳에 붙입니다 */
     '</div></div></section>';
 };
 /* ③ 예상 비용 · 진단 — 실제 계산도구로 보냅니다. ⚠️⚠️ **금액을 적지 않습니다** (시안의 예시 금액 금지) —

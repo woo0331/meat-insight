@@ -917,3 +917,105 @@ window.HallSteps = function(o){
     '</div>'+
   '</div></section>';
 };
+
+/* ══ 2026-11-23 4개 카테고리 시안 — 본문 공통 조각 (Kx*) ═════════════════════
+   시안 01~04 의 본문은 넷 다 같은 뼈대입니다 — ① 핵심 서비스 카드 ② 진행 과정(사진 옆)
+   ③ 예상 비용 계산(사진 옆) ④ 사진 CTA. 전문관마다 베껴 쓰지 않고 여기 한 벌을 씁니다.
+   ⚠️⚠️ 새 구간을 **더한 것**입니다 — 고르개 · 바구니 · 체크리스트 · 가이드 · 매물 · 계산도구는
+      그대로 있습니다 (기존 기능 보존 · 검사가 그 구간들을 봅니다).
+   ⚠️⚠️ 사진은 권리가 확인된 것만 (photos.js 의 insu-* · home-* · svc-*). 없으면 **액자째 안 그리고**
+      글이 주인공인 짜임새로 섭니다 (절대 규칙 2 — 빈 액자 · "준비 중" 을 깔지 않습니다).
+   ⚠️ 클래스는 kx-* 입니다 (.how-* · .hiw-* · .pkg-* 처럼 다른 화면과 겹치지 않게). */
+function kxPh(key, sz){
+  return (key && typeof hasPhoto === "function" && hasPhoto(key))
+    ? photoBox(key, "", false, sz || "(max-width:900px) 92vw, 46vw") : "";
+}
+function kxHd(o){
+  return '<div class="kx-hd">'+
+    (o.kicker ? '<p class="kx-k">'+esc(o.kicker)+'</p>' : '')+
+    '<h2 class="kx-h">'+esc(o.title || "")+'</h2>'+
+    (o.lead ? '<p class="kx-lead">'+esc(o.lead)+'</p>' : '')+
+  '</div>';
+}
+/* ① 핵심 서비스 — 큰 카드. 사진이 있으면 사진, 없으면 **큰** 컬러 아이콘(64px) 판.
+   ⚠️ 카드 전체가 하나의 a 입니다 — 안에 또 a 를 넣지 마세요.
+   ⚠️ 이름 · 주소는 부르는 쪽이 catalog.js 에서 가져옵니다 (손으로 적지 않습니다). */
+window.KxServices = function(o){
+  o = o || {};
+  var L = (o.items || []).filter(function(x){ return x && x.href; });
+  if(!L.length) return "";
+  return '<section class="sec '+esc(o.tone || "sec-white")+' kx kx-svc"'+(o.id ? ' id="'+esc(o.id)+'"' : '')+'><div class="w">'+
+    kxHd(o)+
+    '<ul class="kx-svc-g">'+L.map(function(x){
+      var ph = kxPh(x.ph, "(max-width:600px) 46vw, (max-width:1100px) 30vw, 300px");
+      var art = (typeof hasIconArt === "function" && hasIconArt(x.ia)) ? iconArt(x.ia, 64) : icon(x.ic || "grid", 40);
+      return '<li><a class="kx-svc-c'+(ph ? ' kx-on' : '')+'" href="'+esc(x.href)+'">'+
+        '<span class="kx-svc-ph" aria-hidden="true">'+(ph || '<span class="kx-svc-art">'+art+'</span>')+'</span>'+
+        '<span class="kx-svc-tx"><b>'+esc(x.n)+'</b>'+(x.d ? '<small>'+esc(x.d)+'</small>' : '')+
+        '<i>자세히 보기'+icon("chev",14)+'</i></span></a></li>';
+    }).join("")+'</ul>'+
+    (o.note ? '<p class="kx-note">'+esc(o.note)+'</p>' : '')+
+  '</div></section>';
+};
+/* ② 진행 과정 — 사진 한 장 옆에 번호 걸음. ⚠️ 걸음은 **지킬 수 있는 일**만 (기간 · 보장을 적지 않습니다). */
+window.KxProcess = function(o){
+  o = o || {};
+  var S = o.steps || []; if(!S.length) return "";
+  var ph = kxPh(o.photo);
+  return '<section class="sec '+esc(o.tone || "sec-ivory")+' kx kx-pro'+(ph ? ' kx-on' : '')+'"><div class="w kx-split">'+
+    (ph ? '<div class="kx-fig" aria-hidden="true">'+ph+'</div>' : '')+
+    '<div class="kx-body">'+kxHd(o)+
+      '<ol class="kx-pro-l">'+S.map(function(s, i){
+        return '<li><span class="kx-n" aria-hidden="true">'+String(i+1).padStart(2,"0")+'</span>'+
+          '<span class="kx-pro-tx"><b>'+esc(s[0])+'</b>'+(s[1] ? '<small>'+esc(s[1])+'</small>' : '')+'</span></li>';
+      }).join("")+'</ol>'+
+      (o.foot ? '<p class="kx-note">'+esc(o.foot)+'</p>' : '')+
+    '</div></div></section>';
+};
+/* ③ 예상 비용 · 진단 — 실제 계산도구로 보냅니다. ⚠️⚠️ **금액을 적지 않습니다** (시안의 예시 금액 금지) —
+   무엇을 따져 보는지와 '참고값 · 실제 견적과 다름' 을 적고, 숫자는 도구가 그 자리에서 냅니다. */
+window.KxCalc = function(o){
+  o = o || {};
+  var ph = kxPh(o.photo);
+  var B = (o.btns || []).filter(function(b){ return b && b.href; });
+  return '<section class="sec '+esc(o.tone || "sec-white")+' kx kx-calc'+(ph ? ' kx-on' : '')+'"'+(o.id ? ' id="'+esc(o.id)+'"' : '')+'><div class="w kx-split kx-rev">'+
+    '<div class="kx-body">'+kxHd(o)+
+      (o.list && o.list.length ? '<ul class="kx-ck">'+o.list.map(function(t){
+        return '<li><span aria-hidden="true">'+icon("check",18)+'</span><span>'+esc(t)+'</span></li>'; }).join("")+'</ul>' : '')+
+      (B.length ? '<div class="row-cta kx-go">'+B.map(function(b, i){
+        var jump = b.href.charAt(0) === "#" ? ' onclick="return hhJump(\''+esc(b.href.slice(1))+'\')"' : "";
+        return '<a class="btn btn-lg '+(i ? 'btn-o' : 'btn-b')+'" href="'+esc(b.href)+'"'+jump+'>'+(b.ic ? icon(b.ic,18)+' ' : '')+esc(b.t)+'</a>'; }).join("")+'</div>' : '')+
+      (o.note ? '<p class="kx-note kx-warn">'+icon("info",16)+'<span>'+esc(o.note)+'</span></p>' : '')+
+    '</div>'+
+    (ph ? '<div class="kx-fig" aria-hidden="true">'+ph+'</div>' : '')+
+  '</div></section>';
+};
+/* ④ 사진 CTA — 주 단추는 **접수 상태를 따릅니다** (HallHero 와 같은 data-cta 짝).
+   닫혀 있으면 '접수 안내 보기', 열리면 상담 신청. ⚠️ 시안의 전화번호(1661-XXXX)는 없는 번호라 넣지 않습니다. */
+window.KxCta = function(o){
+  o = o || {};
+  var ph = kxPh(o.photo, "(max-width:900px) 92vw, 40vw");
+  return '<section class="sec '+esc(o.tone || "sec-ivory")+' kx kx-cta"><div class="w">'+
+    '<div class="kx-cta-c'+(ph ? ' kx-on' : '')+'">'+
+      '<div class="kx-cta-tx">'+
+        (o.kicker ? '<p class="kx-k">'+esc(o.kicker)+'</p>' : '')+
+        '<h2 class="kx-h">'+esc(o.title || "")+'</h2>'+
+        (o.lead ? '<p class="kx-lead">'+esc(o.lead)+'</p>' : '')+
+        '<div class="row-cta kx-go">'+
+          '<a class="btn btn-lg btn-b" href="/intake" data-cta="off"'+ctaF(o)+'>접수 안내 보기'+icon("arrow",18)+'</a>'+
+          '<a class="btn btn-lg btn-b" href="'+esc(o.quote || "/quote")+'" data-cta="on"'+ctaF(o)+' hidden>'+esc(o.goName || "무료 상담 신청하기")+icon("arrow",18)+'</a>'+
+          (o.second ? '<a class="btn btn-lg btn-o" href="'+esc(o.second.href)+'">'+esc(o.second.t)+'</a>' : '')+
+        '</div>'+
+      '</div>'+
+      (ph ? '<div class="kx-cta-ph" aria-hidden="true">'+ph+'</div>' : '')+
+    '</div></div></section>';
+};
+/* 카드 한 장 — 분류(+하위) key 로 주소를 만듭니다. ⚠️ 없는 key 면 null (카드가 조용히 빠지고 가짜 링크를 안 만듭니다) */
+window.kxSvc = function(cat, sub, n, d, ia, ph){
+  var c = (window.AM_CATS || []).filter(function(x){ return x.key === cat; })[0];
+  if(!c) return null;
+  if(sub && !(c.items || []).some(function(i){ return i.key === sub; })) return null;
+  var base = catTo(c);
+  var href = sub ? base + (base.indexOf("?") >= 0 ? "&" : "?") + "s=" + encodeURIComponent(sub) : base;
+  return { n:n || c.name, d:d || "", href:href, ia:ia || cat, ph:ph || "" };
+};

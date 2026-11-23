@@ -383,6 +383,45 @@ function OpsvcForInd(ind){
    `/startup` · `/closure` 첫 화면이 그대로 들고 있습니다.
    ════════════════════════════════════════════════════════════════════ */
 
+/* ── 2026-11-23 시안 02_operations — 본문 (KxServices · KxCalc · KxCta) ─────────────
+   ⚠️⚠️ 시안의 '매출 18% 증가' 같은 사례 · 절감 숫자는 **넣지 않습니다** — 재 본 값이 없습니다 (절대 규칙 1).
+   그 자리는 '무엇을 점검하는가' 안내와 실제 계산도구 · 운영 점검표로 갑니다. */
+function OpsKxServices(ind){
+  var q = ind ? "i=" + encodeURIComponent(ind.key || ind) : "";
+  var L = [
+    kxSvc("supply", "", "식자재 · 납품", "원재료 · 포장재 · 소모품 거래처", "supply"),
+    kxSvc("staff", "", "인력 · 노무", "채용 · 아르바이트 · 노무 상담", "staff"),
+    kxSvc("it", "pos", "POS · 결제", "POS · 키오스크 · 결제 단말", "pos", "svc-it"),
+    kxSvc("marketing", "", "온라인 마케팅", "플레이스 · 리뷰 · SNS 운영", "marketing"),
+    kxSvc("clean", "", "청소 · 방역", "정기 청소 · 해충 방역 · 주방 청소", "clean", "svc-clean"),
+    kxSvc("repair", "", "시설 · 수리", "냉장 · 냉난방 · 전기 고장과 점검", "repair"),
+    kxSvc("admin", "tax-agent", "세무 · 기장", "장부 · 부가세 · 종합소득세 신고", "tax"),
+    kxSvc("admin", "insurance", "보험 · 안전", "화재 · 배상책임 보험 · 법정 점검", "shield")
+  ].filter(Boolean);
+  if(q) L.forEach(function(x){ x.href += (x.href.indexOf("?") >= 0 ? "&" : "?") + q; });
+  return KxServices({ id:"op-svc", tone:"sec-white", kicker:"매장 운영 핵심 서비스",
+    title:"운영 중 생기는 일, 맡길 곳을 찾으세요",
+    lead:"분야를 누르면 그 일을 하는 업체 · 정보로 바로 갑니다.", items:L });
+}
+function OpsKxDiag(){
+  return KxCalc({ id:"op-diag", tone:"sec-ivory", photo:"home-ops", kicker:"운영 진단",
+    title:"우리 매장, 어디서 새고 있을까요?",
+    lead:"숫자 몇 개만 적으면 고정비 · 인건비 · 원가 비율을 그 자리에서 계산합니다. 적으신 값은 저장하지 않습니다.",
+    list:["월 고정비 — 임대료 · 관리비 · 구독료가 매출에서 차지하는 몫",
+          "인건비율 — 직원 · 아르바이트 비용이 적정한지",
+          "원가율 · 마진 — 메뉴 · 상품 하나에서 남는 돈",
+          "손익분기 — 한 달에 얼마를 팔아야 본전인지"],
+    btns:[{ href:"/tools/fixed", t:"월 고정비 계산하기", ic:"calc" }, { href:"#ops-check", t:"운영 점검표 보기" }],
+    note:"계산 결과는 적으신 값으로 낸 참고값입니다. 절감 효과나 매출 변화를 약속하지 않습니다." });
+}
+function OpsKxCta(ind){
+  return KxCta({ tone:"sec-ivory", kicker:"운영 상담",
+    title:"운영 고민, 맞는 업체를 찾아 드립니다",
+    lead:"필요한 서비스를 고르거나 상황만 적어 주시면 그 일을 하는 업체를 연결해 드립니다.",
+    quote:quoteTo({ side:"ops", industry:(ind && ind.key) || "" }), goName:"운영 상담 신청하기",
+    second:{ href:"/providers", t:"업체 둘러보기" } });
+}
+
 /* ── A. 소개 (§3) ─────────────────────────────────────────────────
    ⚠️ 단추 둘 다 **실제로 갑니다** — 하나는 바로 아래 고르개로,
    하나는 신청 화면으로. §3 이 적은 글자 그대로입니다.
@@ -676,13 +715,13 @@ function PageOperation(){
      ⚠️⚠️ ③ 이 **신청 단추를 들고 있는 유일한 자리**입니다 — §1 이
      적은 "신청 버튼 위치가 명확하지 않다" 가 그 자리를 셋으로 두었던
      까닭입니다 (둘은 조건을 안 들고 가는 `quoteTo({})` 였습니다). */
-  return OpsIntro(ind) +
+  return OpsIntro(ind) + OpsKxServices(ind) + OpsKxDiag() +
     PickGroupBand("operation", "ops") +
     PickBasket("ops") +
     OpsCheckBand() +
     OpsGuideBand() +
     OpsCalcBand() +
-    HallSteps({ quote:quoteTo({ side:"ops" }) }) +
+    HallSteps({ quote:quoteTo({ side:"ops" }) }) + OpsKxCta(ind) +
     JourneyBand({ current:"operation", tone:"sec-white",
       title:"다른 것도 준비하고 계신가요?",
       lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." }) +
@@ -969,6 +1008,34 @@ function AcqMarket(t, ind, iq){
   '</div></section>';
 }
 
+/* ── 2026-11-23 시안 03_transfer — 본문 (KxServices · KxCta) ───────────────────────
+   ⚠️⚠️ 매물은 위 AcqMarket 이 **실제 데이터**(AM_STORES · AM_ASSETS)로 셉니다 — 시안의 매물 사진 · 지역 ·
+   가격 · 매출을 옮기지 않았습니다. 여기는 '계약 · 세무 · 법률 전문가 연결' 과 마지막 CTA 둘입니다. */
+function AcqKxPros(ind){
+  var q = ind ? "i=" + encodeURIComponent(ind.key) : "";
+  var L = [
+    kxSvc("law", "lease", "임대차 · 계약 법률", "임대차 승계 · 양도 계약서 검토", "law"),
+    kxSvc("admin", "tax-agent", "양도 세무", "권리금 · 시설 대금의 세금 정리", "tax"),
+    kxSvc("labor", "consult", "직원 · 노무 승계", "넘기거나 받을 때 직원 문제 상담", "staff"),
+    kxSvc("contract", "", "계약 · 명의 정리", "인터넷 · POS · 렌탈 명의 이전 · 해지", "contract")
+  ].filter(Boolean);
+  if(q) L.forEach(function(x){ x.href += (x.href.indexOf("?") >= 0 ? "&" : "?") + q; });
+  return KxServices({ id:"aq-pro", tone:"sec-white", kicker:"전문가 연결",
+    title:"계약 · 세무 · 법률, 혼자 하지 마세요",
+    lead:"권리금 · 임대차 승계 · 세금은 거래가 끝난 뒤에 문제가 됩니다. 그 일을 하는 전문가를 찾아 드립니다.",
+    items:L,
+    note:"전문가는 거래 당사자가 아닙니다. 저희도 거래의 당사자가 아니라 연결해 드리는 자리입니다." });
+}
+function AcqKxCta(t){
+  return KxCta({ tone:"sec-ivory", photo:"home-transfer", kicker:t === "out" ? "매장 양도" : "매장 인수",
+    title:t === "out" ? "내 매장, 다음 사장님께 넘기세요" : "좋은 매장, 조건부터 확인하세요",
+    lead:t === "out"
+      ? "평수 · 보증금 · 월세 · 권리금을 적어 주시면 확인한 뒤 매물로 올려 드립니다."
+      : "권리금 · 임대 조건 · 시설 상태를 따져 보고, 계약 전 필요한 전문가를 연결해 드립니다.",
+    quote:quoteTo({ side:"transfer", cat:"transfer" }), goName:"양도양수 상담 신청하기",
+    second:t === "out" ? { href:"/sell", t:"매물 등록하기" } : { href:"/stores", t:"매물 보러 가기" } });
+}
+
 function PageAcquisition(){
   var t    = (nowQS("t") === "out") ? "out" : "in";
   var ind  = (typeof amIndustry === "function") ? amIndustry(nowQS("i")) : null;
@@ -993,13 +1060,13 @@ function PageAcquisition(){
   return AcqIntro(ind, iq, nowQS("t")) +
     AcqWhich(t, ind, iq) +
     (t === "in" ? AcqSearch(ind) + mkt + sel : AcqPrep(ind) + sel + mkt) +
-    AcqProcess(t, ind) +
+    AcqProcess(t, ind) + AcqKxPros(ind) +
     ReadBand({ cat:"transfer", side:"both", limit:3,
                title:"인수 · 양도에서 자주 막히는 것" }) +
     HallCalcBand({ keys:AQ_CALC, tones:AQ_CALC_TONE,
       title:"받기 전 · 넘기기 전에 숫자부터 보세요",
       lead:"권리금이 몇 달이면 돌아오는지, 새로 만드는 것과 받는 것이 얼마나 다른지 따져 보실 수 있습니다. 적으신 값은 저장하지 않습니다." }) +
-    HallSteps({ quote:quoteTo({ side:"transfer", cat:"transfer" }) }) +
+    HallSteps({ quote:quoteTo({ side:"transfer", cat:"transfer" }) }) + AcqKxCta(t) +
     JourneyBand({ current:"acquisition", tone:"sec-white",
       title:"다른 것도 준비하고 계신가요?",
       lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." }) +

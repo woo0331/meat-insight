@@ -58,17 +58,55 @@ function PageStartup(){
      없어서 **운영 · 양도양수 · 폐업으로 가려면 헤더로 돌아가야**
      했습니다. 둘 다 이미 있던 공통 조각입니다 — 새로 만든 것이
      아닙니다. */
-  return StartIntro(ind) + StartPickBand(top, rest, ind) + PickBasket() +
+  return StartIntro(ind) + StartKxServices(ind) + StartKxProcess() + StartSignature(ind) + StartPickBand(top, rest, ind) + PickBasket() +
     /* StartIndustryBand() — 2026-11-19 위 "업종별 창업 준비 과정" 의 전체 보기로 합쳤습니다 */
     PackPickBand("start") + StartChecklist(ind) +
     StartGuideBand(ind) +
     /* 2026-11-20 — 아래쪽 계산도구 구간(HallCalcBand)은 위 '창업 비용 계산기' 와 같은 소개의 반복이라
        내렸습니다. 그 구간에만 있던 신규vs인수 · 권리금 · 임대료 비율은 계산기 아래 '다른 계산도구' 줄로 옮겼습니다. */
-    StartApplyBand() +
+    StartApplyBand() + StartKxCta(ind) +
     JourneyBand({ current:"startup", tone:"sec-white",
       title:"다른 것도 준비하고 계신가요?",
       lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." }) +
     PickBar();
+}
+
+/* ── 2026-11-23 시안 01_startup — 본문 (KxServices · KxProcess · KxCta) ─────────────
+   ⚠️ 여덟은 시안의 '창업 핵심 서비스' 차례이고 주소는 전부 catalog.js 의 실제 분류 · 하위입니다.
+   ⚠️ 사진은 권리 확인된 svc-* 둘(인테리어 · 장비)만 — 나머지는 큰 컬러 아이콘 판입니다. */
+function StartKxServices(ind){
+  var q = ind ? "&i=" + encodeURIComponent(ind) : "";
+  var L = [
+    kxSvc("area", "", "상권 · 입지 분석", "유동 인구 · 경쟁 점포 · 상권 자료를 확인합니다", "mappin"),
+    kxSvc("interior", "", "인테리어 · 설계", "설계부터 시공 · 전기 · 간판까지", "interior", "svc-interior"),
+    kxSvc("equip", "", "주방 · 설비", "업종에 맞는 장비와 설치", "equip", "svc-equip"),
+    kxSvc("admin", "permit", "인허가 · 행정", "영업 신고 · 허가 · 위생 교육", "permit"),
+    kxSvc("it", "pos", "POS · 결제", "POS · 키오스크 · 카드 단말기", "pos"),
+    kxSvc("supply", "", "식자재 · 납품", "원재료 · 포장재 · 소모품 거래처", "supply"),
+    kxSvc("admin", "tax-agent", "세무 · 회계", "사업자 등록 뒤 장부와 신고", "tax"),
+    kxSvc("fund", "", "창업 자금 · 지원", "정책자금 · 보증 · 지원사업 찾는 곳", "wallet")
+  ].filter(Boolean);
+  if(q) L.forEach(function(x){ if(x.href.indexOf("/providers/") === 0) x.href += (x.href.indexOf("?") >= 0 ? q : "?" + q.slice(1)); });
+  return KxServices({ id:"st-svc", tone:"sec-white", kicker:"창업 핵심 서비스",
+    title:"창업에 필요한 서비스를 한곳에서",
+    lead:"분야를 누르면 그 일을 하는 업체 · 준비 정보로 바로 갑니다.", items:L });
+}
+function StartKxProcess(){
+  return KxProcess({ tone:"sec-ivory", photo:"home-startup", kicker:"창업 진행 과정",
+    title:"상담부터 오픈까지, 이렇게 진행됩니다",
+    steps:[["상담", "업종 · 지역 · 예산을 알려 주시면 필요한 일을 함께 정리합니다"],
+           ["입지 선정", "상권 · 임대 조건을 확인하고 자리를 고릅니다"],
+           ["자금 · 설계", "예산을 나누고 인테리어 · 설비 계획을 세웁니다"],
+           ["시공 · 준비", "공사 · 장비 · 인허가 · 직원 준비를 진행합니다"],
+           ["오픈", "POS · 식자재 · 홍보를 맞추고 문을 엽니다"]],
+    foot:"걸음마다 걸리는 기간과 비용은 업종 · 지역 · 규모에 따라 다릅니다." });
+}
+function StartKxCta(ind){
+  return KxCta({ tone:"sec-ivory", photo:"hero-start", kicker:"무료 상담",
+    title:"창업 준비, 혼자 고민하지 마세요",
+    lead:"필요한 서비스를 고르거나 상황만 적어 주시면 맞는 업체를 찾아 드립니다.",
+    quote:quoteTo({ side:"start", industry:ind || "" }), goName:"무료 상담 신청하기",
+    second:{ href:"/tools/cost" + (ind ? "?i=" + encodeURIComponent(ind) : ""), t:"창업 비용 계산하기" } });
 }
 
 /* ── A. 창업 준비 소개 (§2-A) ─────────────────────────────────────
@@ -110,7 +148,7 @@ function StartIntro(ind){
            { ic:"seed", b:"업종별 준비 보기", d:"업종마다 준비 순서 · 필요한 장비가 다릅니다",
              go:(indN ? indN + " 준비 순서 보기" : "업종 고르고 순서 보기"),
              href:(indOk ? "/startup/" + encodeURIComponent(ind) : "#st-ig") }]
-  }) + StartSignature(ind);
+  }); /* 2026-11-23 — 계산기 · 업종 진입(StartSignature)은 시안 차례대로 진행 과정 뒤로 옮겼습니다 (PageStartup) */
 }
 
 /* 창업 — 시안의 "창업 비용 계산기" + "업종별 창업 준비 과정".
@@ -620,6 +658,60 @@ function FranchiseHint(fcat, ind){
 }
 
 /* ── /closure — 정리 방법 고르기 (§21) ──────────────────────────── */
+/* ── 2026-11-23 시안 04_closure — 본문 (KxServices · KxProcess · KxCalc · 지원사업 찾는 곳) ─────
+   ⚠️⚠️ 예상 비용은 /tools/closecost 가 **적으신 값으로** 냅니다 — 시안의 금액(54,800,000원)을 넣지 않습니다.
+   ⚠️⚠️ 지원사업은 **공고(AM_SUPPORTS)가 0건이면 0건이라고** 말하고 '찾는 곳'(기관)만 냅니다 —
+   모집 상태를 지어내지 않고, 지급을 약속하지 않습니다. */
+function CloseKxServices(){
+  var L = [
+    kxSvc("demolish", "", "철거 · 원상복구", "부분 · 전체 철거와 임대 전 상태로 되돌리기", "demolish", "insu-closure"),
+    kxSvc("asset", "", "중고 집기 매각", "주방기기 · 집기 · POS 를 따로 팔거나 일괄로", "sofa"),
+    kxSvc("tax", "", "폐업 세무", "폐업 신고 · 부가세 · 종합소득세 정리", "tax"),
+    { n:"매장 양도", d:"권리금을 받고 다음 사장님께 넘기기", href:"/transfer?t=out", ia:"handover", ph:"" }
+  ].filter(Boolean);
+  return KxServices({ id:"cl-svc", tone:"sec-white", kicker:"폐업 · 철거 서비스",
+    title:"정리에 필요한 서비스를 한 번에",
+    lead:"양도 · 매각이 되면 철거비도 원상복구비도 줄어듭니다. 넘길 수 있는 것부터 보세요.", items:L });
+}
+function CloseKxProcess(){
+  return KxProcess({ tone:"sec-ivory", photo:"insu-closure-in", kicker:"진행 절차",
+    title:"상담부터 완료까지, 이렇게 진행됩니다",
+    steps:[["상담 접수", "매장 위치 · 평수 · 정리하실 범위를 알려 주세요"],
+           ["현장 확인 · 견적", "업체가 현장을 보고 범위와 견적을 냅니다"],
+           ["작업 진행", "철거 · 원상복구 · 집기 반출을 정한 범위대로 진행합니다"],
+           ["완료", "임대인 확인 · 폐기물 처리까지 마무리합니다"]],
+    foot:"기간과 비용은 평수 · 공사 범위 · 건물 조건에 따라 다릅니다." });
+}
+function CloseKxCalc(){
+  return KxCalc({ id:"cl-cost", tone:"sec-white", photo:"home-closure", kicker:"예상 비용",
+    title:"정리 비용, 미리 따져 보세요",
+    lead:"철거 · 원상복구 · 폐기물 · 남은 계약 위약금 같은 항목에 받으신 견적을 적으면 합계와 차액을 보여 드립니다. 적으신 값은 저장하지 않습니다.",
+    list:["철거 · 원상복구 — 어디까지 되돌려야 하는지(임대차 계약서)",
+          "집기 매각 — 팔아서 들어올 돈과 버리는 비용",
+          "계약 해지 — 인터넷 · POS · 렌탈의 남은 약정",
+          "세금 — 폐업 신고와 부가세 확정신고"],
+    btns:[{ href:"/tools/closecost", t:"폐업 예상비용 계산하기", ic:"calc" }, { href:"/tools/close", t:"폐업 체크리스트" }],
+    note:"계산 결과는 적으신 값으로 낸 참고값이며 실제 견적과 다릅니다. 실제 금액은 현장을 본 업체의 견적으로 정해집니다." });
+}
+function CloseKxSupport(){
+  var N = (typeof amSupports === "function") ? amSupports("close").length : 0;
+  var W = (typeof amSupportWhere === "function") ? amSupportWhere("close") : [];
+  if(!W.length) return "";
+  return '<section class="sec sec-ivory kx kx-sup"><div class="w">'+
+    kxHd({ kicker:"정부지원사업", title:"정리할 때 받을 수 있는 지원, 여기서 찾으세요",
+      lead:(N ? "지금 원문을 확인한 공고가 "+N+"건 있습니다. " : "지금 저희가 원문을 확인해 올린 공고는 0건입니다. ")+
+        "공고는 해마다 바뀌어서, 모집 여부는 아래 기관에서 확인하십니다." })+
+    '<ul class="kx-sup-g">'+W.map(function(x){
+      return '<li class="kx-sup-c"><b>'+esc(x.org)+'</b><small>'+esc(x.what)+'</small>'+
+        (x.find ? '<span class="kx-sup-f">'+icon("search",14)+'<span>'+esc(x.find)+'</span></span>' : '')+
+        (x.url ? '<a class="kx-sup-a" href="'+esc(x.url)+'" target="_blank" rel="noopener">사이트 열기'+icon("arrow",14)+'</a>' : '')+
+      '</li>';
+    }).join("")+'</ul>'+
+    '<p class="kx-note">지원 대상인지 · 얼마를 받는지는 그 기관이 심사합니다. 저희는 지급을 약속하지 않습니다.'+
+      (N ? ' <a class="kx-sup-more" href="/support?side=close">공고 보기</a>' : '')+'</p>'+
+  '</div></section>';
+}
+
 function PageClosure(){
   /* ⚠️⚠️ 2026-10-18 전체 점검 지시서 §3 · §12 — 네 전문관이 **같은
      공통 레이아웃**을 씁니다. 재 보니 폐업에 **고르는 체크칸이
@@ -664,7 +756,7 @@ function PageClosure(){
   var path  = nowQS("p") === "all" ? "all" : (nowQS("p") === "pick" ? "pick" : "");
   var sel   = PickGroupBand("closure", "close") + PickBasket("close") +
               PackPickBand("close");
-  return ClosureIntro(path)+
+  return ClosureIntro(path)+ CloseKxServices() + CloseKxProcess() + CloseKxCalc() +
     HallCalcBand({ keys:CLOSE_CALC, tones:CLOSE_CALC_TONE,
       title:"정리하기 전에 체크리스트와 비용부터 보세요",
       lead:"빠뜨린 것과 들 돈을 먼저 보실 수 있습니다. 적으신 값은 저장하지 않습니다." })+
@@ -672,7 +764,7 @@ function PageClosure(){
     ClosureMoreBand()+
     /* ⑥ 가이드 — ⚠️ 맞는 글이 없으면 `ReadBand()` 가 구간째 뺍니다 (절대 규칙 2). */
     ReadBand({ side:"close", limit:4,
-               title:"정리하기 전에 알아 두면 좋은 것" })+
+               title:"정리하기 전에 알아 두면 좋은 것" })+ CloseKxSupport() +
     HallSteps({ quote:"/quote?mode=close&from=closure-steps", ctaForm:"close",
                 goName:"매장 정리 상담 신청하기" }) +
     JourneyBand({ current:"closing",

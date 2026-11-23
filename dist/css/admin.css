@@ -837,3 +837,6 @@ body.sl-locked{ overflow:hidden; }
 
 .rq-hist .rq-proxy{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;
   background:var(--warn-bg);color:var(--warn-dark);font-size:var(--t-cap,13px);font-weight:700}
+
+.rq-amt-ref{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.rq-amt-ref .rq-amt-fill{ min-height:40px; padding:0 14px; font-size:var(--t-cap); }

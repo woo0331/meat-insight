@@ -22,7 +22,7 @@
                                작업 환경의 Network secret 이 그 호스트 요청에 Authorization 을 넣어 줍니다
      TEST_SB_ANON_KEY       시험 프로젝트 공개(anon) 키 — 프록시 모드에서 apikey 머리에 씀 (비밀 아님)
      PREVIEW_ADMIN_PASSWORD (선택) Preview 전용 시험 관리자 비밀번호 — 있으면 /admin 화면까지 검수, 없으면 미검증
-     E_CUST E_CUST2 E_PVA E_PVB E_STAFF   시험 계정 메일 다섯 (역할 · 업체 연결이 시험 DB 에 되어 있어야 함)
+     E_CUST E_CUST2 E_PVA E_PVB E_STAFF E_ADMIN   시험 계정 메일 여섯 (역할 · 업체 연결이 시험 DB 에 되어 있어야 함)
      PVA_ID                 업체 A 의 id (배정 가능 · 계정 연결된 시험 업체)
      SERVICE                신청 서비스 id (기본 demolish/full)
    돌리기:  node tools/preview-e2e.js      (결과 · 캡처는 out/preview-e2e/) */
@@ -39,7 +39,7 @@ const SK = E("TEST_SB_SERVICE_KEY") || (VIA ? "proxy-injected" : "");   /* 프�
 const AK = VIA ? E("TEST_SB_ANON_KEY") : SK;
 const adm = () => ({ "content-type":"application/json", apikey:AK, authorization:"Bearer " + SK });
 const PVA = E("PVA_ID"), SVC = E("SERVICE") || "demolish/full";
-const MAIL = { cust:E("E_CUST"), cust2:E("E_CUST2"), pva:E("E_PVA"), pvb:E("E_PVB"), staff:E("E_STAFF") };
+const MAIL = { cust:E("E_CUST"), cust2:E("E_CUST2"), pva:E("E_PVA"), pvb:E("E_PVB"), staff:E("E_STAFF"), admin:E("E_ADMIN") };
 
 function hdr(extra){ const h = Object.assign({ "content-type":"application/json" }, extra || {}); if(E("VERCEL_BYPASS")) h["x-vercel-protection-bypass"] = E("VERCEL_BYPASS"); return h; }
 async function api(p, opt){ const r = await fetch(BASE + p, opt); let j = null; try{ j = await r.json(); }catch(e){} return { s:r.status, j }; }
@@ -202,7 +202,7 @@ const stateOf = async (t, no) => (find((await me(T.staff)).j, no) || {}).state;
   }
   console.log("\n▶ 시험 계정 로그인 (메일 발송 없음)");
   for(const k of Object.keys(MAIL)) T[k] = await tokenFor(MAIL[k]);
-  for(const [k, want] of [["staff","staff"],["pva","provider"],["pvb","provider"],["cust","customer"],["cust2","customer"]]){
+  for(const [k, want] of [["staff","staff"],["admin","admin"],["pva","provider"],["pvb","provider"],["cust","customer"],["cust2","customer"]]){
     const s = await api("/api/session", { headers:as(T[k]) });
     ok(s.j && s.j.role === want, k + " 역할 " + want, s.j && s.j.role);
   }
@@ -286,13 +286,88 @@ const stateOf = async (t, no) => (find((await me(T.staff)).j, no) || {}).state;
     okUI(qs.some(q => q.state === "chosen"), "고객이 /my 화면에서 견적 선택 → chosen", qs.map(q => q.state).join(",")); }
   okSV((await deal(T.cust2, "choose_quote", { p_request:RID, p_provider:PVA })).s >= 400, "다른 고객은 고르지 못함");
 
-  console.log("\n▶ ⑤ 계약 → 완료 — /admin 화면");
+  console.log("\n▶ ⑤ 계약 확정 · 계약금액 → 완료 — /admin 화면 (관리자)");
   const a3 = await adminMove(NO, "nego", null, null, null);
   okUI(!a3.err && (await stateOf(T.cust, NO)) === "nego", "/admin 에서 협의(nego)", a3.err);
-  const signed = await deal(T.staff, "move_state", { p_request:RID, p_to:"signed", p_ctx:{ amount:3300000, providerId:PVA } });
-  okSV(signed.s === 200, "계약(signed) — 계약금액 입력", signed.j);
+  /* 권한 — 계약 확정 길은 업체 · 직원 · 관리자. 고객 · 미배정 업체는 서버가 거절 */
+  okSV((await deal(T.cust, "move_state", { p_request:RID, p_to:"signed", p_ctx:{ amount:1 } })).s >= 400, "고객은 계약 확정 못 함");
+  okSV((await deal(T.pvb, "move_state", { p_request:RID, p_to:"signed", p_ctx:{ amount:1 } })).s >= 400, "미배정 업체 B 는 계약 확정 못 함");
+  /* 서버 규칙 — 화면을 거치지 않고 보내도 금액 없음 · 음수 · 소수는 거절 */
+  for(const [bad, n] of [[{}, "없음"], [{ amount:-5 }, "음수"], [{ amount:"1.5" }, "소수"]]){
+    const x = await deal(T.admin, "move_state", { p_request:RID, p_to:"signed", p_ctx:bad });
+    okSV(x.s >= 400 && (await stateOf(T.cust, NO)) === "nego", "서버가 계약금액(" + n + ") 거절 · 상태 nego 그대로", x.j);
+  }
+  { const o = await open(T.admin, "/admin", { admin:true, w:390 }); const pg = o.pg; await pg.waitForTimeout(1200);
+    await pg.locator("#rq .rq-s-rq .rq-r", { hasText:NO }).first().locator(".rq-hd").first().click(); await pg.waitForTimeout(400);
+    await pg.selectOption("#rq-to", "signed"); await pg.waitForTimeout(300);
+    await pg.locator(".rq-amt-fill").click(); await pg.waitForTimeout(200);
+    const ov = await pg.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    const h = await pg.locator(".rq-amt-fill").evaluate(e => e.getBoundingClientRect().height);
+    okUI(ov <= 0 && h >= 40, "모바일 390 /admin 계약금액 입력 — 가로 넘침 없음 · '이 금액 넣기' 누름 40px 이상", { ov, h });
+    await pg.locator("#rq-amt").scrollIntoViewIfNeeded(); await snap(pg, "24b-모바일-관리자-계약확정-입력");
+    await o.ctx.close(); }   /* ⚠️ 보내지 않고 닫습니다 */
+  { const o = await open(T.admin, "/admin", { admin:true, w:1440 }); const pg = o.pg; await pg.waitForTimeout(1200);
+    const toastTxt = async () => (await pg.locator("#toast").textContent().catch(() => "")) || "";
+    const row = () => pg.locator("#rq .rq-s-rq .rq-r", { hasText:NO }).first();
+    await row().locator(".rq-hd").first().click(); await pg.waitForTimeout(400);
+    await pg.selectOption("#rq-to", "signed"); await pg.waitForTimeout(300);
+    okUI(await pg.locator("#rq-amt").count() === 1, "계약 완료를 고르면 계약금액 칸이 나옴");
+    const ref = await pg.locator(".rq-amt-ref").textContent().catch(() => "");
+    okUI(/3,300,000/.test(ref), "고객이 고른 견적 금액을 참고로 보여 줌 (저절로 넣지 않음)", ref);
+    okUI((await pg.inputValue("#rq-amt")) === "", "계약금액 칸은 비어 있음 (운영자가 확인 후 입력)");
+    await snap(pg, "24-PC-관리자-계약확정-입력");
+    const go = () => pg.locator("#rq .rq-s-rq .rq-mv button", { hasText:"이 상태로 바꾸기" }).click();
+    let sent = 0; pg.on("request", q => { if(q.url().indexOf("/api/deal") >= 0) sent++; });
+    await go(); await pg.waitForTimeout(600);
+    okUI(/계약금액|amount/.test(await toastTxt()) && sent === 0 && (await stateOf(T.cust, NO)) === "nego", "금액 없이 누르면 보내지 않고 막음 · nego 그대로", await toastTxt());
+    await pg.fill("#rq-amt", "-5"); await go(); await pg.waitForTimeout(600);
+    okUI(/0 이상/.test(await toastTxt()) && sent === 0, "음수는 보내지 않고 막음", await toastTxt());
+    await pg.fill("#rq-amt", "1.5"); await go(); await pg.waitForTimeout(600);
+    okUI(/정수/.test(await toastTxt()) && sent === 0, "소수는 보내지 않고 막음", await toastTxt());
+    await pg.locator(".rq-amt-fill").click(); await pg.waitForTimeout(200);
+    okUI((await pg.inputValue("#rq-amt")) === "3300000", "'이 금액 넣기' 로 고른 견적 금액이 칸에 들어감");
+    /* 저장 실패 — 서버가 한 번 거절 */
+    await pg.route("**/api/deal", r => r.fulfill({ status:500, contentType:"application/json", body:JSON.stringify({ error:"시험용 거절 — 저장되지 않았습니다" }) }));
+    await go(); await pg.waitForTimeout(1200);
+    const ft = await toastTxt();
+    okUI(/시험용 거절/.test(ft) && !/바꿨습니다/.test(ft) && (await stateOf(T.cust, NO)) === "nego", "저장 실패 — 성공으로 안 보이고 상태 nego 그대로", ft);
+    okUI((await pg.inputValue("#rq-amt")) === "3300000", "저장 실패 뒤에도 적은 금액이 남음");
+    await pg.unroute("**/api/deal");
+    /* 처리 중 → 성공 */
+    await pg.route("**/api/deal", async r => { await new Promise(z => setTimeout(z, 1200)); return r.continue(); });
+    await go(); await pg.waitForTimeout(300);
+    const bt = await pg.locator("#rq .rq-s-rq .rq-mv .ad-acts button").first().textContent().catch(() => "");
+    okUI(/보내는 중/.test(bt), "저장 중 — '보내는 중…'", bt);
+    await pg.waitForTimeout(2500);
+    okUI(/계약 완료/.test(await toastTxt()) && (await stateOf(T.cust, NO)) === "signed", "관리자가 화면에서 계약 확정 → signed", await toastTxt());
+    await o.ctx.close(); }
+  { const o = await open(T.admin, "/admin", { admin:true, w:1440 }); const pg = o.pg; await pg.waitForTimeout(1200);
+    const mr = pg.locator("#rq .rq-s-mn .rq-r", { hasText:NO }).first();
+    okUI((await mr.count()) === 1 && /3,300,000/.test(await mr.textContent()), "새로고침 뒤 '계약 · 수수료 · 정산' 에 계약금액 3,300,000원");
+    await mr.locator(".rq-hd").click(); await pg.waitForTimeout(400);
+    const body = await mr.locator(".rq-bd").textContent().catch(() => "");
+    okUI(/계약금액\s*3,300,000원/.test(body) && /계약일/.test(body), "펼치면 계약금액 · 계약일 (저장값)", body.slice(0, 160));
+    await mr.scrollIntoViewIfNeeded(); await snap(pg, "25-PC-관리자-계약조회");
+    await o.ctx.close(); }
+  { const o = await open(T.admin, "/admin", { admin:true, w:390 }); const pg = o.pg; await pg.waitForTimeout(1200);
+    const mr = pg.locator("#rq .rq-s-mn .rq-r", { hasText:NO }).first();
+    await mr.locator(".rq-hd").click(); await pg.waitForTimeout(400);
+    const ov = await pg.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    okUI(ov <= 0, "모바일 390 /admin 계약 조회 — 가로 넘침 없음", ov);
+    await snap(pg, "26-모바일-관리자-계약조회"); await o.ctx.close(); }
+  /* 열람 권한 — 계약금액은 관리자 · 그 업체만. 직원 · 고객 · 다른 업체에는 안 옴 */
+  { const dl = (t) => me(t).then(x => ((x.j || {}).deals || []).filter(d => d.request_id === RID));
+    okSV((await dl(T.admin)).length === 1 && (await dl(T.admin))[0].amount === 3300000, "관리자 /api/me 에 계약금액 3,300,000");
+    okSV((await dl(T.pva)).length === 1, "계약 업체 A 는 자기 계약을 봄");
+    okSV((await dl(T.pvb)).length === 0, "업체 B 에게는 계약이 안 옴");
+    okSV((await dl(T.staff)).length === 0, "직원에게는 계약 · 금액이 안 옴 (기존 정책: 직원은 돈을 안 봄)");
+    okSV((await dl(T.cust)).length === 0 && !("deals" in ((await me(T.cust)).j || {})), "고객에게는 계약을 묻지도 않음"); }
+  { const o = await open(T.staff, "/admin", { admin:true, w:1440 }); await o.pg.waitForTimeout(1200);
+    okUI((await o.pg.locator("#rq .rq-s-mn").count()) === 0, "직원 /admin 에는 '계약 · 수수료 · 정산' 칸이 없음"); await o.ctx.close(); }
   const a4 = await adminMove(NO, "done", null, null, "10-관리자-완료");
   okUI(!a4.err && (await stateOf(T.cust, NO)) === "done", "/admin 에서 완료(done)", a4.err);
+  { const o = await open(T.cust, "/my", { w:390 }); const t = await viewTxt(o.pg);
+    okUI(!/수수료|청구액|입금/.test(t), "완료 뒤 고객 /my 에 수수료 · 청구 · 입금 없음"); await o.ctx.close(); }
   { const o = await open(T.cust, "/my", { w:390 }); await snap(o.pg, "11-고객-완료-my"); await o.ctx.close(); }
 
   console.log("\n▶ ⑥ 취소 — 다른 신청 (고객 화면 신청 → 본인 취소)");

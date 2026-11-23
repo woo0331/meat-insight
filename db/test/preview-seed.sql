@@ -1,12 +1,12 @@
 -- ════════════════════════════════════════════════════════════════════
 -- ⚠️⚠️ **Preview 시험 전용 Supabase 에서만** 돌립니다. 운영 · aboutmeat · igignylgzjphtnyxhhsd 에 돌리지 마세요.
--- tools/preview-e2e.js 가 SETUP_USERS=1 로 시험 계정 다섯을 만든 **뒤에** 돌립니다.
+-- tools/preview-e2e.js 가 SETUP_USERS=1 로 시험 계정 여섯(관리자 포함)을 만든 **뒤에** 돌립니다.
 -- 합성 업체 둘(시험 A · 시험 B)과 역할 · 업체 연결 · 배정 가능을 넣습니다. 지어낸 데이터는 이 시험 DB 안에서만 삽니다.
 -- ════════════════════════════════════════════════════════════════════
 begin;
 do $$ begin
-  if (select count(*) from auth.users where email like 'e2e-%@example.com') < 5 then
-    raise exception '시험 계정 다섯이 아직 없습니다 — SETUP_USERS=1 로 먼저 만드세요';
+  if (select count(*) from auth.users where email like 'e2e-%@example.com') < 6 then
+    raise exception '시험 계정 여섯이 아직 없습니다 — SETUP_USERS=1 로 먼저 만드세요';
   end if;
   if exists (select 1 from request where no not like 'SW-%') or (select count(*) from provider where id not like 'pv-test-%') > 0 then
     raise exception '시험 DB 가 아닌 것 같습니다 — 다른 업체 · 신청이 들어 있습니다. 멈춥니다';
@@ -23,7 +23,8 @@ update account a set role = x.role::app_role, provider_id = x.pv
                ('e2e-cust2@example.com','customer',null),
                ('e2e-pva@example.com','provider','pv-test-a'),
                ('e2e-pvb@example.com','provider','pv-test-b'),
-               ('e2e-staff@example.com','staff',null)) as x(email, role, pv)
+               ('e2e-staff@example.com','staff',null),
+               ('e2e-admin@example.com','admin',null)) as x(email, role, pv)
   join auth.users u on u.email = x.email
  where a.id = u.id;
 

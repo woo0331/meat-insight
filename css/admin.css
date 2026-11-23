@@ -21,6 +21,13 @@
 .ad-body{ background:var(--bg); }
 
 .ad-hd{ background:var(--surface); border-bottom:1px solid var(--line); }
+/* 2026-11-23 — 로고가 **밝은 바탕에 밝은 글자**였습니다. `css/app.css` 의
+   `.lg b{color:var(--on-dk)}` 는 짙은 사이트 헤더(.hd)용인데 `.lg` 를 같이
+   쓰는 관리자 헤더(.ad-hd, 흰 바탕)에도 걸렸습니다 — 대비 약 1.0.
+   브랜드 브라운(--navy)으로 되돌립니다 (바탕 #FFFCF7 위에서 재서 적음).
+   ⚠️ 특정도 (0,2,1) 이라 app.css 의 (0,1,1) 을 이깁니다 — `.ad-hd` 를 빼면 집니다. */
+.ad-hd .lg b{ color:var(--navy); }
+.ad-hd .lg span{ color:var(--ink2); }
 .ad-hd-in{ display:flex; align-items:center; justify-content:space-between;
   gap:var(--s4); min-height:64px; flex-wrap:wrap; }
 .ad-tag{ font-size:var(--t-cap); font-weight:700; color:var(--ink2);

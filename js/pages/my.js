@@ -97,7 +97,7 @@ window.myLoadDb = function(){
    ⚠️ 적다가 거절당해도 **적으신 것이 날아가지 않게** `MYQ.draft` 에
    들고 있습니다 (이 저장소가 배정 화면에서 고른 업체가 빈 칸으로
    돌아간 것을 겪은 자리입니다). */
-var MYQ = { d:null, open:"", draft:{}, busy:false };
+var MYQ = { d:null, open:"", draft:{}, busy:false, act:null, actMsg:null };
 
 function myDbPaint(d){
   var box = document.getElementById("my-db");
@@ -561,6 +561,7 @@ function MyPvList(L, d){
       /* ⚠️⚠️ **견적을 내는 자리가 여기입니다** (§4). 전에는 상태만
          `quoted` 로 바뀌고 **금액이 아무 데도 안 남아서**, 고객은
          전화로 들은 금액을 기억해야 했습니다. */
+      MyActRow(r, "provider")+
       (d ? MyQuoteMine(d, r) : "")+
     '</li>'; }).join("")+'</ul>';
 }
@@ -744,6 +745,7 @@ function MyReqList(L, d){
          까닭은 "무슨 일의 견적인가" 가 바로 위에 있어야 하기
          때문입니다 — 따로 떼면 접수번호를 들고 두 목록을 왕복합니다. */
       (d ? MyQuoteCompare(d, r) : "")+
+      MyActRow(r, "customer")+
     '</li>'; }).join("")+'</ul>';
 }
 
@@ -764,6 +766,102 @@ function MyReqList(L, d){
 /* 그 신청의 견적만 — ⚠️ 거르는 일을 화면이 **또** 하지 않습니다.
    무엇이 오는지는 RLS 가 정하고(거둔 견적은 고객에게 아예 안 옵니다),
    여기서는 신청별로 나눠 담을 뿐입니다. */
+/* ── 신청 한 건의 다음 걸음 — 업체 수락 · 상담 시작 · 고객 신청 취소 ──
+   (2026-11-23 로컬 실제 브라우저 검수에서 빈칸으로 나온 셋)
+
+   ⚠️⚠️ **새 규칙을 만들지 않습니다.** 어떤 단추를 낼지는
+   `js/data/deal.js` 의 길 표(`amDealMoves(상태, 역할)`)가 정하고, 실제로
+   막는 것은 DB 의 `answer_assignment()` · `move_state()` 입니다 (남의
+   건은 0019 트리거가 거절합니다). 화면은 **그 길이 있을 때만 단추를
+   내는** 것까지입니다 — 없는 길에 단추를 내면 누를 때마다 실패합니다
+   (§30-7).
+   ⚠️⚠️ **누가 보나** — 업체 목록은 RLS 가 **배정된 건만** 보내고, 고객
+   목록은 **본인 신청만** 보냅니다 (`api/me.js`). 그래서 미배정 업체 ·
+   다른 고객의 화면에는 그 줄 자체가 없고, 단추도 없습니다.
+   ⚠️⚠️ **성공한 뒤에만 화면이 바뀝니다.** 상태를 화면에서 미리 고치지
+   않고 서버 답을 받은 뒤 `myLoadDb()` 로 **다시 묻습니다** (myqCall 과
+   같은 규칙). 확인창에서 "취소" 를 누르면 아무것도 안 보냅니다. */
+var MY_ACT = {
+  accept:  { fn:"answer_assignment", to:"accepted", role:"provider",
+             label:"배정 수락", busy:"수락하는 중…",
+             ok:"배정을 수락했습니다",
+             args:function(rid){ return { p_request:rid, p_yes:true }; } },
+  consult: { fn:"move_state", to:"consult", role:"provider",
+             label:"상담 시작", busy:"시작하는 중…",
+             ok:"상담을 시작했습니다. 이제 견적을 내실 수 있습니다",
+             args:function(rid){ return { p_request:rid, p_to:"consult", p_ctx:{} }; } },
+  cancel:  { fn:"move_state", to:"lost", role:"customer",
+             label:"신청 취소", busy:"취소하는 중…",
+             ok:"신청을 취소했습니다",
+             ask:"이 신청을 취소하시겠습니까?\n취소하시면 업체 연결과 견적 진행이 멈추고, 되돌릴 수 없습니다.",
+             /* ⚠️ 길 표가 사유(why)를 요구합니다 — 고객이 직접 취소한 것임을 적습니다 */
+             args:function(rid){ return { p_request:rid, p_to:"lost",
+                                          p_ctx:{ why:"고객이 /my 에서 직접 취소" } }; } }
+};
+
+/* 이 역할이 이 상태에서 갈 수 있는 길만 — ⚠️ 길 표 한 곳을 읽습니다 */
+function myActKinds(r, role){
+  var moves = (typeof amDealMoves === "function") ? amDealMoves(r.state, role) : [];
+  var to = moves.map(function(m){ return m[1]; });
+  return Object.keys(MY_ACT).filter(function(k){
+    return MY_ACT[k].role === role && to.indexOf(MY_ACT[k].to) >= 0;
+  });
+}
+
+function MyActRow(r, role){
+  var ks = myActKinds(r, role);
+  var msg = MYQ.actMsg && MYQ.actMsg.id === r.id ? MYQ.actMsg : null;
+  if(!ks.length && !msg) return "";
+  var any = !!MYQ.act || MYQ.busy;
+  var btns = ks.map(function(k){
+    var a = MY_ACT[k];
+    var mine = MYQ.act && MYQ.act.id === r.id && MYQ.act.kind === k;
+    /* ⚠️ 취소는 되돌릴 수 없는 일이라 테두리 단추 · 수락 · 상담은 꽉 찬 단추 */
+    return '<button class="btn '+(k === "cancel" ? "btn-o my-act-x" : "btn-b")+'" type="button"'+
+      ' data-act="'+esc(k)+'" onclick="myAct(\''+esc(r.id)+'\',\''+esc(k)+'\')"'+
+      (any ? ' disabled' : '')+(mine ? ' aria-busy="true"' : '')+'>'+
+      esc(mine ? a.busy : a.label)+'</button>';
+  }).join("");
+  return '<div class="my-act">'+
+    (btns ? '<div class="row-cta">'+btns+'</div>' : '')+
+    '<p class="my-in-n'+(msg ? (msg.ok ? " ok" : " bad") : "")+'" role="status">'+
+      (msg ? esc(msg.text) : "")+'</p>'+
+  '</div>';
+}
+
+window.myAct = function(rid, kind){
+  var a = MY_ACT[kind];
+  if(!a || MYQ.act || MYQ.busy) return;
+  /* 확인창에서 돌아오면 **아무것도 보내지 않고** 화면도 그대로입니다 */
+  if(a.ask && typeof confirm === "function" && !confirm(a.ask)) return;
+  MYQ.act = { id:rid, kind:kind }; MYQ.actMsg = null; myDbPaint();
+  fetch("/api/deal", {
+    method:"POST",
+    headers: Object.assign({ "content-type":"application/json",
+      accept:"application/json" },
+      (typeof amAuthHeaders === "function") ? amAuthHeaders() : {}),
+    body: JSON.stringify({ fn:a.fn, args:a.args(rid) })
+  }).then(function(r){
+    return r.json().catch(function(){ return {}; })
+      .then(function(j){ return { ok:r.ok, j:j }; });
+  }).then(function(x){
+    MYQ.act = null;
+    if(!x.ok){
+      /* ⚠️ DB 가 거절한 그 말을 그대로 — 상태는 그대로 둡니다 */
+      MYQ.actMsg = { id:rid, ok:false, text:(x.j && x.j.error) || "처리하지 못했습니다. 상태는 그대로입니다" };
+      myDbPaint(); return;
+    }
+    MYQ.actMsg = { id:rid, ok:true, text:a.ok };
+    toast(a.ok);
+    window.myLoadDb();
+  }).catch(function(e){
+    MYQ.act = null;
+    try{ console.warn("[my] " + a.fn + " — " + e); }catch(_){}
+    MYQ.actMsg = { id:rid, ok:false, text:"연결이 끊겼습니다. 상태는 그대로입니다 — 잠시 뒤 다시 눌러 주세요" };
+    myDbPaint();
+  });
+};
+
 function myqOf(d, rid){
   return (d.quotes || []).filter(function(q){ return q.request_id === rid; });
 }

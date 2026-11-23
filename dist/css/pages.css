@@ -6366,3 +6366,8 @@ html.ivh #view > section.ipil, html.ivh #view > section.bpass, html.ivh #view > 
 
 .join-cn{ flex-basis:100%; display:flex; gap:8px; align-items:flex-start; margin:12px 0 0; color:var(--ink2); font-size:14px; line-height:1.5; }
 .join-cn[hidden]{ display:none; }
+
+.my-act{ margin-top:var(--s3); }
+.my-act .row-cta{ margin-top:0; }
+.my-act .my-in-n:empty{ margin:0; min-height:0; }
+.my-act .btn{ min-height:var(--tap); }

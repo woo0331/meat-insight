@@ -157,6 +157,38 @@ async function adminMove(no, to, pv, agree, shotName){
   await o.ctx.close();
   return { toast, listTxt, errs:o.errs };
 }
+/* /my 의 한 줄과 그 안의 단추 — 신청번호로 그 줄만 집습니다 */
+const rowOf = (pg, no) => pg.locator("#my-db .myq", { hasText:no }).first();
+/* 화면에서 다음 걸음(수락 · 상담 시작 · 취소) 하나를 누릅니다.
+   mode: "fail"(서버가 한 번 거절) · "busy"(처리 중을 잡아 두었다가 실제 서버로) · "dismiss"(확인창에서 돌아옴) */
+async function actUI(t, no, kind, mode, w, shotName){
+  const o = await open(t, "/my", { w:w || 390 }); const pg = o.pg;
+  const btn = () => rowOf(pg, no).locator("[data-act=" + kind + "]");
+  const out = { has:await btn().count(), sent:0, busyTxt:"", busyDis:null, note:"", noteBad:null, errs:o.errs };
+  if(!out.has){ await o.ctx.close(); return out; }
+  await pg.route("**/api/deal", async route => {
+    out.sent++;
+    if(mode === "fail") return route.fulfill({ status:500, contentType:"application/json", body:JSON.stringify({ error:"시험용 거절 — 서버가 받지 않았습니다" }) });
+    if(mode === "busy") await new Promise(r => setTimeout(r, 1500));
+    return route.continue();
+  });
+  if(kind === "cancel") pg.once("dialog", d => mode === "dismiss" ? d.dismiss() : d.accept());
+  await btn().click();
+  if(mode === "busy"){
+    await pg.waitForTimeout(400);
+    const b = rowOf(pg, no).locator("[data-act=" + kind + "]");
+    out.busyTxt = await b.textContent().catch(() => ""); out.busyDis = await b.isDisabled().catch(() => null);
+    if(shotName) await snap(pg, shotName + "-처리중");
+  }
+  await pg.waitForTimeout(2200);
+  const n = rowOf(pg, no).locator(".my-act .my-in-n");
+  out.note = (await n.count()) ? await n.textContent() : "";
+  out.noteBad = (await n.count()) ? /\bbad\b/.test(await n.getAttribute("class")) : null;
+  out.after = await rowOf(pg, no).locator("[data-act]").evaluateAll(L => L.map(b => b.getAttribute("data-act")));
+  if(shotName) await snap(pg, shotName);
+  await o.ctx.close();
+  return out;
+}
 /* 상태는 직원 목록으로 읽습니다 (고객이 볼 수 있는지는 화면 검사가 따로 봅니다) */
 const stateOf = async (t, no) => (find((await me(T.staff)).j, no) || {}).state;
 
@@ -209,13 +241,27 @@ const stateOf = async (t, no) => (find((await me(T.staff)).j, no) || {}).state;
   }
   const RID = (find((await me(T.staff)).j, NO) || {}).id;
 
-  console.log("\n▶ ③ 업체 수락 · 견적");
-  { const o = await open(T.pva, "/my", { w:390 }); const t = await viewTxt(o.pg);
-    const hasBtn = await o.pg.locator("button", { hasText:/수락/ }).count();
-    ok(true, "[화면] 업체 /my 수락 단추 수: " + hasBtn + (hasBtn ? "" : " — 없음(화면에 '배정을 수락하시면' 안내만)")); if(!hasBtn) R.no.push("업체 수락 · 상담 시작 화면 단추 없음"); await o.ctx.close(); }
-  okSV((await deal(T.pvb, "answer_assignment", { p_request:RID, p_yes:true })).s >= 400, "업체 B 는 수락 못 함");
-  okSV((await deal(T.pva, "answer_assignment", { p_request:RID, p_yes:true })).s === 200, "업체 A 수락");
-  okSV((await deal(T.pva, "move_state", { p_request:RID, p_to:"consult", p_ctx:{} })).s === 200, "업체 A 상담 시작");
+  console.log("\n▶ ③ 업체 수락 · 상담 시작 — 업체 /my 화면에서");
+  { const o = await open(T.pvb, "/my", { w:390 });
+    okUI((await o.pg.locator("#my-db [data-act]").count()) === 0, "미배정 업체 B /my 에 수락 · 상담 단추가 없음");
+    await o.ctx.close(); }
+  { const o = await open(T.pva, "/my", { w:1440 }); await snap(o.pg, "13-PC-업체A-수락전"); await o.ctx.close(); }
+  { const f = await actUI(T.pva, NO, "accept", "fail", 390, "14-업체A-수락-실패");
+    okUI(f.has === 1, "배정받은 업체 A 의 그 줄에만 '배정 수락' 단추");
+    okUI(f.sent === 1 && f.noteBad === true && /거절/.test(f.note), "수락 실패 — 거절 말을 그 줄에 붉게 냄", f.note);
+    okUI((await stateOf(T.cust, NO)) === "assigned" && f.after.indexOf("accept") >= 0, "수락 실패 뒤 상태 그대로(assigned) · 단추 그대로", f.after); }
+  { const r = await actUI(T.pva, NO, "accept", "busy", 390, "15-업체A-수락");
+    okUI(/수락하는 중/.test(r.busyTxt) && r.busyDis === true, "수락 처리 중 — '수락하는 중…' · 단추 잠김", r.busyTxt);
+    okUI((await stateOf(T.cust, NO)) === "accepted", "업체 A 가 화면에서 배정 수락 → accepted");
+    okUI(/수락했습니다/.test(r.note) && r.noteBad === false && r.after.indexOf("consult") >= 0, "수락 성공 — 안내 · 다음 단추 '상담 시작'", r.note + " " + r.after); }
+  okSV((await deal(T.pvb, "answer_assignment", { p_request:RID, p_yes:true })).s >= 400, "업체 B 는 수락 못 함 (서버 차단 유지)");
+  okSV((await deal(T.pvb, "move_state", { p_request:RID, p_to:"consult", p_ctx:{} })).s >= 400, "업체 B 는 상담 시작 못 함 (서버 차단 유지)");
+  { const f = await actUI(T.pva, NO, "consult", "fail", 390, null);
+    okUI(f.noteBad === true && (await stateOf(T.cust, NO)) === "accepted", "상담 시작 실패 — 붉은 안내 · 상태 그대로(accepted)", f.note); }
+  { const r = await actUI(T.pva, NO, "consult", "busy", 390, "16-업체A-상담시작");
+    okUI(/시작하는 중/.test(r.busyTxt) && r.busyDis === true, "상담 시작 처리 중 — '시작하는 중…' · 잠김", r.busyTxt);
+    okUI((await stateOf(T.cust, NO)) === "consult", "업체 A 가 화면에서 상담 시작 → consult");
+    okUI(r.after.length === 0, "상담 시작 뒤에는 수락 · 상담 단추가 사라짐", r.after); }
   { const o = await open(T.pva, "/my", { w:390 }); const pg = o.pg;
     const b = pg.locator("button", { hasText:"견적 내기" }).first();
     if(await b.count()){
@@ -254,12 +300,48 @@ const stateOf = async (t, no) => (find((await me(T.staff)).j, no) || {}).state;
   const s2 = await submitQuote(T.cust, { tel:tel2, shot:"12-고객-두번째신청" });
   okUI(/^SW-/.test(s2.no), "두 번째 신청 접수 " + s2.no);
   const RID2 = (find((await me(T.staff)).j, s2.no) || {}).id;
-  okSV((await deal(T.cust2, "move_state", { p_request:RID2, p_to:"lost", p_ctx:{ why:"x" } })).s >= 400, "다른 고객은 취소 못 함");
-  { const o = await open(T.cust, "/my", { w:390 }); const pg = o.pg;
-    const cb = pg.locator("button", { hasText:/취소/ });
-    const n = await cb.count(); ok(true, "[화면] 고객 /my 취소 단추 수: " + n); if(!n) R.no.push("고객 /my 에 신청 취소 단추 없음"); await o.ctx.close(); }
-  okSV((await deal(T.cust, "move_state", { p_request:RID2, p_to:"lost", p_ctx:{ why:"로컬 시험 취소" } })).s === 200, "고객 본인 취소(lost)");
-  okSV((await stateOf(T.cust, s2.no)) === "lost", "고객 조회 상태 lost");
+  { const o = await open(T.cust2, "/my", { w:390 }); const t = await viewTxt(o.pg);
+    okUI(t.indexOf(s2.no) < 0 && (await o.pg.locator("#my-db [data-act=cancel]").count()) === 0, "다른 고객 /my 에 그 신청도 취소 단추도 없음");
+    await o.ctx.close(); }
+  { const o = await open(T.cust, "/my", { w:390 });
+    okUI((await rowOf(o.pg, NO).locator("[data-act=cancel]").count()) === 0, "끝난 신청(done)에는 취소 단추가 없음 (서버 규칙상 고객 취소 불가)");
+    await o.ctx.close(); }
+  okSV((await deal(T.cust2, "move_state", { p_request:RID2, p_to:"lost", p_ctx:{ why:"x" } })).s >= 400, "다른 고객은 취소 못 함 (서버 차단 유지)");
+  { const d = await actUI(T.cust, s2.no, "cancel", "dismiss", 390, "17-고객-취소-확인창에서돌아옴");
+    okUI(d.has === 1, "신청자 본인 /my 의 그 줄에 '신청 취소' 단추");
+    okUI(d.sent === 0 && (await stateOf(T.cust, s2.no)) === "new" && d.after.indexOf("cancel") >= 0, "확인창에서 돌아오면 아무것도 안 보내고 상태 그대로(new)", d); }
+  { const f = await actUI(T.cust, s2.no, "cancel", "fail", 390, "18-고객-취소-실패");
+    okUI(f.sent === 1 && f.noteBad === true && (await stateOf(T.cust, s2.no)) === "new", "취소 실패 — 붉은 안내 · 상태 그대로(new)", f.note); }
+  { const r = await actUI(T.cust, s2.no, "cancel", "busy", 390, "19-고객-취소");
+    okUI(/취소하는 중/.test(r.busyTxt) && r.busyDis === true, "취소 처리 중 — '취소하는 중…' · 잠김", r.busyTxt);
+    okUI((await stateOf(T.cust, s2.no)) === "lost", "고객이 화면에서 신청 취소 → lost (확인창 수락 후)");
+    okUI(/취소했습니다/.test(r.note) && r.after.length === 0, "취소 성공 — 안내 · 단추 사라짐", r.note + " " + r.after); }
+  { const o = await open(T.cust, "/my", { w:1440 }); await snap(o.pg, "20-PC-고객-my"); await o.ctx.close(); }
+
+  console.log("\n▶ ⑦ 비회원 신청 — 로그인 없이 /quote");
+  { const o = await open(null, "/quote?side=close&sv=" + encodeURIComponent(SVC), { w:390 }); const pg = o.pg;
+    const tel3 = "010-0002-" + String(Date.now()).slice(-4);
+    await pg.selectOption("#q-reg", "gyeonggi"); await pg.fill("#q-name", "시험 비회원"); await pg.fill("#q-tel", tel3);
+    await pg.fill("#q-q", "로컬 시험 — 비회원 신청"); await pg.check("#q-ag");
+    let auth = "x";
+    await pg.route("**/api/quote", async route => { auth = route.request().headers()["authorization"] || ""; await new Promise(r => setTimeout(r, 1200)); return route.continue(); });
+    await pg.locator("#view form [type=submit]").first().click(); await pg.waitForTimeout(300);
+    const busy = await pg.locator("#view form [type=submit]").first().textContent().catch(() => "");
+    okUI(/보내는 중/.test(busy), "신청 처리 중 — '보내는 중…'", busy);
+    await pg.waitForTimeout(2500);
+    const no3 = ((await viewTxt(pg)).match(/SW-[A-Z0-9]{4}-[A-Z0-9]{4}/) || [""])[0];
+    okUI(/^SW-/.test(no3), "비회원 신청이 기존대로 접수 · 접수번호 " + no3);
+    okUI(auth === "", "비회원 신청에는 로그인 머리를 안 실음", auth ? "있음" : "");
+    await snap(pg, "21-비회원-신청완료"); await o.ctx.close();
+    okSV(!!find((await me(T.staff)).j, no3) && !find((await me(T.cust)).j, no3), "비회원 신청은 직원 목록에 있고 고객 계정에는 안 이어짐"); }
+  { const o = await open(T.cust, "/quote?side=close&sv=" + encodeURIComponent(SVC), { w:390 }); const pg = o.pg;
+    await pg.selectOption("#q-reg", "gyeonggi"); await pg.fill("#q-name", "시험 고객"); await pg.fill("#q-tel", "010-0003-0000");
+    await pg.fill("#q-q", "로컬 시험 — 실패 확인"); await pg.check("#q-ag");
+    await pg.route("**/api/quote", route => route.fulfill({ status:503, contentType:"application/json", body:JSON.stringify({ error:"지금은 접수하지 못합니다" }) }));
+    await pg.locator("#view form [type=submit]").first().click(); await pg.waitForTimeout(1500);
+    const t = await viewTxt(pg);
+    okUI(!/SW-[A-Z0-9]{4}-[A-Z0-9]{4}/.test(t) && (await pg.inputValue("#q-q")) === "로컬 시험 — 실패 확인", "신청 실패 — 접수번호 없음 · 적은 글 그대로", t.slice(0, 120));
+    await snap(pg, "22-신청-실패"); await o.ctx.close(); }
 
   await BR.close();
   console.log("\n   시험 접수번호: " + NO + " · " + s2.no);

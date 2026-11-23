@@ -3,6 +3,9 @@
 .ad-body{ background:var(--bg); }
 
 .ad-hd{ background:var(--surface); border-bottom:1px solid var(--line); }
+
+.ad-hd .lg b{ color:var(--navy); }
+.ad-hd .lg span{ color:var(--ink2); }
 .ad-hd-in{ display:flex; align-items:center; justify-content:space-between;
   gap:var(--s4); min-height:64px; flex-wrap:wrap; }
 .ad-tag{ font-size:var(--t-cap); font-weight:700; color:var(--ink2);

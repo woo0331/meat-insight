@@ -8517,3 +8517,26 @@ html.ivh #view > section.ipil, html.ivh #view > section.bpass, html.ivh #view > 
 .my-act .row-cta{ margin-top:0; }
 .my-act .my-in-n:empty{ margin:0; min-height:0; }
 .my-act .btn{ min-height:var(--tap); }
+
+/* ══ 2026-11-23 색상 대비 보완 — 검색칸 · 선택 상태 ═══════════════════════
+   ① 메인 검색(.wp-find) · 서비스 찾기(.pkf-w) 경계가 1.4 · 1.15 였습니다 →
+      `--field-line`. 포커스는 금색 고리(2.47)·옅은 안쪽 선 대신 2px 월넛 바깥선.
+   ② 선택 상태를 **색만으로** 가르던 카드 · 탭(.wnt · .swt-c 는 1px 색 변화뿐)에
+      ✓ 표시 + 2px 테두리. 읽어 주는 프로그램은 aria-current 를 읽습니다.
+      ⚠️ ✓ 는 모서리 **바깥**에 걸쳐 앉습니다 — 안쪽에 두면 좁은 폭에서 글자와 겹칩니다.
+   ③ 양도양수 탭(.aq-t)의 고르지 않은 쪽 경계가 1.37 이라 탭으로 안 보였습니다 → `--field-line`. */
+html.ivh #view .wp-find .wp-t, html.ivh #view .wp-find input,
+html.ivh #view .ih3 .wp-find .wp-t, html.ivh #view .ih3 .wp-fbox input{ border-color:var(--field-line); }
+html.ivh #view .wp-find input:focus-visible, html.ivh #view .wp-find .wp-t:focus-visible{
+  outline:2px solid var(--navy); outline-offset:2px; border-color:var(--navy); }
+.pkf-w{ border-color:var(--field-line); }
+.pkf-w:focus-within{ outline:2px solid var(--navy); outline-offset:2px; }
+.aq-t{ border-color:var(--field-line); }
+/* ⚠️ 테두리 굵기를 2px 로 바꾸면 안쪽 글자가 1px 밀립니다 — 1px 테두리 + 1px 안쪽 선으로 같은 굵기를 냅니다 */
+.wnt.on, .swt-c.on{ border-color:var(--navy); box-shadow:inset 0 0 0 1px var(--navy); }
+.aq-t.on, .jy.on, .swt-c.on, .wnt.on, .clp-c.on{ position:relative; overflow:visible; }
+.aq-t.on::after, .jy.on::after, .swt-c.on::after, .wnt.on::after, .clp-c.on::after{
+  content:"✓"; position:absolute; top:-9px; right:-9px; z-index:1;
+  width:24px; height:24px; border-radius:50%;
+  background:var(--navy); color:#fff; box-shadow:0 0 0 2px var(--surface);
+  font:800 14px/24px var(--font); text-align:center; pointer-events:none; }

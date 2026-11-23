@@ -704,3 +704,12 @@ a.ft-bi:hover b{ text-decoration:underline; }
 .ft-bb-t{ display:flex; flex-direction:column; gap:2px; min-width:0; }
 .ft-bb-t b{ font-size:22px; font-weight:900; letter-spacing:-.03em; }
 .ft-bb-t span{ font-size:var(--t-cap); color:#EFE3D2; }
+
+input[type=number],input:not([type]),textarea,.sel,input[type=text],input[type=email],input[type=tel],input[type=search],input[type=date]{
+  border-color:var(--field-line); }
+.sel{ background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236A4B3B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); }
+input:focus-visible,textarea:focus-visible,.sel:focus-visible,select:focus-visible{
+  outline:2px solid var(--navy); outline-offset:2px; border-color:var(--navy); }
+
+.sel:focus{ background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236A4B3B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right var(--s4) center; }

@@ -5259,9 +5259,10 @@ html.ivh #view .msvc-sc{ margin-top:var(--s8); margin-bottom:0;
   .pk-g{ grid-template-columns:1fr; }
   .pk-c{ grid-template-columns:46px 1fr auto; grid-template-rows:auto; align-items:center;
     min-height:92px; padding:var(--s3) var(--s4); gap:var(--s3); }
-  .pk-i{ grid-column:1; }
-  .pk-t{ grid-column:2; }
-  .pk-ck{ grid-column:3; }
+  /* ⚠️ 줄도 1로 못박습니다 — 체크칸이 DOM 맨 앞(3열)이라 안 박으면 아이콘 · 이름이 둘째 줄로 밀립니다 */
+  .pk-i{ grid-column:1; grid-row:1; }
+  .pk-t{ grid-column:2; grid-row:1; }
+  .pk-ck{ grid-column:3; grid-row:1; }
 }
 
 /* ── C. 선택한 서비스 확인 (§2-C) ─────────────────────────────────── */

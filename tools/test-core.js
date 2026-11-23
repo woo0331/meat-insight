@@ -187,6 +187,34 @@ function run(){
   as(CUST, "select move_state('" + R2 + "','lost','{\"why\":\"일정 변경\"}'::jsonb)");
   ok(psql("select state from request where id='" + R2 + "'") === "lost", "고객 본인 취소 → lost");
   ok(psql("select count(*) from notify_job where request_id='" + R2 + "' and kind='customer_ack'") === "0", "메일을 안 적으면 고객 안내 큐가 안 생김");
+
+  /* ⑧ 운영 시험 데이터 정리 — **제안한 절차를 여기서 미리 돌려 봅니다** (운영 DB 에는 안 함).
+     업체 A 를 시험 업체로 보고: 비노출 · 배정 제외 → 기록 보존 → 알림 보류 → 되돌리기 */
+  console.log("\n▶ ⑧ 시험 데이터 정리 절차 리허설 (운영 아님)");
+  const before = psql("select (select count(*) from assignment where provider_id='core-a')||'|'||(select count(*) from quote where provider_id='core-a')||'|'||(select count(*) from deal where provider_id='core-a')||'|'||(select count(*) from request)");
+  ok(/변경자를 알 수 없|관리자/.test(err("select approve_provider('core-a', false, null, 'x', false)")), "로그인 없는 SQL 로는 공개 여부를 못 바꿈 (가드) — 관리자 세션으로 해야 함");
+  as(ADMIN, "select approve_provider('core-a', false, null, '시험 업체 — 비노출 · 배정 제외', false)");
+  ok(psql("select listed||'|'||assignable from provider where id='core-a'") === "false|false", "업체 A 비노출 · 배정 제외");
+  ok(psql("select (select count(*) from assignment where provider_id='core-a')||'|'||(select count(*) from quote where provider_id='core-a')||'|'||(select count(*) from deal where provider_id='core-a')||'|'||(select count(*) from request)") === before, "배정 · 견적 · 계약 · 신청 기록은 그대로 보존", before);
+  ok(psql("select count(*) from audit_log where obj='provider' and obj_id='core-a' and why like '시험 업체%'") === "1", "누가 · 왜 바꿨는지 감사 기록 1");
+  const P3 = Object.assign({}, P, { no:"SW-CORE-0003", idem:"core-3", tel:"010-7777-8888", email:null });
+  svc("select submit_intake(" + lit(P3) + ")");
+  const R3 = psql("select id from request where no='SW-CORE-0003'");
+  as(STAFF, "select move_state('" + R3 + "','check','{}'::jsonb)");
+  ok(/배정할 수 없|assignable|배정 가능/.test(asErr(STAFF, "select move_state('" + R3 + "','assigned','{\"providerId\":\"core-a\",\"agree3rd\":true}'::jsonb)")), "비노출 · 배정 제외한 업체에는 새 배정이 안 됨");
+  ok(as(PVU, "select count(*) from request where id='" + RID + "'") === "1", "그 업체 계정은 이미 배정된 지난 건을 계속 봄 (계정 연결은 따로 끊어야 함)");
+  /* 알림 보류 — pending 을 gave_up 으로 (due_notify 가 꺼내지 않음) */
+  /* R2 는 접수할 때 ops_new 가 이미 pending 으로 생겼습니다 (운영의 시험 알림 2건과 같은 꼴) */
+  ok(svc("select count(*) from due_notify(20) where request_id='" + R2 + "'") === "1", "보류 전: 시험 알림이 보낼 목록에 있음");
+  psql("update notify_job set status='gave_up', last_error='test-data hold' where request_id='" + R2 + "' and status='pending'");
+  ok(svc("select count(*) from due_notify(20) where request_id='" + R2 + "'") === "0", "보류 후: 재발송이 꺼내지 않음 (발송 안 됨)");
+  const J2 = psql("select id from notify_job where request_id='" + R2 + "' and kind='ops_new'");
+  ok(svc("select mark_notify('" + J2 + "', true)") === "skip" && psql("select status from notify_job where id='" + J2 + "'") === "gave_up", "보류한 것은 서버가 보내도 skip · 상태 그대로 (이중 안전)");
+  /* 되돌리기 */
+  as(ADMIN, "select approve_provider('core-a', true, null, '시험 업체 비노출 되돌림', true)");
+  ok(psql("select listed||'|'||assignable from provider where id='core-a'") === "true|true", "되돌리기 — 공개 · 배정 가능 복구 (계정 연결이 있어서 가능)");
+  psql("update notify_job set status='pending', last_error=null, next_at=now() where request_id='" + R2 + "' and status='gave_up'");
+  ok(svc("select count(*) from due_notify(20) where request_id='" + R2 + "'") === "1", "되돌리기 — 알림이 다시 보낼 목록에");
 }
 
 try{

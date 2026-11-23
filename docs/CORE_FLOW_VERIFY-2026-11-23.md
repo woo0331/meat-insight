@@ -5,6 +5,8 @@
 
 ## 1. 운영 DB (읽기 전용)
 
+> ⚠️ **정정 (같은 날)** — 아래 "운영 DB" 는 `aboutmeat`(gxjzlkvdbafzfjuunvyx)이고, 이 프로젝트는 **시험용으로 지정된 곳**입니다. Vercel Production 이 어느 프로젝트에 물려 있는지는 **확인되지 않았습니다** — `docs/PROD_TARGET_CHECK-2026-11-23.md`.
+
 | 항목 | 결과 |
 |---|---|
 | 프로젝트 | `aboutmeat` · 서울(ap-northeast-2) · Postgres 17 · 정상 |

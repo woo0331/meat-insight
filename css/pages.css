@@ -8732,8 +8732,8 @@ a.kp-c:hover{ transform:translateY(-3px); box-shadow:0 12px 26px rgba(56,39,31,.
 .kp-ban .kp-h em, .kp-cta .kp-h em{ font-style:normal; color:#F2C98F; }
 .kp-ban .kp-lead{ color:#F3E8DA; }
 .kp-ban-go{ margin-top:22px; gap:10px; flex-wrap:wrap; }
-.kp-btn, .kp-btn:visited{ background:#A0724A; border-color:#A0724A; color:#fff; }
-.kp-btn:hover{ background:#8A5F3C; border-color:#8A5F3C; color:#fff; }
+.kp-btn, .kp-btn:visited{ background:#93673F; border-color:#93673F; color:#fff; }
+.kp-btn:hover{ background:#7E5634; border-color:#7E5634; color:#fff; }
 .kp-btn-o, .kp-btn-o:visited{ background:transparent; border-color:rgba(255,255,255,.7); color:#fff; }
 .kp-btn-o:hover{ border-color:#fff; color:#fff; }
 .kp-btn-w, .kp-btn-w:visited{ background:#FBF3E8; border-color:#FBF3E8; color:#3B2A1E; }

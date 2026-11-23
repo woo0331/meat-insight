@@ -8643,3 +8643,6 @@ html.ivh #view .wp-find input:focus-visible, html.ivh #view .wp-find .wp-t:focus
   .kx-sup-c{ padding:16px; gap:6px; }
   .kx-sup-f{ display:none; }   /* 폰에서는 찾는 말을 접습니다 — 기관 이름 · 하는 일 · 링크는 그대로 */
 }
+/* 2026-11-23 — 시안 제목이 세 줄이 되면서 넓은 화면 머리가 512px 로 컸습니다. 짙은 판은 높이 상한(480)으로
+   잽니다 (check.js) — 위아래 여백만 줄여 맞춥니다. 폰은 위 900px 아래 규칙이 그대로 받습니다. */
+@media (min-width:901px){ #view .pgh.hh{ padding:36px 0 40px; } }

@@ -404,7 +404,7 @@ function OpsKxServices(ind){
     lead:"분야를 누르면 그 일을 하는 업체 · 정보로 바로 갑니다.", items:L });
 }
 function OpsKxDiag(){
-  return KxCalc({ id:"op-diag", tone:"sec-ivory", photo:"home-ops", kicker:"운영 진단",
+  return KxCalc({ id:"op-diag", tone:"sec-white", photo:"home-ops", kicker:"운영 진단",
     title:"우리 매장, 어디서 새고 있을까요?",
     lead:"숫자 몇 개만 적으면 고정비 · 인건비 · 원가 비율을 그 자리에서 계산합니다. 적으신 값은 저장하지 않습니다.",
     list:["월 고정비 — 임대료 · 관리비 · 구독료가 매출에서 차지하는 몫",

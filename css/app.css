@@ -1161,3 +1161,19 @@ a.ft-bi:hover b{ text-decoration:underline; }
 .ft-bb-t{ display:flex; flex-direction:column; gap:2px; min-width:0; }
 .ft-bb-t b{ font-size:22px; font-weight:900; letter-spacing:-.03em; }
 .ft-bb-t span{ font-size:var(--t-cap); color:#EFE3D2; }
+
+/* ══ 2026-11-23 색상 대비 보완 — 입력칸 · 고르개 (WCAG 1.4.11 · 2.4.7) ═══════
+   재 본 값(전): 경계/칸 1.15 · 칸/바깥 1.2 · 화살표 2.37 · 포커스 고리 1.13
+   (포커스는 1px 경계색 변화뿐이었습니다). 아이보리 · 월넛은 그대로 두고
+   **경계선 · 화살표 · 포커스 테두리**만 짙게 합니다.
+   ⚠️ 경계는 `--field-line`(칸 3.54 · 흰 4.34 · 카드 4.24) · 화살표는 월넛
+   #6A4B3B(칸 6.38) · 포커스는 2px 바깥 테두리 --navy(바깥 바탕 8 이상). */
+input[type=number],input:not([type]),textarea,.sel,input[type=text],input[type=email],input[type=tel],input[type=search],input[type=date]{
+  border-color:var(--field-line); }
+.sel{ background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236A4B3B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); }
+input:focus-visible,textarea:focus-visible,.sel:focus-visible,select:focus-visible{
+  outline:2px solid var(--navy); outline-offset:2px; border-color:var(--navy); }
+/* ⚠️ 포커스 규칙(`background:var(--surface)` 줄임꼴)이 화살표 그림까지 지워서
+   **고르개를 누르는 순간 화살표가 사라졌습니다** (전부터 있던 고장) — 다시 얹습니다. */
+.sel:focus{ background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236A4B3B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right var(--s4) center; }

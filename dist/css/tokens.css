@@ -54,6 +54,7 @@
   --ivory:       #F5F0E7;
   --surface:     #FFFCF7;
   --line:        #E4D8C6;
+  --field-line:  #8C7563;
   --line-soft:   #EEE6DA;
 
   --white:          var(--surface);

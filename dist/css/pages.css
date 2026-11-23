@@ -6363,3 +6363,18 @@ html.ivh #view{ --ip-bg:#F5F1E9; --ip-card:#FFFCF7; --ip-wal:#584338; --ip-dk:#3
 
 html.ivh #view > section.bhero, html.ivh #view > section.iind, html.ivh #view > section.iops, html.ivh #view > section.bstep{ background:#F5F1E9; }
 html.ivh #view > section.ipil, html.ivh #view > section.bpass, html.ivh #view > section.bdir{ background:#EDE4D6; }
+
+html.ivh #view .wp-find .wp-t, html.ivh #view .wp-find input,
+html.ivh #view .ih3 .wp-find .wp-t, html.ivh #view .ih3 .wp-fbox input{ border-color:var(--field-line); }
+html.ivh #view .wp-find input:focus-visible, html.ivh #view .wp-find .wp-t:focus-visible{
+  outline:2px solid var(--navy); outline-offset:2px; border-color:var(--navy); }
+.pkf-w{ border-color:var(--field-line); }
+.pkf-w:focus-within{ outline:2px solid var(--navy); outline-offset:2px; }
+.aq-t{ border-color:var(--field-line); }
+.wnt.on, .swt-c.on{ border-width:2px; border-color:var(--navy); }
+.aq-t.on, .jy.on, .swt-c.on, .wnt.on, .clp-c.on{ position:relative; overflow:visible; }
+.aq-t.on::after, .jy.on::after, .swt-c.on::after, .wnt.on::after, .clp-c.on::after{
+  content:"✓"; position:absolute; top:-9px; right:-9px; z-index:1;
+  width:24px; height:24px; border-radius:50%;
+  background:var(--navy); color:#fff; box-shadow:0 0 0 2px var(--surface);
+  font:800 14px/24px var(--font); text-align:center; pointer-events:none; }

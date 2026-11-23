@@ -337,7 +337,10 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
  await pg.reload({waitUntil:"networkidle"});
  const osec=await pg.evaluate(()=>document.querySelectorAll("#view > section").length);
- say(osec===9,"운영 ① 아홉 영역이다 (§2 + 2026-11-18 고민 카드 · 이용 순서)","지금 "+osec);
+ /* 2026-11-23 4개 카테고리 시안 — 핵심 서비스 · 운영 진단 · 운영 상담 CTA 셋(.kx)이 더해져 열둘입니다.
+    ⚠️ 셋을 빼고 세면 옛 아홉이 그대로인지도 봅니다 (기존 구간을 지우지 않았다는 것). */
+ const okx=await pg.evaluate(()=>document.querySelectorAll("#view > section.kx").length);
+ say(osec===12 && osec-okx===9,"운영 ① 열두 영역이다 (옛 아홉 + 시안 셋)","지금 "+osec+" · 시안 "+okx);
  const ogr=await pg.evaluate(()=>document.querySelectorAll(".opg-c").length);
  say(ogr===8,"운영 ② 대표 여덟이 나온다 (§4-2)","지금 "+ogr);
  await click(".opg-h");

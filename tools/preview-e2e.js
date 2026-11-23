@@ -28,7 +28,7 @@
    돌리기:  node tools/preview-e2e.js      (결과 · 캡처는 out/preview-e2e/) */
 const fs = require("fs"), path = require("path");
 const E = k => (process.env[k] || "").trim();
-const OUT = path.join(__dirname, "..", "out", "preview-e2e");
+const OUT = path.join(__dirname, "..", "out", "preview-e2e" + (E("E2E_SWAP") === "1" ? "-swap" : ""));
 let pass = 0, bad = 0;
 const ok = (c, n, got) => { if(c){ pass++; console.log("  ✅ " + n); } else { bad++; console.log("  ❌ " + n + (got !== undefined ? "  →  " + String(typeof got === "string" ? got : JSON.stringify(got)).slice(0, 240) : "")); } };
 const die = m => { console.log("⛔ " + m); process.exit(2); };
@@ -103,7 +103,9 @@ const R = { ui:[], srv:[], no:[] };   /* 화면에서 통과 · 서버 호출로
 let BR = null;
 async function open(t, p, opt){
   opt = opt || {};
-  const ctx = await BR.newContext(Object.assign({ viewport:{ width:opt.w || 1440, height:900 } },
+  /* E2E_SWAP=1 — 고객 · 업체는 PC(1440), 관리자는 모바일(390)로 바꿔 같은 흐름을 한 번 더 돕니다 */
+  let vw = opt.w || 1440; if(E("E2E_SWAP") === "1") vw = vw === 390 ? 1440 : 390;
+  const ctx = await BR.newContext(Object.assign({ viewport:{ width:vw, height:900 } },
     opt.admin ? { httpCredentials:{ username:"admin", password:E("PREVIEW_ADMIN_PASSWORD") } } : {},
     E("VERCEL_BYPASS") ? { extraHTTPHeaders:{ "x-vercel-protection-bypass":E("VERCEL_BYPASS") } } : {}));
   if(t) await ctx.addInitScript(v => { try{ localStorage.setItem("am.auth.v1", v); }catch(e){} }, JSON.stringify(t));

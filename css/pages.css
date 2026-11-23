@@ -8805,3 +8805,5 @@ span.kp-more .fld-b{ margin:0; }
 .kp-all .fld-b{ margin:0 auto; }
 .kp-all .hsg-all-l{ text-align:left; margin-top:18px; }
 .kp-svc-in > .kp-note{ grid-column:1 / -1; }
+/* 2026-11-23 — 지원사업 찾는 곳 카드는 기관 이름이 한 낱말로 길어("소상공인시장진흥공단") 폰 두 칸에서 낱말 가운데 잘렸습니다 — 폰은 한 칸 */
+@media (max-width:600px){ #cl-sup .kp-svc-g{ grid-template-columns:minmax(0,1fr); } }

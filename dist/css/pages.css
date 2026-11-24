@@ -6647,3 +6647,6 @@ span.kp-more .fld-b{ margin:0; }
 @media (max-width:900px){
   body:has(#view .clpf){ padding-bottom:calc(var(--mnav-h) + env(safe-area-inset-bottom, 0px) + var(--pk-bar-h, 0px)); }
 }
+
+.join-cn{ flex-basis:100%; display:flex; gap:8px; align-items:flex-start; margin:12px 0 0; color:var(--ink2); font-size:14px; line-height:1.5; }
+.join-cn[hidden]{ display:none; }

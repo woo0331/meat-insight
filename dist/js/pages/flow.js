@@ -104,7 +104,10 @@ function StartIntro(ind){
     quote: quoteTo({ side:"start", industry:ind || "" }),
     goName:"무료 상담 신청하기",
 
-    second:'<a class="btn btn-lg hh-o" href="/tools/cost'+(indOk ? "?i=" + encodeURIComponent(ind) : "")+'">'+icon("calc",18)+' 창업 비용 계산하기</a>',
+    second:'<a class="btn btn-lg hh-o" href="/tools/cost'+(indOk ? "?i=" + encodeURIComponent(ind) : "")+'">'+icon("calc",18)+' 창업 비용 계산하기</a>'+
+
+      '<a class="btn btn-lg hh-o hh-mo" href="'+(indOk ? "/startup/" + encodeURIComponent(ind) : "#st-ig")+'">'+
+        icon("seed",18)+' '+esc(indN ? indN + " 준비 보기" : "내 업종 준비 보기")+'</a>',
 
     cardTitle:"무엇부터 해 볼까요?", qfirst:true,
     quick:[{ ic:"calc", b:"창업비 계산하기", d:"빠뜨리기 쉬운 비용 항목을 늘어놓고 받은 견적을 더해 봅니다",

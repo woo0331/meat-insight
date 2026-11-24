@@ -117,7 +117,9 @@ function StepLinks(s, ind){
   }
   if(s.tool){
     var tl = (window.AM_TOOLS||[]).filter(function(t){ return t.key === s.tool; })[0];
-    if(tl) out.push(['<a class="pcs-l" href="'+esc(tl.to)+'">'+
+    /* 2026-11-24 — 계산기도 업종을 싣습니다 (바로 위 업체 · 바로가기 링크와 같은 규칙). /tools/* 는 ?i= 를 읽어
+       결과 아래 '다음에 볼 준비 순서 · 업체 · 가이드' 를 그 업종으로 잇습니다 — 안 실으면 거기서 업종이 끊겼습니다. */
+    if(tl) out.push(['<a class="pcs-l" href="'+esc(tl.to + (iq ? "?"+iq : ""))+'">'+
       icon("calc",15)+esc(tl.name)+'</a>', 4]);
   }
   return out.map(function(x){ return x[0]; }).join("");

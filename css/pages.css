@@ -8879,3 +8879,11 @@ span.kp-more .fld-b{ margin:0; }
 @media (max-width:900px){ .asp-g{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; }
   .asp-tx{ padding:12px 12px 6px; } .asp-st{ padding:0 12px 12px; } .asp-ic svg{ width:60px; height:60px; } }
 @media (max-width:600px){ .asp-go .btn{ width:100%; justify-content:center; } }
+
+/* 2026-11-24 /startup 폰 — 머리 단추 줄의 '내 업종 준비 보기' (.hh-mo · 폰 전용)
+   ⚠️ 줄 차례: [주 단추 | 창업 비용 계산하기] 다음 줄에 이것이 한 줄 통째. PC 는 바로 가기 카드가 같은 칸을 냅니다. */
+.hh-cta .hh-mo{ display:none; }
+@media (max-width:900px){
+  .hh-cta .hh-mo{ display:inline-flex; grid-column:1 / -1; justify-content:center; }
+  .hh-cta .hh-mo svg{ display:inline; }
+}

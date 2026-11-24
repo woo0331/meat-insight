@@ -2850,6 +2850,19 @@ const AUDIT = `(() => {
      바구니가 신청 화면으로 안 넘어가거나, 넘어가도 칸에 안 적히면
      손님은 같은 것을 두 번 적고 거기서 닫습니다.
      ⚠️ 주석에 백틱을 쓰지 마세요. */
+  await f("창업 머리에서 업종 고르기로 가는 길이 폰에도 있다", "/startup", `
+    /* 2026-11-24 — 폰은 바로 가기 카드를 접어 두어서, 단추 줄 안의 '내 업종 준비 보기'(.hh-mo)가 그 길입니다.
+       그 링크가 있고 · 가는 곳(업종 고르기 구간)이 있고 · 폰 폭 규칙에서만 보이는지 봅니다. 이 주석에 백틱 금지. */
+    const a = document.querySelector(".hh-cta a.hh-mo");
+    if(!a) return "단추 줄에 '내 업종 준비 보기' 가 없습니다";
+    if(a.getAttribute("href") !== "#st-ig") return "가는 곳이 업종 고르기 구간이 아닙니다 — " + a.getAttribute("href");
+    if(!document.getElementById("st-ig")) return "업종 고르기 구간이 없습니다";
+    let mob = false;
+    for (const sh of document.styleSheets){ let rs; try{ rs = sh.cssRules; }catch(e){ continue; }
+      for (const r of rs){ if(r.media && r.media.mediaText.indexOf("max-width: 900px") >= 0)
+        for (const x of r.cssRules) if(x.selectorText && x.selectorText.indexOf(".hh-mo") >= 0 && x.style.display && x.style.display !== "none") mob = true; } }
+    if(!mob) return "폰 폭에서 보이게 하는 규칙이 없습니다";
+    return true;`);
   await f("창업 준비가 §2 의 여섯 영역이다", "/startup", `
     /* 2026-11-24 하단 간소화 — 고르기(STEP 01) · 확인(바구니) · 묶음 · 신청(STEP 02)이 '여러 서비스 함께 고르기'
        한 구역(clpf)으로 합쳐졌습니다. 그 구역이 하나 있고 · 절차(stD)가 있고 · 고르는 칸 · 개수 · 신청 길이

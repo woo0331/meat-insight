@@ -78,7 +78,8 @@ function StepLinks(s, ind){
   }
   if(s.tool){
     var tl = (window.AM_TOOLS||[]).filter(function(t){ return t.key === s.tool; })[0];
-    if(tl) out.push(['<a class="pcs-l" href="'+esc(tl.to)+'">'+
+
+    if(tl) out.push(['<a class="pcs-l" href="'+esc(tl.to + (iq ? "?"+iq : ""))+'">'+
       icon("calc",15)+esc(tl.name)+'</a>', 4]);
   }
   return out.map(function(x){ return x[0]; }).join("");

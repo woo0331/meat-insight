@@ -161,6 +161,9 @@ const CASES = [
   /* 2026-11-24 — 요약 그리기를 끊어 봅니다 (고르면 요약이 안 섬) */
   ["집기 고르기가 품목 아홉을 고르고 요약에서 해제된다",
    `window.aspPaint = function(){};`],
+  /* 2026-11-24 — 폰 머리의 '내 업종 준비 보기' 를 지워 봅니다 */
+  ["창업 머리에서 업종 고르기로 가는 길이 폰에도 있다",
+   `var a = document.querySelector(".hh-cta a.hh-mo"); if(a) a.remove();`],
   ["창업 준비가 §2 의 여섯 영역이다",
    `var b = document.querySelector("#view section.clpf");
     if(b && b.parentNode) b.parentNode.removeChild(b);`],

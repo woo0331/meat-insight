@@ -184,7 +184,12 @@ function StartIntro(ind){
     quote: quoteTo({ side:"start", industry:ind || "" }),
     goName:"무료 상담 신청하기",
     /* 시안의 보조 단추 '창업 비용 계산하기' — 실제 창업비 정리표(/tools/cost)로 갑니다. 서비스 고르기는 바로 아래 칸이 받습니다 */
-    second:'<a class="btn btn-lg hh-o" href="/tools/cost'+(indOk ? "?i=" + encodeURIComponent(ind) : "")+'">'+icon("calc",18)+' 창업 비용 계산하기</a>',
+    second:'<a class="btn btn-lg hh-o" href="/tools/cost'+(indOk ? "?i=" + encodeURIComponent(ind) : "")+'">'+icon("calc",18)+' 창업 비용 계산하기</a>'+
+      /* 2026-11-24 — 폰에서는 바로 가기 카드(업종별 준비 보기)를 접어 두어서 업종 고르기가 2,200px 아래에만 있었습니다.
+         같은 목적지(아래 quick 의 둘째 칸 · #st-ig 또는 고르신 업종 화면)로 가는 한 줄을 단추 줄 안에 둡니다 —
+         ⚠️ 폰 전용(.hh-mo)입니다. PC 는 바로 가기 카드가 같은 칸을 이미 내서, 두면 한 화면에 둘이 됩니다. */
+      '<a class="btn btn-lg hh-o hh-mo" href="'+(indOk ? "/startup/" + encodeURIComponent(ind) : "#st-ig")+'">'+
+        icon("seed",18)+' '+esc(indN ? indN + " 준비 보기" : "내 업종 준비 보기")+'</a>',
     /* 2026-11-19 — 첫 화면의 두 행동. 업종을 고르셨으면 **그 업종으로** 이어집니다
        (/tools/cost 는 ?i= 를 읽고, /startup/:업종 이 그 업종의 준비 순서입니다). */
     cardTitle:"무엇부터 해 볼까요?", qfirst:true,

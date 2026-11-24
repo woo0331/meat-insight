@@ -8807,3 +8807,22 @@ span.kp-more .fld-b{ margin:0; }
 .kp-svc-in > .kp-note{ grid-column:1 / -1; }
 /* 2026-11-23 — 지원사업 찾는 곳 카드는 기관 이름이 한 낱말로 길어("소상공인시장진흥공단") 폰 두 칸에서 낱말 가운데 잘렸습니다 — 폰은 한 칸 */
 @media (max-width:600px){ #cl-sup .kp-svc-g{ grid-template-columns:minmax(0,1fr); } }
+
+/* 2026-11-24 /closure 하단 간소화 — 여러 서비스 함께 고르기 (ClosurePickFold) */
+.clpf .clpf-sum{ max-width:880px; margin:0 auto var(--s4); padding:var(--s4); background:var(--surface);
+  border:1px solid var(--line); border-radius:var(--r-md, 14px); display:grid; gap:var(--s3); }
+.clpf .clpf-sum[hidden]{ display:none; }
+.clpf .clpf-sum-t{ margin:0; font-weight:800; color:var(--ink); }
+.clpf .clpf-tgw{ display:flex; justify-content:center; }
+.clpf .clpf-tgw .fld-b{ min-height:var(--tap); }
+.clpf .clpf-body{ margin-top:var(--s4); }
+.clpf .pks-g{ grid-template-columns:minmax(0,1fr); }
+.clpf .clpf-pk{ margin-top:var(--s5); }
+.clpf .clpf-pk-h{ font-weight:800; color:var(--ink); margin:0 0 var(--s3); }
+.clpf .clpf-body.is-fold-all{ display:none; }
+/* 2026-11-24 — 고르신 서비스가 있으면 폰 하단 띠(#pk-bar)가 **푸터 맨 아랫줄**(통신판매중개자 고지)을 가렸습니다.
+   #view 는 --pk-bar-h 만큼 비우는데 푸터는 #view 밖이라 못 받았습니다 (운영 /closure · /startup · /operation 에서 재현).
+   ⚠️ 이번에는 /closure 만 고칩니다 — 다른 전문관도 같은 자리라 그쪽은 따로 승인 뒤에 :has 조건만 넓히면 됩니다. */
+@media (max-width:900px){
+  body:has(#view .clpf){ padding-bottom:calc(var(--mnav-h) + env(safe-area-inset-bottom, 0px) + var(--pk-bar-h, 0px)); }
+}

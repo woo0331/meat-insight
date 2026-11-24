@@ -825,8 +825,11 @@ function PageClosure(){
      ⚠️ 두 경로 카드(?p=all · ?p=pick)는 같은 선택의 반복이라 내렸습니다. 밖으로 나간
      주소는 그대로 열립니다 — ?p=all 은 자세한 순서를 펼친 채로, ?p=pick 은 #pick 으로 갑니다. */
   var path  = nowQS("p") === "all" ? "all" : (nowQS("p") === "pick" ? "pick" : "");
-  var sel   = PickGroupBand("closure", "close") + PickBasket("close") +
-              PackPickBand("close");
+  /* 2026-11-24 하단 간소화 — 위 사진 카드 · 목적별 이동이 기본 동선이고, 여러 서비스를 한 번에
+     고르는 것은 '여러 서비스 함께 고르기' 한 구역 안에 **기본 접힘**입니다 (ClosurePickFold).
+     ⚠️ 전에는 고르개(#pick) · "고르신 서비스 0개" 바구니 · 함께 하는 묶음 셋이 따로 서서 폰에서 3,381px 였습니다.
+     옛 세 구간(PickGroupBand · PickBasket · PackPickBand)은 다른 전문관이 그대로 씁니다. */
+  var sel   = ClosurePickFold(path);
   /* 2026-11-23 모바일 동선 정리 — 머리의 상황 셋(양도 검토 · 긴급 철거 · 집기 처분)이 첫 행동입니다.
      폐업 순서 여섯(ClosureFlow)이 대표 절차이고, 새 4단계(상담 → 현장 → 작업 → 완료)는 그 안의
      '업체에 맡기면' 한 줄로 합쳤습니다. 서비스 카드 넷(CloseKxServices)은 절차 여섯과 같은 목적지라 내렸습니다.
@@ -851,6 +854,53 @@ function PageClosure(){
       title:"다른 것도 준비하고 계신가요?",
       lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." })+
     PickBar("close");
+}
+
+/* ── 여러 서비스 함께 고르기 (2026-11-24 /closure 하단 간소화) ───────────────
+   ⚠️⚠️ **고르는 칸 · 저장 · 신청 링크를 새로 만들지 않았습니다.** 고르개 몸통은 다른 전문관과 같은
+   PickGroupBody() 이고, 개수 · 목록 · 해제 · 신청 링크는 pickPaint() 가 화면의 같은 표시
+   (data-pick-row · pk-list · pk-go-on · pk-go-clr · data-pick-go)를 그대로 맞춥니다.
+   ⚠️ 접어도 **고르신 것은 접힘 밖 요약**에서 보이고 해제됩니다. 0개면 요약이 줄째 가려집니다.
+   ⚠️ #pick 은 그대로 이 구역입니다 — 밖으로 나간 ?p=pick · #pick 링크가 여기로 옵니다(?p=pick 이면 펼친 채로).
+   ⚠️ 함께 하는 묶음은 **폐업 정리 하나만** 둡니다 — 같이 나오던 '매장 운영 패키지' 는 이 화면의 일이 아닙니다. */
+function ClosurePickFold(path){
+  var side = "close", n = amPickCount();
+  var body = (typeof PickGroupBody === "function") ? PickGroupBody("closure", side, { noAside:true }) : "";
+  if(!body) return PickGroupBand("closure", side) + PickBasket(side) + PackPickBand(side);
+  var opened = path === "pick";
+  var packs = (typeof PackPickList === "function") ? PackPickList(side, ["close"]) : [];
+  return '<section class="sec sec-ivory pkb-sel clpf" id="pick"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">여러 서비스를 한 번에</p>'+
+      '<h2>여러 서비스 함께 고르기</h2>'+
+      '<p>필요한 것이 하나면 위 사진 카드에서 바로 가시면 됩니다. 여러 서비스를 한 번에 맡기실 때만 펼쳐서 고르세요.</p>'+
+    '</div>'+
+    /* 고르신 것 — 접혀 있어도 여기서 보고 해제합니다 (0개면 줄째 없음) */
+    '<div class="clpf-sum" data-pick-row'+(n ? "" : " hidden")+'>'+
+      '<p class="clpf-sum-t">고르신 서비스 <b data-pick-n>'+n+'</b>개</p>'+
+      '<ul class="pkb-l" id="pk-list">'+pickRows()+'</ul>'+
+      '<div class="pkb-go">'+
+        '<a class="btn btn-b btn-lg" id="pk-go-on"'+(n ? "" : " hidden")+
+          ' data-pick-go="'+side+'" data-go-form="'+esc(amPickGoForm(side))+'"'+
+          ' href="'+esc(amPickQuoteTo(side))+'">'+
+          '<span>선택한 '+n+'개 서비스 견적 신청하기</span>'+icon("arrow",18)+'</a>'+
+        '<button class="btn btn-o" type="button" id="pk-go-clr"'+(n ? "" : " hidden")+
+          ' onclick="pickClear()">전부 해제</button>'+
+      '</div>'+
+      PickClosedNote(side)+
+    '</div>'+
+    '<div class="clpf-tgw">'+FoldAll("clpf-body", "서비스 목록 펼치기", "목록 접기", "", opened)+'</div>'+
+    '<div class="clpf-body'+(opened ? "" : " is-fold-all")+'" id="clpf-body">'+
+      body+
+      (packs.length
+        ? '<div class="clpf-pk"><p class="clpf-pk-h">함께 하시면 좋은 묶음</p>'+
+            '<ul class="pkp-g">'+packs.map(PackPickCard).join("")+'</ul></div>'
+        : "")+
+      '<p class="sec-note">'+icon("info",15)+
+        ' 고르기만 하면 저희에게 아무것도 오지 않습니다. <b>신청하기를 누르셔야</b> 접수됩니다. '+
+        '선택한 내용은 이 브라우저에 남고, <b>로그인하신 경우</b> 계정에도 남습니다.</p>'+
+    '</div>'+
+  '</div></section>';
 }
 
 /* ⚠️ 폐업 쪽 계산기 — `AM_TOOLS` 의 "정리할 때" 둘(체크리스트 ·

@@ -6631,3 +6631,19 @@ span.kp-more .fld-b{ margin:0; }
 .kp-svc-in > .kp-note{ grid-column:1 / -1; }
 
 @media (max-width:600px){ #cl-sup .kp-svc-g{ grid-template-columns:minmax(0,1fr); } }
+
+.clpf .clpf-sum{ max-width:880px; margin:0 auto var(--s4); padding:var(--s4); background:var(--surface);
+  border:1px solid var(--line); border-radius:var(--r-md, 14px); display:grid; gap:var(--s3); }
+.clpf .clpf-sum[hidden]{ display:none; }
+.clpf .clpf-sum-t{ margin:0; font-weight:800; color:var(--ink); }
+.clpf .clpf-tgw{ display:flex; justify-content:center; }
+.clpf .clpf-tgw .fld-b{ min-height:var(--tap); }
+.clpf .clpf-body{ margin-top:var(--s4); }
+.clpf .pks-g{ grid-template-columns:minmax(0,1fr); }
+.clpf .clpf-pk{ margin-top:var(--s5); }
+.clpf .clpf-pk-h{ font-weight:800; color:var(--ink); margin:0 0 var(--s3); }
+.clpf .clpf-body.is-fold-all{ display:none; }
+
+@media (max-width:900px){
+  body:has(#view .clpf){ padding-bottom:calc(var(--mnav-h) + env(safe-area-inset-bottom, 0px) + var(--pk-bar-h, 0px)); }
+}

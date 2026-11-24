@@ -6631,3 +6631,6 @@ span.kp-more .fld-b{ margin:0; }
 .kp-svc-in > .kp-note{ grid-column:1 / -1; }
 
 @media (max-width:600px){ #cl-sup .kp-svc-g{ grid-template-columns:minmax(0,1fr); } }
+
+.join-cn{ flex-basis:100%; display:flex; gap:8px; align-items:flex-start; margin:12px 0 0; color:var(--ink2); font-size:14px; line-height:1.5; }
+.join-cn[hidden]{ display:none; }

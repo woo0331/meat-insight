@@ -8807,3 +8807,6 @@ span.kp-more .fld-b{ margin:0; }
 .kp-svc-in > .kp-note{ grid-column:1 / -1; }
 /* 2026-11-23 — 지원사업 찾는 곳 카드는 기관 이름이 한 낱말로 길어("소상공인시장진흥공단") 폰 두 칸에서 낱말 가운데 잘렸습니다 — 폰은 한 칸 */
 @media (max-width:600px){ #cl-sup .kp-svc-g{ grid-template-columns:minmax(0,1fr); } }
+/* 2026-11-22 QA — /join 머리의 '지금은 입점 신청을 받지 않습니다' 한 줄 (data-cta=off · 열리면 숨김) */
+.join-cn{ flex-basis:100%; display:flex; gap:8px; align-items:flex-start; margin:12px 0 0; color:var(--ink2); font-size:14px; line-height:1.5; }
+.join-cn[hidden]{ display:none; }

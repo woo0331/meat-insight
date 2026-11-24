@@ -14,6 +14,18 @@ const { dbCallService } = require("./_db.js");
 
 const FORM_NAME = { quote: "견적 요청", sell: "매물 등록", join: "업체 입점" };
 
+/* 서비스 id → 한글 이름 (빌드가 api/_service-names.js 에 적습니다 — 화면 amPickOne() 과 같은 규칙).
+   ⚠️⚠️ **표에 없으면 받은 글을 그대로 냅니다** — 업체 입점은 이미 이름으로 오고, 내려놓은 서비스를
+   가리키는 지난 신청도 있습니다. 여기서 던지거나 빼면 알림이 통째로 안 나갑니다.
+   ⚠️ 표를 못 읽어도(파일이 없어도) 알림은 나갑니다 — 그때는 코드 그대로입니다. */
+let SVC_NAME = {};
+try { SVC_NAME = require("./_service-names.js") || {}; }
+catch (e) { console.warn("[site] 서비스 이름표를 못 읽었습니다 — 알림에 코드가 그대로 나갑니다"); }
+function svcLabel(v){
+  const s = String(v == null ? "" : v).trim();
+  return Object.prototype.hasOwnProperty.call(SVC_NAME, s) ? SVC_NAME[s] : s;
+}
+
 /* 바깥 오류를 짧은 코드로 — 사람 정보 · 주소 · 키가 섞이지 않게 */
 function errCode(why){
   const s = String(why || "");
@@ -30,7 +42,7 @@ function opsMessage(info){
   const name = FORM_NAME[info.form] || "접수";
   const subject = "[" + name + "] " + info.no;
   const L = ["접수번호  " + info.no, "종류      " + name];
-  if (info.services && info.services.length) L.push("서비스    " + info.services.slice(0, 8).join(" · "));
+  if (info.services && info.services.length) L.push("서비스    " + info.services.slice(0, 8).map(svcLabel).filter(Boolean).join(" / "));
   if (info.region) L.push("지역      " + info.region);
   if (info.near) L.push("⚠️ 확인 필요  같은 연락처의 최근 접수가 있습니다");
   L.push("");
@@ -61,4 +73,4 @@ async function runJob(job, info){
   return { kind: job.kind, ok: ok, state: mk.ok ? mk.data : "unknown" };
 }
 
-module.exports = { runJob, opsMessage, errCode, FORM_NAME };
+module.exports = { svcLabel, runJob, opsMessage, errCode, FORM_NAME };

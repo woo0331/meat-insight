@@ -5,7 +5,9 @@
    보는 것: ① 수신처가 실패(500)면 접수는 그대로 되고 알림 작업이 실패로 남는다
             ② 비밀값 없이 재시도 주소를 부르면 401
             ③ 수신처가 살아난 뒤 재시도하면 그 알림이 '보냄' 으로 바뀌고 한 번만 도착한다
-            ④ 도착한 알림에 성함 · 연락처 · 메일이 없다 */
+            ④ 도착한 알림에 성함 · 연락처 · 메일이 없다
+            ⑤ (2026-11-24) "서비스" 줄이 내부 코드가 아니라 한글 이름 — 하나 · 여럿 · 재시도로 보낸 것 모두
+               (저장된 request_item.service_id 는 코드 그대로) */
 const fs = require("fs"), path = require("path"), { execSync } = require("child_process");
 const { chromium } = require("playwright");
 const OUT = path.join(__dirname, "..", "out", "local-stack");
@@ -50,6 +52,33 @@ const hooks = () => fs.readFileSync(HOOKS, "utf8").split("\n").filter(Boolean).m
   const body = got.map(h => h.body).join("\n");
   ok(body.indexOf(tel) < 0 && body.indexOf(tel.replace(/-/g, "")) < 0 && body.indexOf("알림 시험") < 0 && body.indexOf("@") < 0,
      "④ 알림에 성함 · 연락처 · 메일 없음");
+  /* ⑤ 서비스 이름 — 위 재시도로 도착한 글(하나 고름) */
+  const line = t => ((t.match(/서비스\s+([^\n"]+)/) || [])[1] || "").trim();
+  const txt1 = got.map(h => { try{ return JSON.parse(h.body).text || ""; }catch(e){ return h.body; } }).join("\n");
+  ok(line(txt1) === "철거 · 전체철거", "⑤ 재시도 알림 · 하나 고름 → 한글 이름", line(txt1));
+  ok(txt1.indexOf("demolish/full") < 0, "⑤ 알림에 내부 코드(demolish/full) 없음");
+  ok(psql("select string_agg(service_id, ',') from request_item where request_id=(select id from request where no='" + no + "')") === "demolish/full",
+     "⑤ 저장된 서비스 코드는 그대로 (demolish/full)");
+  /* ⑤ 여럿 고름 — 수신처가 살아 있을 때 바로 도착하는 길 */
+  const multi = ["demolish/full", "restore/shop-restore", "waste/biz-waste"];
+  const b2 = await chromium.launch(); const pg2 = await (await b2.newContext({ viewport:{ width:390, height:844 } })).newPage();
+  await pg2.goto(APP + "/quote?side=close&sv=" + encodeURIComponent(multi.join(",")), { waitUntil:"networkidle" });
+  const tel2 = "010-0008-" + String(Date.now()).slice(-4); const n2 = hooks().length;
+  await pg2.selectOption("#q-reg", "gyeonggi"); await pg2.fill("#q-name", "복수 시험"); await pg2.fill("#q-tel", tel2);
+  await pg2.fill("#q-q", "로컬 시험 — 복수 서비스 알림"); await pg2.check("#q-ag");
+  await pg2.locator("#view form [type=submit]").first().click(); await pg2.waitForTimeout(3500);
+  const no2 = ((await pg2.evaluate(() => document.querySelector("#view").innerText)).match(/SW-[A-Z0-9]{4}-[A-Z0-9]{4}/) || [""])[0];
+  await b2.close();
+  const got2 = hooks().slice(n2).filter(h => !h.fail && h.body.indexOf(no2) >= 0);
+  const txt2 = got2.map(h => { try{ return JSON.parse(h.body).text || ""; }catch(e){ return h.body; } }).join("\n");
+  console.log("     예시 ↓\n" + txt2.split("\n").map(x => "     | " + x).join("\n"));
+  ok(got2.length === 1 && line(txt2) === "철거 · 전체철거 / 원상복구 · 상가 원상복구 / 폐기물 · 수거 · 사업장 폐기물",
+     "⑤ 여럿 고름 → 한글 이름 셋 · 한 번 도착", line(txt2));
+  ok(!/demolish\/|restore\/|waste\//.test(txt2), "⑤ 여럿 고름 알림에도 내부 코드 없음");
+  ok(psql("select string_agg(service_id, ',' order by service_id) from request_item where request_id=(select id from request where no='" + no2 + "')") === multi.slice().sort().join(","),
+     "⑤ 여럿 고름 · 저장 코드 그대로");
+  ok(txt2.indexOf(tel2) < 0 && txt2.indexOf(tel2.replace(/-/g, "")) < 0 && txt2.indexOf("복수 시험") < 0 && txt2.indexOf("@") < 0 && txt2.indexOf("로컬 시험 —") < 0,
+     "④ 여럿 고름 알림에도 성함 · 연락처 · 메일 · 내용 없음");
   console.log(fail ? "❌ " + fail : "✅ 전부");
   process.exit(fail ? 1 : 0);
 })();

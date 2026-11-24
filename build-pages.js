@@ -4323,6 +4323,31 @@ function writeSvcList(W){
   const at = path.join(ROOT, "api/_services.js");
   const was = fs.existsSync(at) ? fs.readFileSync(at, "utf8") : "";
   if(was !== out){ fs.writeFileSync(at, out); console.log("   서비스 목록을 다시 적었습니다 — api/_services.js (" + uniq.length + ")"); }
+
+  /* ── 운영자 알림의 "서비스" 줄 — id → 한글 이름 (2026-11-24) ──────────
+     ⚠️⚠️ **새 이름 표를 만들지 않습니다.** 화면이 쓰는 `amPickOne()` 을
+     그대로 부르고, 관리자 접수함(`js/intake.js` 의 `rqSvcName()`)과 **같은
+     꼴**로 적습니다 — 하위는 "분류 · 하위"(예: 철거 · 전체 철거), 분류는 이름.
+     두 곳이 다른 말을 하면 알림을 보고 접수함을 연 직원이 헷갈립니다.
+     ⚠️ 서버(`api/_notify.js`)는 화면 스크립트를 못 읽어서 빌드가 여기 적습니다.
+     ⚠️ 저장되는 서비스 코드는 그대로입니다 — 이 표는 알림 글에만 씁니다. */
+  if(typeof W.amPickOne !== "function") throw new Error("amPickOne 이 없어 서비스 이름표를 못 만듭니다 (svcpick.js)");
+  const names = {}, miss = [];
+  uniq.forEach(id => {
+    const one = W.amPickOne(id);
+    const nm = one ? (one.sub ? (one.desc + " · " + one.name) : one.name) : "";
+    if(nm) names[id] = nm; else miss.push(id);
+  });
+  if(miss.length) throw new Error("이름을 못 찾은 서비스 id 가 있습니다 — " + miss.slice(0, 5).join(", "));
+  const nout =
+    "/* ⚠️⚠️ **빌드가 만드는 파일입니다 — 손으로 고치지 마세요.**\n" +
+    "   `node build-pages.js` 가 `amPickOne()`(js/data/svcpick.js)으로 서비스 id 의\n" +
+    "   한글 이름을 적습니다. 관리자 접수함 `rqSvcName()` 과 같은 꼴입니다.\n" +
+    "   `api/_notify.js` 가 운영자 알림의 \"서비스\" 줄에만 씁니다 (저장값은 코드 그대로). */\n" +
+    "module.exports = " + JSON.stringify(names) + ";\n";
+  const nat = path.join(ROOT, "api/_service-names.js");
+  const nwas = fs.existsSync(nat) ? fs.readFileSync(nat, "utf8") : "";
+  if(nwas !== nout){ fs.writeFileSync(nat, nout); console.log("   서비스 이름표를 다시 적었습니다 — api/_service-names.js (" + Object.keys(names).length + ")"); }
 }
 checkSvcPage(W);
 checkSteps(W);

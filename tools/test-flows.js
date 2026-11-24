@@ -33,6 +33,11 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  const txt=()=>pg.evaluate(()=>document.getElementById("view").textContent);
  const url=()=>pg.evaluate(()=>location.pathname+location.search);
  const click=async(sel)=>{ await pg.click(sel); await pg.waitForTimeout(260); };
+ /* 2026-11-24 — 네 전문관 하단 고르개가 '여러 서비스 함께 고르기'(기본 접힘)가 됐습니다. 아래 검사들은 고르는 칸 자체를
+    보는 것이라 그 목록을 펼친 채로 둡니다. 접힘 자체는 맨 끝 【14】 가 sessionStorage keepFold 로 끄고 따로 봅니다. */
+ await pg.addInitScript(()=>{ new MutationObserver(()=>{ try{ if(sessionStorage.getItem("keepFold")) return; }catch(e){}
+   const b=document.getElementById("clpf-body"); if(b && b.classList.contains("is-fold-all")) b.classList.remove("is-fold-all");
+ }).observe(document,{subtree:true,childList:true}); });
  /* ⚠️⚠️ **신청 단추가 폭마다 다른 자리에 있습니다** (2026-10-20
     시안 2 · 3). 1100px 위에서는 오른쪽 고정 패널(`#pka-go`)이고,
     그 아래에서는 하단 고정 띠(`#pk-bar-go`)입니다 — 둘을 동시에
@@ -341,7 +346,8 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     ⚠️ 셋을 빼고 세면 옛 아홉이 그대로인지도 봅니다 (기존 구간을 지우지 않았다는 것). */
  /* 2026-11-23 사진형 시안 — 시안 다섯(.kp) + 옛 여덟(이용 순서는 사진 절차와 같은 말이라 내렸습니다) */
  const okx=await pg.evaluate(()=>document.querySelectorAll("#view > section.kp").length);
- say(osec===13 && osec-okx===8,"운영 ① 열셋 영역이다 (옛 여덟 + 사진형 다섯)","지금 "+osec+" · 시안 "+okx);
+ /* 2026-11-24 — 옛 여덟 중 고르개 · 바구니 둘이 '여러 서비스 함께 고르기' 하나로 합쳐져 옛 일곱 */
+ say(osec===12 && osec-okx===7,"운영 ① 열둘 영역이다 (옛 일곱 + 사진형 다섯)","지금 "+osec+" · 시안 "+okx);
  const ogr=await pg.evaluate(()=>document.querySelectorAll(".opg-c").length);
  say(ogr===8,"운영 ② 대표 여덟이 나온다 (§4-2)","지금 "+ogr);
  await click(".opg-h");
@@ -597,7 +603,8 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
  await pg.reload({waitUntil:"networkidle"});
  const t = await txt();
- say(t.indexOf("여러 개를 함께 고르실 수 있습니다")>=0,
+ /* 2026-11-24 — 머리말이 '여러 서비스 함께 고르기' 가 됐습니다 (같은 말을 구역 이름이 합니다) */
+ say(t.indexOf("여러 개를 함께 고르실 수 있습니다")>=0 || t.indexOf("여러 서비스 함께 고르기")>=0,
      "E① 여러 개를 고를 수 있다고 적혀 있다");
  say(t.indexOf("고르기만 하면")>=0 && t.indexOf("접수됩니다")>=0,
      "E② 고르는 것과 신청하는 것을 갈라서 말한다");
@@ -779,10 +786,10 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.goto(B+"/startup?i=cafe",{waitUntil:"networkidle"});
  await pg.waitForTimeout(400);
  const s1h = await pg.evaluate(()=>{
-   const h = document.querySelector(".stB h2");
+   const h = document.querySelector("#pick .stB-why");
    return h ? h.textContent.trim() : ""; });
  say(/카페/.test(s1h), "1 창업 — 업종을 고르면 그 업종 것이 앞에 선다", s1h);
- let cks = await pg.$$(".stB .pk-g .pk-ck");
+ let cks = await pg.$$("#pick .pk-g .pk-ck");
  if(cks.length > 1){ await cks[0].check(); await cks[1].check(); }
  await pg.waitForTimeout(350);
  say(await pickN() === 2, "1 창업 — 둘이 담긴다", String(await pickN()));
@@ -839,7 +846,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await clear();
  await pg.goto(B+"/startup",{waitUntil:"networkidle"});
  await pg.waitForTimeout(400);
- cks = await pg.$$(".stB .pk-g .pk-ck");
+ cks = await pg.$$("#pick .pk-g .pk-ck");
  if(cks.length) await cks[0].check();
  await pg.waitForTimeout(300);
  const n5 = await pickN();
@@ -1215,6 +1222,32 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    sellOpen = true;
    await p3.goto(B + "/", { waitUntil:"networkidle" }); await p3.waitForTimeout(300);
    say(await p3.isVisible('.wp-pgo a[href="/sell"]'), "매물 등록이 열리면 메인의 '내 매장 등록하기' 가 다시 보인다 (반대쪽)");
+   await cx.close();
+ }
+
+
+ /* 【15】 2026-11-24 — 네 전문관 하단 '여러 서비스 함께 고르기' 접힘 (이 블록만 자동 펼침을 끕니다) */
+ console.log("\n【15】 네 전문관 하단 고르개 — 기본 접힘 · 0개 요약 숨김 · 접힌 채 확인 · 해제");
+ {
+   const cx = await br.newContext({ viewport:{ width:390, height:800 } });
+   const p4 = await cx.newPage(); p4.on("dialog", d => d.accept());
+   await p4.addInitScript(() => { try{ sessionStorage.setItem("keepFold", "1"); }catch(e){} });
+   for (const u of ["/startup", "/operation", "/transfer", "/transfer?t=out", "/closure"]){
+     await p4.goto(B + u, { waitUntil:"networkidle" }); await p4.evaluate(() => { try{ localStorage.clear(); }catch(e){} });
+     await p4.reload({ waitUntil:"networkidle" });
+     const d = await p4.evaluate(() => ({ n:document.querySelectorAll("#view section.clpf").length,
+       body:!!(document.getElementById("clpf-body") || {}).offsetParent, sum:!!(document.querySelector("#pick .clpf-sum") || {}).offsetParent }));
+     say(d.n === 1 && !d.body && !d.sum, "고르개 " + u + " — 한 구역 · 기본 접힘 · 0개면 요약 숨김", JSON.stringify(d));
+     const ids = await p4.evaluate(() => [...document.querySelectorAll("#clpf-body [data-pick]")].slice(0, 2).map(e => e.getAttribute("data-pick")));
+     await p4.evaluate(v => { amPickSet(v); }, ids); await p4.reload({ waitUntil:"networkidle" });
+     const f = await p4.evaluate(() => ({ body:!!document.getElementById("clpf-body").offsetParent,
+       rows:[...document.querySelectorAll("#pk-list li")].filter(e => e.offsetParent).length }));
+     say(!f.body && f.rows === 2, "고르개 " + u + " — 고른 둘이 접힌 채 요약에 보인다 (새로고침 뒤)", JSON.stringify(f));
+     await p4.click("#pk-list li:first-child .pk-r-x"); await p4.waitForTimeout(200);
+     say(await p4.evaluate(() => amPickGet().length) === 1, "고르개 " + u + " — 접힌 채로 하나 해제");
+     await p4.click("#pick .clpf-tgw .fld-b"); await p4.waitForTimeout(200);
+     say(await p4.evaluate(() => !!document.getElementById("clpf-body").offsetParent), "고르개 " + u + " — 펼치기 단추로 목록이 열린다");
+   }
    await cx.close();
  }
 

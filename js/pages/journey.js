@@ -752,8 +752,9 @@ function PageOperation(){
      옛 OpsKxServices · OpsKxDiag · OpsKxCta 는 지우지 않았습니다. 이용 순서(HallSteps)는 위 사진 절차와
      같은 말이라 내렸습니다(함수는 그대로). */
   return OpsIntro(ind) + OpsKpSvc(ind) + OpsKpRoad() + OpsKpDiag() + OpsWorry() +
-    PickGroupBand("operation", "ops") +
-    PickBasket("ops") +
+    /* 2026-11-24 하단 간소화 — '여러 서비스 함께 고르기' 한 구역 · 기본 접힘 (옛 PickGroupBand + PickBasket) */
+    HallPickFold({ side:"ops", path:(nowQS("p") === "pick" ? "pick" : ""),
+      body:PickGroupBody("operation", "ops", { noAside:true }), packKeys:["run"] }) +
     OpsCheckBand() +
     OpsGuideBand() +
     OpsCalcBand() +
@@ -1144,7 +1145,9 @@ function PageAcquisition(){
      **매장을 먼저 보시고** 고르시고(PART 7-2 양수인 — "매장 탐색" 이
      첫 항목), 넘기시는 분은 **넘길 때 필요한 것을 먼저 고르시고**
      내놓으십니다. 지우거나 더한 구간은 없습니다 — 차례만 바뀝니다. */
-  var sel = PickGroupBand("transfer", "transfer") + PickBasket("transfer");
+  /* 2026-11-24 하단 간소화 — '여러 서비스 함께 고르기' 한 구역 · 기본 접힘 (옛 PickGroupBand + PickBasket) */
+  var sel = HallPickFold({ side:"transfer", path:(nowQS("p") === "pick" ? "pick" : ""),
+    body:PickGroupBody("transfer", "transfer", { noAside:true }), packKeys:[] });
   var mkt = AcqMarket(t, ind, iq);
   /* 2026-11-20 — 머리 바로 아래가 **고른 경로의 정보**입니다 (AcqWhich).
      인수: 경로 → 매물 찾기(AcqSearch) → 매물 → 고르기 · 양도: 경로 → 준비 자료 → 고르기 → 매물 등록 */

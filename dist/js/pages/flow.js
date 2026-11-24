@@ -8,12 +8,11 @@ function PageStartup(){
   var top = amPickTop("startup", ind), rest = amPickRest("startup", ind);
 
   return StartIntro(ind) + StartKpSvc(ind) + StartKpRoad(ind) + StartKpCalc(ind) + StartKpInd() +
-    StartPickBand(top, rest, ind) + PickBasket() +
 
-    PackPickBand("start") +
+    HallPickFold({ side:"start", path:(nowQS("p") === "pick" ? "pick" : ""),
+      body:StartPickBody(top, rest, ind), packKeys:["open", "build"] }) +
     StartGuideBand(ind) +
 
-    StartApplyBand() +
     KpWhy({ photo:"insu-operations", title:"창업에 필요한 일을 한곳에서 찾고 비교하세요",
       items:KP_WHY }) +
     KpCta({ title:"창업 준비, 어디서부터 시작할지 고민되세요?",
@@ -219,6 +218,58 @@ function StartPickBand(top, rest, ind){
     '</div>'+
     '</div>'+PickAside("start")+'</div>'+
   '</div></section>';
+}
+
+function StartPickBody(top, rest, ind){
+  var on   = (typeof amPickIndOn === "function") && amPickIndOn("startup", ind);
+  var indN = (ind && typeof amIndustryName === "function") ? amIndustryName(ind) : "";
+  return ''+
+    '<div class="stB-ind">'+
+      '<label class="stB-ind-l" for="st-indsel">서비스 추천 순서 — 업종을 고르시면 그 업종에 '+
+        '흔히 필요한 것부터 보여 드립니다</label>'+
+      '<div class="stB-ind-r">'+
+
+        IndustrySelect("st-indsel", ind || "", "startIndGo()", "업종을 고르지 않음")+
+        '<span class="stB-ind-n">선택하지 않아도 됩니다</span>'+
+      '</div>'+
+    '</div>'+
+    (on && indN
+      ? '<p class="stB-why">'+esc(indN)+' 창업에 흔히 필요한 순서로 '+
+        '저희가 추려 둔 것입니다. <b>이용 통계가 아닙니다</b> — 필요 없는 '+
+        '것은 그냥 끄시고, 빠진 것은 아래 전체 서비스에서 더 고르시면 됩니다.</p>'
+      : "")+
+
+    '<div class="pks-g"><div class="pks-main">'+
+    '<div id="pkb-find">'+
+      '<div class="pkf">'+
+        '<label class="pkf-l" for="pkf-q">찾으시는 것을 적어 보세요</label>'+
+        '<span class="pkf-w">'+icon("search",18)+
+          '<input class="pkf-i" id="pkf-q" type="search" autocomplete="off"'+
+            ' placeholder="예: 인테리어, 간판, 세금, 포스"'+
+            ' oninput="pickFind(this.value)">'+
+        '</span>'+
+        '<p class="pkf-r" id="pkb-r" hidden></p>'+
+      '</div>'+
+
+    (function(){
+      var q = (typeof amPickQuick === "function") ? amPickQuick("startup") : [];
+      return q.length
+        ? '<div class="pkq">'+
+            '<p class="pkq-l">필요한 것이 정해져 있으시면 여기서 '+
+              '바로 고르세요</p>'+
+            '<ul class="pk-g pk-g-q">'+q.map(PickCard).join("")+'</ul>'+
+            '<p class="pkq-n">여기 없는 것은 아래 분야별 목록에 '+
+              '전부 있습니다.</p>'+
+          '</div>'
+        : "";
+    })()+
+    '<ul class="pk-g">'+top.map(PickCard).join("")+'</ul>'+
+    (rest.length
+      ? FoldAll("st-rest", "전체 서비스 보기 ("+rest.length+"개 더)", "접기")+
+        '<ul class="pk-g pk-g2 is-fold-all" id="st-rest">'+rest.map(PickCard).join("")+'</ul>'
+      : "")+
+    '</div>'+
+    '</div>';
 }
 
 window.startIndGo = function(){
@@ -591,43 +642,9 @@ function PageClosure(){
 }
 
 function ClosurePickFold(path){
-  var side = "close", n = amPickCount();
-  var body = (typeof PickGroupBody === "function") ? PickGroupBody("closure", side, { noAside:true }) : "";
-  if(!body) return PickGroupBand("closure", side) + PickBasket(side) + PackPickBand(side);
-  var opened = path === "pick";
-  var packs = (typeof PackPickList === "function") ? PackPickList(side, ["close"]) : [];
-  return '<section class="sec sec-ivory pkb-sel clpf" id="pick"><div class="w">'+
-    '<div class="sec-hd sec-hd-c">'+
-      '<p class="eyebrow">여러 서비스를 한 번에</p>'+
-      '<h2>여러 서비스 함께 고르기</h2>'+
-      '<p>필요한 것이 하나면 위 사진 카드에서 바로 가시면 됩니다. 여러 서비스를 한 번에 맡기실 때만 펼쳐서 고르세요.</p>'+
-    '</div>'+
-
-    '<div class="clpf-sum" data-pick-row'+(n ? "" : " hidden")+'>'+
-      '<p class="clpf-sum-t">고르신 서비스 <b data-pick-n>'+n+'</b>개</p>'+
-      '<ul class="pkb-l" id="pk-list">'+pickRows()+'</ul>'+
-      '<div class="pkb-go">'+
-        '<a class="btn btn-b btn-lg" id="pk-go-on"'+(n ? "" : " hidden")+
-          ' data-pick-go="'+side+'" data-go-form="'+esc(amPickGoForm(side))+'"'+
-          ' href="'+esc(amPickQuoteTo(side))+'">'+
-          '<span>선택한 '+n+'개 서비스 견적 신청하기</span>'+icon("arrow",18)+'</a>'+
-        '<button class="btn btn-o" type="button" id="pk-go-clr"'+(n ? "" : " hidden")+
-          ' onclick="pickClear()">전부 해제</button>'+
-      '</div>'+
-      PickClosedNote(side)+
-    '</div>'+
-    '<div class="clpf-tgw">'+FoldAll("clpf-body", "서비스 목록 펼치기", "목록 접기", "", opened)+'</div>'+
-    '<div class="clpf-body'+(opened ? "" : " is-fold-all")+'" id="clpf-body">'+
-      body+
-      (packs.length
-        ? '<div class="clpf-pk"><p class="clpf-pk-h">함께 하시면 좋은 묶음</p>'+
-            '<ul class="pkp-g">'+packs.map(PackPickCard).join("")+'</ul></div>'
-        : "")+
-      '<p class="sec-note">'+icon("info",15)+
-        ' 고르기만 하면 저희에게 아무것도 오지 않습니다. <b>신청하기를 누르셔야</b> 접수됩니다. '+
-        '선택한 내용은 이 브라우저에 남고, <b>로그인하신 경우</b> 계정에도 남습니다.</p>'+
-    '</div>'+
-  '</div></section>';
+  return HallPickFold({ side:"close", path:path,
+    body:PickGroupBody("closure", "close", { noAside:true }), packKeys:["close"],
+    fallback:function(){ return PickGroupBand("closure", "close") + PickBasket("close") + PackPickBand("close"); } });
 }
 
 var CLOSE_CALC      = ["close", "closecost", "premium"];

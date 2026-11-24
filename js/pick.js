@@ -759,6 +759,56 @@ function pickFoldOpen(id){
    전에 `/operation` 은 운영 서비스관 여섯 · 업종별 차례 · 운영 과제
    스물넷 · 패키지가 **같은 분류를 네 군데서** 내고 있었고, 그중
    **어느 것도 고를 수 없었습니다** (전부 링크였습니다). */
+/* ── 여러 서비스 함께 고르기 — 네 전문관 공통 (2026-11-24 하단 간소화) ──────────────
+   /closure 에서 먼저 검증한 구성(claude/closure-pick)을 창업 · 운영 · 양도양수가 같이 씁니다.
+   ⚠️⚠️ 고르는 칸 · 저장 · 신청 링크를 새로 만들지 않았습니다 — 몸통은 전문관마다의 기존 고르개
+   (PickGroupBody · StartPickBody)이고, 개수 · 목록 · 해제 · 신청 링크는 pickPaint() 가 화면의 같은 표시
+   (data-pick-row · pk-list · pk-go-on · pk-go-clr · data-pick-go)를 그대로 맞춥니다.
+   ⚠️ 기본 접힘 · 0개면 요약 줄째 숨김 · 고른 것이 있으면 접힌 채로 개수 · 목록 · 개별 해제 · 전부 해제.
+   ⚠️ 접수가 닫혀 있으면 신청 단추 대신 닫힘 안내와 '접수 안내 보기'(data-pick-closed).
+   ⚠️ #pick 은 이 구역입니다 — ?p=pick 이면 펼친 채로.
+   ⚠️ 펼치기 · 해제는 전부 글자가 있는 <button> 이라 키보드(Tab · Enter · Space)로 됩니다.
+   o = { side, path, body, packKeys:[패키지 key], fallback:function } */
+window.HallPickFold = function(o){
+  o = o || {};
+  var side = o.side || "start", n = amPickCount();
+  if(!o.body) return (typeof o.fallback === "function") ? o.fallback() : (PickBasket(side));
+  var opened = o.path === "pick";
+  var packs = o.packKeys && o.packKeys.length ? PackPickList(side, o.packKeys) : [];
+  return '<section class="sec sec-ivory pkb-sel clpf" id="pick"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">여러 서비스를 한 번에</p>'+
+      '<h2>여러 서비스 함께 고르기</h2>'+
+      '<p>필요한 것이 하나면 위 사진 카드에서 바로 가시면 됩니다. 여러 서비스를 한 번에 맡기실 때만 펼쳐서 고르세요.</p>'+
+    '</div>'+
+    '<div class="clpf-sum" data-pick-row'+(n ? "" : " hidden")+'>'+
+      '<p class="clpf-sum-t">고르신 서비스 <b data-pick-n>'+n+'</b>개</p>'+
+      '<ul class="pkb-l" id="pk-list">'+pickRows()+'</ul>'+
+      '<div class="pkb-go">'+
+        '<a class="btn btn-b btn-lg" id="pk-go-on"'+(n ? "" : " hidden")+
+          ' data-pick-go="'+esc(side)+'" data-go-form="'+esc(amPickGoForm(side))+'"'+
+          ' href="'+esc(amPickQuoteTo(side))+'">'+
+          '<span>선택한 '+n+'개 서비스 견적 신청하기</span>'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-b btn-lg pk-closed" href="/intake" data-pick-closed="'+esc(side)+'" data-go-form="'+esc(amPickGoForm(side))+'">접수 안내 보기'+icon("arrow",18)+'</a>'+
+        '<button class="btn btn-o" type="button" id="pk-go-clr"'+(n ? "" : " hidden")+
+          ' onclick="pickClear()">전부 해제</button>'+
+      '</div>'+
+      PickClosedNote(side)+
+    '</div>'+
+    '<div class="clpf-tgw">'+FoldAll("clpf-body", "서비스 목록 펼치기", "목록 접기", "", opened)+'</div>'+
+    '<div class="clpf-body'+(opened ? "" : " is-fold-all")+'" id="clpf-body">'+
+      o.body+
+      (packs.length
+        ? '<div class="clpf-pk"><p class="clpf-pk-h">함께 하시면 좋은 묶음</p>'+
+            '<ul class="pkp-g">'+packs.map(PackPickCard).join("")+'</ul></div>'
+        : "")+
+      '<p class="sec-note">'+icon("info",15)+
+        ' 고르기만 하면 저희에게 아무것도 오지 않습니다. <b>신청하기를 누르셔야</b> 접수됩니다. '+
+        '선택한 내용은 이 브라우저에 남고, <b>로그인하신 경우</b> 계정에도 남습니다.</p>'+
+    '</div>'+
+  '</div></section>';
+};
+
 window.PickGroupBand = function(hallKey, side){
   var body = PickGroupBody(hallKey, side);
   if(!body) return "";
@@ -843,3 +893,16 @@ window.PickGroupBody = function(hallKey, side, opt){
     '</div>'+
     '</div>'+(opt.noAside ? "" : PickAside(side))+'</div>';
 };
+
+/* 2026-11-24 — '#pick' 으로 오시면(절차 01 '필요한 서비스 고르기' · 양도양수 '필요한 것' 등) 접힌 목록을 펼칩니다.
+   고르러 오신 분이 접힌 단추부터 다시 누르지 않게. ⚠️ 이미 펼쳐져 있으면 아무 일도 안 합니다. */
+window.pickFoldOpen = function(){
+  var body = document.getElementById("clpf-body");
+  if(!body || !body.classList.contains("is-fold-all")) return;
+  var btn = document.querySelector("#pick .clpf-tgw .fld-b");
+  if(btn) foldToggle("clpf-body", btn, "is-fold-all");
+};
+document.addEventListener("click", function(e){
+  var a = e.target && e.target.closest ? e.target.closest('a[href="#pick"]') : null;
+  if(a) setTimeout(window.pickFoldOpen, 0);
+});

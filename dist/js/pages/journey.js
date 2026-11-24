@@ -534,8 +534,9 @@ function PageOperation(){
   var ind = (typeof amIndustry === "function") ? amIndustry(nowQS("i")) : null;
 
   return OpsIntro(ind) + OpsKpSvc(ind) + OpsKpRoad() + OpsKpDiag() + OpsWorry() +
-    PickGroupBand("operation", "ops") +
-    PickBasket("ops") +
+
+    HallPickFold({ side:"ops", path:(nowQS("p") === "pick" ? "pick" : ""),
+      body:PickGroupBody("operation", "ops", { noAside:true }), packKeys:["run"] }) +
     OpsCheckBand() +
     OpsGuideBand() +
     OpsCalcBand() +
@@ -843,7 +844,8 @@ function PageAcquisition(){
   var ind  = (typeof amIndustry === "function") ? amIndustry(nowQS("i")) : null;
   var iq   = ind ? ("?i=" + encodeURIComponent(ind.key)) : "";
 
-  var sel = PickGroupBand("transfer", "transfer") + PickBasket("transfer");
+  var sel = HallPickFold({ side:"transfer", path:(nowQS("p") === "pick" ? "pick" : ""),
+    body:PickGroupBody("transfer", "transfer", { noAside:true }), packKeys:[] });
   var mkt = AcqMarket(t, ind, iq);
 
   return AcqIntro(ind, iq, nowQS("t")) + AcqKpSvc(ind, iq) + AcqKpRoad(t) + AcqKpCalc(t) +

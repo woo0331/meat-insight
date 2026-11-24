@@ -477,6 +477,46 @@ function pickFoldOpen(id){
   else el.classList.remove("is-fold-all");
 }
 
+window.HallPickFold = function(o){
+  o = o || {};
+  var side = o.side || "start", n = amPickCount();
+  if(!o.body) return (typeof o.fallback === "function") ? o.fallback() : (PickBasket(side));
+  var opened = o.path === "pick";
+  var packs = o.packKeys && o.packKeys.length ? PackPickList(side, o.packKeys) : [];
+  return '<section class="sec sec-ivory pkb-sel clpf" id="pick"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">여러 서비스를 한 번에</p>'+
+      '<h2>여러 서비스 함께 고르기</h2>'+
+      '<p>필요한 것이 하나면 위 사진 카드에서 바로 가시면 됩니다. 여러 서비스를 한 번에 맡기실 때만 펼쳐서 고르세요.</p>'+
+    '</div>'+
+    '<div class="clpf-sum" data-pick-row'+(n ? "" : " hidden")+'>'+
+      '<p class="clpf-sum-t">고르신 서비스 <b data-pick-n>'+n+'</b>개</p>'+
+      '<ul class="pkb-l" id="pk-list">'+pickRows()+'</ul>'+
+      '<div class="pkb-go">'+
+        '<a class="btn btn-b btn-lg" id="pk-go-on"'+(n ? "" : " hidden")+
+          ' data-pick-go="'+esc(side)+'" data-go-form="'+esc(amPickGoForm(side))+'"'+
+          ' href="'+esc(amPickQuoteTo(side))+'">'+
+          '<span>선택한 '+n+'개 서비스 견적 신청하기</span>'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-b btn-lg pk-closed" href="/intake" data-pick-closed="'+esc(side)+'" data-go-form="'+esc(amPickGoForm(side))+'">접수 안내 보기'+icon("arrow",18)+'</a>'+
+        '<button class="btn btn-o" type="button" id="pk-go-clr"'+(n ? "" : " hidden")+
+          ' onclick="pickClear()">전부 해제</button>'+
+      '</div>'+
+      PickClosedNote(side)+
+    '</div>'+
+    '<div class="clpf-tgw">'+FoldAll("clpf-body", "서비스 목록 펼치기", "목록 접기", "", opened)+'</div>'+
+    '<div class="clpf-body'+(opened ? "" : " is-fold-all")+'" id="clpf-body">'+
+      o.body+
+      (packs.length
+        ? '<div class="clpf-pk"><p class="clpf-pk-h">함께 하시면 좋은 묶음</p>'+
+            '<ul class="pkp-g">'+packs.map(PackPickCard).join("")+'</ul></div>'
+        : "")+
+      '<p class="sec-note">'+icon("info",15)+
+        ' 고르기만 하면 저희에게 아무것도 오지 않습니다. <b>신청하기를 누르셔야</b> 접수됩니다. '+
+        '선택한 내용은 이 브라우저에 남고, <b>로그인하신 경우</b> 계정에도 남습니다.</p>'+
+    '</div>'+
+  '</div></section>';
+};
+
 window.PickGroupBand = function(hallKey, side){
   var body = PickGroupBody(hallKey, side);
   if(!body) return "";
@@ -544,3 +584,14 @@ window.PickGroupBody = function(hallKey, side, opt){
     '</div>'+
     '</div>'+(opt.noAside ? "" : PickAside(side))+'</div>';
 };
+
+window.pickFoldOpen = function(){
+  var body = document.getElementById("clpf-body");
+  if(!body || !body.classList.contains("is-fold-all")) return;
+  var btn = document.querySelector("#pick .clpf-tgw .fld-b");
+  if(btn) foldToggle("clpf-body", btn, "is-fold-all");
+};
+document.addEventListener("click", function(e){
+  var a = e.target && e.target.closest ? e.target.closest('a[href="#pick"]') : null;
+  if(a) setTimeout(window.pickFoldOpen, 0);
+});

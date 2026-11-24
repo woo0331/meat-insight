@@ -66,13 +66,14 @@ function PageStartup(){
   /* 2026-11-23 사진형 시안 — 큰 대표 사진 → 사진 핵심 서비스 4 → 사진 진행 절차 4 → 사진 배너 + 실제 도구
      → 업종별 준비 → (기존 고르기 · 신청) → 왜 · 하단 안내. 옛 StartSignature · StartRoad 는 지우지 않았습니다. */
   return StartIntro(ind) + StartKpSvc(ind) + StartKpRoad(ind) + StartKpCalc(ind) + StartKpInd() +
-    StartPickBand(top, rest, ind) + PickBasket() +
-    /* StartIndustryBand() — 2026-11-19 위 "업종별 창업 준비 과정" 의 전체 보기로 합쳤습니다 */
-    PackPickBand("start") +
+    /* 2026-11-24 하단 간소화 — 고르개 · 바구니 · 묶음을 '여러 서비스 함께 고르기' 한 구역(기본 접힘)으로.
+       옛 StartPickBand · PickBasket · PackPickBand · StartApplyBand 는 지우지 않았습니다 (되살리기는 이 줄).
+       STEP 02(StartApplyBand)의 신청 · 접수 안내는 이 구역의 요약(고른 것이 있을 때)과 아래 KpCta 가 받습니다. */
+    HallPickFold({ side:"start", path:(nowQS("p") === "pick" ? "pick" : ""),
+      body:StartPickBody(top, rest, ind), packKeys:["open", "build"] }) +
     StartGuideBand(ind) +
     /* 2026-11-20 — 아래쪽 계산도구 구간(HallCalcBand)은 위 '창업 비용 계산기' 와 같은 소개의 반복이라
        내렸습니다. 그 구간에만 있던 신규vs인수 · 권리금 · 임대료 비율은 계산기 아래 '다른 계산도구' 줄로 옮겼습니다. */
-    StartApplyBand() +
     KpWhy({ photo:"insu-operations", title:"창업에 필요한 일을 한곳에서 찾고 비교하세요",
       items:KP_WHY }) +
     KpCta({ title:"창업 준비, 어디서부터 시작할지 고민되세요?",
@@ -351,6 +352,84 @@ function StartPickBand(top, rest, ind){
     '</div>'+
     '</div>'+PickAside("start")+'</div>'+
   '</div></section>';
+}
+
+/* 2026-11-24 — 창업 고르개 몸통만 (업종 고르개 · 찾기 · 빠른 선택 · 대표 · 전체 보기).
+   StartPickBand 와 하단 '여러 서비스 함께 고르기'(HallPickFold)가 같이 씁니다. 오른쪽 요약 패널은 뺍니다. */
+function StartPickBody(top, rest, ind){
+  var on   = (typeof amPickIndOn === "function") && amPickIndOn("startup", ind);
+  var indN = (ind && typeof amIndustryName === "function") ? amIndustryName(ind) : "";
+  return ''+
+    '<div class="stB-ind">'+
+      '<label class="stB-ind-l" for="st-indsel">서비스 추천 순서 — 업종을 고르시면 그 업종에 '+
+        '흔히 필요한 것부터 보여 드립니다</label>'+
+      '<div class="stB-ind-r">'+
+        /* ⚠️⚠️ **id 를 `st-ind` 로 짓지 마세요.** 바로 아래 "업종별로
+           자세히" 의 펼침 목록이 그 id 를 쓰고 있어서, 겹치면
+           `getElementById()` 가 **먼저 나오는 이 고르개**를 집고
+           펼침 단추의 `aria-controls` 도 엉뚱한 데를 가리킵니다 —
+           실제로 그렇게 만들었다가 흐름 검사가 잡았습니다. 이
+           저장소가 `.lg` · `.how-g` · `.pkg-*` 로 겪은 **클래스
+           이름 겹침과 같은 사고**이고, id 는 더 조용합니다. */
+        IndustrySelect("st-indsel", ind || "", "startIndGo()", "업종을 고르지 않음")+
+        '<span class="stB-ind-n">선택하지 않아도 됩니다</span>'+
+      '</div>'+
+    '</div>'+
+    (on && indN
+      ? '<p class="stB-why">'+esc(indN)+' 창업에 흔히 필요한 순서로 '+
+        '저희가 추려 둔 것입니다. <b>이용 통계가 아닙니다</b> — 필요 없는 '+
+        '것은 그냥 끄시고, 빠진 것은 아래 전체 서비스에서 더 고르시면 됩니다.</p>'
+      : "")+
+    /* ── 찾기 칸 (PART 3 통일) ─────────────────────────────────
+       ⚠️⚠️ **창업에만 없었습니다.** 운영 · 폐업 · 양도양수는
+       `PickGroupBand()` 안에 실제로 도는 찾기 칸이 있는데 창업만
+       빠져 있어서, 네 전문관의 흐름이 서로 달랐습니다 (PART 3 이
+       "레이아웃과 흐름을 통일" 이라고 적은 자리입니다).
+       ⚠️ `#pkb-find` 는 `pickFind()` 가 보는 울타리입니다 — 이름을
+       바꾸면 검색이 조용히 아무것도 못 찾습니다. */
+    /* ── 두 칸 (2026-10-20 시안 2) — 왼쪽 고르기 · 오른쪽 요약 */
+    '<div class="pks-g"><div class="pks-main">'+
+    '<div id="pkb-find">'+
+      '<div class="pkf">'+
+        '<label class="pkf-l" for="pkf-q">찾으시는 것을 적어 보세요</label>'+
+        '<span class="pkf-w">'+icon("search",18)+
+          '<input class="pkf-i" id="pkf-q" type="search" autocomplete="off"'+
+            ' placeholder="예: 인테리어, 간판, 세금, 포스"'+
+            ' oninput="pickFind(this.value)">'+
+        '</span>'+
+        '<p class="pkf-r" id="pkb-r" hidden></p>'+
+      '</div>'+
+    /* ── 빠른 선택 여섯 (2026-10-24) ──────────────────
+       ⚠⚠ **창업만 이 줄이 없었습니다.** 재 보니 운영 82칸 · 폐업
+       74칸 · 양도양수 52칸은 **하위까지** 고를 수 있는데 창업은
+       **분류 열두 칸뿐**이라, "간판" · "세금" · "포스" 를 찾아 오신
+       분이 찾기로는 걸리는데 **고를 칸이 없어서** 분류를 눌러야
+       했습니다 (PART 3 "네 전문관의 흐름을 통일").
+       ⚠️ 생김새 · 클래스는 `PickGroupBand()` 와 **같습니다** — 다른
+       이름을 주면 네 전문관이 또 서로 달라집니다.
+       ⚠⚠ **분류 대표 여섯에서 빼지 않습니다.** 같은 칸이 두 자리에
+       보여도 `pickPaint()` 가 화면의 **모든 `[data-pick]`** 을
+       맞춰서 둘이 같이 켜지고 바구니에는 한 번만 들어갑니다.
+       ⚠️ 없으면 줄째 뺍니다 (절대 규칙 2). */
+    (function(){
+      var q = (typeof amPickQuick === "function") ? amPickQuick("startup") : [];
+      return q.length
+        ? '<div class="pkq">'+
+            '<p class="pkq-l">필요한 것이 정해져 있으시면 여기서 '+
+              '바로 고르세요</p>'+
+            '<ul class="pk-g pk-g-q">'+q.map(PickCard).join("")+'</ul>'+
+            '<p class="pkq-n">여기 없는 것은 아래 분야별 목록에 '+
+              '전부 있습니다.</p>'+
+          '</div>'
+        : "";
+    })()+
+    '<ul class="pk-g">'+top.map(PickCard).join("")+'</ul>'+
+    (rest.length
+      ? FoldAll("st-rest", "전체 서비스 보기 ("+rest.length+"개 더)", "접기")+
+        '<ul class="pk-g pk-g2 is-fold-all" id="st-rest">'+rest.map(PickCard).join("")+'</ul>'
+      : "")+
+    '</div>'+
+    '</div>';
 }
 
 /* 업종을 고르면 — ⚠️⚠️ **고르신 서비스를 지우지 않습니다.** 주소만
@@ -864,43 +943,9 @@ function PageClosure(){
    ⚠️ #pick 은 그대로 이 구역입니다 — 밖으로 나간 ?p=pick · #pick 링크가 여기로 옵니다(?p=pick 이면 펼친 채로).
    ⚠️ 함께 하는 묶음은 **폐업 정리 하나만** 둡니다 — 같이 나오던 '매장 운영 패키지' 는 이 화면의 일이 아닙니다. */
 function ClosurePickFold(path){
-  var side = "close", n = amPickCount();
-  var body = (typeof PickGroupBody === "function") ? PickGroupBody("closure", side, { noAside:true }) : "";
-  if(!body) return PickGroupBand("closure", side) + PickBasket(side) + PackPickBand(side);
-  var opened = path === "pick";
-  var packs = (typeof PackPickList === "function") ? PackPickList(side, ["close"]) : [];
-  return '<section class="sec sec-ivory pkb-sel clpf" id="pick"><div class="w">'+
-    '<div class="sec-hd sec-hd-c">'+
-      '<p class="eyebrow">여러 서비스를 한 번에</p>'+
-      '<h2>여러 서비스 함께 고르기</h2>'+
-      '<p>필요한 것이 하나면 위 사진 카드에서 바로 가시면 됩니다. 여러 서비스를 한 번에 맡기실 때만 펼쳐서 고르세요.</p>'+
-    '</div>'+
-    /* 고르신 것 — 접혀 있어도 여기서 보고 해제합니다 (0개면 줄째 없음) */
-    '<div class="clpf-sum" data-pick-row'+(n ? "" : " hidden")+'>'+
-      '<p class="clpf-sum-t">고르신 서비스 <b data-pick-n>'+n+'</b>개</p>'+
-      '<ul class="pkb-l" id="pk-list">'+pickRows()+'</ul>'+
-      '<div class="pkb-go">'+
-        '<a class="btn btn-b btn-lg" id="pk-go-on"'+(n ? "" : " hidden")+
-          ' data-pick-go="'+side+'" data-go-form="'+esc(amPickGoForm(side))+'"'+
-          ' href="'+esc(amPickQuoteTo(side))+'">'+
-          '<span>선택한 '+n+'개 서비스 견적 신청하기</span>'+icon("arrow",18)+'</a>'+
-        '<button class="btn btn-o" type="button" id="pk-go-clr"'+(n ? "" : " hidden")+
-          ' onclick="pickClear()">전부 해제</button>'+
-      '</div>'+
-      PickClosedNote(side)+
-    '</div>'+
-    '<div class="clpf-tgw">'+FoldAll("clpf-body", "서비스 목록 펼치기", "목록 접기", "", opened)+'</div>'+
-    '<div class="clpf-body'+(opened ? "" : " is-fold-all")+'" id="clpf-body">'+
-      body+
-      (packs.length
-        ? '<div class="clpf-pk"><p class="clpf-pk-h">함께 하시면 좋은 묶음</p>'+
-            '<ul class="pkp-g">'+packs.map(PackPickCard).join("")+'</ul></div>'
-        : "")+
-      '<p class="sec-note">'+icon("info",15)+
-        ' 고르기만 하면 저희에게 아무것도 오지 않습니다. <b>신청하기를 누르셔야</b> 접수됩니다. '+
-        '선택한 내용은 이 브라우저에 남고, <b>로그인하신 경우</b> 계정에도 남습니다.</p>'+
-    '</div>'+
-  '</div></section>';
+  return HallPickFold({ side:"close", path:path,
+    body:PickGroupBody("closure", "close", { noAside:true }), packKeys:["close"],
+    fallback:function(){ return PickGroupBand("closure", "close") + PickBasket("close") + PackPickBand("close"); } });
 }
 
 /* ⚠️ 폐업 쪽 계산기 — `AM_TOOLS` 의 "정리할 때" 둘(체크리스트 ·

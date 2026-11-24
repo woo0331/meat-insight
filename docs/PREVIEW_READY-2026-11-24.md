@@ -116,3 +116,18 @@ Vercel Preview 주소는 대략 `meat-insight-git-claude-preview-ready-<팀>.ver
 
 - 운영자 알림의 "서비스" 줄에 서비스 key(`demolish/full`)가 그대로 보임 — 이름으로 바꾸는 별도 작업.
 - `/api/admin-health` 는 `DEAL_WEBHOOK_URL` · `*_EMAIL_FROM` · `CRON_SECRET` 이 있는지 알려 주지 않음 — Vercel 목록에서 눈으로 확인.
+
+## 10. 시험 대상 바뀜 · 대기 기록 (2026-11-24)
+
+- **시험 대상 커밋: `claude/notify-service-name` 의 `e142ff43f`** (로컬 검수 완료본 · 전체 검사 22/22 · 로컬 알림 18/18).
+  §1 의 `claude/preview-ready` 대신 이 브랜치에 Vercel Preview 환경변수를 겁니다 (Preview Branch: `claude/notify-service-name`).
+  `0db6d5b57` 위에 운영자 알림 서비스명 한글화만 더한 것입니다.
+- **확인할 것 셋** (시험 환경이 생기면 §6 차례로):
+  1. 실제 메일 링크로 로그인 → 시험 DB 에서 관리자로 올린 계정으로 `/admin` 접수함 진입
+  2. 시험 견적 제출 → 지정한 시험 수신처(시험 슬랙 채널 · 시험 메일함)에 알림 도착
+  3. 알림의 "서비스" 줄이 한글 이름이고, 성함 · 연락처 · 메일 · 상담 내용이 없음
+- **지금 상태: 대기.** Supabase 계정에 켜진 프로젝트가 여전히 둘(`gxjzlkvdbafzfjuunvyx` aboutmeat ·
+  `igignylgzjphtnyxhhsd`)뿐이고 둘 다 시험용으로 쓸 수 없습니다 (도구가 거절). Preview 에 걸린 시험 환경변수도 없습니다.
+  두 프로젝트는 중지 · 삭제하지 않았습니다.
+- 대표님이 하실 일은 §7 그대로입니다 (시험 Supabase 확보 · service_role 키는 자격 증명 카드 · Vercel Preview 환경변수 ·
+  Redirect URL · 시험 수신처).

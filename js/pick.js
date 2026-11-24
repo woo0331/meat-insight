@@ -469,9 +469,14 @@ window.PickBasket = function(side){
    수 있습니다 (인터넷 · POS · CCTV · 키오스크가 전부 `it`). 잃는 것이
    없는 까닭은, 신청 화면의 `it` 질문이 **"필요한 것"** 체크로 그 넷을
    그대로 묻기 때문입니다 — 고르는 단계만 줄어듭니다. */
-window.PackPickBand = function(side){
+/* 2026-11-24 — opt.keys 를 주면 그 묶음만 (/closure 는 폐업 정리 하나만 — 운영 묶음은 그 화면의 일이 아닙니다) */
+window.PackPickList = function(side, keys){
   var L = (typeof amPackagesFor === "function") ? amPackagesFor(side) : [];
-  L = L.filter(function(p){ return packPickCats(p.key).length; });
+  L = L.filter(function(p){ return packPickCats(p.key).length && (!keys || keys.indexOf(p.key) >= 0); });
+  return L;
+};
+window.PackPickBand = function(side){
+  var L = PackPickList(side);
   if(!L.length) return "";
   return '<section class="sec sec-gray pkp"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
@@ -755,6 +760,26 @@ function pickFoldOpen(id){
    스물넷 · 패키지가 **같은 분류를 네 군데서** 내고 있었고, 그중
    **어느 것도 고를 수 없었습니다** (전부 링크였습니다). */
 window.PickGroupBand = function(hallKey, side){
+  var body = PickGroupBody(hallKey, side);
+  if(!body) return "";
+  return '<section class="sec sec-ivory pkb-sel" id="pick"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">필요한 서비스 선택</p>'+
+      '<h2>무엇이 필요하신가요?</h2>'+
+      /* 2026-11-19 — 접수가 닫혀 있으면 "찾아 드립니다" 를 약속하지 않습니다 (그 전문관의 양식 기준). */
+      '<p>칸을 누르면 아래에 쌓입니다. <b>여러 개를 함께</b> 고르실 수 있습니다. '+
+        ctaPair(amPickGoForm(side),
+          "한 번만 적어 보내시면 서비스마다 업체를 찾아 드립니다.",
+          "지금은 접수를 받지 않습니다 — 고르신 서비스는 이 기기의 브라우저에 남아, 준비 정보와 업체 분야를 먼저 보실 수 있습니다.")+'</p>'+
+    '</div>'+body+
+  '</div></section>';
+};
+
+/* 2026-11-24 — 고르개 몸통만 (머리말 · 구간 껍데기 없이). PickGroupBand 와 /closure 의
+   '여러 서비스 함께 고르기'(ClosurePickFold)가 같이 씁니다 — 두 곳에 적으면 어긋납니다.
+   opt.noAside — 오른쪽 요약 패널을 빼고 몸통만 (그 자리의 요약을 접힘 밖에 따로 둘 때). */
+window.PickGroupBody = function(hallKey, side, opt){
+  opt = opt || {};
   var G = (typeof amPickGroups === "function") ? amPickGroups(hallKey) : [];
   if(!G.length) return "";
   /* 전체 목록 — 묶음이 이미 가리키는 분류는 뺍니다 (§4-5 "나머지") */
@@ -771,17 +796,7 @@ window.PickGroupBand = function(hallKey, side){
      (`amPickGet()` 이 중복을 걸러 냅니다). 눌러서 확인했습니다. */
   var quick = (typeof amPickQuick === "function") ? amPickQuick(hallKey) : [];
 
-  return '<section class="sec sec-ivory pkb-sel" id="pick"><div class="w">'+
-    '<div class="sec-hd sec-hd-c">'+
-      '<p class="eyebrow">필요한 서비스 선택</p>'+
-      '<h2>무엇이 필요하신가요?</h2>'+
-      /* 2026-11-19 — 접수가 닫혀 있으면 "찾아 드립니다" 를 약속하지 않습니다 (그 전문관의 양식 기준). */
-      '<p>칸을 누르면 아래에 쌓입니다. <b>여러 개를 함께</b> 고르실 수 있습니다. '+
-        ctaPair(amPickGoForm(side),
-          "한 번만 적어 보내시면 서비스마다 업체를 찾아 드립니다.",
-          "지금은 접수를 받지 않습니다 — 고르신 서비스는 이 기기의 브라우저에 남아, 준비 정보와 업체 분야를 먼저 보실 수 있습니다.")+'</p>'+
-    '</div>'+
-
+  return ''+
     /* ── 두 칸 (2026-10-20 시안 3) — 왼쪽 고르기 · 오른쪽 요약
        ⚠️ `#pkb-find` 는 `pickFind()` 가 보는 울타리입니다 — 이름을
        바꾸면 찾기가 조용히 아무것도 못 찾습니다. */
@@ -826,6 +841,5 @@ window.PickGroupBand = function(hallKey, side){
           '</div>'
         : "")+
     '</div>'+
-    '</div>'+PickAside(side)+'</div>'+
-  '</div></section>';
+    '</div>'+(opt.noAside ? "" : PickAside(side))+'</div>';
 };

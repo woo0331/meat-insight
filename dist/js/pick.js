@@ -283,9 +283,13 @@ window.PickBasket = function(side){
   '</div></section>';
 };
 
-window.PackPickBand = function(side){
+window.PackPickList = function(side, keys){
   var L = (typeof amPackagesFor === "function") ? amPackagesFor(side) : [];
-  L = L.filter(function(p){ return packPickCats(p.key).length; });
+  L = L.filter(function(p){ return packPickCats(p.key).length && (!keys || keys.indexOf(p.key) >= 0); });
+  return L;
+};
+window.PackPickBand = function(side){
+  var L = PackPickList(side);
   if(!L.length) return "";
   return '<section class="sec sec-gray pkp"><div class="w">'+
     '<div class="sec-hd sec-hd-c">'+
@@ -474,6 +478,23 @@ function pickFoldOpen(id){
 }
 
 window.PickGroupBand = function(hallKey, side){
+  var body = PickGroupBody(hallKey, side);
+  if(!body) return "";
+  return '<section class="sec sec-ivory pkb-sel" id="pick"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">필요한 서비스 선택</p>'+
+      '<h2>무엇이 필요하신가요?</h2>'+
+
+      '<p>칸을 누르면 아래에 쌓입니다. <b>여러 개를 함께</b> 고르실 수 있습니다. '+
+        ctaPair(amPickGoForm(side),
+          "한 번만 적어 보내시면 서비스마다 업체를 찾아 드립니다.",
+          "지금은 접수를 받지 않습니다 — 고르신 서비스는 이 기기의 브라우저에 남아, 준비 정보와 업체 분야를 먼저 보실 수 있습니다.")+'</p>'+
+    '</div>'+body+
+  '</div></section>';
+};
+
+window.PickGroupBody = function(hallKey, side, opt){
+  opt = opt || {};
   var G = (typeof amPickGroups === "function") ? amPickGroups(hallKey) : [];
   if(!G.length) return "";
 
@@ -486,16 +507,7 @@ window.PickGroupBand = function(hallKey, side){
 
   var quick = (typeof amPickQuick === "function") ? amPickQuick(hallKey) : [];
 
-  return '<section class="sec sec-ivory pkb-sel" id="pick"><div class="w">'+
-    '<div class="sec-hd sec-hd-c">'+
-      '<p class="eyebrow">필요한 서비스 선택</p>'+
-      '<h2>무엇이 필요하신가요?</h2>'+
-
-      '<p>칸을 누르면 아래에 쌓입니다. <b>여러 개를 함께</b> 고르실 수 있습니다. '+
-        ctaPair(amPickGoForm(side),
-          "한 번만 적어 보내시면 서비스마다 업체를 찾아 드립니다.",
-          "지금은 접수를 받지 않습니다 — 고르신 서비스는 이 기기의 브라우저에 남아, 준비 정보와 업체 분야를 먼저 보실 수 있습니다.")+'</p>'+
-    '</div>'+
+  return ''+
 
     '<div class="pks-g"><div class="pks-main">'+
     '<div id="pkb-find">'+
@@ -530,6 +542,5 @@ window.PickGroupBand = function(hallKey, side){
           '</div>'
         : "")+
     '</div>'+
-    '</div>'+PickAside(side)+'</div>'+
-  '</div></section>';
+    '</div>'+(opt.noAside ? "" : PickAside(side))+'</div>';
 };

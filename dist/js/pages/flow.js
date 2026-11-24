@@ -570,8 +570,8 @@ function CloseKpSupport(){
 function PageClosure(){
 
   var path  = nowQS("p") === "all" ? "all" : (nowQS("p") === "pick" ? "pick" : "");
-  var sel   = PickGroupBand("closure", "close") + PickBasket("close") +
-              PackPickBand("close");
+
+  var sel   = ClosurePickFold(path);
 
   return ClosureIntro(path) + CloseKpSvc() + CloseKpRoad() + CloseKpCalc() +
     ClosureFlow(path) + ClosureDemoBand() +
@@ -588,6 +588,46 @@ function PageClosure(){
       title:"다른 것도 준비하고 계신가요?",
       lead:"창업 · 운영 · 인수 · 양도 · 폐업 — 어느 자리든 이어서 보실 수 있습니다." })+
     PickBar("close");
+}
+
+function ClosurePickFold(path){
+  var side = "close", n = amPickCount();
+  var body = (typeof PickGroupBody === "function") ? PickGroupBody("closure", side, { noAside:true }) : "";
+  if(!body) return PickGroupBand("closure", side) + PickBasket(side) + PackPickBand(side);
+  var opened = path === "pick";
+  var packs = (typeof PackPickList === "function") ? PackPickList(side, ["close"]) : [];
+  return '<section class="sec sec-ivory pkb-sel clpf" id="pick"><div class="w">'+
+    '<div class="sec-hd sec-hd-c">'+
+      '<p class="eyebrow">여러 서비스를 한 번에</p>'+
+      '<h2>여러 서비스 함께 고르기</h2>'+
+      '<p>필요한 것이 하나면 위 사진 카드에서 바로 가시면 됩니다. 여러 서비스를 한 번에 맡기실 때만 펼쳐서 고르세요.</p>'+
+    '</div>'+
+
+    '<div class="clpf-sum" data-pick-row'+(n ? "" : " hidden")+'>'+
+      '<p class="clpf-sum-t">고르신 서비스 <b data-pick-n>'+n+'</b>개</p>'+
+      '<ul class="pkb-l" id="pk-list">'+pickRows()+'</ul>'+
+      '<div class="pkb-go">'+
+        '<a class="btn btn-b btn-lg" id="pk-go-on"'+(n ? "" : " hidden")+
+          ' data-pick-go="'+side+'" data-go-form="'+esc(amPickGoForm(side))+'"'+
+          ' href="'+esc(amPickQuoteTo(side))+'">'+
+          '<span>선택한 '+n+'개 서비스 견적 신청하기</span>'+icon("arrow",18)+'</a>'+
+        '<button class="btn btn-o" type="button" id="pk-go-clr"'+(n ? "" : " hidden")+
+          ' onclick="pickClear()">전부 해제</button>'+
+      '</div>'+
+      PickClosedNote(side)+
+    '</div>'+
+    '<div class="clpf-tgw">'+FoldAll("clpf-body", "서비스 목록 펼치기", "목록 접기", "", opened)+'</div>'+
+    '<div class="clpf-body'+(opened ? "" : " is-fold-all")+'" id="clpf-body">'+
+      body+
+      (packs.length
+        ? '<div class="clpf-pk"><p class="clpf-pk-h">함께 하시면 좋은 묶음</p>'+
+            '<ul class="pkp-g">'+packs.map(PackPickCard).join("")+'</ul></div>'
+        : "")+
+      '<p class="sec-note">'+icon("info",15)+
+        ' 고르기만 하면 저희에게 아무것도 오지 않습니다. <b>신청하기를 누르셔야</b> 접수됩니다. '+
+        '선택한 내용은 이 브라우저에 남고, <b>로그인하신 경우</b> 계정에도 남습니다.</p>'+
+    '</div>'+
+  '</div></section>';
 }
 
 var CLOSE_CALC      = ["close", "closecost", "premium"];

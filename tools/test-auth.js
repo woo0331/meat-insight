@@ -1471,6 +1471,42 @@ console.log("\n── W03 스위치 — STOREWAY_ACCOUNTS_OPEN 이 꺼지면 전
   process.env.STOREWAY_ACCOUNTS_OPEN = "1";
 }
 
+console.log("\n── /api/admin-health?ref=1 — 프로젝트 ID 만 (2026-11-24)");
+{
+  const H = require(path.join(ROOT, "api", "admin-health.js"));
+  const jwt = (o) => "eyJhbGciOiJIUzI1NiJ9." + Buffer.from(JSON.stringify(o)).toString("base64").replace(/=+$/, "") + ".SIGSIGSIG";
+  const A = jwt({ ref:"abcdefghijklmnopqrst", role:"anon" }), S = jwt({ ref:"abcdefghijklmnopqrst", role:"service_role" });
+  setEnv({ SUPABASE_URL:"https://abcdefghijklmnopqrst.supabase.co", SUPABASE_ANON_KEY:A, SUPABASE_SERVICE_KEY:S });
+  process.env.ADMIN_PASSWORD = "pw-test";
+  for(const open of ["", "1"]){
+    process.env.STOREWAY_ACCOUNTS_OPEN = open;
+    mock([[/./, function(){ return body(200, []); }]]);
+    let r = res(); await H(req({ method:"GET", query:{ ref:"1" }, url:"/api/admin-health?ref=1" }), r);
+    ok("ref=1 (스위치 " + (open || "꺼짐") + ") — 프로젝트 ID 를 돌려준다",
+       r.code === 200 && r.body.projectId === "abcdefghijklmnopqrst" && r.body.sameProject === true
+       && r.body.keys.anon.role === "anon" && r.body.keys.service.role === "service_role", r.body);
+    const dump = JSON.stringify(r.body);
+    ok("ref=1 — 키 · 주소 전체가 안 나간다", dump.indexOf(A) < 0 && dump.indexOf(S) < 0 && dump.indexOf("SIGSIG") < 0 && dump.indexOf("supabase.co") < 0 && !/length|len"/.test(dump), dump);
+    ok("ref=1 — DB 를 한 번도 안 부른다", calls.length === 0, calls.map(c => c.url));
+    ok("ref=1 — 캐시하지 않는다", r.headers["cache-control"] === "no-store", r.headers);
+  }
+  process.env.SUPABASE_SERVICE_KEY = jwt({ ref:"zzzzzzzzzzzzzzzzzzzz", role:"service_role" });
+  let r = res(); await H(req({ method:"GET", query:{ ref:"1" } }), r);
+  ok("ref=1 — 주소와 키가 다른 프로젝트면 그렇게 말한다", r.body.sameProject === false && /서로 다른/.test(r.body.say), r.body);
+  process.env.SUPABASE_SERVICE_KEY = "sb_secret_newstyle"; process.env.SUPABASE_ANON_KEY = "sb_publishable_newstyle";
+  r = res(); await H(req({ method:"GET", query:{ ref:"1" } }), r);
+  ok("ref=1 — 새 꼴 키는 ref 를 모름(null)으로 두고 값은 안 낸다",
+     r.body.keys.service.ref === null && r.body.keys.service.set === true && JSON.stringify(r.body).indexOf("newstyle") < 0, r.body);
+  delete process.env.ADMIN_PASSWORD;
+  r = res(); await H(req({ method:"GET", query:{ ref:"1" } }), r);
+  ok("ref=1 — 관리자 잠금이 없으면 아무것도 안 알려 준다", r.code === 503 && !r.body.projectId, r.body);
+  process.env.ADMIN_PASSWORD = "pw-test";
+  process.env.STOREWAY_ACCOUNTS_OPEN = "";
+  r = res(); await H(req({ method:"GET" }), r);
+  ok("ref 없이 부르면 그대로 점검본 503", r.code === 503 && r.body.restoration === true, r.body);
+  envAll(); process.env.STOREWAY_ACCOUNTS_OPEN = "1";
+}
+
 console.log("\n── W03 /api/auth — 브라우저 대신 Supabase 로 전함 (CSP connect-src 'self')");
 {
   envAll();

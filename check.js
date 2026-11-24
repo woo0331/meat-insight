@@ -2437,37 +2437,23 @@ const AUDIT = `(() => {
   /* 시안 2 · 3 — 넓은 화면에서 고르신 것이 눈에서 안 벗어나야 합니다.
      ⚠️ 흐름 검사는 폭이 하나라 **규칙 자체**를 봅니다 (object-fit 검사와
      같은 방식) — 1100px 아래에서는 하단 고정 띠가 받습니다. */
-  await f("전문관에 선택 패널이 붙고 넓은 화면에서 따라온다", "/operation", `
-    const a = document.querySelector(".pks-side");
-    if(!a) return "선택 패널이 없습니다";
-    if(!document.querySelector(".pks-g .pks-main"))
-      return "두 칸 틀이 없습니다";
-    if(document.querySelectorAll("#pka-list").length !== 1)
-      return "패널 목록 id 가 " + document.querySelectorAll("#pka-list").length + "개입니다";
+  await f("전문관 고르개가 한 구역이고 고른 것이 접힌 채 요약에 보인다", "/operation", `
+    /* 2026-11-24 하단 간소화 — 넓은 화면의 오른쪽 고정 패널을 빼고 요약을 같은 구역 안에 둡니다 (대표 승인).
+       요약이 두 자리면 어느 것이 진짜인지 흐려집니다. 이 주석에 백틱 금지. */
+    const secs = document.querySelectorAll("#view section.clpf");
+    if(secs.length !== 1) return "고르개 구역이 " + secs.length + "개입니다";
+    if(document.querySelector(".pks-side")) return "오른쪽 패널이 남아 요약이 두 자리입니다";
     if(document.querySelectorAll("#pk-list").length !== 1)
-      return "바구니 목록 id 가 겹침니다";
-    let sticky = false, wide = false;
-    for(const sh of document.styleSheets){
-      let rs; try { rs = sh.cssRules; } catch(e) { continue; }
-      for(const r of rs){
-        if(r.type !== 4) continue;
-        if((r.conditionText || "").indexOf("min-width: 1100px") < 0) continue;
-        wide = true;
-        for(const x of r.cssRules)
-          if(x.selectorText === ".pks-side" &&
-             (x.style.position || "").indexOf("sticky") >= 0) sticky = true;
-      }
-    }
-    if(!wide) return "1100px 규칙이 없습니다";
-    if(!sticky) return "넓은 화면에서 패널이 따라오지 않습니다 (sticky 가 아닙니다)";
-    /* 고르면 패널에도 같이 쌓여야 합니다 */
-    const cb = document.querySelector("input[data-pick]");
+      return "요약 목록 id 가 " + document.querySelectorAll("#pk-list").length + "개입니다";
+    const body = document.getElementById("clpf-body");
+    if(!body || !body.classList.contains("is-fold-all")) return "기본이 접혀 있지 않습니다";
+    try{ localStorage.removeItem("am.pick.v1"); }catch(e){}
+    if(window.pickPaint) pickPaint();
+    const cb = document.querySelector("#clpf-body input[data-pick]");
     if(!cb) return "고를 칸이 없습니다";
     cb.click();
-    if(document.querySelectorAll("#pka-list li").length !== 1)
-      return "고랐는데 패널에 안 쌓입니다";
-    const go = document.getElementById("pka-go");
-    if(!go || go.hidden) return "고랐는데 패널 신청 단추가 안 나옵니다";
+    if(document.querySelectorAll("#pk-list li").length !== 1) return "골랐는데 요약에 안 쌓입니다";
+    if(document.querySelector("#pick .clpf-sum").offsetParent === null) return "골랐는데 접힌 채 요약이 안 보입니다";
     cb.click();
     return true;`);
 
@@ -2865,18 +2851,18 @@ const AUDIT = `(() => {
      손님은 같은 것을 두 번 적고 거기서 닫습니다.
      ⚠️ 주석에 백틱을 쓰지 마세요. */
   await f("창업 준비가 §2 의 여섯 영역이다", "/startup", `
-    const want = ["pgh", "stB", "pkb", "stI", "pkp", "stD", "stF"];
-    const got = [].slice.call(document.querySelectorAll("#view > section"))
-      .map(function(s){
-        const hit = want.filter(function(w){ return s.classList.contains(w); })[0];
-        return hit || (s.className.indexOf("pgh") >= 0 ? "pgh" : "?");
-      });
-    for(const w of ["stB", "pkb", "stD", "stF"])
+    /* 2026-11-24 하단 간소화 — 고르기(STEP 01) · 확인(바구니) · 묶음 · 신청(STEP 02)이 '여러 서비스 함께 고르기'
+       한 구역(clpf)으로 합쳐졌습니다. 그 구역이 하나 있고 · 절차(stD)가 있고 · 고르는 칸 · 개수 · 신청 길이
+       그 안에 있는지 봅니다. */
+    const got = [].slice.call(document.querySelectorAll("#view > section")).map(function(s){
+      return s.classList.contains("clpf") ? "clpf" : (s.classList.contains("stD") ? "stD" : (s.className.indexOf("pgh") >= 0 ? "pgh" : "?")); });
+    for(const w of ["pgh", "clpf", "stD"])
       if(got.indexOf(w) < 0) return "구간이 빠졌습니다 — " + w + " · 지금 " + got.join(" ");
-    if(got.indexOf("stB") > got.indexOf("pkb"))
-      return "고르는 자리가 확인 자리보다 뒤에 있습니다 — " + got.join(" ");
-    if(got.indexOf("pkb") > got.indexOf("stF"))
-      return "확인 자리가 신청 자리보다 뒤에 있습니다 — " + got.join(" ");
+    if(got.filter(function(x){ return x === "clpf"; }).length !== 1) return "고르는 구역이 하나가 아닙니다";
+    const c = document.querySelector("#view section.clpf");
+    if(!c.querySelector("[data-pick]")) return "고르는 구역에 고를 칸이 없습니다";
+    if(!c.querySelector("[data-pick-n]")) return "고르는 구역에 개수가 없습니다";
+    if(!c.querySelector("a[href*='/quote']")) return "고르는 구역에 신청 길이 없습니다";
     return true;`);
 
   /* ════════════════════════════════════════════════════════════════
@@ -2917,9 +2903,10 @@ const AUDIT = `(() => {
     if(Object.keys(secs).length > 1)
       return "고르는 자리가 " + Object.keys(secs).length + "곳입니다 — " + Object.keys(secs).join(" / ");
     /* ③ 선택 확인 — 개수가 글로 보여야 합니다 (색만으로 표시 금지) */
-    if(!document.querySelector(".pkb [data-pick-n]")) return "선택 확인 자리가 없습니다";
+    /* 2026-11-24 — 선택 확인은 '여러 서비스 함께 고르기'(.clpf) 구역 안의 요약입니다 (따로 서던 바구니를 합쳤습니다) */
+    if(!document.querySelector(".clpf [data-pick-n]")) return "선택 확인 자리가 없습니다";
     /* ④ 통합 견적 신청 — 바구니에서 신청으로 가는 길 + 폰 고정 띠 */
-    if(!document.querySelector(".pkb a[href*='/quote']")) return "바구니에 신청 단추가 없습니다";
+    if(!document.querySelector(".clpf a[href*='/quote']")) return "바구니에 신청 단추가 없습니다";
     const bar = document.getElementById("pk-bar-go");
     if(!bar) return "폰 고정 띠가 없습니다";
     /* ⚠️⚠️ **쪽(side)이 그 전문관의 것이라야 합니다.** DB 는 넷을
@@ -2958,9 +2945,10 @@ const AUDIT = `(() => {
     if(Object.keys(secs).length > 1)
       return "고르는 자리가 " + Object.keys(secs).length + "곳입니다 — " + Object.keys(secs).join(" / ");
     /* ③ 선택 확인 — 개수가 글로 보여야 합니다 (색만으로 표시 금지) */
-    if(!document.querySelector(".pkb [data-pick-n]")) return "선택 확인 자리가 없습니다";
+    /* 2026-11-24 — 선택 확인은 '여러 서비스 함께 고르기'(.clpf) 구역 안의 요약입니다 (따로 서던 바구니를 합쳤습니다) */
+    if(!document.querySelector(".clpf [data-pick-n]")) return "선택 확인 자리가 없습니다";
     /* ④ 통합 견적 신청 — 바구니에서 신청으로 가는 길 + 폰 고정 띠 */
-    if(!document.querySelector(".pkb a[href*='/quote']")) return "바구니에 신청 단추가 없습니다";
+    if(!document.querySelector(".clpf a[href*='/quote']")) return "바구니에 신청 단추가 없습니다";
     const bar = document.getElementById("pk-bar-go");
     if(!bar) return "폰 고정 띠가 없습니다";
     /* ⚠️⚠️ **쪽(side)이 그 전문관의 것이라야 합니다.** DB 는 넷을
@@ -2999,9 +2987,10 @@ const AUDIT = `(() => {
     if(Object.keys(secs).length > 1)
       return "고르는 자리가 " + Object.keys(secs).length + "곳입니다 — " + Object.keys(secs).join(" / ");
     /* ③ 선택 확인 — 개수가 글로 보여야 합니다 (색만으로 표시 금지) */
-    if(!document.querySelector(".pkb [data-pick-n]")) return "선택 확인 자리가 없습니다";
+    /* 2026-11-24 — 선택 확인은 '여러 서비스 함께 고르기'(.clpf) 구역 안의 요약입니다 (따로 서던 바구니를 합쳤습니다) */
+    if(!document.querySelector(".clpf [data-pick-n]")) return "선택 확인 자리가 없습니다";
     /* ④ 통합 견적 신청 — 바구니에서 신청으로 가는 길 + 폰 고정 띠 */
-    if(!document.querySelector(".pkb a[href*='/quote']")) return "바구니에 신청 단추가 없습니다";
+    if(!document.querySelector(".clpf a[href*='/quote']")) return "바구니에 신청 단추가 없습니다";
     const bar = document.getElementById("pk-bar-go");
     if(!bar) return "폰 고정 띠가 없습니다";
     /* ⚠️⚠️ **쪽(side)이 그 전문관의 것이라야 합니다.** DB 는 넷을
@@ -3040,9 +3029,10 @@ const AUDIT = `(() => {
     if(Object.keys(secs).length > 1)
       return "고르는 자리가 " + Object.keys(secs).length + "곳입니다 — " + Object.keys(secs).join(" / ");
     /* ③ 선택 확인 — 개수가 글로 보여야 합니다 (색만으로 표시 금지) */
-    if(!document.querySelector(".pkb [data-pick-n]")) return "선택 확인 자리가 없습니다";
+    /* 2026-11-24 — 선택 확인은 '여러 서비스 함께 고르기'(.clpf) 구역 안의 요약입니다 (따로 서던 바구니를 합쳤습니다) */
+    if(!document.querySelector(".clpf [data-pick-n]")) return "선택 확인 자리가 없습니다";
     /* ④ 통합 견적 신청 — 바구니에서 신청으로 가는 길 + 폰 고정 띠 */
-    if(!document.querySelector(".pkb a[href*='/quote']")) return "바구니에 신청 단추가 없습니다";
+    if(!document.querySelector(".clpf a[href*='/quote']")) return "바구니에 신청 단추가 없습니다";
     const bar = document.getElementById("pk-bar-go");
     if(!bar) return "폰 고정 띠가 없습니다";
     /* ⚠️⚠️ **쪽(side)이 그 전문관의 것이라야 합니다.** DB 는 넷을
@@ -3066,7 +3056,7 @@ const AUDIT = `(() => {
 
   await f("서비스를 여러 개 고르면 한 신청으로 간다", "/startup", `
     try{ localStorage.removeItem("am.pick.v1"); }catch(e){}
-    const cards = document.querySelectorAll(".stB [data-pick]");
+    const cards = document.querySelectorAll("#pick [data-pick]");
     if(cards.length < 6) return "대표 서비스가 여섯이 아닙니다 — " + cards.length;
     /* ① 셋을 고릅니다 */
     const ids = ["interior", "equip", "marketing"];
@@ -3184,11 +3174,12 @@ const AUDIT = `(() => {
        이용 순서(HallSteps)는 사진 절차와 같은 말이라 내려서 옛 구간은 여덟입니다. */
     const kx = document.querySelectorAll("#view > section.kp").length;
     if(kx !== 5) return "시안 구간이 다섯이 아닙니다 — " + kx;
-    if(secs.length - kx !== 8) return "구간이 여덟이 아닙니다 — " + (secs.length - kx);
+    /* 2026-11-24 — 고르개 · 바구니 둘이 '여러 서비스 함께 고르기' 하나로 합쳐져 옛 구간은 일곱입니다 */
+    if(secs.length - kx !== 7) return "구간이 일곱이 아닙니다 — " + (secs.length - kx);
     /* 고르는 자리는 **하나**입니다 (§2) */
     const sel = document.querySelectorAll(".pkb-sel");
     if(sel.length !== 1) return "서비스를 고르는 구간이 " + sel.length + "개입니다";
-    const must = [[".opg-c", "대표 묶음"], [".pkb-box", "선택 확인"],
+    const must = [[".opg-c", "대표 묶음"], [".clpf-sum", "선택 확인"],
                   [".ock-l", "체크리스트"], [".mcal-g", "계산도구"]];
     for(const m of must)
       if(!document.querySelector(m[0])) return "구간이 빠졌습니다 — " + m[1];
@@ -3286,44 +3277,27 @@ const AUDIT = `(() => {
      안 보여서 이 화면이 어디로 가는 길인지를 못 알아봅니다.
      ⚠️⚠️ **모르시는 분의 길은 닫지 않습니다** — 까닭 줄 안에 고르지
      않고도 바로 상담으로 갈 수 있는 링크가 있어야 합니다. */
-  await f("0개면 신청 단추가 안 눌리고 까닭이 보인다", "/operation", `
-    /* 2026-11-18 — 검사 서버는 접수가 닫혀 있어 신청 단추가 CSS 로 가려집니다.
-       여기서 보는 것은 0개 · 1개의 갈림이라 열림을 흉내 냅니다 (닫힘은 test-s1 · test-gate). */
+  await f("0개면 요약이 숨고 고르면 접힌 채 요약과 신청이 보인다", "/operation", `
+    /* 2026-11-24 하단 간소화 — 선택 0개면 큰 요약을 숨깁니다 (대표 승인 · 전에는 0개일 때 비활성 단추와 까닭 줄을 냈습니다).
+       고르지 않고 신청하는 길은 아래 상담 CTA 가 받습니다. 하나 이상이면 목록이 접힌 채로 요약 · 신청 단추가 보여야 합니다.
+       검사 서버는 접수가 닫혀 있어 신청 단추가 CSS 로 가려져서 열림을 흉내 냅니다. 이 주석에 백틱 금지. */
     document.documentElement.classList.add("iq-quote","iq-close");
     try{ localStorage.removeItem("am.pick.v1"); }catch(e){}
-    const on = document.getElementById("pk-go-on");
-    const off = document.getElementById("pk-go-off");
-    const why = document.getElementById("pk-go-why");
-    if(!on || !off || !why) return "신청 단추나 까닭 줄이 없습니다";
-    if(!on.hidden) return "0개인데 눌리는 신청 단추가 섭니다";
-    if(off.hidden) return "0개인데 비활성 단추도 없습니다 (숨기면 안 됩니다)";
-    if(!off.disabled) return "단추가 비활성이 아닙니다";
-    if(off.offsetHeight < 40)
-      return "비활성 단추가 안 보이거나 너무 낮습니다 — " + off.offsetHeight;
-    if(why.hidden || !why.textContent.trim())
-      return "왜 못 누르는지 말해 주는 줄이 없습니다";
-    const door = why.querySelector("a");
-    if(!door || door.getAttribute("href").indexOf("/quote") < 0)
-      return "고르지 않고 상담하는 길이 없습니다";
-    const head = document.querySelector(".opg-c .opg-h");
-    head.click();
-    await new Promise(function(r){ setTimeout(r, 120); });
-    document.querySelector(".opg-c .opg-p [data-pick]").click();
+    if(window.pickPaint) pickPaint();
+    const sum = document.querySelector("#pick .clpf-sum");
+    const body = document.getElementById("clpf-body");
+    if(!sum || !body) return "요약이나 목록 자리가 없습니다";
+    if(sum.offsetParent !== null) return "0개인데 요약이 보입니다";
+    if(body.offsetParent !== null) return "기본이 접혀 있지 않습니다";
+    if(document.getElementById("pk-zero") && document.getElementById("pk-zero").offsetParent !== null)
+      return "0개 안내가 보입니다";
+    document.querySelector("#clpf-body .opg-p [data-pick]").click();
     await new Promise(function(r){ setTimeout(r, 150); });
-    if(on.hidden) return "골랐는데 신청 단추가 여전히 안 나옵니다";
-    if(!off.hidden) return "골랐는데 비활성 단추가 같이 섭니다";
-    if(!why.hidden) return "골랐는데 까닭 줄이 남아 있습니다";
-    /* ⚠️⚠️ **hidden 이 실제로 가리는지**까지 봅니다. display:flex 인
-       칸은 브라우저 기본 [hidden] 을 이겨서, 고른 뒤에도 "아직
-       고르신 서비스가 없습니다" 가 바구니 위에 그대로 남아 있었습니다
-       (찍어 보고 알았습니다). 속성만 보면 영원히 통과합니다.
-       ⚠️ 주석에 백틱을 쓰지 마세요 — 이 문자열이 거기서 끝납니다
-       (스물세 번째입니다). */
-    const zero = document.getElementById("pk-zero");
-    if(zero && zero.offsetParent !== null)
-      return "골랐는데 '아직 고르신 서비스가 없습니다' 가 그대로 보입니다";
-    if(off.offsetParent !== null) return "골랐는데 비활성 단추가 그려져 있습니다";
-    if(on.offsetParent === null) return "골랐는데 신청 단추가 안 그려집니다";
+    if(sum.offsetParent === null) return "골랐는데 요약이 안 보입니다";
+    if(body.offsetParent !== null) return "골랐는데 목록이 저절로 펼쳐졌습니다";
+    const on = document.getElementById("pk-go-on");
+    if(!on || on.offsetParent === null) return "골랐는데 신청 단추가 안 그려집니다";
+    if(document.querySelectorAll("#pk-list li").length !== 1) return "골랐는데 요약 목록에 안 쌓입니다";
     try{ localStorage.removeItem("am.pick.v1"); }catch(e){}
     return true;`);
 
@@ -4980,6 +4954,8 @@ const AUDIT = `(() => {
      열셋이 선을 쓰고 그 굵기가 보이는 크기에 들어갑니다. */
   await f("컬러 아이콘이 모두 같은 크기로 그려진다", "/startup", `
     /* 2026-11-21 — 메인이 사진 중심이 되며 컬러 아이콘이 없어져 /startup(서비스 고르개 열여덟)에서 잽니다. 이 주석에 백틱 금지. */
+    /* 2026-11-24 — 고르개가 기본 접힘이라 그 안의 아이콘은 펼친 뒤에 잽니다 (재는 것은 그대로) */
+    if(window.pickFoldOpen) pickFoldOpen();
     const svgs = Array.from(document.querySelectorAll("#view svg.ia"));
     if(svgs.length < 4) return "컬러 아이콘이 " + svgs.length + "개뿐입니다";
     const bad = [], seen = {};

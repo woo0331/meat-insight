@@ -159,7 +159,7 @@ const CASES = [
 
   /* ① 구간 하나를 빼 봅니다 (§2 여섯 영역) */
   ["창업 준비가 §2 의 여섯 영역이다",
-   `var b = document.querySelector(".stB");
+   `var b = document.querySelector("#view section.clpf");
     if(b && b.parentNode) b.parentNode.removeChild(b);`],
 
   /* ② ⚠️⚠️ **색만으로 선택을 표시**해 봅니다 (§3-1 · §14 가 금지).
@@ -181,7 +181,7 @@ const CASES = [
 
   /* ① 고르는 자리를 **둘**로 만들어 봅니다 (§2 가 "하나" 라고 적었습니다) */
   ["매장 운영이 §2 의 아홉 영역이다",
-   `var s = document.querySelector(".pkb-sel");
+   `var s = document.querySelector(".clpf-sum");
     if(s && s.parentNode) s.parentNode.insertBefore(s.cloneNode(true), s);`],
 
   /* ② ⚠️⚠️ **대표 카드 머리에 체크칸을 달아 봅니다** (§4-4 가 금지한
@@ -200,11 +200,10 @@ const CASES = [
   /* ④ §5 — ⚠️⚠️ **0개인데 눌리는 단추**를 만들어 봅니다. 비활성을
      풀어 놓으면 아무것도 안 고른 채로 신청 화면까지 가서, 거기서
      무엇을 적어야 하는지를 손님이 들고 있어야 합니다. */
-  ["0개면 신청 단추가 안 눌리고 까닭이 보인다",
-   `var b = document.getElementById("pk-go-off");
-    if(b){ b.disabled = false; b.hidden = false; }
-    var a = document.getElementById("pk-go-on");
-    if(a) a.hidden = false;`],
+  /* 2026-11-24 — 0개인데 요약이 보이게 해 봅니다 (0개면 숨기기로 했습니다) */
+  ["0개면 요약이 숨고 고르면 접힌 채 요약과 신청이 보인다",
+   `var old = window.pickPaint;
+    window.pickPaint = function(){ old(); var s = document.querySelector("#pick .clpf-sum"); if(s) s.hidden = false; };`],
 
   /* ⑤ §6-2 · §9 — ⚠️⚠️ **꺼져 있는데 서버로 보내게** 만들어 봅니다.
      로그인이 `auth:false` 인데 매 화면 왕복이 생기면, 손님은 아무것도
@@ -882,16 +881,10 @@ const CASES = [
       a.setAttribute("href", (a.getAttribute("href")||"").split("?")[0]); });`],
   /* 선택 패널을 **고정에서 풀어** 봅니다 — 규칙 자체를 건드립니다
      (검사가 CSS 규칙을 읽기 때문에 DOM 만 고쳐서는 아무 일도 안 납니다). */
-  ["전문관에 선택 패널이 붙고 넓은 화면에서 따라온다",
-   `for(const sh of document.styleSheets){
-      let rs; try { rs = sh.cssRules; } catch(e) { continue; }
-      for(const r of rs){
-        if(r.type !== 4) continue;
-        if((r.conditionText || "").indexOf("min-width: 1100px") < 0) continue;
-        for(const x of r.cssRules)
-          if(x.selectorText === ".pks-side") x.style.position = "static";
-      }
-    }`],
+  /* 2026-11-24 — 오른쪽 패널을 되살려 요약을 두 자리로 만들어 봅니다 */
+  ["전문관 고르개가 한 구역이고 고른 것이 접힌 채 요약에 보인다",
+   `var g = document.querySelector("#pick .pks-g");
+    if(g){ var a = document.createElement("aside"); a.className = "pks-side"; g.appendChild(a); }`],
   /* 탭 숫자를 손으로 박아 봅니다 — 센 값이 아니게 되면 걸려야 합니다 */
   ["계산도구 목적별 탭이 센 값이고 실제로 거른다",
    `document.querySelector('.tl-tab a[href="/tools?j=startup"]').textContent = "창업 준비 99";`],

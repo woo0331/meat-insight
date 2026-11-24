@@ -72,30 +72,15 @@ function PageStores(){
       /* 2026-11-19 — 셋을 가릅니다: ① 불러오지 못함 ② 전체 0건 ③ 거르개 결과 0건.
          같은 말이면 조건을 바꿔 볼지, 기다릴지, 새로 불러올지를 모릅니다.
          ⚠️ 매물 수를 채우지 않습니다 — 0 은 0 입니다. */
-      : (!loaded
-        ? Empty({ icon:"info", title:"매물 정보를 불러오지 못했습니다",
-            text:"잠시 뒤 다시 불러와 주세요. 등록된 매물이 없다는 뜻이 아닙니다.",
-            cta:'<button class="btn btn-b" type="button" onclick="location.reload()">다시 불러오기'+icon("arrow",16)+'</button>'+
-                '<a class="btn btn-o" href="/transfer">양도양수 안내 보기</a>' })
-        : total
-        ? Empty({ icon:"sliders", title:"선택한 조건에 맞는 매물이 없습니다",
-            text:"조건을 줄이거나 바꿔 보세요. 지금 올라온 매물은 전체 "+total+"건입니다. 매물에 적힌 값은 올리신 사장님이 적으신 값입니다.",
-            cta:'<a class="btn btn-b" href="/stores" data-keep>조건 모두 풀기'+icon("arrow",16)+'</a>'+
-                (ind || reg ? '<a class="btn btn-o" href="/stores'+esc((ind ? "?i="+encodeURIComponent(ind) : "")+(reg ? (ind ? "&" : "?")+"r="+encodeURIComponent(reg) : ""))+'">지역 · 업종만 남기기</a>' : "") })
-        : Empty({
-          icon:"key",
-          title:"현재 등록된 매물이 없습니다",
-          text:"없는 매물을 지어내지 않습니다. 매물이 올라오면 이 목록에 나옵니다 "+
-              "(따로 알려 드리는 기능은 아직 없습니다). 그동안 계약 · 권리금부터 따져 보실 수 있습니다.",
+      : MkZero({ path:"/stores", loaded:loaded, total:total, what:"매물", icon:"key",
+          note:"매물에 적힌 값은 올리신 사장님이 적으신 값입니다.",
           reads: amContentsFor({ cat:"store", side:"start", industry:ind, limit:3 }),
           readTitle:"자리를 보러 가시기 전에",
-          cta:'<a class="btn btn-b" href="'+esc(quoteTo({side:"start",industry:ind,region:reg}))+'">'+
+          buy:'<a class="btn btn-b" href="'+esc(quoteTo({side:"start",industry:ind,region:reg}))+'">'+
               '찾는 조건 남기기'+icon("arrow",16)+'</a>'+
               '<a class="btn btn-o" href="/content?j=startup&amp;cat=store">인수 계약 가이드</a>'+
-              '<a class="btn btn-o" href="/tools/premium">권리금 계산하기</a>'+
-              '<a class="btn btn-o" href="/transfer">양도양수 안내 보기</a>'+
-              '<a class="btn btn-o" href="/sell">내 매장 내놓기</a>'
-        })))+
+              '<a class="btn btn-o" href="/tools/premium">권리금 계산하기</a>',
+          sell:"/sell", sellName:"내 매장 내놓기" }))+
   '</div></section>'+
   BridgeNote()+
   /* 자리를 보러 오신 분께 계약 전에 확인할 것을 냅니다 —
@@ -286,17 +271,14 @@ function PageAssets(){
     (list.length
       ? '<div class="mk-g">'+list.slice(0, amShown(list.length)).map(AssetCard).join("")+'</div>'+
         MoreBtn(list.length)
-      : Empty({
-          icon:"box",
-          title:"조건에 맞는 시설 · 집기가 아직 없습니다",
-          text:"없는 매물을 지어내지 않습니다. 정리하시는 중이라면 지금 등록하실 수 있고, "+
-               "매물이 올라오면 이 목록에 나옵니다. 올라왔다고 따로 알려 드리는 기능은 아직 없습니다.",
+      : MkZero({ path:"/assets", keepQ:(pickTop ? "p=pick" : ""),
+          loaded:(typeof amAssets === "function") && Array.isArray(window.AM_ASSETS),
+          total:(typeof amAssets === "function") ? amAssets({}).length : 0, what:"시설 · 집기", icon:"box",
           reads: amContentsFor({ cat:"asset", side:"close", industry:ind, limit:3 }),
           readTitle:"장비를 사고 넘기기 전에",
-          cta:'<a class="btn btn-b" href="/sell?t=asset">내 시설 내놓기'+icon("arrow",16)+'</a>'+
-              '<a class="btn btn-o" href="'+esc(quoteTo({side:"start",industry:ind,region:reg}))+'">'+
-              '찾는 조건 남기기</a>'
-        }))+
+          buy:'<a class="btn btn-b" href="'+esc(quoteTo({side:"start",industry:ind,region:reg}))+'">'+
+              '찾는 조건 남기기'+icon("arrow",16)+'</a>',
+          sell:"/sell?t=asset", sellName:"내 시설 내놓기" }))+
   '</div></section>'+
   BridgeNote()+
   ReadBand({ cat:"asset", side:"close", industry:ind,
@@ -384,6 +366,66 @@ function mkCount(shown, all){
     (all > shown ? '<em class="fil-off">거르개로 '+(all - shown)+'건 숨김</em>' : '')+
   '</span>';
 }
+
+/* ── 매물 0건 화면 (2026-11-24) — /stores · /assets 가 같이 씁니다 ─────────────
+   셋을 가릅니다: ① 불러오지 못함 ② **조건 때문에 0건** ③ **전체가 0건**.
+   ② 에서는 걸어 두신 조건을 칩으로 보여 주고 **하나씩 풀거나 한 번에 초기화**합니다
+      (조건이 보이지 않으면 무엇을 바꿔야 할지 모릅니다 · 380px 고르개가 아홉 칸입니다).
+   ③ 에서는 조건 탓이 아니라는 것을 밝히고, 내놓으려는 분께 **양도 준비 안내**(/transfer?t=out)를
+      늘 보입니다 — 매물 등록(sell)이 닫혀 있으면 /sell 단추는 가려지는데 그러면 길이 없습니다.
+   ⚠️ 매물 수를 채우지 않습니다 — 0 은 0 입니다 (절대 규칙 1). */
+function mkActive(path, extra){
+  var R = {}, name = function(arr, k){ var o = (arr||[]).filter(function(x){ return x.k === k; })[0]; return o ? o.name : k; };
+  (window.AM_STORE_RANGES||[]).forEach(function(g){ R[g.key] = g; });
+  var cats = window.AM_CATS || [];
+  var lab = {
+    i:  function(v){ return (typeof amIndustryName === "function" && amIndustryName(v)) || v; },
+    r:  function(v){ return (typeof amRegionName === "function" && amRegionName(v)) || v; },
+    kd: function(v){ return v === "transfer" ? "매장 양도" : v === "lease" ? "신규 임대" : v; },
+    eq: function(){ return "시설 포함"; },
+    pk: function(){ return "주차 가능"; },
+    c:  function(v){ var c = cats.filter(function(x){ return x.key === v; })[0]; return c ? c.name : v; },
+    s:  function(v){ return (typeof amEquipName === "function" && amEquipName(v)) || v; },
+    dl: function(v){ return { single:"낱개로", bulk:"묶음으로", all:"시설 전체" }[v] || v; },
+    pr: function(v){ return name(window.AM_ASSET_PRICE, v); }
+  };
+  var out = [];
+  MK_KEYS.forEach(function(k){
+    var v = nowQS(k); if(!v) return;
+    var t = R[k] ? R[k].name + " " + name(R[k].opts, v) : (lab[k] ? lab[k](v) : v);
+    var o = {}; o[k] = "";
+    out.push({ k:k, t:t, href: mkKeep(path, o) + (extra || "") });
+  });
+  return out;
+}
+function mkJoinQ(href, extra){ return extra ? href + (href.indexOf("?") > 0 ? "&" : "?") + extra : href; }
+window.MkZero = function(o){
+  var J = function(pair){ return typeof koWith === "function" ? koWith(o.what, pair) : o.what + pair.charAt(1); };
+  var on = mkActive(o.path).map(function(a){
+    a.href = mkJoinQ(a.href, o.keepQ); return a; });
+  if(!o.loaded) return Empty({ icon:"info", title:"매물 정보를 불러오지 못했습니다",
+      text:"잠시 뒤 다시 불러와 주세요. 등록된 매물이 없다는 뜻이 아닙니다.",
+      cta:'<button class="btn btn-b" type="button" onclick="location.reload()">다시 불러오기'+icon("arrow",16)+'</button>'+
+          '<a class="btn btn-o" href="/transfer">양도양수 안내 보기</a>' });
+  var chips = on.length
+    ? '<div class="mkz-on"><p class="mkz-h">걸어 두신 조건 '+on.length+'개 — 눌러서 하나씩 풀 수 있습니다</p><ul class="chip-g">'+
+        on.map(function(a){ return '<li><a class="chip mkz-x" data-keep href="'+esc(a.href)+'" aria-label="'+esc(a.t)+' 조건 풀기">'+
+          esc(a.t)+'<span class="mkz-xi" aria-hidden="true">✕</span></a></li>'; }).join("")+'</ul></div>'
+    : "";
+  var reset = '<a class="btn btn-b" data-keep href="'+esc(mkJoinQ(o.path, o.keepQ))+'">조건 초기화하고 다시 찾기'+icon("arrow",16)+'</a>';
+  if(o.total) return '<div class="mkz">'+Empty({ icon:"sliders", title:"선택한 조건에 맞는 "+J("이가")+" 없습니다",
+      text:"조건을 바꾸거나 초기화해서 다시 찾아보세요. 지금 올라온 "+J("은는")+" 전체 "+o.total+"건입니다."+
+           (o.note ? " "+o.note : ""),
+      cta: chips + reset })+'</div>';
+  return '<div class="mkz">'+Empty({ icon:o.icon || "key", title:"현재 등록된 "+J("이가")+" 없습니다",
+      text:(on.length ? "걸어 두신 조건 때문이 아니라, 지금 올라온 "+J("이가")+" 전체 0건입니다. " : "")+
+           "없는 매물을 지어내지 않습니다. 올라오면 이 목록에 나옵니다 (따로 알려 드리는 기능은 아직 없습니다).",
+      reads:o.reads, readTitle:o.readTitle,
+      cta:(o.buy || "")+
+          '<p class="mkz-sell">'+icon("store",16)+'<span>매장 · 시설을 내놓으시려는 분은 양도 준비 안내에서 시작하세요.</span></p>'+
+          '<a class="btn btn-o" href="/transfer?t=out">양도 준비 안내 보기</a>'+
+          '<a class="btn btn-o" href="'+esc(o.sell)+'">'+esc(o.sellName)+'</a>' })+'</div>';
+};
 
 /* ⚠️ 중개자라는 사실과, 적힌 값이 누구 것인지를 같이 말합니다 */
 function BridgeNote(){

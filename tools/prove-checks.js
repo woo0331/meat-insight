@@ -167,6 +167,9 @@ const CASES = [
   /* 2026-11-24 — 점검표 항목 하나를 지워 봅니다 (고민 카드 단추가 없는 곳을 가리키게) */
   ["운영 고민 카드마다 계산 · 점검 단추가 실제 목적지로 간다",
    `var r = document.getElementById("ock-row-sales"); if(r) r.remove();`],
+  /* 2026-11-24 — 0건 안내가 조건 칩을 안 내게 해 봅니다 */
+  ["매물 0건이 조건 탓인지 전체 0건인지 가르고 다시 찾는 길을 낸다",
+   `var o = window.MkZero; window.MkZero = function(x){ return o(x).replace(/mkz-x/g, "mkz-y"); };`],
   ["창업 준비가 §2 의 여섯 영역이다",
    `var b = document.querySelector("#view section.clpf");
     if(b && b.parentNode) b.parentNode.removeChild(b);`],

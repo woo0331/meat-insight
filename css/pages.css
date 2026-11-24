@@ -8900,3 +8900,17 @@ span.kp-more .fld-b{ margin:0; }
 .hwr-chk{ margin:auto 0 8px; font-size:var(--t-cap); font-weight:800; color:var(--ink2); }
 #ops-worry, #ops-worry .hwr-g > li, #ops-check li[id]{ scroll-margin-top:calc(var(--hdr-h, 64px) + 12px); }
 #ops-check li.is-hit .ock-r{ outline:3px solid var(--walnut, #6A4B3B); outline-offset:3px; border-radius:12px; }
+
+/* ── 매물 0건 (2026-11-24 · MkZero) — 걸린 조건 칩 · 내놓으실 분 한 줄 ──
+   ⚠️ row-cta 가 flex 줄이라 두 덩이는 **줄을 통째로** 씁니다(flex-basis 100%). */
+.mkz .mkz-on, .mkz .mkz-sell{ flex:1 1 100%; }
+.mkz-on{ display:flex; flex-direction:column; align-items:center; gap:var(--s2); margin-bottom:var(--s2); }
+.mkz-h{ margin:0; font-size:var(--t-cap); font-weight:700; color:var(--ink2); }
+.mkz-on .chip-g{ justify-content:center; }
+.mkz-x{ min-height:44px; display:inline-flex; align-items:center; gap:6px; padding:0 14px; background:var(--surface);
+  border:1px solid var(--line); border-radius:999px; font-weight:700; color:var(--ink); }
+.mkz-xi{ font-size:12px; color:var(--ink2); }
+.mkz-x:hover{ border-color:var(--ink2); }
+.mkz-sell{ display:flex; align-items:center; justify-content:center; gap:6px; margin:var(--s3) 0 0;
+  padding-top:var(--s3); border-top:1px solid var(--line); font-size:14px; font-weight:700; color:var(--ink2); }
+.mkz-sell svg{ flex:none; }

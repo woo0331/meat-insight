@@ -2879,6 +2879,26 @@ const AUDIT = `(() => {
     const m = document.querySelector(".hh-cta a.hh-mo[href='#ops-worry']");
     if(!m || !document.getElementById("ops-worry")) return "폰 머리의 '내 매장 고민부터 보기' 가 없습니다";
     return true;`);
+  await f("매물 0건이 조건 탓인지 전체 0건인지 가르고 다시 찾는 길을 낸다", "/stores?i=cafe&dp=b", `
+    /* 2026-11-24 — 전체 0건이면 그 사실과 내놓으실 분의 길(양도 준비 안내), 조건 탓 0건이면
+       걸린 조건을 하나씩 푸는 칩과 초기화. 저장소 매물은 0건이라 조건 탓 쪽은 MkZero 를
+       전체 3건으로 불러서 봅니다. 이 주석에 백틱 금지. */
+    const z = document.querySelector("#view .mkz");
+    if(!z) return "0건 안내가 없습니다";
+    if(z.textContent.indexOf("조건 때문이 아니라") < 0) return "조건을 걸었는데 전체 0건이라는 말이 없습니다";
+    if(!z.querySelector("a[href='/transfer?t=out']")) return "내놓으실 분의 길(양도 준비 안내)이 없습니다";
+    if(typeof MkZero !== "function") return "MkZero 가 없습니다";
+    const box = document.createElement("div");
+    box.innerHTML = MkZero({ path:"/stores", loaded:true, total:3, what:"매물" });
+    const x = box.querySelectorAll(".mkz-x");
+    if(x.length !== 2) return "걸린 조건 칩이 둘이 아닙니다 — " + x.length;
+    for (const a of x){ const h = a.getAttribute("href");
+      if(!((h.indexOf("i=") < 0) !== (h.indexOf("dp=") < 0))) return "칩이 한 조건만 풀지 않습니다 — " + h; }
+    let reset = null;
+    for (const a of box.querySelectorAll("a.btn")) if(a.textContent.indexOf("초기화") >= 0) reset = a;
+    if(!reset || reset.getAttribute("href") !== "/stores") return "조건 초기화 단추가 없거나 조건을 남깁니다";
+    if(box.textContent.indexOf("전체 3건") < 0) return "전체 건수를 안 밝힙니다";
+    return true;`);
   await f("창업 준비가 §2 의 여섯 영역이다", "/startup", `
     /* 2026-11-24 하단 간소화 — 고르기(STEP 01) · 확인(바구니) · 묶음 · 신청(STEP 02)이 '여러 서비스 함께 고르기'
        한 구역(clpf)으로 합쳐졌습니다. 그 구역이 하나 있고 · 절차(stD)가 있고 · 고르는 칸 · 개수 · 신청 길이

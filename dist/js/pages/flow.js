@@ -672,8 +672,9 @@ function ClosureIntro(path){
              go:"철거 준비 보기", goOn:"집기 처분 + 철거 상담 신청",
              href:"#cl-demo", on:CLOSE_QUICK_URGENT },
            { ic:"box", b:"집기 · 설비 처분", d:"주방기기 · 냉장고 · 가구를 정리합니다",
-             go:"시설 · 집기 처분 보기", goOn:"집기 처분 상담 신청",
-             href:"/assets", on:CLOSE_QUICK_ASSET }]
+
+             go:"정리할 집기 고르기", goOn:"집기 고르고 상담 신청",
+             href:"/assets?p=pick", on:"/assets?p=pick" }]
   });
 }
 

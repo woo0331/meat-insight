@@ -884,6 +884,10 @@ function noscriptFor(W, r, route){
     return L.join("");
   }
   if(route === "/assets"){
+    /* 2026-11-24 — 화면(AssetPickBand)과 같은 말 · 품목 이름은 catalog.js 의 asset 하위 그대로 */
+    h2("어떤 집기를 정리하시나요?");
+    var AC = (W.AM_CATS||[]).filter(c => c.key === "asset")[0];
+    if(AC) ul((AC.items||[]).map(it => it.name));
     h2("업종별로 나오는 시설 · 장비");
     (W.AM_INDUSTRIES||[]).filter(i => (i.equip||[]).length).forEach(i => {
       L.push("<h3>"+esc(i.name)+"</h3>");

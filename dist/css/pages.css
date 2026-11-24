@@ -6650,3 +6650,49 @@ span.kp-more .fld-b{ margin:0; }
 
 .join-cn{ flex-basis:100%; display:flex; gap:8px; align-items:flex-start; margin:12px 0 0; color:var(--ink2); font-size:14px; line-height:1.5; }
 .join-cn[hidden]{ display:none; }
+
+.asp .asp-closed{ display:flex; gap:8px; align-items:flex-start; max-width:880px; margin:0 auto var(--s4);
+  padding:14px 16px; border:1px solid var(--line); border-radius:12px; background:var(--surface);
+  color:var(--ink); font-size:16px; line-height:1.55; }
+.asp .asp-closed svg{ flex:none; margin-top:3px; color:var(--walnut, #6A4B3B); }
+.asp .asp-closed[hidden]{ display:none; }
+.asp-g{ list-style:none; margin:0; padding:0; display:grid; gap:16px; grid-template-columns:repeat(3, minmax(0,1fr)); }
+.asp-c{ position:relative; display:flex; flex-direction:column; height:100%; cursor:pointer; background:var(--surface);
+  border:2px solid var(--line); border-radius:16px; overflow:hidden; transition:border-color .15s, box-shadow .15s; }
+.asp-c:hover{ border-color:var(--hm-pt, #B18A68); }
+.asp-x{ position:absolute; opacity:0; width:1px; height:1px; pointer-events:none; }
+.asp-c:has(.asp-x:focus-visible){ outline:3px solid var(--walnut, #6A4B3B); outline-offset:3px; }
+.asp-c:has(.asp-x:checked){ border-color:var(--walnut, #6A4B3B); box-shadow:0 0 0 2px var(--walnut, #6A4B3B) inset; }
+.asp-ph{ display:block; aspect-ratio:4/3; overflow:hidden; background:linear-gradient(150deg, #F3EBDF, #E6D6C2); }
+.asp-ph .ph{ width:100%; height:100%; object-fit:cover; display:block; }
+.asp-ic{ display:flex; width:100%; height:100%; align-items:center; justify-content:center; color:var(--walnut, #6A4B3B); }
+.asp-ic svg{ width:72px; height:72px; }
+.asp-tx{ display:flex; flex-direction:column; gap:4px; padding:14px 16px 8px; flex:1; }
+.asp-n{ font-size:18px; font-weight:800; color:var(--ink); line-height:1.35; }
+.asp-d{ font-size:16px; color:var(--ink2); line-height:1.5; }
+.asp-st{ display:flex; padding:0 16px 14px; }
+.asp-st > span{ display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 12px; border-radius:999px;
+  font-size:15px; font-weight:700; }
+.asp-st-off{ border:1px solid var(--line); color:var(--ink2); }
+.asp-st-on{ display:none !important; background:var(--walnut, #6A4B3B); color:#fff; }
+.asp-x:checked ~ .asp-st .asp-st-on{ display:inline-flex !important; }
+.asp-x:checked ~ .asp-st .asp-st-off{ display:none; }
+.asp-sum{ max-width:880px; margin:var(--s5) auto 0; padding:20px; background:var(--surface);
+  border:2px solid var(--walnut, #6A4B3B); border-radius:16px; display:grid; gap:12px; }
+.asp-sum[hidden]{ display:none; }
+.asp-sum-t{ margin:0; font-size:18px; font-weight:800; color:var(--ink); }
+.asp-l{ list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.asp-l li{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 0 6px 12px;
+  border:1px solid var(--line); border-radius:12px; background:var(--bg-ivory2, #F8F5EE); }
+.asp-l-n{ display:inline-flex; align-items:center; gap:8px; font-size:17px; font-weight:700; color:var(--ink); }
+.asp-l-n svg{ color:var(--walnut, #6A4B3B); flex:none; }
+.asp-l-x{ min-height:48px; padding:0 16px; border:1px solid var(--line); border-radius:10px; background:var(--surface);
+  font-size:16px; font-weight:700; color:var(--ink); cursor:pointer; flex:none; }
+.asp-l-x:focus-visible{ outline:3px solid var(--walnut, #6A4B3B); outline-offset:2px; }
+.asp-oth{ margin:0; font-size:16px; color:var(--ink2); }
+.asp-oth[hidden]{ display:none; }
+.asp-go{ display:flex; flex-wrap:wrap; gap:10px; }
+.asp-go .btn{ min-height:52px; font-size:17px; }
+@media (max-width:900px){ .asp-g{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; }
+  .asp-tx{ padding:12px 12px 6px; } .asp-st{ padding:0 12px 12px; } .asp-ic svg{ width:60px; height:60px; } }
+@media (max-width:600px){ .asp-go .btn{ width:100%; justify-content:center; } }

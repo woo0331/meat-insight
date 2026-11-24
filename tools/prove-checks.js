@@ -158,6 +158,9 @@ const CASES = [
     if(b) b.setAttribute("href", "/quote?side=start");`],
 
   /* ① 구간 하나를 빼 봅니다 (§2 여섯 영역) */
+  /* 2026-11-24 — 요약 그리기를 끊어 봅니다 (고르면 요약이 안 섬) */
+  ["집기 고르기가 품목 아홉을 고르고 요약에서 해제된다",
+   `window.aspPaint = function(){};`],
   ["창업 준비가 §2 의 여섯 영역이다",
    `var b = document.querySelector("#view section.clpf");
     if(b && b.parentNode) b.parentNode.removeChild(b);`],

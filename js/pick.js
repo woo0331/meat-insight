@@ -208,6 +208,8 @@ window.pickPaint = function(){
     a.setAttribute("data-go-form", amPickGoForm(sd));
     if(a.hasAttribute("data-pick-free")) a.setAttribute("href", amPickQuoteTo(sd));
   });
+  /* 2026-11-24 — /assets 의 집기 고르기 요약 (market.js 의 aspPaint) */
+  if(typeof window.aspPaint === "function") window.aspPaint();
   [].slice.call(document.querySelectorAll("[data-pick-go]")).forEach(function(a){
     a.setAttribute("href", amPickQuoteTo(a.getAttribute("data-pick-go")));
     a.setAttribute("data-go-form", amPickGoForm(a.getAttribute("data-pick-go")));

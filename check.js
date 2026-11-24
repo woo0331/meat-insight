@@ -4698,6 +4698,32 @@ const AUDIT = `(() => {
     if(!/연락처를 바로 드리지 않습니다/.test(t)) return "연락처를 바로 주는 것처럼 읽힙니다";
     return true;`);
 
+  await f("집기 고르기가 품목 아홉을 고르고 요약에서 해제된다", "/assets?p=pick", `
+    /* 2026-11-24 폐업 → 집기 처분 — 품목은 catalog.js 의 asset 하위 그대로이고 전문관과 같은 바구니입니다.
+       0개면 요약을 숨기고, 고르면 체크와 선택됨 글자가 같이 바뀌고(색만이 아님), 요약의 선택 해제가 뺍니다.
+       이 주석에 백틱 금지. */
+    try{ localStorage.removeItem("am.pick.v1"); }catch(e){}
+    if(window.pickPaint) pickPaint();
+    const h1 = document.querySelectorAll("#view h1");
+    if(h1.length !== 1 || h1[0].textContent.trim() !== "어떤 집기를 정리하시나요?") return "맨 위 제목이 아닙니다";
+    const cat = (window.AM_CATS || []).filter(function(x){ return x.key === "asset"; })[0];
+    const want = cat.items.map(function(i){ return "asset/" + i.key; }).join();
+    const got = [].slice.call(document.querySelectorAll(".asp-x")).map(function(x){ return x.getAttribute("data-pick"); }).join();
+    if(got !== want) return "품목이 서비스 코드와 다릅니다 — " + got;
+    const sum = document.getElementById("asp-sum");
+    if(!sum || sum.offsetParent !== null) return "0개인데 요약이 보입니다";
+    const c0 = document.querySelectorAll(".asp-c")[0];
+    c0.click();
+    await new Promise(function(r){ setTimeout(r, 150); });
+    if(amPickGet().join() !== "asset/" + cat.items[0].key) return "카드를 눌러도 안 담깁니다";
+    if(c0.querySelector(".asp-st-on").offsetParent === null) return "선택됨 글자가 안 보입니다";
+    if(sum.offsetParent === null) return "골랐는데 요약이 안 보입니다";
+    const x = document.querySelector("#asp-list .asp-l-x");
+    if(!x || x.textContent.trim() !== "선택 해제") return "요약에 선택 해제가 없습니다";
+    x.click();
+    await new Promise(function(r){ setTimeout(r, 150); });
+    if(amPickGet().length !== 0 || sum.offsetParent !== null) return "선택 해제가 안 뺍니다";
+    return true;`);
   await f("시설 상세가 장비 종류를 영문 key 로 내지 않는다", "/assets", `
     /* ⚠️ 포트폴리오가 \`gyeonggi\` 를 그대로 찍었던 것과 같은 사고입니다 */
     window.AM_ASSETS.push({

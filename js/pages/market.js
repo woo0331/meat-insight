@@ -132,6 +132,103 @@ function StoreCard(s){
     '</span></a>';
 }
 
+/* ── 어떤 집기를 정리하시나요? (2026-11-24 폐업 → 집기 처분 동선) ─────────
+   /closure 의 '집기 · 설비 처분' 이 도착하는 자리입니다 (/assets?p=pick).
+   ⚠️⚠️ **새 분류도 새 저장소도 아닙니다.** 품목은 catalog.js 의 asset 분류
+   하위 아홉 그대로(서비스 코드 asset/<key>)이고, 고른 것은 전문관과 같은
+   바구니(am.pick.v1)에 담깁니다 — 신청 화면 · 관리자 접수함이 이미 그 코드를 읽습니다.
+   ⚠️ 이름은 catalog.js 에서 옵니다. 여기 적는 것은 **사진 · 아이콘 · 한 줄 설명**뿐입니다.
+   ⚠️⚠️ 사진은 **그 품목이 바로 보이는 것만** 씁니다 (지금 둘 — 주방장비 · POS).
+   없으면 빈 액자 대신 아이콘 면이 자리를 지킵니다 (절대 규칙 2).
+   ⚠️ 접수가 닫혀 있으면 고르기 **전에** 알리고, 다음 단추는 '접수 안내 보기'와
+   실제로 쓸 수 있는 준비 자료입니다. 지역은 여기서 묻지 않습니다 — 실제 신청 화면이 받습니다.
+   ⚠️ '매입 업체 찾기' 는 내지 않습니다 — asset 은 매물(listing) 분류라 조회할 업체가 없습니다. */
+var ASP_LOOK = {
+  "kitchen-eq": { ph:"svc-equip",     ia:"kitchen", d:"가스레인지 · 오븐 · 튀김기 · 작업대" },
+  "fridge":     { ic:"snow",                        d:"업소용 냉장고 · 냉동고 · 쇼케이스" },
+  "espresso":   { ic:"cup",                         d:"에스프레소 머신 · 그라인더" },
+  "furniture":  { ia:"sofa",                        d:"테이블 · 의자 · 소파 · 진열장" },
+  "pos":        { ph:"kp-op-svc-pos", ia:"pos",     d:"계산대 단말 · 카드 결제기" },
+  "kiosk":      { ia:"kiosk",                       d:"무인 주문기 · 테이블 주문기" },
+  "fitness":    { ic:"dumbbell",                    d:"러닝머신 · 웨이트 기구" },
+  "salon-eq":   { ic:"scissors",                    d:"미용 의자 · 샴푸대 · 드라이어" },
+  "biz-eq":     { ia:"equip",                       d:"그 밖의 업소용 기계 · 설비" }
+};
+function aspItems(){
+  var c = (window.AM_CATS || []).filter(function(x){ return x.key === "asset"; })[0];
+  return (c && c.items || []).map(function(it){
+    var L = ASP_LOOK[it.key] || {};
+    return { id:"asset/" + it.key, name:it.name, look:L };
+  });
+}
+function aspFace(L, name){
+  if(L.ph && typeof hasPhoto === "function" && hasPhoto(L.ph))
+    return photoBox(L.ph, "", false, "(max-width:600px) 46vw, (max-width:1100px) 30vw, 300px");
+  var art = (L.ia && typeof hasIconArt === "function" && hasIconArt(L.ia))
+    ? iconArt(L.ia, 72) : icon(L.ic || "box", 56);
+  return '<span class="asp-ic" aria-hidden="true">'+art+'</span>';
+}
+function AssetPickBand(top){
+  var items = aspItems();
+  if(!items.length) return "";
+  var H = top ? "h1" : "h2";
+  var cards = items.map(function(s){
+    var id = s.id;
+    return '<li><label class="asp-c">'+
+      '<input class="asp-x" type="checkbox" data-pick="'+esc(id)+'" '+
+        'onchange="pickToggle(\''+esc(id)+'\', this)"'+(amPickHas(id) ? " checked" : "")+'>'+
+      '<span class="asp-ph">'+aspFace(s.look, s.name)+'</span>'+
+      '<span class="asp-tx"><b class="asp-n">'+esc(s.name)+'</b>'+
+        (s.look.d ? '<span class="asp-d">'+esc(s.look.d)+'</span>' : '')+'</span>'+
+      '<span class="asp-st" aria-hidden="true">'+
+        '<span class="asp-st-off">'+icon("plus",18)+'고르기</span>'+
+        '<span class="asp-st-on">'+icon("check",18)+'선택됨</span></span>'+
+    '</label></li>';
+  }).join("");
+  return '<section class="sec sec-ivory asp" id="as-pick"><div class="w">'+
+    '<div class="sec-hd"><p class="eyebrow">폐업 · 집기 처분</p>'+
+      '<'+H+'>어떤 집기를 정리하시나요?</'+H+'>'+
+      '<p>정리하실 품목을 모두 고르세요. 카드를 누르면 고르고, 다시 누르면 해제됩니다.</p></div>'+
+    /* ⚠️ 고르기 **전에** 접수 상태를 알립니다 (data-cta 짝 · 닫혀 있을 때만 보임) */
+    '<p class="asp-closed" data-cta="off" data-cta-form="close">'+icon("info",18)+
+      '<span>지금은 집기 처분 신청을 받지 않습니다. 고르신 품목은 이 기기에 남고, '+
+      '접수가 열리면 그대로 신청하실 수 있습니다.</span></p>'+
+    '<ul class="asp-g">'+cards+'</ul>'+
+    /* 요약 — 고른 집기가 없으면 통째로 숨깁니다 (aspPaint) */
+    '<div class="asp-sum" id="asp-sum" hidden>'+
+      '<p class="asp-sum-t">고르신 집기 <b id="asp-n">0</b>개</p>'+
+      '<ul class="asp-l" id="asp-list"></ul>'+
+      '<p class="asp-oth" id="asp-oth" hidden></p>'+
+      '<div class="asp-go">'+
+        '<a class="btn btn-b btn-lg" href="/quote?mode=close" data-pick-go="close"><span>견적 신청하기</span>'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-b btn-lg pk-closed" href="/intake" data-pick-closed="close" data-go-form="close">접수 안내 보기'+icon("arrow",18)+'</a>'+
+        '<a class="btn btn-o btn-lg" href="/tools/closecost">폐업 예상비용 계산</a>'+
+      '</div>'+
+    '</div>'+
+  '</div></section>';
+}
+/* pickPaint() 가 끝에 부릅니다 — 요약 목록 · 개수 · 해제 단추를 제자리에서 고칩니다 */
+window.aspPaint = function(){
+  var box = document.getElementById("asp-sum");
+  if(!box) return;
+  var ids = amPickGet();
+  var mine = ids.filter(function(id){ return String(id).indexOf("asset/") === 0; });
+  var oth = ids.length - mine.length;
+  box.hidden = mine.length === 0;
+  var n = document.getElementById("asp-n"); if(n) n.textContent = String(mine.length);
+  var names = {}; aspItems().forEach(function(s){ names[s.id] = s.name; });
+  var list = document.getElementById("asp-list");
+  if(list) list.innerHTML = mine.map(function(id){
+    var nm = names[id] || ((amPickOne(id) || {}).name || id);
+    return '<li><span class="asp-l-n">'+icon("check",16)+esc(nm)+'</span>'+
+      '<button type="button" class="asp-l-x" onclick="pickDel(\''+esc(id)+'\')" '+
+        'aria-label="'+esc(nm)+' 선택 해제">선택 해제</button></li>';
+  }).join("");
+  var o = document.getElementById("asp-oth");
+  if(o){ o.hidden = !oth;
+    o.textContent = oth ? "다른 분야에서 고르신 " + oth + "개도 신청에 함께 담깁니다." : ""; }
+};
+
 function PageAssets(){
   var ind = nowQS("i"), reg = nowQS("r"), cat = nowQS("c"), sub = nowQS("s");
   var dl = nowQS("dl"), pr = nowQS("pr");
@@ -140,14 +237,18 @@ function PageAssets(){
                         deal:dl||null, pr:pr||null });
   var all  = amAssets(base);
   var indObj = ind ? amIndustry(ind) : null;
-  return PgHero({
+  /* 2026-11-24 — 폐업의 '집기 · 설비 처분' 은 ?p=pick 으로 옵니다: 품목 고르기가 **맨 위**(h1)이고
+     매물 머리는 안 냅니다 (h1 은 화면에 하나). 그냥 /assets 로 오면 머리 바로 아래에 같은 고르기가 섭니다. */
+  var pickTop = nowQS("p") === "pick";
+  return (pickTop ? AssetPickBand(true) : PgHero({
     kicker:"시설 · 집기 · 재고",
     h1raw:"한 사장님의 끝이<br class=\"br-m\"> <em>다른 사장님의 시작</em>이 됩니다.",
     lead:"정리하시는 사장님이 내놓은 주방장비 · 커피머신 · 가구 · POS · 운동기구 · 미용기기와 남은 재고입니다. 개별로도, 일괄로도, 시설 전체 인수로도 거래하실 수 있습니다.",
     tight:true,
     cta:'<a class="btn btn-o btn-lg" href="/sell?t=asset">내 시설 내놓기'+icon("arrow",18)+'</a>'
-  })+
+  }) + AssetPickBand(false))+
   '<section class="sec sec-white"><div class="w">'+
+    (pickTop ? '<div class="sec-hd"><p class="eyebrow">시설 · 집기 · 재고</p><h2>올라와 있는 시설 · 집기</h2></div>' : '')+
     (indObj && indObj.equip.length ? '<ul class="chip-g chip-g-fil">'+
       '<li><a class="chip'+(sub?"":" on")+'" href="'+esc(mkKeep("/assets",{s:""}))+'">전체</a></li>'+
       indObj.equip.map(function(e){

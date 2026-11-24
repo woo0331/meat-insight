@@ -995,8 +995,10 @@ function ClosureIntro(path){
              go:"철거 준비 보기", goOn:"집기 처분 + 철거 상담 신청",
              href:"#cl-demo", on:CLOSE_QUICK_URGENT },
            { ic:"box", b:"집기 · 설비 처분", d:"주방기기 · 냉장고 · 가구를 정리합니다",
-             go:"시설 · 집기 처분 보기", goOn:"집기 처분 상담 신청",
-             href:"/assets", on:CLOSE_QUICK_ASSET }]
+             /* 2026-11-24 — 접수 상태와 관계없이 **품목 고르기**로 바로 갑니다 (/assets?p=pick).
+                고른 품목이 신청 화면에 그대로 실리고, 닫혀 있으면 그 화면이 고르기 전에 알립니다. */
+             go:"정리할 집기 고르기", goOn:"집기 고르고 상담 신청",
+             href:"/assets?p=pick", on:"/assets?p=pick" }]
   }); /* 2026-11-23 — 상세 진행 과정(ClosureFlow) · 철거가 급할 때(ClosureDemoBand)는 사진 절차 · 배너 뒤로 옮겼습니다 (PageClosure) */
 }
 

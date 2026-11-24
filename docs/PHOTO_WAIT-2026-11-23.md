@@ -1,5 +1,32 @@
 # 사진형 카드 — 사진 자리 현황 (2026-11-23)
 
+## ⚠️ 2026-11-24 갱신 — storeway-ai-assets.zip 23장 적용
+
+대표가 준 ZIP(WebP 23 · 카드 22 + 폐업 비용 배너 1)을 자리 이름으로 바꿔 `img/kp/` 에 넣었습니다.
+원본 WebP 그대로이고 JPG 는 같은 크기로 바꾼 것입니다(확대 없음). 모두 AI 연출 사진 — 실제 고객 · 거래 · 매물로 소개하지 않습니다.
+
+| ZIP 파일 | 자리 | 카드 |
+|---|---|---|
+| startup-location | kp-st-svc-area | 창업 · 상권 · 입지 분석 |
+| startup-permit | kp-st-svc-permit | 창업 · 인허가 · 행정 |
+| startup-requirements | kp-st-pro-check | 창업 절차 01 조건 확인 |
+| startup-design-estimate | kp-st-pro-design | 창업 절차 02 설계 · 견적 |
+| operations_service-supply · staff · pos · repair | kp-op-svc-* | 운영 핵심 서비스 넷 |
+| operations_process-choose-issue | kp-op-pro-pick | 운영 절차 01 |
+| operations_process-audit | kp-op-pro-check | 운영 절차 02 |
+| operations_process-prioritize | kp-op-pro-link | 운영 절차 03 — **단계 이름을 '맡길 일 정리' 로 맞춤** |
+| operations_process-action-plan | kp-op-pro-run | 운영 절차 04 — **단계 이름을 '업체 연결 · 진행' 으로 맞춤** |
+| transfer_service-search | **kp-tr-svc-search (새 자리)** | 양도양수 · 매물 찾기 (전에는 insu-hero) |
+| transfer_service-list-shop · premium · contract-guide | kp-tr-svc-sell · premium · contract | 양도양수 핵심 서비스 |
+| transfer_process-inspect · negotiate · handover | kp-tr-pro-visit · nego · ready | 양도양수 절차 02 · 03 · 04 |
+| closure-inquiry · site-estimate · tax | kp-cl-pro-consult · quote · kp-cl-svc-tax | 폐업 |
+| closure-cost-banner | kp-cl-ban-cost | 폐업 비용 배너 |
+
+**아직 비어 있는 자리 하나 — `kp-tr-pro-search`** (양도양수 절차 01 '매장 탐색' · 양도 쪽 '다음 사장님 찾기').
+ZIP 에 이 장면이 없습니다. 노트북 지도로 매장을 찾는 장면, 권장 960×660.
+
+양도 쪽(?t=out) 절차 04 '계약 · 인계' 는 kp-tr-svc-contract 를 씁니다 — 같은 화면 위 '계약 가이드' 카드와 겹칩니다.
+
 카테고리 네 페이지의 **핵심 서비스 4 · 진행 절차 4** 카드 사진입니다.
 사진이 없는 자리는 같은 크기의 큰 아이콘 판으로 섭니다 (빈 액자 · "준비 중" 없음).
 

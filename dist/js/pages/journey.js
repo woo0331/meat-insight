@@ -271,8 +271,8 @@ function OpsKpRoad(){
     lead:"고르신 서비스는 한 번의 신청으로 함께 보내실 수 있습니다.",
     steps:[{ n:"필요한 서비스 고르기", d:"분야별 서비스를 여러 개 함께 고릅니다", ph:"kp-op-pro-pick", ia:"grid", ic:"grid", href:"#pick" },
            { n:"매장 점검", d:"운영 점검표로 놓치는 것을 확인합니다", ph:"kp-op-pro-check", ia:"calc", ic:"check", href:"#ops-check" },
-           { n:"업체 연결", d:"조건에 맞는 업체를 찾아 상호를 알려 드립니다", ph:"kp-op-pro-link", ia:"staff" },
-           { n:"진행 · 관리", d:"조건을 비교해 고르시고 진행합니다", ph:"kp-op-pro-run", ia:"clean" }] });
+           { n:"맡길 일 정리", d:"점검한 것 가운데 먼저 맡길 일을 정합니다", ph:"kp-op-pro-link", ia:"staff" },
+           { n:"업체 연결 · 진행", d:"정리한 일을 보내시면 맞는 업체를 찾아 드리고, 조건을 비교해 고르십니다", ph:"kp-op-pro-run", ia:"clean" }] });
 }
 function OpsKpDiag(){
   return KpBanner({ id:"op-diag", kicker:"운영 진단", photo:"home-ops",
@@ -768,7 +768,7 @@ function AcqKpSvc(ind, iq){
   var nStore = (typeof amStores === "function") ? amStores({}).length : 0;
   return KpServices({ id:"aq-svc", tone:"sec-white", kicker:"양도양수 핵심 서비스",
     title:"매장을 넘기고 받을 때 필요한 것", lead:"넘기시는 분과 받으시는 분이 같은 곳에서 시작합니다.",
-    items:[{ n:"매물 찾기", d:nStore ? "지금 올라온 매장 "+nStore+"건" : "현재 등록된 매물이 없습니다", href:"/stores"+(iq || ""), ph:"insu-hero", ia:"store" },
+    items:[{ n:"매물 찾기", d:nStore ? "지금 올라온 매장 "+nStore+"건" : "현재 등록된 매물이 없습니다", href:"/stores"+(iq || ""), ph:"kp-tr-svc-search", ia:"store" },
            { n:"내 매장 넘기기", d:"내놓을 때 적는 칸 · 넘기는 순서", href:"/sell", ph:"kp-tr-svc-sell", ia:"handover" },
            { n:"권리금 계산", d:"몇 달이면 돌아오는지 참고값으로 따져 봅니다", href:"/tools/premium", ph:"kp-tr-svc-premium", ia:"won", ic:"gauge" },
            { n:"계약 가이드", d:"상가 계약 · 권리금, 계약 전에 볼 것", href:"/content?j=startup&cat=store", ph:"kp-tr-svc-contract", ia:"contract" }] });
@@ -779,7 +779,7 @@ function AcqKpRoad(t){
     ? [{ n:"조건 정하기", d:"권리금 · 시설 · 넘길 시점을 정합니다", ph:"kp-tr-pro-nego", ia:"won", ic:"gauge" },
        { n:"자료 준비", d:"임대차 · 매출 자료 · 시설 목록을 챙깁니다", ph:"kp-tr-pro-ready", ia:"doc", ic:"doc" },
        { n:"다음 사장님 찾기", d:"매물로 내놓고 조건을 맞춰 봅니다", ph:"kp-tr-pro-search", ia:"handover" },
-       { n:"계약 · 인계", d:"계약 · 명의 정리 · 시설 인계를 마칩니다", ph:"kp-tr-pro-ready", ia:"contract" }]
+       { n:"계약 · 인계", d:"계약 · 명의 정리 · 시설 인계를 마칩니다", ph:"kp-tr-svc-contract", ia:"contract" }]
     : [{ n:"매장 탐색", d:"업종 · 지역 · 조건으로 매물을 봅니다", ph:"kp-tr-pro-search", ia:"store" },
        { n:"현장 확인", d:"시설 상태 · 매출 자료 · 임대 조건을 확인합니다", ph:"kp-tr-pro-visit", ia:"mappin" },
        { n:"조건 협의", d:"권리금 · 시설 · 인수 시점을 맞춥니다", ph:"kp-tr-pro-nego", ia:"won", ic:"gauge" },

@@ -141,3 +141,16 @@ Vercel Preview 주소는 대략 `meat-insight-git-claude-preview-ready-<팀>.ver
 - 시험 대상은 그대로 `claude/notify-service-name` 의 `e142ff43f` (로컬 검수 완료본 · 전체 검사 22/22 · 로컬 알림 18/18).
 - 다시 시작하는 조건: 운영과 분리된 **새 시험 Supabase** (Pro 로 올리기 · 다른 계정 · 기존 하나를 비우는 결정 중 하나는 대표 판단)
   → 그 프로젝트 ID 를 주시면 §6 차례로 이어 갑니다.
+
+## 12. 운영 SUPABASE_URL 수정일 대조 (2026-11-24 · 읽기 전용)
+
+- 대표 확인: Vercel → All Projects → Environment Variables 에서 meat-insight 의 **Production `SUPABASE_URL` 은 Secret · Last Updated Nov 10**.
+  (첨부 화면은 이 대화에 도착하지 않아 대표님이 적어 주신 값으로 대조했습니다.)
+- 기존 기록과 같음: `PREVIEW_E2E_READY-2026-11-23.md` 도 추가일 11-10 으로 적었습니다.
+- 대조:
+  - `gxjzlkvdbafzfjuunvyx`(aboutmeat) 생성 2026-11-17. Supabase ref 는 만들 때 정해지므로 11-10 에 저장된 값이 그 ref 를 담을 수 없습니다.
+  - Vercel 은 환경변수를 **배포할 때** 읽습니다. 지금 운영 배포(`4cfe56618`, 11-24)는 11-10 뒤라 11-10 값을 그대로 씁니다 — 그 뒤 수정이 없으므로 다른 값일 수 없습니다.
+  - → **운영 배포는 aboutmeat 에 연결되어 있지 않습니다** (meat-insight Production 기준).
+- 남은 것 하나 — **다른 서비스**: 같은 목록(Last Updated 정렬)에서 **Nov 17 이후** 수정된 Supabase 관련 변수가 다른 프로젝트에 있는지.
+  없으면 aboutmeat 을 쓰는 배포가 없다는 근거가 됩니다. 지난 24시간 aboutmeat 앱 요청도 0건(관리 도구 상태 확인뿐)입니다.
+- 두 DB · 운영 설정은 그대로입니다.

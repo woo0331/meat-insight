@@ -756,7 +756,11 @@ function PageJoin(){
        ⚠️ 아래 글을 하나도 안 지웠습니다 — 길을 하나 더한 것입니다. */
     /* ⚠️ 2026-11-19 — 입점 접수(join)가 닫혀 있으면 신청 단추를 가립니다 (아래 폼도 잠겨 있습니다) */
     cta:'<a class="btn btn-b btn-lg" href="#join-form" data-go-form="join">입점 신청하기'+icon("arrow",18)+'</a>'+
-        '<a class="btn btn-o btn-lg" href="#join-fields">어떤 분야를 찾나요</a>'
+        '<a class="btn btn-o btn-lg" href="#join-fields">어떤 분야를 찾나요</a>'+
+        /* 2026-11-22 QA — 닫혀 있다는 말이 폼 바로 위(폰 10,500px)에만 있어서, 다 읽고 나서야 신청을 못 한다는 것을
+           알게 됐습니다. 입점 접수(join)가 닫혀 있는 동안만 머리 단추 바로 아래에 같은 말을 냅니다 (열리면 저절로 사라짐). */
+        '<p class="join-cn" data-cta="off" data-cta-form="join">'+icon("info",15)+
+          '<span>지금은 입점 신청을 받지 않고 있습니다. 아래에서 조건과 진행 방식을 미리 보실 수 있습니다.</span></p>'
   })+
   JoinNow(subs)+
   /* ⚠️ §19 — 업체 사장님이 제일 먼저 묻는 여섯입니다. 입점 설득

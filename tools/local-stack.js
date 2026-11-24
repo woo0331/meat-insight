@@ -39,6 +39,22 @@ const ENV = {
 };
 /* 알림 · 메일 · cron 변수는 일부러 비웁니다 (실제 채널로 나가지 않게) */
 for(const k of ["INTAKE_WEBHOOK_URL","DEAL_WEBHOOK_URL","RESEND_API_KEY","CUSTOMER_EMAIL_FROM","PARTNER_EMAIL_FROM","INTAKE_EMAIL_TO","CRON_SECRET","INTAKE_BUCKET"]) delete process.env[k];
+/* 2026-11-23 — LOCAL_NOTIFY=1 이면 알림을 **이 컨테이너 안의 시험 수신처**(127.0.0.1:8972)로만 보냅니다.
+   슬랙 · 메일 등 바깥으로는 나가지 않습니다. 받은 것은 out/local-stack/hooks.jsonl 에 줄마다 적고,
+   out/local-stack/hook-fail 파일이 있으면 500 으로 실패를 흉내 냅니다(재시도 검수용).
+   ⚠️ 운영 · Preview 에는 영향이 없습니다 — 이 도구 안에서만 정하는 값입니다. */
+const HOOK = 8972, LOCAL_NOTIFY = process.env.LOCAL_NOTIFY === "1";
+if(LOCAL_NOTIFY){
+  ENV.INTAKE_WEBHOOK_URL = "http://127.0.0.1:" + HOOK + "/intake";
+  ENV.DEAL_WEBHOOK_URL   = "http://127.0.0.1:" + HOOK + "/deal";
+  ENV.CRON_SECRET        = "local-cron-" + crypto.randomBytes(8).toString("hex");
+  const HOOKS = path.join(OUT, "hooks.jsonl"); fs.writeFileSync(HOOKS, "");
+  http.createServer((req, res) => { let body = ""; req.on("data", d => body += d); req.on("end", () => {
+    const fail = fs.existsSync(path.join(OUT, "hook-fail"));
+    fs.appendFileSync(HOOKS, JSON.stringify({ at:Date.now(), path:req.url, fail, body }) + "\n");
+    res.writeHead(fail ? 500 : 200, { "content-type":"application/json" }); res.end(fail ? '{"ok":false}' : '{"ok":true}'); }); })
+    .listen(HOOK, "127.0.0.1");
+}
 Object.assign(process.env, ENV);
 fs.writeFileSync(path.join(OUT, "env.json"), JSON.stringify(Object.assign({ APP:"http://127.0.0.1:" + APP }, ENV), null, 1));
 
@@ -73,6 +89,12 @@ function startDb(){
   for(const m of migs) file("db/migrations/" + m);
   /* PostgREST 가 붙는 역할 — Supabase 와 같은 짜임 */
   psql("alter role service_role bypassrls");
+  /* 2026-11-23 — Supabase 는 service_role 에 public 표 전부의 권한을 **기본으로** 줍니다(운영 · 시험 프로젝트에서
+     has_table_privilege 로 확인). 이 스택은 그걸 안 만들어서 알림 재시도(api/notify-retry.js)가 request_item 을
+     못 읽고 실패했습니다 — 코드가 아니라 스택의 차이라 여기서 맞춥니다. */
+  psql("grant usage on schema public to service_role");
+  psql("grant select, insert, update, delete on all tables in schema public to service_role");
+  psql("grant usage, select on all sequences in schema public to service_role");
   psql("do $$ begin if not exists (select 1 from pg_roles where rolname='authenticator') then create role authenticator login noinherit; end if; end $$");
   psql("grant anon, authenticated, service_role to authenticator");
   psql("alter table auth.users add column if not exists created_at timestamptz default now()");
@@ -172,6 +194,6 @@ try{
   if(!fs.existsSync(PUB)) execSync("node build-pages.js && node tools/make-restore-public.js", { cwd:ROOT, stdio:"ignore" });
   startDb(); startRest();
   console.log("  PostgREST :" + RESTPORT + " · 게이트웨이 :" + GW + " · 앱 http://127.0.0.1:" + APP);
-  console.log("  값 → out/local-stack/env.json (로컬 시험값) · 알림 · 메일 변수는 비워 둠");
+  console.log("  값 → out/local-stack/env.json (로컬 시험값) · " + (LOCAL_NOTIFY ? "알림 → 로컬 시험 수신처 :" + HOOK + " (바깥으로 안 나감)" : "알림 · 메일 변수는 비워 둠"));
   fs.writeFileSync(path.join(OUT, "ready"), String(Date.now()));
 }catch(e){ console.error("⛔ " + (e.stderr ? String(e.stderr).split("\n").find(l => /ERROR|error/.test(l)) : e.message)); cleanup(); process.exit(1); }

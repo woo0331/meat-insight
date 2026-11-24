@@ -1,5 +1,7 @@
 # Preview 실제 검수 — 한 번에 할 일 (2026-11-23)
 
+> ⚠️ 2026-11-24 — 이 문서는 `docs/PREVIEW_READY-2026-11-24.md` 로 바뀌었습니다 (브랜치 `claude/preview-ready` · 기준 `da2914a1d`).
+
 새 **시험 전용 Supabase** + Vercel Preview 의 **`claude/qa-functional` 브랜치에만** 연결합니다.
 운영 DB · 운영 환경변수 · 접수 · 배포는 건드리지 않습니다. 비밀키는 채팅에 붙이지 않습니다.
 

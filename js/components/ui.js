@@ -831,6 +831,14 @@ window.hhJump = function(id){
   var h = sec.querySelector("h2"); if(h){ h.setAttribute("tabindex","-1"); try{ h.focus({preventScroll:true}); }catch(e){} }
   return false;
 };
+/* 2026-11-25 — 다른 화면의 자리로 (라우터는 # 을 안 봅니다 · location.hash 를 읽지 않는 규칙).
+   그 화면으로 넘긴 뒤 그린 다음 틀에 그 자리로 내립니다. */
+window.hhGoJump = function(path, id){
+  if(typeof go !== "function") return true;
+  go(path);
+  setTimeout(function(){ hhJump(id); }, 0);
+  return false;
+};
 window.HallHero = function(o){
   o = o || {};
   var ph = o.photo && typeof hasPhoto === "function" && hasPhoto(o.photo);

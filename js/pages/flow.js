@@ -1472,7 +1472,7 @@ function SellBand(ind){
       '<p class="eyebrow">'+esc(ind.name)+' 정리</p>'+
       '<h2>이 장비들은 버리지 마세요</h2>'+
       '<p>같은 업종을 준비하는 사장님이 찾습니다. 개별로도, 일괄로도, '+
-        '시설 전체 인수로도 내놓으실 수 있습니다.</p>'+
+        '시설 전체 인수로도 넘길 수 있는 것들입니다.</p>'+
     '</div>'+
     '<ul class="chip-g">'+ind.equip.map(function(e){
       return '<li><a class="chip" href="/assets?i='+encodeURIComponent(ind.key)+
@@ -1530,7 +1530,10 @@ function ClosureHelpBand(){
        안 들고 가서, 손님은 위에서 고른 것이 사라진 빈 신청 화면을
        봅니다 — 한 화면에 신청으로 가는 길이 둘이면 어느 쪽이 맞는지도
        흐려집니다 (§2 · §5). 고르는 자리로 보냅니다. */
-    HelpCard("doc","여러 곳 견적을 한 번에","한 번만 적으시면 철거 · 원상복구 · 폐기물 업체에 같이 전달합니다.","#pick","필요한 것 고르기")+
+    /* 2026-11-25 — 이 띠는 /closure/<업종> 에만 나오고 그 화면에는 #pick 이 없어 눌러도 아무 일이 없었습니다.
+       폐업 화면의 고르기 구역으로 넘깁니다. 접수 상태와 상관없이 맞는 말로 둡니다 ("전달합니다" 를 약속하지 않음). */
+    HelpCard("doc","여러 곳 견적을 한 번에","철거 · 원상복구 · 폐기물처럼 필요한 것을 한곳에서 함께 고릅니다.","/closure","필요한 것 고르기",
+      ' onclick="return hhGoJump(\'/closure\',\'pick\')"')+
   '</div></section>';
 }
 function HelpCard(ic, t, p, to, label, attr){

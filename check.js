@@ -2900,6 +2900,18 @@ const AUDIT = `(() => {
     if(!reset || reset.getAttribute("href") !== "/stores") return "조건 초기화 단추가 없거나 조건을 남깁니다";
     if(box.textContent.indexOf("전체 3건") < 0) return "전체 건수를 안 밝힙니다";
     return true;`);
+  await f("업종 폐업 화면의 링크가 없는 자리를 가리키지 않는다", "/closure/cafe", `
+    /* 2026-11-25 — 도움 카드 '여러 곳 견적을 한 번에' 가 이 화면에 없는 고르기 자리를 가리켜 눌러도
+       아무 일이 없었습니다. 같은 화면 자리 링크는 그 자리가 있어야 하고, 고르기로 가는 카드는 폐업 화면으로 갑니다.
+       이 주석에 백틱 금지. */
+    for (const a of document.querySelectorAll("#view a[href]")){
+      const h = a.getAttribute("href");
+      if(h.charAt(0) === "#" && h.length > 1 && !document.getElementById(h.slice(1))) return "없는 자리를 가리킵니다 — " + h + " · " + a.textContent.trim().slice(0, 20); }
+    let c = null;
+    for (const a of document.querySelectorAll("#view a.help")) if(a.textContent.indexOf("여러 곳 견적") >= 0) c = a;
+    if(!c) return "도움 카드가 없습니다";
+    if(c.getAttribute("href") !== "/closure" || (c.getAttribute("onclick") || "").indexOf("pick") < 0) return "고르기 카드가 폐업 화면 고르기로 안 갑니다";
+    return true;`);
   await f("창업 준비가 §2 의 여섯 영역이다", "/startup", `
     /* 2026-11-24 하단 간소화 — 고르기(STEP 01) · 확인(바구니) · 묶음 · 신청(STEP 02)이 '여러 서비스 함께 고르기'
        한 구역(clpf)으로 합쳐졌습니다. 그 구역이 하나 있고 · 절차(stD)가 있고 · 고르는 칸 · 개수 · 신청 길이

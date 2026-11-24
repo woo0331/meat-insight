@@ -520,6 +520,13 @@ window.hhJump = function(id){
   var h = sec.querySelector("h2"); if(h){ h.setAttribute("tabindex","-1"); try{ h.focus({preventScroll:true}); }catch(e){} }
   return false;
 };
+
+window.hhGoJump = function(path, id){
+  if(typeof go !== "function") return true;
+  go(path);
+  setTimeout(function(){ hhJump(id); }, 0);
+  return false;
+};
 window.HallHero = function(o){
   o = o || {};
   var ph = o.photo && typeof hasPhoto === "function" && hasPhoto(o.photo);

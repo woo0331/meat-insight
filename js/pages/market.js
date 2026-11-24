@@ -752,7 +752,7 @@ function PageSell(){
   return PgHero({
     kicker:"매물 내놓기",
     h1raw:"내놓으시는 것이<br class=\"br-m\"> 다음 사장님의 시작이 됩니다.",
-    lead:"매장 · 시설 · 장비를 내놓으실 수 있습니다. 적어 주신 조건 그대로 올리고, 보시려는 분의 문의를 전달합니다. 무료입니다.",
+    lead:"매장 · 시설 · 장비를 내놓을 때 적는 양식입니다. 접수가 열려 있으면 적어 주신 조건 그대로 올리고, 보시려는 분의 문의를 전달합니다. 무료입니다.",
     tight:true
   })+
   '<section class="sec sec-white"><div class="w form-wrap">'+

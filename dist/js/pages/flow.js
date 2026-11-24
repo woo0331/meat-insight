@@ -1041,7 +1041,7 @@ function SellBand(ind){
       '<p class="eyebrow">'+esc(ind.name)+' 정리</p>'+
       '<h2>이 장비들은 버리지 마세요</h2>'+
       '<p>같은 업종을 준비하는 사장님이 찾습니다. 개별로도, 일괄로도, '+
-        '시설 전체 인수로도 내놓으실 수 있습니다.</p>'+
+        '시설 전체 인수로도 넘길 수 있는 것들입니다.</p>'+
     '</div>'+
     '<ul class="chip-g">'+ind.equip.map(function(e){
       return '<li><a class="chip" href="/assets?i='+encodeURIComponent(ind.key)+
@@ -1092,7 +1092,8 @@ function ClosureHelpBand(){
     HelpCard("list","순서를 모르겠다면","폐업 절차와 필요서류, 기한이 있는 것부터 정리했습니다.","/c/process","폐업 절차 보기")+
     HelpCard("badge","지원을 받으실 수 있는지","철거비 지원처럼 조건만 맞으면 신청할 수 있는 것이 있습니다.","/support","폐업지원 보기")+
 
-    HelpCard("doc","여러 곳 견적을 한 번에","한 번만 적으시면 철거 · 원상복구 · 폐기물 업체에 같이 전달합니다.","#pick","필요한 것 고르기")+
+    HelpCard("doc","여러 곳 견적을 한 번에","철거 · 원상복구 · 폐기물처럼 필요한 것을 한곳에서 함께 고릅니다.","/closure","필요한 것 고르기",
+      ' onclick="return hhGoJump(\'/closure\',\'pick\')"')+
   '</div></section>';
 }
 function HelpCard(ic, t, p, to, label, attr){

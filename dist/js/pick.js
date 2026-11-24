@@ -267,9 +267,10 @@ window.PickBasket = function(side){
       '</div>'+
 
       '<div class="pkb-why" id="pk-go-why"'+(n ? " hidden" : "")+'>'+
-        '<p>위에서 필요한 것을 하나라도 고르시면 신청하실 수 있습니다. '+
-          '<b>무엇이 필요한지 모르시겠으면</b> 고르지 않고 바로 '+
-          '상담을 신청하셔도 됩니다.</p>'+
+
+        '<p>'+ctaPair(amPickGoForm(side),
+          "위에서 필요한 것을 하나라도 고르시면 신청하실 수 있습니다. 무엇이 필요한지 모르시겠으면 고르지 않고 바로 상담을 신청하셔도 됩니다.",
+          "위에서 필요한 것을 고르시면 이 기기에 남습니다. 접수가 열리면 고르신 그대로 신청하실 수 있습니다.")+'</p>'+
         '<a class="btn btn-o" data-pick-free="'+esc(side || "start")+'" data-go-form="'+esc(amPickGoForm(side))+'" href="'+esc(amPickQuoteTo(side))+'">'+
           '고르지 않고 바로 상담 신청하기</a>'+
       '</div>'+

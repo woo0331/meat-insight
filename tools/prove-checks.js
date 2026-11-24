@@ -170,6 +170,10 @@ const CASES = [
   /* 2026-11-24 — 0건 안내가 조건 칩을 안 내게 해 봅니다 */
   ["매물 0건이 조건 탓인지 전체 0건인지 가르고 다시 찾는 길을 낸다",
    `var o = window.MkZero; window.MkZero = function(x){ return o(x).replace(/mkz-x/g, "mkz-y"); };`],
+  /* 2026-11-25 — 도움 카드를 옛날처럼 없는 자리로 되돌려 봅니다 */
+  ["업종 폐업 화면의 링크가 없는 자리를 가리키지 않는다",
+   `var a = [].slice.call(document.querySelectorAll("#view a.help")).filter(function(x){ return x.textContent.indexOf("여러 곳 견적") >= 0; })[0];
+    if(a){ a.setAttribute("href", "#pick"); a.removeAttribute("onclick"); }`],
   ["창업 준비가 §2 의 여섯 영역이다",
    `var b = document.querySelector("#view section.clpf");
     if(b && b.parentNode) b.parentNode.removeChild(b);`],

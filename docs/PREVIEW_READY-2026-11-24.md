@@ -131,3 +131,13 @@ Vercel Preview 주소는 대략 `meat-insight-git-claude-preview-ready-<팀>.ver
   두 프로젝트는 중지 · 삭제하지 않았습니다.
 - 대표님이 하실 일은 §7 그대로입니다 (시험 Supabase 확보 · service_role 키는 자격 증명 카드 · Vercel Preview 환경변수 ·
   Redirect URL · 시험 수신처).
+
+## 11. 대기 확정 (2026-11-24 · 대표 확인)
+
+- 대표 확인: **Supabase 무료 프로젝트 2개 한도로 새 시험 DB 를 만들지 못했습니다.**
+- 그래서 **실제 메일 링크 로그인 · 관리자 접수함 진입 · 시험 견적 · 시험 수신처 알림 도착 · 알림 한글 서비스명 · 개인정보 미포함**의
+  Preview 검수는 **시험 DB 를 확보할 때까지 대기**입니다 (전부 미검증).
+- 기존 두 프로젝트(`gxjzlkvdbafzfjuunvyx` · `igignylgzjphtnyxhhsd`)와 운영 설정은 그대로 둡니다 — 중지 · 삭제 · 변경 없음.
+- 시험 대상은 그대로 `claude/notify-service-name` 의 `e142ff43f` (로컬 검수 완료본 · 전체 검사 22/22 · 로컬 알림 18/18).
+- 다시 시작하는 조건: 운영과 분리된 **새 시험 Supabase** (Pro 로 올리기 · 다른 계정 · 기존 하나를 비우는 결정 중 하나는 대표 판단)
+  → 그 프로젝트 ID 를 주시면 §6 차례로 이어 갑니다.

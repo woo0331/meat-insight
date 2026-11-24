@@ -103,14 +103,14 @@ function StoreCard(s){
 
 var ASP_LOOK = {
   "kitchen-eq": { ph:"svc-equip",     ia:"kitchen", d:"가스레인지 · 오븐 · 튀김기 · 작업대" },
-  "fridge":     { ic:"snow",                        d:"업소용 냉장고 · 냉동고 · 쇼케이스" },
-  "espresso":   { ic:"cup",                         d:"에스프레소 머신 · 그라인더" },
-  "furniture":  { ia:"sofa",                        d:"테이블 · 의자 · 소파 · 진열장" },
+  "fridge":     { ph:"as-fridge", ic:"snow",                        d:"업소용 냉장고 · 냉동고 · 쇼케이스" },
+  "espresso":   { ph:"as-espresso", ic:"cup",                         d:"에스프레소 머신 · 그라인더" },
+  "furniture":  { ph:"as-furniture", ia:"sofa",                        d:"테이블 · 의자 · 소파 · 진열장" },
   "pos":        { ph:"kp-op-svc-pos", ia:"pos",     d:"계산대 단말 · 카드 결제기" },
-  "kiosk":      { ia:"kiosk",                       d:"무인 주문기 · 테이블 주문기" },
-  "fitness":    { ic:"dumbbell",                    d:"러닝머신 · 웨이트 기구" },
-  "salon-eq":   { ic:"scissors",                    d:"미용 의자 · 샴푸대 · 드라이어" },
-  "biz-eq":     { ia:"equip",                       d:"그 밖의 업소용 기계 · 설비" }
+  "kiosk":      { ph:"as-kiosk", ia:"kiosk",                       d:"무인 주문기 · 테이블 주문기" },
+  "fitness":    { ph:"as-fitness", ic:"dumbbell",                    d:"러닝머신 · 웨이트 기구" },
+  "salon-eq":   { ph:"as-salon-eq", ic:"scissors",                    d:"미용 의자 · 샴푸대 · 드라이어" },
+  "biz-eq":     { ph:"as-biz-eq", ia:"equip",                       d:"그 밖의 업소용 기계 · 설비" }
 };
 function aspItems(){
   var c = (window.AM_CATS || []).filter(function(x){ return x.key === "asset"; })[0];
@@ -121,7 +121,8 @@ function aspItems(){
 }
 function aspFace(L, name){
   if(L.ph && typeof hasPhoto === "function" && hasPhoto(L.ph))
-    return photoBox(L.ph, "", false, "(max-width:600px) 46vw, (max-width:1100px) 30vw, 300px");
+
+    return photoBox(L.ph, "", false, L.ph.indexOf("as-") === 0 ? "" : "(max-width:600px) 46vw, (max-width:900px) 47vw, (max-width:1100px) 30vw, 420px");
   var art = (L.ia && typeof hasIconArt === "function" && hasIconArt(L.ia))
     ? iconArt(L.ia, 72) : icon(L.ic || "box", 56);
   return '<span class="asp-ic" aria-hidden="true">'+art+'</span>';

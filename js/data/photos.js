@@ -463,7 +463,30 @@ window.WOW_PHOTO_SLOTS = [
     note:"AI 연출 사진 — 소개용 · 실제 매물 · 거래 실적으로 쓰지 않습니다" },
   { key:"home-transfer", sizes:"(max-width:900px) 92vw, 50vw",
     where:"메인 '매장 양도양수' 구간 — 대표가 준 사진 04_section_transfer (2026-11-22)", min:[1600,800], ratio:[1.7,2.1], maxKB:220,
-    note:"AI 연출 사진 — 소개용 · 실제 매물 · 거래 실적으로 쓰지 않습니다" }
+    note:"AI 연출 사진 — 소개용 · 실제 매물 · 거래 실적으로 쓰지 않습니다" },
+  /* 2026-11-24 — /assets 집기 고르기 사진 일곱 (지금 비어 있고 아이콘 면이 자리를 지킵니다).
+     ⚠️ 카드 이름과 장면이 같아야 합니다 — 특히 냉장 · 냉동 ↔ 업소용 장비 · 키오스크 ↔ POS 가 사진으로 갈려야 합니다. */
+  { key:"as-fridge", sizes:"(max-width:600px) 46vw, (max-width:900px) 47vw, (max-width:1100px) 30vw, 420px",
+    where:"/assets 집기 고르기 '냉장 · 냉동' 카드 (2026-11-24)", min:[840,630], ratio:[1.28,1.38], maxKB:140,
+    note:"필요한 장면 — 업소용 스테인리스 냉장고 · 냉동고 또는 유리문 쇼케이스를 정면에서 — 문 · 손잡이 · 선반이 보이게. ⚠️ 제빙기 · 식기세척기와 헷갈리지 않게 '문 달린 냉장 칸' 이 주인공 · 권장 1200×900(4:3) · 권리 확인된 사진만" },
+  { key:"as-espresso", sizes:"(max-width:600px) 46vw, (max-width:900px) 47vw, (max-width:1100px) 30vw, 420px",
+    where:"/assets 집기 고르기 '커피머신' 카드 (2026-11-24)", min:[840,630], ratio:[1.28,1.38], maxKB:140,
+    note:"필요한 장면 — 에스프레소 머신(그룹헤드 · 스팀봉)과 그라인더가 한 화면에 — 머신이 주인공 · 원두 · 잔은 곁가지 · 권장 1200×900(4:3) · 권리 확인된 사진만" },
+  { key:"as-furniture", sizes:"(max-width:600px) 46vw, (max-width:900px) 47vw, (max-width:1100px) 30vw, 420px",
+    where:"/assets 집기 고르기 '가구' 카드 (2026-11-24)", min:[840,630], ratio:[1.28,1.38], maxKB:140,
+    note:"필요한 장면 — 매장 테이블 · 의자 묶음(빈 매장) — 기계가 하나도 안 보이게 · 권장 1200×900(4:3) · 권리 확인된 사진만" },
+  { key:"as-kiosk", sizes:"(max-width:600px) 46vw, (max-width:900px) 47vw, (max-width:1100px) 30vw, 420px",
+    where:"/assets 집기 고르기 '키오스크' 카드 (2026-11-24)", min:[840,630], ratio:[1.28,1.38], maxKB:140,
+    note:"필요한 장면 — 매장 무인 주문기(세워 두는 큰 화면)를 정면에서 — 계산대 POS 와 갈리게 '서 있는 큰 화면' 이 주인공 · 화면 글자 · 브랜드 로고 안 보이게 · 권장 1200×900(4:3) · 권리 확인된 사진만" },
+  { key:"as-fitness", sizes:"(max-width:600px) 46vw, (max-width:900px) 47vw, (max-width:1100px) 30vw, 420px",
+    where:"/assets 집기 고르기 '운동기구' 카드 (2026-11-24)", min:[840,630], ratio:[1.28,1.38], maxKB:140,
+    note:"필요한 장면 — 러닝머신 · 웨이트 기구가 줄지어 선 체육관 — 사람 없이 기구가 주인공 · 권장 1200×900(4:3) · 권리 확인된 사진만" },
+  { key:"as-salon-eq", sizes:"(max-width:600px) 46vw, (max-width:900px) 47vw, (max-width:1100px) 30vw, 420px",
+    where:"/assets 집기 고르기 '미용기기' 카드 (2026-11-24)", min:[840,630], ratio:[1.28,1.38], maxKB:140,
+    note:"필요한 장면 — 미용 의자 · 샴푸대 · 거울 — 사람 없이 의자가 주인공 · 권장 1200×900(4:3) · 권리 확인된 사진만" },
+  { key:"as-biz-eq", sizes:"(max-width:600px) 46vw, (max-width:900px) 47vw, (max-width:1100px) 30vw, 420px",
+    where:"/assets 집기 고르기 '업소용 장비' 카드 (2026-11-24)", min:[840,630], ratio:[1.28,1.38], maxKB:140,
+    note:"필요한 장면 — 식기세척기 · 업소용 믹서 등 **냉장 · 조리 기기가 아닌** 업소용 기계 — ⚠️ 냉장고 · 가스레인지가 화면에 나오면 '냉장 · 냉동' · '주방장비' 와 헷갈립니다 · 권장 1200×900(4:3) · 권리 확인된 사진만" }
 ];
 
 

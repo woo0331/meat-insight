@@ -422,9 +422,14 @@ window.MkZero = function(o){
            "없는 매물을 지어내지 않습니다. 올라오면 이 목록에 나옵니다 (따로 알려 드리는 기능은 아직 없습니다).",
       reads:o.reads, readTitle:o.readTitle,
       cta:(o.buy || "")+
-          '<p class="mkz-sell">'+icon("store",16)+'<span>매장 · 시설을 내놓으시려는 분은 양도 준비 안내에서 시작하세요.</span></p>'+
-          '<a class="btn btn-o" href="/transfer?t=out">양도 준비 안내 보기</a>'+
-          '<a class="btn btn-o" href="'+esc(o.sell)+'">'+esc(o.sellName)+'</a>' })+'</div>';
+          /* ⚠️ 매물 등록(sell) 접수 상태를 따릅니다 — 닫혀 있으면 등록이 되는 것처럼 말하지 않고
+             '접수 안내 보기'(/intake)로 잇습니다. /sell 단추는 열려 있을 때만 보입니다 (ctaTagLinks). */
+          '<p class="mkz-sell">'+icon("store",16)+'<span>'+
+            ctaPair("sell", "매장 · 시설을 내놓으시려면 아래에서 등록을 신청하실 수 있습니다. 넘기기 전에 맞출 것은 양도 준비 안내에 있습니다.",
+                            "지금은 매물 등록 접수를 받지 않습니다. 내놓으시려는 분은 접수 안내와 양도 준비 안내를 먼저 보세요.")+'</span></p>'+
+          '<a class="btn btn-o" href="'+esc(o.sell)+'">'+esc(o.sellName)+'</a>'+
+          '<a class="btn btn-o" href="/intake" data-cta="off" data-cta-form="sell">접수 안내 보기</a>'+
+          '<a class="btn btn-o" href="/transfer?t=out">양도 준비 안내 보기</a>' })+'</div>';
 };
 
 /* ⚠️ 중개자라는 사실과, 적힌 값이 누구 것인지를 같이 말합니다 */

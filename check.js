@@ -2887,6 +2887,7 @@ const AUDIT = `(() => {
     if(!z) return "0건 안내가 없습니다";
     if(z.textContent.indexOf("조건 때문이 아니라") < 0) return "조건을 걸었는데 전체 0건이라는 말이 없습니다";
     if(!z.querySelector("a[href='/transfer?t=out']")) return "내놓으실 분의 길(양도 준비 안내)이 없습니다";
+    if(!z.querySelector("a[href='/intake'][data-cta-form='sell']")) return "등록이 닫혔을 때의 접수 안내 단추가 없습니다";
     if(typeof MkZero !== "function") return "MkZero 가 없습니다";
     const box = document.createElement("div");
     box.innerHTML = MkZero({ path:"/stores", loaded:true, total:3, what:"매물" });

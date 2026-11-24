@@ -190,14 +190,11 @@ Vercel Preview 주소는 대략 `meat-insight-git-claude-preview-ready-<팀>.ver
 2. Vercel 의 **다른 프로젝트** 환경변수 · Vercel 밖 서비스가 aboutmeat 키를 들고 있는지 — 이 작업 환경에서 볼 수 없음.
 3. 하루보다 앞선 aboutmeat 접속 기록 (로그 보관 1일).
 
-### ① 남은 판정 — 값을 바꾸지 않고 대표님이 보실 것
-- Vercel → meat-insight → Settings → Environment Variables → Production **`SUPABASE_ANON_KEY`** 가 Secret 이 아니면 값이 보입니다.
-  Supabase → aboutmeat → Settings → API Keys 의 **anon (legacy) 키 끝 6글자**와 같은지만 비교 (채팅에 붙이지 않음).
-  - **다르면** Production 이 aboutmeat 에 물려 있지 않다는 근거가 됩니다 (anon 키는 프로젝트마다 다름).
-  - 같으면 운영이 aboutmeat → 재사용 불가. Secret 이라 안 보이면 미확정 그대로.
-- 다른 Vercel 프로젝트 목록에 `SUPABASE_*` 가 있는 프로젝트가 meat-insight 말고 있는지.
+### 판정 기준 — 뺐습니다 (2026-11-24)
+- 키 끝자리로 판정하던 기준은 뺐습니다. 대표 확인으로 Production `SUPABASE_URL` · `SUPABASE_ANON_KEY` 가 **둘 다 Secret** 이라 값을 볼 수 없습니다.
+- 대표에게 같은 화면 · 키 끝자리를 다시 요청하지 않습니다.
 
-### ①이 통과하면 — Preview 전용 설정 순서 (각 단계 승인 뒤)
+### (참고) 재사용이 확정되는 날의 Preview 전용 설정 순서 (각 단계 승인 뒤)
 1. **[승인] 시험 데이터 정리** — aboutmeat 의 e2e 업체 · 신청 · 계정 정리안을 먼저 보여 드리고 승인 뒤 실행 (`preview-seed.sql` 이 기존 업체가 있으면 멈춤).
 2. **[승인] 시험 도구 차단 목록 변경** — `tools/preview-e2e.js` · `tools/preview-preflight.js` 의 차단 목록에서 `gxjzlkvdbafzfjuunvyx` 를 빼는 커밋 (`igignylgzjphtnyxhhsd` 는 그대로).
 3. 대표: Vercel 환경변수 **Preview 만 · 브랜치 `claude/notify-service-name`** — `SUPABASE_URL` · `SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_KEY`(aboutmeat 것) · `STOREWAY_ACCOUNTS_OPEN=1` · `STOREWAY_INTAKE_OPEN=quote` · 시험용 `ADMIN_PASSWORD` · 시험 채널 `INTAKE_WEBHOOK_URL` · `DEAL_WEBHOOK_URL`.
@@ -206,3 +203,22 @@ Vercel Preview 주소는 대략 `meat-insight-git-claude-preview-ready-<팀>.ver
 6. 제가: Preview 빌드 → `tools/preview-preflight.js` (Preview 가 aboutmeat 에만 물렸는지) → §6 차례 (실제 메일 로그인 → /admin → 시험 견적 → 시험 수신처 알림 · 한글 서비스명 · 개인정보 없음).
 
 두 프로젝트 · 운영 설정 · 차단 목록 · 시험 데이터는 그대로입니다.
+
+## 14. 마감 — aboutmeat 재사용 **미확정** · 실제 로그인 · 알림 Preview 검수 **대기** (2026-11-24)
+
+### 더 찾아본 기존 기록 (읽기 전용 · 저장소 전체 이력)
+| 기록 | 무엇을 적었나 | 현재 운영 배포의 확정 근거인가 |
+|---|---|---|
+| 커밋 이력 전체에서 Supabase 주소 | `igignylgzjphtnyxhhsd.supabase.co` 만 나옴 · `gxjzlkvdbafzfjuunvyx` 주소는 **한 번도 없음** | 아님 — 옛 화면 파일 · 문서에 적힌 글자 |
+| `4f9f214df` (11-11) 접근 환경 문서 | 운영 프로젝트를 `igignylgzjphtnyxhhsd` 로 적음 · 그때 운영 `/api/session` 은 auth:true | 아님 — 11-17 사이트 복구(`8f0b76282`) **전**의 다른 코드 줄 |
+| `docs/report-db-apply-2026-11-14.md` (11-17 복구 때 지워짐) | "운영 Supabase 프로젝트 ref: igignylgzjphtnyxhhsd" | 아님 — 같은 까닭 (11-17 전 기록) |
+
+→ 이미 검토한 정황(§13) 외에 **지금 운영 배포가 어느 Supabase 를 쓰는지 확정할 기록은 없습니다.**
+옛 기록 둘은 운영이 `igignylgzjphtnyxhhsd` 쪽이라는 정황을 더해 줄 뿐입니다.
+
+### 마감
+- **aboutmeat(`gxjzlkvdbafzfjuunvyx`) 재사용: 미확정.** 미확인 — ① 현재 운영 배포가 담은 Supabase ref (Secret)
+  ② 다른 Vercel 프로젝트 · Vercel 밖 서비스의 aboutmeat 키 보유 여부 ③ 하루 넘은 aboutmeat 접속 기록.
+- **실제 메일 링크 로그인 · 관리자 접수함 · 시험 견적 · 시험 수신처 알림(한글 서비스명 · 개인정보 미포함) Preview 검수: 대기.**
+- 시험 대상은 그대로 `claude/notify-service-name` `e142ff43f`.
+- 보류 (별도 승인까지): 두 프로젝트 삭제 · 일시정지 · 시험 데이터 정리 · 도구 차단 목록 변경 · 운영 설정 변경 · main 병합 · 배포.

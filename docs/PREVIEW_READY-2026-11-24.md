@@ -150,7 +150,7 @@ Vercel Preview 주소는 대략 `meat-insight-git-claude-preview-ready-<팀>.ver
 - 대조:
   - `gxjzlkvdbafzfjuunvyx`(aboutmeat) 생성 2026-11-17. Supabase ref 는 만들 때 정해지므로 11-10 에 저장된 값이 그 ref 를 담을 수 없습니다.
   - Vercel 은 환경변수를 **배포할 때** 읽습니다. 지금 운영 배포(`4cfe56618`, 11-24)는 11-10 뒤라 11-10 값을 그대로 씁니다 — 그 뒤 수정이 없으므로 다른 값일 수 없습니다.
-  - → **운영 배포는 aboutmeat 에 연결되어 있지 않습니다** (meat-insight Production 기준).
+  - → 운영 배포가 aboutmeat 에 연결되어 있지 않다는 **정황** (§13 에서 확정에서 정황으로 낮춤).
 - 남은 것 하나 — **다른 서비스**: 같은 목록(Last Updated 정렬)에서 **Nov 17 이후** 수정된 Supabase 관련 변수가 다른 프로젝트에 있는지.
   없으면 aboutmeat 을 쓰는 배포가 없다는 근거가 됩니다. 지난 24시간 aboutmeat 앱 요청도 0건(관리 도구 상태 확인뿐)입니다.
 - 두 DB · 운영 설정은 그대로입니다.
@@ -161,5 +161,48 @@ Vercel Preview 주소는 대략 `meat-insight-git-claude-preview-ready-<팀>.ver
 - 그 시각이 Last Updated 정렬 화면의 값이라 **마지막 수정 시각**으로 읽습니다 — 그 뒤 수정이 있으면 그 행의 시각이 바뀝니다.
 - 현재 운영 배포: `4cfe56618` 을 2026-11-24 에 main 으로 올려 **새로 빌드된 배포**이고, 운영 화면에서 그 커밋의 사진형 카드가 실제로 보이는 것까지 확인했습니다
   (기존 배포를 다시 띄운 것이 아님) → 11-10 18:50 이후 빌드라 그 설정을 읽었습니다.
-- aboutmeat 생성 2026-11-17 04:13 UTC (= 13:13 KST) > 11-10 18:50 KST → **운영 배포는 aboutmeat 이 아님 — 확정.**
+- aboutmeat 생성 2026-11-17 04:13 UTC (= 13:13 KST) > 11-10 18:50 KST → 운영 배포가 aboutmeat 이 아니라는 **정황** (§13 에서 확정에서 정황으로 낮춤).
 - 재사용은 **아직 미확정** — 다른 Vercel 프로젝트가 aboutmeat 을 쓰는지(11-17 이후 수정된 Supabase 관련 변수 유무)를 아직 못 봤습니다.
+
+## 13. aboutmeat 재사용 검토 (2026-11-24 · 읽기 전용) — **조건부 · 미확정 하나**
+
+> 대표 지시: Vercel 캡처의 11-10 은 **정황**으로만 적고, Last Updated 정렬로 행 날짜의 뜻이나 운영 DB 연결을 확정하지 않습니다.
+> §12 · §12-1 의 "확정" 을 정황으로 낮췄습니다.
+
+### 운영이 aboutmeat 을 쓰지 않는다는 쪽 (전부 정황)
+| # | 근거 | 무엇을 봤나 |
+|---|---|---|
+| 1 | Production `SUPABASE_URL` 행 2026-11-10 18:50:02 KST · aboutmeat 생성 11-17 13:13 KST | 대표 확인 · Supabase 목록 — **행 날짜의 뜻은 미확정** |
+| 2 | 운영이 지금 DB 를 부르지 않음 | `storeway.co.kr/api/session` = auth:false · restoration:true · 접수 넷 다 닫힘 |
+| 3 | aboutmeat 에 앱 요청 없음 | 지난 24시간 edge_logs 3건 = Supabase 관리 도구 상태 확인뿐 (무료 요금제 로그 보관 1일 — 그 앞은 못 봄) |
+| 4 | 데이터가 전부 시험용 | 판 84 · 업체 2(e2e-pv-a · b) · 신청 2(11-19) · 계정 4(전부 e2e-…@test.invalid · 로그인 기록 없음) |
+| 5 | 대표가 시험용으로 지정 | `PROD_TARGET_CHECK-2026-11-23.md` |
+
+### 다른 서비스 연결 (읽기 전용)
+| 대상 | 결과 |
+|---|---|
+| `aboutmeat.vercel.app` (옛 MEAT INSIGHT 복구 테스트) | 페이지의 `SUPA_URL` = `https://aboutmeat-disconnected.supabase.co`(가짜 주소) · `test-guard.js` 가 Supabase 요청을 읽기 · 쓰기 모두 막음 → **aboutmeat DB 를 안 씀** |
+| `aboutmeat.co.kr` · `www.*` | Vercel 이 storeway.co.kr 로 308 (CLAUDE.md 기록) — 따로 DB 를 부르는 사이트가 아님 |
+| 이 저장소 코드 · 설정 | `gxjzlkvdbafzfjuunvyx` 는 시험 도구의 **차단 목록**에만 있음 |
+
+### 미확인
+1. **Production 이 실제로 담은 Supabase ref** — `SUPABASE_URL` 이 Secret 이라 값을 못 봄. (판정이 가장 확실한 길: 아래 ①)
+2. Vercel 의 **다른 프로젝트** 환경변수 · Vercel 밖 서비스가 aboutmeat 키를 들고 있는지 — 이 작업 환경에서 볼 수 없음.
+3. 하루보다 앞선 aboutmeat 접속 기록 (로그 보관 1일).
+
+### ① 남은 판정 — 값을 바꾸지 않고 대표님이 보실 것
+- Vercel → meat-insight → Settings → Environment Variables → Production **`SUPABASE_ANON_KEY`** 가 Secret 이 아니면 값이 보입니다.
+  Supabase → aboutmeat → Settings → API Keys 의 **anon (legacy) 키 끝 6글자**와 같은지만 비교 (채팅에 붙이지 않음).
+  - **다르면** Production 이 aboutmeat 에 물려 있지 않다는 근거가 됩니다 (anon 키는 프로젝트마다 다름).
+  - 같으면 운영이 aboutmeat → 재사용 불가. Secret 이라 안 보이면 미확정 그대로.
+- 다른 Vercel 프로젝트 목록에 `SUPABASE_*` 가 있는 프로젝트가 meat-insight 말고 있는지.
+
+### ①이 통과하면 — Preview 전용 설정 순서 (각 단계 승인 뒤)
+1. **[승인] 시험 데이터 정리** — aboutmeat 의 e2e 업체 · 신청 · 계정 정리안을 먼저 보여 드리고 승인 뒤 실행 (`preview-seed.sql` 이 기존 업체가 있으면 멈춤).
+2. **[승인] 시험 도구 차단 목록 변경** — `tools/preview-e2e.js` · `tools/preview-preflight.js` 의 차단 목록에서 `gxjzlkvdbafzfjuunvyx` 를 빼는 커밋 (`igignylgzjphtnyxhhsd` 는 그대로).
+3. 대표: Vercel 환경변수 **Preview 만 · 브랜치 `claude/notify-service-name`** — `SUPABASE_URL` · `SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_KEY`(aboutmeat 것) · `STOREWAY_ACCOUNTS_OPEN=1` · `STOREWAY_INTAKE_OPEN=quote` · 시험용 `ADMIN_PASSWORD` · 시험 채널 `INTAKE_WEBHOOK_URL` · `DEAL_WEBHOOK_URL`.
+4. 대표: aboutmeat → Authentication → URL Configuration — Site URL · Redirect URLs 에 Preview 주소.
+5. 대표: aboutmeat service_role 키는 자격 증명 카드에 · `VERCEL_BYPASS` · `PREVIEW_ADMIN_PASSWORD` 는 세션 환경 변수에.
+6. 제가: Preview 빌드 → `tools/preview-preflight.js` (Preview 가 aboutmeat 에만 물렸는지) → §6 차례 (실제 메일 로그인 → /admin → 시험 견적 → 시험 수신처 알림 · 한글 서비스명 · 개인정보 없음).
+
+두 프로젝트 · 운영 설정 · 차단 목록 · 시험 데이터는 그대로입니다.

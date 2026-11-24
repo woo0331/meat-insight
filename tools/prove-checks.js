@@ -164,6 +164,9 @@ const CASES = [
   /* 2026-11-24 — 폰 머리의 '내 업종 준비 보기' 를 지워 봅니다 */
   ["창업 머리에서 업종 고르기로 가는 길이 폰에도 있다",
    `var a = document.querySelector(".hh-cta a.hh-mo"); if(a) a.remove();`],
+  /* 2026-11-24 — 점검표 항목 하나를 지워 봅니다 (고민 카드 단추가 없는 곳을 가리키게) */
+  ["운영 고민 카드마다 계산 · 점검 단추가 실제 목적지로 간다",
+   `var r = document.getElementById("ock-row-sales"); if(r) r.remove();`],
   ["창업 준비가 §2 의 여섯 영역이다",
    `var b = document.querySelector("#view section.clpf");
     if(b && b.parentNode) b.parentNode.removeChild(b);`],

@@ -473,14 +473,17 @@ function OpsIntro(ind){
     quote: quoteTo({ side:"ops", industry:(ind ? ind.key : "") }),
     goName:"무료 상담 신청하기",
     /* 시안의 '운영 진단 받기' — 저희가 진단해 드리는 서비스는 없습니다. 실제로 있는 운영 점검표(체크리스트)로 갑니다 */
-    second:'<a class="btn btn-lg hh-o" href="#ops-check" onclick="return hhJump(\'ops-check\')">'+icon("check",18)+' 운영 점검하기</a>',
+    second:'<a class="btn btn-lg hh-o" href="#ops-check" onclick="return hhJump(\'ops-check\')">'+icon("check",18)+' 운영 점검하기</a>'+
+      /* 2026-11-24 — 폰은 바로 가기 카드(고민 넷)를 접어 두어서 고민 카드가 2,200px 아래에만 있었습니다.
+         같은 자리(아래 고민 카드 구간)로 가는 한 줄 · 폰 전용(.hh-mo — /startup 과 같은 규칙). */
+      '<a class="btn btn-lg hh-o hh-mo" href="#ops-worry" onclick="return hhJump(\'ops-worry\')">'+icon("chat",18)+' 내 매장 고민부터 보기</a>',
     /* 2026-11-20 카테고리 통합 개선 §4 — 첫 화면에서 고민 넷을 바로 고릅니다. 누르면 바로 아래 그 고민의
        카드(서비스 · 계산도구)로 갑니다 — 카드의 목적지는 전부 실제 화면입니다(tools/urls.json · 하위 key 확인). */
     cardTitle:"어떤 고민이세요?", qfirst:true,
     quick:OPS_WORRY.map(function(x){
       /* ⚠️ 설명 줄(d)을 안 붙입니다 — 넷에 두 줄씩 붙으면 PC 머리가 짙은 판 상한(480px)을 넘습니다(check.js).
          무엇으로 이어지는지는 바로 아래 고민 카드가 칸 이름으로 보여 줍니다. */
-      return { ic:x[0], b:x[1], go:"해결 방법 보기", href:"#"+x[3] }; })
+      return { ic:x[0], b:x[1], go:"계산 · 점검 · 업체 보기", href:"#"+x[3] }; })
     /* 2026-11-19 — "이 화면에서 하실 수 있는 것" 넷(체크 카드)은 바로 아래 고민 카드 넷과 같은 말이라
        뺐습니다. 고민 카드가 머리 바로 다음 구간입니다. */
   }); /* 2026-11-23 — 고민 카드(OpsWorry)는 사진 절차 · 배너 뒤로 옮겼습니다 (PageOperation) */
@@ -495,18 +498,55 @@ function OpsIntro(ind){
       **비용 절감** 칸으로 옮겼습니다 — 매장 시스템은 사람 문제가 아니라 운영비 문제입니다.
    ⚠️ 노무는 실제 경로(/providers/admin?s=labor-agent · 노무사)가 있어 제목을 그대로 둡니다. */
 var OPS_WORRY = [
-  ["won",       "비용을 줄이고 싶어요",   [["고정비 계산","/tools/fixed"],["원가율 · 마진 계산","/tools/margin"],["식자재 · 소모품 업체","/providers/supply"],["POS · 매장 시스템","/providers/it"]], "ow-cost"],
-  ["megaphone", "홍보 · 매출을 늘리고 싶어요", [["온라인 홍보 업체","/providers/marketing"],["리뷰 · 플레이스 관리","/providers/marketing?s=review"],["목표 매출 계산","/tools/target"]], "ow-mkt"],
-  ["tool",      "시설을 고치고 싶어요",   [["설비 수리 업체","/providers/repair"],["정기 점검","/providers/repair?s=check-up"],["청소 · 방역","/providers/clean"]], "ow-fix"],
-  ["users",     "인력 · 세무 · 노무가 필요해요", [["직원 채용","/providers/staff"],["세무 대리","/providers/admin?s=tax-agent"],["노무 대리","/providers/admin?s=labor-agent"]], "ow-hr"]
+  ["won",       "비용을 줄이고 싶어요",   [["원가율 · 마진 계산","/tools/margin"],["식자재 · 소모품 업체","/providers/supply"],["POS · 매장 시스템","/providers/it"]], "ow-cost",
+   [["월 고정비 계산하기","/tools/fixed"], ["매출 · 지출 점검표 보기","@sales"]]],
+  ["megaphone", "홍보 · 매출을 늘리고 싶어요", [["온라인 홍보 업체","/providers/marketing"],["리뷰 · 플레이스 관리","/providers/marketing?s=review"]], "ow-mkt",
+   [["목표 매출 계산하기","/tools/target"], ["리뷰 · 평판 점검표 보기","@review"]]],
+  ["tool",      "시설을 고치고 싶어요",   [["설비 수리 업체","/providers/repair"],["정기 점검","/providers/repair?s=check-up"],["청소 · 방역","/providers/clean"]], "ow-fix",
+   [["시설 관리 체크리스트 보기","@equip"], ["소방 · 전기 안전 점검 보기","@safety"]]],
+  ["users",     "인력 · 세무 · 노무가 필요해요", [["직원 채용","/providers/staff"],["세무 대리","/providers/admin?s=tax-agent"],["노무 대리","/providers/admin?s=labor-agent"]], "ow-hr",
+   [["인건비율 계산하기","/tools/labor"], ["근로계약 점검표 보기","@labor"]]]
 ];
+/* 2026-11-24 — 고민 카드의 **할 일 단추**(x[4]). 누르면 무엇을 하는지 적습니다 ('자세히 보기' 가 아니라).
+   ⚠️ "/tools/…" 는 그 계산기 화면, "@키" 는 이 화면 아래 운영 점검표의 **그 항목**(AM_OPS_CHECK 의 key)입니다 —
+      접힌 항목(전체 보기 안)이면 펼친 뒤에 갑니다 (opsCheckJump). 없는 key 를 적으면 단추가 조용히 빠집니다.
+   ⚠️ 칩(x[2])은 맡길 업체 화면입니다 — 단추와 같은 목적지는 칩에서 뺐습니다 (한 카드에 같은 길 둘). */
+function opsWorryActs(L){
+  return (L || []).map(function(a, i){
+    var cls = "btn " + (i ? "btn-o" : "btn-b") + " hwr-go";
+    if(a[1].charAt(0) === "@"){
+      var k = a[1].slice(1);
+      if(!(typeof amOpsCheckOne === "function" && amOpsCheckOne(k))) return "";
+      return '<a class="'+cls+'" href="#ock-row-'+esc(k)+'" onclick="return opsCheckJump(\''+esc(k)+'\')">'+icon("check",16)+esc(a[0])+'</a>';
+    }
+    return '<a class="'+cls+'" href="'+esc(a[1])+'">'+icon("calc",16)+esc(a[0])+'</a>';
+  }).join("");
+}
+/* 점검표의 한 항목으로 — 접혀 있으면 펼치고, 그 줄로 가서 잠깐 표시합니다.
+   ⚠️ 고정 헤더에 가리지 않게 scroll-margin 을 CSS 가 잡습니다 (#ops-check li[id]). */
+window.opsCheckJump = function(k){
+  var li = document.getElementById("ock-row-" + k);
+  if(!li) return true;
+  var rest = document.getElementById("ock-rest");
+  if(rest && rest.contains(li) && rest.classList.contains("is-fold-all")){
+    var b = document.querySelector('[aria-controls="ock-rest"]');
+    if(b) b.click();
+  }
+  li.scrollIntoView({ behavior:"auto", block:"start" });
+  li.classList.add("is-hit"); setTimeout(function(){ li.classList.remove("is-hit"); }, 2400);
+  var lab = li.querySelector(".ock-r"); if(lab){ lab.setAttribute("tabindex","-1"); try{ lab.focus({ preventScroll:true }); }catch(e){} }
+  return false;
+};
 function OpsWorry(){
-  return '<section class="sec sec-white hwr"><div class="w">'+
+  return '<section class="sec sec-white hwr" id="ops-worry"><div class="w">'+
     '<div class="sec-hd"><h2>사장님, <em>이런 고민</em>이 있으신가요?</h2>'+
-      '<p>고민에 맞는 화면으로 바로 가실 수 있습니다. 서비스를 여러 개 고르시려면 아래 고르개를 쓰세요.</p></div>'+
+      '<p>고민마다 바로 해 볼 수 있는 계산 · 점검과 맡길 업체를 모았습니다. 서비스를 여러 개 고르시려면 아래 고르개를 쓰세요.</p></div>'+
     '<ul class="hwr-g">'+OPS_WORRY.map(function(x){
       return '<li id="'+x[3]+'"><div class="hwr-c"><span class="hwr-i" aria-hidden="true">'+icon(x[0], 30)+'</span>'+
-        '<h3>'+esc(x[1])+'</h3><p class="hwr-ch">'+x[2].map(function(c){
+        '<h3>'+esc(x[1])+'</h3>'+
+        '<p class="hwr-acts">'+opsWorryActs(x[4])+'</p>'+
+        '<p class="hwr-chk">맡길 업체 찾기</p>'+
+        '<p class="hwr-ch">'+x[2].map(function(c){
           return '<a href="'+esc(c[1])+'">'+esc(c[0])+'</a>'; }).join("")+'</p></div></li>'; }).join("")+'</ul>'+
   '</div></section>';
 }
@@ -622,7 +662,7 @@ function OpsCheckRow(o){
     go.push('<a class="ock-go" href="/tools/'+esc(o.tool)+'">계산해 보기</a>');
   if(o.read)
     go.push('<a class="ock-go" href="/content/'+esc(o.read)+'">읽어 두기</a>');
-  return '<li>'+
+  return '<li id="ock-row-'+esc(o.key)+'">'+
     '<label class="ock-r" for="'+esc(id)+'">'+
       '<input type="checkbox" class="pk-ck" id="'+esc(id)+'"'+
         ' data-ock="'+esc(o.key)+'"'+

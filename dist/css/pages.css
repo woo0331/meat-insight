@@ -6702,3 +6702,12 @@ span.kp-more .fld-b{ margin:0; }
   .hh-cta .hh-mo{ display:inline-flex; grid-column:1 / -1; justify-content:center; }
   .hh-cta .hh-mo svg{ display:inline; }
 }
+
+@media (min-width:901px){ .hwr-c{ display:flex; flex-direction:column; } }
+@media (max-width:900px){ .hwr-acts, .hwr-chk{ grid-column:1 / -1; } .hwr-acts{ margin:12px 0 4px; } .hwr-chk{ margin:8px 0 0; } .hwr-chk + .hwr-ch{ margin-top:8px; } }
+.hwr-acts{ display:grid; gap:8px; margin:0 0 14px; }
+.hwr-go{ display:flex; align-items:center; justify-content:center; gap:6px; min-height:48px; padding:6px 12px;
+  font-size:15px; line-height:1.3; text-align:center; white-space:normal; }
+.hwr-chk{ margin:auto 0 8px; font-size:var(--t-cap); font-weight:800; color:var(--ink2); }
+#ops-worry, #ops-worry .hwr-g > li, #ops-check li[id]{ scroll-margin-top:calc(var(--hdr-h, 64px) + 12px); }
+#ops-check li.is-hit .ock-r{ outline:3px solid var(--walnut, #6A4B3B); outline-offset:3px; border-radius:12px; }

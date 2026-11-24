@@ -2863,6 +2863,22 @@ const AUDIT = `(() => {
         for (const x of r.cssRules) if(x.selectorText && x.selectorText.indexOf(".hh-mo") >= 0 && x.style.display && x.style.display !== "none") mob = true; } }
     if(!mob) return "폰 폭에서 보이게 하는 규칙이 없습니다";
     return true;`);
+  await f("운영 고민 카드마다 계산 · 점검 단추가 실제 목적지로 간다", "/operation", `
+    /* 2026-11-24 — 고민 넷에 할 일 단추. 계산기 단추는 있는 계산기 화면으로, 점검표 단추는 이 화면 점검표의 그 항목으로
+       가야 합니다 (없는 항목이면 그 단추가 안 그려집니다). 폰 머리의 '내 매장 고민부터 보기' 도 봅니다. 이 주석에 백틱 금지. */
+    const cards = document.querySelectorAll("#ops-worry .hwr-g > li");
+    if(cards.length !== 4) return "고민 카드가 넷이 아닙니다 — " + cards.length;
+    const tools = (window.AM_TOOLS || []).map(function(x){ return x.to; });
+    for (const li of cards){
+      const go = li.querySelectorAll(".hwr-go");
+      if(go.length < 2) return li.id + " 할 일 단추가 둘이 아닙니다";
+      for (const a of go){ const h = a.getAttribute("href");
+        if(h.indexOf("#ock-row-") === 0){ if(!document.getElementById(h.slice(1))) return li.id + " 점검표 항목이 없습니다 — " + h; }
+        else if(tools.indexOf(h) < 0) return li.id + " 없는 계산기 — " + h;
+        if(a.textContent.indexOf("자세히") >= 0) return li.id + " 무엇을 하는지 안 보이는 단추 — " + a.textContent; } }
+    const m = document.querySelector(".hh-cta a.hh-mo[href='#ops-worry']");
+    if(!m || !document.getElementById("ops-worry")) return "폰 머리의 '내 매장 고민부터 보기' 가 없습니다";
+    return true;`);
   await f("창업 준비가 §2 의 여섯 영역이다", "/startup", `
     /* 2026-11-24 하단 간소화 — 고르기(STEP 01) · 확인(바구니) · 묶음 · 신청(STEP 02)이 '여러 서비스 함께 고르기'
        한 구역(clpf)으로 합쳐졌습니다. 그 구역이 하나 있고 · 절차(stD)가 있고 · 고르는 칸 · 개수 · 신청 길이

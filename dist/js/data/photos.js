@@ -514,7 +514,19 @@ window.AM_PIC_EQ = {
   "salon-chair":"as-salon-eq", fitness:"as-fitness", "kiosk-eq":"as-kiosk", vending:"as-kiosk"
 };
 
+window.AM_PIC_PICK = { "interior/interior":"kp-st-pro-design", interior:"kp-st-pro-design",
+  "it/pos":"kp-op-svc-pos", "it/kiosk":"as-kiosk", it:"kp-op-svc-pos",
+  "repair/aircon-fix":"kp-op-svc-repair", "repair/check-up":"kp-op-svc-repair", repair:"kp-op-svc-repair",
+  "supply/consumable":"kp-op-svc-supply", supply:"kp-op-svc-supply",
+  "asset/furniture":"as-furniture", furniture:"as-furniture", equip:"svc-equip", asset:"as-fridge",
+  "demolish/full":"hero-close", demolish:"hero-close", "restore/shop-restore":"kind-take", restore:"kind-take",
+  "waste/biz-waste":"insu-closure-in", waste:"insu-closure-in", clean:"svc-clean" };
 function picKey(kind, key){
+  if(kind === "pick"){
+    var P = window.AM_PIC_PICK || {}, c = String(key || "").split("/")[0];
+    var pk = P[key] || ((String(key).indexOf("/") < 0) ? P[c] : "");
+    return (pk && typeof hasPhoto === "function" && hasPhoto(pk)) ? pk : "";
+  }
   var t = kind === "ind" ? window.AM_PIC_IND : kind === "eq" ? window.AM_PIC_EQ : window.AM_PIC_CAT;
   var k = t && t[key];
   return (k && typeof hasPhoto === "function" && hasPhoto(k)) ? k : "";

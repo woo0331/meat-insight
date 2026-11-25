@@ -476,6 +476,7 @@ function render(){
   if(typeof window.hdCtaPaint === "function") window.hdCtaPaint();
 
   if(typeof window.pickPaint === "function") window.pickPaint();
+  if(typeof window.sellProg === "function") window.sellProg();
 
   if(typeof window.amStateSync === "function") window.amStateSync();
 

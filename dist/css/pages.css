@@ -6924,3 +6924,62 @@ a.pcd:focus-visible, .pcd:focus-within{ outline:3px solid var(--walnut); outline
 
 .cat.cat-pc .cat-go{ z-index:2; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.92);
   display:flex; align-items:center; justify-content:center; box-shadow:0 1px 4px rgba(44,33,28,.15); color:var(--ink2); }
+
+.clpf .clpf-g{ display:grid; gap:var(--s4); }
+.clpf .clpf-sum{ max-width:none; margin:0; }
+.clpf .clpf-sum-t{ display:flex; align-items:center; justify-content:space-between; gap:var(--s3); width:100%;
+  min-height:var(--tap); padding:0; border:0; background:none; font:inherit; font-weight:800; color:var(--ink);
+  text-align:left; cursor:pointer; }
+.clpf .clpf-sum-t b{ color:var(--blue-600); }
+.clpf .clpf-sum-x{ display:inline-flex; align-items:center; gap:4px; font-style:normal; font-size:var(--t-cap);
+  font-weight:700; color:var(--ink2); }
+.clpf .clpf-sum-x svg{ transition:transform .15s; }
+.clpf .clpf-sum.is-open .clpf-sum-x svg{ transform:rotate(180deg); }
+.clpf .clpf-sum-b{ display:grid; gap:var(--s3); }
+.clpf .clpf-sum .pkb-go{ display:grid; gap:var(--s2); }
+.clpf .clpf-sum .pkb-go .btn{ width:100%; }
+@media (max-width:1100px){
+
+  .clpf .clpf-sum:not(.is-open) .clpf-sum-b{ display:none; }
+}
+@media (min-width:1101px){
+  .clpf .clpf-g{ grid-template-columns:minmax(0,1fr) 320px; align-items:start; gap:var(--s6); }
+  .clpf .clpf-g > .clpf-sum{ order:2; position:sticky; top:96px; box-shadow:var(--shadow-soft); }
+  .clpf .clpf-g > .clpf-main{ order:1; min-width:0; }
+  .clpf .clpf-g:has(> .clpf-sum[hidden]){ grid-template-columns:minmax(0,1fr); }
+  .clpf .clpf-sum-t{ cursor:default; pointer-events:none; }
+  .clpf .clpf-sum-x{ display:none; }
+  .clpf .clpf-tgw{ justify-content:flex-start; }
+}
+
+.pk-c .pk-ph{ grid-column:1; width:56px; height:56px; border-radius:12px; overflow:hidden; display:block;
+  box-shadow:inset 0 0 0 1px rgba(44,33,28,.08); }
+.pk-c .pk-ph .ph, .pk-c .pk-ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+.pks-r .pks-ph{ flex:none; width:40px; height:40px; border-radius:9px; overflow:hidden; display:block; }
+.pks-r .pks-ph .ph, .pks-r .pks-ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+html.pk-in-pick .pk-bar{ display:none; }
+
+.sl-tab{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s3); margin:0 0 var(--s2); }
+.sl-tc{ position:relative; display:grid; grid-template-rows:auto 1fr; overflow:hidden; border-radius:var(--r-lg);
+  background:var(--surface); border:1px solid var(--line); box-shadow:0 1px 2px rgba(44,33,28,.06);
+  color:var(--ink); text-decoration:none; transition:border-color .14s, box-shadow .14s; }
+.sl-tc:hover{ border-color:var(--acc-dark); box-shadow:var(--shadow-soft); }
+.sl-tc.on{ border-color:var(--acc-dark); box-shadow:inset 0 0 0 1px var(--acc-dark); background:var(--sand); }
+.sl-tc:focus-visible{ outline:3px solid var(--blue-600); outline-offset:2px; }
+.sl-tph{ display:block; aspect-ratio:16/9; overflow:hidden; }
+.sl-tph .ph, .sl-tph img{ width:100%; height:100%; object-fit:cover; display:block; }
+.sl-tph .pcd-n{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+.sl-ttx{ display:grid; gap:2px; padding:var(--s3) var(--s4) var(--s4); }
+.sl-ttx b{ font-size:17px; font-weight:800; }
+.sl-ttx i{ font-style:normal; font-size:var(--t-sm); color:var(--ink2); }
+.sl-tc .swt-on{ left:auto; right:10px; }
+.sl-tnote{ margin:0 0 var(--s4); font-size:var(--t-cap); color:var(--ink3); }
+.sl-prog{ display:grid; gap:6px; margin:0 0 var(--s4); padding:var(--s3) var(--s4); border-radius:var(--r);
+  background:var(--surface); border:1px solid var(--line); }
+.sl-prog-t{ font-size:var(--t-sm); color:var(--ink2); }
+.sl-prog-t b{ color:var(--ink); }
+.sl-prog-t em{ font-style:normal; }
+.sl-prog-bar{ display:block; height:6px; border-radius:99px; background:var(--bg-2); overflow:hidden; }
+.sl-prog-bar i{ display:block; height:100%; width:0; background:var(--acc-dark); transition:width .2s; }
+.sl-prog.is-done .sl-prog-t em{ color:var(--ink); font-weight:800; }
+@media (max-width:600px){ .sl-ttx{ padding:var(--s2) var(--s3) var(--s3); } .sl-ttx b{ font-size:16px; } }

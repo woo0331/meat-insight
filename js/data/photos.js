@@ -846,7 +846,22 @@ window.AM_PIC_EQ = {
   "salon-chair":"as-salon-eq", fitness:"as-fitness", "kiosk-eq":"as-kiosk", vending:"as-kiosk"
 };
 /* 사진 키를 고르는 한 곳 — 없으면 "" */
+/* 2026-11-25 §6 — 여러 서비스 고르기의 **물리적인 선택지**만 작은 사진 (id 가 먼저 · 없으면 분류).
+   ⚠️ 서류 · 신고 · 상담처럼 손에 잡히는 것이 아닌 칸에는 사진을 안 붙입니다 (아이콘 그대로).
+   ⚠️ 간판(interior/sign) · 인터넷(it/internet)은 맞는 사진이 없어 비웠습니다 (빈 액자를 깔지 않습니다). */
+window.AM_PIC_PICK = { "interior/interior":"kp-st-pro-design", interior:"kp-st-pro-design",
+  "it/pos":"kp-op-svc-pos", "it/kiosk":"as-kiosk", it:"kp-op-svc-pos",
+  "repair/aircon-fix":"kp-op-svc-repair", "repair/check-up":"kp-op-svc-repair", repair:"kp-op-svc-repair",
+  "supply/consumable":"kp-op-svc-supply", supply:"kp-op-svc-supply",
+  "asset/furniture":"as-furniture", furniture:"as-furniture", equip:"svc-equip", asset:"as-fridge",
+  "demolish/full":"hero-close", demolish:"hero-close", "restore/shop-restore":"kind-take", restore:"kind-take",
+  "waste/biz-waste":"insu-closure-in", waste:"insu-closure-in", clean:"svc-clean" };
 function picKey(kind, key){
+  if(kind === "pick"){
+    var P = window.AM_PIC_PICK || {}, c = String(key || "").split("/")[0];
+    var pk = P[key] || ((String(key).indexOf("/") < 0) ? P[c] : "");
+    return (pk && typeof hasPhoto === "function" && hasPhoto(pk)) ? pk : "";
+  }
   var t = kind === "ind" ? window.AM_PIC_IND : kind === "eq" ? window.AM_PIC_EQ : window.AM_PIC_CAT;
   var k = t && t[key];
   return (k && typeof hasPhoto === "function" && hasPhoto(k)) ? k : "";

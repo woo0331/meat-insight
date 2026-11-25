@@ -1241,6 +1241,10 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
      say(d.n === 1 && !d.body && !d.sum, "고르개 " + u + " — 한 구역 · 기본 접힘 · 0개면 요약 숨김", JSON.stringify(d));
      const ids = await p4.evaluate(() => [...document.querySelectorAll("#clpf-body [data-pick]")].slice(0, 2).map(e => e.getAttribute("data-pick")));
      await p4.evaluate(v => { amPickSet(v); }, ids); await p4.reload({ waitUntil:"networkidle" });
+     /* 2026-11-25 §6 — 폰은 요약이 접이식입니다 (개수 줄만 보임). 눌러 펼친 뒤 목록을 셉니다. */
+     const sumClosed = await p4.evaluate(() => { const b = document.querySelector("#pick .clpf-sum-b"); return !!b && !b.offsetParent; });
+     say(sumClosed, "고르개 " + u + " — 폰 요약은 개수만 보이고 목록은 접혀 있다");
+     await p4.click("#pick .clpf-sum-t"); await p4.waitForTimeout(150);
      const f = await p4.evaluate(() => ({ body:!!document.getElementById("clpf-body").offsetParent,
        rows:[...document.querySelectorAll("#pk-list li")].filter(e => e.offsetParent).length }));
      say(!f.body && f.rows === 2, "고르개 " + u + " — 고른 둘이 접힌 채 요약에 보인다 (새로고침 뒤)", JSON.stringify(f));

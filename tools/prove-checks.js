@@ -879,7 +879,8 @@ const CASES = [
       (t[1] 이 undefined 라 되돌리기가 터집니다 · 열네 번째).
       지금 메인에서 한 묶음 안에 아이콘이 여럿인 곳은 진입 카드 넷과
       직접 찾기 여덟입니다. */
-   `const t = [].slice.call(document.querySelectorAll("#view .iind-i svg"));
+   /* 2026-11-25 — 업종 카드가 사진이 되어 아이콘이 없습니다. 네 기둥(.ipil-i)으로 옮겼습니다. */
+   `const t = [].slice.call(document.querySelectorAll("#view .ipil-i svg"));
     t[1].innerHTML = t[0].innerHTML;`],
   /* 고른 전문관이 표시되지 않으면 걸려야 합니다 — 거르개는 무엇이
      켜졌는지 보이지 않으면 거르개가 아닙니다 */
@@ -1355,7 +1356,7 @@ async function proveAudit(pg){
       const e = document.querySelector("#view .ic-t svg, #view .stg-i svg," +
         " #view .ia-t svg, #view .mhall-i svg, #view .mstp-i svg," +
         " #view .bent-i svg, #view .bwhy-i svg, #view .bban-i svg," +
-        " #view .bstep-i svg, #view .bcal-i svg, #view .wp-ci svg, #view .iind-i svg");
+        " #view .bstep-i svg, #view .bcal-i svg, #view .wp-ci svg, #view .iind-i svg, #view .ipil-i svg");
       if(e) e.remove();
     });
     await pg.waitForTimeout(60);

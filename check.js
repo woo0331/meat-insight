@@ -985,7 +985,7 @@ const AUDIT = `(() => {
   document.querySelectorAll("#view .ic-t, #view .stg-i, #view .ia-t," +
                             " #view .mhall-i, #view .mstp-i," +
                             " #view .bent-i, #view .bwhy-i, #view .bban-i," +
-                            " #view .bstep-i, #view .bcal-i, #view .wp-ci, #view .wp-sn, #view .iind-i").forEach(e => {
+                            " #view .bstep-i, #view .bcal-i, #view .wp-ci, #view .wp-sn, #view .iind-i, #view .ipil-i").forEach(e => {
     if(e.querySelector("svg")) return;
     const own = (e.parentElement || e);
     out.ico.push((own.textContent || "").trim().slice(0, 14) || "(이름 없음)");
@@ -4281,7 +4281,7 @@ const AUDIT = `(() => {
     /* 2026-11-18 메인 디자인 개편(대표 확정 시안) — 재는 자리만 새 화면으로.
        옛 판은 git show 2aa1d8d:check.js 에 있습니다. 이 주석에 백틱 금지. */
 
-    const groups = [[".iind-i", "업종별"], [".wp-sn", "이용 방법"]];
+    const groups = [[".ipil-i", "네 기둥"], [".wp-sn", "이용 방법"]];
     for(const g of groups){
       const L = [].slice.call(document.querySelectorAll("#view " + g[0]));
       if(!L.length) return g[1] + " 아이콘이 하나도 없습니다";

@@ -14,7 +14,7 @@
 
 **판정** — `projectId` 가 `gxjzlkvdbafzfjuunvyx`(aboutmeat) **가 아니면** 분리 확인입니다. 같으면 멈추고 보고합니다.
 
-**진단 제거** — 확인이 끝나면 그 커밋을 되돌린 커밋을 올리고 배포합니다.
+**진단 제거** — 2026-11-25 운영 확인 결과 `igignylgzjphtnyxhhsd`(운영) ≠ `gxjzlkvdbafzfjuunvyx`(시험 후보) · 분리 확인. 확인이 끝나면 그 커밋을 되돌린 커밋을 올리고 배포합니다.
 ```
 git revert <진단 커밋>   # api/admin-health.js 의 ?ref=1 갈래와 검사만 빠집니다
 ```

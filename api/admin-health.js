@@ -224,11 +224,27 @@ function refOfKey(k){
     return { set: true, ref: ref, role: role };
   }catch(e){ return { set: true, ref: null, role: null }; }
 }
+/* 2026-11-25 — 관리자 인증을 이 칸 안에서도 한 번 더 봅니다 (middleware.js 와 같은 Basic 비밀번호).
+   ⚠️ 미들웨어의 matcher 가 어긋나거나 지워져도 프로젝트 ID 가 새지 않게. 비밀번호는 어디에도 남기지 않습니다. */
+function adminPassOk(req){
+  var want = String(process.env.ADMIN_PASSWORD || "");
+  var h = (req.headers && (req.headers.authorization || req.headers.Authorization)) || "";
+  if(!want || String(h).indexOf("Basic ") !== 0) return false;
+  var dec = "";
+  try{ dec = Buffer.from(String(h).slice(6), "base64").toString("utf8"); }catch(e){ return false; }
+  var i = dec.indexOf(":"), got = i >= 0 ? dec.slice(i + 1) : "";
+  var a = Buffer.from(got), b = Buffer.from(want);
+  return a.length === b.length && require("crypto").timingSafeEqual(a, b);
+}
 function dbRef(req, res){
   res.setHeader("cache-control", "no-store");
   res.setHeader("x-robots-tag", "noindex");
   if(!has("ADMIN_PASSWORD"))
     return res.status(503).json({ error: "관리자 잠금이 설정되지 않았습니다" });
+  if(!adminPassOk(req)){
+    res.setHeader("WWW-Authenticate", 'Basic realm="Admin", charset="UTF-8"');
+    return res.status(401).json({ error: "관리자 인증이 필요합니다" });
+  }
   var url = process.env.SUPABASE_URL;
   var ref = refOfUrl(url);
   var anon = refOfKey(process.env.SUPABASE_ANON_KEY);

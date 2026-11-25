@@ -17,7 +17,7 @@ window.WOW_BIZ = {
   privacyEmail:   "",
   privacyPhone:   "",
 
-  sosReady:       false,
+  sosReady:       true,
 
   mailNotifyReady: false,
 

@@ -80,7 +80,7 @@ window.WOW_BIZ = {
      말합니다 (`/api/admin-health` 를 실시간으로 읽습니다). */
   // 2026-11-17 복구 준비: 현재 접수처와 DB의 소유·분리 상태를 검증하기 전까지 접수 안내를 닫습니다.
   // 이 UI 설정은 서버 쓰기 차단 장치가 아닙니다. 복구 문서의 배포 제한을 함께 지켜야 합니다.
-  sosReady:       false,
+  sosReady:       true,   /* ⚠️⚠️ 시험 브랜치 전용 — main 에 절대 합치지 않습니다 (docs/PREVIEW_QA-2026-11-25.md §3) */
   // 2026-11-18 W01 ⑥ — 견적 양식의 "진행 상황을 메일로" 상자. 이메일 칸과 실제 발송
   // (RESEND_API_KEY · CUSTOMER_EMAIL_FROM)이 확인되기 전에는 false — 약속만 하는 칸을 만들지 않습니다.
   mailNotifyReady: false,

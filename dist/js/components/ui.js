@@ -131,7 +131,9 @@ window.CatCard = function(c, industryKey, qs){
   if(industryKey) qa.push('i='+encodeURIComponent(industryKey));
   if(qs) qa.push(qs);
   var href = base + (qa.length ? (base.indexOf("?") >= 0 ? "&" : "?")+qa.join("&") : "");
-  return '<a class="cat'+tn(c.tone)+'" href="'+esc(href)+'" data-rv>'+
+
+  return '<a class="cat cat-pc'+tn(c.tone)+'" href="'+esc(href)+'" data-rv>'+
+    '<span class="cat-ph" aria-hidden="true">'+picBox(picKey("cat", c.key), c.icon || "grid", "(max-width:640px) 92vw, (max-width:1100px) 46vw, 300px")+'</span>'+
 
     '<span class="cat-ic'+(hasIconArt(c.key) ? " cat-ic-a" : "")+'">'+
       (hasIconArt(c.key) ? iconArt(c.key, 34) : icon(c.icon,22))+'</span>'+

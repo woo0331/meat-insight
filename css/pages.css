@@ -9117,3 +9117,17 @@ a.pcd:focus-visible, .pcd:focus-within{ outline:3px solid var(--walnut); outline
   .wnt > b{ font-size:15px; }
   .wnt .wnt-l-d{ font-size:13px; line-height:1.45; }
 }
+
+/* 2026-11-25 디자인 개편 §5 · §7 — 분야 카드(CatCard) 맨 위 대표 사진
+   ⚠️ 사진 → 제목 → 설명 → 하위 차례. 카드 안쪽 여백만큼 사진을 밖으로 밀어 가장자리까지 채웁니다.
+   ⚠️ 사진이 없는 분류는 picFace() 월넛 면이 같은 높이를 지킵니다 (빈 액자를 깔지 않습니다). */
+.cat.cat-pc{ padding-top:0; overflow:hidden; background:var(--surface); border:1px solid var(--line);
+  box-shadow:0 1px 2px rgba(44,33,28,.06); }
+.cat.cat-pc .cat-ph{ display:block; margin:0 calc(-1*var(--s6)) var(--s3); aspect-ratio:16/9; overflow:hidden; position:relative; }
+.cat.cat-pc .cat-ph .ph, .cat.cat-pc .cat-ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+.cat.cat-pc .cat-ph .pcd-n{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+.cat.cat-pc .cat-ic{ margin-top:calc(-1*var(--s7)); position:relative; z-index:1; box-shadow:0 2px 6px rgba(44,33,28,.12); background:var(--surface); }
+@media (max-width:600px){ .cat.cat-pc .cat-ph{ margin:0 calc(-1*var(--s5)) var(--s3); } }
+/* 사진 위에 뜬 화살표는 흰 원판 위에 앉힙니다 (사진 밝기와 무관하게 보이게) */
+.cat.cat-pc .cat-go{ z-index:2; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.92);
+  display:flex; align-items:center; justify-content:center; box-shadow:0 1px 4px rgba(44,33,28,.15); color:var(--ink2); }

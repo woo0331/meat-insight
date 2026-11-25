@@ -212,7 +212,9 @@ window.CatCard = function(c, industryKey, qs){
   if(industryKey) qa.push('i='+encodeURIComponent(industryKey));
   if(qs) qa.push(qs);
   var href = base + (qa.length ? (base.indexOf("?") >= 0 ? "&" : "?")+qa.join("&") : "");
-  return '<a class="cat'+tn(c.tone)+'" href="'+esc(href)+'" data-rv>'+
+  /* 2026-11-25 디자인 개편 §5 · §7 — 분야 카드 맨 위 대표 사진 (AM_PIC_CAT · 없으면 같은 높이의 월넛 면) */
+  return '<a class="cat cat-pc'+tn(c.tone)+'" href="'+esc(href)+'" data-rv>'+
+    '<span class="cat-ph" aria-hidden="true">'+picBox(picKey("cat", c.key), c.icon || "grid", "(max-width:640px) 92vw, (max-width:1100px) 46vw, 300px")+'</span>'+
     /* ⚠️ 2026-10-09 지시서 §3 · §7 — 분야 카드도 **컬러 아이콘**입니다.
        `iconArt()` 에 같은 key 가 있으면 그것을, 없으면 선형 아이콘이
        자리를 지킵니다 (빈 칸이 생기지 않습니다 · 절대 규칙 2). */

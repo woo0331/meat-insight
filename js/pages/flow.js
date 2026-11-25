@@ -850,10 +850,14 @@ function CloseKxSupport(){
 function CloseKpSvc(){
   var L = [
     kxSvc("transfer", "", "매장 양도", "넘기면 철거 · 원상복구가 줄어듭니다", "handover", "insu-transfer"),
-    kxSvc("asset", "", "중고 집기 매각", "주방기기 · 냉장고 · 가구 처분", "box", "svc-equip"),
-    kxSvc("demolish", "", "철거 · 원상복구", "무엇을 뜯는지부터 · 계약 조건에 맞게", "demolish", "hero-close"),
+    kxSvc("asset", "", "집기 · 설비 처분", "냉장고 · 커피머신 · 가구 품목 고르기", "box", "as-fridge"),
+    /* 2026-11-25 — 철거(해체 중인 현장)와 원상복구(복구된 바닥 · 벽)를 사진으로 가릅니다 */
+    kxSvc("demolish", "", "철거", "무엇을 뜯는지 · 폐기물 범위부터", "demolish", "hero-close"),
+    kxSvc("restore", "", "원상복구", "임대 계약 조건에 맞게 바닥 · 벽 복구", "restore", "kind-take"),
     kxSvc("tax", "", "폐업 세무", "폐업 신고 · 부가세 · 종합소득세", "tax", "kp-cl-svc-tax")
   ].filter(Boolean);
+  /* 집기 처분은 기존 품목 선택 화면으로 */
+  L.forEach(function(x){ if(/^\/assets/.test(x.href)) x.href = "/assets?p=pick"; });
   return KpServices({ id:"cl-svc", tone:"sec-white", kicker:"폐업 · 정리 핵심 서비스",
     title:"폐업에 꼭 필요한 서비스", lead:"넘길 수 있는 것부터 확인하고, 남는 것을 정리합니다.", items:L });
 }
@@ -1127,6 +1131,9 @@ function ClosureWantFold(sel){
       return '<li><a class="wnt'+(on?" on":"")+'" href="'+
         esc("/closure?w=" + encodeURIComponent(w.key))+'"'+
         (on ? ' aria-current="true"' : '')+'>'+
+        /* 2026-11-25 — 상황마다 사진 (양도=열쇠와 서류 · 시설=업소용 냉장고 · 완전 폐업=비운 현장 · 모르겠어요=준비 목록) */
+        '<span class="wnt-ph" aria-hidden="true">'+picBox(WANT_PH[w.key] || "", w.icon, "(max-width:640px) 46vw, 300px")+
+          (on ? '<em class="swt-on">'+icon("check",14)+' 선택됨</em>' : '')+'</span>'+
         '<span class="wnt-ic">'+icon(w.icon,20)+'</span>'+
         '<b>'+esc(w.name)+'</b>'+
         '<span class="wnt-l-d">'+esc(w.lead)+'</span>'+
@@ -1139,10 +1146,12 @@ function ClosureWantFold(sel){
         '<p>'+esc(sel.lead)+' 나머지 분야는 아래 <b>분야별 상세</b>에 그대로 있습니다.</p></div>'+
       '<div class="cat-g cat-g4">'+g.hit.map(function(c){ return CatCard(c, ""); }).join("")+'</div>';
   }
+  /* 2026-11-25 디자인 개편 §5 — 네 상황을 사진으로 가르는 자리라 처음부터 펼쳐 둡니다 (접기 단추는 그대로) */
   return '<div class="hfl-want">'+
-    FoldAll("cl-want", "어디서부터 시작할지 모르겠어요", "접기", "", !!sel)+
-    '<div class="'+(sel ? "" : "is-fold-all")+'" id="cl-want">'+
-      '<p class="hfl-want-p">상황을 고르시면 그에 맞는 순서와 분야를 앞으로 꺼내 드립니다.</p>'+
+    '<h3 class="hfl-want-h">지금 상황을 골라 주세요</h3>'+
+    '<p class="hfl-want-p">상황을 고르시면 그에 맞는 순서와 분야를 앞으로 꺼내 드립니다.</p>'+
+    FoldAll("cl-want", "상황 카드 숨기기", "상황 카드 숨기기", "", true)+
+    '<div id="cl-want">'+
       list + hit +
     '</div></div>';
 }
@@ -1223,6 +1232,7 @@ function ClosurePathBand(path){
    ⚠️ **고르신 것에 없는 분류를 숨기지 마세요.** 추린 것 아래에
    나머지도 냅니다 — 숨기면 그 사장님에게는 그 기능이 없는 것이
    됩니다. `check.js` 가 개수를 셉니다. */
+var WANT_PH = { pass:"kp-tr-pro-ready", money:"as-fridge", fast:"insu-closure", lost:"kp-op-pro-prior" };
 function WantBand(ind){
   var wants = (window.AM_CLOSE_WANTS || []);
   if(!wants.length) return "";
@@ -1243,6 +1253,9 @@ function WantBand(ind){
       return '<li><a class="wnt'+(on?" on":"")+'" href="'+
         esc(base + "?w=" + encodeURIComponent(w.key))+'"'+
         (on ? ' aria-current="true"' : '')+'>'+
+        /* 2026-11-25 — 상황마다 사진 (양도=열쇠와 서류 · 시설=업소용 냉장고 · 완전 폐업=비운 현장 · 모르겠어요=준비 목록) */
+        '<span class="wnt-ph" aria-hidden="true">'+picBox(WANT_PH[w.key] || "", w.icon, "(max-width:640px) 46vw, 300px")+
+          (on ? '<em class="swt-on">'+icon("check",14)+' 선택됨</em>' : '')+'</span>'+
         '<span class="wnt-ic">'+icon(w.icon,20)+'</span>'+
         '<b>'+esc(w.name)+'</b>'+
         '<span class="wnt-l-d">'+esc(w.lead)+'</span>'+

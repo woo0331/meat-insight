@@ -815,9 +815,10 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.waitForTimeout(400);
  /* 2026-11-19 — 두 경로 카드(.clp-c)는 첫 화면 세 갈래와 같은 선택의 반복이라 내렸습니다.
     지키는 것: 첫 화면 세 갈래가 있고, 상황 넷은 "모르겠어요" 안에 접혀 있다. */
+ /* 2026-11-25 디자인 개편 §5 — 상황 넷은 사진 카드로 **펼쳐 둡니다** (전에는 '모르겠어요' 안에 접혀 있었습니다). */
  const cp = await pg.evaluate(()=>({q:[...document.querySelectorAll(".pgh .hh-qa")].filter(a=>a.getClientRects().length).length, clp:document.querySelectorAll(".clp-c").length,
-   want:(document.getElementById("cl-want")||{className:""}).className.indexOf("is-fold-all")>=0}));
- say(cp.q === 3 && cp.clp === 0 && cp.want, "3 폐업 — 첫 화면 세 갈래 · 상황 넷은 '모르겠어요' 안에 접힘", JSON.stringify(cp));
+   want:[...document.querySelectorAll("#cl-want .wnt")].filter(a=>a.getClientRects().length && a.querySelector(".wnt-ph img, .wnt-ph .pcd-n")).length}));
+ say(cp.q === 3 && cp.clp === 0 && cp.want === 4, "3 폐업 — 첫 화면 세 갈래 · 상황 넷이 사진 카드로 보임", JSON.stringify(cp));
  const c1 = await pg.$$(".pkq .pk-ck");
  if(c1.length > 1){ await c1[0].check(); await c1[1].check(); }
  await pg.waitForTimeout(350);

@@ -330,7 +330,8 @@ function mkActive(path, extra){
 }
 function mkJoinQ(href, extra){ return extra ? href + (href.indexOf("?") > 0 ? "&" : "?") + extra : href; }
 window.MkZero = function(o){
-  var J = function(pair){ return typeof koWith === "function" ? koWith(o.what, pair) : o.what + pair.charAt(1); };
+
+  var J = function(pair){ return ftWith(o.what, pair); };
   var on = mkActive(o.path).map(function(a){
     a.href = mkJoinQ(a.href, o.keepQ); return a; });
   if(!o.loaded) return Empty({ icon:"info", title:"매물 정보를 불러오지 못했습니다",

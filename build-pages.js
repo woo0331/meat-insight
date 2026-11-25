@@ -3418,6 +3418,28 @@ function checkRpcArgs(){
    불리는 길이면 평소에는 안 터집니다). 그래서 **글자로** 봅니다.
    ⚠️ 거꾸로(내려온 쪽이 살아 있는 쪽을 부르는 것)는 정상입니다.
    ════════════════════════════════════════════════════════════════════ */
+/* ── checkKoBare() — 2026-11-25 korean.js 로딩 실패 대응 ───────────────────────────
+   korean.js 요청 하나가 실패하면 koWith 가 없고, 손님 화면 코드가 그것을 맨손으로 부르는 순간
+   그 화면의 그리기가 통째로 멈춥니다 (푸터 중개자 고지에서 재현 · 열 화면 본문 0 구간 · 푸터 없음).
+   손님 화면 코드는 chrome.js 의 ftWith 를 쓰거나 typeof 로 확인한 뒤에 부릅니다.
+   ⚠️ 관리자 화면(admin.js · intake.js)과 안 실리는 home-retired.js 는 보지 않습니다. */
+function checkKoBare(){
+  const files = ["js/app.js", "js/pick.js"]
+    .concat(fs.readdirSync(path.join(ROOT, "js/components")).map(f => "js/components/" + f))
+    .concat(fs.readdirSync(path.join(ROOT, "js/pages")).filter(f => f !== "home-retired.js").map(f => "js/pages/" + f))
+    .filter(f => /\.js$/.test(f));
+  const bad = [];
+  for(const f of files){
+    const src = STRIP.stripJs(fs.readFileSync(path.join(ROOT, f), "utf8"));
+    const re = /\bkoWith\s*\(/g; let m;
+    while((m = re.exec(src))){
+      const before = src.slice(Math.max(0, m.index - 80), m.index);
+      if(/typeof\s+koWith\s*===?\s*["']function["']\s*\)?\s*(return|\?|&&)?\s*$/.test(before)) continue;
+      bad.push(f + " · …" + src.slice(Math.max(0, m.index - 30), m.index + 20).replace(/\s+/g, " "));
+    }
+  }
+  if(bad.length) throw new Error("손님 화면 코드가 koWith 를 확인 없이 부릅니다 — korean.js 가 못 실리면 화면이 멈춥니다. ftWith 를 쓰세요:\n  " + bad.join("\n  "));
+}
 function checkRetired(){
   const ret = path.join(ROOT, "js", "pages", "home-retired.js");
   if(!fs.existsSync(ret)) return;          /* 되살려서 합치셨으면 넘어갑니다 */
@@ -3755,6 +3777,7 @@ checkClaimSql();
 checkQuoteSql(W);
 checkRpcArgs();
 checkRetired();
+checkKoBare();
 
 /* ════════════════════════════════════════════════════════════════════
    checkHallFrame() — **전문관 넷의 공통 검사가 글자까지 같은가**

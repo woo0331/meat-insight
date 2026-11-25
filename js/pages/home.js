@@ -797,7 +797,7 @@ function homeHeroCard(){
 
 function HomeHero(){
   var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND || {}).name || ""));
-  var with_ = (window.koWith ? koWith(nm, "이가") : nm + "가");
+  var with_ = ftWith(nm, "이가");
   /* ⚠️⚠️ **셋째 인자(eager)를 빼지 마세요.** 첫 화면의 제일 큰 그림이라
      여기가 LCP 입니다 — 빼면 `loading="lazy"` 가 붙어 **늦게 시작**하고,
      그만큼 첫 그림이 늦습니다 (§6 "모바일 초기 렌더링 속도").
@@ -1331,7 +1331,7 @@ function HomeGuide(){
    ⚠️ 이름은 brand.js 에서 오고 조사는 koWith() 가 고릅니다. */
 function HomeCta(){
   var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND||{}).name || ""));
-  var wa = (window.koWith ? koWith(nm, "와과") : nm + "와");
+  var wa = ftWith(nm, "와과");
   /* ⚠️ 2026-11-18 W01 — 접수가 닫혀 있으면 신청을 권하지 않습니다 (sosReady). */
   if(!(window.WOW_BIZ && WOW_BIZ.sosReady))
     return '<section class="bcta"><div class="w bcta-c">'+
@@ -2078,7 +2078,7 @@ function HomeFindSW(){
 
 function HomeHeroSW(){
   var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND || {}).name || ""));
-  var who = (typeof koWith === "function") ? koWith(nm, "이가") : nm + "가";
+  var who = ftWith(nm, "이가");
   return '<section class="bhero sw2-hero">'+
     (hasPhoto("hero-start")
       ? '<div class="sw2-ph" aria-hidden="true">'+photoBox("hero-start", "", true, "100vw")+'</div>' : '')+
@@ -2186,7 +2186,7 @@ function HomeWPHero(){
   /* 2026-11-20 대표 확정 시안(1:1) — 세 칸: 왼쪽 대표 메시지 · 가운데 창업 준비 · 오른쪽 폐업·철거.
      ⚠️ 브랜드 이름과 조사는 brand.js · koWith 에서 옵니다 (손으로 적지 않습니다). */
   var nm = (typeof brandName === "function") ? brandName() : "인수인계";
-  var nmJ = (typeof koWith === "function") ? koWith(nm, "이가") : nm + "가";
+  var nmJ = ftWith(nm, "이가");
   return '<section class="bhero wp-hero"><div class="w">'+
     '<div class="wp-hg">'+
     '<div class="wp-msg">'+

@@ -543,6 +543,8 @@ function paintMnav(){
    mountChrome() 뒤의 화면 그리기가 통째로 안 돌아 본문이 안 섭니다 (운영에서 한 번 보였고 격리 환경에서 재현했습니다).
    koWith 가 있으면 그것을 쓰고, 없으면 마지막 글자의 받침만 보고 고릅니다 (koJong 과 같은 규칙 ·
    한글이 아니면 받침 없음). ⚠️ 조사를 손으로 적지 마세요 — 이름이 바뀌면 "인수인계은" 이 됩니다. */
+/* 2026-11-25 — /about 의 중개자 고지(info.js)와 업종 운영 띠(journey.js)도 이 함수를 씁니다.
+   korean.js 가 못 실려도 화면이 서야 하는 자리는 koWith 를 맨손으로 부르지 말고 ftWith 를 쓰세요. */
 function ftWith(w, pair){
   if(typeof koWith === "function") return koWith(w, pair);
   var t = String(w || ""), c = t.charCodeAt(t.length - 1) - 0xAC00;

@@ -97,7 +97,7 @@ function StartIntro(ind){
     side:"start", photo:"insu-startup",
 
     kicker:"창업 준비 서비스",
-    h1raw:"성공하는 창업,<br><em>"+esc((typeof koWith === "function" ? koWith(amBrand(), "와과") : amBrand()))+" 함께</em><br>시작하세요.",
+    h1raw:"성공하는 창업,<br><em>"+esc(ftWith(amBrand(), "와과"))+" 함께</em><br>시작하세요.",
 
     leadHtml:'<span data-cta="off">상권 분석부터 인테리어, 설비, 인허가까지 창업에 필요한 서비스와 준비 정보를 확인하세요.</span>'+
              '<span data-cta="on" hidden>상권 분석부터 인테리어, 설비, 인허가까지 창업에 필요한 서비스를 고르고 한 번에 신청하세요.</span>',
@@ -658,7 +658,7 @@ function ClosureIntro(path){
   return HallHero({
     side:"close", photo:"insu-closure",
     kicker:"폐업 · 철거 서비스",
-    h1raw:"매장 정리부터 철거까지<br>폐업의 모든 과정을<br><em>"+esc((typeof koWith === "function" ? koWith(amBrand(), "이가") : amBrand()))+" 함께합니다.</em>",
+    h1raw:"매장 정리부터 철거까지<br>폐업의 모든 과정을<br><em>"+esc(ftWith(amBrand(), "이가"))+" 함께합니다.</em>",
     lead:"복잡하고 부담스러운 폐업 절차, 철거 · 원상복구 · 집기 정리 · 세무까지 순서대로 짚어 드립니다. 바로 철거하기 전에 넘길 수 있는 것부터 확인하세요.",
 
     quote: "/quote?mode=close&from=closure-hero", ctaForm:"close",

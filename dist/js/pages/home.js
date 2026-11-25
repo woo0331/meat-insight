@@ -125,7 +125,7 @@ function homeHeroCard(){
 
 function HomeHero(){
   var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND || {}).name || ""));
-  var with_ = (window.koWith ? koWith(nm, "이가") : nm + "가");
+  var with_ = ftWith(nm, "이가");
 
   var ph = hasPhoto("hero-start")
     ? '<span class="bhero-ph" aria-hidden="true">'+photoBox("hero-start", "", true)+'</span>' : "";
@@ -491,7 +491,7 @@ function HomeGuide(){
 
 function HomeCta(){
   var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND||{}).name || ""));
-  var wa = (window.koWith ? koWith(nm, "와과") : nm + "와");
+  var wa = ftWith(nm, "와과");
 
   if(!(window.WOW_BIZ && WOW_BIZ.sosReady))
     return '<section class="bcta"><div class="w bcta-c">'+
@@ -1100,7 +1100,7 @@ function HomeFindSW(){
 
 function HomeHeroSW(){
   var nm = (window.amBrand ? amBrand() : ((window.AM_BRAND || {}).name || ""));
-  var who = (typeof koWith === "function") ? koWith(nm, "이가") : nm + "가";
+  var who = ftWith(nm, "이가");
   return '<section class="bhero sw2-hero">'+
     (hasPhoto("hero-start")
       ? '<div class="sw2-ph" aria-hidden="true">'+photoBox("hero-start", "", true, "100vw")+'</div>' : '')+
@@ -1178,7 +1178,7 @@ function wpPh(list){
 function HomeWPHero(){
 
   var nm = (typeof brandName === "function") ? brandName() : "인수인계";
-  var nmJ = (typeof koWith === "function") ? koWith(nm, "이가") : nm + "가";
+  var nmJ = ftWith(nm, "이가");
   return '<section class="bhero wp-hero"><div class="w">'+
     '<div class="wp-hg">'+
     '<div class="wp-msg">'+

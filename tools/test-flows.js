@@ -1251,5 +1251,30 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    await cx.close();
  }
 
+ /* ══ 【17】 2026-11-25 — korean.js 가 못 실려도 다섯 카테고리 · 소개 화면이 선다 ══
+    korean.js 요청만 끊으면 푸터 중개자 고지의 koWith 에서 화면 그리기가 통째로 멈춰
+    열 화면이 본문 0 구간 · 푸터 없음이었습니다 (재현). 정상 · 실패 두 경우를 다 봅니다.
+    ⚠️ 조사가 받침을 따르는지도 봅니다 — 대체 규칙이 받침을 안 보면 "매물가" 가 됩니다. */
+ console.log("\n【17】 korean.js 실패에도 다섯 카테고리 · 소개 화면이 선다");
+ for (const fail of [false, true]){
+   const cx = await br.newContext({ viewport:{ width:390, height:844 } });
+   const p5 = await cx.newPage(); const errs = [];
+   p5.on("pageerror", e => errs.push(e.message));
+   if(fail) await p5.route(/\/js\/data\/korean\.js/, r => r.abort());
+   for (const u of ["/", "/startup", "/operation", "/transfer", "/closure", "/about", "/stores?i=cafe"]){
+     errs.length = 0;
+     await p5.goto(B + u, { waitUntil:"networkidle" }); await p5.waitForTimeout(250);
+     const r = await p5.evaluate(() => ({
+       secs: document.querySelectorAll("#view section").length,
+       role: ((document.querySelector(".ft-role") || {}).textContent || "").trim().slice(0, 18),
+       zero: ((document.querySelector("#view .mkz .empty b") || {}).textContent || "") }));
+     const josa = u.indexOf("/stores") === 0 ? r.zero.indexOf("매물이 없습니다") >= 0 : true;
+     say(r.secs >= 2 && r.role.indexOf("인수인계는 통신판매중개자") === 0 && josa && !errs.length,
+       (fail ? "korean.js 실패 · " : "정상 · ") + u + " — 본문 " + r.secs + "구간 · 푸터 '" + r.role + "'" + (r.zero ? " · '" + r.zero + "'" : ""),
+       errs.join(" | "));
+   }
+   await cx.close();
+ }
+
  await br.close(); srv.close(); process.exit(bad?1:0);
 })();

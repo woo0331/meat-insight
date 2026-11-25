@@ -400,7 +400,8 @@ function mkActive(path, extra){
 }
 function mkJoinQ(href, extra){ return extra ? href + (href.indexOf("?") > 0 ? "&" : "?") + extra : href; }
 window.MkZero = function(o){
-  var J = function(pair){ return typeof koWith === "function" ? koWith(o.what, pair) : o.what + pair.charAt(1); };
+  /* ⚠️ korean.js 가 못 실려도 받침을 보고 고르는 ftWith (chrome.js) — 전에는 받침을 안 봐서 "매물가" 가 됐습니다 */
+  var J = function(pair){ return ftWith(o.what, pair); };
   var on = mkActive(o.path).map(function(a){
     a.href = mkJoinQ(a.href, o.keepQ); return a; });
   if(!o.loaded) return Empty({ icon:"info", title:"매물 정보를 불러오지 못했습니다",

@@ -349,7 +349,7 @@ function OpsvcForInd(ind){
   return '<section class="sec sec-blue"><div class="w">'+
     '<div class="sec-hd">'+
       '<p class="eyebrow">'+esc(ind.name)+' 운영</p>'+
-      '<h2>'+esc(koWith(ind.name, "은는"))+' 이런 것을 자주 찾으십니다</h2>'+
+      '<h2>'+esc(ftWith(ind.name, "은는"))+' 이런 것을 자주 찾으십니다</h2>'+
       '<p>업종에 맞춰 차례를 바꿈 것이고, 나머지도 아래에 그대로 있습니다.</p>'+
     '</div>'+
     '<ul class="opsv-pick">'+L.map(function(o){

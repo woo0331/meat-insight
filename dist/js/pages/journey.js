@@ -674,10 +674,13 @@ window.aqSearchGo = function(e){
 function AcqWhich(t, ind, iq){
 
   function tab(k, name, lead){
-    return '<a class="aq-t'+(t===k?" on":"")+'" href="/transfer?t='+k+
+    var ph = k === "in" ? "kp-tr-pro-visit" : "kp-tr-pro-ready";
+    return '<a class="aq-t aq-pc'+(t===k?" on":"")+'" href="/transfer?t='+k+
       (ind ? "&i="+encodeURIComponent(ind.key) : "")+'"'+
       (t===k?' aria-current="page"':'')+'>'+
-      '<b>'+esc(name)+'</b><em>'+esc(lead)+'</em></a>';
+      '<span class="aq-tph" aria-hidden="true">'+picBox(ph, k === "in" ? "search" : "handover", "(max-width:640px) 46vw, 560px")+
+        (t===k ? '<em class="swt-on">'+icon("check",14)+' 선택됨</em>' : '')+'</span>'+
+      '<span class="aq-tx"><b>'+esc(name)+'</b><em>'+esc(lead)+'</em></span></a>';
   }
   var P = window.AM_PROCESS || {};
   var nIn = (P["acq-in"] || []).length, nOut = (P["acq-out"] || []).length;
@@ -809,7 +812,9 @@ function AcqMarket(t, ind, iq){
 
       : '<p class="aq-zero">'+icon("info",16)+'<span>현재 등록된 매물이 없습니다.</span></p>'+
         '<div class="row-cta"><a class="btn btn-b" href="/content?j=startup&cat=store">인수 계약 가이드'+icon("arrow",16)+'</a>'+
-        '<a class="btn btn-o" href="/tools/premium">권리금 계산</a></div>'))+
+        '<a class="btn btn-o" href="/tools/premium">권리금 계산</a>'+
+
+        '<a class="btn btn-o" href="/transfer?t=out">양도 준비 보기</a></div>'))+
   '</div></section>';
 }
 
@@ -850,10 +855,10 @@ function AcqKpCalc(t){
 function AcqKpPros(ind){
   var q = ind ? "i=" + encodeURIComponent(ind.key) : "";
   var L = [
-    kxSvc("law", "lease", "임대차 · 계약 법률", "임대차 승계 · 양도 계약서 검토", "law"),
-    kxSvc("admin", "tax-agent", "양도 세무", "권리금 · 시설 대금의 세금 정리", "tax"),
-    kxSvc("labor", "consult", "직원 · 노무 승계", "넘기거나 받을 때 직원 문제 상담", "staff"),
-    kxSvc("contract", "", "계약 · 명의 정리", "인터넷 · POS · 렌탈 명의 이전 · 해지", "contract")
+    kxSvc("law", "lease", "임대차 · 계약 법률", "임대차 승계 · 양도 계약서 검토", "law", "kp-tr-svc-contract"),
+    kxSvc("admin", "tax-agent", "양도 세무", "권리금 · 시설 대금의 세금 정리", "tax", "kp-cl-svc-tax"),
+    kxSvc("labor", "consult", "직원 · 노무 승계", "넘기거나 받을 때 직원 문제 상담", "staff", "kp-op-svc-staff"),
+    kxSvc("contract", "", "계약 · 명의 정리", "인터넷 · POS · 렌탈 명의 이전 · 해지", "contract", "kp-tr-pro-nego")
   ].filter(Boolean);
   if(q) L.forEach(function(x){ x.href += (x.href.indexOf("?") >= 0 ? "&" : "?") + q; });
   return KpCards({ id:"aq-pro", tone:"sec-white", kicker:"전문가 연결",
@@ -865,10 +870,10 @@ function AcqKpPros(ind){
 function AcqKxPros(ind){
   var q = ind ? "i=" + encodeURIComponent(ind.key) : "";
   var L = [
-    kxSvc("law", "lease", "임대차 · 계약 법률", "임대차 승계 · 양도 계약서 검토", "law"),
-    kxSvc("admin", "tax-agent", "양도 세무", "권리금 · 시설 대금의 세금 정리", "tax"),
-    kxSvc("labor", "consult", "직원 · 노무 승계", "넘기거나 받을 때 직원 문제 상담", "staff"),
-    kxSvc("contract", "", "계약 · 명의 정리", "인터넷 · POS · 렌탈 명의 이전 · 해지", "contract")
+    kxSvc("law", "lease", "임대차 · 계약 법률", "임대차 승계 · 양도 계약서 검토", "law", "kp-tr-svc-contract"),
+    kxSvc("admin", "tax-agent", "양도 세무", "권리금 · 시설 대금의 세금 정리", "tax", "kp-cl-svc-tax"),
+    kxSvc("labor", "consult", "직원 · 노무 승계", "넘기거나 받을 때 직원 문제 상담", "staff", "kp-op-svc-staff"),
+    kxSvc("contract", "", "계약 · 명의 정리", "인터넷 · POS · 렌탈 명의 이전 · 해지", "contract", "kp-tr-pro-nego")
   ].filter(Boolean);
   if(q) L.forEach(function(x){ x.href += (x.href.indexOf("?") >= 0 ? "&" : "?") + q; });
   return KxServices({ id:"aq-pro", tone:"sec-white", kicker:"전문가 연결",

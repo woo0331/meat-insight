@@ -6732,7 +6732,7 @@ a.pcd:focus-visible, .pcd:focus-within{ outline:3px solid var(--walnut); outline
 .pcd-ph{ position:relative; display:block; aspect-ratio:16/10; overflow:hidden; background:#E9DFD0; flex:none; }
 .pcd-ph img, .pcd-ph .ph{ width:100%; height:100%; object-fit:cover; display:block; }
 .pcd-n{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-  background:linear-gradient(140deg, #CDB496 0%, #B09072 100%); background-color:#BFA284; color:#FFFCF7;
+  background:linear-gradient(140deg, #A48A77 0%, #7E6352 100%); background-color:#8B6F5C; color:#FFFCF7;
   --ia-1:#FFFCF7; --ia-2:rgba(255,252,247,.4); }
 .pcd-n svg{ width:56px; height:56px; }
 .pcd-tx{ display:flex; flex-direction:column; gap:4px; padding:14px 16px 16px; flex:1 1 auto; min-width:0; }

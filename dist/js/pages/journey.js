@@ -91,11 +91,15 @@ window.ProcessBand = function(o){
   if(!steps.length) return "";
   var ind = o.industry || "";
 
-  var body = '<ol class="pcs">'+steps.map(function(s, i){
+  var from = Math.max(0, Math.min(steps.length - 1, o.from || 0));
+  var first = o.first ? Math.max(1, o.first) : 0;
+  var inWin = function(i){ return !first || (i >= from && i < from + first); };
+  var stepLi = function(s, i){
       var no = (i + 1 < 10 ? "0" : "") + (i + 1);
-      return '<li class="pcs-i">'+
+      var tag = first ? (i === from ? '<em class="pcs-tag pcs-tag-now">지금 할 일</em>' : (i > from && i < from + first ? '<em class="pcs-tag">다음 단계</em>' : '')) : '';
+      return '<li class="pcs-i'+(first && i === from ? ' pcs-now' : '')+'">'+
         '<span class="pcs-n">'+no+'</span>'+
-        '<div class="pcs-b">'+
+        '<div class="pcs-b">'+tag+
           '<b class="pcs-t">'+esc(s.name)+'</b>'+
           '<p class="pcs-p">'+esc(s.lead)+'</p>'+
 
@@ -104,7 +108,12 @@ window.ProcessBand = function(o){
           '<div class="pcs-ls">'+StepLinks(s, ind)+'</div>'+
         '</div>'+
       '</li>';
-    }).join("")+'</ol>'+
+    };
+  var rest = first ? steps.map(function(s, i){ return inWin(i) ? "" : stepLi(s, i); }).join("") : "";
+  var fid = (o.key || "pcs") + "-rest";
+  var body = '<ol class="pcs">'+steps.map(function(s, i){ return inWin(i) ? stepLi(s, i) : ""; }).join("")+'</ol>'+
+    (rest ? '<div class="pcs-more">'+FoldAll(fid, "나머지 "+(steps.length - Math.min(first, steps.length - from))+"걸음 모두 보기", "접기")+
+      '<ol class="pcs is-fold-all" id="'+esc(fid)+'">'+rest+'</ol></div>' : '')+
     (o.note ? '<p class="sec-note">'+icon("info",15)+esc(o.note)+'</p>' : '');
 
   if(o.bare) return body;
@@ -115,6 +124,7 @@ window.ProcessBand = function(o){
       '<h2>'+esc(o.title || "무엇부터 해야 하나요?")+'</h2>'+
       '<p>'+esc(o.lead || "순서대로 짚어 드립니다. 걸음마다 필요한 정보 · 업체 · 도구를 바로 열어 보실 수 있습니다.")+'</p>'+
     '</div>'+
+    (o.cta || '')+
     body+
   '</div></section>';
 };

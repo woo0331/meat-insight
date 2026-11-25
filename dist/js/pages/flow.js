@@ -65,7 +65,8 @@ function StartKpCalc(ind){
 function StartKpInd(){
   var pick = ["restaurant", "cafe", "retail", "beauty"];
   var L = pick.map(function(k){ var x = typeof amIndustry === "function" ? amIndustry(k) : null; if(!x) return null;
-    return { n:x.name, d:x.lead || "", href:"/startup/" + encodeURIComponent(k), ic:x.icon || "store", go:"준비 순서 보기" }; }).filter(Boolean);
+
+    return { n:x.name, d:x.lead || "", href:"/startup/" + encodeURIComponent(k), ic:x.icon || "store", ph:picKey("ind", k), go:"준비 순서 보기" }; }).filter(Boolean);
   return KpCards({ id:"st-ig", tone:"sec-white", kicker:"업종별 창업 가이드",
     title:"업종별 창업 준비 과정", lead:"업종마다 준비 순서와 필요한 장비가 다릅니다.", items:L,
     after:'<div class="kp-all">'+FoldAll("st-ind", "전체 업종 "+(window.AM_INDUSTRIES||[]).length+"개 보기", "접기")+
@@ -354,6 +355,8 @@ function PageStartupIndustry(ind){
     kicker:"START · " + ind.name,
 
     h1raw:esc(ind.name)+" 창업을<br class=\"br-m\"> 준비하고 계시네요.",
+
+    photo:picKey("ind", ind.key),
     lead:"지금부터 필요한 순서입니다. 걸음마다 꼭 확인할 것과 맡길 곳을 같이 보여 드립니다.",
     cta:'<a class="btn btn-b btn-lg" href="'+esc(quoteTo({industry:ind.key,side:"start"}))+'">'+
         '한 번에 견적 요청'+icon("arrow",18)+'</a>'+
@@ -370,7 +373,7 @@ function PageStartupIndustry(ind){
         title:ind.name+" 매장 인수, 무엇부터 하나요?",
         lead:amProcess("acq-in").length+"걸음입니다. 권리금과 시설이 같이 오는지, "+
              "임대차가 승계되는지가 금액을 가릅니다.",
-        industry:ind.key, tone:"sec-gray",
+        industry:ind.key, tone:"sec-gray", first:3, from:startFrom("acq-in"), cta:startCalcCta(ind),
         note:"매물에 적힌 평수 · 보증금 · 월세 · 권리금 · 매출은 올리신 "+
              "사장님이 적으신 값이고, 저희가 확인하거나 보증하는 값이 아닙니다." })
     : ProcessBand({ key:"startup", kicker:"STARTUP PROCESS",
@@ -378,7 +381,7 @@ function PageStartupIndustry(ind){
 
         lead:amProcess("startup").length+"걸음입니다. 걸음마다 "+ind.name+
              "에 맞는 업체 · 장비 · 글로 바로 넘어갑니다.",
-        industry:ind.key, tone:"sec-gray" }))+
+        industry:ind.key, tone:"sec-gray", first:3, from:startFrom("startup"), cta:startCalcCta(ind) }))+
   (ind.equip && ind.equip.length ? EquipBand(ind) : "")+
   StepBand(ind)+
   (fcat ? FranchiseHint(fcat, ind) : "")+
@@ -389,10 +392,19 @@ function PageStartupIndustry(ind){
 }
 
 function startWay(){ return nowQS("how") === "take" ? "take" : "new"; }
+
+function startFrom(key){
+  var stg = window.amStartPick ? amStartPick("AM_START_STAGE", nowQS("st")) : null;
+  return stg && stg.at && stg.at[key] ? Math.max(0, stg.at[key] - 1) : 0;
+}
+function startCalcCta(ind){
+  return '<p class="pcs-cta"><a class="btn btn-b" href="/tools/cost?i='+encodeURIComponent(ind.key)+'">'+icon("calc",17)+' 창업비 계산하기</a>'+
+    '<span>예산을 먼저 따져 보면 걸음마다 맡길 범위가 정해집니다.</span></p>';
+}
 var START_WAYS = [
-  { k:"new",  ic:"seed",     n:"새로 창업하기",
+  { k:"new",  ic:"seed",     n:"새로 창업하기", ph:"kp-cl-pro-quote",
     d:"자리를 찾고 공사부터 시작합니다", s:"상권 · 입지부터 영업 시작까지" },
-  { k:"take", ic:"handover", n:"기존 매장 인수하기",
+  { k:"take", ic:"handover", n:"기존 매장 인수하기", ph:"kp-tr-pro-ready",
     d:"하던 가게를 받아 이어서 엽니다", s:"매장 탐색부터 인계까지" }
 ];
 function StartWayBand(ind){
@@ -408,8 +420,11 @@ function StartWayBand(ind){
       var on = (w.k === cur);
 
       var to = (w.k === "new") ? base : (base + "?how=" + w.k);
-      return '<a class="swt-c'+(on ? " on" : "")+'" href="'+esc(to)+'"'+
+
+      return '<a class="swt-c swt-pc'+(on ? " on" : "")+'" href="'+esc(to)+'"'+
         (on ? ' aria-current="true"' : '')+'>'+
+        '<span class="swt-ph" aria-hidden="true">'+picBox(w.ph, w.ic, "(max-width:640px) 92vw, 360px")+
+          (on ? '<em class="swt-on">'+icon("check",14)+' 선택됨</em>' : '')+'</span>'+
         '<span class="ic-t">'+icon(w.ic,26)+'</span>'+
         '<span class="swt-t"><b>'+esc(w.n)+'</b>'+
           '<i>'+esc(w.d)+'</i><em>'+esc(w.s)+'</em></span>'+
@@ -532,10 +547,16 @@ function EquipBand(ind){
       '<a class="sec-more" href="/assets?i='+encodeURIComponent(ind.key)+'">'+
         '중고 시설 · 장비 보기'+icon("chev",15)+'</a>'+
     '</div>'+
-    '<ul class="chip-g">'+ind.equip.map(function(e){
-      return '<li><a class="chip" href="/providers/equip?s='+encodeURIComponent(e.key)+
-        '&i='+encodeURIComponent(ind.key)+'">'+esc(e.name)+'</a></li>';
-    }).join("")+'</ul>'+
+
+    (function(){
+      var P = ind.equip.filter(function(e){ return picKey("eq", e.key); }),
+          C = ind.equip.filter(function(e){ return !picKey("eq", e.key); });
+      var to = function(e){ return '/providers/equip?s='+encodeURIComponent(e.key)+'&i='+encodeURIComponent(ind.key); };
+      return (P.length ? '<ul class="eqp-g">'+P.map(function(e){
+          return '<li><a class="pcd eqp-c" href="'+to(e)+'"><span class="pcd-ph" aria-hidden="true">'+picBox(picKey("eq", e.key), "equip", "(max-width:640px) 46vw, 200px")+'</span>'+
+            '<span class="pcd-tx"><b class="pcd-t">'+esc(e.name)+'</b><i class="pcd-d">대표 이미지 · 업체 보기</i></span></a></li>'; }).join("")+'</ul>' : '')+
+        (C.length ? '<ul class="chip-g">'+C.map(function(e){ return '<li><a class="chip" href="'+to(e)+'">'+esc(e.name)+'</a></li>'; }).join("")+'</ul>' : '');
+    })()+
   '</div></section>';
 }
 

@@ -145,11 +145,17 @@ window.ProcessBand = function(o){
      ⚠️⚠️ `<section>` 안에 `<section>` 을 넣으면 위아래 여백이 두 겹이
      되고 바탕이 한 번 더 깔려 구간이 둘로 읽힙니다 — 그래서 껍데기를
      빼는 쪽입니다. 부르는 쪽이 제 머리말을 답니다. */
-  var body = '<ol class="pcs">'+steps.map(function(s, i){
+  /* 2026-11-25 디자인 개편 — o.first(보일 걸음 수) · o.from(지금 걸음 0부터)을 주면
+     '지금 할 일' · '다음 단계' 가 먼저 보이고 나머지는 접힙니다 (DOM 에는 전부 있습니다). */
+  var from = Math.max(0, Math.min(steps.length - 1, o.from || 0));
+  var first = o.first ? Math.max(1, o.first) : 0;
+  var inWin = function(i){ return !first || (i >= from && i < from + first); };
+  var stepLi = function(s, i){
       var no = (i + 1 < 10 ? "0" : "") + (i + 1);
-      return '<li class="pcs-i">'+
+      var tag = first ? (i === from ? '<em class="pcs-tag pcs-tag-now">지금 할 일</em>' : (i > from && i < from + first ? '<em class="pcs-tag">다음 단계</em>' : '')) : '';
+      return '<li class="pcs-i'+(first && i === from ? ' pcs-now' : '')+'">'+
         '<span class="pcs-n">'+no+'</span>'+
-        '<div class="pcs-b">'+
+        '<div class="pcs-b">'+tag+
           '<b class="pcs-t">'+esc(s.name)+'</b>'+
           '<p class="pcs-p">'+esc(s.lead)+'</p>'+
           /* ⚠️ 꼭 확인할 것 (2026-10-06 2차 §5) — 걸음마다 **무엇을
@@ -166,7 +172,12 @@ window.ProcessBand = function(o){
           '<div class="pcs-ls">'+StepLinks(s, ind)+'</div>'+
         '</div>'+
       '</li>';
-    }).join("")+'</ol>'+
+    };
+  var rest = first ? steps.map(function(s, i){ return inWin(i) ? "" : stepLi(s, i); }).join("") : "";
+  var fid = (o.key || "pcs") + "-rest";
+  var body = '<ol class="pcs">'+steps.map(function(s, i){ return inWin(i) ? stepLi(s, i) : ""; }).join("")+'</ol>'+
+    (rest ? '<div class="pcs-more">'+FoldAll(fid, "나머지 "+(steps.length - Math.min(first, steps.length - from))+"걸음 모두 보기", "접기")+
+      '<ol class="pcs is-fold-all" id="'+esc(fid)+'">'+rest+'</ol></div>' : '')+
     (o.note ? '<p class="sec-note">'+icon("info",15)+esc(o.note)+'</p>' : '');
 
   if(o.bare) return body;
@@ -177,6 +188,7 @@ window.ProcessBand = function(o){
       '<h2>'+esc(o.title || "무엇부터 해야 하나요?")+'</h2>'+
       '<p>'+esc(o.lead || "순서대로 짚어 드립니다. 걸음마다 필요한 정보 · 업체 · 도구를 바로 열어 보실 수 있습니다.")+'</p>'+
     '</div>'+
+    (o.cta || '')+
     body+
   '</div></section>';
 };

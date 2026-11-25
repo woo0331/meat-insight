@@ -6825,3 +6825,35 @@ a.pcd:focus-visible, .pcd:focus-within{ outline:3px solid var(--walnut); outline
   .itr-b2 .itr-f{ grid-template-columns:repeat(3,minmax(0,1fr)) auto; align-items:stretch; }
   .itr-b2 .itr-f > .btn{ grid-column:auto; padding:0 24px; white-space:nowrap; }
 }
+
+.swt-c.swt-pc{ position:relative; display:flex; flex-direction:column; align-items:stretch; padding:0; overflow:hidden; }
+.swt-pc .swt-ph{ position:relative; display:block; aspect-ratio:16/9; overflow:hidden; background:#E9DFD0; }
+.swt-pc .swt-ph img, .swt-pc .swt-ph .ph{ width:100%; height:100%; object-fit:cover; display:block; }
+.swt-pc .ic-t{ display:none; }
+.swt-pc .swt-t{ padding:16px 18px 18px; }
+.swt-pc .swt-k{ position:absolute; right:14px; bottom:16px; }
+.swt-on{ position:absolute; left:10px; top:10px; display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:999px;
+  background:#38271F; color:#fff; font-style:normal; font-size:13px; font-weight:800; }
+
+.pcs-tag{ display:inline-block; margin:0 0 6px; padding:3px 10px; border-radius:999px; background:#EFE6D8; color:#5A3F31;
+  font-style:normal; font-size:13px; font-weight:800; }
+.pcs-tag-now{ background:#5A3F31; color:#fff; }
+.pcs-i.pcs-now{ border-color:var(--walnut); box-shadow:0 0 0 2px rgba(106,75,59,.18); }
+.pcs-more{ margin:14px 0 0; }
+.pcs-more > .pcs{ margin-top:12px; }
+.pcs-cta{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin:14px 0 0; }
+.pcs-cta span{ font-size:var(--t-cap); color:var(--hm-ink2); }
+
+.eqp-g{ list-style:none; margin:0 0 14px; padding:0; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.eqp-g > li{ display:flex; }
+.pcd.eqp-c .pcd-ph{ aspect-ratio:4/3; }
+.pcd.eqp-c .pcd-tx{ padding:10px 12px 12px; }
+.pcd.eqp-c .pcd-t{ font-size:15px; }
+@media (max-width:900px){ .eqp-g{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } }
+
+.kp-ph > .kp-art{ background:linear-gradient(140deg, #CDB496 0%, #B09072 100%); background-color:#BFA284; color:#FFFCF7;
+  --ia-1:#FFFCF7; --ia-2:rgba(255,252,247,.4); }
+.pcs-tag{ display:table; }
+.pcs-cta{ margin:0 0 16px; }
+.pcs-cta .btn{ color:#fff; }
+.pcs-b > .pcs-tag{ align-self:flex-start; width:fit-content; }

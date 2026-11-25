@@ -6987,3 +6987,4 @@ html.pk-in-pick .pk-bar{ display:none; }
 .mk-head b{ font-weight:800; }
 .asp-note{ margin:var(--s3) 0 0; font-size:var(--t-cap); color:var(--ink3); display:flex; gap:6px; align-items:flex-start; }
 .asp-note svg{ flex:none; margin-top:3px; }
+.tl-c-m em i{ font-style:normal; font-size:12px; font-weight:800; color:var(--gold-text); margin-right:2px; }

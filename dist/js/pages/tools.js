@@ -576,7 +576,8 @@ function PageTools(){
           '<span class="tl-c-l">'+esc(t.lead)+'</span>'+
 
           '<span class="tl-c-m">'+
-            '<em>'+esc(t.ask)+'</em>'+icon("arrow",14)+'<em>'+esc(t.out)+'</em>'+
+            '<em><i>넣는 값</i> '+esc((window.AM_TOOL_IN||{})[t.key] || t.ask)+'</em>'+icon("arrow",14)+
+            '<em><i>얻는 결과</i> '+esc(t.out)+'</em>'+
           '</span>'+
         '</a></li>';
       }).join("")+'</ul>';

@@ -714,8 +714,10 @@ function PageTools(){
           '<span class="tl-c-l">'+esc(t.lead)+'</span>'+
           /* ⚠️ 나오는 값 자리는 `—` 입니다. 그럴듯한 숫자를 넣으면 그
              순간 지어낸 값입니다. */
+          /* 2026-11-25 디자인 개편 §8 — 넣는 값 → 얻는 결과를 글로 (AM_TOOL_IN 은 실제 입력 칸 이름) */
           '<span class="tl-c-m">'+
-            '<em>'+esc(t.ask)+'</em>'+icon("arrow",14)+'<em>'+esc(t.out)+'</em>'+
+            '<em><i>넣는 값</i> '+esc((window.AM_TOOL_IN||{})[t.key] || t.ask)+'</em>'+icon("arrow",14)+
+            '<em><i>얻는 결과</i> '+esc(t.out)+'</em>'+
           '</span>'+
         '</a></li>';
       }).join("")+'</ul>';

@@ -427,6 +427,9 @@ window.WOW_PHOTO_SLOTS = [
   { key:"kp-cl-pro-quote", sizes:"(max-width:600px) 46vw, 310px",
     where:"/closure 진행 절차 02 '현장 확인 · 견적'", min:[640,440], ratio:[1.3,1.55], maxKB:120,
     note:"필요한 장면 — 현장에서 견적서 클립보드를 적는 손 · 권장 960×660(16:11) · 권리 확인된 사진만" },
+  { key:"kp-op-pro-prior", sizes:"(max-width:600px) 46vw, 310px",
+    where:"2026-11-25 디자인 개편 — 폐업 '아직 모르겠어요' · 기타 업종 · 가이드 카드", min:[640,440], ratio:[1.3,1.55], maxKB:120,
+    note:"준비 목록 카드를 책상에 펼친 장면 (보내 주신 묶음 operations_process-prioritize) · 연출 사진" },
   { key:"kp-cl-ban-cost", sizes:"(max-width:900px) 100vw, 60vw",
     where:"/closure 비용 배너 오른쪽 사진", min:[1600,700], ratio:[1.8,2.6], maxKB:260,
     note:"필요한 장면 — 줄자 · 안전모 · 도면이 놓인 작업대 · 권장 2000×900 · 권리 확인된 사진만" },
@@ -607,6 +610,10 @@ window.WOW_PHOTOS = {
     w:685, h:471,
     webp:"/img/kp/kp-op-pro-check.webp?v=5b813cd7 685w",
     alt:"클립보드에 매장 점검 내용을 적는 사장님 — 연출 사진" },
+  "kp-op-pro-prior": { src:"/img/kp/kp-op-pro-prior.jpg?v=2c52d18b",
+    w:684, h:470,
+    webp:"/img/kp/kp-op-pro-prior.webp?v=bc33db4c 684w",
+    alt:"책상에 펼쳐 둔 준비 목록 카드 — 연출 사진" },
   "kp-op-pro-run": { src:"/img/kp/kp-op-pro-run.jpg?v=ca6600aa",
     w:684, h:470,
     webp:"/img/kp/kp-op-pro-run.webp?v=3e59c79a 684w",
@@ -812,3 +819,46 @@ window.photoBox = function(key, cls, eager, sz){
      끼어들면 그 열일곱이 전부 어긋납니다. */
   return alt ? '<picture class="ph-p">' + alt + img + '</picture>' : img;
 };
+
+
+/* ═══ 2026-11-25 디자인 개편 — 사진 공통 매핑 ═══════════════════════════════════
+   업종 14 · 업체 분류 · 장비를 **사진 자리 키**로만 가리킵니다 (파일 경로를 적지 않습니다).
+   ⚠️⚠️ 맞는 사진이 없는 자리는 null 입니다 — **비슷한 다른 사진으로 메우지 않습니다.**
+      (네일 자리에 미용실 사진을 넣으면 다른 업종으로 읽힙니다.) 그 자리는 picFace() 가
+      월넛 면 + 아이콘으로 서고, 사진을 받으면 이 표의 한 줄만 바꾸면 됩니다.
+   ⚠️ 전부 연출 사진입니다 — 실제 매물 · 업체 · 시공 실적으로 소개하지 않습니다. */
+window.AM_PIC_IND = {
+  restaurant:"kind-asset", cafe:"as-espresso", bar:null, hair:"as-salon-eq", beauty:null,
+  gym:"as-fitness", academy:null, pet:null, retail:null, unmanned:"as-kiosk", stay:null,
+  office:"kp-cl-svc-tax", online:null, etc:"kp-op-pro-prior"
+};
+window.AM_PIC_CAT = {
+  interior:"kp-st-pro-design", equip:"svc-equip", furniture:"as-furniture", it:"kp-op-svc-pos",
+  supply:"kp-op-svc-supply", repair:"kp-op-svc-repair", admin:"kp-st-svc-permit", staff:"kp-op-svc-staff",
+  marketing:null, clean:"svc-clean", demolish:"hero-close", restore:"kind-take", waste:"insu-closure-in",
+  tax:"kp-cl-svc-tax", labor:null, contract:"kp-tr-svc-contract", law:"kp-tr-pro-nego",
+  item:"kp-st-pro-check", store:"kp-tr-svc-search", area:"kp-st-svc-area", fund:"kp-tr-svc-premium",
+  process:"kp-cl-pro-consult", transfer:"kp-tr-pro-ready", asset:"as-fridge", stock:null, support:null
+};
+/* 장비(industries.js 의 equip key) — 제품을 알아볼 수 있는 것만 */
+window.AM_PIC_EQ = {
+  espresso:"as-espresso", fridge:"as-fridge", "kitchen-eq":"as-biz-eq", "cook-eq":"svc-equip",
+  "salon-chair":"as-salon-eq", fitness:"as-fitness", "kiosk-eq":"as-kiosk", vending:"as-kiosk"
+};
+/* 사진 키를 고르는 한 곳 — 없으면 "" */
+function picKey(kind, key){
+  var t = kind === "ind" ? window.AM_PIC_IND : kind === "eq" ? window.AM_PIC_EQ : window.AM_PIC_CAT;
+  var k = t && t[key];
+  return (k && typeof hasPhoto === "function" && hasPhoto(k)) ? k : "";
+}
+/* 사진 칸 — 사진이 있으면 photoBox, 없으면 월넛 면 + 아이콘 (빈 틀을 두지 않습니다) */
+function picBox(photoKey, iconName, sizes, eager){
+  if(photoKey && typeof hasPhoto === "function" && hasPhoto(photoKey))
+    return photoBox(photoKey, "", !!eager, sizes || "(max-width:600px) 46vw, 320px");
+  return picFace(iconName);
+}
+function picFace(iconName){
+  var art = (typeof hasIconArt === "function" && hasIconArt(iconName)) ? iconArt(iconName, 56)
+          : (typeof icon === "function" ? icon(iconName || "store", 34) : "");
+  return '<span class="pcd-n" aria-hidden="true">'+art+'</span>';
+}

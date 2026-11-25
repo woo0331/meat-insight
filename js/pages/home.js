@@ -2543,8 +2543,9 @@ function HomeITransfer(){
   var S = (window.AM_STORES || []);
   var dp = ((window.AM_STORE_RANGES || window.AM_MK_RANGES || []).filter(function(g){ return g.key === "dp"; })[0] || {}).opts || [];
   return '<section class="bpass itr"><div class="w">'+
-    /* 2026-11-25 — 배너 사진 대신 아래 두 카드가 사진을 듭니다 (같은 구간에 사진이 셋이면 무엇을 누를지 흐려집니다) */
-    '<div class="itr-b itr-b2">'+
+    /* 2026-11-25 — 대표 지정 배너 사진(home-transfer)은 그대로 두고, 오른쪽 글 칸 안에 '매장 찾기 / 내 매장 넘기기' 사진 카드 둘을 둡니다 */
+    '<div class="itr-b itr-b3">'+
+      '<div class="itr-ph" aria-hidden="true">'+ihPhoto("home-transfer", "", false, "(max-width:900px) 92vw, 40vw")+'</div>'+
       '<div class="itr-tx"><p class="ih-kk">TRANSFER</p>'+
         '<h2>새로운 매장을 찾거나, 운영 중인 매장을 넘기고 싶으신가요?</h2>'+
         '<p>지역 · 업종 · 보증금으로 매물을 찾고, 권리금과 계약 순서까지 미리 확인하세요.</p>'+

@@ -1496,7 +1496,8 @@ function HomeITransfer(){
   var dp = ((window.AM_STORE_RANGES || window.AM_MK_RANGES || []).filter(function(g){ return g.key === "dp"; })[0] || {}).opts || [];
   return '<section class="bpass itr"><div class="w">'+
 
-    '<div class="itr-b itr-b2">'+
+    '<div class="itr-b itr-b3">'+
+      '<div class="itr-ph" aria-hidden="true">'+ihPhoto("home-transfer", "", false, "(max-width:900px) 92vw, 40vw")+'</div>'+
       '<div class="itr-tx"><p class="ih-kk">TRANSFER</p>'+
         '<h2>새로운 매장을 찾거나, 운영 중인 매장을 넘기고 싶으신가요?</h2>'+
         '<p>지역 · 업종 · 보증금으로 매물을 찾고, 권리금과 계약 순서까지 미리 확인하세요.</p>'+

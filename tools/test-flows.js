@@ -167,7 +167,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await click('.iops-tx a[href="/operation"]');
  say((await url())==="/operation","메인 진입 카드 매장 운영 → /operation",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.itr-go a[href="/transfer"]');
+ await click('.itr-sub a[href="/transfer"]');  /* 2026-11-25 — 사진 카드 둘 아래 보조 줄 */
  say((await url())==="/transfer","메인 진입 카드 양도양수 → 전문관",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  /* ⚠️⚠️ **2026-10-22 — 서비스 배너 둘이 메인에서 내려왔습니다**
@@ -180,7 +180,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await click('.itr-f button[type="submit"]');
  say((await url()).startsWith("/stores"),"양도양수 매물 찾기(검색) → /stores",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.itr-go a[data-cta-form="sell"]:not([hidden])');
+ await click('.itr-two a[data-cta-form="sell"]:not([hidden])');
  say(/^\/(sell|transfer)/.test(await url()),"양도양수 내 매장 넘기기 → /sell 또는 넘기는 순서",await url());
  /* ⚠️⚠️ **2026-10-25 §1-01 — 히어로가 01 구간으로 돌아왔습니다.**
     첫 화면에서 바로 신청으로 가는 길이 다시 생겼습니다 — 그쪽을 먼저

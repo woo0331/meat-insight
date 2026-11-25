@@ -6988,3 +6988,13 @@ html.pk-in-pick .pk-bar{ display:none; }
 .asp-note{ margin:var(--s3) 0 0; font-size:var(--t-cap); color:var(--ink3); display:flex; gap:6px; align-items:flex-start; }
 .asp-note svg{ flex:none; margin-top:3px; }
 .tl-c-m em i{ font-style:normal; font-size:12px; font-weight:800; color:var(--gold-text); margin-right:2px; }
+
+.itr-b.itr-b3{ grid-template-columns:minmax(0,5fr) minmax(0,7fr); }
+.itr-b3 .itr-tx{ padding:40px 44px; }
+.itr-b3 .itr-ph{ min-height:100%; }
+@media (max-width:1100px){ .itr-b.itr-b3{ grid-template-columns:1fr; } .itr-b3 .itr-ph{ aspect-ratio:16/7; min-height:0; } }
+@media (max-width:900px){ .itr-b3 .itr-tx{ padding:28px 20px; } }
+
+@media (max-width:900px){
+  .clpf .clpf-sum, .clpf .clpf-sum .btn, .clpf .clpf-sum button{ scroll-margin-bottom:calc(var(--mnav-h, 64px) + var(--pk-bar-h, 0px) + 16px); }
+}

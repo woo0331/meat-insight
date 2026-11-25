@@ -487,7 +487,10 @@ window.HallCalcBand = function(o){
         '<span class="mcal-i ia-t" aria-hidden="true">'+
           (art ? iconArt(t.icon, 44) : icon(t.icon, 28))+'</span>'+
         '<b class="mcal-n">'+esc(t.name)+'</b>'+
-        (t.out ? '<i class="mcal-o">'+esc(t.out)+'</i>' : '')+
+
+        ((window.AM_TOOL_IN || {})[t.key] ? '<span class="mcal-io"><span><em>넣는 값</em>'+esc(AM_TOOL_IN[t.key])+'</span>'+
+          (t.out ? '<span><em>얻는 결과</em>'+esc(t.out)+'</span>' : '')+'</span>' :
+          (t.out ? '<i class="mcal-o">'+esc(t.out)+'</i>' : ''))+
         '<span class="mcal-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
       '</a></li>'; }).join("")+'</ul>'+
     '<div class="row-cta">'+

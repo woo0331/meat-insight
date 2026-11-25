@@ -395,12 +395,14 @@ function OpsWorry(){
     '<div class="sec-hd"><h2>사장님, <em>이런 고민</em>이 있으신가요?</h2>'+
       '<p>고민마다 바로 해 볼 수 있는 계산 · 점검과 맡길 업체를 모았습니다. 서비스를 여러 개 고르시려면 아래 고르개를 쓰세요.</p></div>'+
     '<ul class="hwr-g">'+OPS_WORRY.map(function(x){
-      return '<li id="'+x[3]+'"><div class="hwr-c"><span class="hwr-i" aria-hidden="true">'+icon(x[0], 30)+'</span>'+
-        '<h3>'+esc(x[1])+'</h3>'+
+
+      var ph = { "ow-cost":"kp-tr-svc-premium", "ow-mkt":"", "ow-fix":"kp-op-svc-repair", "ow-hr":"kp-op-svc-staff" }[x[3]] || "";
+      return '<li id="'+x[3]+'"><div class="hwr-c hwr-pc"><span class="hwr-ph" aria-hidden="true">'+picBox(ph, x[0], "(max-width:640px) 92vw, 320px")+'</span>'+
+        '<div class="hwr-b"><h3><span class="hwr-i" aria-hidden="true">'+icon(x[0], 22)+'</span>'+esc(x[1])+'</h3>'+
         '<p class="hwr-acts">'+opsWorryActs(x[4])+'</p>'+
         '<p class="hwr-chk">맡길 업체 찾기</p>'+
         '<p class="hwr-ch">'+x[2].map(function(c){
-          return '<a href="'+esc(c[1])+'">'+esc(c[0])+'</a>'; }).join("")+'</p></div></li>'; }).join("")+'</ul>'+
+          return '<a href="'+esc(c[1])+'">'+esc(c[0])+'</a>'; }).join("")+'</p></div></div></li>'; }).join("")+'</ul>'+
   '</div></section>';
 }
 

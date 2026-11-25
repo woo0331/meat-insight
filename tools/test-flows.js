@@ -1222,7 +1222,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    }
    sellOpen = true;
    await p3.goto(B + "/", { waitUntil:"networkidle" }); await p3.waitForTimeout(300);
-   say(await p3.isVisible('.wp-pgo a[href="/sell"]'), "매물 등록이 열리면 메인의 '내 매장 등록하기' 가 다시 보인다 (반대쪽)");
+   say(await p3.isVisible('.itr-two a[href="/sell"]'), "매물 등록이 열리면 메인의 '내 매장 등록하기' 가 다시 보인다 (반대쪽)");
    await cx.close();
  }
 

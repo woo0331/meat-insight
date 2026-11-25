@@ -4228,6 +4228,8 @@ const AUDIT = `(() => {
     /* 지시서 §4 — 걸음마다 정보 · 업체 · 도구를 연결합니다.
        ⚠️ 걸음만 적어 두고 갈 데가 없으면 그건 **읽을거리**이지
        플랫폼이 아닙니다. */
+    /* 2026-11-25 디자인 개편 — 업종 화면도 앞 세 걸음만 펼치고 나머지는 접습니다. 잴 때만 펼칩니다. 이 주석에 백틱 금지. */
+    [].slice.call(document.querySelectorAll(".pcs.is-fold-all")).forEach(function(o){ o.classList.remove("is-fold-all"); });
     const want = (window.AM_PROCESS||{}).startup.length;
     const L = [].slice.call(document.querySelectorAll(".pcs > li"));
     if(L.length !== want) return "걸음이 " + L.length + "개입니다 (" + want + ")";

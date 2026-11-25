@@ -411,7 +411,9 @@ function hdAuthPaint(){
   var box = document.getElementById("hdAuth");
   if(!box || typeof window.amAuthAsk !== "function") return;
   window.amAuthAsk().then(function(a){
-    if(!a || !a.on){ box.setAttribute("hidden",""); box.innerHTML = ""; return; }
+    /* 2026-11-25 — 고객 로그인은 카카오 하나라, 카카오가 꺼져 있으면 "로그인" 칸도 안 냅니다
+       (/my 에 로그인 칸이 없어 빈 화면으로 가는 링크가 됩니다). 로그인된 분의 "내 계정" 은 그대로. */
+    if(!a || !a.on || (!a.signedIn && !a.kakao)){ box.setAttribute("hidden",""); box.innerHTML = ""; return; }
     box.removeAttribute("hidden");
     box.innerHTML = a.signedIn
       ? '<a class="hd-txt" href="/my">'+icon("user",18)+

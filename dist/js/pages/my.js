@@ -21,6 +21,7 @@ window.myLoadDb = function(){
     .then(function(d){
 
       if(d && d.auth && !d.signedIn){
+        if(!(window.amAuthNow && amAuthNow().kakao)){ box.innerHTML = ""; box.hidden = true; return; }
         box.innerHTML = '<div class="w">' + MySignInBand() + '</div>';
         box.hidden = false;
         return;
@@ -53,49 +54,15 @@ function myDbPaint(d){
 }
 
 function MySignInBand(){
-  var kk = !!(window.amAuthNow && amAuthNow().kakao);
   return myHd("MY", "로그인하고 신청 내역 보기",
-    kk ? "카카오로 시작하시거나, 메일로 로그인 링크를 받으실 수 있습니다. 비밀번호는 없습니다."
-       : "메일 주소를 적으시면 로그인 링크를 보내 드립니다. 비밀번호는 없습니다.")+
-
-    (kk ? '<div class="my-kk">'+
+    "카카오로 시작하시면 신청 내역을 보실 수 있습니다. 비밀번호는 없습니다.")+
+    '<div class="my-kk">'+
       '<button class="btn btn-lg my-kakao" type="button" onclick="myKakao()">'+icon("chat",18)+' 카카오로 시작하기</button>'+
       '<p class="f-h">처음이시면 그 자리에서 가입되고, 다음부터는 같은 카카오 계정으로 로그인됩니다. '+
         '서비스 찾기 · 가이드 · 견적 신청은 로그인 없이도 쓰실 수 있습니다.</p>'+
       '<p class="my-in-n" id="my-kk-n" role="status"></p>'+
-    '</div>' : '')+
-
-    (kk ? '<details class="my-em-alt"><summary>이메일로 로그인하기</summary>' : '')+
-    '<form class="my-in" onsubmit="return mySignIn(event)">'+
-      '<div class="f-r">'+
-        '<label for="my-em">메일 주소</label>'+
-        '<div class="my-in-r">'+
-          '<input id="my-em" type="email" name="email" required '+
-            'autocomplete="email" placeholder="example@email.com">'+
-          '<button class="btn btn-b" type="submit">로그인 링크 받기</button>'+
-        '</div>'+
-        '<span class="f-h">비밀번호는 없습니다. 메일로 온 링크를 누르면 로그인됩니다.</span>'+
-      '</div>'+
-      '<p class="my-in-n" id="my-in-n" role="status"></p>'+
-    '</form>'+
-    (kk ? '</details>' : '');
+    '</div>';
 }
-
-window.mySignIn = function(ev){
-  if(ev && ev.preventDefault) ev.preventDefault();
-  var em = document.getElementById("my-em");
-  var note = document.getElementById("my-in-n");
-  var btn = ev && ev.target ? ev.target.querySelector("button") : null;
-  if(!em || typeof amAuthSend !== "function") return false;
-  if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
-  if(note) note.textContent = "";
-  amAuthSend(em.value).then(function(r){
-    if(btn){ btn.disabled = false; btn.textContent = "로그인 링크 받기"; }
-    if(note) note.textContent = r.say;
-    if(note) note.className = "my-in-n" + (r.ok ? " ok" : " bad");
-  });
-  return false;
-};
 
 window.mySignOut = function(){
   if(typeof amAuthOut !== "function") return;

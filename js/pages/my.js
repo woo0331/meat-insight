@@ -73,7 +73,9 @@ window.myLoadDb = function(){
       /* ⚠️ 설정은 됐는데 아직 로그인 안 하셨으면 **로그인 칸**을 냅니다.
          설정 자체가 꺼져 있으면(`auth:false`) 구간째 없습니다 —
          작동하지 않는 단추를 만들지 않습니다 (§30-7). */
+      /* ⚠️ 카카오가 꺼져 있으면 로그인 칸을 안 냅니다 (메일로 넘어가지 않습니다). */
       if(d && d.auth && !d.signedIn){
+        if(!(window.amAuthNow && amAuthNow().kakao)){ box.innerHTML = ""; box.hidden = true; return; }
         box.innerHTML = '<div class="w">' + MySignInBand() + '</div>';
         box.hidden = false;
         return;
@@ -119,61 +121,23 @@ function myDbPaint(d){
 }
 
 /* ── 로그인 칸 ───────────────────────────────────────────────────
-   ⚠️⚠️ **비밀번호를 받지 않습니다.** 매직링크 하나입니다 — 손님이
-   40~60대 사장님이라 "메일로 온 링크를 누르면 끝" 이 제일 적게
-   막히고, 비밀번호를 받는 순간 저장 · 재설정 · 유출 대비가 전부
-   따라옵니다.
-   ⚠️ **지킬 수 없는 약속을 적지 마세요.** "바로 로그인됩니다" 가
-   아니라 메일이 가는 데까지가 우리가 아는 전부입니다. */
+   ⚠️⚠️ **2026-11-25 — 고객 로그인은 카카오 하나입니다.** 메일 로그인
+   (주소 칸 · 링크 받기 단추 · 그 안내)을 고객 화면에서 뺐습니다.
+   ⚠️⚠️ **카카오가 꺼져 있으면 이 칸 자체를 안 냅니다** — 메일로 넘어가는
+   대체 길을 두지 않습니다 (작동하지 않는 단추를 만들지 않는 것과 같은 규칙).
+   ⚠️ 관리자 로그인(`/admin`)과 `amAuthSend()` · `api/auth.js` 의 메일 길은
+   **그대로**입니다 — 지우면 관리자가 못 들어옵니다. 견적 알림 메일과
+   신청서의 이메일 칸도 그대로입니다. */
 function MySignInBand(){
-  var kk = !!(window.amAuthNow && amAuthNow().kakao);
   return myHd("MY", "로그인하고 신청 내역 보기",
-    kk ? "카카오로 시작하시거나, 메일로 로그인 링크를 받으실 수 있습니다. 비밀번호는 없습니다."
-       : "메일 주소를 적으시면 로그인 링크를 보내 드립니다. 비밀번호는 없습니다.")+
-    /* 2026-11-18 카카오 간편 로그인 · 가입 — 서버(AUTH_KAKAO)가 켜졌을 때만 나옵니다.
-       ⚠️ 서비스 검색 · 가이드 · 비회원 접수에는 로그인이 필요 없습니다 (그 말을 같이 적습니다). */
-    (kk ? '<div class="my-kk">'+
+    "카카오로 시작하시면 신청 내역을 보실 수 있습니다. 비밀번호는 없습니다.")+
+    '<div class="my-kk">'+
       '<button class="btn btn-lg my-kakao" type="button" onclick="myKakao()">'+icon("chat",18)+' 카카오로 시작하기</button>'+
       '<p class="f-h">처음이시면 그 자리에서 가입되고, 다음부터는 같은 카카오 계정으로 로그인됩니다. '+
         '서비스 찾기 · 가이드 · 견적 신청은 로그인 없이도 쓰실 수 있습니다.</p>'+
       '<p class="my-in-n" id="my-kk-n" role="status"></p>'+
-    '</div>' : '')+
-    /* ⚠️ 폼 클래스는 이 저장소 것을 그대로 씁니다 — `.f-r` 과 맨
-       `<input type=email>` 입니다. 새 이름을 지어내면 그 줄만 스타일이
-       안 먹고 에러도 안 납니다 (`.f-i` · `.f-l` 로 한 번 겪었습니다). */
-    /* 2026-11-25 — 카카오가 켜져 있으면 카카오가 기본이고 메일 로그인은 접힌 보조 칸입니다.
-       카카오가 꺼져 있으면 지금처럼 메일 로그인만 바로 보입니다. */
-    (kk ? '<details class="my-em-alt"><summary>이메일로 로그인하기</summary>' : '')+
-    '<form class="my-in" onsubmit="return mySignIn(event)">'+
-      '<div class="f-r">'+
-        '<label for="my-em">메일 주소</label>'+
-        '<div class="my-in-r">'+
-          '<input id="my-em" type="email" name="email" required '+
-            'autocomplete="email" placeholder="example@email.com">'+
-          '<button class="btn btn-b" type="submit">로그인 링크 받기</button>'+
-        '</div>'+
-        '<span class="f-h">비밀번호는 없습니다. 메일로 온 링크를 누르면 로그인됩니다.</span>'+
-      '</div>'+
-      '<p class="my-in-n" id="my-in-n" role="status"></p>'+
-    '</form>'+
-    (kk ? '</details>' : '');
+    '</div>';
 }
-
-window.mySignIn = function(ev){
-  if(ev && ev.preventDefault) ev.preventDefault();
-  var em = document.getElementById("my-em");
-  var note = document.getElementById("my-in-n");
-  var btn = ev && ev.target ? ev.target.querySelector("button") : null;
-  if(!em || typeof amAuthSend !== "function") return false;
-  if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
-  if(note) note.textContent = "";
-  amAuthSend(em.value).then(function(r){
-    if(btn){ btn.disabled = false; btn.textContent = "로그인 링크 받기"; }
-    if(note) note.textContent = r.say;
-    if(note) note.className = "my-in-n" + (r.ok ? " ok" : " bad");
-  });
-  return false;
-};
 
 /* 나가기 — ⚠️ 누르면 **이 브라우저에서는 반드시** 지웁니다 */
 window.mySignOut = function(){

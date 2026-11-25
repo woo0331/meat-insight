@@ -242,12 +242,14 @@ const ADM_DEAL = [
   console.log("\n② 설정은 됐고 아직 안 들어오셨으면 (signedIn:false)");
   {
     const { ctx, pg, errs } = await openMy(
-      { auth:true, signedIn:false, conf:{ url:"https://x.supabase.co", anon:"k" } },
+      { auth:true, signedIn:false, kakao:true, conf:{ url:"https://x.supabase.co", anon:"k" } },
       { auth:true, signedIn:false });
     const t = await dbTxt(pg);
     ok("로그인 칸이 나온다", !!t && t.includes("로그인"), String(t).slice(0, 60));
-    ok("메일 칸과 단추가 있다", (await n(pg, "#my-em")) === 1 &&
-        (await n(pg, ".my-in button[type=submit]")) === 1);
+    /* 2026-11-25 — 고객 로그인은 카카오 하나입니다. 메일 칸 · 링크 단추 · 그 안내가 없습니다 */
+    ok("카카오 단추만 있고 메일 칸이 없다", (await n(pg, ".my-kakao")) === 1 &&
+        (await n(pg, "#my-em")) === 0 && (await n(pg, "#my-db .my-in")) === 0 &&
+        !String(t).includes("로그인 링크") && !String(t).includes("메일 주소"), String(t).slice(0, 120));
     /* ⚠️ 비밀번호를 받지 않습니다 — 받는 순간 저장 · 재설정 · 유출
        대비가 전부 따라옵니다 */
     ok("비밀번호 칸이 없다", (await n(pg, "input[type=password]")) === 0);
@@ -1103,12 +1105,10 @@ const ADM_DEAL = [
     /* 가입된 메일 · 없는 메일 — 둘 다 **같은 말**이라야 합니다. 갈라
        주면 어느 메일이 가입돼 있는지 확인해 가며 긁을 수 있습니다
        (claim_request 가 틀린 까닭을 안 가르는 것과 같은 규칙). */
-    const say = async (em) => {
-      await pg.fill("#my-em", em);
-      await pg.click(".my-in button[type=submit]");
-      await pg.waitForTimeout(400);
-      return pg.evaluate(() => document.getElementById("my-in-n").textContent);
-    };
+    /* 2026-11-25 — 고객 화면에는 메일 로그인 칸이 없습니다 (관리자 로그인이 같은 함수를 씁니다).
+       그래서 칸을 누르지 않고 amAuthSend() 를 직접 불러 봅니다. */
+    ok("고객 화면에 메일 로그인 칸이 없다", (await pg.locator("#my-em").count()) === 0);
+    const say = (em) => pg.evaluate(e => window.amAuthSend(e).then(r => r.say), em);
     const a = await say("there@example.com");
     const b = await say("nobody@example.com");
     ok("보냈다고 말한다", a.includes("보냈습니다"), a);
@@ -1116,14 +1116,7 @@ const ADM_DEAL = [
     /* ⚠️ 못 보냈으면 보냈다고 말하지 않습니다 (절대 규칙 5) */
     ok("메일 꼴이 아니면 보내지 않는다", await (async () => {
       const n0 = otp.length;
-      const s = await pg.evaluate(() => {
-        document.getElementById("my-em").removeAttribute("type");
-        document.getElementById("my-em").value = "zzz";
-        return null; });
-      await pg.click(".my-in button[type=submit]");
-      await pg.waitForTimeout(300);
-      const t = await pg.evaluate(() =>
-        document.getElementById("my-in-n").textContent);
+      const t = await say("zzz");
       return otp.length === n0 && t.includes("확인해 주세요");
     })());
     /* ⚠️⚠️ 돌아올 자리를 같이 보냅니다 — Supabase 쪽 Redirect URLs 에
@@ -1236,10 +1229,9 @@ const ADM_DEAL = [
     ok(W + "px 카카오 — 켜져 있으면 단추가 보임", await btn.isVisible());
     const bh = await btn.evaluate(e => e.getBoundingClientRect().height);
     ok(W + "px 카카오 — 단추 높이 44px 이상", bh >= 44, bh);
-    /* 2026-11-25 — 카카오가 기본 · 메일 로그인은 접힌 보조 칸 */
-    const lay = await pg.evaluate(() => { const k = document.querySelector(".my-kakao"), f = document.getElementById("my-em"), d = f && f.closest("details.my-em-alt");
-      return { first: !!(k && f && (k.compareDocumentPosition(f) & 4)), folded: !!(d && !d.open) }; });
-    ok(W + "px 카카오 — 카카오가 먼저 · 메일 로그인은 접힌 보조 칸", lay.first && lay.folded, JSON.stringify(lay));
+    /* 2026-11-25 — 고객 로그인은 카카오 하나 · 메일 로그인 칸이 없음 */
+    ok(W + "px 카카오 — 메일 로그인 칸 · 안내가 없음", (await pg.locator("#my-em, details.my-em-alt, #my-db .my-in").count()) === 0 &&
+       !(await pg.locator("#my-db").textContent()).includes("로그인 링크"));
     ok(W + "px 카카오 — 로그인 없이도 쓸 수 있다는 말", (await pg.locator(".my-kk").textContent()).includes("로그인 없이도"));
     await btn.click(); await pg.waitForTimeout(900);
     ok(W + "px 카카오 — 서버에 원래 자리(next)를 보냄", posts[0] && posts[0].op === "oauth" && posts[0].provider === "kakao" && posts[0].path === "/startup?i=cafe", JSON.stringify(posts[0]));
@@ -1268,8 +1260,10 @@ const ADM_DEAL = [
     /* 꺼짐 */
     kk = false;
     await pg.goto(base + "/my", { waitUntil:"networkidle" }); await pg.waitForTimeout(400);
-    ok(W + "px 꺼짐 — 카카오 단추가 없음 (메일 로그인은 그대로)", (await pg.locator(".my-kakao").count()) === 0 && (await pg.locator("#my-em").count()) === 1);
-    ok(W + "px 꺼짐 — 메일 로그인이 접히지 않고 바로 보임", await pg.locator("#my-em").isVisible() && (await pg.locator("details.my-em-alt").count()) === 0);
+    /* 2026-11-25 — 카카오가 꺼지면 로그인 칸 자체가 없습니다 (메일로 넘어가지 않습니다) */
+    ok(W + "px 꺼짐 — 카카오 단추도 메일 칸도 없음", (await pg.locator(".my-kakao").count()) === 0 && (await pg.locator("#my-em").count()) === 0);
+    ok(W + "px 꺼짐 — 로그인 칸이 통째로 안 나옴", await pg.evaluate(() => { const b = document.getElementById("my-db"); return !!b && b.hidden && b.textContent.trim() === ""; }));
+    ok(W + "px 꺼짐 — 헤더에 '로그인' 링크가 없음 (빈 /my 로 보내지 않음)", await pg.evaluate(() => { const h = document.getElementById("hdAuth"); return !!h && h.hidden && h.textContent.trim() === ""; }));
     /* 로그인 의무 없음 — 검색 · 가이드 · 신청 양식이 로그인 없이 열림 */
     await pg.goto(base + "/quote", { waitUntil:"networkidle" }); await pg.waitForTimeout(300);
     const free = await pg.evaluate(() => ({ form: !!document.getElementById("q-f"), sign: !!document.querySelector(".my-in, .my-kakao") }));

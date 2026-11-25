@@ -141,6 +141,9 @@ function MySignInBand(){
     /* ⚠️ 폼 클래스는 이 저장소 것을 그대로 씁니다 — `.f-r` 과 맨
        `<input type=email>` 입니다. 새 이름을 지어내면 그 줄만 스타일이
        안 먹고 에러도 안 납니다 (`.f-i` · `.f-l` 로 한 번 겪었습니다). */
+    /* 2026-11-25 — 카카오가 켜져 있으면 카카오가 기본이고 메일 로그인은 접힌 보조 칸입니다.
+       카카오가 꺼져 있으면 지금처럼 메일 로그인만 바로 보입니다. */
+    (kk ? '<details class="my-em-alt"><summary>이메일로 로그인하기</summary>' : '')+
     '<form class="my-in" onsubmit="return mySignIn(event)">'+
       '<div class="f-r">'+
         '<label for="my-em">메일 주소</label>'+
@@ -152,7 +155,8 @@ function MySignInBand(){
         '<span class="f-h">비밀번호는 없습니다. 메일로 온 링크를 누르면 로그인됩니다.</span>'+
       '</div>'+
       '<p class="my-in-n" id="my-in-n" role="status"></p>'+
-    '</form>';
+    '</form>'+
+    (kk ? '</details>' : '');
 }
 
 window.mySignIn = function(ev){

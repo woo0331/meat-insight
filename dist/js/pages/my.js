@@ -65,6 +65,7 @@ function MySignInBand(){
       '<p class="my-in-n" id="my-kk-n" role="status"></p>'+
     '</div>' : '')+
 
+    (kk ? '<details class="my-em-alt"><summary>이메일로 로그인하기</summary>' : '')+
     '<form class="my-in" onsubmit="return mySignIn(event)">'+
       '<div class="f-r">'+
         '<label for="my-em">메일 주소</label>'+
@@ -76,7 +77,8 @@ function MySignInBand(){
         '<span class="f-h">비밀번호는 없습니다. 메일로 온 링크를 누르면 로그인됩니다.</span>'+
       '</div>'+
       '<p class="my-in-n" id="my-in-n" role="status"></p>'+
-    '</form>';
+    '</form>'+
+    (kk ? '</details>' : '');
 }
 
 window.mySignIn = function(ev){

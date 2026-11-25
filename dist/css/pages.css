@@ -6723,3 +6723,10 @@ span.kp-more .fld-b{ margin:0; }
 .mkz-sell{ display:flex; align-items:center; justify-content:center; gap:6px; margin:var(--s3) 0 0;
   padding-top:var(--s3); border-top:1px solid var(--line); font-size:14px; font-weight:700; color:var(--ink2); }
 .mkz-sell svg{ flex:none; }
+
+.my-em-alt{ margin-top:var(--s4); border-top:1px solid var(--line); padding-top:var(--s3); }
+.my-em-alt > summary{ min-height:44px; display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:700; color:var(--ink2); list-style:none; }
+.my-em-alt > summary::-webkit-details-marker{ display:none; }
+.my-em-alt > summary::after{ content:"▾"; font-size:12px; }
+.my-em-alt[open] > summary::after{ content:"▴"; }
+.my-em-alt .my-in{ margin-top:var(--s2); }

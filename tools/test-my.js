@@ -1236,6 +1236,10 @@ const ADM_DEAL = [
     ok(W + "px 카카오 — 켜져 있으면 단추가 보임", await btn.isVisible());
     const bh = await btn.evaluate(e => e.getBoundingClientRect().height);
     ok(W + "px 카카오 — 단추 높이 44px 이상", bh >= 44, bh);
+    /* 2026-11-25 — 카카오가 기본 · 메일 로그인은 접힌 보조 칸 */
+    const lay = await pg.evaluate(() => { const k = document.querySelector(".my-kakao"), f = document.getElementById("my-em"), d = f && f.closest("details.my-em-alt");
+      return { first: !!(k && f && (k.compareDocumentPosition(f) & 4)), folded: !!(d && !d.open) }; });
+    ok(W + "px 카카오 — 카카오가 먼저 · 메일 로그인은 접힌 보조 칸", lay.first && lay.folded, JSON.stringify(lay));
     ok(W + "px 카카오 — 로그인 없이도 쓸 수 있다는 말", (await pg.locator(".my-kk").textContent()).includes("로그인 없이도"));
     await btn.click(); await pg.waitForTimeout(900);
     ok(W + "px 카카오 — 서버에 원래 자리(next)를 보냄", posts[0] && posts[0].op === "oauth" && posts[0].provider === "kakao" && posts[0].path === "/startup?i=cafe", JSON.stringify(posts[0]));
@@ -1265,6 +1269,7 @@ const ADM_DEAL = [
     kk = false;
     await pg.goto(base + "/my", { waitUntil:"networkidle" }); await pg.waitForTimeout(400);
     ok(W + "px 꺼짐 — 카카오 단추가 없음 (메일 로그인은 그대로)", (await pg.locator(".my-kakao").count()) === 0 && (await pg.locator("#my-em").count()) === 1);
+    ok(W + "px 꺼짐 — 메일 로그인이 접히지 않고 바로 보임", await pg.locator("#my-em").isVisible() && (await pg.locator("details.my-em-alt").count()) === 0);
     /* 로그인 의무 없음 — 검색 · 가이드 · 신청 양식이 로그인 없이 열림 */
     await pg.goto(base + "/quote", { waitUntil:"networkidle" }); await pg.waitForTimeout(300);
     const free = await pg.evaluate(() => ({ form: !!document.getElementById("q-f"), sign: !!document.querySelector(".my-in, .my-kakao") }));

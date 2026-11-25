@@ -539,6 +539,15 @@ function paintMnav(){
    ⚠️ SNS 아이콘은 **안 답니다.** 계정이 없어서 `href="#"` 을 만들면
    그건 가짜 링크입니다 (§13 이 직접 금지합니다). 계정이 생기면
    여기에 한 줄씩 더하세요. */
+/* 2026-11-20 — 푸터의 조사. korean.js 가 못 실렸을 때(배포 직후 요청 하나가 실패하는 경우) 여기서 멈추면
+   mountChrome() 뒤의 화면 그리기가 통째로 안 돌아 본문이 안 섭니다 (운영에서 한 번 보였고 격리 환경에서 재현했습니다).
+   koWith 가 있으면 그것을 쓰고, 없으면 마지막 글자의 받침만 보고 고릅니다 (koJong 과 같은 규칙 ·
+   한글이 아니면 받침 없음). ⚠️ 조사를 손으로 적지 마세요 — 이름이 바뀌면 "인수인계은" 이 됩니다. */
+function ftWith(w, pair){
+  if(typeof koWith === "function") return koWith(w, pair);
+  var t = String(w || ""), c = t.charCodeAt(t.length - 1) - 0xAC00;
+  return t + ((c >= 0 && c < 11172 && c % 28) ? pair.charAt(0) : pair.charAt(1));
+}
 function Footer(){
   /* ⚠️⚠️ **첫 칸이 2026-10-04 에 "사업 단계" 로 바뀌었습니다.**
      전에는 `창업`(창업 시작하기 · 프랜차이즈 · 점포·상가 · 업체찾기)
@@ -690,7 +699,7 @@ function Footer(){
         return '<li><a href="'+esc(l[0])+'">'+esc(l[1])+'</a></li>'; }).join("")+'</ul>'+
       /* ⚠️ 중개자라는 사실을 미리 알립니다 — 전자상거래법 제20조 제1항.
          안 알리면 제20조의2 에 따라 연대책임을 집니다. 지우지 마세요. */
-      '<p class="ft-role">'+esc(koWith(brandName(),"은는"))+' 통신판매중개자이며 '+
+      '<p class="ft-role">'+esc(ftWith(brandName(),"은는"))+' 통신판매중개자이며 '+
         '입점 업체와 이용자 사이의 거래 당사자가 아닙니다. '+
         '상품 · 서비스 · 거래 조건에 대한 책임은 각 업체에 있습니다.</p>'+
       '<div class="ft-biz" id="ft-biz"></div>'+

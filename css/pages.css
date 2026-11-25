@@ -9193,3 +9193,7 @@ html.pk-in-pick .pk-bar{ display:none; }
 .sl-prog-bar i{ display:block; height:100%; width:0; background:var(--acc-dark); transition:width .2s; }
 .sl-prog.is-done .sl-prog-t em{ color:var(--ink); font-weight:800; }
 @media (max-width:600px){ .sl-ttx{ padding:var(--s2) var(--s3) var(--s3); } .sl-ttx b{ font-size:16px; } }
+.mk-head{ display:flex; align-items:center; gap:8px; margin:0 0 var(--s3); font-size:var(--t-base); color:var(--ink); }
+.mk-head b{ font-weight:800; }
+.asp-note{ margin:var(--s3) 0 0; font-size:var(--t-cap); color:var(--ink3); display:flex; gap:6px; align-items:flex-start; }
+.asp-note svg{ flex:none; margin-top:3px; }

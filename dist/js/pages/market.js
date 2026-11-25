@@ -25,6 +25,7 @@ function PageStores(){
     cta:'<a class="btn btn-o btn-lg" href="/sell">내 매장 내놓기'+icon("arrow",18)+'</a>'
   })+
   '<section class="sec sec-white"><div class="w">'+
+    mkHead(list.length, total, loaded, "매물")+
 
     '<div class="fil fil-wrap"><span class="fil-ic" aria-hidden="true">'+icon("sliders",18)+'</span>'+
       IndustrySelect("fil-i", ind, "mkGo('/stores')")+
@@ -138,6 +139,8 @@ function AssetPickBand(top){
       '<span>지금은 집기 처분 신청을 받지 않습니다. 고르신 품목은 이 기기에 남고, '+
       '접수가 열리면 그대로 신청하실 수 있습니다.</span></p>'+
     '<ul class="asp-g">'+cards+'</ul>'+
+    '<p class="asp-note">'+icon("info",14)+' 품목 사진은 고르기 쉽게 붙인 안내 사진이며 실제 매물이 아닙니다. '+
+      '실제로 올라온 시설 · 집기는 아래 목록에 사장님이 올리신 사진으로 나옵니다.</p>'+
 
     '<div class="asp-sum" id="asp-sum" hidden>'+
       '<p class="asp-sum-t">고르신 집기 <b id="asp-n">0</b>개</p>'+
@@ -192,6 +195,7 @@ function PageAssets(){
   }) + AssetPickBand(false))+
   '<section class="sec sec-white"><div class="w">'+
     (pickTop ? '<div class="sec-hd"><p class="eyebrow">시설 · 집기 · 재고</p><h2>올라와 있는 시설 · 집기</h2></div>' : '')+
+    mkHead(list.length, amAssets({}).length, true, "시설 · 집기")+
     (indObj && indObj.equip.length ? '<ul class="chip-g chip-g-fil">'+
       '<li><a class="chip'+(sub?"":" on")+'" href="'+esc(mkKeep("/assets",{s:""}))+'">전체</a></li>'+
       indObj.equip.map(function(e){
@@ -298,6 +302,12 @@ function mkCk(id, name, on, base){
     '<span>'+esc(name)+'</span></label>';
 }
 
+function mkHead(shown, total, loaded, what){
+  if(!loaded) return "";
+  var t = !total ? "지금 올라온 "+what+" 전체 0건"
+    : (shown === total ? what+" "+total+"건" : "조건에 맞는 "+what+" "+shown+"건 · 전체 "+total+"건");
+  return '<p class="mk-head" role="status">'+icon("search",16)+'<b>'+esc(t)+'</b></p>';
+}
 function mkCount(shown, all){
   return '<span class="fil-n">'+shown+'건'+
     (all > shown ? '<em class="fil-off">거르개로 '+(all - shown)+'건 숨김</em>' : '')+

@@ -139,6 +139,22 @@ function amAuthRefresh(){
     .catch(function(){ return false; });
 }
 
+function amAuthTakeCookie(){
+  var has = false;
+  try{ has = /(?:^|;\s*)sw_kt=1(?:;|$)/.test(document.cookie || ""); }catch(e){}
+  if(!has) return Promise.resolve(false);
+  try{ document.cookie = "sw_kt=; Path=/; Max-Age=0; Secure; SameSite=Lax"; }catch(e){}
+  return fetch("/api/auth", { method:"POST", headers:{ "content-type":"application/json" },
+    body: JSON.stringify({ op:"take" }) })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if(!d || !d.access_token) return false;
+      amAuthSave({ access_token:d.access_token, refresh_token:d.refresh_token || "",
+        at: Date.now() + (parseInt(d.expires_in, 10) || 3600) * 1000 });
+      return true;
+    })
+    .catch(function(){ return false; });
+}
 window.amAuthAsk = function(force){
   if(AM_AUTH.asked && !force) return Promise.resolve(AM_AUTH);
 
@@ -149,7 +165,8 @@ window.amAuthAsk = function(force){
       { accept:"application/json" }, window.amAuthHeaders()) })
       .then(function(r){ return r.ok ? r.json() : null; });
   }
-  AM_AUTH_FLY = ask().then(function(d){
+
+  AM_AUTH_FLY = amAuthTakeCookie().then(ask).then(function(d){
 
     if(d && d.auth && !d.signedIn && amAuthLoad()){
       AM_AUTH.conf = d.conf || null;

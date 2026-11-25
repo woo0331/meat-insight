@@ -1203,8 +1203,9 @@ const ADM_DEAL = [
   console.log("\n카카오 간편 로그인 — 시작 · 복귀 · 취소 · 꺼짐 · 로그인 의무 없음");
   for(const W of [1440, 390]){
     const ctx = await br.newContext({ viewport:{ width:W, height:900 } });
-    const pg = await ctx.newPage(); const errs = [], posts = [];
+    const pg = await ctx.newPage(); const errs = [], posts = [], navs = [];
     pg.on("pageerror", e => errs.push(String(e)));
+    pg.on("framenavigated", f => { if(f === pg.mainFrame()) navs.push(f.url()); });
     let kk = true;
     await pg.route("**/api/session", r => {
       const signed = (r.request().headers()["authorization"] || "").indexOf("Bearer ") === 0;
@@ -1216,12 +1217,26 @@ const ADM_DEAL = [
       body: JSON.stringify({ auth:true, signedIn:false }) }));
     const direct = [];
     await pg.route("https://zz.supabase.co/**", r => { direct.push(r.request().url()); r.abort(); });
-    /* Supabase 가 카카오 동의 뒤 원래 자리로 #access_token 을 붙여 돌려보내는 것을 흉내 냅니다 */
-    const TOK = "aaa.bbb.ccc";
-    await pg.route("**/api/auth", r => {
+    /* 2026-11-25 OIDC 길 — 카카오 동의 뒤 우리 콜백(/api/auth-kakao)이 세션을 잠근 쿠키에 담고
+       토큰 없는 원래 주소로 303 합니다. 화면은 sw_kt 표시를 보고 /api/auth {op:"take"} 로 한 번 받아 갑니다. */
+    const TOK = "aaa.bbb.ccc"; let pend = null;
+    await pg.route("**/api/auth", async r => {
       const b = JSON.parse(r.request().postData() || "{}"); posts.push(b);
+      if(b.op === "take"){
+        const has = ((await r.request().allHeaders())["cookie"] || "").indexOf("sw_ks=SEALED") >= 0;
+        if(!has || !pend) return r.fulfill({ status:401, contentType:"application/json", body:'{"error":"다시 로그인해 주세요"}' });
+        pend = null;
+        return r.fulfill({ status:200, contentType:"application/json",
+          headers:{ "set-cookie":"sw_ks=; Path=/api/auth; Max-Age=0; HttpOnly" },
+          body: JSON.stringify({ access_token:TOK, refresh_token:"rrrrrrrrrr", expires_in:3600 }) });
+      }
       return r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify({
-        url: base + (b.path || "/my") + "#access_token=" + TOK + "&refresh_token=rrrrrrrrrr&expires_in=3600&token_type=bearer" }) });
+        url: base + "/api/auth-kakao?code=CODE12345678&state=STATE&to=" + encodeURIComponent(b.path || "/my") }) });
+    });
+    await pg.route("**/api/auth-kakao**", r => {
+      const to = new URL(r.request().url()).searchParams.get("to") || "/my"; pend = true;
+      return r.fulfill({ status:303, headers:{ location: to,
+        "set-cookie":"sw_ks=SEALED; Path=/api/auth; Max-Age=120; HttpOnly\nsw_kt=1; Path=/; Max-Age=120" }, body:"" });
     });
     await pg.goto(base + "/my?next=" + encodeURIComponent("/startup?i=cafe"), { waitUntil:"networkidle" });
     await pg.waitForTimeout(500);
@@ -1237,8 +1252,9 @@ const ADM_DEAL = [
     ok(W + "px 카카오 — 서버에 원래 자리(next)를 보냄", posts[0] && posts[0].op === "oauth" && posts[0].provider === "kakao" && posts[0].path === "/startup?i=cafe", JSON.stringify(posts[0]));
     const back = await pg.evaluate(() => ({ p: location.pathname + location.search, h: location.hash,
       t: (JSON.parse(localStorage.getItem("am.auth.v1") || "{}").access_token) || "" }));
-    ok(W + "px 카카오 — 원래 페이지로 돌아오고 토큰을 받아 둠 · 주소창의 토큰은 지움",
-       back.p === "/startup?i=cafe" && back.h === "" && back.t === TOK, JSON.stringify(back));
+    ok(W + "px 카카오 — 원래 페이지로 돌아오고 토큰을 받아 둠 · 주소창에 토큰이 한 번도 안 실림",
+       back.p === "/startup?i=cafe" && back.h === "" && back.t === TOK && navs.every(u => u.indexOf(TOK) < 0 && u.indexOf("access_token") < 0), JSON.stringify([back, navs]));
+    ok(W + "px 카카오 — 세션은 take 로 한 번만 받음", posts.filter(x => x.op === "take").length === 1, JSON.stringify(posts));
     ok(W + "px 카카오 — 헤더가 로그인 상태(내 계정)", (await pg.locator("#hdAuth").textContent()).includes("내 계정"));
     ok(W + "px 카카오 — 브라우저가 Supabase 를 직접 부르지 않음", direct.length === 0, direct.join(" "));
     /* 로그아웃 */

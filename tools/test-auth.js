@@ -90,6 +90,7 @@ function res(){
   r.setHeader = function(k, v){ r.headers[String(k).toLowerCase()] = v; return r; };
   r.status = function(c){ r.code = c; return r; };
   r.json = function(b){ r.body = b; return r; };
+  r.end = function(){ r.ended = true; return r; };
   return r;
 }
 /* 샜는가 — ⚠️⚠️ **`service key` 와 그 사람의 토큰은 어디에도** 나오면
@@ -1552,25 +1553,112 @@ console.log("\n── W03 /api/auth — 브라우저 대신 Supabase 로 전함 
   calls = []; r = res(); await Hauth(req({ method:"GET", headers:O }), r);
   ok("POST 만 받음", r.code === 405, r);
 
-  /* 2026-11-18 카카오 간편 로그인 — 주소만 만들어 돌려줍니다 (바깥 요청 0) */
-  delete process.env.AUTH_KAKAO;
+  /* 2026-11-25 카카오 — 이메일을 요청하지 않는 OpenID Connect 길 (api/_kakao.js · api/auth-kakao.js) */
+  const KREST = "KAKAO-REST-1234", KSEC = "KAKAO-SECRET-9876";
+  const KID = "kakao.idtoken.sig", KAT = "KAKAO-ACCESS-555", SACC = "SB-ACCESS-777", SREF = "SB-REFRESH-888";
+  const crypto = require("crypto");
+  const Hcb = require(path.join(ROOT, "api", "auth-kakao.js"));
+  const Kk = require(path.join(ROOT, "api", "_kakao.js"));
+  function setK(on){ if(on){ process.env.AUTH_KAKAO = "1"; process.env.KAKAO_REST_KEY = KREST; process.env.KAKAO_CLIENT_SECRET = KSEC; }
+    else { delete process.env.AUTH_KAKAO; delete process.env.KAKAO_REST_KEY; delete process.env.KAKAO_CLIENT_SECRET; } }
+  function ckOf(r, name){ const sc = [].concat(r.headers["set-cookie"] || []); const c = sc.find(x => x.indexOf(name + "=") === 0); return c ? c.slice(name.length + 1).split(";")[0] : null; }
+  function idTok(nonceHash){ return Buffer.from('{"alg":"RS256"}').toString("base64url") + "." +
+    Buffer.from(JSON.stringify({ iss:"https://kauth.kakao.com", aud:KREST, sub:"4242", nonce:nonceHash })).toString("base64url") + ".sig"; }
+  let kakaoNonce = "", sbBody = null, kTok = null;
+  function kmock(o){ o = o || {}; mock([
+    [/kauth\.kakao\.com\/oauth\/token/, function(opt){ kTok = String(opt.body || ""); return o.kfail ? body(400, { error:"invalid_grant" }) : body(200, { id_token: idTok(o.badNonce ? "x" : kakaoNonce), access_token:KAT, refresh_token:"KREF" }); }],
+    [/\/auth\/v1\/token\?grant_type=id_token/, function(opt){ sbBody = JSON.parse(opt.body); return o.sbfail ? body(400, { error:"invalid request" }) : body(200, { access_token:SACC, refresh_token:SREF, expires_in:3600, user:{ id:"u" } }); }]]); }
+  function allOut(r){ return JSON.stringify([r.headers.location || "", r.body || ""]); }
+
+  setK(false);
   calls = []; r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"oauth", provider:"kakao", path:"/startup" } }), r);
-  ok("카카오 — AUTH_KAKAO 가 없으면 거절 · 바깥 요청 0", r.code === 400 && calls.length === 0, r);
+  ok("카카오 — 키가 없으면 거절 · 바깥 요청 0", r.code === 400 && calls.length === 0, r);
   process.env.AUTH_KAKAO = "1";
+  r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"oauth", provider:"kakao" } }), r);
+  ok("카카오 — AUTH_KAKAO 만 있고 카카오 키가 없으면 거절", r.code === 400, r);
+  setK(true);
   calls = []; r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"oauth", provider:"kakao", path:"/startup?i=cafe" } }), r);
-  ok("카카오 — Supabase authorize 주소 · 돌아올 자리는 들어온 출처 + 원래 경로",
-     r.code === 200 && r.body.url === URL_ + "/auth/v1/authorize?provider=kakao&redirect_to=" +
-       encodeURIComponent("https://storeway.co.kr/startup?i=cafe") && calls.length === 0, r.body);
-  ok("카카오 — 주소에 키가 안 실림", r.body.url.indexOf(ANON) < 0 && r.body.url.indexOf(SVC) < 0, r.body.url);
+  const au = new URL(r.body.url || "http://x/");
+  const sc = au.searchParams.get("scope") || "";
+  ok("카카오 — 카카오 인가 주소를 직접 만든다 (Supabase authorize 아님) · 바깥 요청 0",
+     r.code === 200 && au.host === "kauth.kakao.com" && au.pathname === "/oauth/authorize" && calls.length === 0, r.body);
+  ok("카카오 — scope 에 account_email 이 없다 (openid · profile_nickname 만)",
+     sc.split(" ").sort().join(" ") === "openid profile_nickname" && sc.indexOf("account_email") < 0 && sc.indexOf("profile_image") < 0, sc);
+  ok("카카오 — 콜백은 들어온 출처 + /api/auth-kakao", au.searchParams.get("redirect_uri") === "https://storeway.co.kr/api/auth-kakao", au.searchParams.get("redirect_uri"));
+  ok("카카오 — 주소에 키 · 비밀이 안 실림 (client_id 는 공개 REST 키)", r.body.url.indexOf(KSEC) < 0 && r.body.url.indexOf(ANON) < 0 && r.body.url.indexOf(SVC) < 0, r.body.url);
+  const st1 = au.searchParams.get("state"), nh1 = au.searchParams.get("nonce");
+  const ck1 = ckOf(r, "sw_kk");
+  const scHdr = [].concat(r.headers["set-cookie"] || [])[0] || "";
+  ok("카카오 — state · nonce 는 잠근 httpOnly 쿠키 (Path=/api/auth-kakao · Secure · Lax)",
+     !!ck1 && /HttpOnly/.test(scHdr) && /Secure/.test(scHdr) && /SameSite=Lax/.test(scHdr) && /Path=\/api\/auth-kakao/.test(scHdr) && ck1.indexOf(st1) < 0, scHdr.slice(0, 80));
+  const box1 = Kk.open(ck1);
+  kakaoNonce = Kk.sha256hex(box1.n);
+  ok("카카오 — 카카오에는 nonce 해시만 · 원문은 쿠키 안에만", nh1 === kakaoNonce && r.body.url.indexOf(box1.n) < 0, nh1);
   r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"oauth", provider:"kakao", path:"//evil.example/x" } }), r);
-  ok("카카오 — 바깥 주소로 못 돌림", r.body.url.endsWith(encodeURIComponent("https://storeway.co.kr/my")), r.body.url);
+  ok("카카오 — 바깥 주소로 못 돌림 (돌아갈 자리는 /my)", Kk.open(ckOf(r, "sw_kk")).p === "/my", Kk.open(ckOf(r, "sw_kk")));
   r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"oauth", provider:"google" } }), r);
   ok("카카오 — 목록 밖 공급자는 거절", r.code === 400, r);
   r = res(); await Hauth(req({ method:"POST", headers:{ origin:"https://evil.example", host:"storeway.co.kr" }, body:{ op:"oauth", provider:"kakao" } }), r);
   ok("카카오 — 다른 출처 403", r.code === 403, r);
+
+  /* 콜백 — 정상 */
+  const CB = function(q, cookie){ return req({ method:"GET", query:q, headers:{ host:"storeway.co.kr", cookie: cookie || "" } }); };
+  kmock(); r = res(); await Hcb(CB({ code:"CODE-abcdefgh", state:st1 }, "sw_kk=" + ck1), r);
+  const kb = new URLSearchParams(kTok || "");
+  ok("콜백 — 코드를 서버에서 바꾼다 (client_secret · 같은 redirect_uri)", kb.get("client_secret") === KSEC && kb.get("redirect_uri") === "https://storeway.co.kr/api/auth-kakao" && kb.get("code") === "CODE-abcdefgh", kTok);
+  ok("콜백 — Supabase id_token 로그인 (provider kakao · nonce 원문)", sbBody && sbBody.provider === "kakao" && sbBody.id_token && sbBody.nonce === box1.n && crypto.createHash("sha256").update(sbBody.nonce).digest("hex") === nh1, sbBody);
+  ok("콜백 — 토큰 없는 원래 주소로 303", r.code === 303 && r.headers.location === "https://storeway.co.kr/startup?i=cafe", r.headers.location);
+  ok("콜백 — 주소 · 응답에 ID · 액세스 · 리프레시 토큰 · 코드가 없다",
+     [KID, KAT, "KREF", SACC, SREF, "CODE-abcdefgh"].every(t => allOut(r).indexOf(t) < 0) && allOut(r).indexOf("eyJ") < 0, allOut(r));
+  const ses = ckOf(r, "sw_ks"), flag = ckOf(r, "sw_kt");
+  const sch = [].concat(r.headers["set-cookie"] || []).join(" | ");
+  ok("콜백 — state 쿠키를 지우고 · 세션은 잠근 httpOnly 쿠키(Path=/api/auth) · 표시만 읽힘",
+     ckOf(r, "sw_kk") === "" && !!ses && ses.indexOf(SACC) < 0 && /sw_ks=[^;]+; Path=\/api\/auth; Max-Age=120; HttpOnly/.test(sch) && flag === "1" && !/sw_kt=1; Path=\/; Max-Age=120; HttpOnly/.test(sch), sch.slice(0, 200));
+  ok("콜백 — 브라우저 쪽 응답에 Referrer 를 안 남김", r.headers["referrer-policy"] === "no-referrer", r.headers);
+  /* 재사용 — 같은 state 로 다시 오면 쿠키가 지워져 있어 거절 */
+  kmock(); r = res(); await Hcb(CB({ code:"CODE-abcdefgh", state:st1 }, ""), r);
+  ok("콜백 — 재사용(쿠키 없음) 거절 · 카카오 · Supabase 안 부름", r.code === 303 && /error=server_error/.test(r.headers.location) && calls.length === 0, [r.headers.location, calls.length]);
+  /* state 위조 */
+  kmock(); r = res(); await Hcb(CB({ code:"CODE-abcdefgh", state:"forged-state" }, "sw_kk=" + ck1), r);
+  ok("콜백 — state 불일치 거절 · 바깥 요청 0", /error=server_error/.test(r.headers.location) && calls.length === 0, r.headers.location);
+  /* 쿠키 위조 · 변조 */
+  kmock(); r = res(); await Hcb(CB({ code:"CODE-abcdefgh", state:st1 }, "sw_kk=" + ck1.slice(0, -4) + "AAAA"), r);
+  ok("콜백 — 변조된 쿠키 거절", /error=server_error/.test(r.headers.location) && calls.length === 0, r.headers.location);
+  /* 만료 */
+  const old = Kk.seal(Object.assign({}, box1, { x: Date.now() - 1 }));
+  kmock(); r = res(); await Hcb(CB({ code:"CODE-abcdefgh", state:st1 }, "sw_kk=" + old), r);
+  ok("콜백 — 만료된 state 거절", /error=server_error/.test(r.headers.location) && calls.length === 0, r.headers.location);
+  /* nonce 불일치 (id_token 바꿔치기) */
+  kmock({ badNonce:true }); r = res(); await Hcb(CB({ code:"CODE-abcdefgh", state:st1 }, "sw_kk=" + ck1), r);
+  ok("콜백 — id_token 의 nonce 불일치 거절 · Supabase 안 부름", /error=server_error/.test(r.headers.location) && !calls.some(c => /grant_type=id_token/.test(c.url)), r.headers.location);
+  /* 가짜 토큰 — Supabase 가 거절하면 로그인 안 됨 */
+  kmock({ sbfail:true }); r = res(); await Hcb(CB({ code:"CODE-abcdefgh", state:st1 }, "sw_kk=" + ck1), r);
+  ok("콜백 — Supabase 가 토큰을 거절하면 세션 쿠키를 안 만든다", /error=server_error/.test(r.headers.location) && !ckOf(r, "sw_ks"), r.headers);
+  /* 사용자가 동의 화면에서 취소 */
+  kmock(); r = res(); await Hcb(CB({ error:"access_denied", state:st1 }, "sw_kk=" + ck1), r);
+  ok("콜백 — 취소하면 원래 화면에 ?error=access_denied · 바깥 요청 0", r.headers.location === "https://storeway.co.kr/startup?i=cafe&error=access_denied" && calls.length === 0, r.headers.location);
+  /* 로그에 토큰이 안 남는다 */
+  const logs = []; const cw = console.warn, cl = console.log, ce = console.error;
+  console.warn = function(){ logs.push([].join.call(arguments, " ")); }; console.error = console.warn;
+  kmock({ sbfail:true }); r = res(); await Hcb(CB({ code:"CODE-abcdefgh", state:st1 }, "sw_kk=" + ck1), r);
+  kmock(); r = res(); await Hcb(CB({ code:"CODE-abcdefgh", state:st1 }, "sw_kk=" + ck1), r);
+  console.warn = cw; console.error = ce; console.log = cl;
+  ok("콜백 — 로그에 코드 · 토큰 · 키가 없다", logs.length >= 1 && [KSEC, KAT, SACC, SREF, "CODE-abcdefgh", box1.n, ANON, SVC].every(t => logs.join("|").indexOf(t) < 0), logs);
+
+  /* take — 한 번만 */
+  r = res(); await Hauth(req({ method:"POST", headers:Object.assign({ cookie:"sw_ks=" + ses + "; sw_kt=1" }, O), body:{ op:"take" } }), r);
+  ok("take — 세션을 본문으로 한 번 건넨다", r.code === 200 && r.body.access_token === SACC && r.body.refresh_token === SREF && !r.body.user, r.body);
+  ok("take — 쿠키 둘 다 지움", ckOf(r, "sw_ks") === "" && ckOf(r, "sw_kt") === "", r.headers["set-cookie"]);
+  r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"take" } }), r);
+  ok("take — 두 번째(쿠키 없음)는 401", r.code === 401 && !r.body.access_token, r);
+  r = res(); await Hauth(req({ method:"POST", headers:Object.assign({ cookie:"sw_ks=" + Kk.seal({ a:SACC, x:Date.now() - 1 }) }, O), body:{ op:"take" } }), r);
+  ok("take — 만료된 세션 쿠키는 401", r.code === 401, r);
+  r = res(); await Hauth(req({ method:"POST", headers:{ origin:"https://evil.example", host:"storeway.co.kr", cookie:"sw_ks=" + ses }, body:{ op:"take" } }), r);
+  ok("take — 다른 출처 403", r.code === 403 && !(r.body || {}).access_token, r);
+
   r = res(); await Hsession(req({ method:"GET" }), r);
   ok("세션 — 켜져 있으면 kakao:true", r.body.kakao === true, r.body);
-  delete process.env.AUTH_KAKAO;
+  setK(false);
   r = res(); await Hsession(req({ method:"GET" }), r);
   ok("세션 — 꺼져 있으면 kakao:false", r.body.kakao === false, r.body);
   calls = []; r = res(); await Hauth(req({ method:"POST", headers:Object.assign({ authorization:"Bearer " + TOK }, O), body:{ op:"logout" } }), r);

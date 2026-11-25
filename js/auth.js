@@ -220,6 +220,24 @@ function amAuthRefresh(){
 /* ── 지금 누구인가 ───────────────────────────────────────────────
    `/api/session` 한 번. ⚠️ 역할은 **서버가 토큰으로 DB 에서** 읽은
    값입니다 — 화면이 고르는 것이 아닙니다 (`api/_auth.js` 머리말). */
+/* 카카오 콜백이 남긴 "받아 갈 것이 있다" 표시(sw_kt)가 있을 때만 한 번 묻습니다.
+   ⚠️ 표시가 없으면 요청 0 — 평소 화면에서 왕복을 늘리지 않습니다. */
+function amAuthTakeCookie(){
+  var has = false;
+  try{ has = /(?:^|;\s*)sw_kt=1(?:;|$)/.test(document.cookie || ""); }catch(e){}
+  if(!has) return Promise.resolve(false);
+  try{ document.cookie = "sw_kt=; Path=/; Max-Age=0; Secure; SameSite=Lax"; }catch(e){}
+  return fetch("/api/auth", { method:"POST", headers:{ "content-type":"application/json" },
+    body: JSON.stringify({ op:"take" }) })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if(!d || !d.access_token) return false;
+      amAuthSave({ access_token:d.access_token, refresh_token:d.refresh_token || "",
+        at: Date.now() + (parseInt(d.expires_in, 10) || 3600) * 1000 });
+      return true;
+    })
+    .catch(function(){ return false; });
+}
 window.amAuthAsk = function(force){
   if(AM_AUTH.asked && !force) return Promise.resolve(AM_AUTH);
   /* ⚠️ 이미 묻고 있으면 **그 물음을 그대로** 돌려줍니다 (요청 하나) */
@@ -230,7 +248,9 @@ window.amAuthAsk = function(force){
       { accept:"application/json" }, window.amAuthHeaders()) })
       .then(function(r){ return r.ok ? r.json() : null; });
   }
-  AM_AUTH_FLY = ask().then(function(d){
+  /* 2026-11-25 카카오(OIDC) — 콜백이 세션을 한 번만 읽히는 쿠키에 담아 두었으면 먼저 받아 갑니다.
+     ⚠️ 토큰은 응답 본문으로만 오고 주소창에는 안 나옵니다 (api/_kakao.js). */
+  AM_AUTH_FLY = amAuthTakeCookie().then(ask).then(function(d){
     /* 토큰이 만료되어 떨어졌으면 한 번만 새로 받아 다시 묻습니다 */
     if(d && d.auth && !d.signedIn && amAuthLoad()){
       AM_AUTH.conf = d.conf || null;

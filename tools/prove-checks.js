@@ -166,7 +166,7 @@ const CASES = [
    `var a = document.querySelector(".hh-cta a.hh-mo"); if(a) a.remove();`],
   /* 2026-11-24 — 점검표 항목 하나를 지워 봅니다 (고민 카드 단추가 없는 곳을 가리키게) */
   ["운영 고민 카드마다 계산 · 점검 단추가 실제 목적지로 간다",
-   `var r = document.getElementById("ock-row-sales"); if(r) r.remove();`],
+   `var r = document.getElementById("ock-row-labor"); if(r) r.remove();`],
   /* 2026-11-24 — 0건 안내가 조건 칩을 안 내게 해 봅니다 */
   ["매물 0건이 조건 탓인지 전체 0건인지 가르고 다시 찾는 길을 낸다",
    `var o = window.MkZero; window.MkZero = function(x){ return o(x).replace(/mkz-x/g, "mkz-y"); };`],

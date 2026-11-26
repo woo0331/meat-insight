@@ -63,7 +63,12 @@ module.exports = async function handler(req, res){
     { "content-type":"application/x-www-form-urlencoded;charset=utf-8" },
     new URLSearchParams({ grant_type:"authorization_code", client_id:k.id, client_secret:k.secret,
       redirect_uri:box.r, code:code }).toString());
-  if(!tk.ok || !tk.data || !tk.data.id_token) return fail("server_error", "카카오 토큰 교환 실패(" + tk.status + ")");
+  if(!tk.ok || !tk.data || !tk.data.id_token){
+    const errorCode = tk.data && tk.data.error_code;
+    const detail = typeof errorCode === "string" && /^KOE[0-9]{3}$/.test(errorCode)
+      ? ", " + errorCode : "";
+    return fail("server_error", "카카오 토큰 교환 실패(" + tk.status + detail + ")");
+  }
 
   /* 4. nonce 를 먼저 맞춰 봅니다 (서명 확인은 Supabase 가 합니다) */
   const pl = K.jwtPayload(tk.data.id_token);

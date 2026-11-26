@@ -2706,9 +2706,10 @@ const AUDIT = `(() => {
     if(t.indexOf("커피머신") < 0) return "카페인데 커피머신이 없습니다";
     return true;`);
   await f("폐업: 무엇을 원하는지 먼저 묻는다", "/closure", `
-    const w = document.querySelectorAll(".wnt").length;
+    /* 2026-11-26 — 상황 넷은 머리 바로 아래 첫 구간(#sit)입니다 (아래 정리 순서 구역의 옛 상황 카드는 같은 선택이라 내렸습니다). 이 주석에 백틱 금지. */
+    const w = document.querySelectorAll("#sit .sitf-o").length;
     if(w < 3) return "고를 것이 " + w + "개입니다";
-    const a = document.querySelector(".wnt");
+    const a = document.querySelector("#sit .sitf-o");
     if(!/\\?w=/.test(a.getAttribute("href"))) return "고르면 주소에 안 실립니다";
     return true;`);
   await f("폐업: 고른 것에 없는 분류도 안 숨긴다", "/closure/cafe?w=fast", `

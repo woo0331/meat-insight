@@ -781,7 +781,7 @@ function PageQuoteClose(){
         '<div class="f-2">'+
           '<div class="f-r"><label for="cq-gu">시 · 군 <b>*</b></label>'+
             '<select class="sel" id="cq-gu" onchange="closeAreaPaint()"><option value="">골라 주세요</option>'+
-              SC.gu.map(function(g){ return '<option value="'+esc(g)+'">경기 '+esc(g)+'</option>'; }).join("")+
+              SC.gu.map(function(g){ return '<option value="'+esc(g)+'"'+(nowQS("gu") === g ? " selected" : "")+'>경기 '+esc(g)+'</option>'; }).join("")+
               '<option value="out">그 밖의 지역</option></select></div>'+
           '<div class="f-r"><label for="cq-ind">업종 <b>*</b></label>'+IndustrySelect("cq-ind", ind, "", "골라 주세요")+'</div>'+
         '</div>'+

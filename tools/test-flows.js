@@ -97,7 +97,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
 
  console.log("\n【3】 폐업 → 현재 상황 → 상황별 로드맵");
  await pg.goto(B+"/closure",{waitUntil:"networkidle"});
- const want=await pg.evaluate(()=>[...document.querySelectorAll(".wnt b")].map(b=>b.textContent.trim()));
+ const want=await pg.evaluate(()=>[...document.querySelectorAll("#sit .sitf-o b")].map(b=>b.textContent.trim()));  /* 2026-11-26 — 상황 넷은 맨 위 첫 구간(SitFlow) */
  say(want.length===4,"상황 넷",want.join(" / "));
  for(const [w,n,key] of [["pass",10,"acq-out"],["money",9,"asset-out"],["fast",13,"closing"]]){
    await pg.goto(B+"/closure?w="+w,{waitUntil:"networkidle"});
@@ -817,7 +817,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     지키는 것: 첫 화면 세 갈래가 있고, 상황 넷은 "모르겠어요" 안에 접혀 있다. */
  /* 2026-11-25 디자인 개편 §5 — 상황 넷은 사진 카드로 **펼쳐 둡니다** (전에는 '모르겠어요' 안에 접혀 있었습니다). */
  const cp = await pg.evaluate(()=>({q:[...document.querySelectorAll(".pgh .hh-qa")].filter(a=>a.getClientRects().length).length, clp:document.querySelectorAll(".clp-c").length,
-   want:[...document.querySelectorAll("#cl-want .wnt")].filter(a=>a.getClientRects().length && a.querySelector(".wnt-ph img, .wnt-ph .pcd-n")).length}));
+   want:[...document.querySelectorAll("#sit .sitf-o")].filter(a=>a.getClientRects().length && a.querySelector(".sitf-ph img, .sitf-ph svg")).length}));  /* 2026-11-26 — 상황 넷은 맨 위 첫 구간 */
  say(cp.q === 3 && cp.clp === 0 && cp.want === 4, "3 폐업 — 첫 화면 세 갈래 · 상황 넷이 사진 카드로 보임", JSON.stringify(cp));
  const c1 = await pg.$$(".pkq .pk-ck");
  if(c1.length > 1){ await c1[0].check(); await c1[1].check(); }

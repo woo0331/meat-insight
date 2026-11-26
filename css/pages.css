@@ -9251,3 +9251,136 @@ img[src^="/img/card/service-internet."]{ object-position:55% 45%; }
 .ind{ overflow:hidden; }
 /* 사진이 있는 업종 카드는 아이콘 타일을 접습니다 (사진이 이미 업종을 말합니다 · 폰에서 카드가 두 배로 길어졌습니다) */
 .ind:has(.ind-ph img) .ind-ic{ display:none; }
+
+/* ════════════════════════════════════════════════════════════════════
+   2026-11-26 모바일 사용성 개편 — 내 상황 → 결과 → 다음 행동 (SitFlow · ListHead · ListState)
+   월넛 · 크림 · 사진 카드. ⚠️ 새 색을 만들지 않았습니다 (--walnut · --cream · --sand · --line).
+   ════════════════════════════════════════════════════════════════════ */
+.sitf{ scroll-margin-top:72px; }
+.sitf .w{ max-width:1120px; }
+.sitf-st{ display:flex; gap:6px; list-style:none; margin:0 0 14px; padding:0; flex-wrap:wrap; }
+.sitf-st li{ display:flex; align-items:center; gap:6px; padding:6px 12px 6px 6px; border-radius:999px;
+  background:var(--sand); color:var(--ink2); font-size:13px; font-weight:700; }
+.sitf-st li i{ display:inline-grid; place-items:center; width:22px; height:22px; border-radius:50%;
+  background:var(--cream); color:var(--ink2); font-style:normal; font-size:12px; }
+.sitf-st li.is-now{ background:var(--walnut); color:#fff; }
+.sitf-st li.is-now i{ background:#fff; color:var(--walnut); }
+.sitf-st li.is-done i{ background:var(--walnut); color:#fff; }
+.sitf-hd h2{ font-size:clamp(22px,2.4vw,30px); margin:4px 0 6px; }
+.sitf-hd p{ color:var(--ink2); margin:0 0 16px; }
+.sitf-g{ list-style:none; margin:0; padding:0; display:grid; gap:12px; grid-template-columns:repeat(4, minmax(0,1fr)); }
+.sitf-g2{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+.sitf-g > li{ display:flex; }
+.sitf-o{ position:relative; display:flex; flex-direction:column; width:100%; min-height:44px; border-radius:16px;
+  background:var(--cream); border:2px solid var(--line); color:var(--ink); text-decoration:none; overflow:hidden;
+  box-shadow:var(--shadow-card); transition:border-color .15s, box-shadow .15s; }
+.sitf-o:hover{ border-color:var(--acc); box-shadow:var(--shadow-card-h); }
+.sitf-o:focus-visible{ outline:3px solid var(--walnut); outline-offset:2px; }
+.sitf-o.is-on{ border-color:var(--walnut); box-shadow:0 0 0 2px var(--walnut) inset, var(--shadow-card-h); }
+.sitf-ph{ display:grid; place-items:center; aspect-ratio:16/10; background:var(--walnut); color:#F5E9D8; overflow:hidden; }
+.sitf-ph .ph{ width:100%; height:100%; object-fit:cover; }
+.sitf-ph .ia{ --ia-1:#F5E9D8; --ia-2:#B8956D; }
+.sitf-t{ display:flex; flex-direction:column; gap:3px; padding:12px 40px 14px 14px; }
+.sitf-t b{ font-size:17px; line-height:1.35; }
+.sitf-t small{ font-size:13px; color:var(--ink2); line-height:1.45; }
+.sitf-ck{ position:absolute; right:10px; bottom:12px; width:26px; height:26px; border-radius:50%; display:grid; place-items:center;
+  background:var(--sand); color:var(--walnut); }
+.sitf-o.is-on .sitf-ck{ background:var(--walnut); color:#fff; }
+.sitf-hint{ margin:14px 0 0; color:var(--ink2); font-size:14px; display:flex; gap:6px; align-items:center; }
+.sitf-res{ margin-top:18px; padding:20px; border-radius:18px; background:var(--cream); border:1px solid var(--line);
+  border-top:4px solid var(--walnut); box-shadow:var(--shadow-card); scroll-margin-top:80px; outline:none; }
+.sitf-rh{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+.sitf-k{ margin:0; font-size:13px; font-weight:800; color:var(--walnut); display:flex; gap:4px; align-items:center; }
+.sitf-re{ min-height:44px; display:inline-flex; align-items:center; font-size:14px; font-weight:700; color:var(--ink2); }
+.sitf-res h3{ font-size:clamp(19px,2vw,24px); margin:6px 0 4px; }
+.sitf-rl{ color:var(--ink2); margin:0 0 8px; }
+.sitf-sub{ margin:16px 0 8px; font-size:14px; font-weight:800; color:var(--ink); }
+.sitf-sub small{ font-size:13px; font-weight:600; color:var(--ink3); margin-left:4px; }
+.sitf-do{ list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.sitf-do li{ display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border-radius:12px; background:var(--ivory); }
+.sitf-do li i{ flex:none; width:24px; height:24px; border-radius:50%; display:grid; place-items:center; font-style:normal;
+  background:var(--walnut); color:#fff; font-size:13px; font-weight:800; }
+.sitf-do li span{ line-height:1.5; }
+.sitf-pk.pk-g{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+.sitf-sum{ margin-top:12px; padding:14px; border-radius:14px; background:var(--sand); display:grid; gap:8px; }
+.sitf-sum-t{ margin:0; display:flex; align-items:center; justify-content:space-between; gap:8px; font-weight:700; }
+.sitf-clr{ min-height:44px; padding:0 12px; border-radius:10px; border:1px solid var(--line); background:var(--cream); font-weight:700; color:var(--ink); }
+.sitf-clr[hidden]{ display:none; }
+.sitf-rows:empty{ display:none; }
+.sitf-note{ margin:0; font-size:13px; color:var(--ink2); }
+.sitf-next{ display:flex; flex-wrap:wrap; gap:8px; }
+.sitf-main{ min-height:52px; justify-content:center; }
+.sitf-2{ min-height:48px; }
+@media (max-width:1024px){ .sitf-pk.pk-g{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
+@media (max-width:760px){
+  .sitf-g, .sitf-g4{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+  .sitf-ph{ aspect-ratio:16/9; }
+  .sitf-t{ padding:10px 34px 12px 12px; }
+  .sitf-t b{ font-size:16px; }
+  .sitf-t small{ font-size:13px; }
+  .sitf-ck{ right:8px; bottom:10px; width:22px; height:22px; }
+  .sitf-res{ padding:16px 14px; margin-top:14px; }
+  .sitf-pk.pk-g{ grid-template-columns:1fr; }
+  .sitf-next .btn{ flex:1 1 100%; }
+}
+@media (max-width:380px){ .sitf-t small{ display:none; } }
+
+/* 전문관 머리 — 상황 고르기가 바로 아래에 오는 화면은 폰에서 머리를 줄입니다 (첫 행동이 첫 화면에) */
+@media (max-width:760px){
+  .hh.hh-sit .hh-lead, .hh.hh-sit .hh-cta, .hh.hh-sit .hh-card{ display:none; }
+  .hh.hh-sit .hh-in{ padding-top:20px; padding-bottom:22px; }
+  .hh.hh-sit .hh-h1{ font-size:26px; }
+}
+
+/* 목록 위 한 줄 — 조건 · 결과 수 · 초기화 */
+.lsh{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin:14px 0 10px; }
+.lsh-n{ margin:0; font-size:15px; color:var(--ink2); }
+.lsh-n b{ font-size:20px; color:var(--ink); margin-right:2px; }
+.lsh-c{ list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px; }
+.lsh-c li{ display:flex; align-items:center; gap:2px; padding:0 4px 0 12px; min-height:36px; border-radius:999px;
+  background:var(--sand); font-size:14px; font-weight:700; color:var(--ink); }
+.lsh-c a{ display:grid; place-items:center; width:36px; height:36px; color:var(--ink2); }
+.lsh-x{ min-height:44px; display:inline-flex; align-items:center; font-size:14px; font-weight:700; color:var(--walnut); }
+.lst{ display:flex; flex-wrap:wrap; gap:10px 12px; align-items:center; padding:16px; border-radius:14px;
+  background:var(--cream); border:1px solid var(--line); margin:10px 0; }
+.lst p{ margin:0; flex:1 1 220px; line-height:1.55; }
+.lst-fail{ border-color:#C9A27A; background:#FFF6EC; }
+
+/* 업체 분야 상세 — 세부 서비스 → 지역 → 결과 */
+.pvs-stp{ margin:18px 0 8px; font-size:15px; font-weight:800; color:var(--ink); display:flex; gap:8px; align-items:center; }
+.pvs-stp i{ display:inline-grid; place-items:center; width:24px; height:24px; border-radius:50%; background:var(--walnut); color:#fff; font-style:normal; font-size:13px; }
+.pvs-stp:first-child{ margin-top:0; }
+.pvs-more{ min-height:44px; padding:0 14px; border-radius:999px; border:1px dashed var(--acc); background:transparent; color:var(--ink); font-weight:700; }
+.pvs-rest[hidden]{ display:none; }
+.pvs-geo{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.pvs-geo .sel{ flex:1 1 180px; min-width:0; }
+.pvs-go{ margin:12px 0 4px; display:flex; flex-wrap:wrap; gap:8px; }
+.pvs-go .btn{ min-height:52px; }
+@media (max-width:760px){ .pvs-go .btn{ flex:1 1 100%; justify-content:center; } }
+.qs-hint{ margin:8px 0 12px; padding:12px 14px; border-radius:12px; background:var(--sand); color:var(--ink); font-size:14px; line-height:1.55; display:flex; gap:8px; }
+.sitf-ind{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin-top:14px; padding:12px 14px; border-radius:14px; background:var(--sand); }
+.sitf-ind > label{ font-weight:800; }
+.sitf-ind .sel{ flex:1 1 200px; min-width:0; max-width:360px; }
+.sitf-ind-on{ font-size:13px; font-weight:700; color:var(--walnut); display:inline-flex; gap:4px; align-items:center; }
+.sitf-fil{ margin-top:12px; }
+.lst-all .btn{ min-height:44px; }
+@media (max-width:760px){
+  .sec.sitf{ padding-top:20px; padding-bottom:28px; }
+  .sitf-st{ margin-bottom:10px; }
+  .sitf-st li{ padding:4px 10px 4px 4px; font-size:12.5px; }
+  .sitf-hd h2{ font-size:22px; margin:2px 0 4px; }
+  .sitf-hd p{ font-size:14px; margin-bottom:12px; }
+  .sitf-g4 .sitf-ph{ aspect-ratio:2/1; }
+  .hh.hh-sit .hh-in{ padding-top:14px; padding-bottom:16px; }
+  .hh.hh-sit .hh-k{ margin-bottom:6px; }
+  .hh.hh-sit .hh-h1{ font-size:24px; line-height:1.3; }
+}
+/* 상황 결과 안의 고르는 칸은 한 줄짜리 (사진 · 이름 · 체크) — 폰에서 카드가 세로로 커지지 않게 */
+.sitf-pk.pk-g > li{ display:flex; }
+.sitf-pk .pk-c{ display:grid !important; grid-template-columns:48px minmax(0,1fr) auto !important; grid-template-rows:auto !important;
+  align-items:center; gap:12px; min-height:64px; padding:8px 12px; text-align:left; }
+.sitf-pk .pk-ph, .sitf-pk .pk-i{ grid-column:1 !important; grid-row:1 !important; width:48px !important; height:48px !important; margin:0 !important; }
+.sitf-pk .pk-t{ grid-column:2 !important; grid-row:1 !important; }
+.sitf-pk .pk-t b{ font-size:16px; }
+.sitf-pk .pk-t i{ font-size:13px; }
+.sitf-pk .pk-ck{ grid-column:3 !important; grid-row:1 !important; position:static !important; align-self:center; }

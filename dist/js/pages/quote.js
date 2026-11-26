@@ -113,6 +113,10 @@ function quoteServices(){
   else if(typeof amPickGet === "function") ids = amPickGet();
 
   var one = nowQS("c");
+
+  var oneSub = nowQS("s");
+  if(!ids.length && one && oneSub && typeof amPickOne === "function" && amPickOne(one + "/" + oneSub))
+    ids = [one + "/" + oneSub];
   if(!ids.length && one) ids = [one];
 
   var seen = {}, out = [];
@@ -721,6 +725,24 @@ function closeSrc(){
   return ["close", from, path].filter(Boolean).join("|");
 }
 
+function cqHint(pre, opts){
+  var ks = Object.keys(pre);
+  var bare = ks.filter(function(k){ return k.indexOf("/") < 0; });
+  var lost = ks.filter(function(k){ return k.indexOf("/") >= 0 && CLOSE_OPTS.indexOf(k) < 0; });
+  if(!bare.length && !lost.length) return "";
+  var cats = bare.concat(lost.map(function(k){ return k.split("/")[0]; }));
+  var names = [], subs = [];
+  cats.forEach(function(c){
+    var cat = typeof amCat === "function" ? amCat(c) : null;
+    if(cat && names.indexOf(cat.name) < 0) names.push(cat.name);
+    opts.forEach(function(sv){ if(sv.id.split("/")[0] === c) subs.push(amPickLabel(sv)); });
+  });
+  if(!names.length) return "";
+  return '<p class="qs-hint" id="cq-hint" role="status">'+icon("info",16)+'<span><b>'+esc(names.join(" · "))+
+    '</b> 분야에서 오셨습니다. 아직 세부 서비스는 고르지 않으셨어요 — 바로 아래 목록에서 '+
+    (subs.length ? '<b>'+esc(subs.join(" · "))+'</b> 가운데 ' : '')+'필요한 것을 골라 주세요.</span></p>';
+}
+
 function PageQuoteClose(){
   var SC = window.AM_CLOSE_SCOPE || { gu:[], cats:[] };
   var pre = {};
@@ -745,6 +767,7 @@ function PageQuoteClose(){
       '연결할 업체가 정해지면 어느 업체인지 알려 드린 뒤 연락처 전달 동의를 다시 받습니다.</span></p>'+
     '<form id="cq-f" onsubmit="return closeSend(event)" novalidate>'+
       '<div class="qs">'+QStepHd("01", "필요한 서비스를 골라 주세요", "여러 개를 함께 고르셔도 한 번에 접수됩니다.")+
+        cqHint(pre, opts)+
         '<div class="cq-svc" role="group" aria-label="필요한 서비스">'+
           opts.map(function(sv){
             var id = "cq-s-" + sv.id.replace(/[^a-z0-9]/gi, "-");

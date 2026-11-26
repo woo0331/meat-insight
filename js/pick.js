@@ -147,6 +147,8 @@ window.pickPaint = function(){
   });
 
   /* 바구니 목록 · 빈 상태 */
+  /* 2026-11-26 — 상황 결과 안의 요약 목록 (SitFlow) · id 가 아니라 표시로 찾습니다 (한 화면에 여럿일 수 있음) */
+  [].slice.call(document.querySelectorAll("[data-pick-rows]")).forEach(function(el){ el.innerHTML = pickRows(); });
   var box = document.getElementById("pk-list");
   if(box) box.innerHTML = pickRows();
   var zero = document.getElementById("pk-zero");

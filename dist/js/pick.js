@@ -84,6 +84,7 @@ window.pickPaint = function(){
     el.hidden = n === 0;
   });
 
+  [].slice.call(document.querySelectorAll("[data-pick-rows]")).forEach(function(el){ el.innerHTML = pickRows(); });
   var box = document.getElementById("pk-list");
   if(box) box.innerHTML = pickRows();
   var zero = document.getElementById("pk-zero");

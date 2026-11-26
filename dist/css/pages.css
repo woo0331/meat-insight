@@ -7170,3 +7170,8 @@ img[src^="/img/card/service-internet."]{ object-position:55% 45%; }
 .myq-it{ margin-top:10px; }
 .my-kk-l{ list-style:none; margin:10px 0 6px; padding:0; display:grid; gap:4px; font-size:14px; color:var(--ink2); }
 .my-kk-l b{ color:var(--ink); margin-right:4px; }
+
+.sitf-ph{ background:var(--sand); color:var(--walnut); }
+.sitf-ph .ia{ --ia-1:#6A4B3B; --ia-2:#C9A98A; }
+.lsh-c li{ min-height:44px; }
+.lsh-c a{ width:44px; height:44px; }

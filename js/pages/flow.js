@@ -65,7 +65,8 @@ function PageStartup(){
      끝의 사진 CTA(StartKxCta)는 STEP 02 신청 구간과 같은 말이라 내렸습니다. */
   /* 2026-11-23 사진형 시안 — 큰 대표 사진 → 사진 핵심 서비스 4 → 사진 진행 절차 4 → 사진 배너 + 실제 도구
      → 업종별 준비 → (기존 고르기 · 신청) → 왜 · 하단 안내. 옛 StartSignature · StartRoad 는 지우지 않았습니다. */
-  return StartIntro(ind) + StartKpSvc(ind) + StartKpRoad(ind) + StartKpCalc(ind) + StartKpInd() +
+  /* 2026-11-26 모바일 사용성 개편 — 머리 바로 아래가 '어떻게 시작하세요?'(StartSit) */
+  return StartIntro(ind) + StartSit(ind) + StartKpSvc(ind) + StartKpRoad(ind) + StartKpCalc(ind) + StartKpInd() +
     /* 2026-11-24 하단 간소화 — 고르개 · 바구니 · 묶음을 '여러 서비스 함께 고르기' 한 구역(기본 접힘)으로.
        옛 StartPickBand · PickBasket · PackPickBand · StartApplyBand 는 지우지 않았습니다 (되살리기는 이 줄).
        STEP 02(StartApplyBand)의 신청 · 접수 안내는 이 구역의 요약(고른 것이 있을 때)과 아래 KpCta 가 받습니다. */
@@ -174,7 +175,7 @@ function StartIntro(ind){
      ⚠️ 주 단추는 견적 접수 상태를 따릅니다 (닫힘이면 접수 안내). 보조 단추는 바로 아래 고르개. */
   return HallHero({
     /* 2026-11-20 — 출처가 확인되지 않은 hero-startup 사진 대신 자체 일러스트(아이디어 → 매장 오픈) */
-    side:"start", photo:"insu-startup", /* 2026-11-21 ZIP 01_startup (옛 자체 일러스트 hhFlowArt 는 지우지 않았습니다) */
+    sit:true, side:"start", photo:"insu-startup", /* 2026-11-21 ZIP 01_startup (옛 자체 일러스트 hhFlowArt 는 지우지 않았습니다) */
     /* 2026-11-23 4개 카테고리 시안 — 머리말 · 제목. ⚠️ 브랜드 이름과 조사는 손으로 적지 않습니다 (koWith) */
     kicker:"창업 준비 서비스",
     h1raw:"성공하는 창업,<br><em>"+esc(ftWith(amBrand(), "와과"))+" 함께</em><br>시작하세요.",
@@ -548,7 +549,8 @@ function StartApplyBand(){
 function PageStartupIndustry(ind){
   var cats = amCatsFor(ind.key, "start");
   var fcat = amFranchiseCat(ind.key);       /* 같은 key 면 그 분류로 보냅니다 */
-  return PgHero({
+  /* 2026-11-26 모바일 — 머리를 줄이고(pgh-m-sm · 폰에서 사진 · 설명 · 두 번째 단추 접음) 고르기 → 준비 순서 · 창업비 계산 → 묻는 것 넷 차례 */
+  return PgHero({ cls:"pgh-m-sm",
     crumb: Crumb([["창업","/startup"],[ind.name]]),
     kicker:"START · " + ind.name,
     /* ⚠️ 2026-10-06 2차 §5 — 상황과 업종을 고르고 도착하는 **맞춤 결과
@@ -569,8 +571,6 @@ function PageStartupIndustry(ind){
      먼저 봅니다. 장비는 바로 아래에 그대로 둡니다 — 업종이 갈리는
      것을 보여 주는 자리라 지우지 않습니다 (§1 · §12). */
   StartWayBand(ind)+
-  /* 2026-10-09 PART 4 — 묻는 것 넷 (지역 · 예산 · 준비 단계 · 개업 시기) */
-  StartAskBand(ind)+
   /* ⚠️⚠️ **2026-10-08 지시서 §13 STEP 02 · §15** — 같은 업종이어도
      **새로 만드는 분과 있던 가게를 받는 분은 순서가 다릅니다.** 전에는
      창업 화면이 신규 기준 하나뿐이라, 인수를 보고 계신 분은 상권부터
@@ -593,6 +593,9 @@ function PageStartupIndustry(ind){
         lead:amProcess("startup").length+"걸음입니다. 걸음마다 "+ind.name+
              "에 맞는 업체 · 장비 · 글로 바로 넘어갑니다.",
         industry:ind.key, tone:"sec-gray", first:3, from:startFrom("startup"), cta:startCalcCta(ind) }))+
+  /* 2026-10-09 PART 4 — 묻는 것 넷 (지역 · 예산 · 준비 단계 · 개업 시기)
+     2026-11-26 — 준비 순서 **아래**로 옮겼습니다 (폰에서 다음 행동이 3화면 아래였습니다). 고르시면 위 순서가 그 걸음부터 바뀝니다. */
+  StartAskBand(ind)+
   (ind.equip && ind.equip.length ? EquipBand(ind) : "")+
   StepBand(ind)+
   (fcat ? FranchiseHint(fcat, ind) : "")+
@@ -641,7 +644,8 @@ function StartWayBand(ind){
          두 주소로 나가면 구글이 둘 다 무시합니다. */
       var to = (w.k === "new") ? base : (base + "?how=" + w.k);
       /* 2026-11-25 — 빈 점포 실측 / 기존 매장 인계 사진으로 가릅니다. 고른 쪽은 테두리 + '선택됨' 문구(색만으로 가르지 않습니다) */
-      return '<a class="swt-c swt-pc'+(on ? " on" : "")+'" href="'+esc(to)+'"'+
+      /* 2026-11-26 — 고르면 다시 그린 뒤 바로 아래 준비 순서(창업비 계산 포함)로 내려갑니다 */
+      return '<a class="swt-c swt-pc'+(on ? " on" : "")+'" href="'+esc(to)+'" data-keep data-focus="sw-next"'+
         (on ? ' aria-current="true"' : '')+'>'+
         '<span class="swt-ph" aria-hidden="true">'+picBox(w.ph, w.ic, "(max-width:640px) 92vw, 360px")+
           (on ? '<em class="swt-on">'+icon("check",14)+' 선택됨</em>' : '')+'</span>'+
@@ -656,7 +660,7 @@ function StartWayBand(ind){
         '<a href="/stores?i='+encodeURIComponent(ind.key)+'">'+esc(ind.name)+
         ' 매장 매물</a> · <a href="/tools/vs">신규 vs 인수 비교</a></p>'
       : '')+
-  '</div></section>';
+  '</div></section><span id="sw-next" tabindex="-1"></span>';
 }
 
 /* ── 조건 넷 — 지역 · 예산 · 준비 단계 · 개업 시기 (2026-10-09 PART 4)
@@ -952,8 +956,9 @@ function PageClosure(){
      → 상세 진행 과정(ClosureFlow · #cl-flow) → 철거가 급할 때(#cl-demo) → 고르기 → 분야별 → 가이드
      → 지원사업 찾는 곳(#cl-sup) → 왜 · 하단 안내. 이용 순서(HallSteps)는 사진 절차와 같은 말이라 내렸습니다.
      옛 CloseKxCalc · CloseKxSupport 는 지우지 않았습니다. */
-  return ClosureIntro(path) + CloseKpSvc() + CloseKpRoad() + CloseKpCalc() +
-    ClosureFlow(path) + ClosureDemoBand() +
+  /* 2026-11-26 모바일 사용성 개편 — 머리 바로 아래가 상황 넷(CloseSit)입니다. 사진 서비스 · 절차 · 계산은 그 아래. */
+  return ClosureIntro(path) + CloseSit() + CloseKpSvc() + CloseKpRoad() + CloseKpCalc() +
+    ClosureFlow(path, true) + ClosureDemoBand() +
     sel+
     ClosureMoreBand()+
     /* ⑥ 가이드 — ⚠️ 맞는 글이 없으면 `ReadBand()` 가 구간째 뺍니다 (절대 규칙 2). */
@@ -1004,7 +1009,7 @@ function ClosureIntro(path){
   /* 2026-11-18 카테고리 리뉴얼 — 전문관 머리 + 흐름 띠(ClosureFlow).
      ⚠️⚠️ 흐름의 첫 걸음은 **양도 검토**입니다 — 철거가 맨 앞이 아닙니다
      (넘길 수 있으면 철거비도 원상복구비도 줄어듭니다). */
-  return HallHero({
+  return HallHero({ sit:true,
     side:"close", photo:"insu-closure",
     kicker:"폐업 · 철거 서비스",
     h1raw:"매장 정리부터 철거까지<br>폐업의 모든 과정을<br><em>"+esc(ftWith(amBrand(), "이가"))+" 함께합니다.</em>",
@@ -1092,7 +1097,7 @@ var CLOSE_FLOW = [
   ["doc",      "폐업 신고 · 지원", "신고 순서와 지원사업 찾는 곳",          "/c/process"],
   ["calc",     "세무 정리",        "부가세 · 종합소득세 등 폐업 세무",       "/providers/tax"]
 ];
-function ClosureFlow(path){
+function ClosureFlow(path, noWant){
   /* ⚠️⚠️ 2026-11-19 — 핵심 정리 순서는 **이 한 구역**입니다. 여섯 칸(요약) 아래에
      ① 자세한 순서(상황별 로드맵 · 접힘) ② 직원 기한 ③ 폐업 절차 · 지원사업 링크
      ④ "어디서부터 시작할지 모르겠어요" (상황 넷 · 진단 · 접힘) 를 모았습니다.
@@ -1120,7 +1125,8 @@ function ClosureFlow(path){
         '<a class="btn btn-o" href="#cl-cost" onclick="return hhJump(\'cl-cost\')">'+icon("calc",16)+' 예상 비용 계산</a>'+
         '<a class="btn btn-o" href="#cl-sup" onclick="return hhJump(\'cl-sup\')">'+icon("badge",16)+' 폐업 지원사업 찾는 곳</a>'+
       '</p>'+
-      ClosureWantFold(wSel)+
+      /* 2026-11-26 — 상황 넷은 맨 위 첫 구간(CloseSit)이 받습니다. 같은 선택 영역을 둘 두지 않습니다. */
+      (noWant ? "" : ClosureWantFold(wSel))+
     '</div>'+
   '</div></section>';
 }
@@ -1450,7 +1456,9 @@ window.closeAskGo = function(base){
   /* ⚠️⚠️ **직원이 있으면 기한이 붙습니다** — 해고예고 · 퇴직금 ·
      상실 신고. 순서를 바꾸지는 않고 그 걸음으로 바로 가는 길을
      같이 냅니다 (`?w=` 와 함께 주소에 실립니다). */
-  go(base + "?w=" + encodeURIComponent(w) + (on.staff ? "&staff=1" : ""));
+  /* 2026-11-26 — 첫 구간(SitFlow)의 진단이면 다시 그린 뒤 그 결과로 내려갑니다 */
+  var sit = !!document.getElementById("sit");
+  go(base + "?w=" + encodeURIComponent(w) + (on.staff ? "&staff=1" : ""), sit ? { keepScroll:true, focus:"sit-res" } : {});
 };
 function CloseAsk(base, bare){
   return (bare ? '<div class="cask cask-in">' : '<section class="sec sec-white cask"><div class="w">')+
@@ -1754,4 +1762,96 @@ function StepBand(ind){
       '</li>';
     }).join("")+'</ol>'+
   '</div></section>';
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   2026-11-26 모바일 사용성 개편 — 창업 · 폐업의 첫 구간 (SitFlow)
+   ════════════════════════════════════════════════════════════════════ */
+function sitSteps(key, n){
+  return (typeof amProcess === "function" ? amProcess(key) : []).slice(0, n || 3).map(function(s){ return [s.name, s.lead || ""]; });
+}
+function sitIds(L){ return (L || []).filter(function(x){ return typeof amPickOne === "function" && amPickOne(x); }); }
+
+/* 창업 — 새로 창업 / 기존 매장 인수 + 업종. 고르신 것은 주소(?how= · ?i=)에만 실립니다. */
+window.startSitGo = function(){
+  var i = $("sit-i") ? $("sit-i").value : "", how = nowQS("how");
+  var q = []; if(i) q.push("i=" + encodeURIComponent(i)); if(how) q.push("how=" + encodeURIComponent(how));
+  go("/startup" + (q.length ? "?" + q.join("&") : ""), { keepScroll:true, focus:how ? "sit-res" : "sit" });
+};
+function StartSit(ind){
+  var how = nowQS("how");
+  var indOk = !!(ind && typeof amIndustry === "function" && amIndustry(ind));
+  var indN = indOk ? amIndustryName(ind) : "";
+  var iq = indOk ? "?i=" + encodeURIComponent(ind) : "", ia = indOk ? "&i=" + encodeURIComponent(ind) : "";
+  return SitFlow({ id:"sit", key:"how", base:"/startup", keep:{ i:indOk ? ind : "" }, side:"start",
+    tone:"sec-white", kicker:"창업 시작하기", title:"어떻게 시작하세요?",
+    lead:"고르시면 바로 아래에 지금 할 일과 다음 행동이 나옵니다. 업종을 같이 고르시면 그 업종 기준으로 바뀝니다.",
+    sel:(how === "new" || how === "take") ? how : "",
+    opts:[{ k:"new", b:"새로 창업", d:"빈 자리에 내 매장을 처음부터", ph:"insu-startup", ia:"store" },
+          { k:"take", b:"기존 매장 인수", d:"영업 중인 매장을 넘겨받아 시작", ph:"kind-take", ia:"handover" }],
+    extra:'<div class="sitf-ind"><label for="sit-i">업종</label>'+
+      IndustrySelect("sit-i", indOk ? ind : "", "startSitGo()", "업종을 골라 주세요")+
+      (indOk ? '<span class="sitf-ind-on">'+icon("check",14)+' '+esc(indN)+' 기준</span>' : '')+'</div>',
+    res:function(k){
+      var take = k === "take";
+      return {
+        title:(indN ? indN + " · " : "") + (take ? "기존 매장 인수 — 지금 할 일" : "새로 창업 — 지금 할 일"),
+        lead:take ? "인수는 들어가는 돈보다 넘겨받는 조건(권리금 · 임대차 · 시설)을 먼저 확인하는 일입니다."
+                  : "자리 · 예산 · 업종 조건을 먼저 정리하면 업체 견적이 정확해집니다.",
+        todo:sitSteps(take ? "acq-in" : "startup", 3),
+        pick:{ side:"start", title:"맡길 서비스 고르기",
+          ids:sitIds(take ? ["law/lease","transfer/premium","repair/check-up","interior/interior","it/pos","admin/tax-agent"]
+                          : (typeof amPickTopIds === "function" ? amPickTopIds("startup", indOk ? ind : "") : [])) },
+        main:take ? { href:"/tools/vs" + iq, t:"신규 vs 인수 비용 비교", ic:"calc" }
+                  : { href:"/tools/cost" + iq, t:"창업비 계산하기", ic:"calc" },
+        more:(take ? [{ href:"/stores" + iq, t:"인수 가능한 매장 보기", ic:"search" },
+                      { href:"/providers/law" + iq, t:"계약 · 법률 업체 보기" }]
+                   : [{ href:"/providers/interior" + iq, t:"인테리어 업체 보기", ic:"search" },
+                      { href:"/providers" + iq, t:"분야별 업체 전체" }])
+          .concat([{ href:indOk ? "/startup/" + encodeURIComponent(ind) + (take ? "?how=take" : "") : "#st-ig",
+                     t:indOk ? indN + " 준비 순서 전체" : "업종별 준비 순서" }])
+      };
+    } });
+}
+
+/* 폐업 — 매장 전체 양도 / 집기 정리 / 완전 폐업 / 아직 모르겠어요 (주소 ?w= — 밖으로 나간 링크가 이 값을 씁니다) */
+function CloseSit(){
+  var w = nowQS("w");
+  var CQ = "/quote?mode=close&from=closure-sit";
+  return SitFlow({ id:"sit", key:"w", base:"/closure", side:"close",
+    tone:"sec-white", kicker:"폐업 · 정리 시작하기", title:"지금 어떤 상황이세요?",
+    lead:"정리하기 전에 넘길 수 있는 것부터 확인하면 철거비와 원상복구비가 줄어듭니다.",
+    sel:["pass","money","fast","lost"].indexOf(w) >= 0 ? w : "",
+    opts:[{ k:"pass", b:"매장 전체 양도", d:"권리금 · 시설째 다음 사장님께", ph:"kind-pass", ia:"handover" },
+          { k:"money", b:"집기 정리", d:"쓸 만한 장비 · 가구를 처분", ph:"as-furniture", ia:"equip" },
+          { k:"fast", b:"완전 폐업", d:"철거 · 원상복구 · 신고까지", ph:"insu-closure", ia:"demolish" },
+          { k:"lost", b:"아직 모르겠어요", d:"다섯 가지 질문으로 길 찾기", ph:"kp-cl-pro-consult", ia:"bulb" }],
+    res:function(k){
+      if(k === "pass") return { title:"매장 전체 양도 — 지금 할 일",
+        lead:"양도가 되면 철거도 원상복구도 하지 않을 수 있습니다. 넘길 조건부터 정리하세요.",
+        todo:sitSteps("acq-out", 3),
+        pick:{ side:"close", ids:sitIds(["transfer/store-transfer","asset/kitchen-eq","asset/furniture","tax/close-report"]) },
+        main:{ href:"/sell", t:"매장 내놓기 등록", ic:"handover", gate:"sell" }, mainFirst:true,
+        more:[{ href:"/tools/premium", t:"권리금 따져 보기", ic:"calc" }, { href:"/transfer?t=out", t:"넘기는 순서 전체" }] };
+      if(k === "money") return { title:"집기 정리 — 지금 할 일",
+        lead:"붙박이(떼면 못 쓰는 것)와 떼어 옮길 수 있는 것을 나누면 팔 것과 버릴 것이 갈립니다.",
+        todo:sitSteps("asset-out", 3),
+        pick:{ side:"close", ids:sitIds(["asset/kitchen-eq","asset/fridge","asset/furniture","waste/biz-waste"]) },
+        main:{ href:"/assets?p=pick", t:"처분할 집기 고르기", ic:"equip" },
+        more:[{ href:"/sell?t=asset", t:"시설 · 장비 내놓기" }, { href:"/tools/closecost", t:"정리 비용 계산" }] };
+      if(k === "fast") return { title:"완전 폐업 — 지금 할 일",
+        lead:"철거와 원상복구를 둘 다 맡기실 거면 아래에서 둘 다 고르세요 — 한 번의 신청에 같이 담깁니다.",
+        todo:sitSteps("closing", 4).slice(1),
+        pick:{ side:"close", title:"맡길 정리 서비스 고르기",
+          ids:sitIds(["demolish/full","demolish/partial","demolish/sign","restore/shop-restore","waste/biz-waste","asset/kitchen-eq"]),
+          note:"철거와 원상복구를 함께 고르시면 한 신청에 담기고, 업체는 서비스마다 따로 연결해 드립니다." },
+        main:{ href:"/tools/closecost", t:"폐업 예상비용 계산", ic:"calc" },
+        more:[{ href:"/tools/close", t:"폐업 체크리스트" }, { href:"/providers/demolish", t:"철거 업체 보기" }] };
+      return { title:"아직 모르겠어요 — 먼저 다섯 가지만 확인해요",
+        lead:"영업 중인지 · 임대차가 남았는지 · 넘길 생각이 있는지 · 쓸 만한 시설이 있는지 · 직원이 있는지로 길이 갈립니다. 적으신 것은 저장하지 않습니다.",
+        todo:[["넘길 수 있는지","양도가 되면 철거 · 원상복구가 줄어듭니다"],["남은 계약","임대차 · 렌탈 · 통신 계약을 확인합니다"],["정리 비용","철거 · 원상복구 · 폐기물을 미리 따져 봅니다"]],
+        more:[{ href:CQ, t:"상황만 적어 상담 신청" }, { href:"/tools/close", t:"폐업 체크리스트" }],
+        /* 기존 진단(CloseAsk)을 그대로 — 고르시면 ?w= 가 바뀌어 이 자리의 결과가 바뀝니다 */
+        after:CloseAsk("/closure", true) };
+    } });
 }

@@ -400,6 +400,14 @@ window.routeInfo = function(path){
 window.go = function(url, opt){
   opt = opt || {};
   if(opt.keepScroll) RT.keepScroll = true;
+  /* 2026-11-26 — 상황 카드를 누르면 다시 그린 뒤 결과로 내려갑니다 (data-focus) */
+  /* 2026-11-26 — 다른 화면(홈 등)에서 상황을 고른 채 들어오면(예: /transfer?t=out · /closure?w=fast)
+     그 결과(#sit-res)로 바로 내려갑니다. ⚠️ 새로고침은 그대로 맨 위입니다 (사장님 지시 · 10-21). */
+  if(!opt.focus){
+    var m = String(url).match(/^\/(startup|operation|transfer|closure)\?(?:[^#]*&)?(how|need|t|w)=[a-z]+/);
+    if(m) opt.focus = "sit-res";
+  }
+  if(opt.focus){ RT.keepScroll = true; RT.focus = opt.focus; }
   /* ⚠️⚠️ **떠나기 전에 보던 자리를 적어 둡니다** (2026-10-24).
      고르개 화면이 폰에서 8,000px 이 넘는데, 신청 화면에 갔다가
      뒤로 오면 **맨 위**였습니다 — 서비스를 더 담으려면 아홉 화면을
@@ -429,7 +437,7 @@ document.addEventListener("click", function(ev){
   /* ⚠️ "더 보기"(`data-keep`)는 **스크롤을 지킵니다.** 목록을 늘리는
      것인데 맨 위로 올라가면 방금 보던 자리를 잃고, 그러면 한 번 더
      누르지 않습니다. */
-  go(href, { keepScroll: a.hasAttribute("data-keep") });
+  go(href, { keepScroll: a.hasAttribute("data-keep"), focus: a.getAttribute("data-focus") || "" });
 });
 /* ⚠️⚠️ **뒤로 가기에서만** 보던 자리로 돌려놓습니다.
    ⚠️ `render()` 가 그리고 나서 **그 다음 틀**에 옮깁니다 — 그려지기
@@ -654,6 +662,15 @@ function render(){
     window.quoteDraftPaint();
   if(!RT.keepScroll) window.scrollTo(0,0);
   RT.keepScroll = false;
+  if(RT.focus){
+    var fe = document.getElementById(RT.focus); RT.focus = "";
+    if(fe){
+      var hd = document.querySelector(".hd");
+      var top = fe.getBoundingClientRect().top + (window.scrollY || 0) - ((hd && hd.offsetHeight) || 64) - 12;
+      window.scrollTo(0, Math.max(0, top));
+      try{ fe.focus({ preventScroll:true }); }catch(e){}
+    } else window.scrollTo(0, 0);   /* 갈 자리가 없으면 다른 화면의 스크롤을 들고 오지 않습니다 */
+  }
 }
 window.render = render;
 

@@ -1498,9 +1498,14 @@ console.log("\n── W03 /api/auth — 브라우저 대신 Supabase 로 전함 
   let r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"otp", email:"boss@example.com", path:"/my" } }), r);
   const ob = calls.length ? JSON.parse(calls[0].opt.body) : {};
   ok("메일 링크 — 공개 키로만 보냄", r.code === 200 && calls.length === 1 && calls[0].h.apikey === ANON && noSvcAnywhere(), calls);
-  ok("메일 링크 — 돌아올 자리는 들어온 출처 + 경로", ob.options && ob.options.email_redirect_to === "https://storeway.co.kr/my", ob);
+  /* ⚠️ 2026-11-26 — 복귀 주소는 **주소의 redirect_to** 로 보냅니다. Supabase 의 /auth/v1/otp 는
+     본문의 options.email_redirect_to(자바스크립트 클라이언트 꼴)를 안 읽어서, 시험 Preview 에서 메일
+     링크가 기본 Site URL(localhost:3000)로 떨어졌습니다. 본문에 남아 있지 않은지도 봅니다. */
+  const rt = u => { try{ return new URL(u).searchParams.get("redirect_to"); }catch(e){ return null; } };
+  ok("메일 링크 — 돌아올 자리는 들어온 출처 + 경로 (주소의 redirect_to)",
+     calls.length && rt(calls[0].url) === "https://storeway.co.kr/my" && !(ob.options && ob.options.email_redirect_to), { url: calls[0] && calls[0].url, ob });
   calls = []; r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"otp", email:"boss@example.com", path:"//evil.example/x" } }), r);
-  ok("메일 링크 — 바깥 주소로 못 돌림 (//evil)", JSON.parse(calls[0].opt.body).options.email_redirect_to === "https://storeway.co.kr/my", calls[0].opt.body);
+  ok("메일 링크 — 바깥 주소로 못 돌림 (//evil)", rt(calls[0].url) === "https://storeway.co.kr/my", calls[0].url);
   calls = []; r = res(); await Hauth(req({ method:"POST", headers:{ origin:"https://evil.example", host:"storeway.co.kr" }, body:{ op:"otp", email:"boss@example.com" } }), r);
   ok("다른 출처는 403 · 바깥 요청 0", r.code === 403 && calls.length === 0, r);
   calls = []; r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"admin/users" } }), r);

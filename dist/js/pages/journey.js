@@ -332,7 +332,7 @@ function OpsKxCta(ind){
 
 function OpsIntro(ind){
 
-  return HallHero({
+  return HallHero({ sit:true,
     side:"ops", photo:"insu-operations",
     kicker:"매장 운영 서비스" + (ind ? " · " + ind.name : ""),
     h1raw:"지금 운영 중인 매장,<br><em>더 효율적으로</em><br>관리해보세요.",
@@ -581,7 +581,7 @@ function OpsCalcBand(){
 function PageOperation(){
   var ind = (typeof amIndustry === "function") ? amIndustry(nowQS("i")) : null;
 
-  return OpsIntro(ind) + OpsKpSvc(ind) + OpsKpRoad() + OpsKpDiag() + OpsWorry() +
+  return OpsIntro(ind) + OpsSit(ind) + OpsKpSvc(ind) + OpsKpRoad() + OpsKpDiag() +
 
     HallPickFold({ side:"ops", path:(nowQS("p") === "pick" ? "pick" : ""),
       body:PickGroupBody("operation", "ops", { noAside:true }), packKeys:["run"] }) +
@@ -606,7 +606,7 @@ function AcqIntro(ind, iq, picked){
   var n = (window.AM_STORES || []).length;
 
   var compact = picked === "in" || picked === "out";
-  return HallHero({
+  return HallHero({ sit:true,
 
     side:"transfer", photo:(compact ? "" : "insu-transfer"),
     art:(compact || typeof wpPassArt !== "function") ? "" : wpPassArt(),
@@ -671,7 +671,7 @@ window.aqSearchGo = function(e){
   return false;
 };
 
-function AcqWhich(t, ind, iq){
+function AcqWhich(t, ind, iq, noTabs){
 
   function tab(k, name, lead){
     var ph = k === "in" ? "kp-tr-pro-visit" : "kp-tr-pro-ready";
@@ -701,10 +701,10 @@ function AcqWhich(t, ind, iq){
       ["#pick",                "check",    "인수할 때 필요한 것", "점검 · 임대차 검토 · 승계를 골라 보세요"]
     ];
   return '<section class="sec sec-white aq-path" id="aq-path"><div class="w">'+
-    '<div class="aq-tb">'+
+    (noTabs ? '' : '<div class="aq-tb">'+
       tab("in",  "매장을 인수하고 싶어요",  "있던 가게를 받습니다")+
       tab("out", "내 매장을 넘기고 싶어요", "하던 가게를 넘깁니다")+
-    '</div>'+
+    '</div>')+
     '<div class="sec-hd aq-ph">'+
       '<p class="eyebrow">'+(t === "out" ? "넘기시는 분" : "받으시는 분")+'</p>'+
       '<h2>'+(t === "out" ? "넘기기 전에 이것부터 보세요" : "인수하기 전에 이것부터 보세요")+'</h2>'+
@@ -901,8 +901,8 @@ function PageAcquisition(){
     body:PickGroupBody("transfer", "transfer", { noAside:true }), packKeys:[] });
   var mkt = AcqMarket(t, ind, iq);
 
-  return AcqIntro(ind, iq, nowQS("t")) + AcqKpSvc(ind, iq) + AcqKpRoad(t) + AcqKpCalc(t) +
-    AcqWhich(t, ind, iq) +
+  return AcqIntro(ind, iq, nowQS("t")) + AcqSit(ind) + AcqKpSvc(ind, iq) + AcqKpRoad(t) + AcqKpCalc(t) +
+    AcqWhich(t, ind, iq, true) +
     (t === "in" ? AcqSearch(ind) + mkt + sel : AcqPrep(ind) + sel + mkt) +
     AcqProcess(t, ind) + AcqKpPros(ind) +
     ReadBand({ cat:"transfer", side:"both", limit:3,
@@ -919,3 +919,92 @@ function PageAcquisition(){
     PickBar("transfer");
 }
 
+function jSitIds(L){ return (L || []).filter(function(x){ return typeof amPickOne === "function" && amPickOne(x); }); }
+function jSitSteps(L){ return L; }
+
+function OpsSit(ind){
+  var need = nowQS("need");
+  var iq = ind ? "?i=" + encodeURIComponent(ind.key) : "";
+  return SitFlow({ id:"sit", key:"need", base:"/operation", keep:{ i:ind ? ind.key : "" }, side:"ops",
+    tone:"sec-white", kicker:"매장 운영 도움받기", title:"지금 어떤 고민이 있으세요?",
+    lead:"고민을 고르시면 먼저 해 볼 것 하나와 맡길 서비스가 바로 아래에 나옵니다.",
+    sel:["cost","mkt","fix","hr"].indexOf(need) >= 0 ? need : "",
+    opts:[{ k:"cost", b:"비용", d:"고정비 · 원가를 줄이고 싶어요", ph:"kp-tr-svc-premium", ia:"money" },
+          { k:"mkt", b:"홍보 · 매출", d:"손님 · 매출을 늘리고 싶어요", ph:"service-menu-shoot", ia:"marketing" },
+          { k:"fix", b:"시설", d:"장비 · 설비를 고치고 싶어요", ph:"kp-op-svc-repair", ia:"repair" },
+          { k:"hr", b:"인력 · 세무 · 노무", d:"직원 · 세금 · 계약이 걱정돼요", ph:"service-labor", ia:"staff" }],
+    res:function(k){
+      if(k === "cost") return { title:"비용 — 먼저 계산해 보세요",
+        lead:"매달 나가는 돈(고정비)을 먼저 적어 보면 줄일 곳이 보입니다.",
+        todo:[["고정비 적기","임대료 · 인건비 · 관리비 · 통신비"],["원가율 확인","메뉴 · 상품별로 남는 몫"],["줄일 곳 맡기기","재료 · 소모품 · POS · 통신 요금"]],
+        main:{ href:"/tools/fixed" + iq, t:"월 고정비 계산하기", ic:"calc" },
+        more:[{ href:"/tools/margin" + iq, t:"원가율 · 마진 계산" }, { href:"/providers/supply" + iq, t:"재료 · 소모품 업체" }],
+        pick:{ side:"ops", ids:jSitIds(["supply/consumable","it/pos","it/internet","admin/tax-agent"]) } };
+      if(k === "mkt") return { title:"홍보 · 매출 — 맡길 업체부터",
+        lead:"온라인 홍보와 리뷰 관리는 업체마다 하는 범위가 다릅니다. 무엇을 맡길지 고르고 비교하세요.",
+        todo:[["목표 정하기","한 달에 얼마를 더 팔아야 하는지"],["홍보 범위 고르기","플레이스 · SNS · 리뷰 · 촬영"],["여러 곳 비교","같은 조건으로 제안을 받아 봅니다"]],
+        main:{ href:"/providers/marketing" + iq, t:"홍보 · 마케팅 업체 보기", ic:"search" },
+        more:[{ href:"/tools/target" + iq, t:"목표 매출 계산" }],
+        pick:{ side:"ops", ids:jSitIds(["marketing/open-mkt","marketing/review","marketing/sns","marketing/photo","marketing/blog"]) } };
+      if(k === "fix") return { title:"시설 — 고칠 업체부터",
+        lead:"멈춘 장비는 기다릴수록 손해입니다. 고장 난 것을 고르고 수리 업체를 찾으세요.",
+        todo:[["무엇이 멈췄는지","냉장 · 냉난방 · 전기 · 배관"],["사진 남기기","고장 상태와 모델명"],["누가 내는지 확인","임대인 · 임차인 부담을 계약서로"]],
+        main:{ href:"/providers/repair" + iq, t:"설비 수리 업체 보기", ic:"repair" },
+        more:[{ href:"/providers/repair?s=check-up", t:"정기 점검 업체" }, { href:"/providers/clean" + iq, t:"청소 · 방역" }],
+        pick:{ side:"ops", ids:jSitIds(["repair/fridge-fix","repair/aircon-fix","repair/elec-fix","repair/legal-check","clean/pest"]) } };
+      return { title:"인력 · 세무 · 노무 — 먼저 점검하세요",
+        lead:"근로계약 · 4대보험 · 신고 기한은 놓치면 바로 돈이 됩니다. 점검표로 빠진 것부터 확인하세요.",
+        todo:[["근로계약 점검","계약서 · 근무시간 · 휴게"],["인건비 따져 보기","매출 대비 인건비 비율"],["맡길 곳 고르기","세무 대리 · 노무 대리 · 채용"]],
+        main:{ href:"#ock-row-labor", t:"근로계약 점검표 보기", ic:"check", js:"return opsCheckJump('labor')" },
+        more:[{ href:"/tools/labor" + iq, t:"인건비율 계산" }, { href:"/providers/admin?s=labor-agent", t:"노무 대리 업체" }],
+        pick:{ side:"ops", ids:jSitIds(["staff/fulltime","staff/parttime","admin/tax-agent","admin/labor-agent"]) } };
+    } });
+}
+
+window.aqSitGo = function(){
+  var i = $("aqs-i") ? $("aqs-i").value : "", r = $("aqs-r") ? $("aqs-r").value : "";
+  var q = ["t=in"]; if(i) q.push("i=" + encodeURIComponent(i)); if(r) q.push("r=" + encodeURIComponent(r));
+  go("/transfer?" + q.join("&"), { keepScroll:true, focus:"sit-res" });
+};
+function AcqSit(ind){
+  var t = nowQS("t"), reg = nowQS("r");
+  var regOk = !!(reg && typeof amRegionName === "function" && amRegionName(reg));
+  return SitFlow({ id:"sit", key:"t", base:"/transfer", keep:{ i:ind ? ind.key : "", r:regOk ? reg : "" }, side:"transfer",
+    tone:"sec-white", kicker:"매장 양도양수", title:"어느 쪽이세요?",
+    lead:"매장을 찾는 분과 넘기려는 분의 길이 다릅니다. 고르시면 바로 아래에서 이어집니다.",
+    sel:(t === "in" || t === "out") ? t : "",
+    opts:[{ k:"in", b:"매장 찾기", d:"영업 중인 매장을 인수", ph:"kp-tr-svc-search", ia:"store" },
+          { k:"out", b:"내 매장 넘기기", d:"하던 가게를 다음 사장님께", ph:"kp-tr-svc-sell", ia:"handover" }],
+    res:function(k){
+      if(k === "in"){
+        var all = typeof amStores === "function" ? amStores({}) : [];
+        var hit = typeof amStores === "function" ? amStores({ industry:ind ? ind.key : null, region:regOk ? reg : null }) : [];
+        var fail = !window.AM_STORES;
+        var q = []; if(ind) q.push("i=" + encodeURIComponent(ind.key)); if(regOk) q.push("r=" + encodeURIComponent(reg));
+        var to = "/stores" + (q.length ? "?" + q.join("&") : "");
+        var conds = [ind ? [ind.name, sitQs({ base:"/transfer", key:"t", keep:{ r:regOk ? reg : "" } }, "in")] : null,
+                     regOk ? [amRegionName(reg), sitQs({ base:"/transfer", key:"t", keep:{ i:ind ? ind.key : "" } }, "in")] : null];
+        return { title:"매장 찾기 — 조건을 고르고 결과를 보세요",
+          lead:"매물에 적힌 값은 올리신 사장님이 적으신 값입니다. 계약 전에 꼭 확인하세요.",
+          first:'<div class="sitf-fil">'+
+              '<div class="pvs-geo"><label class="sr-only" for="aqs-i">업종</label>'+IndustrySelect("aqs-i", ind ? ind.key : "", "aqSitGo()", "업종 전체")+
+              '<label class="sr-only" for="aqs-r">지역</label>'+RegionSelect("aqs-r", regOk ? reg : "", "aqSitGo()")+'</div>'+
+              ListHead({ id:"aqs-h", total:fail ? null : all.length, n:hit.length, unit:"건", fail:fail, conds:conds, reset:"/transfer?t=in" })+
+              (ListState({ fail:fail, total:all.length, n:hit.length, what:"매장", reset:"/transfer?t=in",
+                 zeroAll:'<div class="lst lst-all">'+icon("info",18)+'<p><b>지금 올라온 매장 매물이 없습니다.</b> 올라오면 이 자리에 바로 나옵니다. 그동안 인수 비용과 계약 전에 볼 것을 먼저 확인하세요.</p>'+
+                   '<a class="btn btn-o" href="/tools/premium">권리금 계산</a><a class="btn btn-o" href="/content?j=startup&amp;cat=store">인수 계약 가이드</a></div>' }) ||
+               '<div class="sitf-next"><a class="btn btn-b btn-lg sitf-main" href="'+esc(to)+'">'+icon("search",18)+' 조건에 맞는 매장 '+hit.length+'건 보기'+icon("arrow",18)+'</a></div>')+
+            '</div>',
+          todo:[],
+          more:[{ href:"/tools/premium", t:"권리금 따져 보기", ic:"calc" }, { href:"/tools/vs", t:"신규 vs 인수 비교" }],
+          pick:{ side:"transfer", title:"인수할 때 맡길 서비스", ids:jSitIds(["law/lease","transfer/premium","repair/check-up","it/pos"]) } };
+      }
+      var P = (window.AM_PROCESS && AM_PROCESS["acq-out"]) || [];
+      return { title:"내 매장 넘기기 — 등록하고 준비하세요",
+        lead:"매장을 내놓으시면 올리기 전에 한 번 연락드립니다. 연락처 · 상호 · 번지는 매물에 나가지 않습니다.",
+        main:{ href:"/sell", t:"매장 내놓기 등록", ic:"handover", gate:"sell" }, mainFirst:true,
+        todo:P.slice(0, 4).map(function(s){ return [s.name, s.lead || ""]; }),
+        more:[{ href:"/sell?t=asset", t:"시설 · 장비만 내놓기" }, { href:"/tools/premium", t:"권리금 따져 보기", ic:"calc" }],
+        pick:{ side:"transfer", title:"넘길 때 맡길 서비스", ids:jSitIds(["transfer/store-transfer","transfer/premium","law/lease","tax/close-report"]) } };
+    } });
+}

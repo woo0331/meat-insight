@@ -21,7 +21,7 @@ window.tn = function(tone){ return tone ? (" tn-" + tone) : ""; };
 window.PgHero = function(o){
   o = o || {};
   var ph = o.photo && typeof hasPhoto === "function" && hasPhoto(o.photo);
-  return '<section class="pgh'+(o.tight?" pgh-tight":"")+(ph?" pgh-im-on":"")+'">'+
+  return '<section class="pgh'+(o.tight?" pgh-tight":"")+(ph?" pgh-im-on":"")+(o.cls ? " "+esc(o.cls) : "")+'">'+
     /* ⚠️ 자리 이름을 클래스로 같이 냅니다 — 어느 쪽을 남길지(`--ph-pos`)가
        사진마다 다릅니다 (`css/pages.css`). */
     (ph ? '<span class="pgh-im pgh-im-'+esc(o.photo)+'">'+
@@ -859,7 +859,7 @@ window.HallHero = function(o){
      ⚠️ 외부 그림이 아니라 iconArt 로 직접 그린 것만 넘기세요 (양도양수 — wpPassArt). */
   var art = !ph && o.art ? o.art : "";
   return '<section class="pgh hh hh-'+esc(o.side || "start")+(ph ? ' hh-im-on' : '')+(art ? ' hh-art-on' : '')+
-    (o.qfirst && o.quick && o.quick.length ? ' hh-qfirst' : '')+'">'+
+    (o.qfirst && o.quick && o.quick.length ? ' hh-qfirst' : '')+(o.sit ? ' hh-sit' : '')+'">'+
     (ph ? '<span class="hh-ph pgh-im-'+esc(o.photo)+'">'+
           photoBox(o.photo, "", true, "(max-width:900px) 100vw, 62vw")+'</span>' : '')+
     (art ? '<span class="hh-ph hh-art" aria-hidden="true">'+art+'</span>' : '')+
@@ -1128,4 +1128,141 @@ window.KpCta = function(o){
       '<a class="btn btn-lg kp-btn-w" href="/intake" data-cta="off"'+ctaF(o)+'>'+icon("calendar",18)+' 접수 안내 보기</a>'+
       '<a class="btn btn-lg kp-btn-w" href="'+esc(o.quote || "/quote")+'" data-cta="on"'+ctaF(o)+' hidden>'+icon("calendar",18)+' '+esc(o.goName || "무료 상담신청")+'</a>'+
     '</div></div></section>';
+};
+
+/* ════════════════════════════════════════════════════════════════════
+   2026-11-26 모바일 사용성 개편 — 내 상황 선택 → 결과 확인 → 다음 행동
+   네 카테고리(창업 · 운영 · 양도양수 · 폐업)가 같이 쓰는 첫 구간입니다.
+
+   ⚠️⚠️ **고른 상황은 주소(?키=값)에만 싣습니다.** 뒤로 가기 · 새로고침 ·
+   링크 공유에 살아남고, 그 밖에는 아무 데도 남지 않습니다.
+   ⚠️⚠️ **고른 서비스는 기존 바구니(am.pick.v1) 그대로입니다** — 새 저장소를
+   만들지 않았습니다. 체크 · 개수 · 신청 링크는 pickPaint() 가 맞춥니다.
+   ⚠️ 신청 단추는 기존 게이트(data-cta 짝 · data-pick-go/data-go-form)를 씁니다 —
+   접수가 닫혀 있으면 접수 안내가 섭니다.
+   ⚠️ 상황 카드는 링크라서 키보드 · 읽어 주는 프로그램에 그대로 읽히고,
+   고른 카드는 aria-current 와 체크 표시 · 테두리로 함께 표시합니다 (색만이 아닙니다).
+
+   o = { id, key, base, keep:{qs}, tone, kicker, title, lead, opts:[{k,b,d,ph,ia,ic}],
+         sel, extra, hint, res:function(k) → { title, lead, todo:[], main:{href,t,ic,gate},
+         more:[{href,t}], pick:{ids,side,title,note}, after } }
+   ════════════════════════════════════════════════════════════════════ */
+function sitQs(o, k){
+  var q = [];
+  var keep = o.keep || {};
+  Object.keys(keep).forEach(function(n){ if(keep[n]) q.push(n + "=" + encodeURIComponent(keep[n])); });
+  if(k) q.push(o.key + "=" + encodeURIComponent(k));
+  return o.base + (q.length ? "?" + q.join("&") : "");
+}
+window.sitQs = sitQs;
+function SitPickCard(s){
+  /* PickCard 와 같은 칸이되 id 앞머리가 다릅니다 — 같은 화면 아래의 '여러 서비스 함께 고르기' 와
+     겹치면 label for 가 먼저 나온 칸만 가리킵니다 (st-ind 로 겪은 자리). */
+  return PickCard(s).replace(/(id|for)="pk-/g, '$1="sp-');
+}
+window.SitPickCard = SitPickCard;
+window.SitFlow = function(o){
+  o = o || {};
+  var id = o.id || "sit", sel = o.sel || "";
+  var hit = (o.opts || []).filter(function(x){ return x.k === sel; })[0];
+  var R = hit && typeof o.res === "function" ? o.res(sel) : null;
+  var cards = (o.opts || []).map(function(x){
+    var on = hit && x.k === hit.k;
+    var ph = x.ph && typeof hasPhoto === "function" && hasPhoto(x.ph)
+      ? photoBox(x.ph, "", false, "(max-width:700px) 46vw, 280px") : "";
+    return '<li><a class="sitf-o'+(on ? " is-on" : "")+'" href="'+esc(sitQs(o, x.k))+'" data-keep data-focus="'+esc(id)+'-res"'+
+      (on ? ' aria-current="true"' : '')+'>'+
+      '<span class="sitf-ph" aria-hidden="true">'+(ph || ((typeof hasIconArt === "function" && x.ia && hasIconArt(x.ia)) ? iconArt(x.ia, 56) : icon(x.ic || "grid", 34)))+'</span>'+
+      '<span class="sitf-t"><b>'+esc(x.b)+'</b>'+(x.d ? '<small>'+esc(x.d)+'</small>' : '')+'</span>'+
+      '<span class="sitf-ck" aria-hidden="true">'+icon(on ? "check" : "chev", 16)+'</span>'+
+    '</a></li>';
+  }).join("");
+  return '<section class="sec '+esc(o.tone || "sec-white")+' sitf" id="'+esc(id)+'"><div class="w">'+
+    '<ol class="sitf-st" aria-label="진행 순서">'+
+      '<li class="'+(hit ? "is-done" : "is-now")+'"><i>1</i>내 상황</li>'+
+      '<li class="'+(hit ? "is-now" : "")+'"><i>2</i>결과 확인</li>'+
+      '<li><i>3</i>다음 행동</li></ol>'+
+    '<div class="sitf-hd">'+(o.kicker ? '<p class="eyebrow">'+esc(o.kicker)+'</p>' : '')+
+      '<h2>'+esc(o.title || "지금 어떤 상황이세요?")+'</h2>'+
+      (o.lead ? '<p>'+esc(o.lead)+'</p>' : '')+'</div>'+
+    '<ul class="sitf-g sitf-g'+(o.opts || []).length+'">'+cards+'</ul>'+
+    (o.extra || '')+
+    (R ? SitResult(o, id, hit, R)
+       : '<p class="sitf-hint">'+icon("info",15)+' '+esc(o.hint || "고르시면 바로 아래에 지금 할 일과 다음 행동이 나옵니다.")+'</p>')+
+  '</div></section>';
+};
+function SitResult(o, id, hit, R){
+  var todo = (R.todo || []).map(function(t, i){
+    return '<li><i>'+(i + 1)+'</i><span>'+(typeof t === "string" ? esc(t) : '<b>'+esc(t[0])+'</b> '+esc(t[1] || ""))+'</span></li>';
+  }).join("");
+  var pk = R.pick && R.pick.ids ? R.pick.ids.map(function(x){ return amPickOne(x); }).filter(Boolean) : [];
+  var side = (R.pick && R.pick.side) || o.side || "start";
+  var main = R.main;
+  function mainBtn(){
+    if(!main) return "";
+    var inner = (main.ic ? icon(main.ic, 18) + " " : "") + esc(main.t) + icon("arrow", 18);
+    if(main.gate)       /* 접수가 걸린 단추 — 닫혀 있으면 접수 안내 */
+      return '<a class="btn btn-b btn-lg sitf-main" href="'+esc(main.href)+'" data-cta="on" data-cta-form="'+esc(main.gate)+'" hidden>'+inner+'</a>'+
+             /* 닫혀 있으면 접수 안내 — ⚠️ 바로 위 고르기 요약이 이미 '접수 안내 보기' 를 내면 두 번 내지 않습니다 */
+             (pk.length ? '' : '<a class="btn btn-b btn-lg sitf-main" href="/intake" data-cta="off" data-cta-form="'+esc(main.gate)+'">접수 안내 보기'+icon("arrow",18)+'</a>');
+    return '<a class="btn btn-b btn-lg sitf-main" href="'+esc(main.href)+'"'+(main.js ? ' onclick="'+esc(main.js)+'"' : '')+'>'+inner+'</a>';
+  }
+  var NEXT = (main || (R.more && R.more.length)
+      ? '<p class="sitf-sub">다음 행동</p><div class="sitf-next">'+mainBtn()+
+          (R.more || []).map(function(m){
+            return '<a class="btn btn-o sitf-2" href="'+esc(m.href)+'">'+(m.ic ? icon(m.ic,16) + " " : "")+esc(m.t)+'</a>';
+          }).join("")+'</div>'
+      : '');
+  var n = amPickCount();
+  return '<div class="sitf-res" id="'+esc(id)+'-res" tabindex="-1" aria-live="polite">'+
+    '<div class="sitf-rh"><p class="sitf-k">'+icon("check",14)+' 고르신 상황 · '+esc(hit.b)+'</p>'+
+      '<a class="sitf-re" href="'+esc(sitQs(o, ""))+'" data-keep data-focus="'+esc(id)+'">다시 고르기</a></div>'+
+    '<h3>'+esc(R.title)+'</h3>'+(R.lead ? '<p class="sitf-rl">'+esc(R.lead)+'</p>' : '')+
+    (todo ? '<p class="sitf-sub">지금 할 일</p><ol class="sitf-do">'+todo+'</ol>' : '')+
+    (R.first || '')+
+    (R.mainFirst ? NEXT : '')+
+    (pk.length
+      ? '<div class="sitf-pkw"><p class="sitf-sub">'+esc(R.pick.title || "맡길 서비스 고르기")+' <small>여러 개 고르실 수 있습니다</small></p>'+
+          '<ul class="sitf-pk pk-g">'+pk.map(SitPickCard).join("")+'</ul>'+
+          '<div class="sitf-sum">'+
+            '<p class="sitf-sum-t"><span>고르신 서비스 <b data-pick-n>'+n+'</b>개</span>'+
+              '<button class="sitf-clr" type="button" data-pick-row'+(n ? "" : " hidden")+' onclick="pickClear()">전부 해제</button></p>'+
+            '<ul class="sitf-rows pkb-l" data-pick-rows>'+(typeof pickRows === "function" ? pickRows() : "")+'</ul>'+
+            '<a class="btn btn-b btn-lg sitf-main" data-pick-go="'+esc(side)+'" data-go-form="'+esc(amPickGoForm(side))+'" href="'+esc(amPickQuoteTo(side))+'">'+
+              '<span>'+(n ? "선택한 " + n + "개 서비스 견적 신청하기" : "견적 신청하기")+'</span>'+icon("arrow",18)+'</a>'+
+            '<a class="btn btn-b btn-lg sitf-main pk-closed" href="/intake" data-pick-closed="'+esc(side)+'" data-go-form="'+esc(amPickGoForm(side))+'">접수 안내 보기'+icon("arrow",18)+'</a>'+
+            (R.pick.note ? '<p class="sitf-note">'+esc(R.pick.note)+'</p>' : '')+
+            '<p class="sitf-note">고르기만 하면 접수되지 않습니다. 신청하기를 누르셔야 접수됩니다. 고르신 것은 이 브라우저에 남습니다.</p>'+
+          '</div></div>'
+      : '')+
+    (R.mainFirst ? '' : NEXT)+
+    (R.after || '')+
+  '</div>';
+}
+window.SitResult = SitResult;
+
+/* 목록 위 한 줄 — 고른 조건 · 결과 수 · 초기화 (업체 · 매물 · 집기 공통)
+   ⚠️ 상태가 셋입니다 — ① 전체 등록 0건 ② 조건 때문에 0건 ③ 목록을 못 읽음.
+   셋을 한 문구로 덮으면 손님이 무엇을 해야 하는지(기다리기 · 조건 바꾸기 · 새로고침)를 모릅니다. */
+window.ListHead = function(o){
+  o = o || {};
+  var chips = (o.conds || []).filter(function(c){ return c && c[0]; }).map(function(c){
+    return '<li><span>'+esc(c[0])+'</span>'+(c[1] ? '<a href="'+esc(c[1])+'" data-keep aria-label="'+esc(c[0])+' 조건 빼기">'+icon("x",13)+'</a>' : '')+'</li>';
+  }).join("");
+  return '<div class="lsh" id="'+esc(o.id || "lsh")+'">'+
+    '<p class="lsh-n"><b>'+(o.fail ? "—" : o.n)+'</b>'+esc(o.unit || "건")+
+      (o.fail ? " · 목록을 불러오지 못함" : (o.total === 0 ? " · 아직 등록된 곳이 없습니다" : (chips ? " · 고른 조건에 맞는 결과" : " · 전체")))+'</p>'+
+    (chips ? '<ul class="lsh-c">'+chips+'</ul><a class="lsh-x" href="'+esc(o.reset)+'" data-keep>조건 초기화</a>' : '')+
+  '</div>';
+};
+window.ListState = function(o){
+  /* o = { fail, total, n, what, reset, zeroAll:html } */
+  if(o.fail) return '<div class="lst lst-fail" role="alert">'+icon("info",18)+
+    '<p><b>목록을 불러오지 못했습니다.</b> 잠시 뒤 새로고침해 주세요. 아래 안내와 신청은 그대로 쓰실 수 있습니다.</p>'+
+    '<a class="btn btn-o" href="'+esc(location.pathname + location.search)+'" onclick="location.reload();return false">새로고침</a></div>';
+  if(o.n) return "";
+  if(!o.total) return o.zeroAll || "";
+  return '<div class="lst lst-cond">'+icon("sliders",18)+
+    '<p><b>고르신 조건에 맞는 '+esc(o.what || "결과")+'가 없습니다.</b> 전체에는 '+o.total+'건이 있습니다. 조건을 바꾸거나 초기화해 보세요.</p>'+
+    '<a class="btn btn-b" href="'+esc(o.reset)+'" data-keep>조건 초기화</a></div>';
 };

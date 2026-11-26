@@ -24,6 +24,12 @@ window.myLoadDb = function(){
         if(!(window.amAuthNow && amAuthNow().kakao)){ box.innerHTML = ""; box.hidden = true; return; }
         box.innerHTML = '<div class="w">' + MySignInBand() + '</div>';
         box.hidden = false;
+
+        if(typeof nowQS === "function" && nowQS("next")){
+          var hd = document.querySelector(".hd");
+          window.scrollTo(0, Math.max(0, box.getBoundingClientRect().top + (window.scrollY || 0) - ((hd && hd.offsetHeight) || 64) - 8));
+          var kb = box.querySelector(".my-kakao"); try{ if(kb) kb.focus({ preventScroll:true }); }catch(e){}
+        }
         return;
       }
       if(!d || !d.auth || !d.signedIn) return;
@@ -55,11 +61,13 @@ function myDbPaint(d){
 
 function MySignInBand(){
   return myHd("MY", "로그인하고 신청 내역 보기",
-    "카카오로 시작하시면 신청 내역을 보실 수 있습니다. 비밀번호는 없습니다.")+
+    "카카오 계정 하나로 시작합니다. 비밀번호는 없습니다.")+
     '<div class="my-kk">'+
       '<button class="btn btn-lg my-kakao" type="button" onclick="myKakao()">'+icon("chat",18)+' 카카오로 시작하기</button>'+
-      '<p class="f-h">처음이시면 그 자리에서 가입되고, 다음부터는 같은 카카오 계정으로 로그인됩니다. '+
-        '서비스 찾기 · 가이드 · 견적 신청은 로그인 없이도 쓰실 수 있습니다.</p>'+
+
+      '<ul class="my-kk-l"><li><b>처음이세요?</b> 누르면 바로 가입됩니다.</li>'+
+        '<li><b>이미 회원이세요?</b> 같은 카카오 계정으로 로그인됩니다.</li></ul>'+
+      '<p class="f-h">서비스 찾기 · 가이드 · 견적 신청은 로그인 없이도 쓰실 수 있습니다.</p>'+
       '<p class="my-in-n" id="my-kk-n" role="status"></p>'+
     '</div>';
 }

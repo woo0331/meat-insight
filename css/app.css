@@ -1177,3 +1177,8 @@ input:focus-visible,textarea:focus-visible,.sel:focus-visible,select:focus-visib
    **고르개를 누르는 순간 화살표가 사라졌습니다** (전부터 있던 고장) — 다시 얹습니다. */
 .sel:focus{ background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236A4B3B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat:no-repeat; background-position:right var(--s4) center; }
+/* 2026-11-26 — 모바일 상단 사람 아이콘 (로그인 · 내 기록 진입). PC 는 오른쪽 글자(로그인 · 내 기록)가 받습니다. */
+.hd-ic-u{ display:none; }
+@media (max-width:900px){ .hd-ic-u{ display:inline-flex; } }
+/* 폰에서는 사람 아이콘(.hd-ic-u)이 로그인 · 내 계정을 받습니다 — 글자까지 서면 360px 에서 5px 넘쳤습니다 (재 보고 알았습니다) */
+@media (max-width:900px){ .hd-auth, .hd-auth:not([hidden]){ display:none; } }

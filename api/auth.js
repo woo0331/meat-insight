@@ -66,9 +66,10 @@ module.exports = async function handler(req, res){
     const to = String(b.email || "").trim();
     if(!/^[^@\s]{1,64}@[^@\s.]+(\.[^@\s]+)+$/.test(to) || to.length > 200)
       return res.status(400).json({ error:"메일 주소를 확인해 주세요" });
-    const r = await call("/auth/v1/otp", { method:"POST",
+    const query = new URLSearchParams({ redirect_to: redirectFor(req, b.path) });
+    const r = await call("/auth/v1/otp?" + query.toString(), { method:"POST",
       headers:{ "content-type":"application/json", apikey:key },
-      body: JSON.stringify({ email:to, options:{ email_redirect_to: redirectFor(req, b.path) } }) });
+      body: JSON.stringify({ email:to }) });
     /* ⚠️ 메일이 있는지 없는지를 갈라서 말하지 않습니다 */
     if(r.ok) return res.status(200).json({ ok:true });
     if(r.status === 429) return res.status(429).json({ error:"조금 뒤에 다시 눌러 주세요." });

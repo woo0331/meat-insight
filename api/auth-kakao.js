@@ -79,7 +79,12 @@ module.exports = async function handler(req, res){
     { "content-type":"application/json", apikey:K.env("SUPABASE_ANON_KEY") },
     JSON.stringify({ provider:"kakao", id_token:tk.data.id_token,
       access_token:tk.data.access_token || undefined, nonce:box.n }));
-  if(!sb.ok || !sb.data || !sb.data.access_token) return fail("server_error", "Supabase id_token 로그인 실패(" + sb.status + ")");
+  if(!sb.ok || !sb.data || !sb.data.access_token){
+    const errorCode = sb.data && (sb.data.error_code || sb.data.code || sb.data.error);
+    const detail = typeof errorCode === "string" && /^[a-z][a-z0-9_]{1,63}$/.test(errorCode)
+      ? ", " + errorCode : "";
+    return fail("server_error", "Supabase id_token 로그인 실패(" + sb.status + detail + ")");
+  }
 
   /* 5. 세션은 한 번만 읽히는 쿠키로 — 주소에는 아무것도 안 붙입니다 */
   const sess = K.seal({ a:sb.data.access_token, r:sb.data.refresh_token || "",

@@ -747,6 +747,40 @@ try{
   if("scrollRestoration" in history) history.scrollRestoration = "manual";
 }catch(e){}
 
+/* ⚠️⚠️ 2026-11-26 — **휴대폰 새로고침도 맨 위**입니다 (사장님 지시).
+   데스크톱은 위 한 줄로 끝나는데, 휴대폰 브라우저(사파리 · 카카오톡 안
+   브라우저 등)는 그 설정을 무시하거나 **load 뒤에 늦게** 보던 자리로
+   되돌려 놓기도 해서, 중간까지 내린 채 새로고침하면 중간에서 떴습니다.
+   그래서 **새로고침일 때만**(navigation type = reload) load · 그 다음 틀 ·
+   조금 뒤에 한 번씩 더 맨 위로 올립니다.
+   ⚠️ 새로고침에만 겁니다 — 뒤로 가기(popstate · back_forward) ·
+   카카오 로그인 뒤 돌아오기(그냥 navigate) · 화면 안 이동은 그대로입니다.
+   ⚠️ 손님이 먼저 손대면(터치 · 휠 · 키) 더 끌어올리지 않습니다.
+   ⚠️ 주소가 바뀌었으면(그 사이 다른 화면으로 가셨으면) 안 올립니다. */
+window.AM_RELOAD = (function(){
+  try{
+    var n = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
+    if(n && n.type) return n.type === "reload";
+    return !!(performance.navigation && performance.navigation.type === 1);
+  }catch(e){ return false; }
+})();
+window.AM_RELOAD_HREF = window.AM_RELOAD ? window.location.href : "";
+/* 지금 그려진 화면이 "새로고침으로 막 뜬 그 화면" 인가 — 화면 쪽이 내려가는 걸음을 건너뛸 때 씁니다 */
+window.amIsReloadView = function(){ return !!window.AM_RELOAD && window.location.href === window.AM_RELOAD_HREF; };
+if(window.AM_RELOAD){
+  (function(){
+    var stop = false;
+    var cancel = function(){ stop = true; };
+    ["touchstart","wheel","keydown","mousedown"].forEach(function(t){
+      window.addEventListener(t, cancel, { passive:true, once:true });
+    });
+    var top = function(){ if(!stop && window.amIsReloadView() && window.scrollY) window.scrollTo(0, 0); };
+    var all = function(){ top(); if(window.requestAnimationFrame) requestAnimationFrame(top); setTimeout(top, 120); setTimeout(top, 400); setTimeout(top, 900); };
+    window.addEventListener("load", all);
+    window.addEventListener("pageshow", function(e){ if(!e.persisted) all(); });
+  })();
+}
+
 /* ── 시작 ──────────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", function(){
   mountChrome();

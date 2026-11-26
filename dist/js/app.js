@@ -553,6 +553,30 @@ try{
   if("scrollRestoration" in history) history.scrollRestoration = "manual";
 }catch(e){}
 
+window.AM_RELOAD = (function(){
+  try{
+    var n = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
+    if(n && n.type) return n.type === "reload";
+    return !!(performance.navigation && performance.navigation.type === 1);
+  }catch(e){ return false; }
+})();
+window.AM_RELOAD_HREF = window.AM_RELOAD ? window.location.href : "";
+
+window.amIsReloadView = function(){ return !!window.AM_RELOAD && window.location.href === window.AM_RELOAD_HREF; };
+if(window.AM_RELOAD){
+  (function(){
+    var stop = false;
+    var cancel = function(){ stop = true; };
+    ["touchstart","wheel","keydown","mousedown"].forEach(function(t){
+      window.addEventListener(t, cancel, { passive:true, once:true });
+    });
+    var top = function(){ if(!stop && window.amIsReloadView() && window.scrollY) window.scrollTo(0, 0); };
+    var all = function(){ top(); if(window.requestAnimationFrame) requestAnimationFrame(top); setTimeout(top, 120); setTimeout(top, 400); setTimeout(top, 900); };
+    window.addEventListener("load", all);
+    window.addEventListener("pageshow", function(e){ if(!e.persisted) all(); });
+  })();
+}
+
 document.addEventListener("DOMContentLoaded", function(){
   mountChrome();
 

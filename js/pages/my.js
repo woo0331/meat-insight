@@ -79,7 +79,7 @@ window.myLoadDb = function(){
         box.innerHTML = '<div class="w">' + MySignInBand() + '</div>';
         box.hidden = false;
         /* 2026-11-26 — 상단 사람 아이콘 · 메뉴 · 하단 '내 기록' 으로 오셨으면(?next=) 로그인 칸으로 바로 내려갑니다 */
-        if(typeof nowQS === "function" && nowQS("next")){
+        if(typeof nowQS === "function" && nowQS("next") && !(window.amIsReloadView && window.amIsReloadView())){
           var hd = document.querySelector(".hd");
           window.scrollTo(0, Math.max(0, box.getBoundingClientRect().top + (window.scrollY || 0) - ((hd && hd.offsetHeight) || 64) - 8));
           var kb = box.querySelector(".my-kakao"); try{ if(kb) kb.focus({ preventScroll:true }); }catch(e){}

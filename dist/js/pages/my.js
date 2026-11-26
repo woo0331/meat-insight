@@ -25,7 +25,7 @@ window.myLoadDb = function(){
         box.innerHTML = '<div class="w">' + MySignInBand() + '</div>';
         box.hidden = false;
 
-        if(typeof nowQS === "function" && nowQS("next")){
+        if(typeof nowQS === "function" && nowQS("next") && !(window.amIsReloadView && window.amIsReloadView())){
           var hd = document.querySelector(".hd");
           window.scrollTo(0, Math.max(0, box.getBoundingClientRect().top + (window.scrollY || 0) - ((hd && hd.offsetHeight) || 64) - 8));
           var kb = box.querySelector(".my-kakao"); try{ if(kb) kb.focus({ preventScroll:true }); }catch(e){}

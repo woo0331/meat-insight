@@ -940,6 +940,29 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.waitForTimeout(900);
  const after = await pg.evaluate(()=>Math.round(window.scrollY));
  say(after === 0, "새로고침하면 맨 위에서 시작한다", after+"px");
+ /* ⚠️⚠️ 2026-11-26 — **휴대폰 브라우저는 load 뒤에 늦게 되돌려 놓습니다.**
+    사파리 · 카카오톡 안 브라우저가 scrollRestoration 을 무시하고 예전
+    자리로 내려놓는 꼴을 흉내 내서(새로고침일 때만 load 60ms 뒤에 내림)
+    360 · 390 에서 재 봅니다. 고치기 전에는 여기가 전부 실패였습니다.
+    ⚠️ 로그인 입구(/my?next=)도 새로고침이면 맨 위입니다 — 처음 들어올
+    때만 카카오 단추로 내려갑니다. */
+ for(const w of [360, 390]){
+   const cx = await br.newContext({ viewport:{ width:w, height:844 } });
+   await cx.addInitScript(()=>{ try{ const n = performance.getEntriesByType("navigation")[0];
+     if(n && n.type === "reload"){ const y = +sessionStorage.getItem("__late") || 0;
+       addEventListener("load", ()=>setTimeout(()=>scrollTo(0, y), 60)); } }catch(e){} });
+   const p2 = await cx.newPage();
+   for(const u of ["/", "/search", "/closure?w=fast", "/providers/demolish", "/my?next=%2Fquote"]){
+     await p2.goto(B+u, {waitUntil:"networkidle"}); await p2.waitForTimeout(300);
+     await p2.evaluate(()=>{ scrollTo(0, Math.min(1500, document.documentElement.scrollHeight - innerHeight)); sessionStorage.setItem("__late", scrollY); });
+     await p2.waitForTimeout(150);
+     await p2.reload({waitUntil:"networkidle"}); await p2.waitForTimeout(1300);
+     const r = await p2.evaluate(()=>{ const h = document.querySelector("#view h1"); const t = h && h.getBoundingClientRect();
+       return { y:Math.round(scrollY), h1:!!t && t.top >= 0 && t.bottom <= innerHeight }; });
+     say(r.y === 0 && r.h1, w+"px "+u+" — 늦게 되돌려 놓는 브라우저에서도 새로고침하면 맨 위 · 제목 보임", r.y+"px");
+   }
+   await cx.close();
+ }
  /* ⚠️⚠️ **"더 보기" 는 그대로 스크롤을 지킵니다** — 목록을 늘리는
     것인데 맨 위로 올라가면 방금 보던 자리를 잃고, 그러면 한 번 더
     안 누릅니다. 위 한 줄이 이쪽까지 끌고 가면 안 됩니다.

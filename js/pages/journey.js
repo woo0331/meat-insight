@@ -555,7 +555,8 @@ function OpsWorry(){
       '<p>고민마다 바로 해 볼 수 있는 계산 · 점검과 맡길 업체를 모았습니다. 서비스를 여러 개 고르시려면 아래 고르개를 쓰세요.</p></div>'+
     '<ul class="hwr-g">'+OPS_WORRY.map(function(x){
       /* 2026-11-25 — 고민마다 사진 (비용=계산기와 노트 · 시설=냉난방 점검 · 인력=근무표와 서류). 홍보(메뉴 촬영)는 맞는 사진이 없어 월넛 면 */
-      var ph = { "ow-cost":"kp-tr-svc-premium", "ow-mkt":"", "ow-fix":"kp-op-svc-repair", "ow-hr":"kp-op-svc-staff" }[x[3]] || "";
+      /* 2026-11-26 — 홍보 = 메뉴 촬영 · 인력 · 세무 · 노무 = 노무 상담 사진 (누락 카드 사진 13장) */
+      var ph = { "ow-cost":"kp-tr-svc-premium", "ow-mkt":"service-menu-shoot", "ow-fix":"kp-op-svc-repair", "ow-hr":"service-labor" }[x[3]] || "";
       return '<li id="'+x[3]+'"><div class="hwr-c hwr-pc"><span class="hwr-ph" aria-hidden="true">'+picBox(ph, x[0], "(max-width:640px) 92vw, 320px")+'</span>'+
         '<div class="hwr-b"><h3><span class="hwr-i" aria-hidden="true">'+icon(x[0], 22)+'</span>'+esc(x[1])+'</h3>'+
         '<p class="hwr-acts">'+opsWorryActs(x[4])+'</p>'+

@@ -94,6 +94,8 @@ window.IndustryGrid = function(baseTo, current, g){
     var on = (i.key === current);
     return '<li><a class="ind'+tn(i.tone)+(on?" on":"")+'" href="'+esc(baseTo+"/"+i.key)+'"'+
       (on?' aria-current="page"':'')+'>'+
+
+      '<span class="ind-ph" aria-hidden="true">'+(typeof picBox === "function" ? picBox(picKey("ind", i.key), i.icon, "(max-width:640px) 46vw, (max-width:1100px) 30vw, 300px") : "")+'</span>'+
       '<span class="ind-ic">'+icon(i.icon,24)+'</span>'+
       '<b>'+esc(i.name)+'</b>'+
       '<span class="ind-l">'+esc(i.lead)+'</span></a></li>';

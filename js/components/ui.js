@@ -157,6 +157,8 @@ window.IndustryGrid = function(baseTo, current, g){
     var on = (i.key === current);
     return '<li><a class="ind'+tn(i.tone)+(on?" on":"")+'" href="'+esc(baseTo+"/"+i.key)+'"'+
       (on?' aria-current="page"':'')+'>'+
+      /* 2026-11-26 — 전체 업종 목록에도 업종 공통 사진 (AM_PIC_IND · 없으면 월넛 면 · 빈 액자 없음) */
+      '<span class="ind-ph" aria-hidden="true">'+(typeof picBox === "function" ? picBox(picKey("ind", i.key), i.icon, "(max-width:640px) 46vw, (max-width:1100px) 30vw, 300px") : "")+'</span>'+
       '<span class="ind-ic">'+icon(i.icon,24)+'</span>'+
       '<b>'+esc(i.name)+'</b>'+
       '<span class="ind-l">'+esc(i.lead)+'</span></a></li>';

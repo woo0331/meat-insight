@@ -17,7 +17,7 @@ function PageSupport(){
     kicker:"자금 · 정부지원",
     h1raw:"조건만 맞으면<br class=\"br-m\"> 신청하실 수 있는 것들.",
     lead:"창업자금 · 정책자금 · 폐업지원 · 철거비 지원. 저희가 심사하지 않습니다 — 어디에 무엇이 있는지 모아 드립니다.",
-    tight:true
+    tight:true, photo:"service-support"
   })+
   '<section class="sec sec-white"><div class="w">'+
     '<ul class="chip-g chip-g-fil">'+

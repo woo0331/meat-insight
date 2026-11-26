@@ -854,7 +854,9 @@ function CloseKpSvc(){
     /* 2026-11-25 — 철거(해체 중인 현장)와 원상복구(복구된 바닥 · 벽)를 사진으로 가릅니다 */
     kxSvc("demolish", "", "철거", "무엇을 뜯는지 · 폐기물 범위부터", "demolish", "hero-close"),
     kxSvc("restore", "", "원상복구", "임대 계약 조건에 맞게 바닥 · 벽 복구", "restore", "kind-take"),
-    kxSvc("tax", "", "폐업 세무", "폐업 신고 · 부가세 · 종합소득세", "tax", "kp-cl-svc-tax")
+    kxSvc("tax", "", "폐업 세무", "폐업 신고 · 부가세 · 종합소득세", "tax", "kp-cl-svc-tax"),
+    /* 2026-11-26 — 재고 처분 (누락 카드 사진 13장 · service-inventory) */
+    kxSvc("stock", "", "재고 처분", "팔 수 있는 남은 재고 · 소모품부터", "box", "service-inventory")
   ].filter(Boolean);
   /* 집기 처분은 기존 품목 선택 화면으로 */
   L.forEach(function(x){ if(/^\/assets/.test(x.href)) x.href = "/assets?p=pick"; });
@@ -888,7 +890,9 @@ function CloseKpSupport(){
     title:"정리할 때 받을 수 있는 지원, 여기서 찾으세요",
     lead:(N ? "지금 원문을 확인한 공고가 "+N+"건 있습니다. " : "지금 저희가 원문을 확인해 올린 공고는 0건입니다. ")+"모집 여부는 아래 기관에서 확인하십니다.",
     more:{ href:"/support?side=close", t:"지원사업 찾는 곳 전체" },
-    items:W.map(function(x, i){ return { n:x.org, d:x.what, href:x.url, ic:ic[i % ic.length], ia:"", go:"사이트 열기" }; }),
+    /* 2026-11-26 — 맨 앞에 '지원사업 찾는 곳 전체'(사진 service-support) · 기관 카드는 아이콘 그대로 (같은 사진을 넷에 깔지 않습니다) */
+    items:[{ n:"지원사업 찾는 곳 전체", d:"폐업 · 재기 지원을 찾는 기관과 찾는 말을 한곳에", href:"/support?side=close", ph:"service-support", go:"모아 보기" }]
+      .concat(W.map(function(x, i){ return { n:x.org, d:x.what, href:x.url, ic:ic[i % ic.length], ia:"", go:"사이트 열기" }; })),
     note:"지원 대상인지 · 얼마를 받는지는 그 기관이 심사합니다. 저희는 지급을 약속하지 않습니다." });
 }
 
@@ -1480,6 +1484,8 @@ function PageClosureIndustry(ind){
        — "잘 정리하는 것도 사업입니다" 까지입니다. */
     h1raw:esc(ind.name)+" 정리를<br class=\"br-m\"> 준비하고 계시네요.",
     lead:"순서가 있는 일입니다. 지금부터 필요한 차례와 걸음마다 꼭 확인할 것을 보여 드립니다.",
+    /* 2026-11-26 — 창업 업종 상세와 같은 업종 공통 사진 */
+    photo:picKey("ind", ind.key),
     cta:'<a class="btn btn-b btn-lg" href="'+esc(quoteTo({industry:ind.key,side:"close"}))+'">'+
         '한 번에 견적 요청'+icon("arrow",18)+'</a>'+
         '<a class="btn btn-o btn-lg" href="/assets?i='+encodeURIComponent(ind.key)+'">'+

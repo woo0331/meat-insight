@@ -9228,3 +9228,26 @@ html.pk-in-pick .pk-bar{ display:none; }
 .sr-sum{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:var(--s4) 0 var(--s3); }
 .sr-sum b{ margin-right:6px; color:var(--ink); }
 .sr-g{ scroll-margin-top:96px; }
+
+/* 2026-11-26 누락 카드 사진 13장 — 사진마다 주인공 자리(object-position). 좁은 칸 · 폰에서 잘려도 그 물건 · 장면이 남게.
+   ⚠️ 사진을 바꾸시면 이 값도 다시 찍어 보세요 (검사는 피사체 잘림을 못 잽니다). */
+img[src^="/img/card/industry-bar."]{ object-position:55% 40%; }
+img[src^="/img/card/industry-nail."]{ object-position:62% 50%; }
+img[src^="/img/card/industry-academy."]{ object-position:50% 45%; }
+img[src^="/img/card/industry-pet."]{ object-position:62% 40%; }
+img[src^="/img/card/industry-retail."]{ object-position:42% 45%; }
+img[src^="/img/card/industry-stay."]{ object-position:50% 55%; }
+img[src^="/img/card/industry-online-sales."]{ object-position:45% 45%; }
+img[src^="/img/card/service-menu-shoot."]{ object-position:38% 50%; }
+img[src^="/img/card/service-signage."]{ object-position:55% 35%; }
+img[src^="/img/card/service-labor."]{ object-position:55% 45%; }
+img[src^="/img/card/service-inventory."]{ object-position:45% 45%; }
+img[src^="/img/card/service-support."]{ object-position:55% 50%; }
+img[src^="/img/card/service-internet."]{ object-position:55% 45%; }
+/* 2026-11-26 — 전체 업종 목록(.ind) 맨 위 업종 사진 */
+.ind .ind-ph{ display:block; margin:calc(-1*var(--s6)) calc(-1*var(--s6)) var(--s2); aspect-ratio:16/9; overflow:hidden; position:relative; border-radius:var(--r-xl) var(--r-xl) 0 0; }
+.ind .ind-ph .ph, .ind .ind-ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+.ind .ind-ph .pcd-n svg{ width:44px; height:44px; }
+.ind{ overflow:hidden; }
+/* 사진이 있는 업종 카드는 아이콘 타일을 접습니다 (사진이 이미 업종을 말합니다 · 폰에서 카드가 두 배로 길어졌습니다) */
+.ind:has(.ind-ph img) .ind-ic{ display:none; }

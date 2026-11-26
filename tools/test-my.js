@@ -1288,6 +1288,29 @@ const ADM_DEAL = [
     await ctx.close();
   }
 
+  /* ══ 2026-11-26 로그인한 채로 보낸 접수에 토큰이 실리는가 ══════════
+     시험 Preview 의 실제 접수(SW-4JXB-W1TY)가 카카오로 로그인한 채로 들어갔는데
+     계정에 안 이어졌습니다 — amSend() 가 Authorization 을 안 붙였습니다. 서버 검사
+     (test-api)는 머리가 **오면** 잇는지를 보고, 화면이 **보내는지**는 아무도 안 봤습니다. */
+  console.log("\n⑩ 접수 보내기 — 로그인했으면 토큰이 실린다 · 안 했으면 안 실린다");
+  for (const tok of ["ZZTOKEN", ""]) {
+    const cx = await br.newContext({ viewport:{ width:390, height:900 } });
+    const pg = await cx.newPage(); let hdr = null;
+    await pg.route("**/api/session", r => r.fulfill({ status:200, contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn: !!tok, role:"customer", conf:{ url:"https://zz.supabase.co", anonKey:"ZZ-ANON" }, intake:{ quote:true, close:true } }) }));
+    await pg.route("**/api/me**", r => r.fulfill({ status:200, contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn: !!tok, role:"customer", requests:[], quotes:[], state:null }) }));
+    await pg.route("**/api/quote", r => { hdr = r.request().headers(); r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify({ ok:true, no:"SW-AAAA-0002" }) }); });
+    if (tok) await pg.addInitScript("try{localStorage.setItem('am.auth.v1',JSON.stringify({access_token:'" + tok + "',refresh_token:'R',at:Date.now()+3600000}))}catch(e){}");
+    await pg.goto(base + "/quote?mode=close", { waitUntil:"networkidle" }); await pg.waitForTimeout(300);
+    await pg.evaluate(() => window.amSend("cq-fail", { kind:"quote", form:"close", name:"x", tel:"010" }, "closeSend", function(){}));
+    await pg.waitForTimeout(400);
+    const a = hdr ? (hdr.authorization || "") : null;
+    ok(tok ? "로그인 — /api/quote 에 Authorization: Bearer 가 실린다" : "비로그인 — Authorization 을 안 보낸다",
+       hdr !== null && (tok ? a === "Bearer " + tok : a === ""), JSON.stringify(a));
+    await cx.close();
+  }
+
   await br.close(); srv.close();
   console.log("\n" + (fail ? "❌" : "✅") + " 통과 " + pass + " · 실패 " + fail);
   process.exit(fail ? 1 : 0);

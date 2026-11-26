@@ -260,8 +260,27 @@ function hdCtaPaint(){
   });
 }
 
+function amEntryCur(){
+  var p = window.location.pathname, q = new URLSearchParams(window.location.search);
+  if(p === "/quote"){
+    var v = function(id){ var e = document.getElementById(id); return e && e.value ? e.value : ""; };
+    if(q.get("mode") === "close"){
+      if(v("cq-gu")) q.set("gu", v("cq-gu")); if(v("cq-ind")) q.set("i", v("cq-ind"));
+    } else {
+      if(v("q-reg")) q.set("r", v("q-reg")); if(v("q-ind")) q.set("i", v("q-ind"));
+    }
+  }
+  var qs = q.toString();
+  return p + (qs ? "?" + qs : "");
+}
+window.amEntryCur = amEntryCur;
+
+document.addEventListener("click", function(ev){
+  var a = ev.target && ev.target.closest && ev.target.closest('#hdU, #hdDwMy, #mnav a[data-to="/my"]');
+  if(a && window.amAuthNow && window.AM_AUTH_ASKED_ONCE) amEntryPaint(amAuthNow());
+}, true);
 function amEntryPaint(a){
-  var cur = window.location.pathname + window.location.search;
+  var cur = amEntryCur();
   var st = (a && a.on && a.signedIn) ? "in" : ((a && a.on && a.kakao) ? "out" : "off");
   var href = st === "out" && window.location.pathname !== "/my" ? "/my?next=" + encodeURIComponent(cur) : "/my";
   var u = document.getElementById("hdU");

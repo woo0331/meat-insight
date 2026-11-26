@@ -413,8 +413,29 @@ function hdCtaPaint(){
 /* 2026-11-26 — 로그인으로 가는 진입 셋(상단 사람 아이콘 · 메뉴 · 하단 '내 기록')을 한 곳에서 맞춥니다.
    비로그인 + 카카오 켜짐 → /my?next=<지금 자리> (로그인 칸으로 내려가고 로그인 뒤 돌아옵니다)
    로그인됨 → /my '내 계정' · 로그인 꺼짐/카카오 꺼짐 → /my '내 기록' (지금과 같음 — 없는 로그인을 내지 않습니다) */
+/* 견적서에서 누르면 **지금 고른 지역 · 업종**을 돌아올 주소에 싣습니다 — 그 칸들은 주소에 없어서,
+   로그인하고 돌아오면 서비스는 남는데 지역이 비었습니다 (2026-11-27 검수에서 찾음). 연락처 · 이름은 싣지 않습니다. */
+function amEntryCur(){
+  var p = window.location.pathname, q = new URLSearchParams(window.location.search);
+  if(p === "/quote"){
+    var v = function(id){ var e = document.getElementById(id); return e && e.value ? e.value : ""; };
+    if(q.get("mode") === "close"){
+      if(v("cq-gu")) q.set("gu", v("cq-gu")); if(v("cq-ind")) q.set("i", v("cq-ind"));
+    } else {
+      if(v("q-reg")) q.set("r", v("q-reg")); if(v("q-ind")) q.set("i", v("q-ind"));
+    }
+  }
+  var qs = q.toString();
+  return p + (qs ? "?" + qs : "");
+}
+window.amEntryCur = amEntryCur;
+/* 누르는 순간 다시 맞춥니다 (그려 둔 주소는 칸을 고르기 전 것입니다) */
+document.addEventListener("click", function(ev){
+  var a = ev.target && ev.target.closest && ev.target.closest('#hdU, #hdDwMy, #mnav a[data-to="/my"]');
+  if(a && window.amAuthNow && window.AM_AUTH_ASKED_ONCE) amEntryPaint(amAuthNow());
+}, true);
 function amEntryPaint(a){
-  var cur = window.location.pathname + window.location.search;
+  var cur = amEntryCur();
   var st = (a && a.on && a.signedIn) ? "in" : ((a && a.on && a.kakao) ? "out" : "off");
   var href = st === "out" && window.location.pathname !== "/my" ? "/my?next=" + encodeURIComponent(cur) : "/my";
   var u = document.getElementById("hdU");

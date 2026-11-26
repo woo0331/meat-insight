@@ -1145,7 +1145,9 @@ function PageCat(cat){
     crumb: Crumb([[side === "start" ? "창업" : "폐업", side === "start" ? "/startup" : "/closure"],[cat.name]]),
     kicker:(side === "start" ? "START" : "CLOSE") + " · " + cat.lead,
     h1:cat.name,
-    lead:cat.desc
+    lead:cat.desc,
+
+    photo:picKey("cat", cat.key)
   })+
   '<section class="sec sec-white"><div class="w">'+
     (items.length

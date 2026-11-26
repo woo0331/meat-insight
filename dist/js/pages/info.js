@@ -183,6 +183,7 @@ function PageContents(){
         '</ul>'
       : '')+
 
+    (!j && !cat && !q ? ctFeature(all) : "")+
     (list.length
       ? '<ul class="ct-l">'+list.map(card).join("")+'</ul>'
       : Empty({
@@ -196,11 +197,34 @@ function PageContents(){
   '</div></section>';
 }
 
+function ctFeature(all){
+  var seen = {}, pick = [];
+  all.slice().sort(function(a, b){ return String(b.at || "").localeCompare(String(a.at || "")); })
+    .forEach(function(c){
+      if(pick.length >= 3 || seen[c.cat] || !picKey("cat", c.cat)) return;
+      seen[c.cat] = 1; pick.push(c);
+    });
+  if(pick.length < 3) return "";
+  return '<h2 class="ctf-h">최근에 올라온 글</h2>'+
+    '<ul class="ctf-g">'+pick.map(function(c){
+      var cn = ((window.AM_CATS || []).filter(function(k){ return k.key === c.cat; })[0] || {}).name || "";
+      return '<li><a class="pcd ctf-c" href="/content/'+esc(c.slug)+'">'+
+        '<span class="pcd-ph" aria-hidden="true">'+picBox(picKey("cat", c.cat), "book", "(max-width:640px) 92vw, (max-width:1100px) 46vw, 380px")+'</span>'+
+        '<span class="pcd-tx">'+(cn ? '<i class="ctf-k">'+esc(cn)+'</i>' : '')+
+          '<b class="pcd-t">'+esc(c.title)+'</b>'+
+          '<i class="pcd-d">'+esc(c.lead)+'</i>'+
+          '<span class="pcd-go">읽어 보기'+icon("arrow",14)+'</span></span></a></li>';
+    }).join("")+'</ul>'+
+    '<h2 class="ctf-h">전체 글</h2>';
+}
+
 function PageContent(c){
   return PgHero({
     crumb: Crumb([["정보","/content"],[c.title]]),
     kicker:(c.side==="close"?"폐업":"창업")+(c.industry?" · "+amIndustryName(c.industry):""),
-    h1:c.title, lead:c.lead, tight:true
+    h1:c.title, lead:c.lead, tight:true,
+
+    photo:picKey("cat", c.cat)
   })+
   '<section class="sec sec-white"><div class="w read">'+
 

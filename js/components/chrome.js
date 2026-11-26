@@ -509,8 +509,9 @@ function MobileNav(){
 var MNAV_NEAR = [
   [/^\/tools/,                                   "/tools"],
   [/^\/(content|faq|about|support)/,             "/content"],
-  [/^\/(my|search|compare)/,                     "/my"],
-  [/^\/(providers|p\/|c\/|g\/|quote|join|franchise|sell|stores|assets|s\/|a\/|startup|operation|transfer|closure)/, "/providers"]
+  /* 2026-11-26 — 검색 · 업체 비교는 '내 기록' 이 아니라 서비스 찾기입니다 (검색에서 '마이' 가 켜져 있었습니다) */
+  [/^\/my/,                                      "/my"],
+  [/^\/(search|compare|providers|p\/|c\/|g\/|quote|join|franchise|sell|stores|assets|s\/|a\/|startup|operation|transfer|closure)/, "/providers"]
 ];
 function paintMnav(){
   var n = $("mnav"); if(!n) return;

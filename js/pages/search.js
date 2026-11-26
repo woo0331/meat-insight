@@ -31,9 +31,14 @@ function PageSearch(){
       '<button class="btn btn-b" type="submit">검색</button>'+
     '</form>'+
     (!q ? SearchHints() : (res.total
-      ? res.groups.map(function(g){
+      /* 2026-11-26 §8 — 결과 **종류와 건수를 먼저** 한 줄로 (눌러서 그 묶음으로 내려갑니다 · 0건 묶음은 안 냅니다) */
+      ? '<p class="sr-sum" role="status"><b>&ldquo;'+esc(q)+'&rdquo; 결과 '+res.total+'건</b>'+
+          res.groups.map(function(g, gi){
+            return g.rows.length ? '<a class="chip" href="#sr-'+gi+'">'+esc(g.name)+' '+g.rows.length+'</a>' : "";
+          }).join("")+'</p>'+
+        res.groups.map(function(g, gi){
           if(!g.rows.length) return "";
-          return '<div class="sr-g"><h2>'+esc(g.name)+' <em>'+g.rows.length+'</em></h2><ul class="sr-l">'+
+          return '<div class="sr-g" id="sr-'+gi+'"><h2>'+esc(g.name)+' <em>'+g.rows.length+'</em></h2><ul class="sr-l">'+
             g.rows.map(function(r){
               return '<li><a href="'+esc(r.to)+'"><b>'+esc(r.name)+'</b>'+
                 (r.sub?'<span>'+esc(r.sub)+'</span>':'')+

@@ -9208,3 +9208,23 @@ html.pk-in-pick .pk-bar{ display:none; }
 @media (max-width:900px){
   .clpf .clpf-sum, .clpf .clpf-sum .btn, .clpf .clpf-sum button{ scroll-margin-bottom:calc(var(--mnav-h, 64px) + var(--pk-bar-h, 0px) + 16px); }
 }
+
+/* 2026-11-26 디자인 개편 §8 — 정보 글 목록 맨 위 대표 글 셋 (사진 카드) */
+.ctf-h{ margin:var(--s5) 0 var(--s3); font-size:var(--t-lg, 20px); font-weight:800; color:var(--ink); }
+.ctf-g{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s4); margin:0 0 var(--s4); padding:0; list-style:none; }
+.ctf-c{ height:100%; }
+.ctf-k{ display:inline-block; font-style:normal; font-size:12px; font-weight:800; color:var(--gold-text); margin-bottom:2px; }
+@media (max-width:1100px){ .ctf-g{ grid-template-columns:repeat(2,minmax(0,1fr)); } .ctf-g > li:nth-child(3){ grid-column:1 / -1; } }
+@media (max-width:640px){ .ctf-g{ grid-template-columns:1fr; } .ctf-g > li:nth-child(3){ grid-column:auto; } }
+/* 2026-11-26 §8 — 프랜차이즈 분류 카드: 업종 사진 띠 + 아이콘 원판 */
+.fc.fc-pc{ padding:0 0 var(--s4); overflow:hidden; background:var(--surface); border:1px solid var(--line); }
+.fc.fc-pc .fc-ph{ display:block; width:100%; aspect-ratio:4/3; overflow:hidden; position:relative; }
+.fc.fc-pc .fc-ph .ph, .fc.fc-pc .fc-ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+.fc.fc-pc .fc-ph .pcd-n svg{ width:40px; height:40px; }
+.fc.fc-pc .fc-ic{ margin-top:-22px; position:relative; z-index:1; background:var(--surface); box-shadow:0 2px 6px rgba(44,33,28,.12); }
+.fc.fc-pc > b, .fc.fc-pc .fc-n{ padding:0 var(--s2); }
+@media (max-width:1100px){ .fc-g{ grid-template-columns:repeat(4,1fr); } }
+@media (max-width:700px){ .fc-g{ grid-template-columns:repeat(2,1fr); } }
+.sr-sum{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:var(--s4) 0 var(--s3); }
+.sr-sum b{ margin-right:6px; color:var(--ink); }
+.sr-g{ scroll-margin-top:96px; }

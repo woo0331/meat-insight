@@ -1586,7 +1586,9 @@ function PageCat(cat){
     crumb: Crumb([[side === "start" ? "창업" : "폐업", side === "start" ? "/startup" : "/closure"],[cat.name]]),
     kicker:(side === "start" ? "START" : "CLOSE") + " · " + cat.lead,
     h1:cat.name,
-    lead:cat.desc
+    lead:cat.desc,
+    /* 2026-11-26 §8 — 그 분야 일의 연출 사진 (AM_PIC_CAT · 없으면 머리 그대로) */
+    photo:picKey("cat", cat.key)
   })+
   '<section class="sec sec-white"><div class="w">'+
     (items.length

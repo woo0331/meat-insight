@@ -540,7 +540,13 @@ function PageSample(){
       '<p class="row-cta"><a class="btn btn-b btn-lg" href="/join">업체 입점 알아보기'+
         icon("arrow",18)+'</a></p>'+
     '</div></section>'+
-    '<section class="sec sec-white"><div class="w">'+SampleNote("bot")+'</div></section>';
+
+    JoinHow()+
+    '<section class="sec sec-white"><div class="w">'+SampleNote("bot")+
+      '<p class="row-cta"><a class="btn btn-o" href="/join#join-how">입점 절차 자세히</a>'+
+
+      '<a class="btn btn-b" href="/join#join-form" data-cta="on" data-cta-form="join" hidden>입점 신청서로 가기'+icon("arrow",16)+'</a></p>'+
+    '</div></section>';
 }
 
 function PageJoin(){
@@ -733,7 +739,7 @@ function JoinWhy(){
 function JoinHow(){
   var st = (window.AM_JOIN_STEPS || []);
   if(!st.length) return "";
-  return '<section class="sec"><div class="w">'+
+  return '<section class="sec" id="join-how"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">어떻게 진행되나</p>'+
       '<h2>세 걸음이면 됩니다</h2></div>'+
     '<ol class="how-g">'+ st.map(function(x){

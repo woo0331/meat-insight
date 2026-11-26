@@ -264,6 +264,10 @@ function PageContents(){
          합니다.
        ⚠️ 길이가 정말 문제가 되면 **찾기 · 거르개가 전체를 보도록**
        먼저 고치고(데이터에서 걸러 다시 그리기) 그 다음에 붙이세요. */
+    /* 2026-11-26 디자인 개편 §8 — 거르개를 안 걸었을 때만 **대표 글 셋**을 사진 카드로 맨 위에.
+       ⚠️ 고르는 기준은 날짜(at) 하나이고 분류가 겹치지 않게 고릅니다 (인기 · 조회가 아닙니다).
+       ⚠️ 사진은 그 글의 **분류 연출 사진**입니다 — 사진이 있는 분류의 글만 고릅니다. 목록은 아래에 그대로 다 있습니다. */
+    (!j && !cat && !q ? ctFeature(all) : "")+
     (list.length
       ? '<ul class="ct-l">'+list.map(card).join("")+'</ul>'
       : Empty({
@@ -277,11 +281,34 @@ function PageContents(){
   '</div></section>';
 }
 
+function ctFeature(all){
+  var seen = {}, pick = [];
+  all.slice().sort(function(a, b){ return String(b.at || "").localeCompare(String(a.at || "")); })
+    .forEach(function(c){
+      if(pick.length >= 3 || seen[c.cat] || !picKey("cat", c.cat)) return;
+      seen[c.cat] = 1; pick.push(c);
+    });
+  if(pick.length < 3) return "";
+  return '<h2 class="ctf-h">최근에 올라온 글</h2>'+
+    '<ul class="ctf-g">'+pick.map(function(c){
+      var cn = ((window.AM_CATS || []).filter(function(k){ return k.key === c.cat; })[0] || {}).name || "";
+      return '<li><a class="pcd ctf-c" href="/content/'+esc(c.slug)+'">'+
+        '<span class="pcd-ph" aria-hidden="true">'+picBox(picKey("cat", c.cat), "book", "(max-width:640px) 92vw, (max-width:1100px) 46vw, 380px")+'</span>'+
+        '<span class="pcd-tx">'+(cn ? '<i class="ctf-k">'+esc(cn)+'</i>' : '')+
+          '<b class="pcd-t">'+esc(c.title)+'</b>'+
+          '<i class="pcd-d">'+esc(c.lead)+'</i>'+
+          '<span class="pcd-go">읽어 보기'+icon("arrow",14)+'</span></span></a></li>';
+    }).join("")+'</ul>'+
+    '<h2 class="ctf-h">전체 글</h2>';
+}
+
 function PageContent(c){
   return PgHero({
     crumb: Crumb([["정보","/content"],[c.title]]),
     kicker:(c.side==="close"?"폐업":"창업")+(c.industry?" · "+amIndustryName(c.industry):""),
-    h1:c.title, lead:c.lead, tight:true
+    h1:c.title, lead:c.lead, tight:true,
+    /* 2026-11-26 §8 — 그 글이 다루는 일의 연출 사진 (분류 사진이 있을 때만 · 없으면 머리가 예전 그대로) */
+    photo:picKey("cat", c.cat)
   })+
   '<section class="sec sec-white"><div class="w read">'+
     /* ── 세 줄 요약 (2026-10-06 2차 §14) ────────────────────────────

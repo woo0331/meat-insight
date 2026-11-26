@@ -959,6 +959,9 @@ function HomeDirect(noPick){
        ⚠️⚠️ **카드 전체가 하나의 `a` 입니다** — "관련 서비스 보기" 는
        시안에서 단추처럼 보이지만 **표시**이고, 안에 또 `a` 를 넣으면
        브라우저가 쪼갭니다 (단계 카드 · 진입 카드에서 겪은 자리). */
+    /* 2026-11-25 디자인 개편 §1 — 메인(noPick)의 세부 서비스는 빠르게 훑는 링크 목록 */
+    if(noPick) return '<li><a class="bdq-a" href="'+esc(to)+'"><span class="bdq-i" aria-hidden="true">'+icon(c.icon || "grid", 18)+'</span>'+
+      '<span class="bdq-t"><b>'+esc(c.name)+'</b>'+(ds ? '<i>'+esc(ds)+'</i>' : '')+'</span>'+icon("chev",14)+'</a></li>';
     return '<li><a class="bdir-c'+tn(c.tone)+'" href="'+esc(to)+'">'+
       '<span class="bdir-i" aria-hidden="true">'+
         (hasIconArt(c.key) ? iconArt(c.key, 64) : icon(c.icon, 34))+'</span>'+
@@ -988,7 +991,7 @@ function HomeDirect(noPick){
       '<a class="btn btn-ac hm-more" href="/providers">전체 서비스 보기'+
         icon("arrow",16)+'</a>'+
     '</div>'+
-    '<ul class="bdir-g">'+cards+'</ul>'+
+    '<ul class="'+(noPick ? "bdq-g" : "bdir-g")+'">'+cards+'</ul>'+
     /* 2026-11-22 — 히어로가 이미 고르신 서비스 줄을 냅니다 (한 화면에 둘이면 같은 신청 줄이 두 번) */
     (noPick ? "" : HomePicked())+
     /* ⚠️ 숫자는 손으로 적지 않습니다 — 그 자리에서 셉니다 */
@@ -2431,19 +2434,28 @@ function HomeIHelp(){
 /* 4 — 업종별 서비스 탐색: 업종 데이터(AM_INDUSTRIES) 그대로 · 사진 없이 글자 카드 */
 /* 2026-11-22 대표 지시서 §1-5 — 창업 · 운영 · 양도양수 · 폐업 네 기둥. 카드 전체가 링크 하나 */
 var HOME_PILLARS = [
-  { k:"startup",  to:"/startup",   ic:"bulb",     n:"창업 준비",     d:"상권 · 인테리어 · 인허가 · 자금" },
-  { k:"ops",      to:"/operation", ic:"chart",    n:"매장 운영",     d:"POS · 세무 · 청소 · 유지보수" },
-  { k:"transfer", to:"/transfer",  ic:"handover", n:"매장 양도양수", d:"매물 찾기 · 내 매장 넘기기 · 권리금" },
-  { k:"closure",  to:"/closure",   ic:"demolish", n:"폐업 · 철거",   d:"철거 · 원상복구 · 시설 처분 · 신고" }
+  { k:"startup",  to:"/startup",   ic:"bulb",     ph:"insu-startup",  n:"창업 준비",     d:"상권 · 인테리어 · 인허가 · 자금",
+    alt:"오픈을 준비하는 빈 매장" },
+  { k:"ops",      to:"/operation", ic:"chart",    ph:"kp-op-svc-pos", n:"매장 운영",     d:"POS · 세무 · 청소 · 유지보수",
+    alt:"매장 카운터의 POS 단말기" },
+  { k:"transfer", to:"/transfer",  ic:"handover", ph:"kp-tr-pro-ready", n:"매장 양도양수", d:"매물 찾기 · 내 매장 넘기기 · 권리금",
+    alt:"책상 위 열쇠와 서류철 — 인계 준비" },
+  { k:"closure",  to:"/closure",   ic:"demolish", ph:"insu-closure",  n:"폐업 · 철거",   d:"철거 · 원상복구 · 시설 처분 · 신고",
+    alt:"정리 중인 빈 매장" }
 ];
+/* 2026-11-25 디자인 개편 (시안 01) — 네 카드에 사진. 카드 전체가 링크 하나 · 사진은 장식(alt 는 카드 이름이 대신)
+   PC 4열(넓으면 글 왼쪽 · 사진 오른쪽) · 모바일 2열(사진 위). 사진이 없으면 월넛 면 + 아이콘 */
 function HomePillars(){
-  var art = function(n){ return typeof hasIconArt === "function" && hasIconArt(n) ? iconArt(n, 44) : icon(n, 26); };
+  var art = function(n){ return typeof hasIconArt === "function" && hasIconArt(n) ? iconArt(n, 40) : icon(n, 24); };
   return '<section class="ipil"><div class="w">'+
     '<div class="ih-sh"><div><p class="ih-kk">SERVICE</p><h2>필요한 서비스를 단계별로 찾아보세요</h2>'+
       '<p>창업부터 운영, 양도양수, 폐업까지 지금 하시려는 일을 고르세요.</p></div></div>'+
-    '<ul class="ipil-g">'+HOME_PILLARS.map(function(p){
-      return '<li><a class="ipil-c ipil-'+p.k+'" href="'+p.to+'"><span class="ipil-i" aria-hidden="true">'+art(p.ic)+'</span>'+
-        '<span class="ipil-t"><b>'+esc(p.n)+'</b><i>'+esc(p.d)+'</i></span>'+icon("arrow",16)+'</a></li>';
+    '<ul class="ipil-g pcd-g4">'+HOME_PILLARS.map(function(p){
+      return '<li><a class="ipil-c pcd pcd-sp ipil-'+p.k+'" href="'+p.to+'">'+
+        '<span class="pcd-ph" aria-hidden="true">'+picBox(p.ph, p.ic, "(max-width:640px) 46vw, (max-width:1200px) 23vw, 220px")+'</span>'+
+        '<span class="pcd-tx"><span class="ipil-i" aria-hidden="true">'+art(p.ic)+'</span>'+
+          '<b class="pcd-t">'+esc(p.n)+'</b><i class="pcd-d">'+esc(p.d)+'</i>'+
+          '<span class="pcd-go" aria-hidden="true">'+icon("arrow",16)+'</span></span></a></li>';
     }).join("")+'</ul></div></section>';
 }
 
@@ -2458,14 +2470,15 @@ function HomeIInd(){
        ⚠️ 접는 것은 CSS 의 @media 안에서만 걸립니다 — PC · 태블릿은 클래스가 있어도 전부 보입니다.
        ⚠️ 접어도 DOM 에 그대로 있습니다 (링크 · 크롤러 · 검사가 그대로 셉니다). */
     '<ul class="iind-g is-fold" id="iind-g">'+L.map(function(i){
-      return '<li><a class="iind-c" href="/startup/'+esc(i.key)+'">'+
-        '<span class="iind-i" aria-hidden="true">'+icon(i.icon || "store", 26)+'</span>'+
-        '<b>'+esc(i.name)+'</b>'+(i.lead ? '<em>'+esc(i.lead)+'</em>' : '')+'</a></li>';
+      /* 2026-11-25 — 업종마다 다른 사진 (AM_PIC_IND). 맞는 사진이 없는 업종은 월넛 면 + 아이콘 — 다른 업종 사진으로 메우지 않습니다 */
+      return '<li><a class="iind-c pcd" href="/startup/'+esc(i.key)+'">'+
+        '<span class="pcd-ph" aria-hidden="true">'+picBox(picKey("ind", i.key), i.icon || "store", "(max-width:640px) 46vw, (max-width:1100px) 30vw, 280px")+'</span>'+
+        '<span class="pcd-tx"><b class="pcd-t">'+esc(i.name)+'</b>'+(i.lead ? '<em class="pcd-d">'+esc(i.lead)+'</em>' : '')+'</span></a></li>';
     }).join("")+
-    '<li><a class="iind-c iind-all" href="/startup"><span class="iind-i" aria-hidden="true">'+icon("grid",24)+'</span>'+
-      '<b>전체 업종 보기</b><em>기타 업종 · 온라인 판매까지</em></a></li></ul>'+
+    /* '전체 업종 보기' 는 사진 카드가 아니라 별도 링크 (2026-11-25 지시 §1) — 열한 칸 뒤 빈 자리를 채웁니다 */
+    '<li class="iind-allli"><a class="iind-all2" href="/startup">'+icon("grid",20)+'<b>전체 업종 보기</b><i>기타 업종 · 온라인 판매까지</i>'+icon("arrow",16)+'</a></li></ul>'+
     '<button type="button" class="iind-more" aria-expanded="false" aria-controls="iind-g" onclick="ihIndToggle(this)">'+
-      '<span>전체 업종 보기</span>'+icon("chevd",16)+'</button>'+
+      '<span>업종 더 보기</span>'+icon("chevd",16)+'</button>'+
   '</div></section>';
 }
 /* 펼치기 · 접기 — 접을 때는 단추가 화면에서 같은 자리에 머물게 스크롤을 맞춥니다 (위로 튀지 않게) */
@@ -2475,15 +2488,16 @@ window.ihIndToggle = function(btn){
   var shut = ul.classList.toggle("is-fold");
   btn.setAttribute("aria-expanded", shut ? "false" : "true");
   btn.classList.toggle("is-open", !shut);
-  var t = btn.querySelector("span"); if(t) t.textContent = shut ? "전체 업종 보기" : "업종 접기";
+  var t = btn.querySelector("span"); if(t) t.textContent = shut ? "업종 더 보기" : "업종 접기";
   if(shut){ var d = btn.getBoundingClientRect().top - before; if(Math.abs(d) > 1) window.scrollBy(0, d); }
 }
 
 /* 5 — 매장 운영 지원: 02_operations + 실제로 고를 수 있는 운영 서비스(AM_PICK_GROUP.operation) */
 /* 2026-11-22 — 지시서 §2-03 의 여섯 (인테리어 · 시설·장비 · POS · 세무 · 청소 · 유지보수). 분류 · 하위 key 그대로 */
 var IOPS_SIX = [
-  { any:"interior", name:"인테리어" }, { any:"equip", name:"시설 · 장비" }, { any:"it/pos", name:"POS · 매장 시스템" },
-  { any:"admin/tax-agent", name:"세무 · 회계" }, { any:"clean", name:"청소 · 방역" }, { any:"repair", name:"유지보수 · 수리" }
+  { any:"interior", name:"인테리어", ph:"kp-st-pro-design" }, { any:"equip", name:"시설 · 장비", ph:"svc-equip" },
+  { any:"it/pos", name:"POS · 매장 시스템", ph:"kp-op-svc-pos" }, { any:"admin/tax-agent", name:"세무 · 회계", ph:"kp-cl-svc-tax" },
+  { any:"clean", name:"청소 · 방역", ph:"svc-clean" }, { any:"repair", name:"유지보수 · 수리", ph:"kp-op-svc-repair" }
 ];
 function HomeIOps(){
   var G = IOPS_SIX;
@@ -2497,7 +2511,9 @@ function HomeIOps(){
       '<p class="ih-kk">OPERATION</p><h2>매장 운영에 필요한 모든 서비스</h2>'+
       '<p class="iops-s">문을 연 뒤에도 필요한 일은 계속됩니다. 인테리어부터 시설 · 장비, POS, 세무, 청소, 유지보수까지 분야별로 찾아보세요.</p>'+
       '<ul class="iops-l">'+G.map(function(g){
-        return '<li><a href="'+esc(link(g.any))+'"><span>'+esc(g.name)+'</span>'+icon("chev",14)+'</a></li>';
+        /* 2026-11-25 — 주요 운영 서비스에 작은 사진 (연출 사진 · 실제 업체 아님) */
+        return '<li><a class="iops-a" href="'+esc(link(g.any))+'"><span class="iops-th" aria-hidden="true">'+picBox(g.ph, "grid", "64px")+'</span>'+
+          '<span>'+esc(g.name)+'</span>'+icon("chev",14)+'</a></li>';
       }).join("")+'</ul>'+
       '<a class="btn ih-b" href="/operation">운영 서비스 보기'+icon("arrow",16)+'</a>'+
     '</div>'+
@@ -2527,8 +2543,9 @@ function HomeITransfer(){
   var S = (window.AM_STORES || []);
   var dp = ((window.AM_STORE_RANGES || window.AM_MK_RANGES || []).filter(function(g){ return g.key === "dp"; })[0] || {}).opts || [];
   return '<section class="bpass itr"><div class="w">'+
-    '<div class="itr-b">'+
-      '<div class="itr-ph" aria-hidden="true">'+ihPhoto("home-transfer", "", false, "(max-width:900px) 92vw, 50vw")+'</div>'+
+    /* 2026-11-25 — 대표 지정 배너 사진(home-transfer)은 그대로 두고, 오른쪽 글 칸 안에 '매장 찾기 / 내 매장 넘기기' 사진 카드 둘을 둡니다 */
+    '<div class="itr-b itr-b3">'+
+      '<div class="itr-ph" aria-hidden="true">'+ihPhoto("home-transfer", "", false, "(max-width:900px) 92vw, 40vw")+'</div>'+
       '<div class="itr-tx"><p class="ih-kk">TRANSFER</p>'+
         '<h2>새로운 매장을 찾거나, 운영 중인 매장을 넘기고 싶으신가요?</h2>'+
         '<p>지역 · 업종 · 보증금으로 매물을 찾고, 권리금과 계약 순서까지 미리 확인하세요.</p>'+
@@ -2539,14 +2556,25 @@ function HomeITransfer(){
             dp.map(function(o){ return '<option value="'+esc(o.k)+'">'+esc(o.name)+'</option>'; }).join("")+'</select>'+
           '<button class="btn ih-b" type="submit">'+icon("search",16)+'매물 찾기</button>'+
         '</form>'+
-        '<div class="wp-pgo itr-go">'+
-          /* 2026-11-22 지시서 §2-04 — 매물 찾기 / 내 매장 넘기기. 매물 접수가 열렸을 때만 /sell, 닫혀 있으면 넘기는 순서 */
-          /* ⚠️ '매물 찾기' 는 바로 위 검색 단추가 실제 검색(/stores)으로 보냅니다 — 같은 이름 단추를 또 두지 않습니다 */
-          '<a class="btn ih-b-o" href="/sell" data-cta="on" data-cta-form="sell" hidden>내 매장 넘기기</a>'+
-          '<a class="btn ih-b-o" href="/transfer?t=out" data-cta="off" data-cta-form="sell">내 매장 넘기기</a>'+
-          '<a class="btn ih-b-o" href="/transfer">양도양수 안내</a>'+
-          '<a class="btn ih-b-o" href="/tools/premium">권리금 계산</a>'+
+        /* 2026-11-25 디자인 개편 §1 — '매장 찾기' 와 '내 매장 넘기기' 를 사진 카드 둘로 가릅니다.
+           내 매장 넘기기는 매물 접수가 열렸을 때만 /sell, 닫혀 있으면 넘기는 순서(/transfer?t=out) — 기존 게이트 그대로.
+           권리금 계산은 보조 링크입니다. */
+        '<div class="itr-two">'+
+          '<a class="pcd itr-pc" href="/stores">'+
+            '<span class="pcd-ph" aria-hidden="true">'+picBox("kp-tr-pro-visit", "search", "(max-width:640px) 92vw, 300px")+'</span>'+
+            '<span class="pcd-tx"><b class="pcd-t">매장 찾기</b><i class="pcd-d">조건에 맞는 매물을 둘러보고 인수 순서를 확인합니다.</i>'+
+            '<span class="pcd-go">매물 둘러보기'+icon("arrow",14)+'</span></span></a>'+
+          '<a class="pcd itr-pc" href="/sell" data-cta="on" data-cta-form="sell" hidden>'+
+            '<span class="pcd-ph" aria-hidden="true">'+picBox("kp-tr-pro-ready", "handover", "(max-width:640px) 92vw, 300px")+'</span>'+
+            '<span class="pcd-tx"><b class="pcd-t">내 매장 넘기기</b><i class="pcd-d">매장을 내놓고 인계할 열쇠 · 시설 목록을 준비합니다.</i>'+
+            '<span class="pcd-go">매물 내놓기'+icon("arrow",14)+'</span></span></a>'+
+          '<a class="pcd itr-pc" href="/transfer?t=out" data-cta="off" data-cta-form="sell">'+
+            '<span class="pcd-ph" aria-hidden="true">'+picBox("kp-tr-pro-ready", "handover", "(max-width:640px) 92vw, 300px")+'</span>'+
+            '<span class="pcd-tx"><b class="pcd-t">내 매장 넘기기</b><i class="pcd-d">넘기는 순서와 인계할 열쇠 · 시설 목록을 먼저 확인합니다.</i>'+
+            '<span class="pcd-go">넘기는 순서 보기'+icon("arrow",14)+'</span></span></a>'+
         '</div>'+
+        '<p class="itr-sub"><a href="/tools/premium">'+icon("calc",15)+'권리금 계산'+icon("chev",13)+'</a>'+
+          '<a href="/transfer">양도양수 안내 전체'+icon("chev",13)+'</a></p>'+
       '</div>'+
     '</div>'+
     (S.length

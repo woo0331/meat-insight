@@ -10,7 +10,9 @@ function PageFranchise(){
   '<section class="sec sec-white"><div class="w">'+
     '<ul class="fc-g">'+(window.AM_FRANCHISE_CATS||[]).map(function(c){
       var n = amFranchises({cat:c.key}).length;
-      return '<li><a class="fc'+tn(c.tone)+'" href="/franchise/'+esc(c.key)+'">'+
+
+      return '<li><a class="fc fc-pc'+tn(c.tone)+'" href="/franchise/'+esc(c.key)+'">'+
+        '<span class="fc-ph" aria-hidden="true">'+picBox(picKey("ind", c.ind), c.icon, "(max-width:640px) 46vw, 220px")+'</span>'+
         '<span class="fc-ic">'+icon(c.icon,22)+'</span>'+
         '<b>'+esc(c.name)+'</b>'+
 

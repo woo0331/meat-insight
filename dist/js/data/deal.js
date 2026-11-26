@@ -272,3 +272,29 @@ window.amSideName = function(key){
   var s = window.amSide(key);
   return s ? s.name : "";
 };
+
+window.amCustSt = function(key){
+  return (key === "fee_wait" || key === "fee_done") ? "done" : (key || "new");
+};
+window.amReqItemsView = function(reqState, items){
+  var rs = window.amCustSt(reqState);
+  return (items || []).map(function(it){
+    var own = !!(it && it.state && it.state !== "new");
+    var st  = own ? window.amCustSt(it.state) : (rs === "new" ? "new" : rs);
+
+    return { service_id: it && it.service_id, state: st, rec: own, own: own || rs === "new" };
+  });
+};
+
+window.amReqTally = function(reqState, items){
+  var v = window.amReqItemsView(reqState, items), t = { total:v.length, open:0, done:0, hold:0, lost:0,
+    rec: v.some(function(x){ return x.rec; }) };
+  v.forEach(function(x){
+    if(x.state === "done")      t.done++;
+    else if(x.state === "hold") t.hold++;
+    else if(x.state === "lost") t.lost++;
+    else                        t.open++;
+  });
+  t.phase = t.total === 0 ? "none" : t.open > 0 ? "open" : t.hold > 0 ? "hold" : t.done > 0 ? "done" : "lost";
+  return t;
+};

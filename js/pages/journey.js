@@ -145,11 +145,17 @@ window.ProcessBand = function(o){
      ⚠️⚠️ `<section>` 안에 `<section>` 을 넣으면 위아래 여백이 두 겹이
      되고 바탕이 한 번 더 깔려 구간이 둘로 읽힙니다 — 그래서 껍데기를
      빼는 쪽입니다. 부르는 쪽이 제 머리말을 답니다. */
-  var body = '<ol class="pcs">'+steps.map(function(s, i){
+  /* 2026-11-25 디자인 개편 — o.first(보일 걸음 수) · o.from(지금 걸음 0부터)을 주면
+     '지금 할 일' · '다음 단계' 가 먼저 보이고 나머지는 접힙니다 (DOM 에는 전부 있습니다). */
+  var from = Math.max(0, Math.min(steps.length - 1, o.from || 0));
+  var first = o.first ? Math.max(1, o.first) : 0;
+  var inWin = function(i){ return !first || (i >= from && i < from + first); };
+  var stepLi = function(s, i){
       var no = (i + 1 < 10 ? "0" : "") + (i + 1);
-      return '<li class="pcs-i">'+
+      var tag = first ? (i === from ? '<em class="pcs-tag pcs-tag-now">지금 할 일</em>' : (i > from && i < from + first ? '<em class="pcs-tag">다음 단계</em>' : '')) : '';
+      return '<li class="pcs-i'+(first && i === from ? ' pcs-now' : '')+'">'+
         '<span class="pcs-n">'+no+'</span>'+
-        '<div class="pcs-b">'+
+        '<div class="pcs-b">'+tag+
           '<b class="pcs-t">'+esc(s.name)+'</b>'+
           '<p class="pcs-p">'+esc(s.lead)+'</p>'+
           /* ⚠️ 꼭 확인할 것 (2026-10-06 2차 §5) — 걸음마다 **무엇을
@@ -166,7 +172,12 @@ window.ProcessBand = function(o){
           '<div class="pcs-ls">'+StepLinks(s, ind)+'</div>'+
         '</div>'+
       '</li>';
-    }).join("")+'</ol>'+
+    };
+  var rest = first ? steps.map(function(s, i){ return inWin(i) ? "" : stepLi(s, i); }).join("") : "";
+  var fid = (o.key || "pcs") + "-rest";
+  var body = '<ol class="pcs">'+steps.map(function(s, i){ return inWin(i) ? stepLi(s, i) : ""; }).join("")+'</ol>'+
+    (rest ? '<div class="pcs-more">'+FoldAll(fid, "나머지 "+(steps.length - Math.min(first, steps.length - from))+"걸음 모두 보기", "접기")+
+      '<ol class="pcs is-fold-all" id="'+esc(fid)+'">'+rest+'</ol></div>' : '')+
     (o.note ? '<p class="sec-note">'+icon("info",15)+esc(o.note)+'</p>' : '');
 
   if(o.bare) return body;
@@ -177,6 +188,7 @@ window.ProcessBand = function(o){
       '<h2>'+esc(o.title || "무엇부터 해야 하나요?")+'</h2>'+
       '<p>'+esc(o.lead || "순서대로 짚어 드립니다. 걸음마다 필요한 정보 · 업체 · 도구를 바로 열어 보실 수 있습니다.")+'</p>'+
     '</div>'+
+    (o.cta || '')+
     body+
   '</div></section>';
 };
@@ -542,12 +554,15 @@ function OpsWorry(){
     '<div class="sec-hd"><h2>사장님, <em>이런 고민</em>이 있으신가요?</h2>'+
       '<p>고민마다 바로 해 볼 수 있는 계산 · 점검과 맡길 업체를 모았습니다. 서비스를 여러 개 고르시려면 아래 고르개를 쓰세요.</p></div>'+
     '<ul class="hwr-g">'+OPS_WORRY.map(function(x){
-      return '<li id="'+x[3]+'"><div class="hwr-c"><span class="hwr-i" aria-hidden="true">'+icon(x[0], 30)+'</span>'+
-        '<h3>'+esc(x[1])+'</h3>'+
+      /* 2026-11-25 — 고민마다 사진 (비용=계산기와 노트 · 시설=냉난방 점검 · 인력=근무표와 서류). 홍보(메뉴 촬영)는 맞는 사진이 없어 월넛 면 */
+      /* 2026-11-26 — 홍보 = 메뉴 촬영 · 인력 · 세무 · 노무 = 노무 상담 사진 (누락 카드 사진 13장) */
+      var ph = { "ow-cost":"kp-tr-svc-premium", "ow-mkt":"service-menu-shoot", "ow-fix":"kp-op-svc-repair", "ow-hr":"service-labor" }[x[3]] || "";
+      return '<li id="'+x[3]+'"><div class="hwr-c hwr-pc"><span class="hwr-ph" aria-hidden="true">'+picBox(ph, x[0], "(max-width:640px) 92vw, 320px")+'</span>'+
+        '<div class="hwr-b"><h3><span class="hwr-i" aria-hidden="true">'+icon(x[0], 22)+'</span>'+esc(x[1])+'</h3>'+
         '<p class="hwr-acts">'+opsWorryActs(x[4])+'</p>'+
         '<p class="hwr-chk">맡길 업체 찾기</p>'+
         '<p class="hwr-ch">'+x[2].map(function(c){
-          return '<a href="'+esc(c[1])+'">'+esc(c[0])+'</a>'; }).join("")+'</p></div></li>'; }).join("")+'</ul>'+
+          return '<a href="'+esc(c[1])+'">'+esc(c[0])+'</a>'; }).join("")+'</p></div></div></li>'; }).join("")+'</ul>'+
   '</div></section>';
 }
 
@@ -930,11 +945,16 @@ function AcqWhich(t, ind, iq){
      양도: 넘기는 순서 → 준비 자료 → 양도 가이드 (+ 권리금 · 필요한 것 고르기)
      ⚠️ 전부 **실제로 있는 화면 · 글 · 계산기**입니다 (tools/urls.json · content.js · AM_PROCESS).
      ⚠️ 탭 둘(.aq-tb .aq-t)과 메뉴(.aq-m)는 check.js · test-flows 가 이름으로 봅니다. */
+  /* 2026-11-25 — 두 경로를 사진으로 가릅니다 (받는 분=점포를 살펴보는 장면 · 넘기는 분=열쇠와 서류 인계).
+     고른 쪽은 테두리 + '선택됨' 글자 (색만으로 가르지 않습니다). 클래스 aq-t 는 검사가 봅니다 */
   function tab(k, name, lead){
-    return '<a class="aq-t'+(t===k?" on":"")+'" href="/transfer?t='+k+
+    var ph = k === "in" ? "kp-tr-pro-visit" : "kp-tr-pro-ready";
+    return '<a class="aq-t aq-pc'+(t===k?" on":"")+'" href="/transfer?t='+k+
       (ind ? "&i="+encodeURIComponent(ind.key) : "")+'"'+
       (t===k?' aria-current="page"':'')+'>'+
-      '<b>'+esc(name)+'</b><em>'+esc(lead)+'</em></a>';
+      '<span class="aq-tph" aria-hidden="true">'+picBox(ph, k === "in" ? "search" : "handover", "(max-width:640px) 46vw, 560px")+
+        (t===k ? '<em class="swt-on">'+icon("check",14)+' 선택됨</em>' : '')+'</span>'+
+      '<span class="aq-tx"><b>'+esc(name)+'</b><em>'+esc(lead)+'</em></span></a>';
   }
   var P = window.AM_PROCESS || {};
   var nIn = (P["acq-in"] || []).length, nOut = (P["acq-out"] || []).length;
@@ -1086,7 +1106,9 @@ function AcqMarket(t, ind, iq){
          ⚠️ 매물은 서버 조회가 아니라 빌드된 데이터(AM_STORES)라 "조회 실패" 상태가 따로 없습니다. */
       : '<p class="aq-zero">'+icon("info",16)+'<span>현재 등록된 매물이 없습니다.</span></p>'+
         '<div class="row-cta"><a class="btn btn-b" href="/content?j=startup&cat=store">인수 계약 가이드'+icon("arrow",16)+'</a>'+
-        '<a class="btn btn-o" href="/tools/premium">권리금 계산</a></div>'))+
+        '<a class="btn btn-o" href="/tools/premium">권리금 계산</a>'+
+        /* 2026-11-25 — 넘기시려는 분의 길도 같은 자리에 (양도 준비 · 같은 화면 t=out) */
+        '<a class="btn btn-o" href="/transfer?t=out">양도 준비 보기</a></div>'))+
   '</div></section>';
 }
 
@@ -1130,10 +1152,10 @@ function AcqKpCalc(t){
 function AcqKpPros(ind){
   var q = ind ? "i=" + encodeURIComponent(ind.key) : "";
   var L = [
-    kxSvc("law", "lease", "임대차 · 계약 법률", "임대차 승계 · 양도 계약서 검토", "law"),
-    kxSvc("admin", "tax-agent", "양도 세무", "권리금 · 시설 대금의 세금 정리", "tax"),
-    kxSvc("labor", "consult", "직원 · 노무 승계", "넘기거나 받을 때 직원 문제 상담", "staff"),
-    kxSvc("contract", "", "계약 · 명의 정리", "인터넷 · POS · 렌탈 명의 이전 · 해지", "contract")
+    kxSvc("law", "lease", "임대차 · 계약 법률", "임대차 승계 · 양도 계약서 검토", "law", "kp-tr-svc-contract"),
+    kxSvc("admin", "tax-agent", "양도 세무", "권리금 · 시설 대금의 세금 정리", "tax", "kp-cl-svc-tax"),
+    kxSvc("labor", "consult", "직원 · 노무 승계", "넘기거나 받을 때 직원 문제 상담", "staff", "kp-op-svc-staff"),
+    kxSvc("contract", "", "계약 · 명의 정리", "인터넷 · POS · 렌탈 명의 이전 · 해지", "contract", "kp-tr-pro-nego")
   ].filter(Boolean);
   if(q) L.forEach(function(x){ x.href += (x.href.indexOf("?") >= 0 ? "&" : "?") + q; });
   return KpCards({ id:"aq-pro", tone:"sec-white", kicker:"전문가 연결",
@@ -1148,10 +1170,10 @@ function AcqKpPros(ind){
 function AcqKxPros(ind){
   var q = ind ? "i=" + encodeURIComponent(ind.key) : "";
   var L = [
-    kxSvc("law", "lease", "임대차 · 계약 법률", "임대차 승계 · 양도 계약서 검토", "law"),
-    kxSvc("admin", "tax-agent", "양도 세무", "권리금 · 시설 대금의 세금 정리", "tax"),
-    kxSvc("labor", "consult", "직원 · 노무 승계", "넘기거나 받을 때 직원 문제 상담", "staff"),
-    kxSvc("contract", "", "계약 · 명의 정리", "인터넷 · POS · 렌탈 명의 이전 · 해지", "contract")
+    kxSvc("law", "lease", "임대차 · 계약 법률", "임대차 승계 · 양도 계약서 검토", "law", "kp-tr-svc-contract"),
+    kxSvc("admin", "tax-agent", "양도 세무", "권리금 · 시설 대금의 세금 정리", "tax", "kp-cl-svc-tax"),
+    kxSvc("labor", "consult", "직원 · 노무 승계", "넘기거나 받을 때 직원 문제 상담", "staff", "kp-op-svc-staff"),
+    kxSvc("contract", "", "계약 · 명의 정리", "인터넷 · POS · 렌탈 명의 이전 · 해지", "contract", "kp-tr-pro-nego")
   ].filter(Boolean);
   if(q) L.forEach(function(x){ x.href += (x.href.indexOf("?") >= 0 ? "&" : "?") + q; });
   return KxServices({ id:"aq-pro", tone:"sec-white", kicker:"전문가 연결",

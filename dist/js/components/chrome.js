@@ -334,8 +334,9 @@ function MobileNav(){
 var MNAV_NEAR = [
   [/^\/tools/,                                   "/tools"],
   [/^\/(content|faq|about|support)/,             "/content"],
-  [/^\/(my|search|compare)/,                     "/my"],
-  [/^\/(providers|p\/|c\/|g\/|quote|join|franchise|sell|stores|assets|s\/|a\/|startup|operation|transfer|closure)/, "/providers"]
+
+  [/^\/my/,                                      "/my"],
+  [/^\/(search|compare|providers|p\/|c\/|g\/|quote|join|franchise|sell|stores|assets|s\/|a\/|startup|operation|transfer|closure)/, "/providers"]
 ];
 function paintMnav(){
   var n = $("mnav"); if(!n) return;

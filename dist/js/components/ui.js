@@ -94,6 +94,8 @@ window.IndustryGrid = function(baseTo, current, g){
     var on = (i.key === current);
     return '<li><a class="ind'+tn(i.tone)+(on?" on":"")+'" href="'+esc(baseTo+"/"+i.key)+'"'+
       (on?' aria-current="page"':'')+'>'+
+
+      '<span class="ind-ph" aria-hidden="true">'+(typeof picBox === "function" ? picBox(picKey("ind", i.key), i.icon, "(max-width:640px) 46vw, (max-width:1100px) 30vw, 300px") : "")+'</span>'+
       '<span class="ind-ic">'+icon(i.icon,24)+'</span>'+
       '<b>'+esc(i.name)+'</b>'+
       '<span class="ind-l">'+esc(i.lead)+'</span></a></li>';
@@ -131,7 +133,9 @@ window.CatCard = function(c, industryKey, qs){
   if(industryKey) qa.push('i='+encodeURIComponent(industryKey));
   if(qs) qa.push(qs);
   var href = base + (qa.length ? (base.indexOf("?") >= 0 ? "&" : "?")+qa.join("&") : "");
-  return '<a class="cat'+tn(c.tone)+'" href="'+esc(href)+'" data-rv>'+
+
+  return '<a class="cat cat-pc'+tn(c.tone)+'" href="'+esc(href)+'" data-rv>'+
+    '<span class="cat-ph" aria-hidden="true">'+picBox(picKey("cat", c.key), c.icon || "grid", "(max-width:640px) 92vw, (max-width:1100px) 46vw, 300px")+'</span>'+
 
     '<span class="cat-ic'+(hasIconArt(c.key) ? " cat-ic-a" : "")+'">'+
       (hasIconArt(c.key) ? iconArt(c.key, 34) : icon(c.icon,22))+'</span>'+
@@ -487,7 +491,10 @@ window.HallCalcBand = function(o){
         '<span class="mcal-i ia-t" aria-hidden="true">'+
           (art ? iconArt(t.icon, 44) : icon(t.icon, 28))+'</span>'+
         '<b class="mcal-n">'+esc(t.name)+'</b>'+
-        (t.out ? '<i class="mcal-o">'+esc(t.out)+'</i>' : '')+
+
+        ((window.AM_TOOL_IN || {})[t.key] ? '<span class="mcal-io"><span><em>넣는 값</em>'+esc(AM_TOOL_IN[t.key])+'</span>'+
+          (t.out ? '<span><em>얻는 결과</em>'+esc(t.out)+'</span>' : '')+'</span>' :
+          (t.out ? '<i class="mcal-o">'+esc(t.out)+'</i>' : ''))+
         '<span class="mcal-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
       '</a></li>'; }).join("")+'</ul>'+
     '<div class="row-cta">'+

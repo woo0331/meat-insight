@@ -157,6 +157,8 @@ window.IndustryGrid = function(baseTo, current, g){
     var on = (i.key === current);
     return '<li><a class="ind'+tn(i.tone)+(on?" on":"")+'" href="'+esc(baseTo+"/"+i.key)+'"'+
       (on?' aria-current="page"':'')+'>'+
+      /* 2026-11-26 — 전체 업종 목록에도 업종 공통 사진 (AM_PIC_IND · 없으면 월넛 면 · 빈 액자 없음) */
+      '<span class="ind-ph" aria-hidden="true">'+(typeof picBox === "function" ? picBox(picKey("ind", i.key), i.icon, "(max-width:640px) 46vw, (max-width:1100px) 30vw, 300px") : "")+'</span>'+
       '<span class="ind-ic">'+icon(i.icon,24)+'</span>'+
       '<b>'+esc(i.name)+'</b>'+
       '<span class="ind-l">'+esc(i.lead)+'</span></a></li>';
@@ -212,7 +214,9 @@ window.CatCard = function(c, industryKey, qs){
   if(industryKey) qa.push('i='+encodeURIComponent(industryKey));
   if(qs) qa.push(qs);
   var href = base + (qa.length ? (base.indexOf("?") >= 0 ? "&" : "?")+qa.join("&") : "");
-  return '<a class="cat'+tn(c.tone)+'" href="'+esc(href)+'" data-rv>'+
+  /* 2026-11-25 디자인 개편 §5 · §7 — 분야 카드 맨 위 대표 사진 (AM_PIC_CAT · 없으면 같은 높이의 월넛 면) */
+  return '<a class="cat cat-pc'+tn(c.tone)+'" href="'+esc(href)+'" data-rv>'+
+    '<span class="cat-ph" aria-hidden="true">'+picBox(picKey("cat", c.key), c.icon || "grid", "(max-width:640px) 92vw, (max-width:1100px) 46vw, 300px")+'</span>'+
     /* ⚠️ 2026-10-09 지시서 §3 · §7 — 분야 카드도 **컬러 아이콘**입니다.
        `iconArt()` 에 같은 key 가 있으면 그것을, 없으면 선형 아이콘이
        자리를 지킵니다 (빈 칸이 생기지 않습니다 · 절대 규칙 2). */
@@ -779,7 +783,10 @@ window.HallCalcBand = function(o){
         '<span class="mcal-i ia-t" aria-hidden="true">'+
           (art ? iconArt(t.icon, 44) : icon(t.icon, 28))+'</span>'+
         '<b class="mcal-n">'+esc(t.name)+'</b>'+
-        (t.out ? '<i class="mcal-o">'+esc(t.out)+'</i>' : '')+
+        /* 2026-11-25 — '넣는 값 → 얻는 결과' 를 한눈에 (AM_TOOL_IN · out) */
+        ((window.AM_TOOL_IN || {})[t.key] ? '<span class="mcal-io"><span><em>넣는 값</em>'+esc(AM_TOOL_IN[t.key])+'</span>'+
+          (t.out ? '<span><em>얻는 결과</em>'+esc(t.out)+'</span>' : '')+'</span>' :
+          (t.out ? '<i class="mcal-o">'+esc(t.out)+'</i>' : ''))+
         '<span class="mcal-go" aria-hidden="true">'+icon("arrow",16)+'</span>'+
       '</a></li>'; }).join("")+'</ul>'+
     '<div class="row-cta">'+

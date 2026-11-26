@@ -712,7 +712,14 @@ function PageSample(){
       '<p class="row-cta"><a class="btn btn-b btn-lg" href="/join">업체 입점 알아보기'+
         icon("arrow",18)+'</a></p>'+
     '</div></section>'+
-    '<section class="sec sec-white"><div class="w">'+SampleNote("bot")+'</div></section>';
+    /* 2026-11-26 §8 — 예시와 입점 절차를 이어 둡니다: 이 화면을 본 업체가 "그래서 어떻게 올리나" 를 바로 봅니다.
+       ⚠️ 절차는 /join 과 같은 AM_JOIN_STEPS 한 곳에서 옵니다 (두 곳에 적지 않습니다). */
+    JoinHow()+
+    '<section class="sec sec-white"><div class="w">'+SampleNote("bot")+
+      '<p class="row-cta"><a class="btn btn-o" href="/join#join-how">입점 절차 자세히</a>'+
+      /* ⚠️ 신청서 단추는 입점 접수가 열렸을 때만 (data-cta 짝 · 접수 게이트 그대로) */
+      '<a class="btn btn-b" href="/join#join-form" data-cta="on" data-cta-form="join" hidden>입점 신청서로 가기'+icon("arrow",16)+'</a></p>'+
+    '</div></section>';
 }
 
 /* ── /join — 업체 입점 (§39) ───────────────────────────────────── */
@@ -963,7 +970,7 @@ function JoinWhy(){
 function JoinHow(){
   var st = (window.AM_JOIN_STEPS || []);
   if(!st.length) return "";
-  return '<section class="sec"><div class="w">'+
+  return '<section class="sec" id="join-how"><div class="w">'+
     '<div class="sec-hd"><p class="eyebrow">어떻게 진행되나</p>'+
       '<h2>세 걸음이면 됩니다</h2></div>'+
     '<ol class="how-g">'+ st.map(function(x){

@@ -8914,3 +8914,346 @@ span.kp-more .fld-b{ margin:0; }
 .mkz-sell{ display:flex; align-items:center; justify-content:center; gap:6px; margin:var(--s3) 0 0;
   padding-top:var(--s3); border-top:1px solid var(--line); font-size:14px; font-weight:700; color:var(--ink2); }
 .mkz-sell svg{ flex:none; }
+
+/* ══ 2026-11-25 디자인 개편 — 공통 사진 카드 (.pcd) ════════════════════════════
+   사진 → 제목 → 설명 → 버튼 순서 · 얕은 그림자 + 카드 테두리 · 사진은 고정 비율.
+   ⚠️ 사진이 없는 자리는 .pcd-n (월넛 면 + 아이콘) — 빈 베이지 틀을 두지 않습니다.
+   ⚠️ 특정도를 한 단계 높여(.pcd.xxx) 위의 옛 grid 규칙을 덮습니다 — 옛 규칙은 지우지 않았습니다. */
+.pcd{ display:flex; flex-direction:column; min-width:0; width:100%; background:var(--surface); border:1px solid var(--line);
+  border-radius:16px; overflow:hidden; box-shadow:0 2px 10px rgba(56,39,31,.06); color:var(--hm-ink); text-decoration:none;
+  transition:border-color .15s, box-shadow .15s, transform .15s; }
+a.pcd:hover, label.pcd:hover{ border-color:var(--walnut); box-shadow:0 8px 22px rgba(56,39,31,.12); }
+a.pcd:focus-visible, .pcd:focus-within{ outline:3px solid var(--walnut); outline-offset:2px; }
+.pcd-ph{ position:relative; display:block; aspect-ratio:16/10; overflow:hidden; background:#E9DFD0; flex:none; }
+.pcd-ph img, .pcd-ph .ph{ width:100%; height:100%; object-fit:cover; display:block; }
+.pcd-n{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(140deg, #A48A77 0%, #7E6352 100%); background-color:#8B6F5C; color:#FFFCF7;
+  --ia-1:#FFFCF7; --ia-2:rgba(255,252,247,.4); }
+.pcd-n svg{ width:56px; height:56px; }
+.pcd-tx{ display:flex; flex-direction:column; gap:4px; padding:14px 16px 16px; flex:1 1 auto; min-width:0; }
+.pcd-t{ font-weight:800; font-size:17px; line-height:1.35; color:var(--hm-ink); }
+.pcd-d{ font-style:normal; font-size:var(--t-cap); line-height:1.55; color:var(--hm-ink2); }
+.pcd-go{ margin-top:auto; padding-top:10px; display:inline-flex; align-items:center; gap:6px; font-weight:800; font-size:14px; color:var(--walnut); }
+
+/* 홈 단계 네 카드 — PC 4열 · 넓으면 글 왼쪽 · 사진 오른쪽 (시안 01) · 모바일 2열 사진 위 */
+.ipil-g.pcd-g4{ grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+.ipil-g.pcd-g4 > li{ display:flex; }
+.pcd.ipil-c{ display:flex; flex-direction:column; padding:0; gap:0; align-items:stretch; }
+.pcd.ipil-c .ipil-i{ width:44px; height:44px; border-radius:12px; margin-bottom:6px; }
+.pcd.ipil-c .pcd-go{ width:36px; height:36px; justify-content:center; border:1.5px solid var(--hm-ink); border-radius:999px; padding:0; margin-top:auto; }
+.pcd.ipil-c .pcd-tx{ gap:6px; }
+@media (min-width:1201px){
+  .pcd.ipil-c{ flex-direction:row-reverse; min-height:220px; }
+  .pcd.ipil-c .pcd-ph{ aspect-ratio:auto; width:46%; }
+  .pcd.ipil-c .pcd-tx{ padding:20px 16px 18px 20px; }
+}
+@media (max-width:900px){ .ipil-g.pcd-g4{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } }
+@media (max-width:640px){
+  .pcd.ipil-c .pcd-tx{ padding:12px 12px 14px; }
+  .pcd.ipil-c .ipil-i{ display:none; }
+  .pcd.ipil-c .pcd-t{ font-size:16px; }
+  .pcd.ipil-c .pcd-go{ width:32px; height:32px; }
+}
+
+/* 홈 업종 탐색 — 사진 카드 (시안 02 소형) */
+.iind-g > li{ display:flex; }
+.pcd.iind-c{ display:flex; flex-direction:column; padding:0; gap:0; min-height:0; align-items:stretch; }
+.pcd.iind-c .pcd-ph{ aspect-ratio:16/9; }
+.pcd.iind-c .pcd-n svg{ width:44px; height:44px; }
+.pcd.iind-c .pcd-tx{ padding:12px 14px 14px; }
+.pcd.iind-c .pcd-t{ font-size:16px; }
+.iind-allli{ display:flex; }
+.iind-all2{ flex:1 1 auto; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:6px; min-height:120px; padding:20px;
+  border:1.5px dashed var(--walnut); border-radius:16px; color:var(--walnut); background:transparent; text-decoration:none; }
+.iind-all2 b{ font-size:17px; font-weight:800; }
+.iind-all2 i{ font-style:normal; font-size:var(--t-cap); color:var(--hm-ink2); }
+.iind-all2:hover{ background:var(--surface); border-style:solid; }
+.iind-all2:focus-visible{ outline:3px solid var(--walnut); outline-offset:2px; }
+@media (max-width:640px){
+  .pcd.iind-c .pcd-tx{ padding:10px 12px 12px; }
+  .pcd.iind-c .pcd-t{ font-size:15px; }
+  .pcd.iind-c .pcd-d{ display:none; }
+  .iind-all2{ min-height:0; padding:14px; }
+  .iind-all2 b{ font-size:15px; }
+}
+
+/* 홈 양도양수 — 매장 찾기 / 내 매장 넘기기 두 카드 (2026-11-25) */
+.pcd[hidden]{ display:none !important; }
+.itr-b.itr-b2{ grid-template-columns:1fr; }
+.itr-b2 .itr-tx{ padding:44px 48px; }
+.itr-two{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:6px 0 0; }
+.pcd.itr-pc{ flex-direction:row; min-height:150px; }
+.pcd.itr-pc .pcd-ph{ aspect-ratio:auto; width:42%; }
+.pcd.itr-pc .pcd-tx{ padding:16px 18px; }
+.itr-sub{ display:flex; flex-wrap:wrap; gap:6px 18px; margin:14px 0 0; }
+.itr-sub a{ display:inline-flex; align-items:center; gap:6px; min-height:44px; font-weight:700; font-size:14px; color:var(--walnut); text-decoration:none; }
+.itr-sub a:hover{ text-decoration:underline; }
+@media (max-width:900px){ .itr-b2 .itr-tx{ padding:28px 20px; } }
+@media (max-width:640px){
+  .itr-two{ grid-template-columns:1fr; gap:10px; }
+  .pcd.itr-pc{ min-height:120px; }
+  .pcd.itr-pc .pcd-ph{ width:38%; }
+  .pcd.itr-pc .pcd-tx{ padding:12px 14px; }
+}
+
+/* 홈 운영 — 주요 서비스 작은 사진 · 홈 세부 서비스 — 훑는 링크 (2026-11-25) */
+.iops-l .iops-a{ display:flex; align-items:center; gap:12px; }
+.iops-th{ position:relative; flex:none; width:52px; height:52px; border-radius:10px; overflow:hidden; background:#E9DFD0; border:1px solid var(--line); }
+.iops-th img, .iops-th .ph{ width:100%; height:100%; object-fit:cover; display:block; }
+.iops-th .pcd-n svg{ width:24px; height:24px; }
+.iops-a > span:not(.iops-th){ flex:1 1 auto; min-width:0; }
+.bdq-g{ list-style:none; margin:8px 0 0; padding:0; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0 20px; border-top:1px solid var(--line); }
+.bdq-g > li{ border-bottom:1px solid var(--line); }
+.bdq-a{ display:flex; align-items:center; gap:12px; min-height:60px; padding:10px 4px; color:var(--hm-ink); text-decoration:none; }
+.bdq-a:hover b{ text-decoration:underline; }
+.bdq-a:focus-visible{ outline:3px solid var(--walnut); outline-offset:2px; }
+.bdq-i{ flex:none; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:#EFE6D8; color:var(--walnut); }
+.bdq-t{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.bdq-t b{ font-size:15px; font-weight:800; }
+.bdq-t i{ font-style:normal; font-size:var(--t-cap); line-height:1.45; color:var(--hm-ink2); }
+.bdq-a > svg:last-child{ flex:none; color:var(--walnut); }
+@media (max-width:1100px){ .bdq-g{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:640px){ .bdq-g{ grid-template-columns:1fr; } }
+@media (max-width:640px){
+  .iind-g.is-fold > li.iind-allli{ display:flex; grid-column:1 / -1; }
+  .iind-g.is-fold > li.iind-allli .iind-all2{ flex-direction:row; align-items:center; min-height:52px; }
+  .iind-g.is-fold > li.iind-allli .iind-all2 i{ display:none; }
+  .iind-g.is-fold > li.iind-allli .iind-all2 > svg:last-child{ margin-left:auto; }
+}
+@media (min-width:901px){
+  .itr-b2 .itr-f{ grid-template-columns:repeat(3,minmax(0,1fr)) auto; align-items:stretch; }
+  .itr-b2 .itr-f > .btn{ grid-column:auto; padding:0 24px; white-space:nowrap; }
+}
+
+/* ══ 2026-11-25 창업 — 업종 상세 ══════════════════════════════════════ */
+/* 새로 / 인수 두 카드 — 사진 위 · 글 아래 */
+.swt-c.swt-pc{ position:relative; display:flex; flex-direction:column; align-items:stretch; padding:0; overflow:hidden; }
+.swt-pc .swt-ph{ position:relative; display:block; aspect-ratio:16/9; overflow:hidden; background:#E9DFD0; }
+.swt-pc .swt-ph img, .swt-pc .swt-ph .ph{ width:100%; height:100%; object-fit:cover; display:block; }
+.swt-pc .ic-t{ display:none; }
+.swt-pc .swt-t{ padding:16px 18px 18px; }
+.swt-pc .swt-k{ position:absolute; right:14px; bottom:16px; }
+.swt-on{ position:absolute; left:10px; top:10px; display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:999px;
+  background:#38271F; color:#fff; font-style:normal; font-size:13px; font-weight:800; }
+/* 로드맵 — 지금 할 일 · 다음 단계 */
+.pcs-tag{ display:inline-block; margin:0 0 6px; padding:3px 10px; border-radius:999px; background:#EFE6D8; color:#5A3F31;
+  font-style:normal; font-size:13px; font-weight:800; }
+.pcs-tag-now{ background:#5A3F31; color:#fff; }
+.pcs-i.pcs-now{ border-color:var(--walnut); box-shadow:0 0 0 2px rgba(106,75,59,.18); }
+.pcs-more{ margin:14px 0 0; }
+.pcs-more > .pcs{ margin-top:12px; }
+.pcs-cta{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin:14px 0 0; }
+.pcs-cta span{ font-size:var(--t-cap); color:var(--hm-ink2); }
+/* 업종 장비 — 사진 카드 */
+.eqp-g{ list-style:none; margin:0 0 14px; padding:0; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.eqp-g > li{ display:flex; }
+.pcd.eqp-c .pcd-ph{ aspect-ratio:4/3; }
+.pcd.eqp-c .pcd-tx{ padding:10px 12px 12px; }
+.pcd.eqp-c .pcd-t{ font-size:15px; }
+@media (max-width:900px){ .eqp-g{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } }
+/* 사진 없는 kp 카드 판도 같은 월넛 면으로 (빈 베이지 틀처럼 보이지 않게) */
+.kp-ph > .kp-art{ background:linear-gradient(140deg, #CDB496 0%, #B09072 100%); background-color:#BFA284; color:#FFFCF7;
+  --ia-1:#FFFCF7; --ia-2:rgba(255,252,247,.4); }
+.pcs-tag{ display:table; }
+.pcs-cta{ margin:0 0 16px; }
+.pcs-cta .btn{ color:#fff; }
+.pcs-b > .pcs-tag{ align-self:flex-start; width:fit-content; }
+
+/* ══ 2026-11-25 운영 — 고민 카드 사진 · 계산도구 넣는 값 → 얻는 결과 ══════════════════ */
+.hwr-c.hwr-pc{ padding:0; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 2px 10px rgba(56,39,31,.06); }
+.hwr-ph{ position:relative; display:block; aspect-ratio:16/9; overflow:hidden; background:#E9DFD0; flex:none; }
+.hwr-ph img, .hwr-ph .ph{ width:100%; height:100%; object-fit:cover; display:block; }
+.hwr-b{ display:flex; flex-direction:column; gap:10px; padding:16px 18px 18px; flex:1 1 auto; }
+.hwr-b h3{ display:flex; align-items:center; gap:8px; margin:0; font-size:18px; line-height:1.35; min-height:2.7em; }
+.hwr-b h3 .hwr-i{ flex:none; }
+.hwr-b .hwr-acts{ display:flex; flex-direction:column; gap:8px; margin:0; }
+.hwr-b .hwr-acts .btn{ width:100%; justify-content:center; }
+.hwr-b .hwr-chk{ margin:6px 0 0; padding-top:10px; border-top:1px solid var(--line); }
+@media (max-width:1100px){ .hwr-g{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
+@media (max-width:640px){ .hwr-g{ grid-template-columns:1fr; } .hwr-b h3{ min-height:0; } }
+.mcal-io{ display:flex; flex-direction:column; gap:4px; margin:2px 0 0; font-size:var(--t-cap); line-height:1.45; color:var(--hm-ink2); }
+.mcal-io > span{ display:block; }
+.mcal-io em{ display:inline-block; min-width:4.2em; margin-right:6px; font-style:normal; font-weight:800; color:var(--hm-ink); }
+.sec-calc .mcal-g + .row-cta{ margin-top:24px; }
+.mcal-io{ padding-right:44px; }
+
+/* ══ 2026-11-25 양도양수 — 받는 분 / 넘기는 분 사진 카드 · 도움 분야 ══════════════ */
+.aq-tb{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.aq-t.aq-pc{ position:relative; display:flex; flex-direction:column; padding:0; overflow:hidden; border:1.5px solid var(--line);
+  border-radius:16px; background:var(--surface); box-shadow:0 2px 10px rgba(56,39,31,.06); text-decoration:none; color:var(--hm-ink); }
+.aq-t.aq-pc.on{ border-color:#38271F; box-shadow:0 0 0 2px rgba(56,39,31,.25); }
+.aq-t.aq-pc:hover{ border-color:var(--walnut); }
+.aq-t.aq-pc:focus-visible{ outline:3px solid var(--walnut); outline-offset:2px; }
+.aq-tph{ position:relative; display:block; aspect-ratio:21/9; overflow:hidden; background:#E9DFD0; }
+.aq-tph img, .aq-tph .ph{ width:100%; height:100%; object-fit:cover; display:block; }
+.aq-tx{ display:flex; flex-direction:column; gap:4px; padding:14px 18px 16px; }
+.aq-tx b{ font-size:18px; font-weight:800; }
+.aq-tx em{ font-style:normal; font-size:var(--t-cap); color:var(--hm-ink2); }
+@media (max-width:640px){
+  .aq-tb{ gap:10px; }
+  .aq-tph{ aspect-ratio:4/3; }
+  .aq-tx{ padding:10px 12px 12px; }
+  .aq-tx b{ font-size:15px; }
+}
+#aq-pro .kp-tx small{ font-size:14px; line-height:1.55; color:var(--hm-ink); }
+#aq-pro .kp-tx small::before{ content:"받는 도움 · "; font-weight:800; color:var(--walnut); }
+
+/* ══ 2026-11-25 폐업 — 네 상황 사진 카드 · 핵심 서비스 다섯 ═══════════════════════ */
+.wnt-l > li{ display:flex; }
+.wnt{ position:relative; overflow:hidden; }
+.wnt .wnt-ph{ position:relative; display:block; margin:calc(-1 * var(--s7)) calc(-1 * var(--s7)) 8px; aspect-ratio:16/9; overflow:hidden; background:#E9DFD0; border-radius:14px 14px 0 0; }
+.wnt .wnt-ph img, .wnt .wnt-ph .ph{ width:100%; height:100%; object-fit:cover; display:block; }
+.wnt.on{ border-color:#38271F; box-shadow:0 0 0 2px rgba(56,39,31,.25); }
+#cl-svc .kp-svc-g{ grid-template-columns:repeat(5,minmax(0,1fr)); }
+@media (max-width:1200px){ #cl-svc .kp-svc-g{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media (max-width:640px){ #cl-svc .kp-svc-g{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.wnt{ width:100%; background:var(--surface); border:1px solid var(--line); box-shadow:0 2px 10px rgba(56,39,31,.06); } @media (max-width:640px){ .wnt .wnt-ph{ margin:calc(-1 * var(--s7)) calc(-1 * var(--s7)) 6px; } }
+.hfl-want-h{ margin:24px 0 4px; font-size:20px; } .hfl-want .wnt-l{ margin-top:12px; } @media (min-width:1101px){ .hfl-want .wnt-l{ grid-template-columns:repeat(4,minmax(0,1fr)); } }
+.wnt .wnt-ph + .wnt-ic{ display:none; }
+@media (max-width:640px){
+  .hfl-want .wnt-l, .wnt-l{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .wnt{ padding:12px; gap:4px; }
+  .wnt .wnt-ph{ margin:-12px -12px 6px; aspect-ratio:4/3; }
+  .wnt > b{ font-size:15px; }
+  .wnt .wnt-l-d{ font-size:13px; line-height:1.45; }
+}
+
+/* 2026-11-25 디자인 개편 §5 · §7 — 분야 카드(CatCard) 맨 위 대표 사진
+   ⚠️ 사진 → 제목 → 설명 → 하위 차례. 카드 안쪽 여백만큼 사진을 밖으로 밀어 가장자리까지 채웁니다.
+   ⚠️ 사진이 없는 분류는 picFace() 월넛 면이 같은 높이를 지킵니다 (빈 액자를 깔지 않습니다). */
+.cat.cat-pc{ padding-top:0; overflow:hidden; background:var(--surface); border:1px solid var(--line);
+  box-shadow:0 1px 2px rgba(44,33,28,.06); }
+.cat.cat-pc .cat-ph{ display:block; margin:0 calc(-1*var(--s6)) var(--s3); aspect-ratio:16/9; overflow:hidden; position:relative; }
+.cat.cat-pc .cat-ph .ph, .cat.cat-pc .cat-ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+.cat.cat-pc .cat-ph .pcd-n{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+.cat.cat-pc .cat-ic{ margin-top:calc(-1*var(--s7)); position:relative; z-index:1; box-shadow:0 2px 6px rgba(44,33,28,.12); background:var(--surface); }
+@media (max-width:600px){ .cat.cat-pc .cat-ph{ margin:0 calc(-1*var(--s5)) var(--s3); } }
+/* 사진 위에 뜬 화살표는 흰 원판 위에 앉힙니다 (사진 밝기와 무관하게 보이게) */
+.cat.cat-pc .cat-go{ z-index:2; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.92);
+  display:flex; align-items:center; justify-content:center; box-shadow:0 1px 4px rgba(44,33,28,.15); color:var(--ink2); }
+
+/* 2026-11-25 디자인 개편 §6 — 여러 서비스 함께 고르기: PC 는 목록 옆 요약 · 폰은 개수가 보이는 접이식 요약
+   ⚠️ 0개면 요약 상자째 숨기고(대표 승인 2026-11-24) 목록이 폭을 다 씁니다. */
+.clpf .clpf-g{ display:grid; gap:var(--s4); }
+.clpf .clpf-sum{ max-width:none; margin:0; }
+.clpf .clpf-sum-t{ display:flex; align-items:center; justify-content:space-between; gap:var(--s3); width:100%;
+  min-height:var(--tap); padding:0; border:0; background:none; font:inherit; font-weight:800; color:var(--ink);
+  text-align:left; cursor:pointer; }
+.clpf .clpf-sum-t b{ color:var(--blue-600); }
+.clpf .clpf-sum-x{ display:inline-flex; align-items:center; gap:4px; font-style:normal; font-size:var(--t-cap);
+  font-weight:700; color:var(--ink2); }
+.clpf .clpf-sum-x svg{ transition:transform .15s; }
+.clpf .clpf-sum.is-open .clpf-sum-x svg{ transform:rotate(180deg); }
+.clpf .clpf-sum-b{ display:grid; gap:var(--s3); }
+.clpf .clpf-sum .pkb-go{ display:grid; gap:var(--s2); }
+.clpf .clpf-sum .pkb-go .btn{ width:100%; }
+@media (max-width:1100px){
+  /* 폰 · 태블릿 — 개수 줄만 보이고 눌러야 목록 · 단추가 펼쳐집니다 (신청은 하단 띠가 늘 받습니다) */
+  .clpf .clpf-sum:not(.is-open) .clpf-sum-b{ display:none; }
+}
+@media (min-width:1101px){
+  .clpf .clpf-g{ grid-template-columns:minmax(0,1fr) 320px; align-items:start; gap:var(--s6); }
+  .clpf .clpf-g > .clpf-sum{ order:2; position:sticky; top:96px; box-shadow:var(--shadow-soft); }
+  .clpf .clpf-g > .clpf-main{ order:1; min-width:0; }
+  .clpf .clpf-g:has(> .clpf-sum[hidden]){ grid-template-columns:minmax(0,1fr); }
+  .clpf .clpf-sum-t{ cursor:default; pointer-events:none; }
+  .clpf .clpf-sum-x{ display:none; }
+  .clpf .clpf-tgw{ justify-content:flex-start; }
+}
+/* 2026-11-25 §6 — 고르는 카드의 작은 사진 (물리적인 선택지만 · 아이콘 자리와 같은 칸) */
+.pk-c .pk-ph{ grid-column:1; width:56px; height:56px; border-radius:12px; overflow:hidden; display:block;
+  box-shadow:inset 0 0 0 1px rgba(44,33,28,.08); }
+.pk-c .pk-ph .ph, .pk-c .pk-ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+.pks-r .pks-ph{ flex:none; width:40px; height:40px; border-radius:9px; overflow:hidden; display:block; }
+.pks-r .pks-ph .ph, .pks-r .pks-ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+html.pk-in-pick .pk-bar{ display:none; }
+
+/* 2026-11-25 디자인 개편 §7 — /sell 무엇을 내놓는지 고르는 사진 카드 + 필수 진행 */
+.sl-tab{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s3); margin:0 0 var(--s2); }
+.sl-tc{ position:relative; display:grid; grid-template-rows:auto 1fr; overflow:hidden; border-radius:var(--r-lg);
+  background:var(--surface); border:1px solid var(--line); box-shadow:0 1px 2px rgba(44,33,28,.06);
+  color:var(--ink); text-decoration:none; transition:border-color .14s, box-shadow .14s; }
+.sl-tc:hover{ border-color:var(--acc-dark); box-shadow:var(--shadow-soft); }
+.sl-tc.on{ border-color:var(--acc-dark); box-shadow:inset 0 0 0 1px var(--acc-dark); background:var(--sand); }
+.sl-tc:focus-visible{ outline:3px solid var(--blue-600); outline-offset:2px; }
+.sl-tph{ display:block; aspect-ratio:16/9; overflow:hidden; }
+.sl-tph .ph, .sl-tph img{ width:100%; height:100%; object-fit:cover; display:block; }
+.sl-tph .pcd-n{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+.sl-ttx{ display:grid; gap:2px; padding:var(--s3) var(--s4) var(--s4); }
+.sl-ttx b{ font-size:17px; font-weight:800; }
+.sl-ttx i{ font-style:normal; font-size:var(--t-sm); color:var(--ink2); }
+.sl-tc .swt-on{ left:auto; right:10px; }
+.sl-tnote{ margin:0 0 var(--s4); font-size:var(--t-cap); color:var(--ink3); }
+.sl-prog{ display:grid; gap:6px; margin:0 0 var(--s4); padding:var(--s3) var(--s4); border-radius:var(--r);
+  background:var(--surface); border:1px solid var(--line); }
+.sl-prog-t{ font-size:var(--t-sm); color:var(--ink2); }
+.sl-prog-t b{ color:var(--ink); }
+.sl-prog-t em{ font-style:normal; }
+.sl-prog-bar{ display:block; height:6px; border-radius:99px; background:var(--bg-2); overflow:hidden; }
+.sl-prog-bar i{ display:block; height:100%; width:0; background:var(--acc-dark); transition:width .2s; }
+.sl-prog.is-done .sl-prog-t em{ color:var(--ink); font-weight:800; }
+@media (max-width:600px){ .sl-ttx{ padding:var(--s2) var(--s3) var(--s3); } .sl-ttx b{ font-size:16px; } }
+.mk-head{ display:flex; align-items:center; gap:8px; margin:0 0 var(--s3); font-size:var(--t-base); color:var(--ink); }
+.mk-head b{ font-weight:800; }
+.asp-note{ margin:var(--s3) 0 0; font-size:var(--t-cap); color:var(--ink3); display:flex; gap:6px; align-items:flex-start; }
+.asp-note svg{ flex:none; margin-top:3px; }
+.tl-c-m em i{ font-style:normal; font-size:12px; font-weight:800; color:var(--gold-text); margin-right:2px; }
+/* 2026-11-25 — 양도양수: 왼쪽 대표 배너 사진 · 오른쪽 글 + 사진 카드 둘 */
+.itr-b.itr-b3{ grid-template-columns:minmax(0,5fr) minmax(0,7fr); }
+.itr-b3 .itr-tx{ padding:40px 44px; }
+.itr-b3 .itr-ph{ min-height:100%; }
+@media (max-width:1100px){ .itr-b.itr-b3{ grid-template-columns:1fr; } .itr-b3 .itr-ph{ aspect-ratio:16/7; min-height:0; } }
+@media (max-width:900px){ .itr-b3 .itr-tx{ padding:28px 20px; } }
+/* 2026-11-25 — 폰에서 요약 · 단추로 이동(포커스 · 앵커)할 때 하단 띠 · 아래 네비 밑으로 숨지 않게 */
+@media (max-width:900px){
+  .clpf .clpf-sum, .clpf .clpf-sum .btn, .clpf .clpf-sum button{ scroll-margin-bottom:calc(var(--mnav-h, 64px) + var(--pk-bar-h, 0px) + 16px); }
+}
+
+/* 2026-11-26 디자인 개편 §8 — 정보 글 목록 맨 위 대표 글 셋 (사진 카드) */
+.ctf-h{ margin:var(--s5) 0 var(--s3); font-size:var(--t-lg, 20px); font-weight:800; color:var(--ink); }
+.ctf-g{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s4); margin:0 0 var(--s4); padding:0; list-style:none; }
+.ctf-c{ height:100%; }
+.ctf-k{ display:inline-block; font-style:normal; font-size:12px; font-weight:800; color:var(--gold-text); margin-bottom:2px; }
+@media (max-width:1100px){ .ctf-g{ grid-template-columns:repeat(2,minmax(0,1fr)); } .ctf-g > li:nth-child(3){ grid-column:1 / -1; } }
+@media (max-width:640px){ .ctf-g{ grid-template-columns:1fr; } .ctf-g > li:nth-child(3){ grid-column:auto; } }
+/* 2026-11-26 §8 — 프랜차이즈 분류 카드: 업종 사진 띠 + 아이콘 원판 */
+.fc.fc-pc{ padding:0 0 var(--s4); overflow:hidden; background:var(--surface); border:1px solid var(--line); }
+.fc.fc-pc .fc-ph{ display:block; width:100%; aspect-ratio:4/3; overflow:hidden; position:relative; }
+.fc.fc-pc .fc-ph .ph, .fc.fc-pc .fc-ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+.fc.fc-pc .fc-ph .pcd-n svg{ width:40px; height:40px; }
+.fc.fc-pc .fc-ic{ margin-top:-22px; position:relative; z-index:1; background:var(--surface); box-shadow:0 2px 6px rgba(44,33,28,.12); }
+.fc.fc-pc > b, .fc.fc-pc .fc-n{ padding:0 var(--s2); }
+@media (max-width:1100px){ .fc-g{ grid-template-columns:repeat(4,1fr); } }
+@media (max-width:700px){ .fc-g{ grid-template-columns:repeat(2,1fr); } }
+.sr-sum{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:var(--s4) 0 var(--s3); }
+.sr-sum b{ margin-right:6px; color:var(--ink); }
+.sr-g{ scroll-margin-top:96px; }
+
+/* 2026-11-26 누락 카드 사진 13장 — 사진마다 주인공 자리(object-position). 좁은 칸 · 폰에서 잘려도 그 물건 · 장면이 남게.
+   ⚠️ 사진을 바꾸시면 이 값도 다시 찍어 보세요 (검사는 피사체 잘림을 못 잽니다). */
+img[src^="/img/card/industry-bar."]{ object-position:55% 40%; }
+img[src^="/img/card/industry-nail."]{ object-position:62% 50%; }
+img[src^="/img/card/industry-academy."]{ object-position:50% 45%; }
+img[src^="/img/card/industry-pet."]{ object-position:62% 40%; }
+img[src^="/img/card/industry-retail."]{ object-position:42% 45%; }
+img[src^="/img/card/industry-stay."]{ object-position:50% 55%; }
+img[src^="/img/card/industry-online-sales."]{ object-position:45% 45%; }
+img[src^="/img/card/service-menu-shoot."]{ object-position:38% 50%; }
+img[src^="/img/card/service-signage."]{ object-position:55% 35%; }
+img[src^="/img/card/service-labor."]{ object-position:55% 45%; }
+img[src^="/img/card/service-inventory."]{ object-position:45% 45%; }
+img[src^="/img/card/service-support."]{ object-position:55% 50%; }
+img[src^="/img/card/service-internet."]{ object-position:55% 45%; }
+/* 2026-11-26 — 전체 업종 목록(.ind) 맨 위 업종 사진 */
+.ind .ind-ph{ display:block; margin:calc(-1*var(--s6)) calc(-1*var(--s6)) var(--s2); aspect-ratio:16/9; overflow:hidden; position:relative; border-radius:var(--r-xl) var(--r-xl) 0 0; }
+.ind .ind-ph .ph, .ind .ind-ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+.ind .ind-ph .pcd-n svg{ width:44px; height:44px; }
+.ind{ overflow:hidden; }
+/* 사진이 있는 업종 카드는 아이콘 타일을 접습니다 (사진이 이미 업종을 말합니다 · 폰에서 카드가 두 배로 길어졌습니다) */
+.ind:has(.ind-ph img) .ind-ic{ display:none; }
+
+/* 고객 상태 — 서비스별 줄의 "신청 전체와 함께 진행" 딱지 (2026-11-26)
+   ⚠️ 흐린 글자(--ink3)를 쓰지 않습니다 — 상태를 읽는 줄입니다. */
+.my-lk-it li > span{ text-align:right; }
+.my-lk-it .my-it-with{ display:block; font-style:normal; font-size:var(--t-cap); color:var(--ink2); font-weight:500; }
+.myq-it{ margin-top:10px; }

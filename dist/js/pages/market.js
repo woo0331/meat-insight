@@ -25,6 +25,7 @@ function PageStores(){
     cta:'<a class="btn btn-o btn-lg" href="/sell">내 매장 내놓기'+icon("arrow",18)+'</a>'
   })+
   '<section class="sec sec-white"><div class="w">'+
+    mkHead(list.length, total, loaded, "매물")+
 
     '<div class="fil fil-wrap"><span class="fil-ic" aria-hidden="true">'+icon("sliders",18)+'</span>'+
       IndustrySelect("fil-i", ind, "mkGo('/stores')")+
@@ -138,6 +139,8 @@ function AssetPickBand(top){
       '<span>지금은 집기 처분 신청을 받지 않습니다. 고르신 품목은 이 기기에 남고, '+
       '접수가 열리면 그대로 신청하실 수 있습니다.</span></p>'+
     '<ul class="asp-g">'+cards+'</ul>'+
+    '<p class="asp-note">'+icon("info",14)+' 품목 사진은 고르기 쉽게 붙인 안내 사진이며 실제 매물이 아닙니다. '+
+      '실제로 올라온 시설 · 집기는 아래 목록에 사장님이 올리신 사진으로 나옵니다.</p>'+
 
     '<div class="asp-sum" id="asp-sum" hidden>'+
       '<p class="asp-sum-t">고르신 집기 <b id="asp-n">0</b>개</p>'+
@@ -192,6 +195,7 @@ function PageAssets(){
   }) + AssetPickBand(false))+
   '<section class="sec sec-white"><div class="w">'+
     (pickTop ? '<div class="sec-hd"><p class="eyebrow">시설 · 집기 · 재고</p><h2>올라와 있는 시설 · 집기</h2></div>' : '')+
+    mkHead(list.length, amAssets({}).length, true, "시설 · 집기")+
     (indObj && indObj.equip.length ? '<ul class="chip-g chip-g-fil">'+
       '<li><a class="chip'+(sub?"":" on")+'" href="'+esc(mkKeep("/assets",{s:""}))+'">전체</a></li>'+
       indObj.equip.map(function(e){
@@ -298,6 +302,12 @@ function mkCk(id, name, on, base){
     '<span>'+esc(name)+'</span></label>';
 }
 
+function mkHead(shown, total, loaded, what){
+  if(!loaded) return "";
+  var t = !total ? "지금 올라온 "+what+" 전체 0건"
+    : (shown === total ? what+" "+total+"건" : "조건에 맞는 "+what+" "+shown+"건 · 전체 "+total+"건");
+  return '<p class="mk-head" role="status">'+icon("search",16)+'<b>'+esc(t)+'</b></p>';
+}
 function mkCount(shown, all){
   return '<span class="fil-n">'+shown+'건'+
     (all > shown ? '<em class="fil-off">거르개로 '+(all - shown)+'건 숨김</em>' : '')+
@@ -532,13 +542,32 @@ var SELL_TABS = [
   { k:"asset", name:"시설 · 장비", lead:"쓰던 장비 · 집기 · 남은 재고를 넘깁니다" }
 ];
 
+var SELL_PH = { store:"kp-tr-svc-sell", asset:"as-fridge" };
 function sellTabs(t){
-  return '<nav class="chip-g chip-g-fil" aria-label="무엇을 내놓으시나요">'+
+  return '<nav class="sl-tab" aria-label="무엇을 내놓으시나요">'+
     SELL_TABS.map(function(x){
-      return '<a class="chip'+(x.k === t ? " on" : "")+'" href="/sell?t='+x.k+'">'+
-        esc(x.name)+'</a>'; }).join("")+
-  '</nav>';
+      var on = x.k === t;
+      return '<a class="sl-tc'+(on ? " on" : "")+'" href="/sell?t='+x.k+'"'+(on ? ' aria-current="page"' : "")+'>'+
+        '<span class="sl-tph" aria-hidden="true">'+picBox(SELL_PH[x.k], x.k === "store" ? "store" : "equip", "(max-width:600px) 44vw, 320px")+'</span>'+
+        '<span class="sl-ttx"><b>'+esc(x.name)+'</b><i>'+esc(x.lead)+'</i></span>'+
+        (on ? '<em class="swt-on">'+icon("check",14)+'선택됨</em>' : '')+
+      '</a>'; }).join("")+
+  '</nav>'+
+  '<p class="sl-tnote">사진은 이해를 돕는 연출 사진이며 실제 매물이 아닙니다.</p>';
 }
+
+window.sellProg = function(){
+  var f = document.getElementById("sl-f"), out = document.getElementById("sl-prog");
+  if(!f || !out) return;
+
+  var req = ["sl-ind", "sl-reg", document.getElementById("sl-item") ? "sl-item" : "sl-kind", "sl-q", "sl-name", "sl-tel"]
+    .map(function(id){ return document.getElementById(id); }).filter(Boolean);
+  var done = req.filter(function(el){ return String(el.value || "").trim() !== ""; }).length;
+  var b = out.querySelector("b"); if(b) b.textContent = done + " / " + req.length;
+  var bar = out.querySelector("i"); if(bar) bar.style.width = (req.length ? Math.round(done / req.length * 100) : 0) + "%";
+  out.classList.toggle("is-done", done === req.length);
+  var t = out.querySelector("em"); if(t) t.textContent = done === req.length ? "필수 항목을 모두 적으셨습니다" : "* 표시 항목을 적어 주세요";
+};
 
 function PageSell(){
   var t = nowQS("t") === "asset" ? "asset" : "store";
@@ -634,7 +663,10 @@ function PageSell(){
       '분께 연락처를 전하는 것은 사장님이 그때 다시 동의하셔야 합니다.</p>'+
     '</div>'+
 
-    '<form id="sl-f" onsubmit="return sellSend(event)">'+
+    '<div class="sl-prog" id="sl-prog" role="status" aria-live="polite">'+
+      '<span class="sl-prog-t">필수 <b>0 / 6</b> · <em>* 표시 항목을 적어 주세요</em></span>'+
+      '<span class="sl-prog-bar" aria-hidden="true"><i></i></span></div>'+
+    '<form id="sl-f" onsubmit="return sellSend(event)" oninput="sellProg()" onchange="sellProg()">'+
       '<div class="f-2">'+
         '<div class="f-r"><label for="sl-ind">업종 <b>*</b></label>'+
           IndustrySelect("sl-ind", ind, "", "업종을 골라 주세요")+'</div>'+

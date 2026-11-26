@@ -985,7 +985,7 @@ const AUDIT = `(() => {
   document.querySelectorAll("#view .ic-t, #view .stg-i, #view .ia-t," +
                             " #view .mhall-i, #view .mstp-i," +
                             " #view .bent-i, #view .bwhy-i, #view .bban-i," +
-                            " #view .bstep-i, #view .bcal-i, #view .wp-ci, #view .wp-sn, #view .iind-i").forEach(e => {
+                            " #view .bstep-i, #view .bcal-i, #view .wp-ci, #view .wp-sn, #view .iind-i, #view .ipil-i").forEach(e => {
     if(e.querySelector("svg")) return;
     const own = (e.parentElement || e);
     out.ico.push((own.textContent || "").trim().slice(0, 14) || "(이름 없음)");
@@ -3858,7 +3858,7 @@ const AUDIT = `(() => {
                   [".iind-g",  "업종별 서비스 탐색"],
                   [".iops-l",  "매장 운영 목록"],
                   [".itr-f",   "매물 찾기 (지역 · 업종 · 예산)"],
-                  [".bdir-g",  "세부 서비스"],
+                  [".bdir-g, .bdq-g",  "세부 서비스"],
                   [".wp-sg",   "이용 방법 넷"]];
     /* 숨겨 둔 짝(data-cta=on · hidden)은 닫혀 있을 때 안 보이는 것이 맞습니다 — 보이는 것만 셉니다 */
     if(!(window.WOW_BIZ && WOW_BIZ.sosReady) && [].slice.call(v.querySelectorAll('a[href="/quote"]')).some(function(a){ return !a.closest("[hidden]") && a.getClientRects().length; }))
@@ -4228,6 +4228,8 @@ const AUDIT = `(() => {
     /* 지시서 §4 — 걸음마다 정보 · 업체 · 도구를 연결합니다.
        ⚠️ 걸음만 적어 두고 갈 데가 없으면 그건 **읽을거리**이지
        플랫폼이 아닙니다. */
+    /* 2026-11-25 디자인 개편 — 업종 화면도 앞 세 걸음만 펼치고 나머지는 접습니다. 잴 때만 펼칩니다. 이 주석에 백틱 금지. */
+    [].slice.call(document.querySelectorAll(".pcs.is-fold-all")).forEach(function(o){ o.classList.remove("is-fold-all"); });
     const want = (window.AM_PROCESS||{}).startup.length;
     const L = [].slice.call(document.querySelectorAll(".pcs > li"));
     if(L.length !== want) return "걸음이 " + L.length + "개입니다 (" + want + ")";
@@ -4279,7 +4281,7 @@ const AUDIT = `(() => {
     /* 2026-11-18 메인 디자인 개편(대표 확정 시안) — 재는 자리만 새 화면으로.
        옛 판은 git show 2aa1d8d:check.js 에 있습니다. 이 주석에 백틱 금지. */
 
-    const groups = [[".iind-i", "업종별"], [".wp-sn", "이용 방법"]];
+    const groups = [[".ipil-i", "네 기둥"], [".wp-sn", "이용 방법"]];
     for(const g of groups){
       const L = [].slice.call(document.querySelectorAll("#view " + g[0]));
       if(!L.length) return g[1] + " 아이콘이 하나도 없습니다";

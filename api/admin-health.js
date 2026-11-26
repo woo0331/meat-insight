@@ -200,80 +200,11 @@ const realHandler = async function handler(req, res){
   });
 };
 
-/* ── ?ref=1 — 지금 이 배포가 **어느 Supabase 프로젝트**를 보는가 (2026-11-24)
-   운영과 시험 DB 가 갈렸는지를 확인할 길이 Vercel 화면 하나뿐이었습니다.
-   ⚠️⚠️ 돌려주는 것은 **프로젝트 ID(주소의 앞 토막)** 와, 두 키가 가리키는
-   프로젝트 ID · 역할 이름뿐입니다. 키 · 주소 전체 · 길이는 안 돌려줍니다.
-   ⚠️⚠️ **DB 를 한 번도 부르지 않습니다** — 환경변수만 읽습니다. 그래서
-   STOREWAY_ACCOUNTS_OPEN 이 꺼져 있어도(점검본) 이 칸은 대답합니다.
-   ⚠️ 관리자 잠금(ADMIN_PASSWORD) 뒤에서만 돕니다 — middleware 가 막고 여기서도 봅니다. */
-function refOfUrl(u){
-  u = String(u || "").trim();
-  var m = /^https:\/\/([a-z0-9]{15,40})\.supabase\.co\/?$/.exec(u);
-  return m ? m[1] : null;
-}
-function refOfKey(k){
-  /* 옛 꼴(JWT)만 ref · role 을 들고 있습니다. 새 꼴(sb_…)은 null — "모름" 입니다 */
-  k = String(k || "").trim();
-  var parts = k.split(".");
-  if(parts.length !== 3) return { set: k.length > 0, ref: null, role: null };
-  try{
-    var j = JSON.parse(Buffer.from(parts[1].replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8"));
-    var ref = typeof j.ref === "string" && /^[a-z0-9]{15,40}$/.test(j.ref) ? j.ref : null;
-    var role = typeof j.role === "string" && /^[a-z_]{1,20}$/.test(j.role) ? j.role : null;
-    return { set: true, ref: ref, role: role };
-  }catch(e){ return { set: true, ref: null, role: null }; }
-}
-/* 2026-11-25 — 관리자 인증을 이 칸 안에서도 한 번 더 봅니다 (middleware.js 와 같은 Basic 비밀번호).
-   ⚠️ 미들웨어의 matcher 가 어긋나거나 지워져도 프로젝트 ID 가 새지 않게. 비밀번호는 어디에도 남기지 않습니다. */
-function adminPassOk(req){
-  var want = String(process.env.ADMIN_PASSWORD || "");
-  var h = (req.headers && (req.headers.authorization || req.headers.Authorization)) || "";
-  if(!want || String(h).indexOf("Basic ") !== 0) return false;
-  var dec = "";
-  try{ dec = Buffer.from(String(h).slice(6), "base64").toString("utf8"); }catch(e){ return false; }
-  var i = dec.indexOf(":"), got = i >= 0 ? dec.slice(i + 1) : "";
-  var a = Buffer.from(got), b = Buffer.from(want);
-  return a.length === b.length && require("crypto").timingSafeEqual(a, b);
-}
-function dbRef(req, res){
-  res.setHeader("cache-control", "no-store");
-  res.setHeader("x-robots-tag", "noindex");
-  if(!has("ADMIN_PASSWORD"))
-    return res.status(503).json({ error: "관리자 잠금이 설정되지 않았습니다" });
-  if(!adminPassOk(req)){
-    res.setHeader("WWW-Authenticate", 'Basic realm="Admin", charset="UTF-8"');
-    return res.status(401).json({ error: "관리자 인증이 필요합니다" });
-  }
-  var url = process.env.SUPABASE_URL;
-  var ref = refOfUrl(url);
-  var anon = refOfKey(process.env.SUPABASE_ANON_KEY);
-  var svc  = refOfKey(process.env.SUPABASE_SERVICE_KEY);
-  var refs = [ref, anon.ref, svc.ref].filter(Boolean);
-  var same = refs.length ? refs.every(function(x){ return x === refs[0]; }) : null;
-  var say = !has("SUPABASE_URL") ? "이 배포에는 SUPABASE_URL 이 없습니다"
-    : !ref ? "SUPABASE_URL 이 https://<ID>.supabase.co 꼴이 아닙니다"
-    : same === false ? "주소와 키가 서로 다른 프로젝트를 가리킵니다"
-    : "이 배포는 Supabase 프로젝트 " + ref + " 를 봅니다";
-  return res.status(200).json({
-    env: process.env.VERCEL_ENV || "unknown",
-    projectId: ref,
-    keys: { anon: anon, service: svc },
-    sameProject: same,
-    say: say
-  });
-}
-
 /* 복구 점검본: 운영 DB·메일·웹훅을 호출하지 않고 종료합니다. */
 /* 복구 점검본 — W03 부터 STOREWAY_ACCOUNTS_OPEN=1 일 때만 실제 경로로 갑니다 (api/_open.js).
    ⚠️ 꺼져 있으면 전과 같은 503 이고 운영 DB · 메일 · 웹훅을 부르지 않습니다. */
 const { accountsOpen, closed } = require("./_open.js");
-function wantsRef(req){
-  if(req.query && String(req.query.ref) === "1") return true;
-  return /[?&]ref=1(&|$)/.test(String(req.url || ""));
-}
 module.exports = function restorationGate(req, res){
-  if(req.method === "GET" && wantsRef(req)) return dbRef(req, res);
   if(!accountsOpen()) return closed(res);
   return realHandler(req, res);
 };

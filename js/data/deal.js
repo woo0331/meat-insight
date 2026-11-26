@@ -445,3 +445,51 @@ window.amSideName = function(key){
   var s = window.amSide(key);
   return s ? s.name : "";
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   고객에게 보이는 상태 — 신청 전체 + 서비스별 (2026-11-26)
+
+   ⚠️⚠️ **신청 단위로 배정하면 서비스 항목의 상태는 움직이지 않습니다.**
+   move_state() 는 request.state 만 바꾸고 request_item.state 는 'new'
+   그대로입니다. 그래서 계약까지 간 건을 고객이 조회하면 "진행 중 ·
+   서비스 둘 다 신청 접수" 로 보였습니다 — 신청 전체 상태를 화면이 아예
+   안 쓰고 있었습니다.
+
+   규칙은 둘뿐입니다.
+   ① 맨 위 상태는 **신청 전체 상태**입니다.
+   ② 항목이 'new' 인데 신청 전체는 그보다 나아갔으면 그 항목은 **따로
+      진행된 기록이 없는 것**이라 신청 전체 상태를 따라 보입니다
+      (own:false). 항목이 'new' 가 아니면 **실제로 따로 진행된 것**이라
+      그 상태를 그대로 냅니다 (own:true).
+
+   ⚠️⚠️ **정산 상태(fee_wait · fee_done)를 고객에게 보이지 마세요.**
+   우리와 업체 사이의 일이라 보이면 자기가 내는 돈으로 읽힙니다 —
+   고객 화면에서는 '서비스 완료' 로 접습니다.
+   ⚠️ 비회원 본인 조회(myLkView)와 회원 /my(MyReqList)가 **둘 다**
+   이것을 부릅니다 — 한쪽에만 적으면 같은 건이 두 화면에서 다르게 보입니다. */
+window.amCustSt = function(key){
+  return (key === "fee_wait" || key === "fee_done") ? "done" : (key || "new");
+};
+window.amReqItemsView = function(reqState, items){
+  var rs = window.amCustSt(reqState);
+  return (items || []).map(function(it){
+    var own = !!(it && it.state && it.state !== "new");
+    var st  = own ? window.amCustSt(it.state) : (rs === "new" ? "new" : rs);
+    /* rec — 항목에 따로 진행된 기록이 실제로 있는가 · own — 딱지를 안 붙여도 되는가 */
+    return { service_id: it && it.service_id, state: st, rec: own, own: own || rs === "new" };
+  });
+};
+/* 서비스 여럿일 때의 셈 — 위 규칙을 지난 상태로 셉니다 (DB 의 rollup 은
+   항목 상태만 세서 신청 단위 진행을 못 봅니다). */
+window.amReqTally = function(reqState, items){
+  var v = window.amReqItemsView(reqState, items), t = { total:v.length, open:0, done:0, hold:0, lost:0,
+    rec: v.some(function(x){ return x.rec; }) };
+  v.forEach(function(x){
+    if(x.state === "done")      t.done++;
+    else if(x.state === "hold") t.hold++;
+    else if(x.state === "lost") t.lost++;
+    else                        t.open++;
+  });
+  t.phase = t.total === 0 ? "none" : t.open > 0 ? "open" : t.hold > 0 ? "hold" : t.done > 0 ? "done" : "lost";
+  return t;
+};

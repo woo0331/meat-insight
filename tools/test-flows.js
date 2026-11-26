@@ -167,7 +167,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await click('.iops-tx a[href="/operation"]');
  say((await url())==="/operation","메인 진입 카드 매장 운영 → /operation",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.itr-go a[href="/transfer"]');
+ await click('.itr-sub a[href="/transfer"]');  /* 2026-11-25 — 사진 카드 둘 아래 보조 줄 */
  say((await url())==="/transfer","메인 진입 카드 양도양수 → 전문관",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  /* ⚠️⚠️ **2026-10-22 — 서비스 배너 둘이 메인에서 내려왔습니다**
@@ -180,7 +180,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await click('.itr-f button[type="submit"]');
  say((await url()).startsWith("/stores"),"양도양수 매물 찾기(검색) → /stores",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.itr-go a[data-cta-form="sell"]:not([hidden])');
+ await click('.itr-two a[data-cta-form="sell"]:not([hidden])');
  say(/^\/(sell|transfer)/.test(await url()),"양도양수 내 매장 넘기기 → /sell 또는 넘기는 순서",await url());
  /* ⚠️⚠️ **2026-10-25 §1-01 — 히어로가 01 구간으로 돌아왔습니다.**
     첫 화면에서 바로 신청으로 가는 길이 다시 생겼습니다 — 그쪽을 먼저
@@ -815,9 +815,10 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.waitForTimeout(400);
  /* 2026-11-19 — 두 경로 카드(.clp-c)는 첫 화면 세 갈래와 같은 선택의 반복이라 내렸습니다.
     지키는 것: 첫 화면 세 갈래가 있고, 상황 넷은 "모르겠어요" 안에 접혀 있다. */
+ /* 2026-11-25 디자인 개편 §5 — 상황 넷은 사진 카드로 **펼쳐 둡니다** (전에는 '모르겠어요' 안에 접혀 있었습니다). */
  const cp = await pg.evaluate(()=>({q:[...document.querySelectorAll(".pgh .hh-qa")].filter(a=>a.getClientRects().length).length, clp:document.querySelectorAll(".clp-c").length,
-   want:(document.getElementById("cl-want")||{className:""}).className.indexOf("is-fold-all")>=0}));
- say(cp.q === 3 && cp.clp === 0 && cp.want, "3 폐업 — 첫 화면 세 갈래 · 상황 넷은 '모르겠어요' 안에 접힘", JSON.stringify(cp));
+   want:[...document.querySelectorAll("#cl-want .wnt")].filter(a=>a.getClientRects().length && a.querySelector(".wnt-ph img, .wnt-ph .pcd-n")).length}));
+ say(cp.q === 3 && cp.clp === 0 && cp.want === 4, "3 폐업 — 첫 화면 세 갈래 · 상황 넷이 사진 카드로 보임", JSON.stringify(cp));
  const c1 = await pg.$$(".pkq .pk-ck");
  if(c1.length > 1){ await c1[0].check(); await c1[1].check(); }
  await pg.waitForTimeout(350);
@@ -1221,7 +1222,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    }
    sellOpen = true;
    await p3.goto(B + "/", { waitUntil:"networkidle" }); await p3.waitForTimeout(300);
-   say(await p3.isVisible('.wp-pgo a[href="/sell"]'), "매물 등록이 열리면 메인의 '내 매장 등록하기' 가 다시 보인다 (반대쪽)");
+   say(await p3.isVisible('.itr-two a[href="/sell"]'), "매물 등록이 열리면 메인의 '내 매장 등록하기' 가 다시 보인다 (반대쪽)");
    await cx.close();
  }
 
@@ -1240,6 +1241,10 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
      say(d.n === 1 && !d.body && !d.sum, "고르개 " + u + " — 한 구역 · 기본 접힘 · 0개면 요약 숨김", JSON.stringify(d));
      const ids = await p4.evaluate(() => [...document.querySelectorAll("#clpf-body [data-pick]")].slice(0, 2).map(e => e.getAttribute("data-pick")));
      await p4.evaluate(v => { amPickSet(v); }, ids); await p4.reload({ waitUntil:"networkidle" });
+     /* 2026-11-25 §6 — 폰은 요약이 접이식입니다 (개수 줄만 보임). 눌러 펼친 뒤 목록을 셉니다. */
+     const sumClosed = await p4.evaluate(() => { const b = document.querySelector("#pick .clpf-sum-b"); return !!b && !b.offsetParent; });
+     say(sumClosed, "고르개 " + u + " — 폰 요약은 개수만 보이고 목록은 접혀 있다");
+     await p4.click("#pick .clpf-sum-t"); await p4.waitForTimeout(150);
      const f = await p4.evaluate(() => ({ body:!!document.getElementById("clpf-body").offsetParent,
        rows:[...document.querySelectorAll("#pk-list li")].filter(e => e.offsetParent).length }));
      say(!f.body && f.rows === 2, "고르개 " + u + " — 고른 둘이 접힌 채 요약에 보인다 (새로고침 뒤)", JSON.stringify(f));

@@ -200,6 +200,7 @@ window.pickPaint = function(){
      안 나고 가로 스크롤도 안 나서 **재 보고** 알았습니다.
      `pickPad()` 는 띠가 없으면 0 을 넣습니다. */
   pickPad();
+  pickBarAuto();
   /* 본문 안의 신청 단추들도 같이 */
   /* ⚠️ 쪽은 `data-pick-go` 의 **값**으로 옵니다
      (`data-pick-go="ops"`). 빈 값이면 `start` 입니다. */
@@ -294,7 +295,9 @@ window.PickCard = function(s){
       '<input type="checkbox" id="'+esc(id)+'" class="pk-ck"'+
         ' data-pick="'+esc(s.id)+'"'+(on ? " checked" : "")+
         ' onchange="pickToggle(\''+esc(s.id)+'\', this)">'+
-      '<span class="pk-i ia-t">'+art+'</span>'+
+      /* 2026-11-25 §6 — 물리적인 선택지는 작은 사진 (없으면 아이콘 그대로) */
+      (picKey("pick", s.id) ? '<span class="pk-ph" aria-hidden="true">'+photoBox(picKey("pick", s.id), "", false, "96px")+'</span>'
+        : '<span class="pk-i ia-t">'+art+'</span>')+
       /* ⚠️⚠️ **하위는 어느 분야 것인지를 같이 냅니다.** "가구" ·
          "폐업신고" 처럼 이름만 있으면 어느 분야인지 안 보이고,
          바구니에서 섞이면 더 그렇습니다 — `PickSubRow()` 가 겹치는
@@ -632,6 +635,7 @@ function PickSubRow(s, note, g, dup){
         ' data-pick="'+esc(s.id)+'"'+(on ? " checked" : "")+
         (aria ? ' aria-label="'+esc(aria)+'"' : "")+
         ' onchange="pickToggle(\''+esc(s.id)+'\', this)">'+
+      (!note && picKey("pick", s.id) ? '<span class="pks-ph" aria-hidden="true">'+photoBox(picKey("pick", s.id), "", false, "64px")+'</span>' : "")+
       '<span class="pks-n"><b>'+esc(note || amPickLabel(s))+'</b>'+
         (note ? '<i>상담하면서 정하겠습니다</i>'
               : (s.easy && s.easy !== s.name ? '<i>'+esc(s.name)+'</i>' : ""))+
@@ -785,8 +789,15 @@ window.HallPickFold = function(o){
       '<h2>여러 서비스 함께 고르기</h2>'+
       '<p>필요한 것이 하나면 위 사진 카드에서 바로 가시면 됩니다. 여러 서비스를 한 번에 맡기실 때만 펼쳐서 고르세요.</p>'+
     '</div>'+
-    '<div class="clpf-sum" data-pick-row'+(n ? "" : " hidden")+'>'+
-      '<p class="clpf-sum-t">고르신 서비스 <b data-pick-n>'+n+'</b>개</p>'+
+    /* 2026-11-25 디자인 개편 §6 — PC 는 목록 **옆**에 요약(sticky), 폰은 개수가 보이는 **접이식** 요약.
+       ⚠️ 요약은 접힌 목록 밖이라 접어 둔 채로도 개수 · 목록 · 개별 해제 · 전부 해제 · 신청이 됩니다.
+       ⚠️ 0개면 상자째 숨깁니다 (2026-11-24 대표 승인 그대로) — 그때는 목록이 폭을 다 씁니다. */
+    '<div class="clpf-g">'+
+    '<aside class="clpf-sum" data-pick-row'+(n ? "" : " hidden")+' aria-label="고르신 서비스">'+
+      '<button class="clpf-sum-t" type="button" aria-expanded="false" aria-controls="clpf-sum-b" onclick="clpfSumToggle(this)">'+
+        '<span>고르신 서비스 <b data-pick-n>'+n+'</b>개</span>'+
+        '<em class="clpf-sum-x">'+icon("chevd",16)+'<i>목록</i></em></button>'+
+      '<div class="clpf-sum-b" id="clpf-sum-b">'+
       '<ul class="pkb-l" id="pk-list">'+pickRows()+'</ul>'+
       '<div class="pkb-go">'+
         '<a class="btn btn-b btn-lg" id="pk-go-on"'+(n ? "" : " hidden")+
@@ -798,7 +809,9 @@ window.HallPickFold = function(o){
           ' onclick="pickClear()">전부 해제</button>'+
       '</div>'+
       PickClosedNote(side)+
-    '</div>'+
+      '</div>'+
+    '</aside>'+
+    '<div class="clpf-main">'+
     '<div class="clpf-tgw">'+FoldAll("clpf-body", "서비스 목록 펼치기", "목록 접기", "", opened)+'</div>'+
     '<div class="clpf-body'+(opened ? "" : " is-fold-all")+'" id="clpf-body">'+
       o.body+
@@ -810,7 +823,16 @@ window.HallPickFold = function(o){
         ' 고르기만 하면 저희에게 아무것도 오지 않습니다. <b>신청하기를 누르셔야</b> 접수됩니다. '+
         '선택한 내용은 이 브라우저에 남고, <b>로그인하신 경우</b> 계정에도 남습니다.</p>'+
     '</div>'+
+    '</div></div>'+
   '</div></section>';
+};
+
+/* 폰의 요약 접기 — ⚠️ 다시 그리지 않습니다 (고르던 자리를 잃습니다) */
+window.clpfSumToggle = function(btn){
+  var box = btn && btn.closest(".clpf-sum"); if(!box) return;
+  var open = !box.classList.contains("is-open");
+  box.classList.toggle("is-open", open);
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
 };
 
 window.PickGroupBand = function(hallKey, side){
@@ -910,3 +932,21 @@ document.addEventListener("click", function(e){
   var a = e.target && e.target.closest ? e.target.closest('a[href="#pick"]') : null;
   if(a) setTimeout(window.pickFoldOpen, 0);
 });
+
+/* 2026-11-25 §6 — 넓은 화면에서 '여러 서비스 함께 고르기' 구역이 보이는 동안은 하단 띠를 접습니다.
+   그 구역 옆 요약에 같은 신청 단추가 이미 있어서, 한 화면에 같은 단추가 둘이면 어느 것이 진짜인지 흐려집니다.
+   ⚠️ 구역을 벗어나면 띠가 다시 섭니다 (다른 구간을 보시면서도 신청으로 갈 수 있게). */
+function pickBarAuto(){
+  var sec = document.getElementById("pick");
+  var sum = sec && sec.querySelector(".clpf-sum:not([hidden])");
+  var on = false;
+  if(sum && window.innerWidth > 1100){
+    var r = sec.getBoundingClientRect();
+    on = r.top < window.innerHeight && r.bottom > 0;
+  }
+  var was = document.documentElement.classList.contains("pk-in-pick");
+  if(was !== on){ document.documentElement.classList.toggle("pk-in-pick", on); pickPad(); }
+}
+window.addEventListener("scroll", pickBarAuto, { passive:true });
+window.addEventListener("resize", pickBarAuto);
+document.addEventListener("change", function(){ setTimeout(pickBarAuto, 0); });

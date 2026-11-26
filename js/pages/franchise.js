@@ -23,7 +23,10 @@ function PageFranchise(){
   '<section class="sec sec-white"><div class="w">'+
     '<ul class="fc-g">'+(window.AM_FRANCHISE_CATS||[]).map(function(c){
       var n = amFranchises({cat:c.key}).length;
-      return '<li><a class="fc'+tn(c.tone)+'" href="/franchise/'+esc(c.key)+'">'+
+      /* 2026-11-26 §8 — 분류 카드에 **업종 공통 사진** (c.ind → AM_PIC_IND). 브랜드 사진이 아니라 업종 사진입니다.
+         ⚠️ 사진이 없는 업종은 월넛 면 (빈 액자를 깔지 않습니다) */
+      return '<li><a class="fc fc-pc'+tn(c.tone)+'" href="/franchise/'+esc(c.key)+'">'+
+        '<span class="fc-ph" aria-hidden="true">'+picBox(picKey("ind", c.ind), c.icon, "(max-width:640px) 46vw, 220px")+'</span>'+
         '<span class="fc-ic">'+icon(c.icon,22)+'</span>'+
         '<b>'+esc(c.name)+'</b>'+
         /* ⚠️ 0 일 때 "준비 중" 을 찍지 않습니다 (절대 규칙 2). 세는 값을

@@ -238,7 +238,10 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  /* 2026-11-18 메인 개편 · W01 — 접수가 닫혀 있으면 마지막 구간은 신청 단추 대신
     계산도구 · 자주 묻는 질문으로 보냅니다. 열려 있으면 견적 신청으로 갑니다. */
  /* 2026-11-19 Warm Premium — 이용 방법 구간이 접수 상태를 따릅니다 (닫히면 안내 · 열리면 신청) */
- const ctaOpen = await pg.evaluate(()=>!!(window.WOW_BIZ && WOW_BIZ.sosReady));
+ /* ⚠️ 2026-11-26 — 열림은 sosReady **와** 서버 게이트(/api/session intake.quote)가 둘 다 켜져야 합니다.
+    sosReady 만 보면 시험 브랜치(sosReady:true)에서 서버 게이트가 없는 로컬 검사가 늘 "열림" 으로
+    읽혀 엉뚱하게 실패합니다. 화면이 쓰는 amIntakeOpen() 을 그대로 묻습니다. 열림 · 닫힘 둘 다는 【14】 가 봅니다. */
+ const ctaOpen = await pg.evaluate(()=> window.amIntakeOpen ? window.amIntakeOpen("quote") : false);
  if(ctaOpen){
    await click('.wp-snote-on a[href="/quote"]');
    say((await url()).startsWith("/quote"),"이용 방법 → 상담 신청",await url());
@@ -1139,7 +1142,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
      body: JSON.stringify({ auth:false, signedIn:false, intake:{ quote: gateOpen } }) }));
    await p2.route("**/dist/js/data/site.js*", async r => {
      const t = fs.readFileSync(path.join(root, "dist/js/data/site.js"), "utf8")
-       .replace(/sosReady:(\s*)false/, "sosReady:$1" + (sos ? "true" : "false"));
+       .replace(/sosReady:(\s*)(true|false)/, "sosReady:$1" + (sos ? "true" : "false"));
      await r.fulfill({ status:200, contentType:"text/javascript", body:t });
    });
    const vis = () => p2.evaluate(() => [].slice.call(document.querySelectorAll(".hd .hd-cta"))
@@ -1152,6 +1155,14 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
        ? v[0][0].indexOf("견적 신청") >= 0 && v[0][1].indexOf("/quote") === 0
        : v[0][0] === "접수 안내" && v[0][1] === "/intake");
      say(good, nm + " · " + w + "px · " + u + " — 헤더 " + (open ? "'견적 신청' → /quote" : "'접수 안내' → /intake"), JSON.stringify(v));
+     if(u === "/"){
+       /* 메인 '이용 방법' 구간도 같은 게이트를 따른다 (열림 → 상담 신청 · 닫힘 → 접수 안내) */
+       const sn = await p2.evaluate(() => {
+         const on = document.querySelector('.wp-snote-on a[href="/quote"]'), off = document.querySelector('.wp-snote:not(.wp-snote-on) a[href="/intake"]');
+         return { on: !!(on && on.getClientRects().length), off: !!(off && off.getClientRects().length) };
+       });
+       say(open ? (sn.on && !sn.off) : (!sn.on && sn.off), nm + " · " + w + "px — 메인 이용 방법 " + (open ? "→ 상담 신청" : "→ 접수 안내"), JSON.stringify(sn));
+     }
      if(open && u.indexOf("cafe") >= 0)
        say(v[0][1].indexOf("i=cafe") >= 0 && v[0][1].indexOf("r=gyeonggi") >= 0,
            nm + " · " + w + "px — 열렸을 때 보던 조건을 /quote 로 들고 간다", v[0][1]);
@@ -1200,7 +1211,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    await p3.route("**/api/session", r => r.fulfill({ status:200, contentType:"application/json",
      body: JSON.stringify({ auth:false, signedIn:false, intake:{ quote:false, close:true, sell:sellOpen, join:sellOpen } }) }));
    await p3.route("**/dist/js/data/site.js*", async r => {
-     const t = fs.readFileSync(path.join(root, "dist/js/data/site.js"), "utf8").replace(/sosReady:(\s*)false/, "sosReady:$1true");
+     const t = fs.readFileSync(path.join(root, "dist/js/data/site.js"), "utf8").replace(/sosReady:(\s*)(true|false)/, "sosReady:$1true");
      await r.fulfill({ status:200, contentType:"text/javascript", body:t });
    });
    const scan = () => p3.evaluate(() => {

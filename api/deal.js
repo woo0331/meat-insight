@@ -37,7 +37,7 @@
    ════════════════════════════════════════════════════════════════════ */
 
 const { authReady, session, authWhy } = require("./_auth.js");
-const { dbRpc, dbWhy } = require("./_db.js");
+const { dbRpc, dbWhy, dbSelectAs } = require("./_db.js");
 const { deliver, clean, customerStep, partnerStep } = require("./_send.js");
 const { dbSelect } = require("./_db.js");
 
@@ -447,6 +447,29 @@ const realHandler = async function handler(req, res){
   if(!s.ok){
     if(s.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
     return res.status(401).json({ error:"로그인이 필요합니다" });
+  }
+
+  /* ⚠️⚠️ 2026-11-26 — 견적 줄 없이 '견적 전달'(quoted)로 바로 넘기지 않습니다.
+     시험 접수 SW-EX79-WR8H 가 견적 0건인 채 견적 전달 → 계약까지 갔습니다.
+     견적은 staff_record_quote · submit_quote 가 **먼저 저장하고** 그 안에서
+     상태를 넘기므로, 이 문(move_state)으로 quoted 에 바로 가는 정상 길은
+     없습니다. 그 사람의 토큰으로 읽어서(RLS 그대로) 견적이 없으면 거절합니다.
+     ⚠️ 이건 이 API 를 지나는 길만 막습니다 — DB 를 직접 부르는 길까지 막으려면
+     트리거(0085 초안 · 적용 전 승인 필요)가 있어야 합니다.
+     ⚠️ 읽기가 실패하면 넘기지 않습니다 (모르는 채로 상태부터 바꾸지 않습니다). */
+  if(fn === "move_state" && String((b.args || {}).p_to || "") === "quoted"){
+    const rid = String((b.args || {}).p_request || "");
+    if(!/^[0-9a-f-]{36}$/i.test(rid))
+      return res.status(400).json({ error:"신청을 찾을 수 없습니다" });
+    const qq = await dbSelectAs(s.token, "quote",
+      "?select=id&request_id=eq." + rid + "&state=neq.withdrawn&limit=1");
+    if(!qq.ok){
+      if(qq.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+      console.warn("[deal] quoted 확인 — " + dbWhy(qq.why));
+      return res.status(503).json({ error:"견적이 있는지 확인하지 못했습니다. 잠시 뒤 다시 눌러 주세요" });
+    }
+    if(!qq.rows.length)
+      return res.status(400).json({ error:"견적이 기록되지 않아 견적 전달로 넘길 수 없습니다 — 받은 견적 적기로 먼저 기록해 주세요" });
   }
 
   const r = await dbRpc(s.token, fn, pickArgs(b.args));

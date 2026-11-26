@@ -368,6 +368,40 @@ console.log("\n── /api/deal — 상태를 바꾸는 유일한 길");
   ok("성공하면 ok", r.code === 200 && r.body.ok === true, r.body);
   ok("답에 키 · 토큰이 섞이지 않는다", !leaks(r), r.body);
 
+  /* ⚠️⚠️ 2026-11-26 — 견적 줄 없이 '견적 전달'(quoted)로 바로 넘기지 않습니다
+     (시험 접수 SW-EX79-WR8H 가 견적 0건인 채 계약까지 갔습니다) */
+  const RQ = "11111111-2222-3333-4444-555555555555";
+  r = res();
+  mock([USER, ACCT, [/\/rest\/v1\/quote/, function(){ return body(200, []); }],
+        [/\/rpc\/move_state/, function(){ return body(200, "quoted"); }]]);
+  await Hdeal(req({ method:"POST", headers:{ authorization:"Bearer " + TOK },
+                    body:{ fn:"move_state", args:{ p_request:RQ, p_to:"quoted" } } }), r);
+  ok("견적이 없으면 '견적 전달' 로 안 넘긴다 (400 · 까닭)",
+     r.code === 400 && /받은 견적 적기/.test(r.body.error || ""), r.body);
+  ok("…그때 상태를 바꾸는 함수를 아예 안 부른다", !rpcBody("move_state"), calls.map(c => c.url));
+  const qcall = calls.filter(c => /\/rest\/v1\/quote/.test(c.url))[0];
+  ok("견적은 그 사람의 토큰으로 읽는다 (RLS 그대로 · 거둔 견적 빼고)",
+     !!qcall && /request_id=eq\./.test(qcall.url) && /state=neq\.withdrawn/.test(qcall.url) &&
+     String(qcall.h.authorization || qcall.h.Authorization || "") === "Bearer " + TOK, qcall && qcall.url);
+  r = res();
+  mock([USER, ACCT, [/\/rest\/v1\/quote/, function(){ return body(200, [{ id:"q-1" }]); }],
+        [/\/rpc\/move_state/, function(){ return body(200, "quoted"); }]]);
+  await Hdeal(req({ method:"POST", headers:{ authorization:"Bearer " + TOK },
+                    body:{ fn:"move_state", args:{ p_request:RQ, p_to:"quoted" } } }), r);
+  ok("견적이 있으면 그대로 넘어간다", r.code === 200 && !!rpcBody("move_state"), r.body);
+  r = res();
+  mock([USER, ACCT, [/\/rest\/v1\/quote/, function(){ return body(500, { message:"boom" }); }],
+        [/\/rpc\/move_state/, function(){ return body(200, "quoted"); }]]);
+  await Hdeal(req({ method:"POST", headers:{ authorization:"Bearer " + TOK },
+                    body:{ fn:"move_state", args:{ p_request:RQ, p_to:"quoted" } } }), r);
+  ok("견적을 못 읽으면 상태부터 바꾸지 않는다", r.code === 503 && !rpcBody("move_state"), r.body);
+  r = res();
+  mock([USER, ACCT, [/\/rpc\/move_state/, function(){ return body(200, "hold"); }]]);
+  await Hdeal(req({ method:"POST", headers:{ authorization:"Bearer " + TOK },
+                    body:{ fn:"move_state", args:{ p_request:RQ, p_to:"hold", p_ctx:{ why:"x" } } } }), r);
+  ok("다른 상태로 가는 길은 견적을 안 묻는다", r.code === 200 &&
+     calls.filter(c => /\/rest\/v1\/quote/.test(c.url)).length === 0, calls.map(c => c.url));
+
   /* ⚠️ DB 함수가 거절한 **그 말**이 손님에게 그대로 가야 합니다 —
      "무엇을 하면 되는지" 가 거기 적혀 있습니다 */
   r = res();

@@ -7193,3 +7193,15 @@ img[src^="/img/card/service-internet."]{ object-position:55% 45%; }
   .swt-g .swt-c{ min-height:44px; }
 }
 #sw-next{ display:block; scroll-margin-top:72px; }
+
+@media (min-width:901px){
+  .pgh.pgh-m-sm{ padding-top:36px; padding-bottom:36px; min-height:0; }
+  .pgh.pgh-m-sm .pg-h1{ font-size:clamp(34px, 3.2vw, 44px); }
+  .sec.swt{ padding-top:44px; }
+  .sec.swt .sec-hd{ margin-bottom:20px; }
+  .sec.swt .sec-hd h2{ font-size:clamp(26px, 2.4vw, 34px); }
+
+  .swt-g .swt-c.swt-pc{ flex-direction:row; align-items:stretch; }
+  .swt-g .swt-pc .swt-ph{ flex:0 0 38%; aspect-ratio:auto; min-height:168px; }
+  .swt-g .swt-pc .swt-t{ flex:1 1 auto; align-self:center; padding:18px 20px 44px; }
+}

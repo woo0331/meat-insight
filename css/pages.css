@@ -9415,3 +9415,19 @@ img[src^="/img/card/service-internet."]{ object-position:55% 45%; }
   .swt-g .swt-c{ min-height:44px; }
 }
 #sw-next{ display:block; scroll-margin-top:72px; }
+
+/* 2026-11-26 — PC 에서 /startup/:업종 의 '새로 창업 / 인수' 카드가 첫 화면(1440×844) 아래로 밀렸습니다
+   (머리 500 + 구간 여백 96 + 머리말 142 + 40 → 카드가 851px 부터 · 카드 안 사진 354px).
+   ⚠️ 이 화면에만 붙는 클래스(pgh-m-sm · swt)만 고칩니다 — 다른 화면은 한 픽셀도 안 바뀝니다.
+   ⚠️ 폰(760px 아래)은 위 블록이 따로 잡고 있어서 건드리지 않습니다. */
+@media (min-width:901px){
+  .pgh.pgh-m-sm{ padding-top:36px; padding-bottom:36px; min-height:0; }
+  .pgh.pgh-m-sm .pg-h1{ font-size:clamp(34px, 3.2vw, 44px); }
+  .sec.swt{ padding-top:44px; }
+  .sec.swt .sec-hd{ margin-bottom:20px; }
+  .sec.swt .sec-hd h2{ font-size:clamp(26px, 2.4vw, 34px); }
+  /* 카드 — 사진 왼쪽 · 글 오른쪽 (카드 높이 483 → 사진 높이를 글이 정합니다) */
+  .swt-g .swt-c.swt-pc{ flex-direction:row; align-items:stretch; }
+  .swt-g .swt-pc .swt-ph{ flex:0 0 38%; aspect-ratio:auto; min-height:168px; }
+  .swt-g .swt-pc .swt-t{ flex:1 1 auto; align-self:center; padding:18px 20px 44px; }
+}

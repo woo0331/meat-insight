@@ -7038,3 +7038,7 @@ img[src^="/img/card/service-internet."]{ object-position:55% 45%; }
 .ind{ overflow:hidden; }
 
 .ind:has(.ind-ph img) .ind-ic{ display:none; }
+
+.my-lk-it li > span{ text-align:right; }
+.my-lk-it .my-it-with{ display:block; font-style:normal; font-size:var(--t-cap); color:var(--ink2); font-weight:500; }
+.myq-it{ margin-top:10px; }

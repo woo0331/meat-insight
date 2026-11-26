@@ -9251,3 +9251,9 @@ img[src^="/img/card/service-internet."]{ object-position:55% 45%; }
 .ind{ overflow:hidden; }
 /* 사진이 있는 업종 카드는 아이콘 타일을 접습니다 (사진이 이미 업종을 말합니다 · 폰에서 카드가 두 배로 길어졌습니다) */
 .ind:has(.ind-ph img) .ind-ic{ display:none; }
+
+/* 고객 상태 — 서비스별 줄의 "신청 전체와 함께 진행" 딱지 (2026-11-26)
+   ⚠️ 흐린 글자(--ink3)를 쓰지 않습니다 — 상태를 읽는 줄입니다. */
+.my-lk-it li > span{ text-align:right; }
+.my-lk-it .my-it-with{ display:block; font-style:normal; font-size:var(--t-cap); color:var(--ink2); font-weight:500; }
+.myq-it{ margin-top:10px; }

@@ -238,5 +238,23 @@ console.log("\n── 계약까지 간 건 (전환율의 분자)");
      W.AM_DEAL_ST.filter(s => s.off).map(s => s.key));
 }
 
+/* 고객에게 보이는 상태 (2026-11-26) — 신청 단위로 계약까지 간 건이
+   "진행 중 · 신청 접수" 로 보이던 자리 */
+{
+  const I2 = [{ service_id:"demolish/full", state:"new" }, { service_id:"restore/shop-restore", state:"new" }];
+  const v = W.amReqItemsView("signed", I2), t = W.amReqTally("signed", I2);
+  ok("신청 단위 계약 — 항목이 전체 상태(계약)를 따라 보인다", v.every(x => x.state === "signed" && x.own === false && x.rec === false), v);
+  ok("신청 단위 계약 — 따로 진행된 기록이 없다고 셈한다(rec=false)", t.rec === false && t.total === 2, t);
+  const m = W.amReqItemsView("signed", [{ service_id:"a", state:"done" }, { service_id:"b", state:"new" }]);
+  ok("항목별로 따로 진행된 것은 실제 상태 그대로 · 나머지만 전체를 따름",
+     m[0].state === "done" && m[0].rec === true && m[1].state === "signed" && m[1].own === false, m);
+  const n = W.amReqItemsView("new", I2);
+  ok("접수 직후에는 딱지 없이 신청 접수", n.every(x => x.state === "new" && x.own === true), n);
+  ok("고객에게 정산 상태를 보이지 않는다 (서비스 완료로 접음)",
+     W.amCustSt("fee_wait") === "done" && W.amCustSt("fee_done") === "done" && W.amCustSt("signed") === "signed");
+  const h = W.amReqTally("assigned", [{ service_id:"a", state:"hold" }, { service_id:"b", state:"done" }]);
+  ok("셈 — 보류 · 완료가 갈린다", h.hold === 1 && h.done === 1 && h.open === 0 && h.phase === "hold", h);
+}
+
 console.log("\n" + (bad ? "❌ " + bad + "/" + ran + " 실패" : "✅ " + ran + "개 전부 통과") + "\n");
 process.exit(bad ? 1 : 0);

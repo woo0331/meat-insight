@@ -570,7 +570,7 @@ function OpsGuideBand(){
   '</div></section>';
 }
 
-var OPS_CALC = ["bep", "target", "labor", "margin"];
+var OPS_CALC = ["bep", "target"];
 var OPS_CALC_TONE = { bep:"sv3", target:"sv1", labor:"sv4", margin:"sv6" };
 
 function OpsCalcBand(){
@@ -581,7 +581,8 @@ function OpsCalcBand(){
 function PageOperation(){
   var ind = (typeof amIndustry === "function") ? amIndustry(nowQS("i")) : null;
 
-  return OpsIntro(ind) + OpsSit(ind) + OpsKpSvc(ind) + OpsKpRoad() + OpsKpDiag() +
+  var opPicked = ["cost","mkt","fix","hr"].indexOf(nowQS("need")) >= 0;
+  return OpsIntro(ind) + OpsSit(ind) + OpsKpSvc(ind) + OpsKpRoad() + (opPicked ? "" : OpsKpDiag()) +
 
     HallPickFold({ side:"ops", path:(nowQS("p") === "pick" ? "pick" : ""),
       body:PickGroupBody("operation", "ops", { noAside:true }), packKeys:["run"] }) +
@@ -901,9 +902,10 @@ function PageAcquisition(){
     body:PickGroupBody("transfer", "transfer", { noAside:true }), packKeys:[] });
   var mkt = AcqMarket(t, ind, iq);
 
-  return AcqIntro(ind, iq, nowQS("t")) + AcqSit(ind) + AcqKpSvc(ind, iq) + AcqKpRoad(t) + AcqKpCalc(t) +
-    AcqWhich(t, ind, iq, true) +
-    (t === "in" ? AcqSearch(ind) + mkt + sel : AcqPrep(ind) + sel + mkt) +
+  var aqPicked = ["in","out"].indexOf(nowQS("t")) >= 0;
+  return AcqIntro(ind, iq, nowQS("t")) + AcqSit(ind) + AcqKpSvc(ind, iq) + AcqKpRoad(t) + (aqPicked ? "" : AcqKpCalc(t)) +
+    (aqPicked ? "" : AcqWhich(t, ind, iq, true)) +
+    (t === "in" ? (aqPicked ? "" : AcqSearch(ind) + mkt) + sel : AcqPrep(ind) + sel + (aqPicked ? "" : mkt)) +
     AcqProcess(t, ind) + AcqKpPros(ind) +
     ReadBand({ cat:"transfer", side:"both", limit:3,
                title:"인수 · 양도에서 자주 막히는 것" }) +
@@ -992,11 +994,14 @@ function AcqSit(ind){
               ListHead({ id:"aqs-h", total:fail ? null : all.length, n:hit.length, unit:"건", fail:fail, conds:conds, reset:"/transfer?t=in" })+
               (ListState({ fail:fail, total:all.length, n:hit.length, what:"매장", reset:"/transfer?t=in",
                  zeroAll:'<div class="lst lst-all">'+icon("info",18)+'<p><b>지금 올라온 매장 매물이 없습니다.</b> 올라오면 이 자리에 바로 나옵니다. 그동안 인수 비용과 계약 전에 볼 것을 먼저 확인하세요.</p>'+
-                   '<a class="btn btn-o" href="/tools/premium">권리금 계산</a><a class="btn btn-o" href="/content?j=startup&amp;cat=store">인수 계약 가이드</a></div>' }) ||
+                   '<a class="btn btn-o" href="/tools/premium">권리금 계산</a>'+
+
+                   '<a class="btn btn-o" href="/content?j=startup&amp;cat=store" onclick="return hhJump(\'aq-steps\')">인수 체크리스트</a></div>' }) ||
                '<div class="sitf-next"><a class="btn btn-b btn-lg sitf-main" href="'+esc(to)+'">'+icon("search",18)+' 조건에 맞는 매장 '+hit.length+'건 보기'+icon("arrow",18)+'</a></div>')+
             '</div>',
           todo:[],
-          more:[{ href:"/tools/premium", t:"권리금 따져 보기", ic:"calc" }, { href:"/tools/vs", t:"신규 vs 인수 비교" }],
+
+          more:(!fail && !all.length ? [] : [{ href:"/tools/premium", t:"권리금 따져 보기", ic:"calc" }]).concat([{ href:"/tools/vs", t:"신규 vs 인수 비교" }]),
           pick:{ side:"transfer", title:"인수할 때 맡길 서비스", ids:jSitIds(["law/lease","transfer/premium","repair/check-up","it/pos"]) } };
       }
       var P = (window.AM_PROCESS && AM_PROCESS["acq-out"]) || [];

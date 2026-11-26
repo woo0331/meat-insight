@@ -437,7 +437,9 @@ function PageProviderCat(cat){
              두 번 이스케이프되어 화면에 `&amp;` 가 찍힙니다. */
           note:"이 분야에 등록된 "+amBrand()+" 파트너 업체는 지금 "+
                all.length+"곳입니다. 업체가 등록되면 이 목록에 나옵니다.",
-          cta:'<a class="btn btn-o" href="/join">'+esc(cat.name)+' 업체라면 입점하기</a>'+
+          /* 2026-11-26 모바일 시안 §6 — 전체 0곳이면 그 분야에 맞는 비용 계산(또는 준비 체크리스트)을 먼저 */
+          cta:pvZeroTool(cat, side)+
+              '<a class="btn btn-o" href="/join">'+esc(cat.name)+' 업체라면 입점하기</a>'+
               /* 2026-11-19 — 접수가 닫히면 위 신청 단추가 가려집니다(ctaTagLinks).
                  그 자리에 닫힘 한 줄과 접수 안내를 냅니다. ⚠️ 이 상자가 있는 화면에서는
                  아래 "한 번만 적으세요" 구간이 통째로 가려져 같은 안내가 두 번 나오지 않습니다. */
@@ -1239,4 +1241,15 @@ function PageCompare(){
       '적힌 값은 업체가 등록한 것이고, 저희가 확인하거나 보증하는 값이 아닙니다. '+
       '확인 배지는 저희가 서류로 본 항목만 붙습니다.</p>'+
   '</div></section>';
+}
+
+/* 2026-11-26 — 업체가 전체 0곳인 분야에서 오늘 바로 쓸 수 있는 도구 하나.
+   tools.js 의 rel(그 도구가 이어지는 분야)을 거꾸로 읽습니다(amToolsForCat) — 없으면 쪽에 맞는 체크리스트 · 창업비. */
+function pvZeroTool(cat, side){
+  var T = (typeof amToolsForCat === "function" ? amToolsForCat(cat.key) : []) || [];
+  var t = T[0];
+  if(t && t.key) return '<a class="btn btn-b" href="/tools/'+esc(t.key)+'">'+icon("calc",16)+' '+esc(t.name)+'</a>';
+  return side === "close"
+    ? '<a class="btn btn-b" href="/tools/close">'+icon("check",16)+' 폐업 준비 체크리스트</a>'
+    : '<a class="btn btn-b" href="/tools/cost">'+icon("calc",16)+' 창업비 계산</a>';
 }

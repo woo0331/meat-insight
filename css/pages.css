@@ -9431,3 +9431,87 @@ img[src^="/img/card/service-internet."]{ object-position:55% 45%; }
   .swt-g .swt-pc .swt-ph{ flex:0 0 38%; aspect-ratio:auto; min-height:168px; }
   .swt-g .swt-pc .swt-t{ flex:1 1 auto; align-self:center; padding:18px 20px 44px; }
 }
+
+/* 2026-11-26 모바일 시안 §1 — 홈 검색 옆 운영 · 양도양수 바로가기 */
+.wp-jump{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 0 0; }
+.wp-jump a{ display:grid; grid-template-columns:auto 1fr auto; grid-template-rows:auto auto; column-gap:10px; align-items:center;
+  min-height:56px; padding:10px 14px; border:1px solid var(--line); border-radius:14px; background:#fff; color:var(--hm-ink, #2C211C); }
+.wp-jump a > svg:first-child{ grid-row:1 / 3; color:#6A4B3B; }
+.wp-jump a > b{ font-size:15px; font-weight:800; }
+.wp-jump a > i{ grid-column:2; font-style:normal; font-size:13px; color:var(--ink2); }
+.wp-jump a > svg:last-child{ grid-column:3; grid-row:1 / 3; color:#6A4B3B; }
+.wp-jump a:hover, .wp-jump a:focus-visible{ border-color:#6A4B3B; }
+@media (max-width:420px){ .wp-jump a{ padding:10px 10px; column-gap:8px; } .wp-jump a > i{ font-size:12.5px; } }
+@media (max-width:359px){ .wp-jump{ grid-template-columns:1fr; } }
+/* 폰: 운영 구간의 분야 여섯은 바로 아래 '세부 서비스' 와 겹쳐 접습니다 (사진 · 설명 · 운영 서비스 보기만) */
+@media (max-width:760px){ .iops .iops-l{ display:none; } }
+
+/* 2026-11-26 모바일 시안 §5 — 접힌 구간(여러 서비스 함께 고르기 · 분야와 업종으로 보기 · 받는 순서)은
+   펼치기 단추 하나라 64px 여백을 줄입니다. 펼친 뒤에도 같은 여백이라 내용이 붙지 않습니다(28px). */
+@media (max-width:760px){
+  .sec.pkb-sel, .sec.cl-det.stI, .sec.stD:not(.hfl-road):not(.kp){ padding-top:28px; padding-bottom:28px; }
+  .sec.pkb-sel .sec-hd, .sec.cl-det.stI .sec-hd, .sec.stD:not(.hfl-road):not(.kp) .sec-hd{ margin-bottom:14px; }
+}
+/* 2026-11-26 — 업체 카드 딱지 (가능한 작업 · 활동 지역) */
+.pv .pv-lb{ display:block; margin:0 0 3px; font-size:12px; font-weight:800; color:var(--ink2); letter-spacing:.01em; }
+.pv .pv-sv .pv-lb{ flex-basis:100%; }
+/* 2026-11-26 모바일 시안 §7 — 대표 글 한 편 · 아래 목록에서는 가림(찾는 중에는 보임) */
+.ct-l:not(.is-q) > li.ct-feat-dup{ display:none; }
+.ctf[hidden]{ display:none; }
+.ctf-g.ctf-one{ grid-template-columns:1fr; }
+@media (min-width:901px){
+  .ctf-g.ctf-one .ctf-c{ display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); }
+  .ctf-g.ctf-one .pcd-ph{ aspect-ratio:auto; min-height:260px; height:100%; }
+}
+/* 2026-11-26 §7 — 글 상세의 강조 행동 하나 */
+.rd-main{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin:18px 0; padding:16px 18px;
+  border:1px solid #D9C7B4; border-radius:16px; background:#FBF6EF; }
+.rd-main-t{ display:flex; align-items:flex-start; gap:10px; margin:0; color:#5A3F31; }
+.rd-main-t > span{ display:flex; flex-direction:column; gap:2px; }
+.rd-main-t b{ font-size:16px; color:var(--ink); }
+.rd-main-t i{ font-style:normal; font-size:14px; color:var(--ink2); }
+.rd-main .btn{ min-height:48px; }
+@media (max-width:640px){ .rd-main .btn{ width:100%; justify-content:center; } }
+/* 2026-11-26 §9 — 내놓기 준비 자료 */
+.sl-prep{ margin:14px 0 16px; padding:16px 18px; border:1px solid var(--line); border-radius:16px; background:#FBF6EF; }
+.sl-prep-h{ display:flex; align-items:center; gap:8px; margin:0 0 10px; color:#5A3F31; }
+.sl-prep-h b{ color:var(--ink); font-size:16px; }
+.sl-prep ul{ list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.sl-prep li{ display:flex; gap:8px; align-items:flex-start; font-size:14.5px; color:var(--ink2); line-height:1.5; }
+.sl-prep li > svg{ flex:none; margin-top:4px; color:#6A4B3B; }
+/* 2026-11-26 §10 — 프랜차이즈: 등록 수 먼저 · 분류 사진은 업종 사진 · 비교 기준 */
+.fc-sum{ display:flex; align-items:center; gap:8px; margin:0 0 14px; font-size:15px; color:var(--ink2); }
+.fc-sum b{ color:var(--ink); }
+.fc-ph{ position:relative; }
+.fc-phn{ position:absolute; left:8px; bottom:8px; padding:3px 8px; border-radius:999px; background:rgba(40,29,23,.82); color:#fff;
+  font-style:normal; font-size:12px; font-weight:700; line-height:1.3; }
+.fc-crit{ margin:18px 0 6px; padding:18px; border:1px solid var(--line); border-radius:16px; background:#FBF6EF; }
+.fc-crit-h{ display:flex; flex-direction:column; gap:4px; margin:0 0 12px; }
+.fc-crit-h b{ font-size:17px; color:var(--ink); }
+.fc-crit-h i{ font-style:normal; font-size:14px; color:var(--ink2); }
+.fc-crit ul{ list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+@media (min-width:901px){ .fc-crit ul{ grid-template-columns:repeat(3, minmax(0,1fr)); } }
+.fc-crit li{ display:flex; gap:10px; align-items:flex-start; padding:12px; border-radius:12px; background:#fff; border:1px solid var(--line); }
+.fc-crit li > svg{ flex:none; color:#6A4B3B; margin-top:2px; }
+.fc-crit li > span{ display:flex; flex-direction:column; gap:2px; }
+.fc-crit li b{ font-size:15px; color:var(--ink); }
+.fc-crit li i{ font-style:normal; font-size:14px; color:var(--ink2); line-height:1.5; }
+/* 2026-11-26 — 신청서: 이번 분야 / 전에 담음 */
+.qs-grp{ display:flex; gap:6px; align-items:flex-start; margin:0 0 8px; font-size:14px; color:var(--ink2); }
+.qs-tag{ flex:none; margin-right:6px; padding:2px 8px; border-radius:999px; background:#5A3F31; color:#fff; font-style:normal; font-size:12px; font-weight:800; }
+.qs-tag.qs-tag-prev{ background:#EFE6D8; color:#5A3F31; }
+/* 2026-11-26 §11 — 신청서 맨 위 요약 */
+.qsum{ margin:0 0 16px; padding:14px 16px; border:1px solid var(--line); border-radius:16px; background:#fff; }
+.qsum:empty{ display:none; }
+.qsum-h{ margin:0 0 8px; font-size:14px; font-weight:800; color:#5A3F31; }
+.qsum ul{ list-style:none; margin:0; padding:0; display:grid; gap:4px; }
+.qsum li{ display:grid; grid-template-columns:56px minmax(0,1fr) auto; align-items:center; gap:8px; min-height:44px; border-top:1px solid #F1EAE0; }
+.qsum li:first-child{ border-top:0; }
+.qsum-k{ font-size:13px; font-weight:800; color:var(--ink2); }
+.qsum-v{ font-size:15px; font-weight:700; color:var(--ink); }
+.qsum-v.qsum-e{ font-weight:500; color:var(--ink2); }
+.qsum-x{ display:inline-flex; align-items:center; min-height:44px; padding:0 8px; font-size:14px; font-weight:700; color:#5A3F31; text-decoration:underline; }
+/* 2026-11-26 §12 — 내 기록 카드 */
+.myq .myq-lb{ margin-right:6px; font-size:12px; font-weight:800; color:var(--ink2); }
+.myq-qgo{ margin:8px 0 0; }
+.myq-qgo .btn{ min-height:44px; }

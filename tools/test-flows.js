@@ -841,6 +841,18 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
                              ["?t=out", "넘기는 순서", "/stores"]]){
    await pg.goto(B+"/transfer"+q,{waitUntil:"networkidle"});
    await pg.waitForTimeout(400);
+   /* 2026-11-26 모바일 시안 §4 — '내 매장 넘기기' 를 고르면(?t=out) 경로 메뉴(.aq-m)는 내려가고
+      **그 결과(#sit-res)** 가 그 쪽 길을 냅니다 — 내놓기(/sell)가 먼저 · 매장 찾기(/stores)는 섞이지 않음 */
+   if(q === "?t=out"){
+     const o = await pg.evaluate(()=>{ const r = document.getElementById("sit-res");
+       if(!r) return null;
+       const hs = [].slice.call(r.querySelectorAll("a[href]")).map(a=>a.getAttribute("href"));
+       return { t:(r.querySelector("h2,h3") || {}).textContent || "", sell:hs.some(h=>h.indexOf("/sell")===0),
+                stores:hs.some(h=>h.indexOf("/stores")===0), menu:document.querySelectorAll(".aq-m").length }; });
+     say(!!o && /넘기기/.test(o.t) && o.sell && !o.stores && o.menu === 0,
+         "4 양도양수?t=out — 그 쪽 길(내놓기)이 결과에 먼저 · 매장 찾기는 섞이지 않음 · 경로 메뉴 반복 없음", JSON.stringify(o));
+     continue;
+   }
    const m = await pg.evaluate(()=>
      [].slice.call(document.querySelectorAll(".aq-m b")).map(b=>b.textContent.trim()));
    say(m[0] === want, "4 양도양수"+(q||"(인수)")+" — 그 쪽 메뉴가 먼저 온다", m.join(" · "));

@@ -710,6 +710,8 @@ function MyReqList(L, d){
     var pv = (r.assignment && r.assignment.length && r.assignment[0].provider)
                ? r.assignment[0].provider.name : "";
     var cat = r.cat && typeof amCat === "function" ? amCat(r.cat) : null;
+    /* 2026-11-26 모바일 시안 §12 — 실제로 받은 견적이 있을 때만 '견적 보기' (없으면 단추째 없음) */
+    var nq = d ? myqOf(d, r.id).length : 0;
     return '<li class="myq"><div class="myq-h">'+
         '<b class="myq-no">'+esc(r.no || "")+'</b>'+
         '<span class="myq-st myq-'+esc(myStTone(cs))+'">'+esc(st)+'</span>'+
@@ -717,7 +719,8 @@ function MyReqList(L, d){
       '<p class="myq-m">'+myCond(r, cat)+'</p>'+
       /* ⚠️⚠️ 업체 상호는 **배정이 된 뒤에만** 나옵니다 — 그 전에 적으면
          정해지지도 않은 곳을 알려 주는 것입니다 (제17조 제2항). */
-      (pv ? '<p class="myq-pv">'+icon("users",15)+esc(pv)+'</p>' : "")+
+      (pv ? '<p class="myq-pv">'+icon("users",15)+'<small class="myq-lb">배정된 업체</small>'+esc(pv)+'</p>' : "")+
+      (nq ? '<p class="myq-qgo"><a class="btn btn-o btn-sm" href="#myqt-'+esc(r.id)+'" onclick="return hhJump(\'myqt-'+esc(r.id)+'\')">'+icon("doc",15)+' 견적 보기 '+nq+'건</a></p>' : "")+
       /* 서비스가 둘 이상이면 서비스별 줄 — 비회원 조회와 같은 규칙 */
       ((r.request_item || []).length > 1
         ? '<ul class="my-lk-it myq-it">'+myReqItemsHtml(r.state, r.request_item)+'</ul>' : "")+
@@ -792,7 +795,7 @@ function MyQuoteCompare(d, r){
   var L = myqOf(d, r.id);
   if(!L.length) return "";
   var got = L.filter(function(q){ return q.state === "chosen"; })[0];
-  return '<div class="myqt">'+
+  return '<div class="myqt" id="myqt-'+esc(r.id)+'">'+
     '<p class="myqt-h">'+icon("doc",15)+'받은 견적 '+L.length+'건'+
       (got ? '' : ' <i>— 하나를 고르시면 업체에 전달됩니다</i>')+'</p>'+
     '<ul class="myqt-l">'+L.map(function(q){

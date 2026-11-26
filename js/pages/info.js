@@ -156,6 +156,9 @@ window.ctFind = function(q){
     el.hidden = !on;
     if(on && q) hit++;
   });
+  /* 찾는 동안에는 대표 글을 가리고 목록이 그 글까지 보여 줍니다 */
+  var L = document.querySelector(".ct-l"); if(L) L.classList.toggle("is-q", !!q);
+  var F = document.getElementById("ctf"); if(F) F.hidden = !!q;
   var r = document.getElementById("ct-r");
   if(r){
     r.hidden = !q;
@@ -195,11 +198,14 @@ function PageContents(){
   /* ⚠️ 딱지는 **여정 이름**입니다 — 탭이 "양도양수" 인데 카드가
      "창업 · 폐업" 이라고 적혀 있으면 서로 다른 말을 합니다.
      여정을 못 찾는 글은 그 칸을 **아예 안 냅니다** (절대 규칙 2). */
+  /* 2026-11-26 모바일 시안 §7 — 대표 글은 **한 편**만 위에 크게. 그 글은 바로 아래 목록에서 가립니다(찾기를 하면 다시 보입니다) */
+  var featShow = !j && !cat && !q;
+  var featSlug = featShow ? ctFeatPick(all) : "";
   var card = function(c){
     var jk = jOf(c);
     var jn = "";
     JY.forEach(function(x){ if(x.key === jk) jn = x.name; });
-    return '<li data-ct-q="'+esc(ctQOf(c))+'"><a href="/content/'+esc(c.slug)+'">'+
+    return '<li data-ct-q="'+esc(ctQOf(c))+'"'+(featSlug && c.slug === featSlug ? ' class="ct-feat-dup"' : '')+'><a href="/content/'+esc(c.slug)+'">'+
       '<span class="ct-m">'+(jn ? esc(jn) : "")+
         (c.industry?(jn?' · ':'')+esc(amIndustryName(c.industry)):'')+
         (c.read?' · '+esc(String(c.read))+'분':'')+'</span>'+
@@ -211,18 +217,10 @@ function PageContents(){
     kicker:"창업 · 폐업 정보",
     h1raw:"실제로 막히는 것만<br class=\"br-m\"> 정리합니다.",
     lead:"창업비용 · 철거비 · 원상복구 범위 · 권리금 · 사업자등록 · 폐업신고처럼, 검색해도 답이 잘 안 나오는 것들입니다.",
-    tight:true
+    tight:true, cls:"pgh-m-sm"   /* 2026-11-26 §7 — 폰에서 머리 설명을 접어 찾기 · 주제가 첫 화면에 */
   })+
   '<section class="sec sec-white"><div class="w">'+
-    /* ── 탭 다섯 (PART 10-2) — 전부 **세는 값**입니다 ─────────── */
-    '<ul class="chip-g chip-g-fil">'+
-      '<li><a class="chip'+(j?"":" on")+'" href="'+esc(ctUrl("",""))+'">'+
-        '전체 '+all.length+'</a></li>'+
-      JY.map(function(x){
-        return '<li><a class="chip'+(j===x.key?" on":"")+'" href="'+
-          esc(ctUrl(x.key,""))+'">'+esc(x.name)+' '+nOf(x.key)+'</a></li>';
-      }).join("")+
-    '</ul>'+
+    /* 2026-11-26 모바일 시안 §7 — 찾기를 주제 칩보다 위로 */
     /* ── 찾기 (PART 10-3) ──────────────────────────────────────
        ⚠️⚠️ **작동하지 않는 검색창은 추가하지 않는다** (PART 10-3 이
        직접 적었습니다). 이 칸은 `ctFind()` 로 실제로 거릅니다 —
@@ -237,6 +235,15 @@ function PageContents(){
       '</span>'+
       '<p class="pkf-r" id="ct-r" hidden></p>'+
     '</div>'+
+    /* ── 탭 다섯 (PART 10-2) — 전부 **세는 값**입니다 ─────────── */
+    '<ul class="chip-g chip-g-fil">'+
+      '<li><a class="chip'+(j?"":" on")+'" href="'+esc(ctUrl("",""))+'">'+
+        '전체 '+all.length+'</a></li>'+
+      JY.map(function(x){
+        return '<li><a class="chip'+(j===x.key?" on":"")+'" href="'+
+          esc(ctUrl(x.key,""))+'">'+esc(x.name)+' '+nOf(x.key)+'</a></li>';
+      }).join("")+
+    '</ul>'+
     /* ⚠️ **분야 칩은 쪽을 고른 뒤에만 냅니다.** 25개를 다 깔면 폰에서
        화면 하나를 통째로 먹고 글이 한 편도 안 보입니다 (실제로 그랬습니다).
        이 사이트가 원래 하는 일이 "창업이냐 폐업이냐" 를 먼저 묻는
@@ -267,7 +274,7 @@ function PageContents(){
     /* 2026-11-26 디자인 개편 §8 — 거르개를 안 걸었을 때만 **대표 글 셋**을 사진 카드로 맨 위에.
        ⚠️ 고르는 기준은 날짜(at) 하나이고 분류가 겹치지 않게 고릅니다 (인기 · 조회가 아닙니다).
        ⚠️ 사진은 그 글의 **분류 연출 사진**입니다 — 사진이 있는 분류의 글만 고릅니다. 목록은 아래에 그대로 다 있습니다. */
-    (!j && !cat && !q ? ctFeature(all) : "")+
+    (featShow ? ctFeature(all, featSlug) : "")+
     (list.length
       ? '<ul class="ct-l">'+list.map(card).join("")+'</ul>'
       : Empty({
@@ -281,25 +288,27 @@ function PageContents(){
   '</div></section>';
 }
 
-function ctFeature(all){
-  var seen = {}, pick = [];
-  all.slice().sort(function(a, b){ return String(b.at || "").localeCompare(String(a.at || "")); })
-    .forEach(function(c){
-      if(pick.length >= 3 || seen[c.cat] || !picKey("cat", c.cat)) return;
-      seen[c.cat] = 1; pick.push(c);
-    });
-  if(pick.length < 3) return "";
-  return '<h2 class="ctf-h">최근에 올라온 글</h2>'+
-    '<ul class="ctf-g">'+pick.map(function(c){
-      var cn = ((window.AM_CATS || []).filter(function(k){ return k.key === c.cat; })[0] || {}).name || "";
-      return '<li><a class="pcd ctf-c" href="/content/'+esc(c.slug)+'">'+
-        '<span class="pcd-ph" aria-hidden="true">'+picBox(picKey("cat", c.cat), "book", "(max-width:640px) 92vw, (max-width:1100px) 46vw, 380px")+'</span>'+
+function ctFeatPick(all){
+  var c = all.slice().sort(function(a, b){ return String(b.at || "").localeCompare(String(a.at || "")); })
+    .filter(function(c){ return picKey("cat", c.cat); })[0];
+  return c ? c.slug : "";
+}
+/* 2026-11-26 모바일 시안 §7 — 대표 글 **한 편** (날짜 기준 · 사진이 있는 분류의 글). 셋을 깔면 아래 목록과 같은 카드가 되풀이됐습니다 */
+function ctFeature(all, slug){
+  var c = all.filter(function(x){ return x.slug === slug; })[0];
+  if(!c) return "";
+  var cn = ((window.AM_CATS || []).filter(function(k){ return k.key === c.cat; })[0] || {}).name || "";
+  return '<div class="ctf" id="ctf">'+
+    '<h2 class="ctf-h">대표 글</h2>'+
+    '<ul class="ctf-g ctf-one">'+
+      '<li><a class="pcd ctf-c" href="/content/'+esc(c.slug)+'">'+
+        '<span class="pcd-ph" aria-hidden="true">'+picBox(picKey("cat", c.cat), "book", "(max-width:640px) 92vw, (max-width:1100px) 46vw, 560px")+'</span>'+
         '<span class="pcd-tx">'+(cn ? '<i class="ctf-k">'+esc(cn)+'</i>' : '')+
           '<b class="pcd-t">'+esc(c.title)+'</b>'+
           '<i class="pcd-d">'+esc(c.lead)+'</i>'+
-          '<span class="pcd-go">읽어 보기'+icon("arrow",14)+'</span></span></a></li>';
-    }).join("")+'</ul>'+
-    '<h2 class="ctf-h">전체 글</h2>';
+          '<span class="pcd-go">읽어 보기'+icon("arrow",14)+'</span></span></a></li>'+
+    '</ul>'+
+    '<h2 class="ctf-h">전체 글</h2></div>';
 }
 
 function PageContent(c){
@@ -321,6 +330,10 @@ function PageContent(c){
       '<ul>'+c.sum.slice(0,3).map(function(t){
         return '<li>'+mark(t)+'</li>'; }).join("")+'</ul>'+
     '</div>' : '')+
+
+    /* 2026-11-26 모바일 시안 §7 — 이 글과 바로 이어지는 **행동 하나**를 위에서 강조합니다
+       (계산기 → 없으면 그 분야 업체 → 없으면 쪽에 맞는 체크리스트). 아래 '관련' 구간은 그대로입니다. */
+    ctMainAct(c)+
 
     /* ── 이 글에서 다루는 것 (§14) ──────────────────────────────────
        ⚠️ **글 자신의 구간 제목**입니다 (지어내지 않습니다). 글 하나가
@@ -701,4 +714,18 @@ function PageFaq(){
       '<a class="btn btn-o btn-lg" href="/about">소개 보기</a>'+
     '</div>'+
   '</div></section>';
+}
+
+function ctMainAct(c){
+  var T = (typeof amToolsForCat === "function" ? amToolsForCat(c.cat) : []) || [];
+  var cat = (window.AM_CATS || []).filter(function(k){ return k.key === c.cat; })[0];
+  var a = null;
+  if(T[0] && T[0].key) a = { href:"/tools/" + T[0].key, t:T[0].name, ic:"calc", why:"이 글의 숫자를 내 매장 값으로 바로 따져 보세요." };
+  else if(cat && cat.kind === "provider") a = { href:"/providers/" + cat.key, t:cat.name + " 업체 찾기", ic:"search", why:"이 일을 맡길 업체를 지역 · 세부 서비스로 좁혀 보세요." };
+  else if(c.side === "close") a = { href:"/tools/close", t:"폐업 체크리스트", ic:"check", why:"정리할 것을 빠짐없이 순서대로 짚어 보세요." };
+  else a = { href:"/tools/cost", t:"창업비 계산", ic:"calc", why:"들어갈 돈을 항목별로 미리 따져 보세요." };
+  return '<div class="rd-main">'+
+    '<p class="rd-main-t">'+icon(a.ic,18)+'<span><b>이 글 다음에 할 일</b><i>'+esc(a.why)+'</i></span></p>'+
+    '<a class="btn btn-b" href="'+esc(a.href)+'">'+esc(a.t)+icon("arrow",16)+'</a>'+
+  '</div>';
 }

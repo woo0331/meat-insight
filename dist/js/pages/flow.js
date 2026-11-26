@@ -7,7 +7,8 @@ function PageStartup(){
   var ind = nowQS("i");
   var top = amPickTop("startup", ind), rest = amPickRest("startup", ind);
 
-  return StartIntro(ind) + StartSit(ind) + StartKpSvc(ind) + StartKpRoad(ind) + StartKpCalc(ind) + StartKpInd() +
+  var stPicked = ["new","take"].indexOf(nowQS("how")) >= 0;
+  return StartIntro(ind) + StartSit(ind) + StartKpSvc(ind) + StartKpRoad(ind) + (stPicked ? "" : StartKpCalc(ind)) + StartKpInd() +
 
     HallPickFold({ side:"start", path:(nowQS("p") === "pick" ? "pick" : ""),
       body:StartPickBody(top, rest, ind), packKeys:["open", "build"] }) +
@@ -657,7 +658,8 @@ function PageClosure(){
 
   var sel   = ClosurePickFold(path);
 
-  return ClosureIntro(path) + CloseSit() + CloseKpSvc() + CloseKpRoad() + CloseKpCalc() +
+  var clPicked = ["pass","money","fast","lost"].indexOf(nowQS("w")) >= 0;
+  return ClosureIntro(path) + CloseSit() + CloseKpSvc() + CloseKpRoad() + (clPicked ? "" : CloseKpCalc()) +
     ClosureFlow(path, true) + ClosureDemoBand() +
     sel+
     ClosureMoreBand()+
@@ -774,7 +776,8 @@ function ClosureFlow(path, noWant){
       '<p class="row-cta hfl-links">'+
         '<a class="btn btn-o" href="/c/process">'+icon("list",16)+' 폐업 신고 순서 · 필요서류</a>'+
         '<a class="btn btn-o" href="/tools/close">'+icon("check",16)+' 폐업 체크리스트</a>'+
-        '<a class="btn btn-o" href="#cl-cost" onclick="return hhJump(\'cl-cost\')">'+icon("calc",16)+' 예상 비용 계산</a>'+
+
+        '<a class="btn btn-o" href="/tools/closecost" onclick="return hhJump(\'cl-cost\')">'+icon("calc",16)+' 예상 비용 계산</a>'+
         '<a class="btn btn-o" href="#cl-sup" onclick="return hhJump(\'cl-sup\')">'+icon("badge",16)+' 폐업 지원사업 찾는 곳</a>'+
       '</p>'+
 
@@ -1329,28 +1332,29 @@ function CloseSit(){
     tone:"sec-white", kicker:"폐업 · 정리 시작하기", title:"지금 어떤 상황이세요?",
     lead:"정리하기 전에 넘길 수 있는 것부터 확인하면 철거비와 원상복구비가 줄어듭니다.",
     sel:["pass","money","fast","lost"].indexOf(w) >= 0 ? w : "",
-    opts:[{ k:"pass", b:"매장 전체 양도", d:"권리금 · 시설째 다음 사장님께", ph:"kind-pass", ia:"handover" },
-          { k:"money", b:"집기 정리", d:"쓸 만한 장비 · 가구를 처분", ph:"as-furniture", ia:"equip" },
-          { k:"fast", b:"완전 폐업", d:"철거 · 원상복구 · 신고까지", ph:"insu-closure", ia:"demolish" },
-          { k:"lost", b:"아직 모르겠어요", d:"다섯 가지 질문으로 길 찾기", ph:"kp-cl-pro-consult", ia:"bulb" }],
+
+    opts:[{ k:"fast", b:"철거가 급해요", d:"전체 철거 · 상가 원상복구를 한 번에", ph:"insu-closure", ia:"demolish" },
+          { k:"money", b:"집기만 정리할래요", d:"쓸 만한 장비 · 가구 처분", ph:"as-furniture", ia:"equip" },
+          { k:"pass", b:"매장을 넘기고 싶어요", d:"권리금 · 시설째 다음 사장님께", ph:"kind-pass", ia:"handover" },
+          { k:"lost", b:"아직 모르겠어요", d:"다섯 가지만 답하면 길을 알려 드려요", ph:"kp-cl-pro-consult", ia:"bulb" }],
     res:function(k){
-      if(k === "pass") return { title:"매장 전체 양도 — 지금 할 일",
+      if(k === "pass") return { title:"매장을 넘기고 싶어요 — 양도 준비",
         lead:"양도가 되면 철거도 원상복구도 하지 않을 수 있습니다. 넘길 조건부터 정리하세요.",
         todo:sitSteps("acq-out", 3),
         pick:{ side:"close", ids:sitIds(["transfer/store-transfer","asset/kitchen-eq","asset/furniture","tax/close-report"]) },
         main:{ href:"/sell", t:"매장 내놓기 등록", ic:"handover", gate:"sell" }, mainFirst:true,
         more:[{ href:"/tools/premium", t:"권리금 따져 보기", ic:"calc" }, { href:"/transfer?t=out", t:"넘기는 순서 전체" }] };
-      if(k === "money") return { title:"집기 정리 — 지금 할 일",
+      if(k === "money") return { title:"집기만 정리할래요 — 품목부터 고르세요",
         lead:"붙박이(떼면 못 쓰는 것)와 떼어 옮길 수 있는 것을 나누면 팔 것과 버릴 것이 갈립니다.",
         todo:sitSteps("asset-out", 3),
         pick:{ side:"close", ids:sitIds(["asset/kitchen-eq","asset/fridge","asset/furniture","waste/biz-waste"]) },
         main:{ href:"/assets?p=pick", t:"처분할 집기 고르기", ic:"equip" },
         more:[{ href:"/sell?t=asset", t:"시설 · 장비 내놓기" }, { href:"/tools/closecost", t:"정리 비용 계산" }] };
-      if(k === "fast") return { title:"완전 폐업 — 지금 할 일",
-        lead:"철거와 원상복구를 둘 다 맡기실 거면 아래에서 둘 다 고르세요 — 한 번의 신청에 같이 담깁니다.",
+      if(k === "fast") return { title:"철거가 급해요 — 전체 철거 · 원상복구를 한 신청에",
+        lead:"전체 철거와 상가 원상복구를 바로 아래에서 함께 고르시면 한 번의 신청(접수번호 하나)에 같이 담깁니다.",
         todo:sitSteps("closing", 4).slice(1),
         pick:{ side:"close", title:"맡길 정리 서비스 고르기",
-          ids:sitIds(["demolish/full","demolish/partial","demolish/sign","restore/shop-restore","waste/biz-waste","asset/kitchen-eq"]),
+          ids:sitIds(["demolish/full","restore/shop-restore","demolish/partial","demolish/sign","waste/biz-waste","asset/kitchen-eq"]),
           note:"철거와 원상복구를 함께 고르시면 한 신청에 담기고, 업체는 서비스마다 따로 연결해 드립니다." },
         main:{ href:"/tools/closecost", t:"폐업 예상비용 계산", ic:"calc" },
         more:[{ href:"/tools/close", t:"폐업 체크리스트" }, { href:"/providers/demolish", t:"철거 업체 보기" }] };

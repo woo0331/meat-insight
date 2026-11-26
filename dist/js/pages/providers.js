@@ -339,7 +339,9 @@ function PageProviderCat(cat){
 
           note:"이 분야에 등록된 "+amBrand()+" 파트너 업체는 지금 "+
                all.length+"곳입니다. 업체가 등록되면 이 목록에 나옵니다.",
-          cta:'<a class="btn btn-o" href="/join">'+esc(cat.name)+' 업체라면 입점하기</a>'+
+
+          cta:pvZeroTool(cat, side)+
+              '<a class="btn btn-o" href="/join">'+esc(cat.name)+' 업체라면 입점하기</a>'+
 
               ''
         })))+
@@ -958,4 +960,13 @@ function PageCompare(){
       '적힌 값은 업체가 등록한 것이고, 저희가 확인하거나 보증하는 값이 아닙니다. '+
       '확인 배지는 저희가 서류로 본 항목만 붙습니다.</p>'+
   '</div></section>';
+}
+
+function pvZeroTool(cat, side){
+  var T = (typeof amToolsForCat === "function" ? amToolsForCat(cat.key) : []) || [];
+  var t = T[0];
+  if(t && t.key) return '<a class="btn btn-b" href="/tools/'+esc(t.key)+'">'+icon("calc",16)+' '+esc(t.name)+'</a>';
+  return side === "close"
+    ? '<a class="btn btn-b" href="/tools/close">'+icon("check",16)+' 폐업 준비 체크리스트</a>'
+    : '<a class="btn btn-b" href="/tools/cost">'+icon("calc",16)+' 창업비 계산</a>';
 }

@@ -21,12 +21,16 @@ function PageFranchise(){
     cta:'<a class="btn btn-o btn-lg" href="/join">브랜드 등록하기'+icon("arrow",18)+'</a>'
   })+
   '<section class="sec sec-white"><div class="w">'+
+    /* 2026-11-26 모바일 시안 §10 — 업종 분류와 **실제 등록 브랜드 수**를 먼저 (세는 값) */
+    '<p class="fc-sum" role="status">'+icon("store",16)+'<span>등록된 브랜드 <b>'+(window.AM_FRANCHISES||[]).length+'개</b> · 업종 분류 '+(window.AM_FRANCHISE_CATS||[]).length+'개</span></p>'+
     '<ul class="fc-g">'+(window.AM_FRANCHISE_CATS||[]).map(function(c){
       var n = amFranchises({cat:c.key}).length;
       /* 2026-11-26 §8 — 분류 카드에 **업종 공통 사진** (c.ind → AM_PIC_IND). 브랜드 사진이 아니라 업종 사진입니다.
          ⚠️ 사진이 없는 업종은 월넛 면 (빈 액자를 깔지 않습니다) */
       return '<li><a class="fc fc-pc'+tn(c.tone)+'" href="/franchise/'+esc(c.key)+'">'+
-        '<span class="fc-ph" aria-hidden="true">'+picBox(picKey("ind", c.ind), c.icon, "(max-width:640px) 46vw, 220px")+'</span>'+
+        '<span class="fc-ph" aria-hidden="true">'+picBox(picKey("ind", c.ind), c.icon, "(max-width:640px) 46vw, 220px")+
+          /* 2026-11-26 §10 — 분류 사진이 실제 브랜드로 읽히지 않게 사진 위에 밝힙니다 */
+          '<em class="fc-phn">업종 사진 · 브랜드 아님</em></span>'+
         '<span class="fc-ic">'+icon(c.icon,22)+'</span>'+
         '<b>'+esc(c.name)+'</b>'+
         /* ⚠️ 0 일 때 "준비 중" 을 찍지 않습니다 (절대 규칙 2). 세는 값을
@@ -34,6 +38,7 @@ function PageFranchise(){
            말하는 것이 이 플랫폼의 약속입니다. */
         '<span class="fc-n">'+n+'개 브랜드</span></a></li>';
     }).join("")+'</ul>'+
+    (!(window.AM_FRANCHISES||[]).length ? FcCriteria() : "")+
     (!(window.AM_FRANCHISES||[]).length ? Empty({
       icon:"store",
       title:"아직 등록된 브랜드가 없습니다",
@@ -167,4 +172,15 @@ function PageFranchiseOne(f){
     })+
   '</div></section>'+
   '<div class="sticky-cta"><a class="btn btn-b" href="'+esc(quoteTo({side:"start"}))+'">창업 상담 신청</a></div>';
+}
+
+/* 2026-11-26 모바일 시안 §10 — 브랜드가 0개일 때 비교 기준 셋.
+   ⚠️ 금액을 적지 않습니다 — 무엇을 나란히 놓을지만. 금액은 정보공개서(가맹사업법)의 값이라야 합니다. */
+function FcCriteria(){
+  var G = [["won","초기 비용","가맹비 · 교육비 · 보증금 · 인테리어 · 장비 — 본사 지정 업체를 꼭 써야 하는 항목이 있는지"],
+           ["calc","월 비용","로열티 · 광고 분담금 · 본사 물류(식자재 · 소모품) 공급 조건"],
+           ["doc","계약 조건","계약 기간 · 영업지역 보호 · 갱신 · 중도 해지 위약금"]];
+  return '<div class="fc-crit"><p class="fc-crit-h"><b>브랜드를 견줄 때 이 셋을 나란히 놓으세요</b>'+
+      '<i>금액은 가맹본부가 등록한 정보공개서에서 확인하세요. 여기에는 지어낸 금액을 적지 않습니다.</i></p>'+
+    '<ul>'+G.map(function(g){ return '<li>'+icon(g[0],20)+'<span><b>'+esc(g[1])+'</b><i>'+esc(g[2])+'</i></span></li>'; }).join("")+'</ul></div>';
 }

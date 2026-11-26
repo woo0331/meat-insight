@@ -488,6 +488,8 @@ function render(){
 
   if(nowPath() === "/quote" && typeof window.quoteDraftPaint === "function")
     window.quoteDraftPaint();
+  if(nowPath() === "/quote" && typeof window.quoteSumPaint === "function")
+    window.quoteSumPaint();
   if(!RT.keepScroll) window.scrollTo(0,0);
   RT.keepScroll = false;
   if(RT.focus){
@@ -567,7 +569,7 @@ if(window.AM_RELOAD){
   (function(){
     var stop = false;
     var cancel = function(){ stop = true; };
-    ["touchstart","wheel","keydown","mousedown"].forEach(function(t){
+    ["touchstart","touchmove","pointerdown","wheel","keydown","mousedown"].forEach(function(t){
       window.addEventListener(t, cancel, { passive:true, once:true });
     });
     var top = function(){ if(!stop && window.amIsReloadView() && window.scrollY) window.scrollTo(0, 0); };

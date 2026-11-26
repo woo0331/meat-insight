@@ -300,13 +300,14 @@ window.ProviderCard = function(p){
         badges.map(function(bd){
           return '<em class="pv-vf">'+icon("check",13)+esc(bd)+'</em>'; }).join("")+
       '</p>'+
-      '<p class="pv-m">'+
+      /* 2026-11-26 모바일 시안 §6 — 실제 업체 카드는 **가능한 작업 → 활동 지역** 이 먼저입니다 (업종은 그 뒤) */
+      (subs.length ? '<p class="pv-sv"><small class="pv-lb">가능한 작업</small>'+subs.slice(0,4).map(function(n){
+          return '<span>'+esc(n)+'</span>'; }).join("")+
+          (subs.length > 4 ? '<em>외 '+(subs.length-4)+'</em>' : '')+'</p>' : '')+
+      '<p class="pv-m"><small class="pv-lb">활동 지역</small>'+
         esc(regs.join(" · ") || "지역 미등록")+
         (inds.length ? ' · '+esc(inds.join(" · ")) : '')+
       '</p>'+
-      (subs.length ? '<p class="pv-sv">'+subs.slice(0,4).map(function(n){
-          return '<span>'+esc(n)+'</span>'; }).join("")+
-          (subs.length > 4 ? '<em>외 '+(subs.length-4)+'</em>' : '')+'</p>' : '')+
       (s.rating !== null && s.rating !== undefined
         ? '<p class="pv-r">'+icon("star",14)+'<b>'+esc(String(s.rating))+'</b>'+
           '<em>후기 '+s.reviews+'</em>'+(s.jobs ? '<em>작업 '+s.jobs+'</em>' : '')+'</p>'

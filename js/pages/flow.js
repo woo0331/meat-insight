@@ -66,7 +66,10 @@ function PageStartup(){
   /* 2026-11-23 사진형 시안 — 큰 대표 사진 → 사진 핵심 서비스 4 → 사진 진행 절차 4 → 사진 배너 + 실제 도구
      → 업종별 준비 → (기존 고르기 · 신청) → 왜 · 하단 안내. 옛 StartSignature · StartRoad 는 지우지 않았습니다. */
   /* 2026-11-26 모바일 사용성 개편 — 머리 바로 아래가 '어떻게 시작하세요?'(StartSit) */
-  return StartIntro(ind) + StartSit(ind) + StartKpSvc(ind) + StartKpRoad(ind) + StartKpCalc(ind) + StartKpInd() +
+  /* 2026-11-26 모바일 시안 §2 — 신규/인수를 고르면 결과에 이미 창업비(또는 신규 vs 인수) 계산이 첫 행동으로 나옵니다.
+     바로 아래 계산 띠가 같은 말을 되풀이하지 않게, 고른 뒤에는 띠를 뺍니다 (안 고르면 그대로). */
+  var stPicked = ["new","take"].indexOf(nowQS("how")) >= 0;
+  return StartIntro(ind) + StartSit(ind) + StartKpSvc(ind) + StartKpRoad(ind) + (stPicked ? "" : StartKpCalc(ind)) + StartKpInd() +
     /* 2026-11-24 하단 간소화 — 고르개 · 바구니 · 묶음을 '여러 서비스 함께 고르기' 한 구역(기본 접힘)으로.
        옛 StartPickBand · PickBasket · PackPickBand · StartApplyBand 는 지우지 않았습니다 (되살리기는 이 줄).
        STEP 02(StartApplyBand)의 신청 · 접수 안내는 이 구역의 요약(고른 것이 있을 때)과 아래 KpCta 가 받습니다. */
@@ -957,7 +960,9 @@ function PageClosure(){
      → 지원사업 찾는 곳(#cl-sup) → 왜 · 하단 안내. 이용 순서(HallSteps)는 사진 절차와 같은 말이라 내렸습니다.
      옛 CloseKxCalc · CloseKxSupport 는 지우지 않았습니다. */
   /* 2026-11-26 모바일 사용성 개편 — 머리 바로 아래가 상황 넷(CloseSit)입니다. 사진 서비스 · 절차 · 계산은 그 아래. */
-  return ClosureIntro(path) + CloseSit() + CloseKpSvc() + CloseKpRoad() + CloseKpCalc() +
+  /* 2026-11-26 모바일 시안 §5 — 상황을 고르면 결과에 비용 계산 · 체크리스트가 이미 있어서 아래 계산 띠는 뺍니다 */
+  var clPicked = ["pass","money","fast","lost"].indexOf(nowQS("w")) >= 0;
+  return ClosureIntro(path) + CloseSit() + CloseKpSvc() + CloseKpRoad() + (clPicked ? "" : CloseKpCalc()) +
     ClosureFlow(path, true) + ClosureDemoBand() +
     sel+
     ClosureMoreBand()+
@@ -1122,7 +1127,8 @@ function ClosureFlow(path, noWant){
       '<p class="row-cta hfl-links">'+
         '<a class="btn btn-o" href="/c/process">'+icon("list",16)+' 폐업 신고 순서 · 필요서류</a>'+
         '<a class="btn btn-o" href="/tools/close">'+icon("check",16)+' 폐업 체크리스트</a>'+
-        '<a class="btn btn-o" href="#cl-cost" onclick="return hhJump(\'cl-cost\')">'+icon("calc",16)+' 예상 비용 계산</a>'+
+        /* 계산 띠(#cl-cost)가 없으면(상황을 고른 뒤) 계산기 화면으로 바로 갑니다 — hhJump 가 자리가 없으면 true 를 돌려줍니다 */
+        '<a class="btn btn-o" href="/tools/closecost" onclick="return hhJump(\'cl-cost\')">'+icon("calc",16)+' 예상 비용 계산</a>'+
         '<a class="btn btn-o" href="#cl-sup" onclick="return hhJump(\'cl-sup\')">'+icon("badge",16)+' 폐업 지원사업 찾는 곳</a>'+
       '</p>'+
       /* 2026-11-26 — 상황 넷은 맨 위 첫 구간(CloseSit)이 받습니다. 같은 선택 영역을 둘 두지 않습니다. */
@@ -1822,28 +1828,31 @@ function CloseSit(){
     tone:"sec-white", kicker:"폐업 · 정리 시작하기", title:"지금 어떤 상황이세요?",
     lead:"정리하기 전에 넘길 수 있는 것부터 확인하면 철거비와 원상복구비가 줄어듭니다.",
     sel:["pass","money","fast","lost"].indexOf(w) >= 0 ? w : "",
-    opts:[{ k:"pass", b:"매장 전체 양도", d:"권리금 · 시설째 다음 사장님께", ph:"kind-pass", ia:"handover" },
-          { k:"money", b:"집기 정리", d:"쓸 만한 장비 · 가구를 처분", ph:"as-furniture", ia:"equip" },
-          { k:"fast", b:"완전 폐업", d:"철거 · 원상복구 · 신고까지", ph:"insu-closure", ia:"demolish" },
-          { k:"lost", b:"아직 모르겠어요", d:"다섯 가지 질문으로 길 찾기", ph:"kp-cl-pro-consult", ia:"bulb" }],
+    /* 2026-11-26 모바일 시안 §5 — 대표 지시 문구 · 차례 (철거가 급해요 → 집기 → 양도 → 모르겠어요).
+       ⚠️ key(fast · money · pass · lost)는 그대로입니다 — 밖으로 나간 링크(?w=)가 그 값을 들고 있습니다.
+       ⚠️ 차례만 바뀌었고, 각 결과의 '지금 할 일'은 그대로 양도 · 처분 가능성을 먼저 짚습니다. */
+    opts:[{ k:"fast", b:"철거가 급해요", d:"전체 철거 · 상가 원상복구를 한 번에", ph:"insu-closure", ia:"demolish" },
+          { k:"money", b:"집기만 정리할래요", d:"쓸 만한 장비 · 가구 처분", ph:"as-furniture", ia:"equip" },
+          { k:"pass", b:"매장을 넘기고 싶어요", d:"권리금 · 시설째 다음 사장님께", ph:"kind-pass", ia:"handover" },
+          { k:"lost", b:"아직 모르겠어요", d:"다섯 가지만 답하면 길을 알려 드려요", ph:"kp-cl-pro-consult", ia:"bulb" }],
     res:function(k){
-      if(k === "pass") return { title:"매장 전체 양도 — 지금 할 일",
+      if(k === "pass") return { title:"매장을 넘기고 싶어요 — 양도 준비",
         lead:"양도가 되면 철거도 원상복구도 하지 않을 수 있습니다. 넘길 조건부터 정리하세요.",
         todo:sitSteps("acq-out", 3),
         pick:{ side:"close", ids:sitIds(["transfer/store-transfer","asset/kitchen-eq","asset/furniture","tax/close-report"]) },
         main:{ href:"/sell", t:"매장 내놓기 등록", ic:"handover", gate:"sell" }, mainFirst:true,
         more:[{ href:"/tools/premium", t:"권리금 따져 보기", ic:"calc" }, { href:"/transfer?t=out", t:"넘기는 순서 전체" }] };
-      if(k === "money") return { title:"집기 정리 — 지금 할 일",
+      if(k === "money") return { title:"집기만 정리할래요 — 품목부터 고르세요",
         lead:"붙박이(떼면 못 쓰는 것)와 떼어 옮길 수 있는 것을 나누면 팔 것과 버릴 것이 갈립니다.",
         todo:sitSteps("asset-out", 3),
         pick:{ side:"close", ids:sitIds(["asset/kitchen-eq","asset/fridge","asset/furniture","waste/biz-waste"]) },
         main:{ href:"/assets?p=pick", t:"처분할 집기 고르기", ic:"equip" },
         more:[{ href:"/sell?t=asset", t:"시설 · 장비 내놓기" }, { href:"/tools/closecost", t:"정리 비용 계산" }] };
-      if(k === "fast") return { title:"완전 폐업 — 지금 할 일",
-        lead:"철거와 원상복구를 둘 다 맡기실 거면 아래에서 둘 다 고르세요 — 한 번의 신청에 같이 담깁니다.",
+      if(k === "fast") return { title:"철거가 급해요 — 전체 철거 · 원상복구를 한 신청에",
+        lead:"전체 철거와 상가 원상복구를 바로 아래에서 함께 고르시면 한 번의 신청(접수번호 하나)에 같이 담깁니다.",
         todo:sitSteps("closing", 4).slice(1),
         pick:{ side:"close", title:"맡길 정리 서비스 고르기",
-          ids:sitIds(["demolish/full","demolish/partial","demolish/sign","restore/shop-restore","waste/biz-waste","asset/kitchen-eq"]),
+          ids:sitIds(["demolish/full","restore/shop-restore","demolish/partial","demolish/sign","waste/biz-waste","asset/kitchen-eq"]),
           note:"철거와 원상복구를 함께 고르시면 한 신청에 담기고, 업체는 서비스마다 따로 연결해 드립니다." },
         main:{ href:"/tools/closecost", t:"폐업 예상비용 계산", ic:"calc" },
         more:[{ href:"/tools/close", t:"폐업 체크리스트" }, { href:"/providers/demolish", t:"철거 업체 보기" }] };

@@ -2235,6 +2235,11 @@ function HomeWPFind(){
       '<button class="sw-find-b wp-find-b" type="submit"><span>검색</span></button></span>'+
     '</form>'+
     '<p id="wp-msg" class="wp-fmsg" role="status" aria-live="polite"></p>'+
+    /* 2026-11-26 모바일 시안 §1 — 검색 바로 옆에 운영 · 양도양수 바로가기 (사진 카드는 창업 · 폐업 둘) */
+    '<nav class="wp-jump" aria-label="운영 · 양도양수 바로가기">'+
+      '<a href="/operation">'+icon("chart",18)+'<b>매장 운영</b><i>비용 · 홍보 · 시설 · 인력</i>'+icon("arrow",14)+'</a>'+
+      '<a href="/transfer">'+icon("handover",18)+'<b>매장 양도양수</b><i>매장 찾기 · 내 매장 넘기기</i>'+icon("arrow",14)+'</a>'+
+    '</nav>'+
     '<nav class="wp-sug" aria-label="검색 예시"><span class="wp-sug-k">이렇게 찾아보세요</span>'+
       WP_SUGGEST.map(function(t){
         return '<a href="/search?q='+encodeURIComponent(t)+'">'+esc(t)+'</a>'; }).join("")+
@@ -2465,7 +2470,8 @@ function HomeIInd(){
   return '<section class="iind"><div class="w">'+
     '<div class="ih-sh ih-sh-r"><div><p class="ih-kk">BY INDUSTRY</p><h2>업종별 서비스 탐색</h2>'+
       '<p>업종을 고르시면 그 업종에서 먼저 챙길 서비스와 준비 순서를 보여 드립니다.</p></div>'+
-      '<a class="ih-all" href="/startup">전체 업종 보기'+icon("chev",14)+'</a></div>'+
+      /* 2026-11-26 — '전체 업종 보기' 는 아래 격자 끝 한 칸이 받습니다 (같은 곳으로 가는 링크를 두 번 두지 않음) */
+      '</div>'+
     /* 2026-11-22 — 폰(640px 아래)에서는 앞 여섯만 두고 나머지는 '전체 업종 보기' 로 펼칩니다.
        ⚠️ 접는 것은 CSS 의 @media 안에서만 걸립니다 — PC · 태블릿은 클래스가 있어도 전부 보입니다.
        ⚠️ 접어도 DOM 에 그대로 있습니다 (링크 · 크롤러 · 검사가 그대로 셉니다). */
@@ -2510,6 +2516,8 @@ function HomeIOps(){
     '<div class="iops-tx">'+
       '<p class="ih-kk">OPERATION</p><h2>매장 운영에 필요한 모든 서비스</h2>'+
       '<p class="iops-s">문을 연 뒤에도 필요한 일은 계속됩니다. 인테리어부터 시설 · 장비, POS, 세무, 청소, 유지보수까지 분야별로 찾아보세요.</p>'+
+      /* 2026-11-26 모바일 시안 §1 — 여기 분야 링크 여섯은 바로 아래 '세부 서비스' 와 같은 곳으로 가서 한 구간으로 정리했습니다.
+         목록은 PC 에서만 두고(사진 옆 빈 자리), 폰에서는 접습니다 — 링크 자체는 DOM 에 그대로라 길이 사라지지 않습니다. */
       '<ul class="iops-l">'+G.map(function(g){
         /* 2026-11-25 — 주요 운영 서비스에 작은 사진 (연출 사진 · 실제 업체 아님) */
         return '<li><a class="iops-a" href="'+esc(link(g.any))+'"><span class="iops-th" aria-hidden="true">'+picBox(g.ph, "grid", "64px")+'</span>'+

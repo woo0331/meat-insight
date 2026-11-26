@@ -541,13 +541,16 @@ function MyReqList(L, d){
     var pv = (r.assignment && r.assignment.length && r.assignment[0].provider)
                ? r.assignment[0].provider.name : "";
     var cat = r.cat && typeof amCat === "function" ? amCat(r.cat) : null;
+
+    var nq = d ? myqOf(d, r.id).length : 0;
     return '<li class="myq"><div class="myq-h">'+
         '<b class="myq-no">'+esc(r.no || "")+'</b>'+
         '<span class="myq-st myq-'+esc(myStTone(cs))+'">'+esc(st)+'</span>'+
       '</div>'+
       '<p class="myq-m">'+myCond(r, cat)+'</p>'+
 
-      (pv ? '<p class="myq-pv">'+icon("users",15)+esc(pv)+'</p>' : "")+
+      (pv ? '<p class="myq-pv">'+icon("users",15)+'<small class="myq-lb">배정된 업체</small>'+esc(pv)+'</p>' : "")+
+      (nq ? '<p class="myq-qgo"><a class="btn btn-o btn-sm" href="#myqt-'+esc(r.id)+'" onclick="return hhJump(\'myqt-'+esc(r.id)+'\')">'+icon("doc",15)+' 견적 보기 '+nq+'건</a></p>' : "")+
 
       ((r.request_item || []).length > 1
         ? '<ul class="my-lk-it myq-it">'+myReqItemsHtml(r.state, r.request_item)+'</ul>' : "")+
@@ -589,7 +592,7 @@ function MyQuoteCompare(d, r){
   var L = myqOf(d, r.id);
   if(!L.length) return "";
   var got = L.filter(function(q){ return q.state === "chosen"; })[0];
-  return '<div class="myqt">'+
+  return '<div class="myqt" id="myqt-'+esc(r.id)+'">'+
     '<p class="myqt-h">'+icon("doc",15)+'받은 견적 '+L.length+'건'+
       (got ? '' : ' <i>— 하나를 고르시면 업체에 전달됩니다</i>')+'</p>'+
     '<ul class="myqt-l">'+L.map(function(q){

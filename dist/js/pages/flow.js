@@ -350,7 +350,8 @@ function StartApplyBand(){
 function PageStartupIndustry(ind){
   var cats = amCatsFor(ind.key, "start");
   var fcat = amFranchiseCat(ind.key);
-  return PgHero({
+
+  return PgHero({ cls:"pgh-m-sm",
     crumb: Crumb([["창업","/startup"],[ind.name]]),
     kicker:"START · " + ind.name,
 
@@ -366,8 +367,6 @@ function PageStartupIndustry(ind){
 
   StartWayBand(ind)+
 
-  StartAskBand(ind)+
-
   (startWay() === "take"
     ? ProcessBand({ key:"acq-in", kicker:"TAKE OVER PROCESS",
         title:ind.name+" 매장 인수, 무엇부터 하나요?",
@@ -382,6 +381,8 @@ function PageStartupIndustry(ind){
         lead:amProcess("startup").length+"걸음입니다. 걸음마다 "+ind.name+
              "에 맞는 업체 · 장비 · 글로 바로 넘어갑니다.",
         industry:ind.key, tone:"sec-gray", first:3, from:startFrom("startup"), cta:startCalcCta(ind) }))+
+
+  StartAskBand(ind)+
   (ind.equip && ind.equip.length ? EquipBand(ind) : "")+
   StepBand(ind)+
   (fcat ? FranchiseHint(fcat, ind) : "")+
@@ -421,7 +422,7 @@ function StartWayBand(ind){
 
       var to = (w.k === "new") ? base : (base + "?how=" + w.k);
 
-      return '<a class="swt-c swt-pc'+(on ? " on" : "")+'" href="'+esc(to)+'"'+
+      return '<a class="swt-c swt-pc'+(on ? " on" : "")+'" href="'+esc(to)+'" data-keep data-focus="sw-next"'+
         (on ? ' aria-current="true"' : '')+'>'+
         '<span class="swt-ph" aria-hidden="true">'+picBox(w.ph, w.ic, "(max-width:640px) 92vw, 360px")+
           (on ? '<em class="swt-on">'+icon("check",14)+' 선택됨</em>' : '')+'</span>'+
@@ -436,7 +437,7 @@ function StartWayBand(ind){
         '<a href="/stores?i='+encodeURIComponent(ind.key)+'">'+esc(ind.name)+
         ' 매장 매물</a> · <a href="/tools/vs">신규 vs 인수 비교</a></p>'
       : '')+
-  '</div></section>';
+  '</div></section><span id="sw-next" tabindex="-1"></span>';
 }
 
 function startAskVals(){

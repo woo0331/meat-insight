@@ -5,7 +5,7 @@ window.tn = function(tone){ return tone ? (" tn-" + tone) : ""; };
 window.PgHero = function(o){
   o = o || {};
   var ph = o.photo && typeof hasPhoto === "function" && hasPhoto(o.photo);
-  return '<section class="pgh'+(o.tight?" pgh-tight":"")+(ph?" pgh-im-on":"")+'">'+
+  return '<section class="pgh'+(o.tight?" pgh-tight":"")+(ph?" pgh-im-on":"")+(o.cls ? " "+esc(o.cls) : "")+'">'+
 
     (ph ? '<span class="pgh-im pgh-im-'+esc(o.photo)+'">'+
           photoBox(o.photo, "", true)+'</span>' : '')+

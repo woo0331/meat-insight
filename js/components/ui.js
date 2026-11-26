@@ -21,7 +21,7 @@ window.tn = function(tone){ return tone ? (" tn-" + tone) : ""; };
 window.PgHero = function(o){
   o = o || {};
   var ph = o.photo && typeof hasPhoto === "function" && hasPhoto(o.photo);
-  return '<section class="pgh'+(o.tight?" pgh-tight":"")+(ph?" pgh-im-on":"")+'">'+
+  return '<section class="pgh'+(o.tight?" pgh-tight":"")+(ph?" pgh-im-on":"")+(o.cls ? " "+esc(o.cls) : "")+'">'+
     /* ⚠️ 자리 이름을 클래스로 같이 냅니다 — 어느 쪽을 남길지(`--ph-pos`)가
        사진마다 다릅니다 (`css/pages.css`). */
     (ph ? '<span class="pgh-im pgh-im-'+esc(o.photo)+'">'+

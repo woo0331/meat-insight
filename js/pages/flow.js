@@ -549,7 +549,8 @@ function StartApplyBand(){
 function PageStartupIndustry(ind){
   var cats = amCatsFor(ind.key, "start");
   var fcat = amFranchiseCat(ind.key);       /* 같은 key 면 그 분류로 보냅니다 */
-  return PgHero({
+  /* 2026-11-26 모바일 — 머리를 줄이고(pgh-m-sm · 폰에서 사진 · 설명 · 두 번째 단추 접음) 고르기 → 준비 순서 · 창업비 계산 → 묻는 것 넷 차례 */
+  return PgHero({ cls:"pgh-m-sm",
     crumb: Crumb([["창업","/startup"],[ind.name]]),
     kicker:"START · " + ind.name,
     /* ⚠️ 2026-10-06 2차 §5 — 상황과 업종을 고르고 도착하는 **맞춤 결과
@@ -570,8 +571,6 @@ function PageStartupIndustry(ind){
      먼저 봅니다. 장비는 바로 아래에 그대로 둡니다 — 업종이 갈리는
      것을 보여 주는 자리라 지우지 않습니다 (§1 · §12). */
   StartWayBand(ind)+
-  /* 2026-10-09 PART 4 — 묻는 것 넷 (지역 · 예산 · 준비 단계 · 개업 시기) */
-  StartAskBand(ind)+
   /* ⚠️⚠️ **2026-10-08 지시서 §13 STEP 02 · §15** — 같은 업종이어도
      **새로 만드는 분과 있던 가게를 받는 분은 순서가 다릅니다.** 전에는
      창업 화면이 신규 기준 하나뿐이라, 인수를 보고 계신 분은 상권부터
@@ -594,6 +593,9 @@ function PageStartupIndustry(ind){
         lead:amProcess("startup").length+"걸음입니다. 걸음마다 "+ind.name+
              "에 맞는 업체 · 장비 · 글로 바로 넘어갑니다.",
         industry:ind.key, tone:"sec-gray", first:3, from:startFrom("startup"), cta:startCalcCta(ind) }))+
+  /* 2026-10-09 PART 4 — 묻는 것 넷 (지역 · 예산 · 준비 단계 · 개업 시기)
+     2026-11-26 — 준비 순서 **아래**로 옮겼습니다 (폰에서 다음 행동이 3화면 아래였습니다). 고르시면 위 순서가 그 걸음부터 바뀝니다. */
+  StartAskBand(ind)+
   (ind.equip && ind.equip.length ? EquipBand(ind) : "")+
   StepBand(ind)+
   (fcat ? FranchiseHint(fcat, ind) : "")+
@@ -642,7 +644,8 @@ function StartWayBand(ind){
          두 주소로 나가면 구글이 둘 다 무시합니다. */
       var to = (w.k === "new") ? base : (base + "?how=" + w.k);
       /* 2026-11-25 — 빈 점포 실측 / 기존 매장 인계 사진으로 가릅니다. 고른 쪽은 테두리 + '선택됨' 문구(색만으로 가르지 않습니다) */
-      return '<a class="swt-c swt-pc'+(on ? " on" : "")+'" href="'+esc(to)+'"'+
+      /* 2026-11-26 — 고르면 다시 그린 뒤 바로 아래 준비 순서(창업비 계산 포함)로 내려갑니다 */
+      return '<a class="swt-c swt-pc'+(on ? " on" : "")+'" href="'+esc(to)+'" data-keep data-focus="sw-next"'+
         (on ? ' aria-current="true"' : '')+'>'+
         '<span class="swt-ph" aria-hidden="true">'+picBox(w.ph, w.ic, "(max-width:640px) 92vw, 360px")+
           (on ? '<em class="swt-on">'+icon("check",14)+' 선택됨</em>' : '')+'</span>'+
@@ -657,7 +660,7 @@ function StartWayBand(ind){
         '<a href="/stores?i='+encodeURIComponent(ind.key)+'">'+esc(ind.name)+
         ' 매장 매물</a> · <a href="/tools/vs">신규 vs 인수 비교</a></p>'
       : '')+
-  '</div></section>';
+  '</div></section><span id="sw-next" tabindex="-1"></span>';
 }
 
 /* ── 조건 넷 — 지역 · 예산 · 준비 단계 · 개업 시기 (2026-10-09 PART 4)

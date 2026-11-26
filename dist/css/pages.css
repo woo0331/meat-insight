@@ -7175,3 +7175,21 @@ img[src^="/img/card/service-internet."]{ object-position:55% 45%; }
 .sitf-ph .ia{ --ia-1:#6A4B3B; --ia-2:#C9A98A; }
 .lsh-c li{ min-height:44px; }
 .lsh-c a{ width:44px; height:44px; }
+
+@media (max-width:760px){
+  .pgh.pgh-m-sm .pgh-im, .pgh.pgh-m-sm .pg-lead{ display:none; }
+  .pgh.pgh-m-sm .row-cta .btn + .btn{ display:none; }
+  .pgh.pgh-m-sm .w{ padding-top:16px; padding-bottom:18px; }
+  .pgh.pgh-m-sm .pg-h1{ font-size:24px; }
+}
+@media (max-width:760px){
+  .pgh.pgh-m-sm{ padding:14px 0 18px; }
+  .pgh.pgh-m-sm .crumb{ margin-bottom:6px; }
+
+  .swt-g{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+  .swt-g .swt-ph{ aspect-ratio:16/10; height:auto; }
+  .swt-g .swt-t em, .swt-g .swt-t i{ display:none; }
+  .swt-g .swt-t b{ font-size:16px; }
+  .swt-g .swt-c{ min-height:44px; }
+}
+#sw-next{ display:block; scroll-margin-top:72px; }

@@ -9384,3 +9384,10 @@ img[src^="/img/card/service-internet."]{ object-position:55% 45%; }
 .sitf-pk .pk-t b{ font-size:16px; }
 .sitf-pk .pk-t i{ font-size:13px; }
 .sitf-pk .pk-ck{ grid-column:3 !important; grid-row:1 !important; position:static !important; align-self:center; }
+/* 고객 상태 — 서비스별 줄의 "신청 전체와 함께 진행" 딱지 (2026-11-26)
+   ⚠️ 흐린 글자(--ink3)를 쓰지 않습니다 — 상태를 읽는 줄입니다. */
+.my-lk-it li > span{ text-align:right; }
+.my-lk-it .my-it-with{ display:block; font-style:normal; font-size:var(--t-cap); color:var(--ink2); font-weight:500; }
+.myq-it{ margin-top:10px; }
+.my-kk-l{ list-style:none; margin:10px 0 6px; padding:0; display:grid; gap:4px; font-size:14px; color:var(--ink2); }
+.my-kk-l b{ color:var(--ink); margin-right:4px; }

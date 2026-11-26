@@ -45,7 +45,7 @@ var MNAV = [
   { to:"/providers", name:"서비스",    icon:"grid" },
   { to:"/tools",     name:"계산도구",  icon:"calc" },
   { to:"/content",   name:"가이드",    icon:"book" },
-  { to:"/my",        name:"마이",      icon:"user" }
+  { to:"/my",        name:"내 기록",   icon:"user" }
 ];
 
 function brandName(){ return (window.AM_BRAND || {}).name || ""; }
@@ -115,6 +115,8 @@ function Header(){
           'aria-label="통합 검색" placeholder="원하는 서비스나 업체를 검색하세요.">'+
       '</form>'+
       '<a class="hd-ic hd-ic-s" href="/search" aria-label="검색">'+icon("search",20)+'</a>'+
+
+      '<a class="hd-ic hd-ic-u" id="hdU" href="/my" aria-label="내 기록">'+icon("user",20)+'</a>'+
       '<span class="hd-sep" aria-hidden="true"></span>'+
 
       '<span class="hd-auth" id="hdAuth" hidden></span>'+
@@ -174,7 +176,7 @@ function HeaderDrawer(){
           '<div class="hd-dw-m" id="hd-dw-m-'+i+'" hidden>'+gnbSub(m.sub)+'</div>'+
         '</div>';
       }).join("")+
-      '<a href="/my">'+esc("내 기록")+icon("arrow",16)+'</a>'+
+      '<a href="/my" id="hdDwMy">'+esc("내 기록")+icon("arrow",16)+'</a>'+
       '<a href="/join">'+esc("파트너 입점")+icon("arrow",16)+'</a>'+
 
       '<a href="/search">'+esc("통합검색")+icon("arrow",16)+'</a>'+
@@ -258,11 +260,27 @@ function hdCtaPaint(){
   });
 }
 
+function amEntryPaint(a){
+  var cur = window.location.pathname + window.location.search;
+  var st = (a && a.on && a.signedIn) ? "in" : ((a && a.on && a.kakao) ? "out" : "off");
+  var href = st === "out" && window.location.pathname !== "/my" ? "/my?next=" + encodeURIComponent(cur) : "/my";
+  var u = document.getElementById("hdU");
+  if(u){ u.setAttribute("href", href); u.setAttribute("aria-label", st === "in" ? "내 계정" : st === "out" ? "로그인 · 회원가입" : "내 기록");
+         u.setAttribute("data-auth", st); }
+  var d = document.getElementById("hdDwMy");
+  if(d){ d.setAttribute("href", href);
+         d.firstChild.textContent = st === "in" ? "내 계정" : st === "out" ? "로그인 · 회원가입" : "내 기록"; }
+  els('#mnav a[data-to="/my"]').forEach(function(m){ m.setAttribute("href", href); });
+}
+window.amEntryPaint = amEntryPaint;
 function hdAuthPaint(){
   var box = document.getElementById("hdAuth");
   if(!box || typeof window.amAuthAsk !== "function") return;
   window.amAuthAsk().then(function(a){
-    if(!a || !a.on){ box.setAttribute("hidden",""); box.innerHTML = ""; return; }
+    window.AM_AUTH_ASKED_ONCE = true;
+    amEntryPaint(a);
+
+    if(!a || !a.on || (!a.signedIn && !a.kakao)){ box.setAttribute("hidden",""); box.innerHTML = ""; return; }
     box.removeAttribute("hidden");
     box.innerHTML = a.signedIn
       ? '<a class="hd-txt" href="/my">'+icon("user",18)+
@@ -449,7 +467,9 @@ function paintBiz(){
   }).join("") + '<span class="ft-cp">© '+new Date().getFullYear()+' '+esc(brandName())+'</span>';
 }
 
-window.paintChrome = function(){ paintGnb(); paintMnav(); paintBiz(); };
+window.paintChrome = function(){ paintGnb(); paintMnav(); paintBiz();
+
+  if(window.amAuthNow && window.AM_AUTH_ASKED_ONCE) amEntryPaint(amAuthNow()); };
 
 window.ftFold = function(btn){
   var col = btn.closest(".ft-col"); if(!col) return;

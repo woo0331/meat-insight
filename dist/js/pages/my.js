@@ -21,8 +21,15 @@ window.myLoadDb = function(){
     .then(function(d){
 
       if(d && d.auth && !d.signedIn){
+        if(!(window.amAuthNow && amAuthNow().kakao)){ box.innerHTML = ""; box.hidden = true; return; }
         box.innerHTML = '<div class="w">' + MySignInBand() + '</div>';
         box.hidden = false;
+
+        if(typeof nowQS === "function" && nowQS("next")){
+          var hd = document.querySelector(".hd");
+          window.scrollTo(0, Math.max(0, box.getBoundingClientRect().top + (window.scrollY || 0) - ((hd && hd.offsetHeight) || 64) - 8));
+          var kb = box.querySelector(".my-kakao"); try{ if(kb) kb.focus({ preventScroll:true }); }catch(e){}
+        }
         return;
       }
       if(!d || !d.auth || !d.signedIn) return;
@@ -53,47 +60,17 @@ function myDbPaint(d){
 }
 
 function MySignInBand(){
-  var kk = !!(window.amAuthNow && amAuthNow().kakao);
   return myHd("MY", "로그인하고 신청 내역 보기",
-    kk ? "카카오로 시작하시거나, 메일로 로그인 링크를 받으실 수 있습니다. 비밀번호는 없습니다."
-       : "메일 주소를 적으시면 로그인 링크를 보내 드립니다. 비밀번호는 없습니다.")+
-
-    (kk ? '<div class="my-kk">'+
+    "카카오 계정 하나로 시작합니다. 비밀번호는 없습니다.")+
+    '<div class="my-kk">'+
       '<button class="btn btn-lg my-kakao" type="button" onclick="myKakao()">'+icon("chat",18)+' 카카오로 시작하기</button>'+
-      '<p class="f-h">처음이시면 그 자리에서 가입되고, 다음부터는 같은 카카오 계정으로 로그인됩니다. '+
-        '서비스 찾기 · 가이드 · 견적 신청은 로그인 없이도 쓰실 수 있습니다.</p>'+
+
+      '<ul class="my-kk-l"><li><b>처음이세요?</b> 누르면 바로 가입됩니다.</li>'+
+        '<li><b>이미 회원이세요?</b> 같은 카카오 계정으로 로그인됩니다.</li></ul>'+
+      '<p class="f-h">서비스 찾기 · 가이드 · 견적 신청은 로그인 없이도 쓰실 수 있습니다.</p>'+
       '<p class="my-in-n" id="my-kk-n" role="status"></p>'+
-    '</div>' : '')+
-
-    '<form class="my-in" onsubmit="return mySignIn(event)">'+
-      '<div class="f-r">'+
-        '<label for="my-em">메일 주소</label>'+
-        '<div class="my-in-r">'+
-          '<input id="my-em" type="email" name="email" required '+
-            'autocomplete="email" placeholder="example@email.com">'+
-          '<button class="btn btn-b" type="submit">로그인 링크 받기</button>'+
-        '</div>'+
-        '<span class="f-h">비밀번호는 없습니다. 메일로 온 링크를 누르면 로그인됩니다.</span>'+
-      '</div>'+
-      '<p class="my-in-n" id="my-in-n" role="status"></p>'+
-    '</form>';
+    '</div>';
 }
-
-window.mySignIn = function(ev){
-  if(ev && ev.preventDefault) ev.preventDefault();
-  var em = document.getElementById("my-em");
-  var note = document.getElementById("my-in-n");
-  var btn = ev && ev.target ? ev.target.querySelector("button") : null;
-  if(!em || typeof amAuthSend !== "function") return false;
-  if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
-  if(note) note.textContent = "";
-  amAuthSend(em.value).then(function(r){
-    if(btn){ btn.disabled = false; btn.textContent = "로그인 링크 받기"; }
-    if(note) note.textContent = r.say;
-    if(note) note.className = "my-in-n" + (r.ok ? " ok" : " bad");
-  });
-  return false;
-};
 
 window.mySignOut = function(){
   if(typeof amAuthOut !== "function") return;
@@ -558,17 +535,22 @@ function myStTone(key){
 
 function MyReqList(L, d){
   return '<ul class="myq-l">'+L.map(function(r){
-    var st = (typeof amDealStName === "function") ? amDealStName(r.state) : r.state;
+
+    var cs = window.amCustSt ? amCustSt(r.state) : r.state;
+    var st = (typeof amDealStName === "function") ? amDealStName(cs) : cs;
     var pv = (r.assignment && r.assignment.length && r.assignment[0].provider)
                ? r.assignment[0].provider.name : "";
     var cat = r.cat && typeof amCat === "function" ? amCat(r.cat) : null;
     return '<li class="myq"><div class="myq-h">'+
         '<b class="myq-no">'+esc(r.no || "")+'</b>'+
-        '<span class="myq-st myq-'+esc(myStTone(r.state))+'">'+esc(st)+'</span>'+
+        '<span class="myq-st myq-'+esc(myStTone(cs))+'">'+esc(st)+'</span>'+
       '</div>'+
       '<p class="myq-m">'+myCond(r, cat)+'</p>'+
 
       (pv ? '<p class="myq-pv">'+icon("users",15)+esc(pv)+'</p>' : "")+
+
+      ((r.request_item || []).length > 1
+        ? '<ul class="my-lk-it myq-it">'+myReqItemsHtml(r.state, r.request_item)+'</ul>' : "")+
 
       (d ? MyQuoteCompare(d, r) : "")+
     '</li>'; }).join("")+'</ul>';
@@ -1003,21 +985,32 @@ function myLkKst(v){
   var d = new Date(v); if(isNaN(d)) return "";
   return d.toLocaleString("ko-KR", { timeZone:"Asia/Seoul", year:"numeric", month:"2-digit", day:"2-digit" });
 }
-function myLkView(d){
-  var ru = d.rollup || {};
-  var items = (d.items || []).map(function(it){
+
+function myReqItemsHtml(reqState, items){
+  var V = window.amReqItemsView ? amReqItemsView(reqState, items) : (items || []);
+  return V.map(function(it){
     var o = window.amPickOne ? amPickOne(it.service_id) : null;
     var nm = (o && window.amPickLabel) ? amPickLabel(o) : it.service_id;
-    var st = window.amDealStName ? amDealStName(it.state) : it.state;
-    return '<li><b>'+esc(nm)+'</b><span>'+esc(st)+'</span></li>';
+    var st = window.amDealStName ? (amDealStName(it.state) || it.state) : it.state;
+    return '<li data-own="'+(it.own === false ? "0" : "1")+'"><b>'+esc(nm)+'</b><span>'+esc(st)+
+      (it.own === false ? ' <i class="my-it-with">신청 전체와 함께 진행</i>' : '')+'</span></li>';
   }).join("");
+}
+function myLkView(d){
+  var ru = d.rollup || {};
+  var cs = window.amCustSt ? amCustSt(d.state) : d.state;
+  var tl = (d.state && window.amReqTally) ? amReqTally(d.state, d.items) : ru;
+
+  var head = !d.state ? "" : (tl.rec ? (LK_PHASE[tl.phase] || "") : (window.amDealStName ? amDealStName(cs) : ""));
+  var items = myReqItemsHtml(d.state, d.items);
   var notes = (d.notes || []).map(function(n){
     return '<li><em>'+esc(myLkKst(n.at))+'</em><p>'+esc(n.body)+'</p></li>';
   }).join("");
   return '<div class="my-lk-v" data-lk="view">'+
     '<p class="my-lk-no">접수번호 <b>'+esc(d.no)+'</b>'+(d.created_at ? ' · 접수일 '+esc(myLkKst(d.created_at)) : '')+'</p>'+
-    '<p class="my-lk-ph">지금 상태 <b>'+esc(LK_PHASE[ru.phase] || "확인 중")+'</b>'+
-      (ru.total > 1 ? ' — 서비스 '+ru.total+'개 중 진행 '+ru.open+' · 완료 '+ru.done+(ru.hold ? ' · 보류 '+ru.hold : '')+(ru.lost ? ' · 종료 '+ru.lost : '') : '')+'</p>'+
+
+    '<p class="my-lk-ph">지금 상태 <b data-lk-st="'+esc(tl.rec ? "items" : (cs || ""))+'">'+esc(head || LK_PHASE[ru.phase] || "확인 중")+'</b>'+
+      (tl.total > 1 ? ' — 서비스 '+tl.total+'개 중 진행 '+tl.open+' · 완료 '+tl.done+(tl.hold ? ' · 보류 '+tl.hold : '')+(tl.lost ? ' · 종료 '+tl.lost : '') : '')+'</p>'+
     (items ? '<h3>서비스별 상태</h3><ul class="my-lk-it">'+items+'</ul>' : '')+
     '<h3>안내</h3>'+(notes ? '<ol class="my-lk-nt">'+notes+'</ol>'
       : '<p class="note">아직 남겨 드린 안내가 없습니다.</p>')+

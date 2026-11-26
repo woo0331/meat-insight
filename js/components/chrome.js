@@ -89,7 +89,7 @@ var MNAV = [
   { to:"/providers", name:"서비스",    icon:"grid" },
   { to:"/tools",     name:"계산도구",  icon:"calc" },
   { to:"/content",   name:"가이드",    icon:"book" },
-  { to:"/my",        name:"마이",      icon:"user" }
+  { to:"/my",        name:"내 기록",   icon:"user" }
 ];
 
 function brandName(){ return (window.AM_BRAND || {}).name || ""; }
@@ -192,6 +192,9 @@ function Header(){
           'aria-label="통합 검색" placeholder="원하는 서비스나 업체를 검색하세요.">'+
       '</form>'+
       '<a class="hd-ic hd-ic-s" href="/search" aria-label="검색">'+icon("search",20)+'</a>'+
+      /* 2026-11-26 모바일 — 사람 아이콘 (900px 아래에서만). 로그인 상태는 hdAuthPaint() 가 주소 · 이름을 맞춥니다.
+         비로그인이고 카카오가 켜져 있으면 /my?next=<지금 자리> 로 — /my 가 로그인 칸으로 내려가고, 로그인 뒤 이 자리로 돌아옵니다. */
+      '<a class="hd-ic hd-ic-u" id="hdU" href="/my" aria-label="내 기록">'+icon("user",20)+'</a>'+
       '<span class="hd-sep" aria-hidden="true"></span>'+
       /* ⚠️⚠️ **로그인은 설정됐을 때만 나옵니다** (2026-10-13 §3).
          지시서가 "로그인 또는 내 계정" 을 적었는데, `/api/session` 이
@@ -295,7 +298,7 @@ function HeaderDrawer(){
           '<div class="hd-dw-m" id="hd-dw-m-'+i+'" hidden>'+gnbSub(m.sub)+'</div>'+
         '</div>';
       }).join("")+
-      '<a href="/my">'+esc("내 기록")+icon("arrow",16)+'</a>'+
+      '<a href="/my" id="hdDwMy">'+esc("내 기록")+icon("arrow",16)+'</a>'+
       '<a href="/join">'+esc("파트너 입점")+icon("arrow",16)+'</a>'+
       /* ⚠️⚠️ **통합검색을 여기에도 둡니다** (2026-10-19). 320px
          (옛 아이폰 SE)에서 헤더 오른쪽이 11px 넘쳐서 가로 스크롤이
@@ -407,11 +410,31 @@ function hdCtaPaint(){
 /* ⚠️⚠️ **로그인이 설정되기 전에는 아무것도 안 그립니다** (§0-7 ·
    절대 규칙 2 · 5). `auth:false` 면 `hidden` 인 채로 둡니다 —
    "준비 중" 도 적지 않습니다. */
+/* 2026-11-26 — 로그인으로 가는 진입 셋(상단 사람 아이콘 · 메뉴 · 하단 '내 기록')을 한 곳에서 맞춥니다.
+   비로그인 + 카카오 켜짐 → /my?next=<지금 자리> (로그인 칸으로 내려가고 로그인 뒤 돌아옵니다)
+   로그인됨 → /my '내 계정' · 로그인 꺼짐/카카오 꺼짐 → /my '내 기록' (지금과 같음 — 없는 로그인을 내지 않습니다) */
+function amEntryPaint(a){
+  var cur = window.location.pathname + window.location.search;
+  var st = (a && a.on && a.signedIn) ? "in" : ((a && a.on && a.kakao) ? "out" : "off");
+  var href = st === "out" && window.location.pathname !== "/my" ? "/my?next=" + encodeURIComponent(cur) : "/my";
+  var u = document.getElementById("hdU");
+  if(u){ u.setAttribute("href", href); u.setAttribute("aria-label", st === "in" ? "내 계정" : st === "out" ? "로그인 · 회원가입" : "내 기록");
+         u.setAttribute("data-auth", st); }
+  var d = document.getElementById("hdDwMy");
+  if(d){ d.setAttribute("href", href);
+         d.firstChild.textContent = st === "in" ? "내 계정" : st === "out" ? "로그인 · 회원가입" : "내 기록"; }
+  els('#mnav a[data-to="/my"]').forEach(function(m){ m.setAttribute("href", href); });
+}
+window.amEntryPaint = amEntryPaint;
 function hdAuthPaint(){
   var box = document.getElementById("hdAuth");
   if(!box || typeof window.amAuthAsk !== "function") return;
   window.amAuthAsk().then(function(a){
-    if(!a || !a.on){ box.setAttribute("hidden",""); box.innerHTML = ""; return; }
+    window.AM_AUTH_ASKED_ONCE = true;
+    amEntryPaint(a);
+    /* 2026-11-25 — 고객 로그인은 카카오 하나라, 카카오가 꺼져 있으면 "로그인" 칸도 안 냅니다
+       (/my 에 로그인 칸이 없어 빈 화면으로 가는 링크가 됩니다). 로그인된 분의 "내 계정" 은 그대로. */
+    if(!a || !a.on || (!a.signedIn && !a.kakao)){ box.setAttribute("hidden",""); box.innerHTML = ""; return; }
     box.removeAttribute("hidden");
     box.innerHTML = a.signedIn
       ? '<a class="hd-txt" href="/my">'+icon("user",18)+
@@ -748,7 +771,9 @@ function paintBiz(){
 }
 
 /* 화면을 그릴 때마다 헤더·네비 표시를 맞춥니다 */
-window.paintChrome = function(){ paintGnb(); paintMnav(); paintBiz(); };
+window.paintChrome = function(){ paintGnb(); paintMnav(); paintBiz();
+  /* 2026-11-26 — 로그인 진입의 next 는 **지금 자리**라 화면을 옮길 때마다 다시 맞춥니다 (서버에 다시 묻지 않습니다 — 받아 둔 값) */
+  if(window.amAuthNow && window.AM_AUTH_ASKED_ONCE) amEntryPaint(amAuthNow()); };
 
 /* ⚠️⚠️ **`ui.js` 의 `FoldBtn` 을 쓰지 않습니다.** `admin.html` 은
    `ui.js` 를 안 읽어서, 거기 기대면 그 화면에서만 **에러 없이 조용히**

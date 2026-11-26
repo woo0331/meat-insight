@@ -563,8 +563,10 @@ window.amSend = function(failId, body, again, done){
 
   var ctl = (typeof AbortController === "function") ? new AbortController() : null;
   var late = setTimeout(function(){ if(ctl) ctl.abort(); }, 20000);
-  var opt = { method:"POST", headers:{ "content-type":"application/json" },
-              body: JSON.stringify(body) };
+
+  var hd = { "content-type":"application/json" };
+  try{ if(typeof window.amAuthHeaders === "function") Object.assign(hd, window.amAuthHeaders()); }catch(e){}
+  var opt = { method:"POST", headers:hd, body: JSON.stringify(body) };
   if(ctl) opt.signal = ctl.signal;
 
   fetch("/api/quote", opt)

@@ -73,9 +73,17 @@ window.myLoadDb = function(){
       /* ⚠️ 설정은 됐는데 아직 로그인 안 하셨으면 **로그인 칸**을 냅니다.
          설정 자체가 꺼져 있으면(`auth:false`) 구간째 없습니다 —
          작동하지 않는 단추를 만들지 않습니다 (§30-7). */
+      /* ⚠️ 카카오가 꺼져 있으면 로그인 칸을 안 냅니다 (메일로 넘어가지 않습니다). */
       if(d && d.auth && !d.signedIn){
+        if(!(window.amAuthNow && amAuthNow().kakao)){ box.innerHTML = ""; box.hidden = true; return; }
         box.innerHTML = '<div class="w">' + MySignInBand() + '</div>';
         box.hidden = false;
+        /* 2026-11-26 — 상단 사람 아이콘 · 메뉴 · 하단 '내 기록' 으로 오셨으면(?next=) 로그인 칸으로 바로 내려갑니다 */
+        if(typeof nowQS === "function" && nowQS("next")){
+          var hd = document.querySelector(".hd");
+          window.scrollTo(0, Math.max(0, box.getBoundingClientRect().top + (window.scrollY || 0) - ((hd && hd.offsetHeight) || 64) - 8));
+          var kb = box.querySelector(".my-kakao"); try{ if(kb) kb.focus({ preventScroll:true }); }catch(e){}
+        }
         return;
       }
       if(!d || !d.auth || !d.signedIn) return;
@@ -119,57 +127,25 @@ function myDbPaint(d){
 }
 
 /* ── 로그인 칸 ───────────────────────────────────────────────────
-   ⚠️⚠️ **비밀번호를 받지 않습니다.** 매직링크 하나입니다 — 손님이
-   40~60대 사장님이라 "메일로 온 링크를 누르면 끝" 이 제일 적게
-   막히고, 비밀번호를 받는 순간 저장 · 재설정 · 유출 대비가 전부
-   따라옵니다.
-   ⚠️ **지킬 수 없는 약속을 적지 마세요.** "바로 로그인됩니다" 가
-   아니라 메일이 가는 데까지가 우리가 아는 전부입니다. */
+   ⚠️⚠️ **2026-11-25 — 고객 로그인은 카카오 하나입니다.** 메일 로그인
+   (주소 칸 · 링크 받기 단추 · 그 안내)을 고객 화면에서 뺐습니다.
+   ⚠️⚠️ **카카오가 꺼져 있으면 이 칸 자체를 안 냅니다** — 메일로 넘어가는
+   대체 길을 두지 않습니다 (작동하지 않는 단추를 만들지 않는 것과 같은 규칙).
+   ⚠️ 관리자 로그인(`/admin`)과 `amAuthSend()` · `api/auth.js` 의 메일 길은
+   **그대로**입니다 — 지우면 관리자가 못 들어옵니다. 견적 알림 메일과
+   신청서의 이메일 칸도 그대로입니다. */
 function MySignInBand(){
-  var kk = !!(window.amAuthNow && amAuthNow().kakao);
   return myHd("MY", "로그인하고 신청 내역 보기",
-    kk ? "카카오로 시작하시거나, 메일로 로그인 링크를 받으실 수 있습니다. 비밀번호는 없습니다."
-       : "메일 주소를 적으시면 로그인 링크를 보내 드립니다. 비밀번호는 없습니다.")+
-    /* 2026-11-18 카카오 간편 로그인 · 가입 — 서버(AUTH_KAKAO)가 켜졌을 때만 나옵니다.
-       ⚠️ 서비스 검색 · 가이드 · 비회원 접수에는 로그인이 필요 없습니다 (그 말을 같이 적습니다). */
-    (kk ? '<div class="my-kk">'+
+    "카카오 계정 하나로 시작합니다. 비밀번호는 없습니다.")+
+    '<div class="my-kk">'+
       '<button class="btn btn-lg my-kakao" type="button" onclick="myKakao()">'+icon("chat",18)+' 카카오로 시작하기</button>'+
-      '<p class="f-h">처음이시면 그 자리에서 가입되고, 다음부터는 같은 카카오 계정으로 로그인됩니다. '+
-        '서비스 찾기 · 가이드 · 견적 신청은 로그인 없이도 쓰실 수 있습니다.</p>'+
+      /* 2026-11-26 — 처음이면 가입, 회원이면 로그인 (짧게) */
+      '<ul class="my-kk-l"><li><b>처음이세요?</b> 누르면 바로 가입됩니다.</li>'+
+        '<li><b>이미 회원이세요?</b> 같은 카카오 계정으로 로그인됩니다.</li></ul>'+
+      '<p class="f-h">서비스 찾기 · 가이드 · 견적 신청은 로그인 없이도 쓰실 수 있습니다.</p>'+
       '<p class="my-in-n" id="my-kk-n" role="status"></p>'+
-    '</div>' : '')+
-    /* ⚠️ 폼 클래스는 이 저장소 것을 그대로 씁니다 — `.f-r` 과 맨
-       `<input type=email>` 입니다. 새 이름을 지어내면 그 줄만 스타일이
-       안 먹고 에러도 안 납니다 (`.f-i` · `.f-l` 로 한 번 겪었습니다). */
-    '<form class="my-in" onsubmit="return mySignIn(event)">'+
-      '<div class="f-r">'+
-        '<label for="my-em">메일 주소</label>'+
-        '<div class="my-in-r">'+
-          '<input id="my-em" type="email" name="email" required '+
-            'autocomplete="email" placeholder="example@email.com">'+
-          '<button class="btn btn-b" type="submit">로그인 링크 받기</button>'+
-        '</div>'+
-        '<span class="f-h">비밀번호는 없습니다. 메일로 온 링크를 누르면 로그인됩니다.</span>'+
-      '</div>'+
-      '<p class="my-in-n" id="my-in-n" role="status"></p>'+
-    '</form>';
+    '</div>';
 }
-
-window.mySignIn = function(ev){
-  if(ev && ev.preventDefault) ev.preventDefault();
-  var em = document.getElementById("my-em");
-  var note = document.getElementById("my-in-n");
-  var btn = ev && ev.target ? ev.target.querySelector("button") : null;
-  if(!em || typeof amAuthSend !== "function") return false;
-  if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
-  if(note) note.textContent = "";
-  amAuthSend(em.value).then(function(r){
-    if(btn){ btn.disabled = false; btn.textContent = "로그인 링크 받기"; }
-    if(note) note.textContent = r.say;
-    if(note) note.className = "my-in-n" + (r.ok ? " ok" : " bad");
-  });
-  return false;
-};
 
 /* 나가기 — ⚠️ 누르면 **이 브라우저에서는 반드시** 지웁니다 */
 window.mySignOut = function(){
@@ -728,18 +704,23 @@ function myStTone(key){
 
 function MyReqList(L, d){
   return '<ul class="myq-l">'+L.map(function(r){
-    var st = (typeof amDealStName === "function") ? amDealStName(r.state) : r.state;
+    /* ⚠️ 고객 화면이라 정산 상태(fee_*)는 '서비스 완료' 로 접습니다 */
+    var cs = window.amCustSt ? amCustSt(r.state) : r.state;
+    var st = (typeof amDealStName === "function") ? amDealStName(cs) : cs;
     var pv = (r.assignment && r.assignment.length && r.assignment[0].provider)
                ? r.assignment[0].provider.name : "";
     var cat = r.cat && typeof amCat === "function" ? amCat(r.cat) : null;
     return '<li class="myq"><div class="myq-h">'+
         '<b class="myq-no">'+esc(r.no || "")+'</b>'+
-        '<span class="myq-st myq-'+esc(myStTone(r.state))+'">'+esc(st)+'</span>'+
+        '<span class="myq-st myq-'+esc(myStTone(cs))+'">'+esc(st)+'</span>'+
       '</div>'+
       '<p class="myq-m">'+myCond(r, cat)+'</p>'+
       /* ⚠️⚠️ 업체 상호는 **배정이 된 뒤에만** 나옵니다 — 그 전에 적으면
          정해지지도 않은 곳을 알려 주는 것입니다 (제17조 제2항). */
       (pv ? '<p class="myq-pv">'+icon("users",15)+esc(pv)+'</p>' : "")+
+      /* 서비스가 둘 이상이면 서비스별 줄 — 비회원 조회와 같은 규칙 */
+      ((r.request_item || []).length > 1
+        ? '<ul class="my-lk-it myq-it">'+myReqItemsHtml(r.state, r.request_item)+'</ul>' : "")+
       /* ⚠️⚠️ **받은 견적을 여기에 냅니다** (§6). 신청 줄 안에 두는
          까닭은 "무슨 일의 견적인가" 가 바로 위에 있어야 하기
          때문입니다 — 따로 떼면 접수번호를 들고 두 목록을 왕복합니다. */
@@ -1267,21 +1248,41 @@ function myLkKst(v){
   var d = new Date(v); if(isNaN(d)) return "";
   return d.toLocaleString("ko-KR", { timeZone:"Asia/Seoul", year:"numeric", month:"2-digit", day:"2-digit" });
 }
-function myLkView(d){
-  var ru = d.rollup || {};
-  var items = (d.items || []).map(function(it){
+/* 서비스별 줄 — 비회원 조회와 회원 /my 가 같이 씁니다.
+   ⚠️⚠️ 규칙은 js/data/deal.js 의 amReqItemsView() 한 곳입니다. 따로
+   진행된 기록이 없는 항목(own:false)은 신청 전체 상태를 따라 보이고
+   "함께 진행" 딱지가 붙습니다 — 계약까지 간 건에 "신청 접수" 가 남아
+   전체 상태와 모순되던 자리입니다. */
+function myReqItemsHtml(reqState, items){
+  var V = window.amReqItemsView ? amReqItemsView(reqState, items) : (items || []);
+  return V.map(function(it){
     var o = window.amPickOne ? amPickOne(it.service_id) : null;
     var nm = (o && window.amPickLabel) ? amPickLabel(o) : it.service_id;
-    var st = window.amDealStName ? amDealStName(it.state) : it.state;
-    return '<li><b>'+esc(nm)+'</b><span>'+esc(st)+'</span></li>';
+    var st = window.amDealStName ? (amDealStName(it.state) || it.state) : it.state;
+    return '<li data-own="'+(it.own === false ? "0" : "1")+'"><b>'+esc(nm)+'</b><span>'+esc(st)+
+      (it.own === false ? ' <i class="my-it-with">신청 전체와 함께 진행</i>' : '')+'</span></li>';
   }).join("");
+}
+function myLkView(d){
+  var ru = d.rollup || {};
+  var cs = window.amCustSt ? amCustSt(d.state) : d.state;
+  var tl = (d.state && window.amReqTally) ? amReqTally(d.state, d.items) : ru;
+  /* 맨 위 상태 — 서비스가 **따로 진행된 기록이 있으면** 그 셈(진행 중 ·
+     완료 …)을, 없으면 **신청 전체 상태**(계약 완료 …)를 냅니다. 항목별로
+     진행하면 신청 전체 상태가 뒤처질 수 있고, 신청 단위로 진행하면
+     항목 상태가 'new' 에 머뭅니다 — 둘 중 실제로 움직인 쪽을 믿습니다. */
+  var head = !d.state ? "" : (tl.rec ? (LK_PHASE[tl.phase] || "") : (window.amDealStName ? amDealStName(cs) : ""));
+  var items = myReqItemsHtml(d.state, d.items);
   var notes = (d.notes || []).map(function(n){
     return '<li><em>'+esc(myLkKst(n.at))+'</em><p>'+esc(n.body)+'</p></li>';
   }).join("");
   return '<div class="my-lk-v" data-lk="view">'+
     '<p class="my-lk-no">접수번호 <b>'+esc(d.no)+'</b>'+(d.created_at ? ' · 접수일 '+esc(myLkKst(d.created_at)) : '')+'</p>'+
-    '<p class="my-lk-ph">지금 상태 <b>'+esc(LK_PHASE[ru.phase] || "확인 중")+'</b>'+
-      (ru.total > 1 ? ' — 서비스 '+ru.total+'개 중 진행 '+ru.open+' · 완료 '+ru.done+(ru.hold ? ' · 보류 '+ru.hold : '')+(ru.lost ? ' · 종료 '+ru.lost : '') : '')+'</p>'+
+    /* ⚠️⚠️ 맨 위는 **신청 전체 상태**입니다 (d.state). 서비스 항목의
+       상태만 모은 rollup 을 쓰면 신청 단위로 계약까지 간 건이
+       "진행 중" 으로 보입니다. state 가 없는 옛 응답일 때만 rollup. */
+    '<p class="my-lk-ph">지금 상태 <b data-lk-st="'+esc(tl.rec ? "items" : (cs || ""))+'">'+esc(head || LK_PHASE[ru.phase] || "확인 중")+'</b>'+
+      (tl.total > 1 ? ' — 서비스 '+tl.total+'개 중 진행 '+tl.open+' · 완료 '+tl.done+(tl.hold ? ' · 보류 '+tl.hold : '')+(tl.lost ? ' · 종료 '+tl.lost : '') : '')+'</p>'+
     (items ? '<h3>서비스별 상태</h3><ul class="my-lk-it">'+items+'</ul>' : '')+
     '<h3>안내</h3>'+(notes ? '<ol class="my-lk-nt">'+notes+'</ol>'
       : '<p class="note">아직 남겨 드린 안내가 없습니다.</p>')+

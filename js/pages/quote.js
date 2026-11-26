@@ -812,8 +812,14 @@ window.amSend = function(failId, body, again, done){
      다시 보내시면 운영자에게 두 번 올 뿐 잃는 것은 없습니다. */
   var ctl = (typeof AbortController === "function") ? new AbortController() : null;
   var late = setTimeout(function(){ if(ctl) ctl.abort(); }, 20000);
-  var opt = { method:"POST", headers:{ "content-type":"application/json" },
-              body: JSON.stringify(body) };
+  /* ⚠️⚠️ 2026-11-26 — **로그인한 채로 보내면 토큰을 같이 보냅니다.** 서버(api/quote.js)는
+     토큰을 Supabase 에 물어 나온 계정에 신청을 잇는데, 여기서 머리를 안 붙여서
+     로그인한 손님의 신청이 **전부 비회원 접수**로 들어갔습니다 (/my 에 안 보임).
+     서버 검사(test-api)만 그 길을 보고 있어서 몰랐습니다 — 시험 Preview 의 실제 접수
+     SW-4JXB-W1TY 에서 찾았습니다. 토큰이 없으면 amAuthHeaders() 는 빈 객체입니다. */
+  var hd = { "content-type":"application/json" };
+  try{ if(typeof window.amAuthHeaders === "function") Object.assign(hd, window.amAuthHeaders()); }catch(e){}
+  var opt = { method:"POST", headers:hd, body: JSON.stringify(body) };
   if(ctl) opt.signal = ctl.signal;
 
   fetch("/api/quote", opt)

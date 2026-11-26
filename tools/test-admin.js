@@ -835,6 +835,14 @@ function ok(name, cond, extra) {
     await pg.waitForTimeout(200);
     const dests = await pg.locator("#rq-to option").allTextContents();
     ok("갈 수 있는 길만 나온다", dests.includes("업체 배정") && dests.includes("보류"), dests.join(","));
+    /* 2026-11-27 — 견적이 없으면 '견적 전달' 을 상태 칸에서 고를 수 없다 (SW-EX79-WR8H 시험에서 견적 없이 넘어간 자리).
+       견적은 '받은 견적 적기' 로 기록하면 그 자리에서 견적 전달이 됩니다. */
+    const qm = await pg.evaluate(() => {
+      const to = r => rqMoves(r).map(m => m[1]);
+      return { none: to({ id:"no-quote", state:"consult" }), has: to({ id:"11111111-1111-1111-1111-111111111111", state:"consult" }) };
+    });
+    ok("견적이 없으면 상태 칸에 '견적 전달' 이 없다 · 있으면 있다",
+       !qm.none.includes("quoted") && qm.has.includes("quoted"), JSON.stringify(qm));
 
     /* ── 업체가 낸 견적 (0008 · §4 · §6) ──────────────────────
        ⚠️⚠️ **서버가 보내는데 화면이 안 그리면** 직원은 금액과 범위를

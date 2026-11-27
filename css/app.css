@@ -1181,3 +1181,25 @@ input:focus-visible,textarea:focus-visible,.sel:focus-visible,select:focus-visib
    ⚠️ 열린 양식이면 가립니다. 짝(data-go-form)과 반대 규칙입니다. */
 html.iq-quote [data-go-off="quote"], html.iq-close [data-go-off="close"],
 html.iq-sell  [data-go-off="sell"],  html.iq-join  [data-go-off="join"]{ display:none !important; }
+
+/* 2026-11-27 대표 지시 — 상단 '로그인 및 회원가입' 글자 단추 (모든 폭 · 사람 아이콘 자리).
+   PC 의 옛 '로그인' 칸(.hd-auth)은 같은 일이라 숨깁니다 (hdAuthPaint 는 그대로 돌고 칸만 안 보입니다). */
+.hd-lgn{ display:inline-flex; align-items:center; gap:6px; min-height:44px; padding:0 12px; border:1px solid #D9C7B4; border-radius:999px;
+  background:#fff; color:#4A3025; font-size:14px; font-weight:800; white-space:nowrap; flex:none; }
+.hd-lgn[hidden]{ display:none; }
+.hd-lgn:hover, .hd-lgn:focus-visible{ border-color:#6A4B3B; }
+.hd-lgn > svg{ flex:none; color:#6A4B3B; }
+.hd-auth, .hd-auth:not([hidden]){ display:none; }
+.hd-ic-u{ display:inline-flex; }
+/* 폰 — 글자 단추를 살리려고 헤더 돋보기는 메뉴(서랍) 안의 '통합검색' 으로 옮깁니다 (600px 아래).
+   ⚠️ 검색이 사라지는 것이 아닙니다 — 서랍 맨 아래 '통합검색' 이 늘 있습니다 (chrome.js HeaderDrawer). */
+@media (max-width:600px){
+  .hd .hd-ic-s{ display:none; }
+  .hd-lgn{ padding:0 10px; font-size:13px; }
+  .hd-lgn > svg{ display:none; }
+}
+/* 아주 좁은 폰(420px 아래) — 한 줄로는 '무료 견적 신청' · 메뉴와 겹칩니다. 잘리지 않게 두 줄(로그인 및 / 회원가입)로 접습니다 */
+@media (max-width:420px){
+  .hd-lgn{ padding:0 8px; }
+  .hd-lgn-t{ white-space:normal; width:4.6em; text-align:center; line-height:1.2; word-break:keep-all; }
+}

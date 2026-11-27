@@ -9251,3 +9251,7 @@ img[src^="/img/card/service-internet."]{ object-position:55% 45%; }
 .ind{ overflow:hidden; }
 /* 사진이 있는 업종 카드는 아이콘 타일을 접습니다 (사진이 이미 업종을 말합니다 · 폰에서 카드가 두 배로 길어졌습니다) */
 .ind:has(.ind-ph img) .ind-ic{ display:none; }
+
+/* 2026-11-26 — /my 카카오 로그인 칸: 처음이면 가입 · 회원이면 로그인 (짧게) */
+.my-kk-l{ list-style:none; margin:10px 0 6px; padding:0; display:grid; gap:4px; font-size:14px; color:var(--ink2); }
+.my-kk-l b{ color:var(--ink); margin-right:4px; }

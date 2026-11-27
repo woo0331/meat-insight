@@ -110,6 +110,8 @@ function Header(){
           'aria-label="통합 검색" placeholder="원하는 서비스나 업체를 검색하세요.">'+
       '</form>'+
       '<a class="hd-ic hd-ic-s" href="/search" aria-label="검색">'+icon("search",20)+'</a>'+
+
+      '<a class="hd-lgn" id="hdU" href="/my" hidden>'+icon("user",16)+'<span class="hd-lgn-t">로그인 및 회원가입</span></a>'+
       '<span class="hd-sep" aria-hidden="true"></span>'+
 
       '<span class="hd-auth" id="hdAuth" hidden></span>'+
@@ -169,7 +171,7 @@ function HeaderDrawer(){
           '<div class="hd-dw-m" id="hd-dw-m-'+i+'" hidden>'+gnbSub(m.sub)+'</div>'+
         '</div>';
       }).join("")+
-      '<a href="/my">'+esc("내 기록")+icon("arrow",16)+'</a>'+
+      '<a href="/my" id="hdDwMy">'+esc("내 기록")+icon("arrow",16)+'</a>'+
       '<a href="/join">'+esc("파트너 입점")+icon("arrow",16)+'</a>'+
 
       '<a href="/search">'+esc("통합검색")+icon("arrow",16)+'</a>'+
@@ -268,11 +270,48 @@ function hdCtaPaint(){
   });
 }
 
+function amEntryCur(){
+  var p = window.location.pathname, q = new URLSearchParams(window.location.search);
+  if(p === "/quote"){
+    var v = function(id){ var e = document.getElementById(id); return e && e.value ? e.value : ""; };
+    if(q.get("mode") === "close"){
+      if(v("cq-gu")) q.set("gu", v("cq-gu")); if(v("cq-ind")) q.set("i", v("cq-ind"));
+    } else {
+      if(v("q-reg")) q.set("r", v("q-reg")); if(v("q-ind")) q.set("i", v("q-ind"));
+    }
+  }
+  var qs = q.toString();
+  return p + (qs ? "?" + qs : "");
+}
+window.amEntryCur = amEntryCur;
+
+document.addEventListener("click", function(ev){
+  var a = ev.target && ev.target.closest && ev.target.closest('#hdU, #hdDwMy, #mnav a[data-to="/my"]');
+  if(a && window.amAuthNow && window.AM_AUTH_ASKED_ONCE) amEntryPaint(amAuthNow());
+}, true);
+function amEntryPaint(a){
+  var cur = amEntryCur();
+  var st = (a && a.on && a.signedIn) ? "in" : ((a && a.on && a.kakao) ? "out" : "off");
+  var href = st === "out" && window.location.pathname !== "/my" ? "/my?next=" + encodeURIComponent(cur) : "/my";
+  var u = document.getElementById("hdU");
+  if(u){ u.setAttribute("href", st === "in" ? "/my" : href); u.setAttribute("data-auth", st);
+         var t = u.querySelector(".hd-lgn-t"); if(t) t.textContent = st === "in" ? "내 계정" : "로그인 및 회원가입";
+         if(st === "off") u.setAttribute("hidden", ""); else u.removeAttribute("hidden"); }
+  var d = document.getElementById("hdDwMy");
+  if(d){ d.setAttribute("href", href);
+         d.firstChild.textContent = st === "in" ? "내 계정" : st === "out" ? "로그인 및 회원가입" : "내 기록"; }
+  els('#mnav a[data-to="/my"]').forEach(function(m){ m.setAttribute("href", href); });
+}
+window.amEntryPaint = amEntryPaint;
+
 function hdAuthPaint(){
   var box = document.getElementById("hdAuth");
   if(!box || typeof window.amAuthAsk !== "function") return;
   window.amAuthAsk().then(function(a){
-    if(!a || !a.on){ box.setAttribute("hidden",""); box.innerHTML = ""; return; }
+    window.AM_AUTH_ASKED_ONCE = true;
+    amEntryPaint(a);
+
+    if(!a || !a.on || (!a.signedIn && !a.kakao)){ box.setAttribute("hidden",""); box.innerHTML = ""; return; }
     box.removeAttribute("hidden");
     box.innerHTML = a.signedIn
       ? '<a class="hd-txt" href="/my">'+icon("user",18)+
@@ -459,7 +498,9 @@ function paintBiz(){
   }).join("") + '<span class="ft-cp">© '+new Date().getFullYear()+' '+esc(brandName())+'</span>';
 }
 
-window.paintChrome = function(){ paintGnb(); paintMnav(); paintBiz(); };
+window.paintChrome = function(){ paintGnb(); paintMnav(); paintBiz();
+
+  if(window.amAuthNow && window.AM_AUTH_ASKED_ONCE) amEntryPaint(amAuthNow()); };
 
 window.ftFold = function(btn){
   var col = btn.closest(".ft-col"); if(!col) return;

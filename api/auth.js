@@ -16,14 +16,17 @@ const { authReady } = require("./_auth.js");
 const { fromOurPages } = require("./_send.js");
 const { accountsOpen, closed } = require("./_open.js");
 
-const OPS = { otp:1, refresh:1, logout:1, oauth:1 };
+const OPS = { otp:1, refresh:1, logout:1, oauth:1, take:1 };
+const K = require("./_kakao.js");
 /* 2026-11-18 카카오 간편 로그인 — Supabase Auth 의 kakao 공급자를 그대로 씁니다.
    ⚠️ 켜는 것은 둘 다 필요합니다: STOREWAY_ACCOUNTS_OPEN=1(계정 스위치 · 재사용) +
    AUTH_KAKAO=1(Supabase 대시보드에서 Kakao 공급자를 켜 두었다는 운영자 표시).
    AUTH_KAKAO 가 없으면 화면에 카카오 단추가 안 나오고 여기서도 거절합니다.
    ⚠️ 공급자는 이 목록뿐입니다 — 아무 이름이나 넘기면 열린 중계기가 됩니다. */
 const PROVIDERS = { kakao:1 };
-function kakaoOn(){ return String(process.env.AUTH_KAKAO || "").trim() === "1"; }
+/* 2026-11-25 — 이메일을 요청하지 않는 OpenID Connect 길로 바꿨습니다 (api/_kakao.js).
+   AUTH_KAKAO=1 + KAKAO_REST_KEY + KAKAO_CLIENT_SECRET + 쿠키 열쇠가 다 있어야 켜집니다. */
+function kakaoOn(){ return K.oidcReady(); }
 const TIMEOUT = 8000;
 
 function env(n){ const v = process.env[n]; return (typeof v === "string" && v.trim()) ? v.trim() : ""; }
@@ -63,9 +66,10 @@ module.exports = async function handler(req, res){
     const to = String(b.email || "").trim();
     if(!/^[^@\s]{1,64}@[^@\s.]+(\.[^@\s]+)+$/.test(to) || to.length > 200)
       return res.status(400).json({ error:"메일 주소를 확인해 주세요" });
-    const r = await call("/auth/v1/otp", { method:"POST",
+    const query = new URLSearchParams({ redirect_to: redirectFor(req, b.path) });
+    const r = await call("/auth/v1/otp?" + query.toString(), { method:"POST",
       headers:{ "content-type":"application/json", apikey:key },
-      body: JSON.stringify({ email:to, options:{ email_redirect_to: redirectFor(req, b.path) } }) });
+      body: JSON.stringify({ email:to }) });
     /* ⚠️ 메일이 있는지 없는지를 갈라서 말하지 않습니다 */
     if(r.ok) return res.status(200).json({ ok:true });
     if(r.status === 429) return res.status(429).json({ error:"조금 뒤에 다시 눌러 주세요." });
@@ -75,14 +79,21 @@ module.exports = async function handler(req, res){
   if(op === "oauth"){
     const pv = String(b.provider || "");
     if(!PROVIDERS[pv] || !kakaoOn()) return res.status(400).json({ error:"지금은 이 방법으로 로그인할 수 없습니다" });
-    /* 돌아올 자리 — 들어온 출처 + 경로만 (바깥 주소로 못 보냅니다).
-       ⚠️ Supabase 대시보드의 Redirect URLs 에 이 출처가 들어 있어야 합니다. */
-    const to = redirectFor(req, b.path);
-    /* ⚠️ 바깥으로 요청하지 않습니다 — 주소만 만들어 돌려주고, 화면이 그리로 갑니다.
-       Supabase 가 카카오 동의 화면을 거쳐 #access_token=… 로 돌려보내고,
-       js/auth.js 의 amAuthTakeHash() 가 매직링크와 **같은 자리**에서 받습니다. */
-    return res.status(200).json({ url: base() + "/auth/v1/authorize?provider=" + pv +
-      "&redirect_to=" + encodeURIComponent(to) });
+    /* ⚠️⚠️ Supabase 의 authorize 를 안 씁니다 — 그쪽은 account_email 을 고정으로 넣습니다.
+       카카오 인가 주소를 직접 만들고(scope 에 이메일 없음), state · nonce 는 잠근 쿠키에 둡니다.
+       돌아올 자리는 들어온 출처 + 경로만 (바깥 주소로 못 보냅니다). */
+    const st = K.startAuth(req.headers.origin || "", b.path);
+    res.setHeader("Set-Cookie", st.cookie);
+    return res.status(200).json({ url: st.url });
+  }
+
+  if(op === "take"){
+    /* 콜백이 담아 둔 세션을 **한 번만** 건넵니다 — 응답 본문으로만 (주소 · 로그 아님).
+       ⚠️ 받든 못 받든 쿠키를 지웁니다 (두 번째는 빈손). */
+    const box = K.open(K.cookies(req)[K.C_SESS]);
+    res.setHeader("Set-Cookie", [K.clearCookie(K.C_SESS, "/api/auth", true), K.clearCookie(K.C_FLAG, "/", false)]);
+    if(!box || !(box.x > Date.now()) || !box.a) return res.status(401).json({ error:"다시 로그인해 주세요" });
+    return res.status(200).json({ access_token:box.a, refresh_token:box.r || "", expires_in:box.e || 3600 });
   }
 
   if(op === "refresh"){

@@ -484,11 +484,11 @@ function PageQuote(){
         '<div class="f-2">'+
           '<div class="f-r"><label for="q-reg">지역 <b>*</b></label>'+
             RegionSelect("q-reg", reg, "", "지역을 골라 주세요", true)+'</div>'+
-          '<div class="f-r"><label for="q-gu">시 · 군 · 구</label>'+
+          '<div class="f-r"><label for="q-gu">시 · 군 · 구 <i>(선택)</i></label>'+
             '<input id="q-gu" autocomplete="address-level2" placeholder="예: 안양시"></div>'+
         '</div>'+
         '<div class="f-2">'+
-          '<div class="f-r"><label for="q-ind">업종</label>'+IndustrySelect("q-ind", ind)+'</div>'+
+          '<div class="f-r"><label for="q-ind">업종 <i>(선택)</i></label>'+IndustrySelect("q-ind", ind)+'</div>'+
           '<div class="f-r"><label for="q-side">무엇 때문에 <b>*</b></label>'+
             '<select class="sel" id="q-side">'+
               /* ⚠⚠ **운영이 없었습니다.** DB 는 처음부터 `ops` 를
@@ -528,25 +528,26 @@ function PageQuote(){
           '<input id="q-what" required value="'+esc(what)+'" '+
             'placeholder="예: 카페 인테리어 / 주방 철거 / POS 설치"></div>'+
 
-        '<div class="f-2">'+
-          '<div class="f-r"><label for="q-py">평수</label>'+
-            '<input id="q-py" inputmode="numeric" value="'+esc(py||"")+'" '+
-              'placeholder="예: 30"></div>'+
-          '<div class="f-r"><label for="q-bud">예산</label>'+
-            '<input id="q-bud" value="'+esc(bud||"")+'" '+
-              'placeholder="예: 5,000만원 / 아직 모름"></div>'+
-        '</div>'+
-        '<div class="f-r"><label for="q-when">희망 일정</label>'+
-          '<input id="q-when" value="'+esc(when||"")+'" '+
-            'placeholder="예: 2027년 2월 오픈 / 이번 달 안"></div>'+
-
         '<div class="f-r"><label for="q-q">자세한 내용 <b>*</b></label>'+
           '<textarea id="q-q" rows="6" required '+
             'placeholder="지금 상황과 필요한 것을 그대로 적어 주세요. 양식이 없어도 됩니다."></textarea></div>'+
+        /* 2026-11-27 — 필수 칸을 먼저, 선택 칸은 그 아래에 (선택) 을 붙여 모읍니다 */
+        '<div class="f-2">'+
+          '<div class="f-r"><label for="q-py">평수 <i>(선택)</i></label>'+
+            '<input id="q-py" inputmode="numeric" value="'+esc(py||"")+'" '+
+              'placeholder="예: 30"></div>'+
+          '<div class="f-r"><label for="q-bud">예산 <i>(선택)</i></label>'+
+            '<input id="q-bud" value="'+esc(bud||"")+'" '+
+              'placeholder="예: 5,000만원 / 아직 모름"></div>'+
+        '</div>'+
+        '<div class="f-r"><label for="q-when">희망 일정 <i>(선택)</i></label>'+
+          '<input id="q-when" value="'+esc(when||"")+'" '+
+            'placeholder="예: 2027년 2월 오픈 / 이번 달 안"></div>'+
+
         /* ⚠️ 파일을 받아 둘 곳이 없어서 **주소로 받습니다.** 첨부 칸을
            만들어 놓고 버리는 것보다 낫습니다. */
-        '<div class="f-r"><label for="q-img">사진 · 도면 주소</label>'+
-          '<input id="q-img" placeholder="공유 링크가 있으면 붙여 주세요 (선택)"></div>'+
+        '<div class="f-r"><label for="q-img">사진 · 도면 링크 <i>(선택)</i></label>'+
+          '<input id="q-img" placeholder="클라우드 공유 링크가 있으면"></div>'+
 
         /* §5-3 — 고르신 서비스마다 그 서비스에서만 쓰는 것을 묻습니다.
            ⚠️ 칸이 없는 서비스면 그 묶음째 빠집니다 (절대 규칙 2). */
@@ -561,6 +562,7 @@ function PageQuote(){
         AgreeBox("q-ag","성함 · 연락처 · 업종 · 지역 · 평수 · 예산 · 일정 · 적어 주신 내용",
                  "견적 요청 접수와 상담 안내","접수일로부터 1년")+
         QNotifyBox()+
+        PhotoPick("q")+
         '<div id="q-fail"></div>'+
         '<button class="btn btn-b btn-lg btn-full" type="submit" disabled data-gate="quote">'+
           '<span id="q-go-t">'+(list.length
@@ -880,7 +882,12 @@ window.amSend = function(failId, body, again, done){
          0016)라 **올릴 때마다 거절당합니다.** 2026-10-25 에 입점 신청도
          접수번호를 받게 되면서 이 줄이 그대로 켜질 자리였습니다
          (올리는 척하는 칸은 §30-7 이고 절대 규칙 5 입니다). */
-      if(no && box && (!body || body.kind !== "partner") &&
+      /* 2026-11-27 — 작성 중에 고르신 사진이 있으면 그 번호로 바로 올립니다 (일부 실패하면 실패한 것만 다시).
+         고르신 것이 없으면 예전처럼 완료 안내 안에 '사진 추가' 를 붙입니다. */
+      var frm = box && box.closest("form");
+      var phDone = (box && (!body || body.kind !== "partner") && typeof amPhotoSubmit === "function")
+        ? amPhotoSubmit(frm, box, no, (body && body.tel) || "") : false;
+      if(!phDone && no && box && (!body || body.kind !== "partner") &&
          typeof amPhotoAfter === "function")
         amPhotoAfter(box, no, (body && body.tel) || "");
       toast(dup ? "이미 접수되었습니다" : "접수되었습니다");
@@ -1102,9 +1109,16 @@ function PageQuoteClose(){
       '연결할 업체가 정해지면 어느 업체인지 알려 드린 뒤 연락처 전달 동의를 다시 받습니다.</span></p>'+
     QSum()+
     '<form id="cq-f" onsubmit="return closeSend(event)" novalidate>'+
-      '<div class="qs" id="qs-svc">'+QStepHd("01", "필요한 서비스를 골라 주세요", "여러 개를 함께 고르셔도 한 번에 접수됩니다.")+
-        cqHint(pre, opts)+
-        '<div class="cq-svc" role="group" aria-label="필요한 서비스">'+
+      /* 2026-11-27 대표 지시 — 앞 화면에서 이미 고르신 서비스(전체철거 · 원상복구 …)는 다시 고르게 하지 않습니다.
+         고르신 것과 '수정' 만 보이고, 누르면 아래 목록이 열립니다. ⚠️ 체크칸은 그대로 있어 보내는 값은 같습니다. */
+      (function(){
+        var got = opts.filter(function(sv){ return pre[sv.id]; });
+        if(!got.length) return '<div class="qs" id="qs-svc">'+QStepHd("01", "필요한 서비스를 골라 주세요", "여러 개를 함께 고르셔도 한 번에 접수됩니다.")+cqHint(pre, opts);
+        return '<div class="qs" id="qs-svc">'+QStepHd("01", "선택하신 서비스", "")+
+          '<div class="cq-got"><ul class="cq-got-l">'+got.map(function(sv){ return '<li>'+icon("check",15)+esc(amPickLabel(sv))+'</li>'; }).join("")+'</ul>'+
+          '<button type="button" class="btn btn-o btn-sm cq-got-x" aria-expanded="false" aria-controls="cq-svc" onclick="cqSvcOpen(this)">수정</button></div>';
+      })()+
+        '<div class="cq-svc" id="cq-svc" role="group" aria-label="필요한 서비스"'+(opts.some(function(sv){ return pre[sv.id]; }) ? ' hidden' : '')+'>'+
           opts.map(function(sv){
             var id = "cq-s-" + sv.id.replace(/[^a-z0-9]/gi, "-");
             return '<label class="cq-k" for="'+id+'"><input type="checkbox" id="'+id+'" name="cq-s" value="'+esc(sv.id)+'"'+
@@ -1131,11 +1145,11 @@ function PageQuoteClose(){
         '</div>'+
         '<div class="f-r"><label for="cq-q">지금 상황 <i>(선택)</i></label>'+
           '<textarea id="cq-q" rows="4" placeholder="예: 30평 음식점, 다음 달 말 계약 만료. 주방 기기는 팔고 싶고 철거와 원상복구가 필요합니다."></textarea></div>'+
-        '<p class="note">사진은 접수 뒤에 올리실 수 있습니다 (선택).</p>'+
       '</div>'+
       '<div class="qs">'+QStepHd("04", "확인하고 보내기", "")+
         AgreeBox("cq-ag","성함 · 연락처 · 업종 · 지역 · 정리 희망일 · 필요한 서비스 · 적어 주신 내용(선택)",
                  "매장 정리 상담 접수와 업체 연결 안내","접수일로부터 1년")+
+        PhotoPick("cq", { say:"철거 · 원상복구할 자리, 처분할 집기를 찍어 주시면 더 정확한 견적을 받습니다. 없어도 신청할 수 있습니다." })+
         '<div id="cq-fail"></div>'+
         '<button class="btn btn-b btn-lg btn-full" id="cq-go" type="submit" disabled data-gate="close">'+
           '매장 정리 상담 신청하기'+icon("arrow",18)+'</button>'+
@@ -1145,6 +1159,14 @@ function PageQuoteClose(){
   '</div></section>';
 }
 
+/* 고르신 서비스 '수정' — 목록을 엽니다 */
+window.cqSvcOpen = function(b){
+  var g = $("cq-svc"); if(!g) return;
+  var open = g.hasAttribute("hidden");
+  if(open) g.removeAttribute("hidden"); else g.setAttribute("hidden","");
+  b.setAttribute("aria-expanded", open ? "true" : "false");
+  b.textContent = open ? "접기" : "수정";
+};
 /* 지역 밖이면 그 자리에서 말하고 단추를 잠급니다 — ⚠️ 서버도 422 로 막습니다 */
 window.closeAreaPaint = function(){
   var out = $("cq-gu") && $("cq-gu").value === "out";

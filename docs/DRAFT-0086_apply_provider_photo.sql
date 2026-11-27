@@ -1,0 +1,18 @@
+-- ⚠️⚠️ 초안입니다 — 어느 DB 에도 적용하지 않았습니다 (2026-11-27 대표 지시: 운영 DB 변경 금지 · 범위만 보고).
+-- 목적: 업체 입점 신청(/join)과 로그인 업체의 '내 업체 정보'(/my)에서도 사진을 붙이게 합니다.
+--
+-- 왜 지금 안 되나
+--   · 사진 자리를 주는 문 claim_photo_slot() 은 **신청(request)** 의 접수번호 + 연락처만 봅니다.
+--   · 입점 신청은 provider_apply(0016) 라서 올릴 때마다 거절당합니다.
+--   · 업체 정보는 provider · provider_contact 이고 사진을 담는 표가 없습니다.
+--
+-- 적용 범위 (승인 뒤 0086 으로)
+--   1) 표 apply_photo — provider_apply 에 붙는 사진 (입점 신청 접수번호 + 연락처로 자리 받기)
+--   2) 표 provider_photo — 업체가 스스로 올리는 로고 · 포트폴리오 (로그인 업체 my_provider() 만)
+--   3) 함수 claim_apply_photo_slot(p_no, p_tel, p_mime, p_bytes) · claim_provider_photo_slot(p_mime, p_bytes, p_kind)
+--      — 0011 과 같은 상한 (형식 넷 · 8MB · 다섯 장) · 경로는 DB 가 만듭니다 (원래 파일 이름 안 받음)
+--   4) RLS — apply_photo: 직원 · 관리자만 읽기 / provider_photo: 그 업체 + 직원 · 관리자, 공개는 관리자 승인(listed) 뒤
+--   5) 서버 api/upload.js 에 kind:"apply" · kind:"provider" 두 갈래 · 화면 PhotoPick("jn") · PhotoPick("pvs") 켜기
+--   6) 버킷은 같은 비공개 버킷(INTAKE_BUCKET)을 쓰고 경로 머리로 가릅니다 (apply/ · provider/)
+--
+-- 영향: 표 2 · 함수 2 · 정책 4 추가. 기존 표 · 함수는 바꾸지 않습니다. db/verify.sql 기대값(표 · 함수 수)이 늘어납니다.

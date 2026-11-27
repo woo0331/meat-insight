@@ -675,7 +675,7 @@ function PageSell(){
         '<div class="f-r"><label for="sl-reg">지역 <b>*</b></label>'+
           RegionSelect("sl-reg", reg, "", "지역을 골라 주세요")+'</div>'+
       '</div>'+
-      '<div class="f-r"><label for="sl-gu">시 · 군 · 구</label>'+
+      '<div class="f-r"><label for="sl-gu">시 · 군 · 구 <i>(선택)</i></label>'+
         '<input id="sl-gu" autocomplete="address-level2" placeholder="예: 안양시">'+
         '<span class="f-h">번지까지는 적지 마세요. 화면에는 시 · 군 · 구까지만 나갑니다.</span></div>'+
 
@@ -684,9 +684,6 @@ function PageSell(){
       '<div class="f-r"><label for="sl-q">설명 <b>*</b></label>'+
         '<textarea id="sl-q" rows="6" required '+
           'placeholder="상태와 넘기시는 까닭, 보실 수 있는 시간을 적어 주세요. 양식이 없어도 됩니다."></textarea></div>'+
-      '<div class="f-r"><label for="sl-img">사진 주소</label>'+
-        '<input id="sl-img" placeholder="공유 링크가 있으면 붙여 주세요 (선택)">'+
-        '<span class="f-h">파일을 받아 둘 곳이 아직 없어서 주소로 받습니다.</span></div>'+
 
       '<div class="f-2">'+
         '<div class="f-r"><label for="sl-name">성함 <b>*</b></label>'+
@@ -696,8 +693,13 @@ function PageSell(){
             'placeholder="010-0000-0000"></div>'+
       '</div>'+
 
+      '<div class="f-r"><label for="sl-img">사진 링크 <i>(선택)</i></label>'+
+        '<input id="sl-img" placeholder="클라우드 공유 링크가 있으면">'+
+        '<span class="f-h">사진 파일은 아래 \'사진 추가\' 에서 바로 고르실 수 있습니다.</span></div>'+
+
       AgreeBox("sl-ag","성함 · 연락처 · 업종 · 지역 · 적어 주신 매물 조건과 설명",
                "매물 등록 확인과 문의 전달","등록을 내리신 날로부터 1년")+
+      PhotoPick("sl", { say:"매장 · 홀 · 주방 · 외관이나 장비 앞면 · 명판을 찍어 주시면 검수가 빨라집니다. 없어도 내놓으실 수 있습니다." })+
       '<div id="sl-fail"></div>'+
       '<button class="btn btn-b btn-lg btn-full" type="submit"'+' disabled data-gate="sell"'+'>'+
         (isStore ? "매장 내놓기" : "시설 · 장비 내놓기")+icon("arrow",18)+'</button>'+

@@ -219,7 +219,7 @@ var HOME_DIRECT = ["interior", "equip", "it", "admin",
 
 var HOME_QUICK8 = {
   interior:  { t:"인테리어·시공",   s:"설계 · 전기 · 배관",     ic:"roller",     tn:"terra" },
-  equip:     { t:"시설·장비",       s:"주방기기 · 냉장·냉동",   ic:"wrench",     tn:"mint" },
+  equip:     { t:"시설·장비",       s:"업종별 장비 · 매장 설비",   ic:"wrench",     tn:"mint" },
   it:        { t:"POS·매장 시스템", s:"키오스크 · 인터넷",      ic:"monitor",    tn:"blue" },
   admin:     { t:"세무·노무·행정",  s:"세무사 · 노무사",        ic:"briefcase",  tn:"lav" },
   staff:     { t:"직원 채용",       s:"정직원 · 아르바이트",    ic:"users",      tn:"sage" },

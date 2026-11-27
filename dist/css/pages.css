@@ -7316,6 +7316,8 @@ html.ivh #view > section.bsq{ background:#FDFBF6; }
 .bsq-olive{ background:#EDF1D8; color:#6B7A26; }
 .bsq .msvc-sc{ margin-top:18px; }
 @media (max-width:1100px){ .bsq-c{ gap:12px; padding:14px 34px 14px 14px; } .bsq-i{ width:52px; height:52px; } .bsq-t b{ font-size:16px; } }
+
+@media (max-width:900px){ .bsq-g{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:720px){
   .bsq-g{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
   .bsq-c{ gap:10px; min-height:96px; padding:12px 26px 12px 12px; border-radius:14px; }
@@ -7325,4 +7327,10 @@ html.ivh #view > section.bsq{ background:#FDFBF6; }
   .bsq-t i{ font-size:13px; }
   .bsq-go{ right:8px; }
   .bsq-go .ic{ width:16px; height:16px; }
+}
+
+@media (max-width:340px){
+  .bsq-c{ flex-direction:column; align-items:flex-start; padding:12px 12px 14px; gap:8px; }
+  .bsq-go{ top:14px; transform:none; }
+  .bsq-t{ width:100%; }
 }

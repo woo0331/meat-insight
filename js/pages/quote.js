@@ -857,6 +857,20 @@ window.amSend = function(failId, body, again, done){
         amPhotoAfter(box, no, (body && body.tel) || "");
       toast(dup ? "이미 접수되었습니다" : "접수되었습니다");
       var f = box && box.closest("form"); if(f) f.reset();
+      /* 2026-11-27 대표 지시 — 접수가 끝나면 **작성 폼과 동의 칸을 접고** 접수번호 · 사진 저장 결과를
+         맨 위에 둡니다. ⚠️ 지우지 않습니다 — 폼은 숨기기만 하고 '새로 작성하기' 로 다시 엽니다.
+         ⚠️ 결과 상자(id 그대로)를 폼 앞으로 옮기므로 사진 '다시 올리기' 도 같이 옮겨 갑니다. */
+      if(f && box && f.parentNode){
+        box.classList.add("q-done");
+        f.parentNode.insertBefore(box, f);
+        f.hidden = true;
+        var again2 = document.createElement("p");
+        again2.className = "q-done-again";
+        again2.innerHTML = '<button type="button" class="btn btn-o">새로 작성하기</button>';
+        again2.firstChild.onclick = function(){ f.hidden = false; again2.remove(); f.scrollIntoView({ block:"start" }); };
+        box.appendChild(again2);
+        try{ box.scrollIntoView({ block:"start" }); }catch(e){}
+      }
       /* §4-3 "최종 제출 후 중복 임시 신청 정리" — 보낸 뒤에 치웁니다.
          ⚠️ **보내기 전에 치우면 안 됩니다** — 실패했을 때 적으신 것과
          고르신 것이 같이 날아갑니다. */

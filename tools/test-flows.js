@@ -444,7 +444,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
      "A③ 고른 하나가 그대로 적혀 있다");
  await pg.selectOption("#q-reg","gyeonggi");
  await pg.fill("#q-name","홍길동"); await pg.fill("#q-tel","010-1234-5678");
- await pg.fill("#q-q","20평 카페 인테리어입니다");
+ await pg.evaluate(()=>document.querySelectorAll("details.q-more").forEach(d=>d.open=true)); /* 2026-11-27 — 추가 정보(선택)가 접혀 있습니다 */ await pg.fill("#q-q","20평 카페 인테리어입니다");
  await pg.check("#q-ag");
  /* ⚠️ 실제로 보내지는 않습니다 — 접수처가 꺼져 있고, 켜져 있어도
     운영자에게 시험 접수를 보내면 안 됩니다. **보낼 몸통**을 재 봅니다. */
@@ -529,7 +529,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
      "B④ 서비스마다 다른 질문만 따로 열린다");
  await pg.selectOption("#q-reg","gyeonggi");
  await pg.fill("#q-name","홍길동"); await pg.fill("#q-tel","010-1234-5678");
- await pg.fill("#q-q","카페 하나 엽니다"); await pg.check("#q-ag");
+ await pg.evaluate(()=>document.querySelectorAll("details.q-more").forEach(d=>d.open=true)); /* 2026-11-27 — 추가 정보(선택)가 접혀 있습니다 */ await pg.fill("#q-q","카페 하나 엽니다"); await pg.check("#q-ag");
  const bodyB = await pg.evaluate(()=>{
    let got=null; const real=window.amSend;
    window.amSend=(id,b)=>{ got=b; return false; };
@@ -543,7 +543,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
      bodyB && bodyB.items.map(x=>x.id).join(","));
 
  /* ── C. 임시저장 → 이동 → 복구 → 수정 ────────────────────────── */
- await pg.fill("#q-gu","안양시"); await pg.fill("#q-py","20");
+ await pg.evaluate(()=>document.querySelectorAll("details.q-more").forEach(d=>d.open=true)); /* 2026-11-27 — 추가 정보(선택)가 접혀 있습니다 */ await pg.fill("#q-gu","안양시"); await pg.fill("#q-py","20");
  await pg.evaluate(()=>window.quoteDraftSave());
  say(await pg.evaluate(()=>!!localStorage.getItem("am.draft.v1")),"C① 조건이 저장된다");
  /* ⚠️⚠️ **성함 · 연락처 · 자세한 내용은 안 담깁니다** (§4-1) */
@@ -576,7 +576,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  /* ⚠️ 잘못된 연락처 (§8) */
  await pg.selectOption("#q-reg","gyeonggi");
  await pg.fill("#q-name","홍"); await pg.fill("#q-tel","123");
- await pg.fill("#q-q","내용"); await pg.check("#q-ag");
+ await pg.evaluate(()=>document.querySelectorAll("details.q-more").forEach(d=>d.open=true)); /* 2026-11-27 — 추가 정보(선택)가 접혀 있습니다 */ await pg.fill("#q-q","내용"); await pg.check("#q-ag");
  const badTel = await pg.evaluate(()=>{
    let sent=false; const real=window.amSend;
    window.amSend=()=>{ sent=true; return false; };
@@ -675,7 +675,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
      say(/^\/quote/.test(await url()), no+"④ 신청 화면으로 간다", await url());
      const cn = await pg.evaluate(()=>document.querySelectorAll('input[name="cq-s"]:checked').length);
      say(cn === want, no+"⑤⑥ 매장 정리 상담 양식에 고른 "+want+"개가 체크되어 있다", String(cn));
-     await pg.selectOption("#cq-gu","안양시"); await pg.selectOption("#cq-ind","restaurant");
+     await pg.evaluate(()=>document.querySelectorAll("details.q-more").forEach(d=>d.open=true)); /* 2026-11-27 — 추가 정보(선택)가 접혀 있습니다 */ await pg.selectOption("#cq-gu","안양시"); await pg.selectOption("#cq-ind","restaurant");
      await pg.fill("#cq-when","2026-12-30");
      await pg.fill("#cq-name","홍길동"); await pg.fill("#cq-tel","010-1234-5678");
      await pg.check("#cq-ag");
@@ -702,7 +702,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
       갑니다). 항목이 하나로 묶여 가는지와 상황 칸이 맞는지를 봅니다. */
    await pg.selectOption("#q-reg","gyeonggi");
    await pg.fill("#q-name","홍길동"); await pg.fill("#q-tel","010-1234-5678");
-   await pg.fill("#q-q","검사용 내용입니다");
+   await pg.evaluate(()=>document.querySelectorAll("details.q-more").forEach(d=>d.open=true)); /* 2026-11-27 — 추가 정보(선택)가 접혀 있습니다 */ await pg.fill("#q-q","검사용 내용입니다");
    await pg.check("#q-ag");
    const body = await pg.evaluate(()=>{
      let got=null; const real=window.amSend;

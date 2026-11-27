@@ -1002,9 +1002,12 @@ const ADM_DEAL = [
     await pg.waitForTimeout(400);
     ok("앞에서 고른 서비스는 다시 고르게 하지 않는다 (고른 것 + 수정)",
         (await n(pg, ".cq-got-l li")) === 2 && (await pg.evaluate(() => document.getElementById("cq-svc").hidden)));
-    ok("'사진 추가 (선택)' 이 처음부터 보이고 제출 단추 바로 위에 있다",
+    /* 2026-11-27 시안 순서 — 서비스 → 지역 → 이름 · 휴대폰 → **사진** → 추가 정보(접힘) → 동의 → 신청 */
+    ok("'사진 추가 (선택)' 이 처음부터 보이고 연락처 다음 · 추가 정보 · 제출 단추보다 앞에 있다",
         await pg.evaluate(() => { const ph = document.querySelector("#cq-f .phup-form"), go = document.getElementById("cq-go");
-          return !!ph && !ph.hidden && /사진 추가/.test(ph.textContent) && ph.nextElementSibling && ph.nextElementSibling.nextElementSibling === go; }));
+          const tel = document.getElementById("cq-tel"), more = document.getElementById("cq-more");
+          const before = (a, b) => !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+          return !!ph && !ph.hidden && /사진 추가/.test(ph.textContent) && before(tel, ph) && before(ph, more) && before(ph, go); }));
     const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==", "base64");
     await pg.setInputFiles("#pp-cq-a", [1,2].map(i => ({ name:"a" + i + ".png", mimeType:"image/png", buffer: png })));
     await pg.setInputFiles("#pp-cq-f", { name:"f1.png", mimeType:"image/png", buffer: png });
@@ -1012,7 +1015,7 @@ const ADM_DEAL = [
     ok("고르면 썸네일과 'n/5장' 이 바로 보인다",
         (await pg.textContent("#cq-f [data-ph-cnt]")) === "3/5장" && (await n(pg, "#cq-f [data-ph-list] img")) === 3);
     ok("고르기만 해서는 올라가지 않는다", slot === 0);
-    await pg.selectOption("#cq-gu", "안양시"); await pg.selectOption("#cq-ind", { index:1 });
+    await pg.evaluate(()=>document.querySelectorAll("details.q-more").forEach(d=>d.open=true)); /* 2026-11-27 — 추가 정보(선택)가 접혀 있습니다 */ await pg.selectOption("#cq-gu", "안양시"); await pg.selectOption("#cq-ind", { index:1 });
     await pg.fill("#cq-when", "2030-01-01"); await pg.fill("#cq-name", "시험"); await pg.fill("#cq-tel", "010-1111-2222");
     await pg.check("#cq-ag");
     await pg.click("#cq-go");

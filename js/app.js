@@ -640,6 +640,7 @@ function render(){
      요청은 그만큼 느려집니다. */
   if(nowPath() === "/my" && typeof window.myLoadDb === "function") window.myLoadDb();
   if(nowPath() === "/my" && typeof window.myLkInit === "function") window.myLkInit();
+  if(nowPath() === "/my" && typeof window.myPdInit === "function") window.myPdInit();
   if(nowPath() === "/intake" && typeof window.intakePaint === "function") window.intakePaint();
   /* 2026-11-18 — 본문의 data-cta 짝(전문관 머리 등)도 견적 접수 상태로 고릅니다 */
   if(typeof window.hdCtaPaint === "function") window.hdCtaPaint();

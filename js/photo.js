@@ -67,7 +67,8 @@ var AM_PH_ACC2 = ".jpg,.jpeg,.png,.webp,.heic,.heif,.pdf,image/jpeg,image/png,im
 window.PhotoPick = function(pfx, opt){
   opt = opt || {};
   var a = "pp-" + pfx + "-a", f = "pp-" + pfx + "-f";
-  return '<div class="phup phup-form" data-ph="' + esc(pfx) + '" hidden>' +
+  var img = !!opt.imgOnly;   /* 2026-11-27 — 상품 사진은 이미지만 (PDF 를 안 받습니다 · 서버도 같은 규칙) */
+  return '<div class="phup phup-form" data-ph="' + esc(pfx) + '"' + (img ? ' data-ph-img="1"' : '') + ' hidden>' +
     '<p class="phup-h"><b>사진 추가</b> <i>(선택)</i> <span class="phup-cnt" data-ph-cnt>0/' + AM_PH_N + '장</span></p>' +
     '<p class="phup-sub">' + esc(opt.say || "현장 · 고장난 곳 · 공사할 자리를 찍어 주시면 더 정확한 견적을 받습니다. 없어도 제출할 수 있습니다.") + '</p>' +
     '<div class="phup-bs">' +
@@ -75,10 +76,12 @@ window.PhotoPick = function(pfx, opt){
       '<label class="phup-b phup-b2" for="' + f + '">' + icon("files",17) + '<span>파일에서 선택</span></label>' +
     '</div>' +
     '<input type="file" id="' + a + '" class="phup-i" data-ph-in multiple accept="image/*">' +
-    '<input type="file" id="' + f + '" class="phup-i" data-ph-in multiple accept="' + AM_PH_ACC2 + '">' +
+    '<input type="file" id="' + f + '" class="phup-i" data-ph-in multiple accept="' + (img ? AM_PH_ACC2.replace(/,?\.pdf|,?application\/pdf/g, "") : AM_PH_ACC2) + '">' +
     '<ul class="phup-l" data-ph-list></ul>' +
-    '<p class="note phup-note">JPG · PNG · WEBP · PDF · 한 장 8MB · 앨범과 파일 섞어 ' + AM_PH_N + '장까지. ' +
-      '제출하면 같이 저장되고 <b>배정된 업체와 저희 담당자만</b> 봅니다. 얼굴 · 주민등록번호는 가려 주세요.</p>' +
+    '<p class="note phup-note">' + (img
+      ? 'JPG · PNG · WEBP · 한 장 8MB · ' + AM_PH_N + '장까지. 저장하면 같이 올라가고, <b>공개 전에는 올리신 분과 저희 담당자만</b> 봅니다.'
+      : 'JPG · PNG · WEBP · PDF · 한 장 8MB · 앨범과 파일 섞어 ' + AM_PH_N + '장까지. ' +
+        '제출하면 같이 저장되고 <b>배정된 업체와 저희 담당자만</b> 봅니다. 얼굴 · 주민등록번호는 가려 주세요.') + '</p>' +
   '</div>';
 };
 
@@ -162,6 +165,7 @@ function amPhStage(w, f){
   return conv.then(function(){
     if(it.bad) return;
     if(AM_PH_MIME.indexOf(it.mime) < 0){ it.bad = "이 형식은 올릴 수 없습니다"; return; }
+    if(w.getAttribute("data-ph-img") && it.mime === "application/pdf"){ it.bad = "상품 사진은 이미지만 올리실 수 있습니다"; return; }
     if(it.size > AM_PH_MAX){ it.bad = "8MB 를 넘습니다"; return; }
     if(it.mime !== "application/pdf"){ try{ it.url = URL.createObjectURL(it.f); }catch(e){} }
   });
@@ -227,6 +231,23 @@ window.amPhotoSubmit = function(form, box, no, tel){
   return true;
 };
 
+/* 2026-11-27 — 상품 올리기: 저장된 상품 id 로 고르신 사진을 올립니다 (폼은 비우지 않습니다).
+   slot(it) 은 fetch Promise 를 돌려줍니다 — 응답 json 에 url(서명된 올리기 주소). */
+window.amPhotoSubmitWith = function(form, key, slot){
+  var w = form && form.querySelector(".phup-form");
+  if(!w || !w.__ph) return Promise.resolve(false);
+  var st = w.__ph;
+  if(!st.items.some(function(o){ return !o.bad && !o.ok; })) return Promise.resolve(false);
+  st.no = String(key); st.slot = slot;
+  if(!w.querySelector("[data-ph-retry]")){
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "btn btn-o phup-go"; b.setAttribute("data-ph-retry", "");
+    b.hidden = true; b.innerHTML = icon("refresh",17) + " 다시 올리기";
+    w.appendChild(b);
+  }
+  return amPhotoGo(w).then(function(){ return true; });
+};
+
 /* 접수 완료 안내 안에 칸을 붙입니다 — 작성 중에 고르지 않으셨을 때만 (붙여서 더 올릴 수 있게).
    ⚠️ `no`(접수번호)가 없으면 **붙이지 않습니다** (절대 규칙 5). */
 window.amPhotoAfter = function(box, no, tel){
@@ -258,11 +279,12 @@ window.amPhotoGo = function(w){
   todo.forEach(function(it){
     chain = chain.then(function(){
       it.busy = true; it.fail = ""; it.bad = ""; amPhPaint(w);
-      return fetch("/api/upload", {
+      /* 2026-11-27 — 상품 사진은 자리를 다른 문(/api/product · 로그인 주인)에서 받습니다 (st.slot) */
+      return (st.slot ? st.slot(it) : fetch("/api/upload", {
         method:"POST",
         headers:{ "content-type":"application/json" },
         body: JSON.stringify({ no:st.no, tel:st.tel, mime:it.mime, bytes:it.size })
-      }).then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+      })).then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
         .then(function(x){
           if(!x.ok || !x.j || !x.j.url)
             throw new Error((x.j && x.j.error) || "지금 올리지 못했습니다");

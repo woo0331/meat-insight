@@ -50,7 +50,7 @@ function res(){
   return r;
 }
 
-const QUOTE = { kind: "quote", name: "합성 고객", tel: "010-0000-0000", q: "합성 요청 — 검사용",
+const QUOTE = { kind: "quote", name: "합성 고객", tel: "010-0000-0000", q: "합성 요청 — 검사용", region: "경기",
   agree: true, idem: "t01-quote-1" };
 const SELL  = Object.assign({}, QUOTE, { form: "sell", cat: "transfer", idem: "t01-sell-1" });
 const JOIN  = { kind: "partner", name: "합성 담당", tel: "010-0000-0001", company: "합성 업체",

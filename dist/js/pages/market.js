@@ -571,8 +571,66 @@ window.sellProg = function(){
   var t = out.querySelector("em"); if(t) t.textContent = done === req.length ? "필수 항목을 모두 적으셨습니다" : "* 표시 항목을 적어 주세요";
 };
 
+var SL_STATE = ["거의 새것", "사용감 조금", "사용감 많음", "고장 · 부품용"];
+function PageSellAsset(){
+  var ind = nowQS("i"), reg = nowQS("r");
+  return PgHero({ kicker:"매물 내놓기", h1raw:"집기 내놓기",
+    lead:"사진과 집기 이름, 상태, 가격만 적어 주세요. 운영자가 확인한 뒤 올립니다. 무료입니다.", tight:true })+
+  '<section class="sec sec-white"><div class="w form-wrap qf">'+
+    sellTabs("asset")+
+    '<div class="notice-bad" data-cta="off" data-cta-form="sell"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
+      '<p>적으셔도 보내지지 않습니다. 그동안 <a href="/assets">지금 나와 있는 시설 · 집기</a>를 보실 수 있습니다.</p></div>'+
+    '<form id="sl-f" onsubmit="return sellSend(event)" data-sl="asset">'+
+      PhotoPick("sl", { say:"앞면과 명판(제조사 · 모델이 적힌 스티커)을 찍어 주시면 확인이 빨라집니다. 없어도 등록하실 수 있습니다." })+
+      '<div class="f-r"><label for="sl-item">집기 이름 <b>*</b></label>'+
+        '<input id="sl-item" required placeholder="예: 4도어 냉장고 / 에스프레소 머신 2그룹"></div>'+
+      '<div class="f-2">'+
+        '<div class="f-r"><label for="sl-state">상태 <b>*</b></label>'+
+          '<select class="sel" id="sl-state"><option value="">골라 주세요</option>'+
+            SL_STATE.map(function(x){ return '<option>'+esc(x)+'</option>'; }).join("")+'</select></div>'+
+        '<div class="f-r"><label for="sl-price">희망 가격 (만원)</label>'+
+          '<input id="sl-price" inputmode="numeric" placeholder="비워 두면 협의"></div>'+
+      '</div>'+
+      '<div class="f-2">'+
+        '<div class="f-r"><label for="sl-reg">거래 지역 <b>*</b></label>'+
+          RegionSelect("sl-reg", reg, "", "지역을 골라 주세요")+'</div>'+
+        '<div class="f-r"><label for="sl-gu">시 · 군 · 구 <i>(선택)</i></label>'+
+          '<input id="sl-gu" autocomplete="address-level2" placeholder="예: 안양시"></div>'+
+      '</div>'+
+      '<div class="f-2">'+
+        '<div class="f-r"><label for="sl-name">이름 <b>*</b></label>'+
+          '<input id="sl-name" required autocomplete="name"></div>'+
+        '<div class="f-r"><label for="sl-tel">휴대폰 <b>*</b></label>'+
+          '<input id="sl-tel" type="tel" required autocomplete="tel" inputmode="tel" placeholder="010-0000-0000"></div>'+
+      '</div>'+
+      QMore("sl-more",
+        '<div class="f-2">'+
+          '<div class="f-r"><label for="sl-brand">제조사</label><input id="sl-brand" placeholder="예: 라마르조코"></div>'+
+          '<div class="f-r"><label for="sl-model">모델명</label><input id="sl-model" placeholder="명판에 적힌 이름"></div>'+
+        '</div>'+
+        '<div class="f-2">'+
+          '<div class="f-r"><label for="sl-age">사용 기간</label><input id="sl-age" placeholder="예: 3년"></div>'+
+          '<div class="f-r"><label for="sl-size">크기</label><input id="sl-size" placeholder="예: 가로 120 · 깊이 80 cm"></div>'+
+        '</div>'+
+        '<div class="f-2">'+
+          '<div class="f-r"><label for="sl-out">반출 조건</label><input id="sl-out" placeholder="예: 직접 가져가셔야 함 / 3층 계단"></div>'+
+          '<div class="f-r"><label for="sl-ind">쓰던 업종</label>'+IndustrySelect("sl-ind", ind, "", "골라 주세요")+'</div>'+
+        '</div>'+
+        '<div class="f-r"><label for="sl-q">더 전하실 것</label>'+
+          '<textarea id="sl-q" rows="3" placeholder="보실 수 있는 시간 등"></textarea></div>')+
+      AgreeBox("sl-ag","성함 · 연락처 · 업종 · 지역 · 적어 주신 매물 조건과 설명",
+               "매물 등록 확인과 문의 전달","등록을 내리신 날로부터 1년")+
+      '<p class="note note-mid">이름 · 휴대폰과 번지 주소는 매물에 나가지 않습니다. 지역은 시 · 군 · 구까지만 올립니다.</p>'+
+      '<div id="sl-fail"></div>'+
+      '<button class="btn btn-b btn-lg btn-full" type="submit" disabled data-gate="sell">'+
+        '집기 등록하기'+icon("arrow",18)+'</button>'+
+    '</form>'+
+  '</div></section>';
+}
+
 function PageSell(){
   var t = nowQS("t") === "asset" ? "asset" : "store";
+  if(t === "asset") return PageSellAsset();
   var ind = nowQS("i"), reg = nowQS("r");
   var ready = !!(window.WOW_BIZ && WOW_BIZ.sosReady);
   var isStore = t === "store";
@@ -717,14 +775,17 @@ window.sellSend = function(ev){
   if(!$("sl-ag").checked){ toast("개인정보 수집 · 이용 동의가 필요합니다"); return false; }
   var isStore = !$("sl-item");
 
-  var need = [["sl-ind","업종"],["sl-reg","지역"],
-              ["sl-q","설명"],["sl-name","성함"],["sl-tel","연락처"]];
-  if(!isStore) need.unshift(["sl-item","무엇을 내놓으시는지"]);
+  var need = isStore
+    ? [["sl-ind","업종"],["sl-reg","지역"],["sl-q","설명"],["sl-name","성함"],["sl-tel","연락처"]]
+
+    : [["sl-item","집기 이름"],["sl-state","상태"],["sl-reg","거래 지역"],["sl-name","이름"],["sl-tel","휴대폰"]];
   for(var i=0;i<need.length;i++){
     if(!$(need[i][0]).value.trim()){
       toast(need[i][1]+"을(를) 적어 주세요"); $(need[i][0]).focus(); return false; }
   }
   var v = function(id){ var e = $(id); return e ? e.value.trim() : ""; };
+  var tdig = v("sl-tel").replace(/[^0-9]/g, "");
+  if(tdig.length < 9 || tdig.length > 11){ toast("휴대폰 번호를 다시 확인해 주세요"); $("sl-tel").focus(); return false; }
   var ind = v("sl-ind"), reg = v("sl-reg");
   var detail = isStore
     ? { "거래 방식": $("sl-kind").value === "lease" ? "임대" : "매장 양도",
@@ -734,11 +795,10 @@ window.sellSend = function(ev){
         "시설 포함": $("sl-eq").checked ? "그대로 두고 갑니다" : "",
         "문 연 해": v("sl-since"), "넘기고 싶은 시점": v("sl-want"),
         "월 매출(사장님이 적으신 값)": v("sl-sales"), "사진 주소": v("sl-img") }
-    : { "품목": v("sl-item"),
-        "거래 단위": { single:"낱개", bulk:"묶음", all:"시설 전체" }[$("sl-deal").value] || "",
+    : { "품목": v("sl-item"), "상태": v("sl-state"), "희망가": v("sl-price"),
         "업종": ind ? amIndustryName(ind) : "", "시군구": v("sl-gu"),
-        "제조사": v("sl-brand"), "연식": v("sl-year"), "수량": v("sl-cnt"),
-        "희망가": v("sl-price"), "상태": v("sl-state"), "사진 주소": v("sl-img") };
+        "제조사": v("sl-brand"), "모델명": v("sl-model"), "사용 기간": v("sl-age"),
+        "크기": v("sl-size"), "반출 조건": v("sl-out") };
 
   detail = amDropEmpty(detail);
 
@@ -752,7 +812,7 @@ window.sellSend = function(ev){
     tel:   v("sl-tel"),
     region: reg ? amRegionName(reg) : "",
     service: "", serviceName: isStore ? "매장 내놓기" : "시설 · 장비 내놓기",
-    q: v("sl-q"),
+    q: v("sl-q") || (isStore ? "" : "집기 내놓기 — " + v("sl-item") + (v("sl-state") ? " (" + v("sl-state") + ")" : "")),
     budget: "",
     detail: detail,
     agree: true

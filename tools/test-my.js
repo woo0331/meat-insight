@@ -862,10 +862,10 @@ const ADM_DEAL = [
     ok("버킷이 있으면 사진 칸이 그려진다", (await n(pg, "#zz-ph .phup")) === 1);
     /* 2026-11-27 — 갤럭시 · 아이폰 둘 다 앨범과 파일 양쪽에서 */
     ok("'앨범에서 선택' 은 사진 고르개 (accept image/*)",
-        (await pg.getAttribute("#phup-f", "accept")) === "image/*");
+        (await pg.getAttribute("#pp-after-a", "accept")) === "image/*");
     ok("'파일에서 선택' 은 파일 고르개 (확장자 · HEIC · PDF 를 같이)",
-        /\.heic/.test(await pg.getAttribute("#phup-f2", "accept")) &&
-        /application\/pdf/.test(await pg.getAttribute("#phup-f2", "accept")));
+        /\.heic/.test(await pg.getAttribute("#pp-after-f", "accept")) &&
+        /application\/pdf/.test(await pg.getAttribute("#pp-after-f", "accept")));
     ok("카메라 촬영만 열리게 하지 않는다 (capture 속성 없음)",
         (await n(pg, "#zz-ph input[capture]")) === 0);
     ok("단추 둘이 다 보인다 (앨범 · 파일)",
@@ -876,15 +876,15 @@ const ADM_DEAL = [
 
     /* 한 장 — ⚠️ 이름에 성함이 들어간 흔한 꼴로 · 고르면 먼저 미리보기 */
     const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==", "base64");
-    await pg.setInputFiles("#phup-f", { name:"김사장_주방.jpg", mimeType:"image/jpeg", buffer: png });
+    await pg.setInputFiles("#pp-after-a", { name:"김사장_주방.jpg", mimeType:"image/jpeg", buffer: png });
     await pg.waitForTimeout(400);
-    ok("고르면 바로 올리지 않고 미리보기로 쌓인다", slot.length === 0 && (await n(pg, "#phup-l li .phup-th img")) === 1);
-    ok("올리기 단추에 장수가 적힌다", /1장 올리기/.test(await pg.textContent("#phup-go")));
-    await pg.click("#phup-go");
+    ok("고르면 바로 올리지 않고 미리보기로 쌓인다", slot.length === 0 && (await n(pg, "#zz-ph [data-ph-list] li .phup-th img")) === 1);
+    ok("올리기 단추에 장수가 적힌다", /1장 올리기/.test(await pg.textContent("#zz-ph [data-ph-retry]")));
+    await pg.click("#zz-ph [data-ph-retry]");
     await pg.waitForTimeout(700);
     ok("올라간 뒤에만 '올렸습니다' 라고 말한다",
-        (await n(pg, "#phup-l li.is-ok")) === 1,
-        await pg.evaluate(() => (document.querySelector("#phup-l li") || {}).textContent));
+        (await n(pg, "#zz-ph [data-ph-list] li.is-ok")) === 1,
+        await pg.evaluate(() => (document.querySelector("#zz-ph [data-ph-list] li") || {}).textContent));
     ok("파일이 서명된 주소로 바로 간다 (우리 함수를 안 지납니다)",
         put.length === 1 && put[0].m === "PUT" && put[0].ct === "image/jpeg",
         JSON.stringify(put));
@@ -898,50 +898,50 @@ const ADM_DEAL = [
         (await pg.evaluate(() => document.querySelector(".phup-n").textContent))
           === "김사장_주방.jpg");
     ok("올라간 것은 빼기 단추가 없다 (올린 뒤 빼는 길은 로그인한 분만)",
-        (await n(pg, "#phup-l li.is-ok .phup-x")) === 0);
+        (await n(pg, "#zz-ph [data-ph-list] li.is-ok .phup-x")) === 0);
 
     /* 상한 셋 — ⚠️ 서버에 보내기 전에 화면이 먼저 막습니다 */
     const before = slot.length;
-    await pg.setInputFiles("#phup-f2", { name:"x.txt", mimeType:"text/plain", buffer: Buffer.from("zz") });
+    await pg.setInputFiles("#pp-after-f", { name:"x.txt", mimeType:"text/plain", buffer: Buffer.from("zz") });
     await pg.waitForTimeout(300);
     ok("형식이 아닌 것은 화면이 먼저 막는다",
-        (await pg.evaluate(() => [].some.call(document.querySelectorAll("#phup-l li.is-bad"),
+        (await pg.evaluate(() => [].some.call(document.querySelectorAll("#zz-ph [data-ph-list] li.is-bad"),
           e => /이 형식은 올릴 수 없습니다/.test(e.textContent)))) && slot.length === before);
-    await pg.setInputFiles("#phup-f", { name:"big.jpg", mimeType:"image/jpeg", buffer: Buffer.alloc(8388609) });
+    await pg.setInputFiles("#pp-after-a", { name:"big.jpg", mimeType:"image/jpeg", buffer: Buffer.alloc(8388609) });
     await pg.waitForTimeout(300);
     ok("8MB 를 넘으면 화면이 먼저 막는다",
-        (await pg.evaluate(() => [].some.call(document.querySelectorAll("#phup-l li.is-bad"),
+        (await pg.evaluate(() => [].some.call(document.querySelectorAll("#zz-ph [data-ph-list] li.is-bad"),
           e => /8MB 를 넘습니다/.test(e.textContent)))) && slot.length === before);
     /* 갤럭시 '내 파일' 은 type 을 비워 줄 때가 있습니다 — 확장자로 알아봅니다 */
-    await pg.setInputFiles("#phup-f2", { name:"도면.pdf", mimeType:"", buffer: Buffer.from("%PDF-1.4") });
+    await pg.setInputFiles("#pp-after-f", { name:"도면.pdf", mimeType:"", buffer: Buffer.from("%PDF-1.4") });
     await pg.waitForTimeout(300);
     ok("type 이 빈 파일도 확장자로 알아본다 (PDF)",
-        (await pg.evaluate(() => [].some.call(document.querySelectorAll("#phup-l li:not(.is-bad)"),
+        (await pg.evaluate(() => [].some.call(document.querySelectorAll("#zz-ph [data-ph-list] li:not(.is-bad)"),
           e => /도면\.pdf/.test(e.textContent)))));
     /* HEIC — 실제 HEIC 파일. ⚠️ 크로미움은 못 읽어서 안내로 떨어지는 것이 맞습니다 */
-    await pg.setInputFiles("#phup-f2", { name:"IMG_0001.HEIC", mimeType:"image/heic",
+    await pg.setInputFiles("#pp-after-f", { name:"IMG_0001.HEIC", mimeType:"image/heic",
       buffer: require("fs").readFileSync(require("path").join(__dirname, "fixtures-test.heic")) });
     await pg.waitForTimeout(900);
     ok("HEIC 는 읽을 수 있으면 JPG 로 바꾸고 · 못 읽으면 올리지 않고 JPG 안내를 낸다",
-        (await pg.evaluate(() => [].some.call(document.querySelectorAll("#phup-l li"),
+        (await pg.evaluate(() => [].some.call(document.querySelectorAll("#zz-ph [data-ph-list] li"),
           e => /IMG_0001/.test(e.textContent) && (/JPG 로 바꿈/.test(e.textContent) ||
                (e.classList.contains("is-bad") && /JPG 로 저장한 뒤/.test(e.textContent)))))) && slot.length === before);
     /* 빼기 — 올리기 전에 × 로 */
-    const xb = await n(pg, "#phup-l li");
-    await pg.click("#phup-l li:last-child .phup-x");
+    const xb = await n(pg, "#zz-ph [data-ph-list] li");
+    await pg.click("#zz-ph [data-ph-list] li:last-child .phup-x");
     await pg.waitForTimeout(200);
-    ok("올리기 전에 × 로 한 장씩 뺀다", (await n(pg, "#phup-l li")) === xb - 1);
+    ok("올리기 전에 × 로 한 장씩 뺀다", (await n(pg, "#zz-ph [data-ph-list] li")) === xb - 1);
     /* 앨범 · 파일 섞어 다섯 장까지 — 이미 올린 1 + PDF 1 + 앨범 2 + 파일 2 = 6 → 여섯째는 밀림 */
-    await pg.setInputFiles("#phup-f", [1,2].map(i => ({ name:"a" + i + ".jpg", mimeType:"image/jpeg", buffer: png })));
-    await pg.setInputFiles("#phup-f2", [3,4].map(i => ({ name:"f" + i + ".png", mimeType:"image/png", buffer: png })));
+    await pg.setInputFiles("#pp-after-a", [1,2].map(i => ({ name:"a" + i + ".jpg", mimeType:"image/jpeg", buffer: png })));
+    await pg.setInputFiles("#pp-after-f", [3,4].map(i => ({ name:"f" + i + ".png", mimeType:"image/png", buffer: png })));
     await pg.waitForTimeout(500);
     ok("앨범 · 파일을 섞어 여섯째부터 '다섯 장까지입니다'",
-        (await pg.evaluate(() => [].some.call(document.querySelectorAll("#phup-l li.is-bad"),
+        (await pg.evaluate(() => [].some.call(document.querySelectorAll("#zz-ph [data-ph-list] li.is-bad"),
           e => /다섯 장까지입니다/.test(e.textContent)))));
-    await pg.click("#phup-go");
+    await pg.click("#zz-ph [data-ph-retry]");
     await pg.waitForTimeout(1500);
     ok("다섯 장까지만 올라간다",
-        (await n(pg, "#phup-l li.is-ok")) === 5, "올라간 장수: " + (await n(pg, "#phup-l li.is-ok")));
+        (await n(pg, "#zz-ph [data-ph-list] li.is-ok")) === 5, "올라간 장수: " + (await n(pg, "#zz-ph [data-ph-list] li.is-ok")));
     ok("JS 에러 0", errs.length === 0, errs.join(" | "));
     await ctx.close();
   }
@@ -965,17 +965,66 @@ const ADM_DEAL = [
       amPhotoAfter(box, "SW-AAAA-0001", "010-9999-9999");
     });
     await pg.waitForTimeout(500);
-    await pg.setInputFiles("#phup-f", {
+    await pg.setInputFiles("#pp-after-a", {
       name:"a.jpg", mimeType:"image/jpeg", buffer: Buffer.from("zz") });
     await pg.waitForTimeout(300);
-    await pg.click("#phup-go");
+    await pg.click("#zz-ph [data-ph-retry]");
     await pg.waitForTimeout(600);
-    ok("'올렸습니다' 가 안 뜬다", (await n(pg, "#phup-l li.is-ok")) === 0);
+    ok("'올렸습니다' 가 안 뜬다", (await n(pg, "#zz-ph [data-ph-list] li.is-ok")) === 0);
     /* ⚠️ 서버가 돌려준 까닭을 그대로 보여 줍니다 — 손님이 무엇을
        하셔야 하는지가 "지금 안 됩니다" 와 다릅니다 */
     ok("서버가 돌려준 까닭을 그대로 적는다",
-        (await pg.evaluate(() => document.querySelector("#phup-l li").textContent))
+        (await pg.evaluate(() => document.querySelector("#zz-ph [data-ph-list] li").textContent))
           .includes("접수번호와 연락처를 확인해 주세요"));
+    ok("JS 에러 0", errs.length === 0, errs.join(" | "));
+    await ctx.close();
+  }
+
+  console.log("\n⑧-3 작성 화면에서 고르고 — 제출하면 같이 · 일부 실패는 실패한 것만 다시");
+  {
+    const ctx = await br.newContext({ viewport:{ width:390, height:844 } });
+    const pg = await ctx.newPage();
+    const errs = []; pg.on("pageerror", e => errs.push(String(e)));
+    let slot = 0, put = 0;
+    await pg.route("**/api/session**", r => r.fulfill({ status:200, contentType:"application/json",
+      body: JSON.stringify({ auth:true, signedIn:false, kakao:true, intake:{ quote:true, close:true, sell:true, join:true } }) }));
+    await pg.route("**/api/upload", r => {
+      if (r.request().method() === "GET")
+        return r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify({ up:true }) });
+      slot++;
+      if (slot === 2) return r.fulfill({ status:503, contentType:"application/json", body: JSON.stringify({ error:"잠시 뒤 다시 올려 주세요" }) });
+      r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify({ url:"https://zz.example/sign/" + slot, id:"p" + slot }) });
+    });
+    await pg.route("https://zz.example/**", r => { put++; r.fulfill({ status:200, body:"" }); });
+    await pg.route("**/api/quote", r => r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify({ ok:true, no:"SW-AAAA-0002" }) }));
+    await pg.goto(base + "/quote?mode=close&sv=demolish/full,restore/shop-restore", { waitUntil:"networkidle" });
+    await pg.evaluate(() => { WOW_BIZ.sosReady = true; hdCtaPaint(); });
+    await pg.waitForTimeout(400);
+    ok("앞에서 고른 서비스는 다시 고르게 하지 않는다 (고른 것 + 수정)",
+        (await n(pg, ".cq-got-l li")) === 2 && (await pg.evaluate(() => document.getElementById("cq-svc").hidden)));
+    ok("'사진 추가 (선택)' 이 처음부터 보이고 제출 단추 바로 위에 있다",
+        await pg.evaluate(() => { const ph = document.querySelector("#cq-f .phup-form"), go = document.getElementById("cq-go");
+          return !!ph && !ph.hidden && /사진 추가/.test(ph.textContent) && ph.nextElementSibling && ph.nextElementSibling.nextElementSibling === go; }));
+    const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==", "base64");
+    await pg.setInputFiles("#pp-cq-a", [1,2].map(i => ({ name:"a" + i + ".png", mimeType:"image/png", buffer: png })));
+    await pg.setInputFiles("#pp-cq-f", { name:"f1.png", mimeType:"image/png", buffer: png });
+    await pg.waitForTimeout(300);
+    ok("고르면 썸네일과 'n/5장' 이 바로 보인다",
+        (await pg.textContent("#cq-f [data-ph-cnt]")) === "3/5장" && (await n(pg, "#cq-f [data-ph-list] img")) === 3);
+    ok("고르기만 해서는 올라가지 않는다", slot === 0);
+    await pg.selectOption("#cq-gu", "안양시"); await pg.selectOption("#cq-ind", { index:1 });
+    await pg.fill("#cq-when", "2030-01-01"); await pg.fill("#cq-name", "시험"); await pg.fill("#cq-tel", "010-1111-2222");
+    await pg.check("#cq-ag");
+    await pg.click("#cq-go");
+    await pg.waitForTimeout(1200);
+    ok("제출하면 접수번호가 남고 사진이 그 번호로 올라간다",
+        /SW-AAAA-0002/.test(await pg.textContent("#cq-fail")) && put === 2);
+    ok("일부가 실패하면 실패한 것만 '다시 올리기' 로 남는다",
+        (await n(pg, "#cq-fail li.is-ok")) === 2 && (await n(pg, "#cq-fail li.is-fail")) === 1 &&
+        !(await pg.evaluate(() => document.querySelector("#cq-fail [data-ph-retry]").hidden)));
+    await pg.click("#cq-fail [data-ph-retry]");
+    await pg.waitForTimeout(600);
+    ok("다시 올리면 실패한 것만 올라간다 (성공한 것을 또 안 올림)", put === 3 && (await n(pg, "#cq-fail li.is-ok")) === 3);
     ok("JS 에러 0", errs.length === 0, errs.join(" | "));
     await ctx.close();
   }

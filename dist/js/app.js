@@ -481,6 +481,8 @@ function render(){
 
   if(typeof window.hdCtaPaint === "function") window.hdCtaPaint();
 
+  if(typeof window.amPhotoWire === "function") window.amPhotoWire(document.getElementById("view"));
+
   if(typeof window.pickPaint === "function") window.pickPaint();
   if(typeof window.sellProg === "function") window.sellProg();
 

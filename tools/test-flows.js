@@ -97,7 +97,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
 
  console.log("\n【3】 폐업 → 현재 상황 → 상황별 로드맵");
  await pg.goto(B+"/closure",{waitUntil:"networkidle"});
- const want=await pg.evaluate(()=>[...document.querySelectorAll(".wnt b")].map(b=>b.textContent.trim()));
+ const want=await pg.evaluate(()=>[...document.querySelectorAll("#sit .sitf-o b")].map(b=>b.textContent.trim()));  /* 2026-11-26 — 상황 넷은 맨 위 첫 구간(SitFlow) */
  say(want.length===4,"상황 넷",want.join(" / "));
  for(const [w,n,key] of [["pass",10,"acq-out"],["money",9,"asset-out"],["fast",13,"closing"]]){
    await pg.goto(B+"/closure?w="+w,{waitUntil:"networkidle"});
@@ -238,7 +238,10 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  /* 2026-11-18 메인 개편 · W01 — 접수가 닫혀 있으면 마지막 구간은 신청 단추 대신
     계산도구 · 자주 묻는 질문으로 보냅니다. 열려 있으면 견적 신청으로 갑니다. */
  /* 2026-11-19 Warm Premium — 이용 방법 구간이 접수 상태를 따릅니다 (닫히면 안내 · 열리면 신청) */
- const ctaOpen = await pg.evaluate(()=>!!(window.WOW_BIZ && WOW_BIZ.sosReady));
+ /* ⚠️ 2026-11-26 — 열림은 sosReady **와** 서버 게이트(/api/session intake.quote)가 둘 다 켜져야 합니다.
+    sosReady 만 보면 시험 브랜치(sosReady:true)에서 서버 게이트가 없는 로컬 검사가 늘 "열림" 으로
+    읽혀 엉뚱하게 실패합니다. 화면이 쓰는 amIntakeOpen() 을 그대로 묻습니다. 열림 · 닫힘 둘 다는 【14】 가 봅니다. */
+ const ctaOpen = await pg.evaluate(()=> window.amIntakeOpen ? window.amIntakeOpen("quote") : false);
  if(ctaOpen){
    await click('.wp-snote-on a[href="/quote"]');
    say((await url()).startsWith("/quote"),"이용 방법 → 상담 신청",await url());
@@ -817,7 +820,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     지키는 것: 첫 화면 세 갈래가 있고, 상황 넷은 "모르겠어요" 안에 접혀 있다. */
  /* 2026-11-25 디자인 개편 §5 — 상황 넷은 사진 카드로 **펼쳐 둡니다** (전에는 '모르겠어요' 안에 접혀 있었습니다). */
  const cp = await pg.evaluate(()=>({q:[...document.querySelectorAll(".pgh .hh-qa")].filter(a=>a.getClientRects().length).length, clp:document.querySelectorAll(".clp-c").length,
-   want:[...document.querySelectorAll("#cl-want .wnt")].filter(a=>a.getClientRects().length && a.querySelector(".wnt-ph img, .wnt-ph .pcd-n")).length}));
+   want:[...document.querySelectorAll("#sit .sitf-o")].filter(a=>a.getClientRects().length && a.querySelector(".sitf-ph img, .sitf-ph svg")).length}));  /* 2026-11-26 — 상황 넷은 맨 위 첫 구간 */
  say(cp.q === 3 && cp.clp === 0 && cp.want === 4, "3 폐업 — 첫 화면 세 갈래 · 상황 넷이 사진 카드로 보임", JSON.stringify(cp));
  const c1 = await pg.$$(".pkq .pk-ck");
  if(c1.length > 1){ await c1[0].check(); await c1[1].check(); }
@@ -838,6 +841,18 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
                              ["?t=out", "넘기는 순서", "/stores"]]){
    await pg.goto(B+"/transfer"+q,{waitUntil:"networkidle"});
    await pg.waitForTimeout(400);
+   /* 2026-11-26 모바일 시안 §4 — '내 매장 넘기기' 를 고르면(?t=out) 경로 메뉴(.aq-m)는 내려가고
+      **그 결과(#sit-res)** 가 그 쪽 길을 냅니다 — 내놓기(/sell)가 먼저 · 매장 찾기(/stores)는 섞이지 않음 */
+   if(q === "?t=out"){
+     const o = await pg.evaluate(()=>{ const r = document.getElementById("sit-res");
+       if(!r) return null;
+       const hs = [].slice.call(r.querySelectorAll("a[href]")).map(a=>a.getAttribute("href"));
+       return { t:(r.querySelector("h2,h3") || {}).textContent || "", sell:hs.some(h=>h.indexOf("/sell")===0),
+                stores:hs.some(h=>h.indexOf("/stores")===0), menu:document.querySelectorAll(".aq-m").length }; });
+     say(!!o && /넘기기/.test(o.t) && o.sell && !o.stores && o.menu === 0,
+         "4 양도양수?t=out — 그 쪽 길(내놓기)이 결과에 먼저 · 매장 찾기는 섞이지 않음 · 경로 메뉴 반복 없음", JSON.stringify(o));
+     continue;
+   }
    const m = await pg.evaluate(()=>
      [].slice.call(document.querySelectorAll(".aq-m b")).map(b=>b.textContent.trim()));
    say(m[0] === want, "4 양도양수"+(q||"(인수)")+" — 그 쪽 메뉴가 먼저 온다", m.join(" · "));
@@ -937,6 +952,29 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.waitForTimeout(900);
  const after = await pg.evaluate(()=>Math.round(window.scrollY));
  say(after === 0, "새로고침하면 맨 위에서 시작한다", after+"px");
+ /* ⚠️⚠️ 2026-11-26 — **휴대폰 브라우저는 load 뒤에 늦게 되돌려 놓습니다.**
+    사파리 · 카카오톡 안 브라우저가 scrollRestoration 을 무시하고 예전
+    자리로 내려놓는 꼴을 흉내 내서(새로고침일 때만 load 60ms 뒤에 내림)
+    360 · 390 에서 재 봅니다. 고치기 전에는 여기가 전부 실패였습니다.
+    ⚠️ 로그인 입구(/my?next=)도 새로고침이면 맨 위입니다 — 처음 들어올
+    때만 카카오 단추로 내려갑니다. */
+ for(const w of [360, 390]){
+   const cx = await br.newContext({ viewport:{ width:w, height:844 } });
+   await cx.addInitScript(()=>{ try{ const n = performance.getEntriesByType("navigation")[0];
+     if(n && n.type === "reload"){ const y = +sessionStorage.getItem("__late") || 0;
+       addEventListener("load", ()=>setTimeout(()=>scrollTo(0, y), 60)); } }catch(e){} });
+   const p2 = await cx.newPage();
+   for(const u of ["/", "/search", "/closure?w=fast", "/providers/demolish", "/my?next=%2Fquote"]){
+     await p2.goto(B+u, {waitUntil:"networkidle"}); await p2.waitForTimeout(300);
+     await p2.evaluate(()=>{ scrollTo(0, Math.min(1500, document.documentElement.scrollHeight - innerHeight)); sessionStorage.setItem("__late", scrollY); });
+     await p2.waitForTimeout(150);
+     await p2.reload({waitUntil:"networkidle"}); await p2.waitForTimeout(1300);
+     const r = await p2.evaluate(()=>{ const h = document.querySelector("#view h1"); const t = h && h.getBoundingClientRect();
+       return { y:Math.round(scrollY), h1:!!t && t.top >= 0 && t.bottom <= innerHeight }; });
+     say(r.y === 0 && r.h1, w+"px "+u+" — 늦게 되돌려 놓는 브라우저에서도 새로고침하면 맨 위 · 제목 보임", r.y+"px");
+   }
+   await cx.close();
+ }
  /* ⚠️⚠️ **"더 보기" 는 그대로 스크롤을 지킵니다** — 목록을 늘리는
     것인데 맨 위로 올라가면 방금 보던 자리를 잃고, 그러면 한 번 더
     안 누릅니다. 위 한 줄이 이쪽까지 끌고 가면 안 됩니다.
@@ -1139,7 +1177,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
      body: JSON.stringify({ auth:false, signedIn:false, intake:{ quote: gateOpen } }) }));
    await p2.route("**/dist/js/data/site.js*", async r => {
      const t = fs.readFileSync(path.join(root, "dist/js/data/site.js"), "utf8")
-       .replace(/sosReady:(\s*)false/, "sosReady:$1" + (sos ? "true" : "false"));
+       .replace(/sosReady:(\s*)(true|false)/, "sosReady:$1" + (sos ? "true" : "false"));
      await r.fulfill({ status:200, contentType:"text/javascript", body:t });
    });
    const vis = () => p2.evaluate(() => [].slice.call(document.querySelectorAll(".hd .hd-cta"))
@@ -1152,6 +1190,14 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
        ? v[0][0].indexOf("견적 신청") >= 0 && v[0][1].indexOf("/quote") === 0
        : v[0][0] === "접수 안내" && v[0][1] === "/intake");
      say(good, nm + " · " + w + "px · " + u + " — 헤더 " + (open ? "'견적 신청' → /quote" : "'접수 안내' → /intake"), JSON.stringify(v));
+     if(u === "/"){
+       /* 메인 '이용 방법' 구간도 같은 게이트를 따른다 (열림 → 상담 신청 · 닫힘 → 접수 안내) */
+       const sn = await p2.evaluate(() => {
+         const on = document.querySelector('.wp-snote-on a[href="/quote"]'), off = document.querySelector('.wp-snote:not(.wp-snote-on) a[href="/intake"]');
+         return { on: !!(on && on.getClientRects().length), off: !!(off && off.getClientRects().length) };
+       });
+       say(open ? (sn.on && !sn.off) : (!sn.on && sn.off), nm + " · " + w + "px — 메인 이용 방법 " + (open ? "→ 상담 신청" : "→ 접수 안내"), JSON.stringify(sn));
+     }
      if(open && u.indexOf("cafe") >= 0)
        say(v[0][1].indexOf("i=cafe") >= 0 && v[0][1].indexOf("r=gyeonggi") >= 0,
            nm + " · " + w + "px — 열렸을 때 보던 조건을 /quote 로 들고 간다", v[0][1]);
@@ -1200,7 +1246,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    await p3.route("**/api/session", r => r.fulfill({ status:200, contentType:"application/json",
      body: JSON.stringify({ auth:false, signedIn:false, intake:{ quote:false, close:true, sell:sellOpen, join:sellOpen } }) }));
    await p3.route("**/dist/js/data/site.js*", async r => {
-     const t = fs.readFileSync(path.join(root, "dist/js/data/site.js"), "utf8").replace(/sosReady:(\s*)false/, "sosReady:$1true");
+     const t = fs.readFileSync(path.join(root, "dist/js/data/site.js"), "utf8").replace(/sosReady:(\s*)(true|false)/, "sosReady:$1true");
      await r.fulfill({ status:200, contentType:"text/javascript", body:t });
    });
    const scan = () => p3.evaluate(() => {

@@ -113,7 +113,19 @@ function quoteServices(){
   else if(typeof amPickGet === "function") ids = amPickGet();
 
   var one = nowQS("c");
+
+  var oneSub = nowQS("s");
+  if(!ids.length && one && oneSub && typeof amPickOne === "function" && amPickOne(one + "/" + oneSub))
+    ids = [one + "/" + oneSub];
   if(!ids.length && one) ids = [one];
+
+  window.__qThisCat = "";
+  if(!raw && one && ids.length && typeof amPickOne === "function"){
+    var t1 = (oneSub && amPickOne(one + "/" + oneSub)) ? one + "/" + oneSub : one;
+    var had = ids.some(function(x){ return x === t1 || x.split("/")[0] === one; });
+    if(!had && amPickOne(t1)) ids = [t1].concat(ids);
+    window.__qThisCat = one;
+  }
 
   var seen = {}, out = [];
   ids.forEach(function(id){
@@ -138,11 +150,20 @@ function QuoteSvcStep(list, side){
       list.length ? "고르신 서비스입니다. 빼실 수 있고, 더 고르실 수도 있습니다."
                   : "아직 안 고르셨어도 됩니다. 아래에 상황만 적어 주시면 저희가 찾아 드립니다.")+
     (list.length
-      ? '<ul class="qs-l" id="q-svl">'+list.map(function(sv){
-          return '<li><span class="qs-n">'+esc(amPickLabel(sv))+'</span>'+
-            '<button class="qs-x" type="button" onclick="quoteSvcDel(\''+esc(sv.id)+'\')" '+
-              'aria-label="'+esc(amPickLabel(sv))+' 빼기">'+icon("x",15)+'</button></li>';
-        }).join("")+'</ul>'
+      ? (function(){
+
+          var tc = window.__qThisCat || "";
+          var isNow = function(sv){ return !!tc && sv.id.split("/")[0] === tc; };
+          var both = !!tc && list.some(isNow) && list.some(function(sv){ return !isNow(sv); });
+          var L = both ? list.filter(isNow).concat(list.filter(function(sv){ return !isNow(sv); })) : list;
+          return (both ? '<p class="qs-grp">'+icon("info",14)+' 이번 분야에서 고르신 것과 전에 담아 두신 것을 같이 보냅니다. 빼실 것만 빼 주세요.</p>' : '')+
+            '<ul class="qs-l" id="q-svl">'+L.map(function(sv){
+            return '<li>'+(both ? '<em class="qs-tag'+(isNow(sv) ? '' : ' qs-tag-prev')+'">'+(isNow(sv) ? '이번 분야' : '전에 담음')+'</em>' : '')+
+              '<span class="qs-n">'+esc(amPickLabel(sv))+'</span>'+
+              '<button class="qs-x" type="button" onclick="quoteSvcDel(\''+esc(sv.id)+'\')" '+
+                'aria-label="'+esc(amPickLabel(sv))+' 빼기">'+icon("x",15)+'</button></li>';
+          }).join("")+'</ul>';
+        })()
       : '<p class="qs-zero">'+icon("info",16)+
         ' 고르신 서비스가 없습니다. 그대로 보내셔도 됩니다.</p>')+
     '<p class="qs-go"><a class="btn btn-o" href="'+esc(quotePickBack(side))+'">'+
@@ -300,10 +321,11 @@ function PageQuote(){
         '먼저 보실 수 있습니다.</p></div>')+
     QuoteOfferBand()+
 
+    QSum()+
     '<form id="q-f" onsubmit="return quoteSend(event)">'+
       QuoteSvcStep(list, side)+
 
-      '<div class="qs">'+
+      '<div class="qs" id="qs-where">'+
         QStepHd("02", "어느 지역이신가요?",
           "지역이 업체를 고르는 첫 번째 조건입니다.")+
         '<div class="f-2">'+
@@ -723,6 +745,24 @@ function closeSrc(){
   return ["close", from, path].filter(Boolean).join("|");
 }
 
+function cqHint(pre, opts){
+  var ks = Object.keys(pre);
+  var bare = ks.filter(function(k){ return k.indexOf("/") < 0; });
+  var lost = ks.filter(function(k){ return k.indexOf("/") >= 0 && CLOSE_OPTS.indexOf(k) < 0; });
+  if(!bare.length && !lost.length) return "";
+  var cats = bare.concat(lost.map(function(k){ return k.split("/")[0]; }));
+  var names = [], subs = [];
+  cats.forEach(function(c){
+    var cat = typeof amCat === "function" ? amCat(c) : null;
+    if(cat && names.indexOf(cat.name) < 0) names.push(cat.name);
+    opts.forEach(function(sv){ if(sv.id.split("/")[0] === c) subs.push(amPickLabel(sv)); });
+  });
+  if(!names.length) return "";
+  return '<p class="qs-hint" id="cq-hint" role="status">'+icon("info",16)+'<span><b>'+esc(names.join(" · "))+
+    '</b> 분야에서 오셨습니다. 아직 세부 서비스는 고르지 않으셨어요 — 바로 아래 목록에서 '+
+    (subs.length ? '<b>'+esc(subs.join(" · "))+'</b> 가운데 ' : '')+'필요한 것을 골라 주세요.</span></p>';
+}
+
 function PageQuoteClose(){
   var SC = window.AM_CLOSE_SCOPE || { gu:[], cats:[] };
   var pre = {};
@@ -745,8 +785,10 @@ function PageQuoteClose(){
     '<p class="note-box cq-area">'+icon("mappin",16)+'<span>지금은 <b>'+esc(SC.gu.join(" · "))+
       '</b>의 매장을 연결해 드립니다. 업체 연결은 운영자가 직접 확인해 진행하고, '+
       '연결할 업체가 정해지면 어느 업체인지 알려 드린 뒤 연락처 전달 동의를 다시 받습니다.</span></p>'+
+    QSum()+
     '<form id="cq-f" onsubmit="return closeSend(event)" novalidate>'+
-      '<div class="qs">'+QStepHd("01", "필요한 서비스를 골라 주세요", "여러 개를 함께 고르셔도 한 번에 접수됩니다.")+
+      '<div class="qs" id="qs-svc">'+QStepHd("01", "필요한 서비스를 골라 주세요", "여러 개를 함께 고르셔도 한 번에 접수됩니다.")+
+        cqHint(pre, opts)+
         '<div class="cq-svc" role="group" aria-label="필요한 서비스">'+
           opts.map(function(sv){
             var id = "cq-s-" + sv.id.replace(/[^a-z0-9]/gi, "-");
@@ -754,11 +796,11 @@ function PageQuoteClose(){
               (pre[sv.id] ? " checked" : "")+'><span>'+esc(amPickLabel(sv))+'</span></label>';
           }).join("")+
         '</div></div>'+
-      '<div class="qs">'+QStepHd("02", "매장은 어디인가요?", "")+
+      '<div class="qs" id="qs-where">'+QStepHd("02", "매장은 어디인가요?", "")+
         '<div class="f-2">'+
           '<div class="f-r"><label for="cq-gu">시 · 군 <b>*</b></label>'+
             '<select class="sel" id="cq-gu" onchange="closeAreaPaint()"><option value="">골라 주세요</option>'+
-              SC.gu.map(function(g){ return '<option value="'+esc(g)+'">경기 '+esc(g)+'</option>'; }).join("")+
+              SC.gu.map(function(g){ return '<option value="'+esc(g)+'"'+(nowQS("gu") === g ? " selected" : "")+'>경기 '+esc(g)+'</option>'; }).join("")+
               '<option value="out">그 밖의 지역</option></select></div>'+
           '<div class="f-r"><label for="cq-ind">업종 <b>*</b></label>'+IndustrySelect("cq-ind", ind, "", "골라 주세요")+'</div>'+
         '</div>'+
@@ -829,3 +871,31 @@ window.closeSend = function(ev){
   };
   return amSend("cq-fail", body, "closeSend", function(){ amIdemClear("close"); });
 };
+
+function QSum(){
+  return '<div class="qsum" id="qsum" aria-live="polite"></div>';
+}
+window.quoteSumPaint = function(){
+  var box = document.getElementById("qsum"); if(!box) return;
+  var txt = function(id){ var e = document.getElementById(id); if(!e || !e.value || e.value === "out") return e && e.value === "out" ? "그 밖의 지역" : "";
+    var o = e.options ? e.options[e.selectedIndex] : null; return o ? o.textContent.trim() : e.value; };
+  var close = !!document.getElementById("cq-f");
+  var sv = close
+    ? [].slice.call(document.querySelectorAll('input[name="cq-s"]:checked')).map(function(i){ var l = i.closest("label"); return l ? l.textContent.trim() : i.value; })
+    : [].slice.call(document.querySelectorAll("#q-svl .qs-n")).map(function(e){ return e.textContent.trim(); });
+  var reg = close ? txt("cq-gu") : txt("q-reg");
+  var ind = close ? txt("cq-ind") : txt("q-ind");
+  var row = function(k, v, to, empty){
+    return '<li><span class="qsum-k">'+esc(k)+'</span><span class="qsum-v'+(v ? "" : " qsum-e")+'">'+esc(v || empty)+'</span>'+
+      '<a class="qsum-x" href="#'+to+'" onclick="return hhJump(\''+to+'\')">수정</a></li>';
+  };
+  box.innerHTML = '<p class="qsum-h">고르신 내용</p><ul>'+
+    row("서비스", sv.length ? sv.join(" · ") : "", "qs-svc", "아직 안 고르셨어요")+
+    row("지역", reg, "qs-where", "아직 안 고르셨어요")+
+    row("업종", ind, "qs-where", "아직 안 고르셨어요")+'</ul>';
+};
+if(!window.__qsumWired){ window.__qsumWired = true;
+  document.addEventListener("change", function(e){
+    if(e.target && e.target.closest && e.target.closest("#q-f, #cq-f")) window.quoteSumPaint();
+  });
+}

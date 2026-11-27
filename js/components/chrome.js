@@ -89,7 +89,7 @@ var MNAV = [
   { to:"/providers", name:"서비스",    icon:"grid" },
   { to:"/tools",     name:"계산도구",  icon:"calc" },
   { to:"/content",   name:"가이드",    icon:"book" },
-  { to:"/my",        name:"마이",      icon:"user" }
+  { to:"/my",        name:"내 기록",   icon:"user" }
 ];
 
 function brandName(){ return (window.AM_BRAND || {}).name || ""; }
@@ -428,6 +428,9 @@ function hdCtaPaint(){
   });
 }
 
+/* ⚠️⚠️ **로그인이 설정되기 전에는 아무것도 안 그립니다** (§0-7 ·
+   절대 규칙 2 · 5). `auth:false` 면 `hidden` 인 채로 둡니다 —
+   "준비 중" 도 적지 않습니다. */
 /* 2026-11-26 — 로그인으로 가는 진입 셋(상단 사람 아이콘 · 메뉴 · 하단 '내 기록')을 한 곳에서 맞춥니다.
    비로그인 + 카카오 켜짐 → /my?next=<지금 자리> (로그인 칸으로 내려가고 로그인 뒤 돌아옵니다)
    로그인됨 → /my '내 계정' · 로그인 꺼짐/카카오 꺼짐 → /my '내 기록' (지금과 같음 — 없는 로그인을 내지 않습니다) */
@@ -466,9 +469,6 @@ function amEntryPaint(a){
   els('#mnav a[data-to="/my"]').forEach(function(m){ m.setAttribute("href", href); });
 }
 window.amEntryPaint = amEntryPaint;
-/* ⚠️⚠️ **로그인이 설정되기 전에는 아무것도 안 그립니다** (§0-7 ·
-   절대 규칙 2 · 5). `auth:false` 면 `hidden` 인 채로 둡니다 —
-   "준비 중" 도 적지 않습니다. */
 function hdAuthPaint(){
   var box = document.getElementById("hdAuth");
   if(!box || typeof window.amAuthAsk !== "function") return;

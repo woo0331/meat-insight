@@ -1222,6 +1222,11 @@ function HomeWPFind(){
       '<button class="sw-find-b wp-find-b" type="submit"><span>검색</span></button></span>'+
     '</form>'+
     '<p id="wp-msg" class="wp-fmsg" role="status" aria-live="polite"></p>'+
+
+    '<nav class="wp-jump" aria-label="운영 · 양도양수 바로가기">'+
+      '<a href="/operation">'+icon("chart",18)+'<b>매장 운영</b><i>비용 · 홍보 · 시설 · 인력</i>'+icon("arrow",14)+'</a>'+
+      '<a href="/transfer">'+icon("handover",18)+'<b>매장 양도양수</b><i>매장 찾기 · 내 매장 넘기기</i>'+icon("arrow",14)+'</a>'+
+    '</nav>'+
     '<nav class="wp-sug" aria-label="검색 예시"><span class="wp-sug-k">이렇게 찾아보세요</span>'+
       WP_SUGGEST.map(function(t){
         return '<a href="/search?q='+encodeURIComponent(t)+'">'+esc(t)+'</a>'; }).join("")+
@@ -1424,7 +1429,8 @@ function HomeIInd(){
   return '<section class="iind"><div class="w">'+
     '<div class="ih-sh ih-sh-r"><div><p class="ih-kk">BY INDUSTRY</p><h2>업종별 서비스 탐색</h2>'+
       '<p>업종을 고르시면 그 업종에서 먼저 챙길 서비스와 준비 순서를 보여 드립니다.</p></div>'+
-      '<a class="ih-all" href="/startup">전체 업종 보기'+icon("chev",14)+'</a></div>'+
+
+      '</div>'+
 
     '<ul class="iind-g is-fold" id="iind-g">'+L.map(function(i){
 
@@ -1465,6 +1471,7 @@ function HomeIOps(){
     '<div class="iops-tx">'+
       '<p class="ih-kk">OPERATION</p><h2>매장 운영에 필요한 모든 서비스</h2>'+
       '<p class="iops-s">문을 연 뒤에도 필요한 일은 계속됩니다. 인테리어부터 시설 · 장비, POS, 세무, 청소, 유지보수까지 분야별로 찾아보세요.</p>'+
+
       '<ul class="iops-l">'+G.map(function(g){
 
         return '<li><a class="iops-a" href="'+esc(link(g.any))+'"><span class="iops-th" aria-hidden="true">'+picBox(g.ph, "grid", "64px")+'</span>'+

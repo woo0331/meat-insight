@@ -400,6 +400,14 @@ window.routeInfo = function(path){
 window.go = function(url, opt){
   opt = opt || {};
   if(opt.keepScroll) RT.keepScroll = true;
+  /* 2026-11-26 — 상황 카드를 누르면 다시 그린 뒤 결과로 내려갑니다 (data-focus) */
+  /* 2026-11-26 — 다른 화면(홈 등)에서 상황을 고른 채 들어오면(예: /transfer?t=out · /closure?w=fast)
+     그 결과(#sit-res)로 바로 내려갑니다. ⚠️ 새로고침은 그대로 맨 위입니다 (사장님 지시 · 10-21). */
+  if(!opt.focus){
+    var m = String(url).match(/^\/(startup|operation|transfer|closure)\?(?:[^#]*&)?(how|need|t|w)=[a-z]+/);
+    if(m) opt.focus = "sit-res";
+  }
+  if(opt.focus){ RT.keepScroll = true; RT.focus = opt.focus; }
   /* ⚠️⚠️ **떠나기 전에 보던 자리를 적어 둡니다** (2026-10-24).
      고르개 화면이 폰에서 8,000px 이 넘는데, 신청 화면에 갔다가
      뒤로 오면 **맨 위**였습니다 — 서비스를 더 담으려면 아홉 화면을
@@ -429,7 +437,7 @@ document.addEventListener("click", function(ev){
   /* ⚠️ "더 보기"(`data-keep`)는 **스크롤을 지킵니다.** 목록을 늘리는
      것인데 맨 위로 올라가면 방금 보던 자리를 잃고, 그러면 한 번 더
      누르지 않습니다. */
-  go(href, { keepScroll: a.hasAttribute("data-keep") });
+  go(href, { keepScroll: a.hasAttribute("data-keep"), focus: a.getAttribute("data-focus") || "" });
 });
 /* ⚠️⚠️ **뒤로 가기에서만** 보던 자리로 돌려놓습니다.
    ⚠️ `render()` 가 그리고 나서 **그 다음 틀**에 옮깁니다 — 그려지기
@@ -652,8 +660,19 @@ function render(){
   /* 임시저장 — 마지막 저장 시각과 단추 두 개의 보임 여부 (§4-3) */
   if(nowPath() === "/quote" && typeof window.quoteDraftPaint === "function")
     window.quoteDraftPaint();
+  if(nowPath() === "/quote" && typeof window.quoteSumPaint === "function")
+    window.quoteSumPaint();
   if(!RT.keepScroll) window.scrollTo(0,0);
   RT.keepScroll = false;
+  if(RT.focus){
+    var fe = document.getElementById(RT.focus); RT.focus = "";
+    if(fe){
+      var hd = document.querySelector(".hd");
+      var top = fe.getBoundingClientRect().top + (window.scrollY || 0) - ((hd && hd.offsetHeight) || 64) - 12;
+      window.scrollTo(0, Math.max(0, top));
+      try{ fe.focus({ preventScroll:true }); }catch(e){}
+    } else window.scrollTo(0, 0);   /* 갈 자리가 없으면 다른 화면의 스크롤을 들고 오지 않습니다 */
+  }
 }
 window.render = render;
 
@@ -729,6 +748,40 @@ function setMeta(attr, key, val){
 try{
   if("scrollRestoration" in history) history.scrollRestoration = "manual";
 }catch(e){}
+
+/* ⚠️⚠️ 2026-11-26 — **휴대폰 새로고침도 맨 위**입니다 (사장님 지시).
+   데스크톱은 위 한 줄로 끝나는데, 휴대폰 브라우저(사파리 · 카카오톡 안
+   브라우저 등)는 그 설정을 무시하거나 **load 뒤에 늦게** 보던 자리로
+   되돌려 놓기도 해서, 중간까지 내린 채 새로고침하면 중간에서 떴습니다.
+   그래서 **새로고침일 때만**(navigation type = reload) load · 그 다음 틀 ·
+   조금 뒤에 한 번씩 더 맨 위로 올립니다.
+   ⚠️ 새로고침에만 겁니다 — 뒤로 가기(popstate · back_forward) ·
+   카카오 로그인 뒤 돌아오기(그냥 navigate) · 화면 안 이동은 그대로입니다.
+   ⚠️ 손님이 먼저 손대면(터치 · 휠 · 키) 더 끌어올리지 않습니다.
+   ⚠️ 주소가 바뀌었으면(그 사이 다른 화면으로 가셨으면) 안 올립니다. */
+window.AM_RELOAD = (function(){
+  try{
+    var n = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
+    if(n && n.type) return n.type === "reload";
+    return !!(performance.navigation && performance.navigation.type === 1);
+  }catch(e){ return false; }
+})();
+window.AM_RELOAD_HREF = window.AM_RELOAD ? window.location.href : "";
+/* 지금 그려진 화면이 "새로고침으로 막 뜬 그 화면" 인가 — 화면 쪽이 내려가는 걸음을 건너뛸 때 씁니다 */
+window.amIsReloadView = function(){ return !!window.AM_RELOAD && window.location.href === window.AM_RELOAD_HREF; };
+if(window.AM_RELOAD){
+  (function(){
+    var stop = false;
+    var cancel = function(){ stop = true; };
+    ["touchstart","touchmove","pointerdown","wheel","keydown","mousedown"].forEach(function(t){
+      window.addEventListener(t, cancel, { passive:true, once:true });
+    });
+    var top = function(){ if(!stop && window.amIsReloadView() && window.scrollY) window.scrollTo(0, 0); };
+    var all = function(){ top(); if(window.requestAnimationFrame) requestAnimationFrame(top); setTimeout(top, 120); setTimeout(top, 400); setTimeout(top, 900); };
+    window.addEventListener("load", all);
+    window.addEventListener("pageshow", function(e){ if(!e.persisted) all(); });
+  })();
+}
 
 /* ── 시작 ──────────────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", function(){

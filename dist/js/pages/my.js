@@ -535,17 +535,25 @@ function myStTone(key){
 
 function MyReqList(L, d){
   return '<ul class="myq-l">'+L.map(function(r){
-    var st = (typeof amDealStName === "function") ? amDealStName(r.state) : r.state;
+
+    var cs = window.amCustSt ? amCustSt(r.state) : r.state;
+    var st = (typeof amDealStName === "function") ? amDealStName(cs) : cs;
     var pv = (r.assignment && r.assignment.length && r.assignment[0].provider)
                ? r.assignment[0].provider.name : "";
     var cat = r.cat && typeof amCat === "function" ? amCat(r.cat) : null;
+
+    var nq = d ? myqOf(d, r.id).length : 0;
     return '<li class="myq"><div class="myq-h">'+
         '<b class="myq-no">'+esc(r.no || "")+'</b>'+
-        '<span class="myq-st myq-'+esc(myStTone(r.state))+'">'+esc(st)+'</span>'+
+        '<span class="myq-st myq-'+esc(myStTone(cs))+'">'+esc(st)+'</span>'+
       '</div>'+
       '<p class="myq-m">'+myCond(r, cat)+'</p>'+
 
-      (pv ? '<p class="myq-pv">'+icon("users",15)+esc(pv)+'</p>' : "")+
+      (pv ? '<p class="myq-pv">'+icon("users",15)+'<small class="myq-lb">배정된 업체</small>'+esc(pv)+'</p>' : "")+
+      (nq ? '<p class="myq-qgo"><a class="btn btn-o btn-sm" href="#myqt-'+esc(r.id)+'" onclick="return hhJump(\'myqt-'+esc(r.id)+'\')">'+icon("doc",15)+' 견적 보기 '+nq+'건</a></p>' : "")+
+
+      ((r.request_item || []).length > 1
+        ? '<ul class="my-lk-it myq-it">'+myReqItemsHtml(r.state, r.request_item)+'</ul>' : "")+
 
       (d ? MyQuoteCompare(d, r) : "")+
     '</li>'; }).join("")+'</ul>';
@@ -584,7 +592,7 @@ function MyQuoteCompare(d, r){
   var L = myqOf(d, r.id);
   if(!L.length) return "";
   var got = L.filter(function(q){ return q.state === "chosen"; })[0];
-  return '<div class="myqt">'+
+  return '<div class="myqt" id="myqt-'+esc(r.id)+'">'+
     '<p class="myqt-h">'+icon("doc",15)+'받은 견적 '+L.length+'건'+
       (got ? '' : ' <i>— 하나를 고르시면 업체에 전달됩니다</i>')+'</p>'+
     '<ul class="myqt-l">'+L.map(function(q){
@@ -980,21 +988,32 @@ function myLkKst(v){
   var d = new Date(v); if(isNaN(d)) return "";
   return d.toLocaleString("ko-KR", { timeZone:"Asia/Seoul", year:"numeric", month:"2-digit", day:"2-digit" });
 }
-function myLkView(d){
-  var ru = d.rollup || {};
-  var items = (d.items || []).map(function(it){
+
+function myReqItemsHtml(reqState, items){
+  var V = window.amReqItemsView ? amReqItemsView(reqState, items) : (items || []);
+  return V.map(function(it){
     var o = window.amPickOne ? amPickOne(it.service_id) : null;
     var nm = (o && window.amPickLabel) ? amPickLabel(o) : it.service_id;
-    var st = window.amDealStName ? amDealStName(it.state) : it.state;
-    return '<li><b>'+esc(nm)+'</b><span>'+esc(st)+'</span></li>';
+    var st = window.amDealStName ? (amDealStName(it.state) || it.state) : it.state;
+    return '<li data-own="'+(it.own === false ? "0" : "1")+'"><b>'+esc(nm)+'</b><span>'+esc(st)+
+      (it.own === false ? ' <i class="my-it-with">신청 전체와 함께 진행</i>' : '')+'</span></li>';
   }).join("");
+}
+function myLkView(d){
+  var ru = d.rollup || {};
+  var cs = window.amCustSt ? amCustSt(d.state) : d.state;
+  var tl = (d.state && window.amReqTally) ? amReqTally(d.state, d.items) : ru;
+
+  var head = !d.state ? "" : (tl.rec ? (LK_PHASE[tl.phase] || "") : (window.amDealStName ? amDealStName(cs) : ""));
+  var items = myReqItemsHtml(d.state, d.items);
   var notes = (d.notes || []).map(function(n){
     return '<li><em>'+esc(myLkKst(n.at))+'</em><p>'+esc(n.body)+'</p></li>';
   }).join("");
   return '<div class="my-lk-v" data-lk="view">'+
     '<p class="my-lk-no">접수번호 <b>'+esc(d.no)+'</b>'+(d.created_at ? ' · 접수일 '+esc(myLkKst(d.created_at)) : '')+'</p>'+
-    '<p class="my-lk-ph">지금 상태 <b>'+esc(LK_PHASE[ru.phase] || "확인 중")+'</b>'+
-      (ru.total > 1 ? ' — 서비스 '+ru.total+'개 중 진행 '+ru.open+' · 완료 '+ru.done+(ru.hold ? ' · 보류 '+ru.hold : '')+(ru.lost ? ' · 종료 '+ru.lost : '') : '')+'</p>'+
+
+    '<p class="my-lk-ph">지금 상태 <b data-lk-st="'+esc(tl.rec ? "items" : (cs || ""))+'">'+esc(head || LK_PHASE[ru.phase] || "확인 중")+'</b>'+
+      (tl.total > 1 ? ' — 서비스 '+tl.total+'개 중 진행 '+tl.open+' · 완료 '+tl.done+(tl.hold ? ' · 보류 '+tl.hold : '')+(tl.lost ? ' · 종료 '+tl.lost : '') : '')+'</p>'+
     (items ? '<h3>서비스별 상태</h3><ul class="my-lk-it">'+items+'</ul>' : '')+
     '<h3>안내</h3>'+(notes ? '<ol class="my-lk-nt">'+notes+'</ol>'
       : '<p class="note">아직 남겨 드린 안내가 없습니다.</p>')+

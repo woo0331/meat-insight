@@ -45,7 +45,7 @@ var MNAV = [
   { to:"/providers", name:"서비스",    icon:"grid" },
   { to:"/tools",     name:"계산도구",  icon:"calc" },
   { to:"/content",   name:"가이드",    icon:"book" },
-  { to:"/my",        name:"마이",      icon:"user" }
+  { to:"/my",        name:"내 기록",   icon:"user" }
 ];
 
 function brandName(){ return (window.AM_BRAND || {}).name || ""; }
@@ -303,7 +303,6 @@ function amEntryPaint(a){
   els('#mnav a[data-to="/my"]').forEach(function(m){ m.setAttribute("href", href); });
 }
 window.amEntryPaint = amEntryPaint;
-
 function hdAuthPaint(){
   var box = document.getElementById("hdAuth");
   if(!box || typeof window.amAuthAsk !== "function") return;

@@ -62,3 +62,28 @@ git revert <진단 커밋>   # api/admin-health.js 의 ?ref=1 갈래와 검사�
 | 4 | 시험 알림 | Claude | 서비스명이 한글 · 성함 · 연락처 · 요청 내용이 **안 실림** |
 
 ⚠️ 모든 제출은 **시험 이름 · 시험 번호**로만 합니다. 운영 주소(storeway.co.kr)에서는 아무것도 제출하지 않습니다.
+
+## 5. 카카오 로그인 — 이메일을 요청하지 않는 OpenID Connect 길 (시험 브랜치만)
+
+**왜** — Supabase 기본 Kakao 공급자는 scope 에 `account_email profile_image profile_nickname` 을
+고정으로 넣고 `scopes` 는 덧붙기만 합니다 (supabase/auth `internal/api/provider/kakao.go`).
+시험 DB(Auth v2.198.0)의 실제 요청도 그렇습니다 — 이메일 동의항목이 없는 앱은 KOE205.
+
+**흐름**
+1. `/api/auth {op:"oauth"}` — 카카오 인가 주소를 직접 만듭니다. `scope=openid profile_nickname`
+   (이메일 · 프로필 사진 없음 — 사이트가 프로필 사진을 안 씁니다). state · nonce 원문 · 돌아갈 자리는
+   AES-256-GCM 으로 잠근 httpOnly 쿠키(`sw_kk`, Path=/api/auth-kakao, 10분)에. 카카오에는 nonce 의 sha256 만.
+2. `/api/auth-kakao` (콜백) — state 쿠키를 **먼저 지우고**(한 번만), 만료 · state 를 맞춘 뒤 코드를
+   서버에서 카카오 토큰으로 바꾸고(client_secret 은 서버만), id_token 의 nonce 를 맞춰 본 뒤
+   Supabase `POST /auth/v1/token?grant_type=id_token` (provider=kakao, nonce 원문)으로 세션을 받습니다.
+3. 세션은 잠근 httpOnly 쿠키(`sw_ks`, Path=/api/auth, 2분)에 담고 **토큰 없는 원래 주소**로 303.
+   표시 쿠키(`sw_kt=1`)만 화면이 읽습니다.
+4. 화면이 `/api/auth {op:"take"}` 로 **한 번** 받아 갑니다 (응답 본문 · 두 번째는 401).
+
+⚠️ ID · 액세스 · 리프레시 토큰과 코드는 주소창 · 로그에 안 나옵니다 (`tools/test-auth.js` 가 봅니다).
+⚠️ 닉네임은 선택 동의입니다 — 거부해도 `sub` 만으로 로그인됩니다.
+
+**환경변수 (Preview 만)** — `AUTH_KAKAO=1` · `KAKAO_REST_KEY` · `KAKAO_CLIENT_SECRET`
+(쿠키 열쇠는 `AUTH_COOKIE_SECRET`, 없으면 `SUPABASE_SERVICE_KEY` 에서 뽑습니다). 하나라도 없으면 단추가 안 나옵니다.
+**카카오 콘솔** — OpenID Connect 활성화 · Redirect URI `https://<preview 주소>/api/auth-kakao`.
+**Supabase** — Kakao 공급자는 켠 채로 (Client ID = REST API 키 · id_token 의 aud 확인에 씁니다) · Allow users without an email.

@@ -258,6 +258,21 @@ function PageProviderCat(cat){
   var all  = amProviders({ cat:cat.key, sub:sub || null,
                            industry:ind || null, region:reg || null });
 
+  var subHit = items.filter(function(i){ return i.key === sub; })[0] || null;
+  var FRONT = 5, frontL = items.slice(0, FRONT), restL = items.slice(FRONT);
+  var restOpen = !!(subHit && restL.indexOf(subHit) >= 0);
+  var chip = function(i){ return '<li><a class="chip'+(sub===i.key?" on":"")+'" href="'+esc(pcUrl(cat,i.key,ind,reg))+'" data-keep'+
+    (sub===i.key ? ' aria-current="true"' : '')+'>'+(sub===i.key ? icon("check",14)+" " : "")+esc(i.name)+'</a></li>'; };
+  var regName = (reg && typeof amRegionName === "function") ? amRegionName(reg) : "";
+  var indName = (ind && typeof amIndustryName === "function") ? amIndustryName(ind) : "";
+  var fail = !Array.isArray(window.AM_PROVIDERS);
+  var total = fail ? 0 : amProviders({ cat:cat.key }).length;
+  var conds = [subHit ? [subHit.name, pcUrl(cat,"",ind,reg)] : null,
+               regName ? [regName, pcUrl(cat,sub,ind,"")] : null,
+               indName ? [indName, pcUrl(cat,sub,"",reg)] : null,
+               vf ? ["확인된 곳만", ""] : null, fo ? ["포트폴리오 있는 곳만", ""] : null];
+  var qHref = quoteTo({cat:cat.key,sub:sub,industry:ind,region:reg,side:side});
+
   return PgHero({
     crumb: Crumb([["업체찾기","/providers"],[cat.name]]),
     kicker:(side === "start" ? "START" : "CLOSE") + " · 업체찾기",
@@ -265,19 +280,24 @@ function PageProviderCat(cat){
     lead:cat.desc,
     tight:true
   })+
-  '<section class="sec sec-white"><div class="w">'+
+  '<section class="sec sec-white pvs"><div class="w">'+
 
-    (items.length ? '<ul class="chip-g chip-g-fil">'+
-      '<li><a class="chip'+(sub?"":" on")+'" href="'+esc(pcUrl(cat,"",ind,reg))+'">전체</a></li>'+
-      items.map(function(i){
-        return '<li><a class="chip'+(sub===i.key?" on":"")+'" href="'+
-          esc(pcUrl(cat,i.key,ind,reg))+'">'+esc(i.name)+'</a></li>';
-      }).join("")+'</ul>' : "")+
+    (items.length ? '<p class="pvs-stp"><i>1</i>어떤 일이 필요하세요?</p>'+
+      '<ul class="chip-g chip-g-fil">'+
+      '<li><a class="chip'+(sub?"":" on")+'" href="'+esc(pcUrl(cat,"",ind,reg))+'" data-keep>전체</a></li>'+
+      frontL.map(chip).join("")+
+      (restL.length ? '<li class="pvs-rest-w"><button class="pvs-more" type="button" aria-expanded="'+(restOpen?"true":"false")+'" aria-controls="pvs-rest" '+
+        'onclick="var r=document.getElementById(\'pvs-rest\');r.hidden=!r.hidden;this.setAttribute(\'aria-expanded\',r.hidden?\'false\':\'true\');this.firstChild.textContent=r.hidden?\'더 보기 (\'+'+restL.length+'+\')\':\'접기\';">'+
+        (restOpen ? "접기" : "더 보기 ("+restL.length+")")+'</button></li>' : '')+
+      '</ul>'+
+      (restL.length ? '<ul class="chip-g chip-g-fil pvs-rest" id="pvs-rest"'+(restOpen ? '' : ' hidden')+'>'+restL.map(chip).join("")+'</ul>' : '')
+      : '')+
 
+    '<p class="pvs-stp"><i>'+(items.length ? 2 : 1)+'</i>어느 지역이세요?</p>'+
     '<div class="fil">'+
       '<span class="fil-ic" aria-hidden="true">'+icon("sliders",18)+'</span>'+
-      IndustrySelect("fil-i", ind, "pcGo('"+esc(cat.key)+"')")+
       RegionSelect("fil-r", reg, "pcGo('"+esc(cat.key)+"')")+
+      IndustrySelect("fil-i", ind, "pcGo('"+esc(cat.key)+"')")+
       '<input type="hidden" id="fil-s" value="'+esc(sub)+'">'+
 
       '<label class="fil-ck'+(vf?" on":"")+'">'+
@@ -288,21 +308,29 @@ function PageProviderCat(cat){
         '<input type="checkbox" id="fil-f"'+(fo?" checked":"")+
         ' onchange="pcGo(\''+esc(cat.key)+'\')">'+
         '<span>포트폴리오 있는 곳만</span></label>'+
-      '<span class="fil-n">'+(list.length ? list.length+"곳" : "0곳")+
 
-        ((vf || fo) && all.length > list.length
-          ? '<em class="fil-off">거르개로 '+(all.length - list.length)+'곳 숨김</em>' : '')+
-      '</span>'+
+      ((vf || fo) && all.length > list.length
+        ? '<span class="fil-n"><em class="fil-off">거르개로 '+(all.length - list.length)+'곳 숨김</em></span>' : '')+
     '</div>'+
 
-    (list.length
+    '<p class="pvs-stp"><i>'+(items.length ? 3 : 2)+'</i>결과</p>'+
+    ListHead({ id:"pvs-h", total:fail ? null : total, n:list.length, unit:"곳", fail:fail, conds:conds, reset:"/providers/"+cat.key })+
+    '<div class="pvs-go">'+
+      '<a class="btn btn-b btn-lg" href="'+esc(qHref)+'">'+esc(subHit ? subHit.name + " 견적 신청하기" : cat.name + " 견적 신청하기")+icon("arrow",18)+'</a>'+
+      pvClosedNote(pvForm)+
+    '</div>'+
+    (subHit ? '' : '<p class="note pvs-nosub">'+icon("info",14)+' 세부 서비스를 고르지 않으셨으면 신청서 첫 칸에서 고르실 수 있습니다.</p>')+
+    (fail ? ListState({ fail:true }) :
+     (!list.length && total ? ListState({ total:total, n:0, what:"업체", reset:"/providers/"+cat.key }) : ''))+
+
+    (fail ? '' : list.length
 
       ? '<div class="pv-g">'+list.slice(0, amShown(list.length)).map(ProviderPickCard).join("")+'</div>'+
 
         '<p class="note">등록된 차례로 냅니다. 광고로 위에 올린 자리는 없습니다.</p>'+
         MoreBtn(list.length)
 
-      : EmptyGuide({
+      : (total ? '' : EmptyGuide({
           icon:cat.icon,
           title:cat.name+" 업체를 찾고 계신가요?",
           text:"좋은 업체를 고르려면 가격보다 먼저 확인해야 할 것이 있습니다.",
@@ -311,12 +339,12 @@ function PageProviderCat(cat){
 
           note:"이 분야에 등록된 "+amBrand()+" 파트너 업체는 지금 "+
                all.length+"곳입니다. 업체가 등록되면 이 목록에 나옵니다.",
-          cta:'<a class="btn btn-b" href="'+esc(quoteTo({cat:cat.key,sub:sub,industry:ind,region:reg,side:side}))+'">'+
-              '원하는 조건 남기기'+icon("arrow",16)+'</a>'+
+
+          cta:pvZeroTool(cat, side)+
               '<a class="btn btn-o" href="/join">'+esc(cat.name)+' 업체라면 입점하기</a>'+
 
-              pvClosedNote(pvForm)
-        }))+
+              ''
+        })))+
   '</div></section>'+
 
   SvcPageBands(cat, items)+
@@ -932,4 +960,13 @@ function PageCompare(){
       '적힌 값은 업체가 등록한 것이고, 저희가 확인하거나 보증하는 값이 아닙니다. '+
       '확인 배지는 저희가 서류로 본 항목만 붙습니다.</p>'+
   '</div></section>';
+}
+
+function pvZeroTool(cat, side){
+  var T = (typeof amToolsForCat === "function" ? amToolsForCat(cat.key) : []) || [];
+  var t = T[0];
+  if(t && t.key) return '<a class="btn btn-b" href="/tools/'+esc(t.key)+'">'+icon("calc",16)+' '+esc(t.name)+'</a>';
+  return side === "close"
+    ? '<a class="btn btn-b" href="/tools/close">'+icon("check",16)+' 폐업 준비 체크리스트</a>'
+    : '<a class="btn btn-b" href="/tools/cost">'+icon("calc",16)+' 창업비 계산</a>';
 }

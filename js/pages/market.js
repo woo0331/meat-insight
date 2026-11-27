@@ -234,9 +234,11 @@ function PageAssets(){
     h1raw:"한 사장님의 끝이<br class=\"br-m\"> <em>다른 사장님의 시작</em>이 됩니다.",
     lead:"정리하시는 사장님이 내놓은 주방장비 · 커피머신 · 가구 · POS · 운동기구 · 미용기기와 남은 재고입니다. 개별로도, 일괄로도, 시설 전체 인수로도 거래하실 수 있습니다.",
     tight:true,
-    cta:'<a class="btn btn-o btn-lg" href="/sell?t=asset">내 시설 내놓기'+icon("arrow",18)+'</a>'
+    /* 2026-11-26 모바일 시안 §8 — 찾는 분과 처분하려는 분이 각자의 단추를 바로 찾게 (둘 다 같은 화면 안의 자리로) */
+    cta:'<a class="btn btn-b btn-lg" href="#as-list" onclick="return hhJump(\'as-list\')">'+icon("search",18)+' 집기 찾기</a>'+
+        '<a class="btn btn-o btn-lg" href="/sell?t=asset" onclick="return hhJump(\'as-pick\')">내 집기 정리하기'+icon("arrow",18)+'</a>'
   }) + AssetPickBand(false))+
-  '<section class="sec sec-white"><div class="w">'+
+  '<section class="sec sec-white" id="as-list"><div class="w">'+
     (pickTop ? '<div class="sec-hd"><p class="eyebrow">시설 · 집기 · 재고</p><h2>올라와 있는 시설 · 집기</h2></div>' : '')+
     mkHead(list.length, amAssets({}).length, true, "시설 · 집기")+
     (indObj && indObj.equip.length ? '<ul class="chip-g chip-g-fil">'+
@@ -793,8 +795,9 @@ function PageSell(){
   })+
   '<section class="sec sec-white"><div class="w form-wrap">'+
     sellTabs(t)+
-    '<p class="note">'+esc(SELL_TABS.filter(function(x){
-      return x.k === t; })[0].lead)+'</p>'+
+    /* 2026-11-26 모바일 시안 §9 — 유형을 고르면 **준비 자료**가 먼저 섭니다 (탭 설명을 한 번 더 적던 자리).
+       ⚠️ 금액 · 기한을 적지 않습니다 — 무엇을 챙겨 두면 연락이 빨라지는가까지입니다. */
+    sellPrep(t)+
 
     (
       '<div class="notice-bad" data-cta="off" data-cta-form="sell"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
@@ -935,3 +938,21 @@ window.sellSend = function(ev){
     amIdemClear(ns);
   });
 };
+
+var SELL_PREP = {
+  store:["임대차 계약서 — 보증금 · 월세 · 남은 계약 기간을 볼 수 있게",
+         "사업자등록증 — 업종 · 문 연 해를 확인합니다",
+         "매장 사진 몇 장 — 홀 · 주방 · 외관 (사진 주소로 받습니다)",
+         "넘길 시설 · 장비 목록 — 두고 가실 것과 가져가실 것",
+         "(선택) 최근 매출 자료 — 적으시면 '사장님이 적으신 값' 으로 밝혀 올립니다"],
+  asset:["품목 · 제조사 · 연식 — 명판 사진이 있으면 가장 정확합니다",
+         "수량과 상태 — 정상 작동 여부 · 수리 이력",
+         "사진 몇 장 — 앞면 · 명판 · 놓인 자리 (사진 주소로 받습니다)",
+         "희망가 — 정하지 않으셨으면 비워 두셔도 됩니다",
+         "떼어 가는 날 — 철거 · 원상복구 일정과 겹치는지"]
+};
+function sellPrep(t){
+  var L = SELL_PREP[t] || SELL_PREP.store;
+  return '<div class="sl-prep"><p class="sl-prep-h">'+icon("listck",18)+'<b>'+(t === "asset" ? "시설 · 장비" : "매장 · 점포")+' — 미리 챙겨 두시면 빠릅니다</b></p>'+
+    '<ul>'+L.map(function(x){ return '<li>'+icon("check",14)+'<span>'+esc(x)+'</span></li>'; }).join("")+'</ul></div>';
+}

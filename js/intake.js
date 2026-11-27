@@ -479,9 +479,16 @@ function rqRegName(r){
    적으면 DB 의 `deal_move` 표와 어긋나고, 어긋나면 **화면이 내는
    단추가 서버에서 거절당합니다** (빌드가 둘을 맞춰 봅니다).
    ⚠️ 돈 쪽은 뺍니다 — `move_state()` 가 스스로 거절하는 길입니다. */
+/* 2026-11-27 — 견적 없이 '견적 전달' 로 넘기지 않습니다. SW-EX79-WR8H 시험에서 상태 칸으로 바로
+   넘겨 **견적 표에 줄이 없는 채** 계약까지 갔습니다. 견적은 '받은 견적 적기' 로 기록하면
+   staff_record_quote() 가 그 자리에서 '견적 전달' 로 넘깁니다 (기록과 상태가 한 번에). */
+function rqHasQuote(r){
+  return (RQ.quotes || []).some(function(q){ return q.request_id === r.id && q.state !== "withdrawn"; });
+}
 function rqMoves(r){
   return (window.amDealMoves ? amDealMoves(r.state, RQ.role) : []).filter(function(m){
     var s = amDealSt(m[1]);
+    if(m[1] === "quoted" && !rqHasQuote(r)) return false;
     return s && !s.money;
   });
 }
@@ -494,8 +501,12 @@ function rqMove(r){
       ' 이(가) 옮길 수 있는 길이 없습니다.</p>';
 
   var sel = M.filter(function(m){ return m[1] === RQ.to; })[0];
+  var noQ = r.state === "consult" && !rqHasQuote(r) &&
+    (window.amDealMoves ? amDealMoves(r.state, RQ.role) : []).some(function(m){ return m[1] === "quoted"; });
 
   return '<div class="rq-mv">'+
+    (noQ ? '<p class="note-box rq-noq">'+icon("info",15)+' <span>견적 전달로 넘기려면 아래 <b>받은 견적 적기</b>에서 금액과 범위를 먼저 기록하세요. '+
+      '기록하면 저절로 견적 전달이 됩니다.</span></p>' : '')+
     '<div class="f-r">'+
       '<label for="rq-to">다음 상태</label>'+
       '<select id="rq-to" class="sel" onchange="rqSetTo(this.value)">'+

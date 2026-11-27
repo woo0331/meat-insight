@@ -97,6 +97,9 @@ window.ctFind = function(q){
     el.hidden = !on;
     if(on && q) hit++;
   });
+
+  var L = document.querySelector(".ct-l"); if(L) L.classList.toggle("is-q", !!q);
+  var F = document.getElementById("ctf"); if(F) F.hidden = !!q;
   var r = document.getElementById("ct-r");
   if(r){
     r.hidden = !q;
@@ -133,11 +136,13 @@ function PageContents(){
   var cnt = function(k){
     return byJ.filter(function(c){ return c.cat === k; }).length; };
 
+  var featShow = !j && !cat && !q;
+  var featSlug = featShow ? ctFeatPick(all) : "";
   var card = function(c){
     var jk = jOf(c);
     var jn = "";
     JY.forEach(function(x){ if(x.key === jk) jn = x.name; });
-    return '<li data-ct-q="'+esc(ctQOf(c))+'"><a href="/content/'+esc(c.slug)+'">'+
+    return '<li data-ct-q="'+esc(ctQOf(c))+'"'+(featSlug && c.slug === featSlug ? ' class="ct-feat-dup"' : '')+'><a href="/content/'+esc(c.slug)+'">'+
       '<span class="ct-m">'+(jn ? esc(jn) : "")+
         (c.industry?(jn?' · ':'')+esc(amIndustryName(c.industry)):'')+
         (c.read?' · '+esc(String(c.read))+'분':'')+'</span>'+
@@ -149,18 +154,9 @@ function PageContents(){
     kicker:"창업 · 폐업 정보",
     h1raw:"실제로 막히는 것만<br class=\"br-m\"> 정리합니다.",
     lead:"창업비용 · 철거비 · 원상복구 범위 · 권리금 · 사업자등록 · 폐업신고처럼, 검색해도 답이 잘 안 나오는 것들입니다.",
-    tight:true
+    tight:true, cls:"pgh-m-sm"
   })+
   '<section class="sec sec-white"><div class="w">'+
-
-    '<ul class="chip-g chip-g-fil">'+
-      '<li><a class="chip'+(j?"":" on")+'" href="'+esc(ctUrl("",""))+'">'+
-        '전체 '+all.length+'</a></li>'+
-      JY.map(function(x){
-        return '<li><a class="chip'+(j===x.key?" on":"")+'" href="'+
-          esc(ctUrl(x.key,""))+'">'+esc(x.name)+' '+nOf(x.key)+'</a></li>';
-      }).join("")+
-    '</ul>'+
 
     '<div class="pkf ct-find">'+
       '<label class="pkf-l" for="ct-q">제목이나 낱말로 찾아보세요</label>'+
@@ -171,6 +167,15 @@ function PageContents(){
       '</span>'+
       '<p class="pkf-r" id="ct-r" hidden></p>'+
     '</div>'+
+
+    '<ul class="chip-g chip-g-fil">'+
+      '<li><a class="chip'+(j?"":" on")+'" href="'+esc(ctUrl("",""))+'">'+
+        '전체 '+all.length+'</a></li>'+
+      JY.map(function(x){
+        return '<li><a class="chip'+(j===x.key?" on":"")+'" href="'+
+          esc(ctUrl(x.key,""))+'">'+esc(x.name)+' '+nOf(x.key)+'</a></li>';
+      }).join("")+
+    '</ul>'+
 
     ((j || cat) && cats.length > 1
       ? '<ul class="chip-g chip-g-fil ct-f2">'+
@@ -183,7 +188,7 @@ function PageContents(){
         '</ul>'
       : '')+
 
-    (!j && !cat && !q ? ctFeature(all) : "")+
+    (featShow ? ctFeature(all, featSlug) : "")+
     (list.length
       ? '<ul class="ct-l">'+list.map(card).join("")+'</ul>'
       : Empty({
@@ -197,25 +202,27 @@ function PageContents(){
   '</div></section>';
 }
 
-function ctFeature(all){
-  var seen = {}, pick = [];
-  all.slice().sort(function(a, b){ return String(b.at || "").localeCompare(String(a.at || "")); })
-    .forEach(function(c){
-      if(pick.length >= 3 || seen[c.cat] || !picKey("cat", c.cat)) return;
-      seen[c.cat] = 1; pick.push(c);
-    });
-  if(pick.length < 3) return "";
-  return '<h2 class="ctf-h">최근에 올라온 글</h2>'+
-    '<ul class="ctf-g">'+pick.map(function(c){
-      var cn = ((window.AM_CATS || []).filter(function(k){ return k.key === c.cat; })[0] || {}).name || "";
-      return '<li><a class="pcd ctf-c" href="/content/'+esc(c.slug)+'">'+
-        '<span class="pcd-ph" aria-hidden="true">'+picBox(picKey("cat", c.cat), "book", "(max-width:640px) 92vw, (max-width:1100px) 46vw, 380px")+'</span>'+
+function ctFeatPick(all){
+  var c = all.slice().sort(function(a, b){ return String(b.at || "").localeCompare(String(a.at || "")); })
+    .filter(function(c){ return picKey("cat", c.cat); })[0];
+  return c ? c.slug : "";
+}
+
+function ctFeature(all, slug){
+  var c = all.filter(function(x){ return x.slug === slug; })[0];
+  if(!c) return "";
+  var cn = ((window.AM_CATS || []).filter(function(k){ return k.key === c.cat; })[0] || {}).name || "";
+  return '<div class="ctf" id="ctf">'+
+    '<h2 class="ctf-h">대표 글</h2>'+
+    '<ul class="ctf-g ctf-one">'+
+      '<li><a class="pcd ctf-c" href="/content/'+esc(c.slug)+'">'+
+        '<span class="pcd-ph" aria-hidden="true">'+picBox(picKey("cat", c.cat), "book", "(max-width:640px) 92vw, (max-width:1100px) 46vw, 560px")+'</span>'+
         '<span class="pcd-tx">'+(cn ? '<i class="ctf-k">'+esc(cn)+'</i>' : '')+
           '<b class="pcd-t">'+esc(c.title)+'</b>'+
           '<i class="pcd-d">'+esc(c.lead)+'</i>'+
-          '<span class="pcd-go">읽어 보기'+icon("arrow",14)+'</span></span></a></li>';
-    }).join("")+'</ul>'+
-    '<h2 class="ctf-h">전체 글</h2>';
+          '<span class="pcd-go">읽어 보기'+icon("arrow",14)+'</span></span></a></li>'+
+    '</ul>'+
+    '<h2 class="ctf-h">전체 글</h2></div>';
 }
 
 function PageContent(c){
@@ -233,6 +240,8 @@ function PageContent(c){
       '<ul>'+c.sum.slice(0,3).map(function(t){
         return '<li>'+mark(t)+'</li>'; }).join("")+'</ul>'+
     '</div>' : '')+
+
+    ctMainAct(c)+
 
     (function(){
       var hs = (c.body||[]).map(function(b, i){ return b.h ? [i, b.h] : null; })
@@ -536,4 +545,18 @@ function PageFaq(){
       '<a class="btn btn-o btn-lg" href="/about">소개 보기</a>'+
     '</div>'+
   '</div></section>';
+}
+
+function ctMainAct(c){
+  var T = (typeof amToolsForCat === "function" ? amToolsForCat(c.cat) : []) || [];
+  var cat = (window.AM_CATS || []).filter(function(k){ return k.key === c.cat; })[0];
+  var a = null;
+  if(T[0] && T[0].key) a = { href:"/tools/" + T[0].key, t:T[0].name, ic:"calc", why:"이 글의 숫자를 내 매장 값으로 바로 따져 보세요." };
+  else if(cat && cat.kind === "provider") a = { href:"/providers/" + cat.key, t:cat.name + " 업체 찾기", ic:"search", why:"이 일을 맡길 업체를 지역 · 세부 서비스로 좁혀 보세요." };
+  else if(c.side === "close") a = { href:"/tools/close", t:"폐업 체크리스트", ic:"check", why:"정리할 것을 빠짐없이 순서대로 짚어 보세요." };
+  else a = { href:"/tools/cost", t:"창업비 계산", ic:"calc", why:"들어갈 돈을 항목별로 미리 따져 보세요." };
+  return '<div class="rd-main">'+
+    '<p class="rd-main-t">'+icon(a.ic,18)+'<span><b>이 글 다음에 할 일</b><i>'+esc(a.why)+'</i></span></p>'+
+    '<a class="btn btn-b" href="'+esc(a.href)+'">'+esc(a.t)+icon("arrow",16)+'</a>'+
+  '</div>';
 }

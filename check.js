@@ -2706,9 +2706,10 @@ const AUDIT = `(() => {
     if(t.indexOf("커피머신") < 0) return "카페인데 커피머신이 없습니다";
     return true;`);
   await f("폐업: 무엇을 원하는지 먼저 묻는다", "/closure", `
-    const w = document.querySelectorAll(".wnt").length;
+    /* 2026-11-26 — 상황 넷은 머리 바로 아래 첫 구간(#sit)입니다 (아래 정리 순서 구역의 옛 상황 카드는 같은 선택이라 내렸습니다). 이 주석에 백틱 금지. */
+    const w = document.querySelectorAll("#sit .sitf-o").length;
     if(w < 3) return "고를 것이 " + w + "개입니다";
-    const a = document.querySelector(".wnt");
+    const a = document.querySelector("#sit .sitf-o");
     if(!/\\?w=/.test(a.getAttribute("href"))) return "고르면 주소에 안 실립니다";
     return true;`);
   await f("폐업: 고른 것에 없는 분류도 안 숨긴다", "/closure/cafe?w=fast", `
@@ -2864,21 +2865,31 @@ const AUDIT = `(() => {
     if(!mob) return "폰 폭에서 보이게 하는 규칙이 없습니다";
     return true;`);
   await f("운영 고민 카드마다 계산 · 점검 단추가 실제 목적지로 간다", "/operation", `
-    /* 2026-11-24 — 고민 넷에 할 일 단추. 계산기 단추는 있는 계산기 화면으로, 점검표 단추는 이 화면 점검표의 그 항목으로
-       가야 합니다 (없는 항목이면 그 단추가 안 그려집니다). 폰 머리의 '내 매장 고민부터 보기' 도 봅니다. 이 주석에 백틱 금지. */
-    const cards = document.querySelectorAll("#ops-worry .hwr-g > li");
-    if(cards.length !== 4) return "고민 카드가 넷이 아닙니다 — " + cards.length;
+    /* 2026-11-26 모바일 사용성 개편 — 고민 넷이 맨 위 첫 구간(#sit)으로 올라왔습니다. 고민마다 계산 · 점검 · 업체 중
+       **주 단추 하나**가 앞에 서고, 그 단추가 실제로 있는 곳(계산기 · 이 화면 점검표 항목 · 업체 분야)을 가리켜야 합니다.
+       고른 고민은 주소(?need=)라 여기서 주소를 바꿔 그려 보고 되돌립니다. 이 주석에 백틱 금지. */
+    const opts = document.querySelectorAll("#sit .sitf-o");
+    if(opts.length !== 4) return "고민 카드가 넷이 아닙니다 — " + opts.length;
+    if(typeof OpsSit !== "function") return "OpsSit 이 없습니다";
     const tools = (window.AM_TOOLS || []).map(function(x){ return x.to; });
-    for (const li of cards){
-      const go = li.querySelectorAll(".hwr-go");
-      if(go.length < 2) return li.id + " 할 일 단추가 둘이 아닙니다";
-      for (const a of go){ const h = a.getAttribute("href");
-        if(h.indexOf("#ock-row-") === 0){ if(!document.getElementById(h.slice(1))) return li.id + " 점검표 항목이 없습니다 — " + h; }
-        else if(tools.indexOf(h) < 0) return li.id + " 없는 계산기 — " + h;
-        if(a.textContent.indexOf("자세히") >= 0) return li.id + " 무엇을 하는지 안 보이는 단추 — " + a.textContent; } }
-    const m = document.querySelector(".hh-cta a.hh-mo[href='#ops-worry']");
-    if(!m || !document.getElementById("ops-worry")) return "폰 머리의 '내 매장 고민부터 보기' 가 없습니다";
-    return true;`);
+    const keep = location.pathname + location.search;
+    let bad = "";
+    ["cost","mkt","fix","hr"].forEach(function(k){
+      if(bad) return;
+      history.replaceState(null, "", "/operation?need=" + k);
+      const box = document.createElement("div"); box.innerHTML = OpsSit(null);
+      const mains = [].slice.call(box.querySelectorAll("#sit-res .sitf-main")).filter(function(a){
+        return !a.hasAttribute("data-pick-go") && !a.classList.contains("pk-closed"); });
+      if(mains.length !== 1){ bad = k + " 주 단추가 " + mains.length + "개입니다"; return; }
+      const h = (mains[0].getAttribute("href") || "").split("?")[0];
+      if(h.indexOf("#ock-row-") === 0){ if(!document.getElementById(h.slice(1))) bad = k + " 점검표 항목이 없습니다 — " + h; }
+      else if(h.indexOf("/tools/") === 0){ if(tools.indexOf(h) < 0) bad = k + " 없는 계산기 — " + h; }
+      else if(h.indexOf("/providers/") === 0){ if(!(window.amCat && amCat(h.split("/")[2]))) bad = k + " 없는 분야 — " + h; }
+      else bad = k + " 계산 · 점검 · 업체가 아닌 곳 — " + h;
+      if(!bad && mains[0].textContent.indexOf("자세히") >= 0) bad = k + " 무엇을 하는지 안 보이는 단추";
+    });
+    history.replaceState(null, "", keep);
+    return bad || true;`);
   await f("매물 0건이 조건 탓인지 전체 0건인지 가르고 다시 찾는 길을 낸다", "/stores?i=cafe&dp=b", `
     /* 2026-11-24 — 전체 0건이면 그 사실과 내놓으실 분의 길(양도 준비 안내), 조건 탓 0건이면
        걸린 조건을 하나씩 푸는 칩과 초기화. 저장소 매물은 0건이라 조건 탓 쪽은 MkZero 를
@@ -4196,18 +4207,19 @@ const AUDIT = `(() => {
     if(cls.indexOf("side-") >= 0) return "운영 화면이 " + cls + " 로 물들었습니다";
     return true;`);
 
-  await f("인수 · 양도는 한쪽으로 물들지 않고 두 길이 같은 무게다", "/transfer", `
+  await f("인수 · 양도는 한쪽으로 물들지 않고 두 길이 같은 무게다", "/transfer?t=in", `
     /* ⚠️⚠️ 넘기시는 분과 받으시는 분이 **같은 화면**을 봅니다.
        초록으로 칠하면 정리하시는 분에게, 주황으로 칠하면 인수하시는
        분에게 "여긴 내 자리가 아니네" 가 됩니다. */
     const cls = document.getElementById("view").className;
     if(cls.indexOf("side-") >= 0) return "인수 · 양도 화면이 " + cls + " 로 물들었습니다";
-    const tabs = [].slice.call(document.querySelectorAll(".aq-tb .aq-t"));
+    /* 2026-11-26 — 두 길은 맨 위 첫 구간(#sit)의 카드 둘입니다 (아래 경로 구간은 탭 없이 메뉴만) */
+    const tabs = [].slice.call(document.querySelectorAll("#sit .sitf-o"));
     if(tabs.length !== 2) return "두 길이 " + tabs.length + "개입니다";
     const w0 = tabs[0].getBoundingClientRect(), w1 = tabs[1].getBoundingClientRect();
     if(Math.abs(w0.width - w1.width) > 1)
       return "두 길의 폭이 " + Math.round(w0.width) + " · " + Math.round(w1.width) + " 로 다릅니다";
-    if(!tabs.some(function(t){ return t.classList.contains("on"); }))
+    if(!tabs.some(function(t){ return t.classList.contains("is-on") && t.getAttribute("aria-current") === "true"; }))
       return "어느 길이 켜졌는지 표가 안 납니다";
     /* 걸음이 데이터 개수와 같아야 합니다 */
     const steps = document.querySelectorAll(".pcs > li").length;

@@ -475,7 +475,7 @@ function OpsKxCta(ind){
    모르시는 분께 "먼저 고르고 오세요" 라고 하면 거기서 닫습니다. */
 function OpsIntro(ind){
   /* 2026-11-18 카테고리 리뉴얼 — 전문관 머리 + "이런 고민" 넷(OpsWorry). */
-  return HallHero({
+  return HallHero({ sit:true,
     side:"ops", photo:"insu-operations",
     kicker:"매장 운영 서비스" + (ind ? " · " + ind.name : ""),
     h1raw:"지금 운영 중인 매장,<br><em>더 효율적으로</em><br>관리해보세요.",
@@ -782,7 +782,9 @@ function OpsGuideBand(){
    빌드가 막습니다.
    ⚠️ §11 의 "매출 · 순이익" 은 **목표 매출 계산**(`target`)입니다 —
    따로 만들지 않았습니다 (서로 뒤집은 값은 한 도구입니다). */
-var OPS_CALC = ["bep", "target", "labor", "margin"];
+/* 2026-11-26 모바일 시안 §3 — 원가율 · 인건비 계산은 바로 위 '이번 달 점검표' 가 줄마다 이미 냅니다 (같은 링크 두 번).
+   여기는 점검표에 없는 둘(손익분기 · 목표 매출)만 냅니다 — 되돌리려면 이 줄에 "labor", "margin" 을 다시. */
+var OPS_CALC = ["bep", "target"];
 var OPS_CALC_TONE = { bep:"sv3", target:"sv1", labor:"sv4", margin:"sv6" };
 
 /* ⚠️⚠️ **공통 조각이 `HallCalcBand()` 로 올라갔습니다**
@@ -808,7 +810,10 @@ function PageOperation(){
      → 고민 카드(OpsWorry) → (기존 고르기 · 점검표 · 가이드 · 계산) → 왜 · 하단 안내.
      옛 OpsKxServices · OpsKxDiag · OpsKxCta 는 지우지 않았습니다. 이용 순서(HallSteps)는 위 사진 절차와
      같은 말이라 내렸습니다(함수는 그대로). */
-  return OpsIntro(ind) + OpsKpSvc(ind) + OpsKpRoad() + OpsKpDiag() + OpsWorry() +
+  /* 2026-11-26 모바일 사용성 개편 — 머리 바로 아래가 고민 넷(OpsSit). 옛 고민 카드(OpsWorry)는 같은 선택이라 내렸습니다(함수는 그대로). */
+  /* 2026-11-26 모바일 시안 §3 — 고민을 고르면 결과에 그 계산이 첫 행동으로 나옵니다 · 아래 진단 띠(월 고정비)는 고른 뒤 뺍니다 */
+  var opPicked = ["cost","mkt","fix","hr"].indexOf(nowQS("need")) >= 0;
+  return OpsIntro(ind) + OpsSit(ind) + OpsKpSvc(ind) + OpsKpRoad() + (opPicked ? "" : OpsKpDiag()) +
     /* 2026-11-24 하단 간소화 — '여러 서비스 함께 고르기' 한 구역 · 기본 접힘 (옛 PickGroupBand + PickBasket) */
     HallPickFold({ side:"ops", path:(nowQS("p") === "pick" ? "pick" : ""),
       body:PickGroupBody("operation", "ops", { noAside:true }), packKeys:["run"] }) +
@@ -861,7 +866,7 @@ function AcqIntro(ind, iq, picked){
   /* 2026-11-20 — 경로를 고르고 들어오시면(주소에 t=in · t=out) 머리를 줄입니다: 사진 띠와 고르는 카드를 빼고
      바로 아래 경로 탭 · 그 경로의 정보가 첫 화면에 오게 합니다 (고르는 일은 그 탭이 그대로 합니다). */
   var compact = picked === "in" || picked === "out";
-  return HallHero({
+  return HallHero({ sit:true,
     /* 2026-11-20 — 출처가 확인되지 않은 kind-pass 사진 대신 메인과 같은 자체 일러스트
        (넘기는 매장 → 받는 사장님 · wpPassArt). 경로를 고른 화면은 머리를 줄이므로 판을 안 냅니다. */
     side:"transfer", photo:(compact ? "" : "insu-transfer"), /* 2026-11-21 ZIP 03_transfer — 경로를 고른 줄인 머리에는 안 냅니다 */
@@ -939,7 +944,7 @@ window.aqSearchGo = function(e){
 };
 
 /* B. 어느 쪽이세요 — 탭 + 메뉴 다섯 (그대로) */
-function AcqWhich(t, ind, iq){
+function AcqWhich(t, ind, iq, noTabs){
   /* 2026-11-20 /transfer 개선 1차 — 두 경로 탭 + **고른 경로에 맞는 것부터**.
      인수: 권리금 · 인수 비용 → 인수 계약 가이드 → 매물 찾기 (+ 받는 순서 · 필요한 것 고르기)
      양도: 넘기는 순서 → 준비 자료 → 양도 가이드 (+ 권리금 · 필요한 것 고르기)
@@ -975,10 +980,10 @@ function AcqWhich(t, ind, iq){
       ["#pick",                "check",    "인수할 때 필요한 것", "점검 · 임대차 검토 · 승계를 골라 보세요"]
     ];
   return '<section class="sec sec-white aq-path" id="aq-path"><div class="w">'+
-    '<div class="aq-tb">'+
+    (noTabs ? '' : '<div class="aq-tb">'+
       tab("in",  "매장을 인수하고 싶어요",  "있던 가게를 받습니다")+
       tab("out", "내 매장을 넘기고 싶어요", "하던 가게를 넘깁니다")+
-    '</div>'+
+    '</div>')+
     '<div class="sec-hd aq-ph">'+
       '<p class="eyebrow">'+(t === "out" ? "넘기시는 분" : "받으시는 분")+'</p>'+
       '<h2>'+(t === "out" ? "넘기기 전에 이것부터 보세요" : "인수하기 전에 이것부터 보세요")+'</h2>'+
@@ -1219,9 +1224,14 @@ function PageAcquisition(){
      → 경로 탭 · 매물(실제 건수) · 고르기 → 거래 절차(접힘) → 전문가 연결 → 왜 · 하단 안내.
      계산도구 구간(HallCalcBand) · 이용 순서(HallSteps)는 위 배너 · 사진 절차와 같은 말이라 내렸습니다(함수는 그대로).
      옛 AcqKxPros · AcqKxCta 도 지우지 않았습니다. */
-  return AcqIntro(ind, iq, nowQS("t")) + AcqKpSvc(ind, iq) + AcqKpRoad(t) + AcqKpCalc(t) +
-    AcqWhich(t, ind, iq) +
-    (t === "in" ? AcqSearch(ind) + mkt + sel : AcqPrep(ind) + sel + mkt) +
+  /* 2026-11-26 모바일 사용성 개편 — 머리 바로 아래가 두 갈래(AcqSit). 아래 경로 구간은 탭 없이 메뉴만 냅니다. */
+  /* 2026-11-26 모바일 시안 §4 — '매장 찾기 / 내 매장 넘기기' 를 고르면 그 경로가 결과에 바로 섭니다.
+     결과에 이미 있는 권리금 계산 띠 · 경로 메뉴(aq-path) · (넘기기면) 매물 건수 띠는 고른 뒤 뺍니다 — 같은 링크가 여섯 번 나왔습니다.
+     안 고르면 그대로입니다. */
+  var aqPicked = ["in","out"].indexOf(nowQS("t")) >= 0;
+  return AcqIntro(ind, iq, nowQS("t")) + AcqSit(ind) + AcqKpSvc(ind, iq) + AcqKpRoad(t) + (aqPicked ? "" : AcqKpCalc(t)) +
+    (aqPicked ? "" : AcqWhich(t, ind, iq, true)) +
+    (t === "in" ? (aqPicked ? "" : AcqSearch(ind) + mkt) + sel : AcqPrep(ind) + sel + (aqPicked ? "" : mkt)) +
     AcqProcess(t, ind) + AcqKpPros(ind) +
     ReadBand({ cat:"transfer", side:"both", limit:3,
                title:"인수 · 양도에서 자주 막히는 것" }) +
@@ -1237,3 +1247,103 @@ function PageAcquisition(){
     PickBar("transfer");
 }
 
+
+/* ════════════════════════════════════════════════════════════════════
+   2026-11-26 모바일 사용성 개편 — 운영 · 양도양수의 첫 구간 (SitFlow)
+   ════════════════════════════════════════════════════════════════════ */
+function jSitIds(L){ return (L || []).filter(function(x){ return typeof amPickOne === "function" && amPickOne(x); }); }
+function jSitSteps(L){ return L; }
+
+/* 운영 — 고민 넷. 고민마다 **계산 · 점검 · 업체 중 하나**를 앞세웁니다 (main).
+   ⚠️ 점검표 항목으로 가는 단추는 같은 화면 아래 점검표(opsCheckJump)입니다. 고르신 고민은 주소 ?need= */
+function OpsSit(ind){
+  var need = nowQS("need");
+  var iq = ind ? "?i=" + encodeURIComponent(ind.key) : "";
+  return SitFlow({ id:"sit", key:"need", base:"/operation", keep:{ i:ind ? ind.key : "" }, side:"ops",
+    tone:"sec-white", kicker:"매장 운영 도움받기", title:"지금 어떤 고민이 있으세요?",
+    lead:"고민을 고르시면 먼저 해 볼 것 하나와 맡길 서비스가 바로 아래에 나옵니다.",
+    sel:["cost","mkt","fix","hr"].indexOf(need) >= 0 ? need : "",
+    opts:[{ k:"cost", b:"비용", d:"고정비 · 원가를 줄이고 싶어요", ph:"kp-tr-svc-premium", ia:"money" },
+          { k:"mkt", b:"홍보 · 매출", d:"손님 · 매출을 늘리고 싶어요", ph:"service-menu-shoot", ia:"marketing" },
+          { k:"fix", b:"시설", d:"장비 · 설비를 고치고 싶어요", ph:"kp-op-svc-repair", ia:"repair" },
+          { k:"hr", b:"인력 · 세무 · 노무", d:"직원 · 세금 · 계약이 걱정돼요", ph:"service-labor", ia:"staff" }],
+    res:function(k){
+      if(k === "cost") return { title:"비용 — 먼저 계산해 보세요",
+        lead:"매달 나가는 돈(고정비)을 먼저 적어 보면 줄일 곳이 보입니다.",
+        todo:[["고정비 적기","임대료 · 인건비 · 관리비 · 통신비"],["원가율 확인","메뉴 · 상품별로 남는 몫"],["줄일 곳 맡기기","재료 · 소모품 · POS · 통신 요금"]],
+        main:{ href:"/tools/fixed" + iq, t:"월 고정비 계산하기", ic:"calc" },
+        more:[{ href:"/tools/margin" + iq, t:"원가율 · 마진 계산" }, { href:"/providers/supply" + iq, t:"재료 · 소모품 업체" }],
+        pick:{ side:"ops", ids:jSitIds(["supply/consumable","it/pos","it/internet","admin/tax-agent"]) } };
+      if(k === "mkt") return { title:"홍보 · 매출 — 맡길 업체부터",
+        lead:"온라인 홍보와 리뷰 관리는 업체마다 하는 범위가 다릅니다. 무엇을 맡길지 고르고 비교하세요.",
+        todo:[["목표 정하기","한 달에 얼마를 더 팔아야 하는지"],["홍보 범위 고르기","플레이스 · SNS · 리뷰 · 촬영"],["여러 곳 비교","같은 조건으로 제안을 받아 봅니다"]],
+        main:{ href:"/providers/marketing" + iq, t:"홍보 · 마케팅 업체 보기", ic:"search" },
+        more:[{ href:"/tools/target" + iq, t:"목표 매출 계산" }],
+        pick:{ side:"ops", ids:jSitIds(["marketing/open-mkt","marketing/review","marketing/sns","marketing/photo","marketing/blog"]) } };
+      if(k === "fix") return { title:"시설 — 고칠 업체부터",
+        lead:"멈춘 장비는 기다릴수록 손해입니다. 고장 난 것을 고르고 수리 업체를 찾으세요.",
+        todo:[["무엇이 멈췄는지","냉장 · 냉난방 · 전기 · 배관"],["사진 남기기","고장 상태와 모델명"],["누가 내는지 확인","임대인 · 임차인 부담을 계약서로"]],
+        main:{ href:"/providers/repair" + iq, t:"설비 수리 업체 보기", ic:"repair" },
+        more:[{ href:"/providers/repair?s=check-up", t:"정기 점검 업체" }, { href:"/providers/clean" + iq, t:"청소 · 방역" }],
+        pick:{ side:"ops", ids:jSitIds(["repair/fridge-fix","repair/aircon-fix","repair/elec-fix","repair/legal-check","clean/pest"]) } };
+      return { title:"인력 · 세무 · 노무 — 먼저 점검하세요",
+        lead:"근로계약 · 4대보험 · 신고 기한은 놓치면 바로 돈이 됩니다. 점검표로 빠진 것부터 확인하세요.",
+        todo:[["근로계약 점검","계약서 · 근무시간 · 휴게"],["인건비 따져 보기","매출 대비 인건비 비율"],["맡길 곳 고르기","세무 대리 · 노무 대리 · 채용"]],
+        main:{ href:"#ock-row-labor", t:"근로계약 점검표 보기", ic:"check", js:"return opsCheckJump('labor')" },
+        more:[{ href:"/tools/labor" + iq, t:"인건비율 계산" }, { href:"/providers/admin?s=labor-agent", t:"노무 대리 업체" }],
+        pick:{ side:"ops", ids:jSitIds(["staff/fulltime","staff/parttime","admin/tax-agent","admin/labor-agent"]) } };
+    } });
+}
+
+/* 양도양수 — 매장 찾기 / 내 매장 넘기기 (주소 ?t= — 아래 경로 구간이 같은 값을 씁니다).
+   매장 찾기는 업종 · 지역 거르개와 **센 결과 수**까지 이 자리에서, 넘기기는 등록과 준비 목록으로 */
+window.aqSitGo = function(){
+  var i = $("aqs-i") ? $("aqs-i").value : "", r = $("aqs-r") ? $("aqs-r").value : "";
+  var q = ["t=in"]; if(i) q.push("i=" + encodeURIComponent(i)); if(r) q.push("r=" + encodeURIComponent(r));
+  go("/transfer?" + q.join("&"), { keepScroll:true, focus:"sit-res" });
+};
+function AcqSit(ind){
+  var t = nowQS("t"), reg = nowQS("r");
+  var regOk = !!(reg && typeof amRegionName === "function" && amRegionName(reg));
+  return SitFlow({ id:"sit", key:"t", base:"/transfer", keep:{ i:ind ? ind.key : "", r:regOk ? reg : "" }, side:"transfer",
+    tone:"sec-white", kicker:"매장 양도양수", title:"어느 쪽이세요?",
+    lead:"매장을 찾는 분과 넘기려는 분의 길이 다릅니다. 고르시면 바로 아래에서 이어집니다.",
+    sel:(t === "in" || t === "out") ? t : "",
+    opts:[{ k:"in", b:"매장 찾기", d:"영업 중인 매장을 인수", ph:"kp-tr-svc-search", ia:"store" },
+          { k:"out", b:"내 매장 넘기기", d:"하던 가게를 다음 사장님께", ph:"kp-tr-svc-sell", ia:"handover" }],
+    res:function(k){
+      if(k === "in"){
+        var all = typeof amStores === "function" ? amStores({}) : [];
+        var hit = typeof amStores === "function" ? amStores({ industry:ind ? ind.key : null, region:regOk ? reg : null }) : [];
+        var fail = !window.AM_STORES;
+        var q = []; if(ind) q.push("i=" + encodeURIComponent(ind.key)); if(regOk) q.push("r=" + encodeURIComponent(reg));
+        var to = "/stores" + (q.length ? "?" + q.join("&") : "");
+        var conds = [ind ? [ind.name, sitQs({ base:"/transfer", key:"t", keep:{ r:regOk ? reg : "" } }, "in")] : null,
+                     regOk ? [amRegionName(reg), sitQs({ base:"/transfer", key:"t", keep:{ i:ind ? ind.key : "" } }, "in")] : null];
+        return { title:"매장 찾기 — 조건을 고르고 결과를 보세요",
+          lead:"매물에 적힌 값은 올리신 사장님이 적으신 값입니다. 계약 전에 꼭 확인하세요.",
+          first:'<div class="sitf-fil">'+
+              '<div class="pvs-geo"><label class="sr-only" for="aqs-i">업종</label>'+IndustrySelect("aqs-i", ind ? ind.key : "", "aqSitGo()", "업종 전체")+
+              '<label class="sr-only" for="aqs-r">지역</label>'+RegionSelect("aqs-r", regOk ? reg : "", "aqSitGo()")+'</div>'+
+              ListHead({ id:"aqs-h", total:fail ? null : all.length, n:hit.length, unit:"건", fail:fail, conds:conds, reset:"/transfer?t=in" })+
+              (ListState({ fail:fail, total:all.length, n:hit.length, what:"매장", reset:"/transfer?t=in",
+                 zeroAll:'<div class="lst lst-all">'+icon("info",18)+'<p><b>지금 올라온 매장 매물이 없습니다.</b> 올라오면 이 자리에 바로 나옵니다. 그동안 인수 비용과 계약 전에 볼 것을 먼저 확인하세요.</p>'+
+                   '<a class="btn btn-o" href="/tools/premium">권리금 계산</a>'+
+                   /* 2026-11-26 시안 §4 — 전체 0건이면 권리금 계산 · 인수 체크리스트 (같은 화면의 받는 순서 #aq-steps 로) */
+                   '<a class="btn btn-o" href="/content?j=startup&amp;cat=store" onclick="return hhJump(\'aq-steps\')">인수 체크리스트</a></div>' }) ||
+               '<div class="sitf-next"><a class="btn btn-b btn-lg sitf-main" href="'+esc(to)+'">'+icon("search",18)+' 조건에 맞는 매장 '+hit.length+'건 보기'+icon("arrow",18)+'</a></div>')+
+            '</div>',
+          todo:[],
+          /* 전체 0건 안내에 권리금 계산이 이미 있으면 여기서 다시 내지 않습니다 */
+          more:(!fail && !all.length ? [] : [{ href:"/tools/premium", t:"권리금 따져 보기", ic:"calc" }]).concat([{ href:"/tools/vs", t:"신규 vs 인수 비교" }]),
+          pick:{ side:"transfer", title:"인수할 때 맡길 서비스", ids:jSitIds(["law/lease","transfer/premium","repair/check-up","it/pos"]) } };
+      }
+      var P = (window.AM_PROCESS && AM_PROCESS["acq-out"]) || [];
+      return { title:"내 매장 넘기기 — 등록하고 준비하세요",
+        lead:"매장을 내놓으시면 올리기 전에 한 번 연락드립니다. 연락처 · 상호 · 번지는 매물에 나가지 않습니다.",
+        main:{ href:"/sell", t:"매장 내놓기 등록", ic:"handover", gate:"sell" }, mainFirst:true,
+        todo:P.slice(0, 4).map(function(s){ return [s.name, s.lead || ""]; }),
+        more:[{ href:"/sell?t=asset", t:"시설 · 장비만 내놓기" }, { href:"/tools/premium", t:"권리금 따져 보기", ic:"calc" }],
+        pick:{ side:"transfer", title:"넘길 때 맡길 서비스", ids:jSitIds(["transfer/store-transfer","transfer/premium","law/lease","tax/close-report"]) } };
+    } });
+}

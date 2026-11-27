@@ -339,9 +339,13 @@ function rqRegName(r){
   return [nm, r.gu].filter(Boolean).join(" ");
 }
 
+function rqHasQuote(r){
+  return (RQ.quotes || []).some(function(q){ return q.request_id === r.id && q.state !== "withdrawn"; });
+}
 function rqMoves(r){
   return (window.amDealMoves ? amDealMoves(r.state, RQ.role) : []).filter(function(m){
     var s = amDealSt(m[1]);
+    if(m[1] === "quoted" && !rqHasQuote(r)) return false;
     return s && !s.money;
   });
 }
@@ -354,8 +358,12 @@ function rqMove(r){
       ' 이(가) 옮길 수 있는 길이 없습니다.</p>';
 
   var sel = M.filter(function(m){ return m[1] === RQ.to; })[0];
+  var noQ = r.state === "consult" && !rqHasQuote(r) &&
+    (window.amDealMoves ? amDealMoves(r.state, RQ.role) : []).some(function(m){ return m[1] === "quoted"; });
 
   return '<div class="rq-mv">'+
+    (noQ ? '<p class="note-box rq-noq">'+icon("info",15)+' <span>견적 전달로 넘기려면 아래 <b>받은 견적 적기</b>에서 금액과 범위를 먼저 기록하세요. '+
+      '기록하면 저절로 견적 전달이 됩니다.</span></p>' : '')+
     '<div class="f-r">'+
       '<label for="rq-to">다음 상태</label>'+
       '<select id="rq-to" class="sel" onchange="rqSetTo(this.value)">'+

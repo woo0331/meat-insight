@@ -344,6 +344,25 @@ function PageProviderCat(cat){
   var all  = amProviders({ cat:cat.key, sub:sub || null,
                            industry:ind || null, region:reg || null });
 
+  /* 2026-11-26 모바일 사용성 개편 — 세부 서비스 → 지역 → 결과 순서.
+     ⚠️ "자주 찾는" 이라고 적지 않습니다 — 이용 기록을 모으지 않습니다. 앞에 내는 다섯은 그 분야의 **대표 세부 서비스**
+        (catalog.js 차례)이고, 나머지는 '더 보기' 로 엽니다. 고르신 것이 뒤쪽이면 처음부터 펼쳐 둡니다.
+     ⚠️ 고르신 세부 서비스 · 지역은 주소(?s= · ?r=)에 실려 신청서까지 갑니다 (quoteTo → 신청서가 그 항목을 체크). */
+  var subHit = items.filter(function(i){ return i.key === sub; })[0] || null;
+  var FRONT = 5, frontL = items.slice(0, FRONT), restL = items.slice(FRONT);
+  var restOpen = !!(subHit && restL.indexOf(subHit) >= 0);
+  var chip = function(i){ return '<li><a class="chip'+(sub===i.key?" on":"")+'" href="'+esc(pcUrl(cat,i.key,ind,reg))+'" data-keep'+
+    (sub===i.key ? ' aria-current="true"' : '')+'>'+(sub===i.key ? icon("check",14)+" " : "")+esc(i.name)+'</a></li>'; };
+  var regName = (reg && typeof amRegionName === "function") ? amRegionName(reg) : "";
+  var indName = (ind && typeof amIndustryName === "function") ? amIndustryName(ind) : "";
+  var fail = !Array.isArray(window.AM_PROVIDERS);
+  var total = fail ? 0 : amProviders({ cat:cat.key }).length;
+  var conds = [subHit ? [subHit.name, pcUrl(cat,"",ind,reg)] : null,
+               regName ? [regName, pcUrl(cat,sub,ind,"")] : null,
+               indName ? [indName, pcUrl(cat,sub,"",reg)] : null,
+               vf ? ["확인된 곳만", ""] : null, fo ? ["포트폴리오 있는 곳만", ""] : null];
+  var qHref = quoteTo({cat:cat.key,sub:sub,industry:ind,region:reg,side:side});
+
   return PgHero({
     crumb: Crumb([["업체찾기","/providers"],[cat.name]]),
     kicker:(side === "start" ? "START" : "CLOSE") + " · 업체찾기",
@@ -351,28 +370,28 @@ function PageProviderCat(cat){
     lead:cat.desc,
     tight:true
   })+
-  '<section class="sec sec-white"><div class="w">'+
+  '<section class="sec sec-white pvs"><div class="w">'+
 
-    /* 하위 분류 — 이것이 업체 입점의 단위입니다 (§39) */
-    (items.length ? '<ul class="chip-g chip-g-fil">'+
-      '<li><a class="chip'+(sub?"":" on")+'" href="'+esc(pcUrl(cat,"",ind,reg))+'">전체</a></li>'+
-      items.map(function(i){
-        return '<li><a class="chip'+(sub===i.key?" on":"")+'" href="'+
-          esc(pcUrl(cat,i.key,ind,reg))+'">'+esc(i.name)+'</a></li>';
-      }).join("")+'</ul>' : "")+
+    /* ① 세부 서비스 — 이것이 업체 입점의 단위입니다 (§39) */
+    (items.length ? '<p class="pvs-stp"><i>1</i>어떤 일이 필요하세요?</p>'+
+      '<ul class="chip-g chip-g-fil">'+
+      '<li><a class="chip'+(sub?"":" on")+'" href="'+esc(pcUrl(cat,"",ind,reg))+'" data-keep>전체</a></li>'+
+      frontL.map(chip).join("")+
+      (restL.length ? '<li class="pvs-rest-w"><button class="pvs-more" type="button" aria-expanded="'+(restOpen?"true":"false")+'" aria-controls="pvs-rest" '+
+        'onclick="var r=document.getElementById(\'pvs-rest\');r.hidden=!r.hidden;this.setAttribute(\'aria-expanded\',r.hidden?\'false\':\'true\');this.firstChild.textContent=r.hidden?\'더 보기 (\'+'+restL.length+'+\')\':\'접기\';">'+
+        (restOpen ? "접기" : "더 보기 ("+restL.length+")")+'</button></li>' : '')+
+      '</ul>'+
+      (restL.length ? '<ul class="chip-g chip-g-fil pvs-rest" id="pvs-rest"'+(restOpen ? '' : ' hidden')+'>'+restL.map(chip).join("")+'</ul>' : '')
+      : '')+
 
-    /* 거르개 — 지역과 업종 (§35 · §44) */
+    /* ② 지역 (+ 업종) — 지역이 업체를 고르는 첫 조건입니다 */
+    '<p class="pvs-stp"><i>'+(items.length ? 2 : 1)+'</i>어느 지역이세요?</p>'+
     '<div class="fil">'+
       '<span class="fil-ic" aria-hidden="true">'+icon("sliders",18)+'</span>'+
-      IndustrySelect("fil-i", ind, "pcGo('"+esc(cat.key)+"')")+
       RegionSelect("fil-r", reg, "pcGo('"+esc(cat.key)+"')")+
+      IndustrySelect("fil-i", ind, "pcGo('"+esc(cat.key)+"')")+
       '<input type="hidden" id="fil-s" value="'+esc(sub)+'">'+
-      /* ⚠️⚠️ **재 본 적 없는 값으로는 안 거릅니다.** 지시서 §11 의
-         "평점 · 응답속도 · 가격대" 는 각각 후기 0건 · 재는 장치 없음 ·
-         업체마다 단위가 달라서, 거르개로 만들면 아무도 안 걸리거나
-         지어낸 순서가 됩니다. 아래 둘은 우리가 **서류로 확인한 사실**과
-         **세는 값**입니다.
-         ⚠️ 체크칸은 `<label>` 로 감싸서 글자를 눌러도 켜집니다 (누름 44px). */
+      /* ⚠️⚠️ **재 본 적 없는 값으로는 안 거릅니다** (평점 · 응답속도 · 가격대). 아래 둘은 서류로 확인한 사실과 세는 값입니다. */
       '<label class="fil-ck'+(vf?" on":"")+'">'+
         '<input type="checkbox" id="fil-v"'+(vf?" checked":"")+
         ' onchange="pcGo(\''+esc(cat.key)+'\')">'+
@@ -381,15 +400,23 @@ function PageProviderCat(cat){
         '<input type="checkbox" id="fil-f"'+(fo?" checked":"")+
         ' onchange="pcGo(\''+esc(cat.key)+'\')">'+
         '<span>포트폴리오 있는 곳만</span></label>'+
-      '<span class="fil-n">'+(list.length ? list.length+"곳" : "0곳")+
-        /* ⚠️ 거르개 때문에 빠진 곳이 몇인지 **밝힙니다** — 안 밝히면
-           손님은 그 분야에 업체가 원래 그만큼인 줄 압니다 */
-        ((vf || fo) && all.length > list.length
-          ? '<em class="fil-off">거르개로 '+(all.length - list.length)+'곳 숨김</em>' : '')+
-      '</span>'+
+      /* ⚠️ 거르개 때문에 빠진 곳이 몇인지 밝힙니다 */
+      ((vf || fo) && all.length > list.length
+        ? '<span class="fil-n"><em class="fil-off">거르개로 '+(all.length - list.length)+'곳 숨김</em></span>' : '')+
     '</div>'+
 
-    (list.length
+    /* ③ 결과 — 고른 조건과 결과 수를 목록 **바로 위**에 */
+    '<p class="pvs-stp"><i>'+(items.length ? 3 : 2)+'</i>결과</p>'+
+    ListHead({ id:"pvs-h", total:fail ? null : total, n:list.length, unit:"곳", fail:fail, conds:conds, reset:"/providers/"+cat.key })+
+    '<div class="pvs-go">'+
+      '<a class="btn btn-b btn-lg" href="'+esc(qHref)+'">'+esc(subHit ? subHit.name + " 견적 신청하기" : cat.name + " 견적 신청하기")+icon("arrow",18)+'</a>'+
+      pvClosedNote(pvForm)+
+    '</div>'+
+    (subHit ? '' : '<p class="note pvs-nosub">'+icon("info",14)+' 세부 서비스를 고르지 않으셨으면 신청서 첫 칸에서 고르실 수 있습니다.</p>')+
+    (fail ? ListState({ fail:true }) :
+     (!list.length && total ? ListState({ total:total, n:0, what:"업체", reset:"/providers/"+cat.key }) : ''))+
+
+    (fail ? '' : list.length
       /* ⚠️ 24장씩 — 1000곳이 등록되는 날 카드 1000장을 한 번에
          그리지 않습니다 (`MoreBtn()` 한 곳에서 셉니다). */
       /* ⚠️ 목록에서는 **비교에 담을 수 있는** 카드를 냅니다 (V2 §14) */
@@ -400,7 +427,7 @@ function PageProviderCat(cat){
       /* ⚠️⚠️ **2026-10-06 2차 §8** — "없습니다" 를 주인공에서 내렸습니다.
          주인공은 **지금 바로 도움이 되는 것**이고, 0 은 아래 줄에서
          세는 값으로 그대로 말합니다 (숨기지 않습니다). */
-      : EmptyGuide({
+      : (total ? '' : EmptyGuide({
           icon:cat.icon,
           title:cat.name+" 업체를 찾고 계신가요?",
           text:"좋은 업체를 고르려면 가격보다 먼저 확인해야 할 것이 있습니다.",
@@ -410,14 +437,14 @@ function PageProviderCat(cat){
              두 번 이스케이프되어 화면에 `&amp;` 가 찍힙니다. */
           note:"이 분야에 등록된 "+amBrand()+" 파트너 업체는 지금 "+
                all.length+"곳입니다. 업체가 등록되면 이 목록에 나옵니다.",
-          cta:'<a class="btn btn-b" href="'+esc(quoteTo({cat:cat.key,sub:sub,industry:ind,region:reg,side:side}))+'">'+
-              '원하는 조건 남기기'+icon("arrow",16)+'</a>'+
+          /* 2026-11-26 모바일 시안 §6 — 전체 0곳이면 그 분야에 맞는 비용 계산(또는 준비 체크리스트)을 먼저 */
+          cta:pvZeroTool(cat, side)+
               '<a class="btn btn-o" href="/join">'+esc(cat.name)+' 업체라면 입점하기</a>'+
               /* 2026-11-19 — 접수가 닫히면 위 신청 단추가 가려집니다(ctaTagLinks).
                  그 자리에 닫힘 한 줄과 접수 안내를 냅니다. ⚠️ 이 상자가 있는 화면에서는
                  아래 "한 번만 적으세요" 구간이 통째로 가려져 같은 안내가 두 번 나오지 않습니다. */
-              pvClosedNote(pvForm)
-        }))+
+              ''
+        })))+
   '</div></section>'+
 
   /* § 6 의 ②③④⑤ — 업체 목록 다음, ⑥ 견적 배너 앞입니다.
@@ -1214,4 +1241,15 @@ function PageCompare(){
       '적힌 값은 업체가 등록한 것이고, 저희가 확인하거나 보증하는 값이 아닙니다. '+
       '확인 배지는 저희가 서류로 본 항목만 붙습니다.</p>'+
   '</div></section>';
+}
+
+/* 2026-11-26 — 업체가 전체 0곳인 분야에서 오늘 바로 쓸 수 있는 도구 하나.
+   tools.js 의 rel(그 도구가 이어지는 분야)을 거꾸로 읽습니다(amToolsForCat) — 없으면 쪽에 맞는 체크리스트 · 창업비. */
+function pvZeroTool(cat, side){
+  var T = (typeof amToolsForCat === "function" ? amToolsForCat(cat.key) : []) || [];
+  var t = T[0];
+  if(t && t.key) return '<a class="btn btn-b" href="/tools/'+esc(t.key)+'">'+icon("calc",16)+' '+esc(t.name)+'</a>';
+  return side === "close"
+    ? '<a class="btn btn-b" href="/tools/close">'+icon("check",16)+' 폐업 준비 체크리스트</a>'
+    : '<a class="btn btn-b" href="/tools/cost">'+icon("calc",16)+' 창업비 계산</a>';
 }

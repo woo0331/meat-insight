@@ -116,7 +116,7 @@ function Header(){
       '</form>'+
       '<a class="hd-ic hd-ic-s" href="/search" aria-label="검색">'+icon("search",20)+'</a>'+
 
-      '<a class="hd-ic hd-ic-u" id="hdU" href="/my" aria-label="내 기록">'+icon("user",20)+'</a>'+
+      '<a class="hd-lgn" id="hdU" href="/my" hidden>'+icon("user",16)+'<span class="hd-lgn-t">로그인 및 회원가입</span></a>'+
       '<span class="hd-sep" aria-hidden="true"></span>'+
 
       '<span class="hd-auth" id="hdAuth" hidden></span>'+
@@ -284,11 +284,12 @@ function amEntryPaint(a){
   var st = (a && a.on && a.signedIn) ? "in" : ((a && a.on && a.kakao) ? "out" : "off");
   var href = st === "out" && window.location.pathname !== "/my" ? "/my?next=" + encodeURIComponent(cur) : "/my";
   var u = document.getElementById("hdU");
-  if(u){ u.setAttribute("href", href); u.setAttribute("aria-label", st === "in" ? "내 계정" : st === "out" ? "로그인 · 회원가입" : "내 기록");
-         u.setAttribute("data-auth", st); }
+  if(u){ u.setAttribute("href", st === "in" ? "/my" : href); u.setAttribute("data-auth", st);
+         var t = u.querySelector(".hd-lgn-t"); if(t) t.textContent = st === "in" ? "내 계정" : "로그인 및 회원가입";
+         if(st === "off") u.setAttribute("hidden", ""); else u.removeAttribute("hidden"); }
   var d = document.getElementById("hdDwMy");
   if(d){ d.setAttribute("href", href);
-         d.firstChild.textContent = st === "in" ? "내 계정" : st === "out" ? "로그인 · 회원가입" : "내 기록"; }
+         d.firstChild.textContent = st === "in" ? "내 계정" : st === "out" ? "로그인 및 회원가입" : "내 기록"; }
   els('#mnav a[data-to="/my"]').forEach(function(m){ m.setAttribute("href", href); });
 }
 window.amEntryPaint = amEntryPaint;

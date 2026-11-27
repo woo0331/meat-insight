@@ -194,7 +194,11 @@ function Header(){
       '<a class="hd-ic hd-ic-s" href="/search" aria-label="검색">'+icon("search",20)+'</a>'+
       /* 2026-11-26 모바일 — 사람 아이콘 (900px 아래에서만). 로그인 상태는 hdAuthPaint() 가 주소 · 이름을 맞춥니다.
          비로그인이고 카카오가 켜져 있으면 /my?next=<지금 자리> 로 — /my 가 로그인 칸으로 내려가고, 로그인 뒤 이 자리로 돌아옵니다. */
-      '<a class="hd-ic hd-ic-u" id="hdU" href="/my" aria-label="내 기록">'+icon("user",20)+'</a>'+
+      /* 2026-11-27 대표 지시 — 사람 아이콘 자리를 **글자 단추**로 (모바일 · PC 모두 상단에 바로 보임).
+         로그아웃 → '로그인 및 회원가입' (누르면 /my 의 '카카오로 시작하기') · 로그인 → '내 계정'.
+         ⚠️ 로그인이 설정 안 된 곳(운영: 카카오 꺼짐)에서는 **안 그립니다** — 눌러도 로그인 화면이 없는 단추가 됩니다.
+         그래서 처음에는 hidden 이고 amEntryPaint() 가 /api/session 답을 보고 켭니다. '내 기록' 은 따로 그대로입니다. */
+      '<a class="hd-lgn" id="hdU" href="/my" hidden>'+icon("user",16)+'<span class="hd-lgn-t">로그인 및 회원가입</span></a>'+
       '<span class="hd-sep" aria-hidden="true"></span>'+
       /* ⚠️⚠️ **로그인은 설정됐을 때만 나옵니다** (2026-10-13 §3).
          지시서가 "로그인 또는 내 계정" 을 적었는데, `/api/session` 이
@@ -439,11 +443,12 @@ function amEntryPaint(a){
   var st = (a && a.on && a.signedIn) ? "in" : ((a && a.on && a.kakao) ? "out" : "off");
   var href = st === "out" && window.location.pathname !== "/my" ? "/my?next=" + encodeURIComponent(cur) : "/my";
   var u = document.getElementById("hdU");
-  if(u){ u.setAttribute("href", href); u.setAttribute("aria-label", st === "in" ? "내 계정" : st === "out" ? "로그인 · 회원가입" : "내 기록");
-         u.setAttribute("data-auth", st); }
+  if(u){ u.setAttribute("href", st === "in" ? "/my" : href); u.setAttribute("data-auth", st);
+         var t = u.querySelector(".hd-lgn-t"); if(t) t.textContent = st === "in" ? "내 계정" : "로그인 및 회원가입";
+         if(st === "off") u.setAttribute("hidden", ""); else u.removeAttribute("hidden"); }
   var d = document.getElementById("hdDwMy");
   if(d){ d.setAttribute("href", href);
-         d.firstChild.textContent = st === "in" ? "내 계정" : st === "out" ? "로그인 · 회원가입" : "내 기록"; }
+         d.firstChild.textContent = st === "in" ? "내 계정" : st === "out" ? "로그인 및 회원가입" : "내 기록"; }
   els('#mnav a[data-to="/my"]').forEach(function(m){ m.setAttribute("href", href); });
 }
 window.amEntryPaint = amEntryPaint;

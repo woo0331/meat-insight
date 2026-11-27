@@ -1248,6 +1248,12 @@ const ADM_DEAL = [
     ok(W + "px 카카오 — 메일 로그인 칸 · 안내가 없음", (await pg.locator("#my-em, details.my-em-alt, #my-db .my-in").count()) === 0 &&
        !(await pg.locator("#my-db").textContent()).includes("로그인 링크"));
     ok(W + "px 카카오 — 로그인 없이도 쓸 수 있다는 말", (await pg.locator(".my-kk").textContent()).includes("로그인 없이도"));
+    /* 2026-11-27 — 로그아웃 상태: 상단에 '로그인 및 회원가입' 글자 단추가 바로 보이고(잘리지 않음) /my 의 카카오로 갑니다 */
+    ok(W + "px 카카오 — 상단 '로그인 및 회원가입' 글자 단추가 보이고 잘리지 않음", await pg.evaluate(() => { const u = document.getElementById("hdU");
+      if(!u || u.hidden) return false; const r = u.getBoundingClientRect(), t = u.querySelector(".hd-lgn-t");
+      return r.width > 0 && r.top >= 0 && r.bottom <= 90 && u.textContent.trim() === "로그인 및 회원가입" &&
+             t.scrollWidth <= t.clientWidth + 1 && t.scrollHeight <= t.clientHeight + 1 && document.documentElement.scrollWidth <= innerWidth &&
+             u.getAttribute("href").indexOf("/my") === 0; }));
     await btn.click(); await pg.waitForTimeout(900);
     ok(W + "px 카카오 — 서버에 원래 자리(next)를 보냄", posts[0] && posts[0].op === "oauth" && posts[0].provider === "kakao" && posts[0].path === "/startup?i=cafe", JSON.stringify(posts[0]));
     const back = await pg.evaluate(() => ({ p: location.pathname + location.search, h: location.hash,
@@ -1256,6 +1262,9 @@ const ADM_DEAL = [
        back.p === "/startup?i=cafe" && back.h === "" && back.t === TOK && navs.every(u => u.indexOf(TOK) < 0 && u.indexOf("access_token") < 0), JSON.stringify([back, navs]));
     ok(W + "px 카카오 — 세션은 take 로 한 번만 받음", posts.filter(x => x.op === "take").length === 1, JSON.stringify(posts));
     ok(W + "px 카카오 — 헤더가 로그인 상태(내 계정)", (await pg.locator("#hdAuth").textContent()).includes("내 계정"));
+    /* 2026-11-27 — 상단 글자 단추(#hdU)가 같은 자리에서 '내 계정' 으로 바뀌고 화면에 보입니다 */
+    ok(W + "px 카카오 — 상단 글자 단추가 '내 계정' 으로 보임", await pg.evaluate(() => { const u = document.getElementById("hdU");
+      const r = u && u.getBoundingClientRect(); return !!u && !u.hidden && r.width > 0 && u.textContent.trim() === "내 계정"; }));
     ok(W + "px 카카오 — 브라우저가 Supabase 를 직접 부르지 않음", direct.length === 0, direct.join(" "));
     /* 로그아웃 */
     await pg.goto(base + "/my", { waitUntil:"networkidle" }); await pg.waitForTimeout(300);
@@ -1280,6 +1289,9 @@ const ADM_DEAL = [
     ok(W + "px 꺼짐 — 카카오 단추도 메일 칸도 없음", (await pg.locator(".my-kakao").count()) === 0 && (await pg.locator("#my-em").count()) === 0);
     ok(W + "px 꺼짐 — 로그인 칸이 통째로 안 나옴", await pg.evaluate(() => { const b = document.getElementById("my-db"); return !!b && b.hidden && b.textContent.trim() === ""; }));
     ok(W + "px 꺼짐 — 헤더에 '로그인' 링크가 없음 (빈 /my 로 보내지 않음)", await pg.evaluate(() => { const h = document.getElementById("hdAuth"); return !!h && h.hidden && h.textContent.trim() === ""; }));
+    /* 2026-11-27 — 카카오가 꺼진 곳(운영)에서는 '로그인 및 회원가입' 글자 단추도 안 나옵니다 (로그인 화면이 없는 단추) */
+    ok(W + "px 꺼짐 — 상단 '로그인 및 회원가입' 단추도 안 보임", await pg.evaluate(() => { const u = document.getElementById("hdU");
+      return !!u && (u.hidden || !u.getClientRects().length); }));
     /* 로그인 의무 없음 — 검색 · 가이드 · 신청 양식이 로그인 없이 열림 */
     await pg.goto(base + "/quote", { waitUntil:"networkidle" }); await pg.waitForTimeout(300);
     const free = await pg.evaluate(() => ({ form: !!document.getElementById("q-f"), sign: !!document.querySelector(".my-in, .my-kakao") }));

@@ -718,3 +718,22 @@ input:focus-visible,textarea:focus-visible,.sel:focus-visible,select:focus-visib
 @media (max-width:900px){ .hd-ic-u{ display:inline-flex; } }
 
 @media (max-width:900px){ .hd-auth, .hd-auth:not([hidden]){ display:none; } }
+
+.hd-lgn{ display:inline-flex; align-items:center; gap:6px; min-height:44px; padding:0 12px; border:1px solid #D9C7B4; border-radius:999px;
+  background:#fff; color:#4A3025; font-size:14px; font-weight:800; white-space:nowrap; flex:none; }
+.hd-lgn[hidden]{ display:none; }
+.hd-lgn:hover, .hd-lgn:focus-visible{ border-color:#6A4B3B; }
+.hd-lgn > svg{ flex:none; color:#6A4B3B; }
+.hd-auth, .hd-auth:not([hidden]){ display:none; }
+.hd-ic-u{ display:inline-flex; }
+
+@media (max-width:600px){
+  .hd .hd-ic-s{ display:none; }
+  .hd-lgn{ padding:0 10px; font-size:13px; }
+  .hd-lgn > svg{ display:none; }
+}
+
+@media (max-width:420px){
+  .hd-lgn{ padding:0 8px; }
+  .hd-lgn-t{ white-space:normal; width:4.6em; text-align:center; line-height:1.2; word-break:keep-all; }
+}

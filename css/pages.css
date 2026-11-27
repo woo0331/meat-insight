@@ -9521,7 +9521,7 @@ img[src^="/img/card/service-internet."]{ object-position:55% 45%; }
    ⚠️ 카드는 흰색 하나 · 색은 아이콘과 그 뒤 파스텔 칸에만 (아이콘 3.0 이상으로 재서 고름)
    ⚠️ 글자를 줄이거나 말줄임하지 않습니다 — 360px 에서 긴 제목은 두 줄로 내려갑니다
    ════════════════════════════════════════════════════════════════════ */
-html.ivh #view > section.bsq{ background:#FAF6EF; }
+html.ivh #view > section.bsq{ background:#FDFBF6; }   /* 이웃(#F5F1E9)과 ΔE 3.8 — #FAF6EF 는 1.84 라 한 구간으로 읽혔습니다 (전수 점검) */
 .bsq-hd{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 16px; }
 .bsq-hd h2{ margin:0; font-size:clamp(21px,2.2vw,28px); color:var(--hm-ink); }
 .bsq-all{ flex:none; display:inline-flex; align-items:center; gap:4px; min-height:44px; padding:0 4px;

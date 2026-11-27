@@ -2304,6 +2304,8 @@ const AUDIT = `(() => {
     const bad = [];
     document.querySelectorAll("#view *").forEach(function(e){
       const r = e.getBoundingClientRect(); if(r.width * r.height < 1500) return;
+      /* 2026-11-27 대표 최종 시안 서비스 바로 찾기 — 색은 아이콘 뒤 작은 파스텔 칸에만 (이것만 예외 · 카드 · 구간은 그대로 봅니다) */
+      if(e.closest(".bsq-i")) return;
       const c = rgb(getComputedStyle(e).backgroundColor); if(!c) return;
       const h = hsl(c);
       if(h[1] > 0.30 && h[2] > 0.08 && h[2] < 0.97 && (h[0] < 8 || h[0] > 50))

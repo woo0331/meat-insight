@@ -7287,7 +7287,7 @@ img[src^="/img/card/service-internet."]{ object-position:55% 45%; }
 .myq-qgo{ margin:8px 0 0; }
 .myq-qgo .btn{ min-height:44px; }
 
-html.ivh #view > section.bsq{ background:#FAF6EF; }
+html.ivh #view > section.bsq{ background:#FDFBF6; }
 .bsq-hd{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 16px; }
 .bsq-hd h2{ margin:0; font-size:clamp(21px,2.2vw,28px); color:var(--hm-ink); }
 .bsq-all{ flex:none; display:inline-flex; align-items:center; gap:4px; min-height:44px; padding:0 4px;

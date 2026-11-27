@@ -9569,3 +9569,32 @@ html.ivh #view > section.bsq{ background:#FDFBF6; }   /* 이웃(#F5F1E9)과 ΔE 
   .bsq-go{ top:14px; transform:none; }
   .bsq-t{ width:100%; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   2026-11-27 사진 첨부 — 앨범 · 파일 두 단추 + 미리보기 · 개별 빼기 · 올리기
+   ⚠️ 두 라벨 다 포커스 테두리가 따라갑니다 (숨긴 파일 칸이 둘이라 :has 도 둘)
+   ════════════════════════════════════════════════════════════════════ */
+.phup-bs{ display:flex; flex-wrap:wrap; gap:8px; }
+.phup-b2{ background:#fff; color:var(--blue-600); border:1.5px solid var(--blue-600); }
+.phup-b2:hover{ background:var(--blue-50, #F3EEE8); color:var(--navy); }
+.phup:has(#phup-f:focus-visible) .phup-b{ outline:none; }
+.phup:has(#phup-f:focus-visible) label[for="phup-f"],
+.phup:has(#phup-f2:focus-visible) label[for="phup-f2"]{ outline:2px solid var(--blue); outline-offset:3px; }
+.phup-l > li{ grid-template-columns:56px minmax(0,1fr) auto; padding:6px 6px 6px 6px; }
+.phup-th{ width:56px; height:56px; border-radius:10px; overflow:hidden; background:var(--bg-2, #F3EEE8);
+  display:grid; place-items:center; color:var(--ink2); }
+.phup-th img{ width:100%; height:100%; object-fit:cover; display:block; }
+.phup-tx{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.phup-tx .phup-st{ white-space:normal; }
+.phup-hint{ font-size:var(--t-cap); line-height:1.5; color:var(--ink2); }
+.phup-x{ width:44px; height:44px; display:grid; place-items:center; border:0; background:transparent;
+  color:var(--ink2); border-radius:10px; cursor:pointer; }
+.phup-x:hover{ background:var(--bg-2, #F3EEE8); color:var(--ink); }
+.phup-cnt{ margin:8px 0 0; font-size:var(--t-cap); color:var(--ink2); }
+.phup-cnt:empty{ display:none; }
+.phup-go{ margin-top:10px; min-height:var(--tap); }
+.phup-go[disabled]{ opacity:.55; cursor:not-allowed; }
+@media (max-width:620px){
+  .phup-bs .phup-b{ flex:1 1 140px; width:auto; }
+  .phup-go{ width:100%; }
+}

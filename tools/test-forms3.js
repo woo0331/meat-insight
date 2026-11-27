@@ -59,6 +59,12 @@ const res = []; const ok = (c, m, x) => { res.push((c ? "✅ " : "❌ ") + m + (
     ok(qb.items && qb.items.length === 2 && qb.region && qb.name === "시험", W + " quote 보낸 몸통 (서비스 2 · 지역 · 이름)", qb);
     ok(/SW-TEST-0001/.test(await pg.textContent("#q-fail")), W + " quote 접수번호 표시");
     ok(/저장됨/.test(await pg.textContent("#q-fail")), W + " quote 사진 저장됨 표시");
+    ok(await pg.evaluate(() => { const f = document.getElementById("q-f"), b = document.getElementById("q-fail");
+      return f.hidden && !document.getElementById("q-ag").offsetParent && b.nextElementSibling === f && b.offsetParent &&
+        b.textContent.indexOf("SW-TEST-0001") < b.textContent.indexOf("저장됨"); }),
+      W + " quote 접수 뒤 폼 · 동의 칸은 접히고 접수번호 → 사진 결과가 먼저");
+    await pg.click(".q-done-again button");
+    ok(await pg.evaluate(() => !document.getElementById("q-f").hidden), W + " quote '새로 작성하기' 로 폼이 다시 열림");
     // 2 폐업
     await check("/quote?mode=close", "close");
     await pg.check("#cq-s-demolish-full"); await pg.check("#cq-s-asset");
@@ -82,6 +88,7 @@ const res = []; const ok = (c, m, x) => { res.push((c ? "✅ " : "❌ ") + m + (
     const ab = (sent.find(x => x.u === "quote") || {}).j || {};
     ok(ab.form === "sell" && ab.cat === "asset" && ab.detail["품목"] === "4도어 냉장고" && ab.q, W + " asset 몸통", ab);
     ok(/검수 대기/.test(await pg.textContent("#sl-fail")), W + " asset 완료 화면이 검수 대기라고 말함");
+    ok(await pg.evaluate(() => document.getElementById("sl-f").hidden && document.getElementById("sl-fail").offsetParent !== null), W + " asset 접수 뒤 폼이 접히고 결과가 보임");
     // 4 상품
     await check("/my?v=product", "product");
     ok(await pg.evaluate(() => !document.getElementById("pd-fs").disabled), W + " product 로그인 · 준비면 칸이 열림");

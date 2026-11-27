@@ -7405,3 +7405,8 @@ html.ivh #view > section.bsq{ background:#FDFBF6; }
 .pd-mine a{ display:flex; flex-direction:column; gap:2px; min-height:52px; justify-content:center;
   padding:10px 14px; border:1px solid var(--line); border-radius:12px; background:#fff; color:var(--ink); text-decoration:none; }
 .pd-mine a i{ font-style:normal; color:var(--ink2); font-size:var(--t-cap, 13px); }
+
+.q-done{ margin:0 0 20px; scroll-margin-top:90px; }
+.q-done .phup-form{ margin-top:14px; }
+.q-done-again{ margin:16px 0 0; }
+#q-f[hidden], #cq-f[hidden], #sl-f[hidden]{ display:none !important; }

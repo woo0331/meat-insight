@@ -616,6 +616,18 @@ window.amSend = function(failId, body, again, done){
       toast(dup ? "이미 접수되었습니다" : "접수되었습니다");
       var f = box && box.closest("form"); if(f) f.reset();
 
+      if(f && box && f.parentNode){
+        box.classList.add("q-done");
+        f.parentNode.insertBefore(box, f);
+        f.hidden = true;
+        var again2 = document.createElement("p");
+        again2.className = "q-done-again";
+        again2.innerHTML = '<button type="button" class="btn btn-o">새로 작성하기</button>';
+        again2.firstChild.onclick = function(){ f.hidden = false; again2.remove(); f.scrollIntoView({ block:"start" }); };
+        box.appendChild(again2);
+        try{ box.scrollIntoView({ block:"start" }); }catch(e){}
+      }
+
       if(typeof done === "function"){ try{ done(); }catch(e){} }
       if(btn){ btn.disabled = false; btn.textContent = "다시 보내기"; }
     })

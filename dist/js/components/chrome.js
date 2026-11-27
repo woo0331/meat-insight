@@ -88,12 +88,7 @@ function Logo(where){
 
 function Header(){
 
-  var closedBar = (window.WOW_BIZ && WOW_BIZ.sosReady) ? "" :
-    '<div role="status" class="hd-closed" style="background:var(--bg-sky,#EFF6FC);color:var(--navy,#0C3D70);'+
-      'border-bottom:1px solid var(--line,#E2E8F0);text-align:center;padding:10px 16px;font-size:14px">'+
-      '현재 견적 · 매물 등록 · 입점 · 로그인 접수를 받지 않습니다. '+
-      '<span class="hd-closed-x">정보 · 계산도구 · 체크리스트는 그대로 이용하실 수 있습니다.</span></div>';
-  return closedBar + '<header class="hd"><div class="w-wide hd-in">'+
+  return '<header class="hd"><div class="w-wide hd-in">'+
     Logo() +
     '<nav class="gnb" id="gnb" aria-label="주요 메뉴">'+
       AM_GNB.map(function(m, i){
@@ -234,8 +229,23 @@ function ctaTagLinks(){
       }
     }
     a.setAttribute("data-go-form", f);
+
+    var nx = a.nextElementSibling;
+
+    var box = a.parentNode, box2 = box && box.parentNode;
+    var has = function(n){ return n && n.querySelector && n.querySelector('a[href^="/intake"]:not([data-go-off])'); };
+    if(!(nx && nx.getAttribute("data-go-off") === f) && !has(box) && !has(box2)){
+      var o = document.createElement("a");
+
+      o.className = "btn btn-o go-off" + (/\bbtn-lg\b/.test(a.className) ? " btn-lg" : "");
+      o.setAttribute("href", "/intake");
+      o.setAttribute("data-go-off", f);
+      o.textContent = (GO_OFF_SAY[f] || GO_OFF_SAY.quote) + " · 안내 보기";
+      a.parentNode.insertBefore(o, a.nextSibling);
+    }
   });
 }
+var GO_OFF_SAY = { quote:"견적 접수 중단", close:"상담 접수 중단", sell:"매물 등록 중단", join:"입점 접수 중단" };
 window.hdCtaPaint = hdCtaPaint;
 function hdCtaPaint(){
   ctaTagLinks();

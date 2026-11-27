@@ -926,6 +926,19 @@ function HomeEnter(){
    여기 적는 것은 **어느 분류를 앞에 낼지** 뿐입니다. */
 var HOME_DIRECT = ["interior", "equip", "it", "admin",
                    "staff", "marketing", "demolish", "restore"];
+/* 2026-11-27 대표 최종 시안 '서비스 바로 찾기' — 카드 여덟의 표시 문구 · 아이콘 · 아이콘 영역 색.
+   ⚠️ 차례와 분류 key 는 HOME_DIRECT 그대로입니다 (주소는 catTo 가 정합니다).
+   ⚠️ 색은 **아이콘과 그 뒤 파스텔 칸에만** 씁니다 — 카드는 흰색으로 통일 (css/pages.css .bsq-*). */
+var HOME_QUICK8 = {
+  interior:  { t:"인테리어·시공",   s:"설계 · 전기 · 배관",     ic:"roller",     tn:"terra" },
+  equip:     { t:"시설·장비",       s:"업종별 장비 · 매장 설비",   ic:"wrench",     tn:"mint" },
+  it:        { t:"POS·매장 시스템", s:"키오스크 · 인터넷",      ic:"monitor",    tn:"blue" },
+  admin:     { t:"세무·노무·행정",  s:"세무사 · 노무사",        ic:"briefcase",  tn:"lav" },
+  staff:     { t:"직원 채용",       s:"정직원 · 아르바이트",    ic:"users",      tn:"sage" },
+  marketing: { t:"홍보·디자인",     s:"로고 · 메뉴판",          ic:"megaphone",  tn:"rose" },
+  demolish:  { t:"철거",            s:"전체철거 · 부분철거",    ic:"jackhammer", tn:"amber" },
+  restore:   { t:"원상복구",        s:"바닥 · 벽 · 설비",       ic:"corner",     tn:"olive" }
+};
 
 /* ⚠️⚠️ **카드 설명은 그 분류가 실제로 들고 있는 하위 서비스**입니다
    (`catalog.js` 의 `items`). 시안이 적어 둔 "주방기기, 냉난방, 집기,
@@ -959,9 +972,16 @@ function HomeDirect(noPick){
        ⚠️⚠️ **카드 전체가 하나의 `a` 입니다** — "관련 서비스 보기" 는
        시안에서 단추처럼 보이지만 **표시**이고, 안에 또 `a` 를 넣으면
        브라우저가 쪼갭니다 (단계 카드 · 진입 카드에서 겪은 자리). */
-    /* 2026-11-25 디자인 개편 §1 — 메인(noPick)의 세부 서비스는 빠르게 훑는 링크 목록 */
-    if(noPick) return '<li><a class="bdq-a" href="'+esc(to)+'"><span class="bdq-i" aria-hidden="true">'+icon(c.icon || "grid", 18)+'</span>'+
-      '<span class="bdq-t"><b>'+esc(c.name)+'</b>'+(ds ? '<i>'+esc(ds)+'</i>' : '')+'</span>'+icon("chev",14)+'</a></li>';
+    /* 2026-11-25 디자인 개편 §1 — 메인(noPick)의 세부 서비스는 빠르게 훑는 링크 목록
+       ⚠️⚠️ 2026-11-27 대표 최종 시안 '서비스 바로 찾기' — 흰 카드 여덟 (HOME_QUICK8).
+       이름 · 줄 · 아이콘 · 색은 시안 그대로이고, **주소는 그 분류의 진짜 화면**(catTo)입니다. */
+    if(noPick){
+      var q = HOME_QUICK8[k] || { t:c.name, s:"", ic:c.icon || "grid", tn:"terra" };
+      return '<li><a class="bsq-c" href="'+esc(to)+'">'+
+        '<span class="bsq-i bsq-'+esc(q.tn)+'" aria-hidden="true">'+icon(q.ic, 28)+'</span>'+
+        '<span class="bsq-t"><b>'+esc(q.t)+'</b>'+(q.s ? '<i>'+esc(q.s)+'</i>' : '')+'</span>'+
+        '<span class="bsq-go" aria-hidden="true">'+icon("chev",18)+'</span></a></li>';
+    }
     return '<li><a class="bdir-c'+tn(c.tone)+'" href="'+esc(to)+'">'+
       '<span class="bdir-i" aria-hidden="true">'+
         (hasIconArt(c.key) ? iconArt(c.key, 64) : icon(c.icon, 34))+'</span>'+
@@ -981,6 +1001,15 @@ function HomeDirect(noPick){
   /* ⚠️ "전체 서비스 보기" 가 **구간 아래에서 머리말 오른쪽으로**
      올라왔습니다 (시안). 길은 그대로 `/providers` 하나입니다 —
      옮긴 것이지 지운 것이 아닙니다. */
+  /* 2026-11-27 대표 최종 시안 — 메인은 제목 '서비스 바로 찾기' + 오른쪽 작은 '전체 보기 →'.
+     긴 설명과 가로 전체 진한 단추를 뺐습니다 (길은 그대로 /providers 하나). */
+  if(noPick) return '<section class="bdir bsq"><div class="w">'+
+    '<div class="bsq-hd"><h2>서비스 바로 찾기</h2>'+
+      '<a class="bsq-all" href="/providers">전체 보기'+icon("arrow",15)+'</a></div>'+
+    '<ul class="bsq-g">'+cards+'</ul>'+
+    /* ⚠️ 숫자는 손으로 적지 않습니다 — 그 자리에서 셉니다 (ⓘ "등록된 업체 수가 아닙니다" 줄을 지우지 마세요) */
+    MainScopeStrip()+
+  '</div></section>';
   return '<section class="bdir"><div class="w">'+
     '<div class="sec-hd hm-hd">'+
       '<div class="hm-hd-t">'+

@@ -2304,6 +2304,8 @@ const AUDIT = `(() => {
     const bad = [];
     document.querySelectorAll("#view *").forEach(function(e){
       const r = e.getBoundingClientRect(); if(r.width * r.height < 1500) return;
+      /* 2026-11-27 대표 최종 시안 서비스 바로 찾기 — 색은 아이콘 뒤 작은 파스텔 칸에만 (이것만 예외 · 카드 · 구간은 그대로 봅니다) */
+      if(e.closest(".bsq-i")) return;
       const c = rgb(getComputedStyle(e).backgroundColor); if(!c) return;
       const h = hsl(c);
       if(h[1] > 0.30 && h[2] > 0.08 && h[2] < 0.97 && (h[0] < 8 || h[0] > 50))
@@ -3869,7 +3871,7 @@ const AUDIT = `(() => {
                   [".iind-g",  "업종별 서비스 탐색"],
                   [".iops-l",  "매장 운영 목록"],
                   [".itr-f",   "매물 찾기 (지역 · 업종 · 예산)"],
-                  [".bdir-g, .bdq-g",  "세부 서비스"],
+                  [".bdir-g, .bdq-g, .bsq-g",  "세부 서비스"],
                   [".wp-sg",   "이용 방법 넷"]];
     /* 숨겨 둔 짝(data-cta=on · hidden)은 닫혀 있을 때 안 보이는 것이 맞습니다 — 보이는 것만 셉니다 */
     if(!(window.WOW_BIZ && WOW_BIZ.sosReady) && [].slice.call(v.querySelectorAll('a[href="/quote"]')).some(function(a){ return !a.closest("[hidden]") && a.getClientRects().length; }))

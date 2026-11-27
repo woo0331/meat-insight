@@ -161,12 +161,11 @@ function Header(){
      띠라 폰 360px 첫 화면의 어두운 면이 15% 를 넘었습니다 · sweep-rest 13건).
      ⚠️ sosReady 가 켜지면 저절로 사라집니다 — 손으로 지우는 띠를 만들지 않습니다.
      재개일은 적지 않습니다 (확정되지 않았습니다). */
-  var closedBar = (window.WOW_BIZ && WOW_BIZ.sosReady) ? "" :
-    '<div role="status" class="hd-closed" style="background:var(--bg-sky,#EFF6FC);color:var(--navy,#0C3D70);'+
-      'border-bottom:1px solid var(--line,#E2E8F0);text-align:center;padding:10px 16px;font-size:14px">'+
-      '현재 견적 · 매물 등록 · 입점 · 로그인 접수를 받지 않습니다. '+
-      '<span class="hd-closed-x">정보 · 계산도구 · 체크리스트는 그대로 이용하실 수 있습니다.</span></div>';
-  return closedBar + '<header class="hd"><div class="w-wide hd-in">'+
+  /* ⚠️⚠️ 2026-11-27 — 맨 위 회색 공지 띠를 뺐습니다 (사장님 지시 · 모바일 · PC).
+     닫혀 있다는 말은 이제 **그 단추 자리**에서 합니다 — 헤더 '접수 안내' ·
+     메뉴의 닫힘 쪽 이름 · 본문 단추 옆의 '… 접수 중단 · 안내' (ctaTagLinks) ·
+     /intake 화면. ⚠️ 띠를 되살리지 마세요 — 모든 화면 맨 위를 한 줄 먹습니다. */
+  return '<header class="hd"><div class="w-wide hd-in">'+
     Logo() +
     '<nav class="gnb" id="gnb" aria-label="주요 메뉴">'+
       AM_GNB.map(function(m, i){
@@ -375,8 +374,26 @@ function ctaTagLinks(){
       }
     }
     a.setAttribute("data-go-form", f);
+    /* 2026-11-27 — 닫힌 양식의 단추는 CSS 가 가립니다. 그 자리에 **닫혔다는 말**을
+       남깁니다 (맨 위 띠를 뺀 대신). 열리면 CSS 가 이쪽을 가립니다 (html.iq-<양식>). */
+    var nx = a.nextElementSibling;
+    /* ⚠️ 같은 덩이에 이미 닫힘 안내(/intake 로 가는 단추)가 있으면 또 내지 않습니다 —
+       한 자리에 '접수 안내' 가 둘이면 같은 말을 두 번 합니다 (찍어 보고 알았습니다). */
+    var box = a.parentNode, box2 = box && box.parentNode;
+    var has = function(n){ return n && n.querySelector && n.querySelector('a[href^="/intake"]:not([data-go-off])'); };
+    if(!(nx && nx.getAttribute("data-go-off") === f) && !has(box) && !has(box2)){
+      var o = document.createElement("a");
+      /* ⚠️ 원래 단추의 **짙은 색을 베끼지 않습니다** — 닫힘 안내는 보조 단추(테두리)입니다.
+         베꼈더니 /providers 첫 화면의 어두운 면이 20.8% 로 한도(15%)를 넘었습니다 (전수 점검). */
+      o.className = "btn btn-o go-off" + (/\bbtn-lg\b/.test(a.className) ? " btn-lg" : "");
+      o.setAttribute("href", "/intake");
+      o.setAttribute("data-go-off", f);
+      o.textContent = (GO_OFF_SAY[f] || GO_OFF_SAY.quote) + " · 안내 보기";
+      a.parentNode.insertBefore(o, a.nextSibling);
+    }
   });
 }
+var GO_OFF_SAY = { quote:"견적 접수 중단", close:"상담 접수 중단", sell:"매물 등록 중단", join:"입점 접수 중단" };
 window.hdCtaPaint = hdCtaPaint;
 function hdCtaPaint(){
   ctaTagLinks();

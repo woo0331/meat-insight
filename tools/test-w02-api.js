@@ -89,7 +89,8 @@ const Q = { kind: "quote", name: "합성고객김", tel: "010-9999-1111", email:
                         ["연락처 없음", Object.assign({}, Q, { tel: "" })],
                         ["없는 서비스 id", Object.assign({}, Q, { items: [{ id: "no-such-svc" }] })],
                         ["받지 않는 종류(sos)", Object.assign({}, Q, { kind: "sos" })],
-                        ["내용 없음", Object.assign({}, Q, { q: "" })]]) {
+                        ["서비스도 내용도 없음", Object.assign({}, Q, { q: "", items: undefined, serviceName: "" })],
+                        ["지역 없음", Object.assign({}, Q, { region: "" })]]) {
     const h = load("quote.js"); const w = world(); const r = res(); await h(req(b), r);
     ok(r.code === 400 && w.rpc.length === 0, n + " → 400 · DB 를 부르지 않음", { code: r.code, body: r.body, rpc: w.rpc.length }); }
 

@@ -477,6 +477,7 @@ function render(){
 
   if(nowPath() === "/my" && typeof window.myLoadDb === "function") window.myLoadDb();
   if(nowPath() === "/my" && typeof window.myLkInit === "function") window.myLkInit();
+  if(nowPath() === "/my" && typeof window.myPdInit === "function") window.myPdInit();
   if(nowPath() === "/intake" && typeof window.intakePaint === "function") window.intakePaint();
 
   if(typeof window.hdCtaPaint === "function") window.hdCtaPaint();

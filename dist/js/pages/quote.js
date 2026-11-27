@@ -280,130 +280,119 @@ function QuoteStage(){
     '않습니다.</p>';
 }
 
-function PageQuote(){
+var Q_ANY = ["interior","equip","it","admin","marketing","demolish","restore","clean"];
+function quoteChoices(c, ind){
 
+  var L = [];
+  if(c && typeof amCatItems === "function"){
+    L = amCatItems(c, ind).slice(0, 8).map(function(x){ return amPickOne(c.key + "/" + x.key); });
+    if(!L.filter(Boolean).length) L = [amPickOne(c.key)];
+  }
+  if(!L.filter(Boolean).length) L = Q_ANY.map(function(k){ return amPickOne(k); });
+  return L.filter(Boolean);
+}
+function QChoiceGrid(name, opts, pre, unsureLab){
+  return '<div class="cq-svc q-chs" role="group" aria-label="필요한 서비스">'+
+    opts.map(function(sv){
+      var id = name + "-" + sv.id.replace(/[^a-z0-9]/gi, "-");
+      return '<label class="cq-k" for="'+id+'"><input type="checkbox" id="'+id+'" name="'+name+'" value="'+esc(sv.id)+'"'+
+        (pre && pre[sv.id] ? " checked" : "")+'><span>'+esc(amPickLabel(sv))+'</span></label>';
+    }).join("")+
+    '<label class="cq-k cq-k-un" for="'+name+'-un"><input type="checkbox" id="'+name+'-un" name="'+name+'" value="unsure"><span>'+esc(unsureLab || "잘 모르겠어요")+'</span></label>'+
+  '</div>';
+}
+
+function qPicked(name){
+  var v = [].slice.call(document.querySelectorAll('input[name="'+name+'"]:checked')).map(function(x){ return x.value; });
+  return { ids: v.filter(function(x){ return x !== "unsure"; }), unsure: v.indexOf("unsure") >= 0 };
+}
+function QMore(id, inner){
+  return '<details class="q-more" id="'+id+'"><summary><b>추가 정보</b> <i>(선택)</i>'+icon("chevd",16)+'</summary>'+
+    '<div class="q-more-b">'+inner+'</div></details>';
+}
+
+function PageQuote(){
   if(nowQS("mode") === "close") return PageQuoteClose();
   var list = quoteServices();
-  var cat  = nowQS("c"), sub = nowQS("s");
+  var cat  = nowQS("c");
   var ind  = nowQS("i"), reg = nowQS("r");
   var side = nowQS("side") || "start";
-
   var bud  = nowQS("bud"), when = nowQS("when");
-
   var py   = (nowQS("py") || "").replace(/[^0-9]/g, "").slice(0, 5);
   var c    = cat ? amCat(cat) : null;
-  var subName = "";
-  if(c){
-    var hit = amCatItems(c, ind).filter(function(x){ return x.key === sub; })[0];
-    subName = hit ? hit.name : "";
-  }
-  var ready = !!(window.WOW_BIZ && WOW_BIZ.sosReady);
-
   var offNames = (typeof quoteOfferNames === "function") ? quoteOfferNames() : "";
-  var svNames  = list.map(amPickLabel).join(" · ");
-  var what = subName || svNames || (c ? c.name : "") || offNames;
+  var what = list.map(amPickLabel).join(" · ") || offNames;
+  var opts = list.length ? [] : quoteChoices(c, ind);
 
   return PgHero({
     kicker:"견적 요청",
-    h1raw:"한 번만 적으시면<br class=\"br-m\"> 서비스마다 나눠서 확인합니다.",
-    lead:"고르신 서비스마다 조건에 맞는 업체가 있는지 운영자가 확인합니다. 같은 내용을 업체마다 다시 적지 않으셔도 됩니다. 맞는 업체가 없으면 연결되지 않을 수 있습니다. 무료입니다.",
+    h1raw:"견적 신청",
+    lead:"필요한 서비스와 지역, 연락처만 적어 주세요. 무료입니다.",
     tight:true
   })+
-  '<section class="sec sec-white"><div class="w form-wrap">'+
-
-    QuoteStage()+
-
-    (
-      '<div class="notice-bad" data-cta="off" data-cta-form="quote"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
-        '<p>접수처 설정이 끝나면 바로 열립니다. 그동안에는 '+
-        '<a href="/providers">업체찾기</a>에서 분야를 보시거나, '+
-        '<a href="/content">창업 · 폐업 정보</a>에서 무엇을 확인해야 하는지 '+
-        '먼저 보실 수 있습니다.</p></div>')+
+  '<section class="sec sec-white"><div class="w form-wrap qf">'+
+    '<div class="notice-bad" data-cta="off" data-cta-form="quote"><b>지금은 이 양식으로 접수하지 못합니다.</b>'+
+      '<p>적으셔도 보내지지 않습니다. 그동안 <a href="/providers">업체찾기</a>에서 분야를 먼저 보실 수 있습니다.</p></div>'+
     QuoteOfferBand()+
-
-    QSum()+
     '<form id="q-f" onsubmit="return quoteSend(event)">'+
-      QuoteSvcStep(list, side)+
+      '<input type="hidden" id="q-side" value="'+esc(side)+'">'+
+      '<input type="hidden" id="q-what" value="'+esc(what)+'">'+
 
-      '<div class="qs" id="qs-where">'+
-        QStepHd("02", "어느 지역이신가요?",
-          "지역이 업체를 고르는 첫 번째 조건입니다.")+
+      '<div class="qs" id="qs-svc">'+QStepHd("1", "필요한 서비스", list.length ? "" : "여러 개를 함께 고르셔도 됩니다.")+
+        (list.length
+          ? '<ul class="qs-l" id="q-svl">'+list.map(function(sv){
+              return '<li><span class="qs-n">'+esc(amPickLabel(sv))+'</span>'+
+                '<button class="qs-x" type="button" onclick="quoteSvcDel(\''+esc(sv.id)+'\')" '+
+                  'aria-label="'+esc(amPickLabel(sv))+' 빼기">'+icon("x",15)+'</button></li>';
+            }).join("")+'</ul>'+
+            '<p class="qs-go"><a class="btn btn-o btn-sm" href="'+esc(quotePickBack(side))+'">수정'+icon("arrow",14)+'</a></p>'
+          : QChoiceGrid("q-s", opts, null))+
+      '</div>'+
+
+      '<div class="qs" id="qs-where">'+QStepHd("2", "매장 지역", "")+
         '<div class="f-2">'+
-          '<div class="f-r"><label for="q-reg">지역 <b>*</b></label>'+
+          '<div class="f-r"><label for="q-reg">시 · 도 <b>*</b></label>'+
             RegionSelect("q-reg", reg, "", "지역을 골라 주세요", true)+'</div>'+
           '<div class="f-r"><label for="q-gu">시 · 군 · 구 <i>(선택)</i></label>'+
             '<input id="q-gu" autocomplete="address-level2" placeholder="예: 안양시"></div>'+
         '</div>'+
-        '<div class="f-2">'+
-          '<div class="f-r"><label for="q-ind">업종 <i>(선택)</i></label>'+IndustrySelect("q-ind", ind)+'</div>'+
-          '<div class="f-r"><label for="q-side">무엇 때문에 <b>*</b></label>'+
-            '<select class="sel" id="q-side">'+
-
-              (window.AM_SIDES || []).map(function(s){
-                return '<option value="'+esc(s.key)+'"'+
-                  ((side === s.key || (!side && s.key === "start")) ? " selected" : "")+
-                  '>'+esc(s.say)+'</option>';
-              }).join("")+
-            '</select></div>'+
-        '</div>'+
       '</div>'+
 
-      '<div class="qs">'+
-        QStepHd("03", "연락처와 필요한 내용을 적어 주세요",
-          "별표(*)만 필수입니다. 나머지는 아시는 만큼만 적어 주셔도 됩니다.")+
+      '<div class="qs">'+QStepHd("3", "이름 · 휴대폰", "")+
         '<div class="f-2">'+
-          '<div class="f-r"><label for="q-name">성함 <b>*</b></label>'+
+          '<div class="f-r"><label for="q-name">이름 <b>*</b></label>'+
             '<input id="q-name" required autocomplete="name"></div>'+
-
-          '<div class="f-r"><label for="q-tel">연락처 <b>*</b></label>'+
-            '<input id="q-tel" type="tel" required autocomplete="tel" '+
-              'inputmode="tel" placeholder="010-0000-0000"></div>'+
+          '<div class="f-r"><label for="q-tel">휴대폰 <b>*</b></label>'+
+            '<input id="q-tel" type="tel" required autocomplete="tel" inputmode="tel" placeholder="010-0000-0000"></div>'+
         '</div>'+
+      '</div>'+
 
-        '<div class="f-r"><label for="q-what">필요한 일 <b>*</b></label>'+
-          '<input id="q-what" required value="'+esc(what)+'" '+
-            'placeholder="예: 카페 인테리어 / 주방 철거 / POS 설치"></div>'+
+      PhotoPick("q", { say:"현장 사진이 있으면 견적이 정확해집니다. 없어도 신청할 수 있습니다." })+
 
-        '<div class="f-r"><label for="q-q">자세한 내용 <b>*</b></label>'+
-          '<textarea id="q-q" rows="6" required '+
-            'placeholder="지금 상황과 필요한 것을 그대로 적어 주세요. 양식이 없어도 됩니다."></textarea></div>'+
-
+      QMore("q-more",
         '<div class="f-2">'+
-          '<div class="f-r"><label for="q-py">평수 <i>(선택)</i></label>'+
-            '<input id="q-py" inputmode="numeric" value="'+esc(py||"")+'" '+
-              'placeholder="예: 30"></div>'+
-          '<div class="f-r"><label for="q-bud">예산 <i>(선택)</i></label>'+
-            '<input id="q-bud" value="'+esc(bud||"")+'" '+
-              'placeholder="예: 5,000만원 / 아직 모름"></div>'+
+          '<div class="f-r"><label for="q-py">평수</label>'+
+            '<input id="q-py" inputmode="numeric" value="'+esc(py||"")+'" placeholder="예: 30"></div>'+
+          '<div class="f-r"><label for="q-bud">예산</label>'+
+            '<input id="q-bud" value="'+esc(bud||"")+'" placeholder="예: 5,000만원 / 아직 모름"></div>'+
         '</div>'+
-        '<div class="f-r"><label for="q-when">희망 일정 <i>(선택)</i></label>'+
-          '<input id="q-when" value="'+esc(when||"")+'" '+
-            'placeholder="예: 2027년 2월 오픈 / 이번 달 안"></div>'+
-
-        '<div class="f-r"><label for="q-img">사진 · 도면 링크 <i>(선택)</i></label>'+
-          '<input id="q-img" placeholder="클라우드 공유 링크가 있으면"></div>'+
-
+        '<div class="f-2">'+
+          '<div class="f-r"><label for="q-when">희망 일정</label>'+
+            '<input id="q-when" value="'+esc(when||"")+'" placeholder="예: 다음 달 말"></div>'+
+          '<div class="f-r"><label for="q-ind">업종</label>'+IndustrySelect("q-ind", ind)+'</div>'+
+        '</div>'+
+        '<div class="f-r"><label for="q-q">추가 요청</label>'+
+          '<textarea id="q-q" rows="4" placeholder="지금 상황이나 꼭 전하실 것이 있으면 적어 주세요."></textarea></div>'+
         SvcAskBand(list)+
+        QuoteDraftBox())+
 
-        QuoteDraftBox()+
-      '</div>'+
-
-      '<div class="qs">'+
-        QStepHd("04", "확인하고 보내기", "")+
-        AgreeBox("q-ag","성함 · 연락처 · 업종 · 지역 · 평수 · 예산 · 일정 · 적어 주신 내용",
-                 "견적 요청 접수와 상담 안내","접수일로부터 1년")+
-        QNotifyBox()+
-        PhotoPick("q")+
-        '<div id="q-fail"></div>'+
-        '<button class="btn btn-b btn-lg btn-full" type="submit" disabled data-gate="quote">'+
-          '<span id="q-go-t">'+(list.length
-            ? "선택한 "+list.length+"개 서비스 견적 신청하기"
-            : "견적 신청하기")+'</span>'+icon("arrow",18)+'</button>'+
-
-        '<p class="note note-mid">업체에서 견적을 받으시면 <b>아래 표에 적어 '+
-          '두세요.</b> 금액 · 기간 · 포함 범위를 나란히 놓고 보실 수 있습니다. '+
-          '이 브라우저에만 남고 서버로 보내지 않습니다.</p>'+
-      '</div>'+
+      AgreeBox("q-ag","이름 · 휴대폰 · 지역 · 고르신 서비스 · 적어 주신 추가 정보(선택)",
+               "견적 요청 접수와 상담 안내","접수일로부터 1년")+
+      QNotifyBox()+
+      '<div id="q-fail"></div>'+
+      '<button class="btn btn-b btn-lg btn-full" type="submit" disabled data-gate="quote">'+
+        '<span id="q-go-t">견적 신청하기</span>'+icon("arrow",18)+'</button>'+
+      QuoteStage()+
     '</form>'+
   '</div></section>'+
   CompareBand();
@@ -479,25 +468,32 @@ window.quoteSend = function(ev){
   ev.preventDefault();
   if(!$("q-ag").checked){ toast("개인정보 수집 · 이용 동의가 필요합니다"); return false; }
 
-  var need = [["q-what","필요한 일"],["q-reg","지역"],["q-q","자세한 내용"],
-              ["q-name","성함"],["q-tel","연락처"]];
+  var list = quoteServices();
+  var pk = qPicked("q-s");
+  if(!list.length){
+    list = pk.ids.map(amPickOne).filter(Boolean);
+    $("q-what").value = list.map(amPickLabel).join(" · ") || (pk.unsure ? "잘 모르겠어요 — 상담 후 정하기" : $("q-what").value);
+  }
+  if(!list.length && !pk.unsure && !$("q-what").value.trim()){
+    toast("필요한 서비스를 하나 이상 골라 주세요");
+    var c0 = document.querySelector('#qs-svc input'); if(c0){ c0.focus(); c0.scrollIntoView({ block:"center" }); }
+    return false;
+  }
+  var need = [["q-reg","지역"],["q-name","이름"],["q-tel","휴대폰"]];
   for(var i=0;i<need.length;i++){
     if(!$(need[i][0]).value.trim()){
       toast(need[i][1]+"을(를) 적어 주세요");
-
       $(need[i][0]).focus();
       $(need[i][0]).scrollIntoView({ block:"center" });
       return false; }
   }
-
   var tel = $("q-tel").value.replace(/[^0-9]/g, "");
   if(tel.length < 9 || tel.length > 11){
-    toast("연락처를 다시 확인해 주세요");
+    toast("휴대폰 번호를 다시 확인해 주세요");
     $("q-tel").focus(); $("q-tel").scrollIntoView({ block:"center" });
     return false;
   }
 
-  var list = quoteServices();
   var ind = $("q-ind").value, reg = $("q-reg").value;
   var body = {
     kind: "quote",
@@ -525,7 +521,6 @@ window.quoteSend = function(ev){
       "시군구": $("q-gu").value.trim(),
       "평수":  $("q-py").value.trim(),
       "일정":  $("q-when").value.trim(),
-      "사진":  $("q-img").value.trim(),
 
       "신청 서비스": list.map(amPickLabel).join(" · "),
       "신청 상품": quoteOfferNames()
@@ -606,7 +601,7 @@ window.amSend = function(failId, body, again, done){
         (dup ? "이미 접수되었습니다." : "접수되었습니다.") + '</b>' +
         (no ? '<p>접수번호 <b>' + esc(no) + '</b> — 문의하실 때 알려 주세요.</p>' : '') +
         (body && body.form === "sell"
-          ? '<p>운영자가 검수한 뒤에 올립니다 — <b>자동으로 게시되지 않습니다.</b> 연락처는 매물에 나가지 않습니다.</p>'
+          ? '<p>지금 상태는 <b>검수 대기</b>입니다 — <b>아직 공개되지 않았습니다.</b> 운영자가 확인한 뒤 올립니다. 연락처는 매물에 나가지 않습니다.</p>'
           : body && body.kind === "partner"
           ? '<p>입점 심사를 거칩니다 — 심사 전에는 업체 목록에 나가지 않습니다.</p>'
           : '<p>현재 상태는 <b>접수됨</b>입니다. 운영자가 확인합니다.</p>') +
@@ -771,71 +766,69 @@ function PageQuoteClose(){
   var SC = window.AM_CLOSE_SCOPE || { gu:[], cats:[] };
   var pre = {};
   String(nowQS("sv") || "").split(",").forEach(function(x){ x = x.trim(); if(x) pre[x] = 1; });
-  var opts = CLOSE_OPTS.map(function(id){ return amPickOne(id); }).filter(Boolean);
+
+  var MAIN = ["demolish/full","demolish/partial","restore/shop-restore","asset"];
+  var ids = MAIN.slice();
+  Object.keys(pre).forEach(function(k){ if(ids.indexOf(k) < 0 && CLOSE_OPTS.indexOf(k) >= 0) ids.push(k); });
+  var opts = ids.map(function(id){ return amPickOne(id); }).filter(Boolean);
+  if(opts[3] && opts[3].id === "asset") opts[3] = Object.assign({}, opts[3], { easy:"집기 처분" });
   var ind = nowQS("i");
   var today = new Date(); var iso = today.toISOString().slice(0, 10);
+  var got = opts.filter(function(sv){ return pre[sv.id]; });
   return PgHero({
     kicker:"매장 정리 상담",
-    h1raw:"집기 처분 · 철거 · 원상복구를<br class=\"br-m\"> 한 번에 견적 받아 보세요.",
-    lead:"필요한 것만 고르고 연락처를 남기시면 운영자가 확인하고 맞는 업체를 찾아 연락드립니다. 가입하지 않으셔도 됩니다. 무료입니다.",
+    h1raw:"폐업 · 철거 견적 신청",
+    lead:"필요한 것을 고르고 연락처를 남겨 주세요. 무료입니다.",
     tight:true
   })+
-  '<section class="sec sec-white"><div class="w form-wrap cq">'+
+  '<section class="sec sec-white"><div class="w form-wrap cq qf">'+
     '<div class="notice-bad" data-cta="off" data-cta-form="close" role="status"><b>지금은 매장 정리 상담을 받지 않습니다.</b>'+
-      '<p>지금 보내셔도 접수되지 않습니다. 재개 일정은 정해지지 않았습니다. '+
-      '그동안 <a href="/closure">폐업·철거 순서</a>와 '+
+      '<p>적으셔도 보내지지 않습니다. 그동안 <a href="/closure">폐업·철거 순서</a>와 '+
       '<a href="/tools/closecost">폐업 예상비용 계산</a>을 먼저 보실 수 있습니다.</p></div>'+
-
-    '<p class="note-box cq-area">'+icon("mappin",16)+'<span>지금은 <b>'+esc(SC.gu.join(" · "))+
-      '</b>의 매장을 연결해 드립니다. 업체 연결은 운영자가 직접 확인해 진행하고, '+
-      '연결할 업체가 정해지면 어느 업체인지 알려 드린 뒤 연락처 전달 동의를 다시 받습니다.</span></p>'+
-    QSum()+
+    '<p class="note-box cq-area">'+icon("mappin",16)+'<span>지금은 <b>'+esc(SC.gu.join(" · "))+'</b>의 매장을 연결해 드립니다.</span></p>'+
     '<form id="cq-f" onsubmit="return closeSend(event)" novalidate>'+
-
-      (function(){
-        var got = opts.filter(function(sv){ return pre[sv.id]; });
-        if(!got.length) return '<div class="qs" id="qs-svc">'+QStepHd("01", "필요한 서비스를 골라 주세요", "여러 개를 함께 고르셔도 한 번에 접수됩니다.")+cqHint(pre, opts);
-        return '<div class="qs" id="qs-svc">'+QStepHd("01", "선택하신 서비스", "")+
-          '<div class="cq-got"><ul class="cq-got-l">'+got.map(function(sv){ return '<li>'+icon("check",15)+esc(amPickLabel(sv))+'</li>'; }).join("")+'</ul>'+
-          '<button type="button" class="btn btn-o btn-sm cq-got-x" aria-expanded="false" aria-controls="cq-svc" onclick="cqSvcOpen(this)">수정</button></div>';
-      })()+
-        '<div class="cq-svc" id="cq-svc" role="group" aria-label="필요한 서비스"'+(opts.some(function(sv){ return pre[sv.id]; }) ? ' hidden' : '')+'>'+
+      '<div class="qs" id="qs-svc">'+
+        (got.length
+          ? QStepHd("1", "선택하신 서비스", "")+
+            '<div class="cq-got"><ul class="cq-got-l">'+got.map(function(sv){ return '<li>'+icon("check",15)+esc(amPickLabel(sv))+'</li>'; }).join("")+'</ul>'+
+            '<button type="button" class="btn btn-o btn-sm cq-got-x" aria-expanded="false" aria-controls="cq-svc" onclick="cqSvcOpen(this)">수정</button></div>'
+          : QStepHd("1", "필요한 서비스", "여러 개를 함께 고르셔도 됩니다.")+cqHint(pre, opts))+
+        '<div class="cq-svc" id="cq-svc" role="group" aria-label="필요한 서비스"'+(got.length ? ' hidden' : '')+'>'+
           opts.map(function(sv){
             var id = "cq-s-" + sv.id.replace(/[^a-z0-9]/gi, "-");
             return '<label class="cq-k" for="'+id+'"><input type="checkbox" id="'+id+'" name="cq-s" value="'+esc(sv.id)+'"'+
               (pre[sv.id] ? " checked" : "")+'><span>'+esc(amPickLabel(sv))+'</span></label>';
           }).join("")+
+          '<label class="cq-k cq-k-un" for="cq-s-un"><input type="checkbox" id="cq-s-un" name="cq-s" value="unsure"><span>잘 모르겠어요</span></label>'+
         '</div></div>'+
-      '<div class="qs" id="qs-where">'+QStepHd("02", "매장은 어디인가요?", "")+
-        '<div class="f-2">'+
-          '<div class="f-r"><label for="cq-gu">시 · 군 <b>*</b></label>'+
-            '<select class="sel" id="cq-gu" onchange="closeAreaPaint()"><option value="">골라 주세요</option>'+
-              SC.gu.map(function(g){ return '<option value="'+esc(g)+'"'+(nowQS("gu") === g ? " selected" : "")+'>경기 '+esc(g)+'</option>'; }).join("")+
-              '<option value="out">그 밖의 지역</option></select></div>'+
-          '<div class="f-r"><label for="cq-ind">업종 <b>*</b></label>'+IndustrySelect("cq-ind", ind, "", "골라 주세요")+'</div>'+
-        '</div>'+
+      '<div class="qs" id="qs-where">'+QStepHd("2", "매장 지역", "")+
+        '<div class="f-r"><label for="cq-gu">시 · 군 <b>*</b></label>'+
+          '<select class="sel" id="cq-gu" onchange="closeAreaPaint()"><option value="">골라 주세요</option>'+
+            SC.gu.map(function(g){ return '<option value="'+esc(g)+'"'+(nowQS("gu") === g ? " selected" : "")+'>경기 '+esc(g)+'</option>'; }).join("")+
+            '<option value="out">그 밖의 지역</option></select></div>'+
         '<div class="notice-bad cq-out" id="cq-out" hidden role="status"><b>'+esc(window.AM_CLOSE_OUT_SAY || "")+'</b>'+
           '<p><a href="/closure">폐업·철거 순서</a>와 <a href="/tools/closecost">예상비용 계산</a>은 지역과 상관없이 쓰실 수 있습니다.</p></div>'+
-        '<div class="f-r"><label for="cq-when">정리 희망일 <b>*</b></label>'+
-          '<input id="cq-when" type="date" min="'+iso+'"></div>'+
       '</div>'+
-      '<div class="qs">'+QStepHd("03", "연락처를 남겨 주세요", "")+
+      '<div class="qs">'+QStepHd("3", "이름 · 휴대폰", "")+
         '<div class="f-2">'+
-          '<div class="f-r"><label for="cq-name">성함 <b>*</b></label><input id="cq-name" autocomplete="name"></div>'+
-          '<div class="f-r"><label for="cq-tel">연락처 <b>*</b></label><input id="cq-tel" type="tel" autocomplete="tel" inputmode="tel" placeholder="010-0000-0000"></div>'+
+          '<div class="f-r"><label for="cq-name">이름 <b>*</b></label><input id="cq-name" autocomplete="name"></div>'+
+          '<div class="f-r"><label for="cq-tel">휴대폰 <b>*</b></label><input id="cq-tel" type="tel" autocomplete="tel" inputmode="tel" placeholder="010-0000-0000"></div>'+
         '</div>'+
-        '<div class="f-r"><label for="cq-q">지금 상황 <i>(선택)</i></label>'+
-          '<textarea id="cq-q" rows="4" placeholder="예: 30평 음식점, 다음 달 말 계약 만료. 주방 기기는 팔고 싶고 철거와 원상복구가 필요합니다."></textarea></div>'+
       '</div>'+
-      '<div class="qs">'+QStepHd("04", "확인하고 보내기", "")+
-        AgreeBox("cq-ag","성함 · 연락처 · 업종 · 지역 · 정리 희망일 · 필요한 서비스 · 적어 주신 내용(선택)",
-                 "매장 정리 상담 접수와 업체 연결 안내","접수일로부터 1년")+
-        PhotoPick("cq", { say:"철거 · 원상복구할 자리, 처분할 집기를 찍어 주시면 더 정확한 견적을 받습니다. 없어도 신청할 수 있습니다." })+
-        '<div id="cq-fail"></div>'+
-        '<button class="btn btn-b btn-lg btn-full" id="cq-go" type="submit" disabled data-gate="close">'+
-          '매장 정리 상담 신청하기'+icon("arrow",18)+'</button>'+
-        '<p class="note note-mid">회신 시점과 업체 연결을 약속드리지는 않습니다. 결제는 이 화면에서 하지 않습니다.</p>'+
-      '</div>'+
+      PhotoPick("cq", { say:"철거 · 원상복구할 자리나 처분할 집기 사진이 있으면 견적이 정확해집니다. 없어도 신청할 수 있습니다." })+
+      QMore("cq-more",
+        '<div class="f-2">'+
+          '<div class="f-r"><label for="cq-ind">업종</label>'+IndustrySelect("cq-ind", ind, "", "골라 주세요")+'</div>'+
+          '<div class="f-r"><label for="cq-when">정리 희망일</label><input id="cq-when" type="date" min="'+iso+'"></div>'+
+        '</div>'+
+        '<div class="f-r"><label for="cq-q">추가 요청</label>'+
+          '<textarea id="cq-q" rows="4" placeholder="예: 30평 음식점, 다음 달 말 계약 만료. 주방 기기는 팔고 싶습니다."></textarea></div>')+
+      AgreeBox("cq-ag","이름 · 휴대폰 · 지역 · 필요한 서비스 · 적어 주신 추가 정보(선택)",
+               "매장 정리 상담 접수와 업체 연결 안내","접수일로부터 1년")+
+      '<div id="cq-fail"></div>'+
+      '<button class="btn btn-b btn-lg btn-full" id="cq-go" type="submit" disabled data-gate="close">'+
+        '견적 신청하기'+icon("arrow",18)+'</button>'+
+      '<p class="note note-mid">회신 시점과 업체 연결을 약속드리지는 않습니다. 결제는 이 화면에서 하지 않습니다.</p>'+
     '</form>'+
   '</div></section>';
 }
@@ -858,32 +851,36 @@ window.closeAreaPaint = function(){
 window.closeSend = function(ev){
   ev.preventDefault();
   var SC = window.AM_CLOSE_SCOPE || { gu:[] };
-  var ids = [].slice.call(document.querySelectorAll('input[name="cq-s"]:checked')).map(function(x){ return x.value; });
+  var pk = qPicked("cq-s"), ids = pk.ids;
   var gu = $("cq-gu").value;
-  if(!ids.length){ toast("필요한 서비스를 하나 이상 골라 주세요"); return false; }
+
+  if(!ids.length && !pk.unsure){ toast("필요한 서비스를 하나 이상 골라 주세요"); return false; }
   if(!gu){ toast("시 · 군을 골라 주세요"); $("cq-gu").focus(); return false; }
   if(gu === "out" || SC.gu.indexOf(gu) < 0){ closeAreaPaint(); toast(window.AM_CLOSE_OUT_SAY || ""); return false; }
-  var need = [["cq-ind","업종"],["cq-when","정리 희망일"],["cq-name","성함"],["cq-tel","연락처"]];
+  var need = [["cq-name","이름"],["cq-tel","휴대폰"]];
   for(var i=0;i<need.length;i++){
     if(!$(need[i][0]).value.trim()){ toast(need[i][1]+"을(를) 적어 주세요"); $(need[i][0]).focus(); return false; }
   }
   var tel = $("cq-tel").value.replace(/[^0-9]/g, "");
-  if(tel.length < 9 || tel.length > 11){ toast("연락처를 다시 확인해 주세요"); $("cq-tel").focus(); return false; }
+  if(tel.length < 9 || tel.length > 11){ toast("휴대폰 번호를 다시 확인해 주세요"); $("cq-tel").focus(); return false; }
   if(!$("cq-ag").checked){ toast("개인정보 수집 · 이용 동의가 필요합니다"); return false; }
   var list = ids.map(amPickOne).filter(Boolean);
   var ind = $("cq-ind").value;
+  var names = list.map(amPickLabel);
+  if(pk.unsure) names.push("잘 모르겠어요");
   var body = {
     kind:"quote", form:"close",
     name:$("cq-name").value.trim(), tel:$("cq-tel").value.trim(),
     region:SC.regionName, regionKey:SC.region, gu:gu,
-    side:"close", industry:ind, cat:list[0].id,
-    serviceName:list.map(amPickLabel).join(" · "),
+    side:"close", industry:ind, cat:list.length ? list[0].id : "",
+    unsure: pk.unsure === true,
+    serviceName:names.join(" · "),
     q:$("cq-q").value.trim(), wantAt:$("cq-when").value,
     items:list.map(function(sv){ return { id:sv.id, detail:{} }; }),
     idem:amIdem("close"),
     detail:amDropEmpty({ "상황":"폐업·철거", "업종":ind ? amIndustryName(ind) : "",
                          "시군구":gu, "정리 희망일":$("cq-when").value,
-                         "신청 서비스":list.map(amPickLabel).join(" · ") }),
+                         "신청 서비스":names.join(" · ") }),
     src:closeSrc(),
     agree:true
   };

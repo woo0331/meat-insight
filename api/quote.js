@@ -226,16 +226,16 @@ module.exports = async function handler(req, res){
   const isClose = formOf(b) === "close";
   if(isClose){
     if(kind !== "quote") return res.status(400).json({ error: "지금은 받지 않는 양식입니다" });
-    if(!q.items.length) return res.status(400).json({ error: "필요한 서비스를 하나 이상 골라 주세요" });
+    /* 2026-11-27 — '잘 모르겠어요' 만 고르셔도 받습니다 (화면과 같은 규칙) */
+    if(!q.items.length && b.unsure !== true) return res.status(400).json({ error: "필요한 서비스를 하나 이상 골라 주세요" });
     if(q.items.some(function(it){ return !svcOk(it.id); }))
       return res.status(400).json({ error: "매장 정리 상담에서는 양도 · 집기 처분 · 철거 · 원상복구 · 폐기물만 받습니다" });
     if(!inArea(clean(b.regionKey, 20), q.region, clean(b.gu, 40))){
       console.warn("[site] 매장 정리 상담 — 초기 지역 밖 (" + (q.region || "-") + " " + (clean(b.gu, 40) || "-") + ")");
       return res.status(422).json({ error: OUT_SAY, outArea: true });
     }
-    if(!clean(b.industry, 40)) return res.status(400).json({ error: "업종을 골라 주세요" });
-    if(!clean(b.wantAt, 40))   return res.status(400).json({ error: "정리 희망일을 골라 주세요" });
-    if(!q.q) q.q = "매장 정리 상담 — " + q.items.map(function(it){ return it.id; }).join(", ");
+    /* 2026-11-27 대표 지시 — 업종 · 정리 희망일은 '추가 정보(선택)' 로 내려갔습니다. 화면도 막지 않습니다. */
+    if(!q.q) q.q = "매장 정리 상담 — " + (q.items.length ? q.items.map(function(it){ return it.id; }).join(", ") : "서비스는 상담 후 정하기");
   }
 
   /* ── 빠진 것 확인 ─────────────────────────────────────────
@@ -245,8 +245,15 @@ module.exports = async function handler(req, res){
   if(kind === "partner"){
     if(!q.company)         return res.status(400).json({ error: "업체명을 적어 주세요" });
     if(!q.services.length) return res.status(400).json({ error: "어떤 일을 하시는지 골라 주세요" });
-  }else if(!q.q){
-    return res.status(400).json({ error: "어떤 일인지 적어 주세요" });
+  }else{
+    /* 2026-11-27 — 견적 · 매물은 **지역이 필수**입니다 (화면도 막습니다 · 매칭의 첫 조건).
+       내용(q)은 선택이 됐습니다 — 비면 고르신 서비스로 채웁니다. 고르신 것도 내용도 없으면 받지 않습니다. */
+    if(kind === "quote" && !q.region) return res.status(400).json({ error: "지역을 골라 주세요" });
+    if(!q.q && kind === "quote"){
+      const what = q.serviceName || (q.items || []).map(function(it){ return it.id; }).join(", ");
+      if(what) q.q = "견적 요청 — " + what;
+    }
+    if(!q.q) return res.status(400).json({ error: "어떤 일인지 적어 주세요" });
   }
 
   /* ════════════════════════════════════════════════════════════

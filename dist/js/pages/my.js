@@ -793,6 +793,7 @@ function myqCall(fn, args, say){
 }
 
 function PageMy(){
+  if(nowQS("v") === "product") return PageMyProduct();
   var p = amGet(MKEY, { side:"", industry:"", region:"", gu:"", pyeong:"", dday:"" });
   var qs = amGet("am.quotes.v1", []);
   var ind = p.industry ? amIndustry(p.industry) : null;
@@ -807,6 +808,8 @@ function PageMy(){
   MyLookupBand()+
 
   MyDbBand()+
+
+  '<section class="sec sec-white my-pd-go"><div class="w"><p><a class="btn btn-o" href="/my?v=product">'+icon("box",17)+' 상품 올리기 · 내 상품 보기</a></p></div></section>'+
   '<section class="sec sec-white"><div class="w">'+
     '<div class="my-area-hd"><h2>이 브라우저에 저장한 준비 기록</h2>'+
       '<p>아래 기록은 <b>이 브라우저에만</b> 남고 서버로 보내지 않습니다. 신청서에 저절로 붙지도 않습니다. '+
@@ -1090,4 +1093,137 @@ window.myKakao = function(){
   amAuthKakao().then(function(r){
     if(!r.ok && n){ n.textContent = r.say; n.className = "my-in-n bad"; }
   });
+};
+
+var PD_CATS = [["kitchen","주방 · 집기"],["supply","소모품 · 포장재"],["furniture","매장 가구"],
+               ["device","IT · 기기"],["etc","기타"]];
+var PD_ST = { review:"검수 대기 — 아직 공개되지 않았습니다", live:"공개 중", hidden:"내려 둠" };
+function PageMyProduct(){
+  var edit = /^[0-9a-fA-F-]{36}$/.test(nowQS("id") || "");
+  return PgHero({ kicker:"MY", h1raw: edit ? "상품 고치기" : "상품 올리기",
+    lead:"사진과 상품명, 가격만 적어 주세요. 운영자가 확인한 뒤 공개합니다.", tight:true })+
+  '<section class="sec sec-white"><div class="w form-wrap qf">'+
+    '<div id="pd-gate" role="status"></div>'+
+    '<form id="pd-f" onsubmit="return pdSend(event)">'+
+      '<fieldset id="pd-fs" disabled>'+
+        '<div id="pd-have"></div>'+
+        PhotoPick("pd", { imgOnly:true, say:"앞면 · 옆면 · 흠집이 있는 곳을 찍어 주세요. 첫 장이 대표 사진이 됩니다." })+
+        '<div class="f-r"><label for="pd-name">상품명 <b>*</b></label>'+
+          '<input id="pd-name" maxlength="80" required placeholder="예: 업소용 반찬 냉장고 1500"></div>'+
+        '<div class="f-2">'+
+          '<div class="f-r"><label for="pd-cat">카테고리 <b>*</b></label>'+
+            '<select class="sel" id="pd-cat"><option value="">골라 주세요</option>'+
+              PD_CATS.map(function(c){ return '<option value="'+c[0]+'">'+esc(c[1])+'</option>'; }).join("")+'</select></div>'+
+          '<div class="f-r"><label for="pd-price">판매 가격 (원)</label>'+
+            '<input id="pd-price" inputmode="numeric" maxlength="12" placeholder="비워 두면 가격 협의"></div>'+
+        '</div>'+
+        '<div class="f-r"><label for="pd-body">상품 설명</label>'+
+          '<textarea id="pd-body" rows="5" maxlength="3000" placeholder="상태 · 사용 기간 · 함께 드리는 것"></textarea></div>'+
+        QMore("pd-more",
+          '<div class="f-r"><label for="pd-ship">배송 · 수령 조건</label>'+
+            '<input id="pd-ship" maxlength="500" placeholder="예: 직접 수령 / 택배 가능(착불)"></div>')+
+        '<div id="pd-fail"></div>'+
+        '<button class="btn btn-b btn-lg btn-full" type="submit" id="pd-go">'+
+          (edit ? "고친 내용 저장하기" : "상품 등록하기")+icon("arrow",18)+'</button>'+
+      '</fieldset>'+
+    '</form>'+
+    '<div id="pd-mine"></div>'+
+  '</div></section>';
+}
+function pdH(){ var h = { "content-type":"application/json" };
+  try{ if(typeof amAuthHeaders === "function") Object.assign(h, amAuthHeaders()); }catch(e){} return h; }
+function pdGate(html){ var g = $("pd-gate"); if(g) g.innerHTML = html; }
+window.myPdInit = function(){
+  if(!$("pd-f")) return;
+  var id = nowQS("id") || "";
+  fetch("/api/product" + (/^[0-9a-fA-F-]{36}$/.test(id) ? "?id=" + encodeURIComponent(id) : ""), { headers:pdH() })
+    .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ return { ok:r.ok, j:j }; }); })
+    .then(function(x){
+      var j = x.j || {};
+      if(!j.ready){
+        pdGate('<div class="notice-bad"><b>지금은 상품을 올릴 수 없습니다.</b><p>적으셔도 저장되지 않습니다. 준비가 끝나면 이 화면에서 바로 올리실 수 있습니다.</p></div>');
+        return;
+      }
+      if(!j.signedIn){
+        pdGate('<div class="notice-bad"><b>로그인하시면 올리실 수 있습니다.</b><p>올린 상품은 로그인한 계정에만 묶이고, 그 계정에서만 고칠 수 있습니다.</p>'+
+          '<p><a class="btn btn-b" href="/my?next='+encodeURIComponent("/my?v=product")+'">로그인 · 회원가입</a></p></div>');
+        return;
+      }
+      $("pd-fs").disabled = false;
+      var L = j.products || [];
+      if(id){
+        if(!x.ok || !L[0]){ pdGate('<div class="notice-bad"><b>이 상품을 찾을 수 없습니다.</b><p>내가 올린 상품만 고칠 수 있습니다.</p></div>'); $("pd-fs").disabled = true; return; }
+        pdFill(L[0]);
+      }
+      if(!id) pdMine();
+    })
+    .catch(function(){ pdGate('<div class="notice-bad"><b>지금 불러오지 못했습니다.</b><p>잠시 뒤 다시 열어 주세요.</p></div>'); });
+};
+function pdFill(p){
+  $("pd-f").setAttribute("data-id", p.id);
+  $("pd-name").value = p.name || ""; $("pd-cat").value = p.cat || "";
+  $("pd-price").value = p.price == null ? "" : String(p.price);
+  $("pd-body").value = p.body || ""; $("pd-ship").value = p.ship || "";
+  pdGate('<p class="note-box">지금 상태: <b>'+esc(PD_ST[p.state] || p.state)+'</b>'+
+    (p.state === "live" ? ' — 고치시면 다시 확인한 뒤 공개합니다.' : '')+'</p>');
+  pdHave(p.product_photo || []);
+}
+
+function pdHave(ph){
+  var box = $("pd-have"); if(!box) return;
+  box.innerHTML = ph.length ? '<p class="phup-h"><b>올린 사진</b> <span class="phup-cnt">'+ph.length+'/5장</span></p>'+
+    '<ul class="phup-l pd-have-l">'+ph.map(function(p){
+      return '<li class="is-ok">'+(p.url ? '<img class="phup-th" src="'+esc(p.url)+'" alt="">' : '')+
+        '<span>저장됨</span><button type="button" class="phup-x" data-pd-x="'+esc(p.id)+'" aria-label="이 사진 빼기">'+icon("x",15)+'</button></li>';
+    }).join("")+'</ul>' : '';
+}
+document.addEventListener("click", function(e){
+  var b = e.target.closest && e.target.closest("[data-pd-x]"); if(!b) return;
+  if(!window.confirm("이 사진을 뺄까요?")) return;
+  b.disabled = true;
+  fetch("/api/product", { method:"POST", headers:pdH(), body:JSON.stringify({ op:"drop", photo:b.getAttribute("data-pd-x") }) })
+    .then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+    .then(function(x){ if(!x.ok) throw new Error((x.j && x.j.error) || "빼지 못했습니다");
+      var li = b.closest("li"); if(li) li.remove(); toast("사진을 뺐습니다"); })
+    .catch(function(er){ b.disabled = false; toast(er.message || "빼지 못했습니다"); });
+});
+function pdMine(){
+  fetch("/api/product", { headers:pdH() }).then(function(r){ return r.json(); }).then(function(j){
+    var L = (j && j.products) || []; if(!L.length) return;
+    $("pd-mine").innerHTML = '<div class="pd-mine"><h2>내가 올린 상품</h2><ul>'+L.map(function(p){
+      return '<li><a href="/my?v=product&id='+encodeURIComponent(p.id)+'"><b>'+esc(p.name)+'</b>'+
+        '<i>'+esc(PD_ST[p.state] || p.state)+' · 사진 '+(p.photos || 0)+'장</i></a></li>'; }).join("")+'</ul></div>';
+  }).catch(function(){});
+}
+window.pdSend = function(ev){
+  ev.preventDefault();
+  var name = $("pd-name").value.trim(), cat = $("pd-cat").value;
+  var price = $("pd-price").value.replace(/[^0-9]/g, "");
+
+  if(!name){ toast("상품명을 적어 주세요"); $("pd-name").focus(); return false; }
+  if(!cat){ toast("카테고리를 골라 주세요"); $("pd-cat").focus(); return false; }
+  if(price.length > 10){ toast("판매 가격을 다시 확인해 주세요"); $("pd-price").focus(); return false; }
+  var f = $("pd-f"), btn = $("pd-go"), id = f.getAttribute("data-id") || "";
+  btn.disabled = true; var lab = btn.innerHTML; btn.textContent = "저장하는 중…";
+  fetch("/api/product", { method:"POST", headers:pdH(), body:JSON.stringify({ op:"save", p:{
+      id:id || undefined, name:name, cat:cat, price:price,
+      body:$("pd-body").value.trim(), ship:$("pd-ship").value.trim() } }) })
+    .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ return { ok:r.ok, j:j }; }); })
+    .then(function(x){
+      if(!x.ok || !x.j || !x.j.id) throw new Error((x.j && x.j.error) || "지금 저장하지 못했습니다");
+
+      f.setAttribute("data-id", x.j.id);
+      $("pd-fail").innerHTML = '<div class="notice-ok"><b>저장되었습니다.</b><p>지금 상태는 <b>'+
+        esc(PD_ST[x.j.state] || "검수 대기")+'</b>. 운영자가 확인한 뒤 공개합니다.</p></div>';
+      return (typeof amPhotoSubmitWith === "function" ? amPhotoSubmitWith(f, x.j.id, function(it){
+        return fetch("/api/product", { method:"POST", headers:pdH(),
+          body:JSON.stringify({ op:"slot", id:x.j.id, mime:it.mime, bytes:it.size }) }); }) : Promise.resolve(false));
+    })
+    .then(function(){ btn.disabled = false; btn.innerHTML = lab; toast("저장되었습니다"); })
+    .catch(function(e){
+      btn.disabled = false; btn.innerHTML = lab;
+      $("pd-fail").innerHTML = '<div class="notice-bad"><b>저장하지 못했습니다.</b><p>'+esc((e && e.message) || "")+
+        ' 적으신 내용은 그대로 있습니다 — 다시 눌러 주세요.</p></div>';
+    });
+  return false;
 };

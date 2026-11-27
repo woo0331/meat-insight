@@ -77,7 +77,7 @@ function dbPart(){
   psql("update provider set assignable = true where id in ('syn-demo','syn-other')");
 
   console.log("\n▶ 신청 → 저장 → 접수 길");
-  const CONSENT = { notice_ver:"close-test", items:"성함 · 연락처 · 업종 · 지역 · 정리 희망일 · 필요한 서비스 · 적어 주신 내용(선택)",
+  const CONSENT = { notice_ver:"close-test", items:"이름 · 휴대폰 · 지역 · 필요한 서비스 · 적어 주신 추가 정보(선택)",
                     purpose:"매장 정리 상담 접수와 업체 연결 안내", keep:"접수일로부터 1년" };
   const P = { no:"SW-CLS1-0001", idem:"s1-a", form:"quote", side:"close", industry:"restaurant", cat:"asset/kitchen-eq",
     region:"경기", gu:"안양시", want_at:"2026-12-20", body:"매장 정리 상담 — 합성", name:"합성 고객", tel:"010-2222-3333",
@@ -215,8 +215,13 @@ async function apiPart(){
   ok(r.code === 422, "서울 + 안양시 같은 엇갈린 값도 지역 밖", r.body);
   r = res(); w.rpc = []; await h(req(Object.assign({}, B, { items:[{ id:"interior" }] })), r);
   ok(r.code === 400 && w.rpc.length === 0, "정리 분류 밖 서비스(인테리어)는 이 길로 안 받음", r.body);
-  r = res(); w.rpc = []; await h(req(Object.assign({}, B, { wantAt:"" })), r);
-  ok(r.code === 400 && /정리 희망일/.test(r.body.error), "정리 희망일 필수", r.body);
+  /* 2026-11-27 대표 지시 — 업종 · 정리 희망일은 '추가 정보(선택)' 로 내려갔습니다 (화면 · 서버 같은 규칙) */
+  r = res(); w.rpc = []; await h(req(Object.assign({}, B, { wantAt:"", industry:"", idem:"api-nowant" })), r);
+  ok(r.code === 200 && r.body.no, "업종 · 정리 희망일이 없어도 받음 (선택)", r.body);
+  r = res(); w.rpc = []; await h(req(Object.assign({}, B, { items:[], unsure:true, idem:"api-unsure" })), r);
+  ok(r.code === 200 && r.body.no, "'잘 모르겠어요' 만 골라도 받음", r.body);
+  r = res(); w.rpc = []; await h(req(Object.assign({}, B, { items:[], idem:"api-none" })), r);
+  ok(r.code === 400 && w.rpc.length === 0, "서비스도 '잘 모르겠어요' 도 없으면 안 받음", r.body);
   r = res(); w.rpc = []; await h(req(Object.assign({}, B, { agree:false })), r);
   ok(r.code === 400 && w.rpc.length === 0, "동의 없이는 안 받음", r.body);
 

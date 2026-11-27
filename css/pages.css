@@ -9618,3 +9618,32 @@ html.ivh #view > section.bsq{ background:#FDFBF6; }   /* 이웃(#F5F1E9)과 ΔE 
 .cq-got-x{ min-height:44px; }
 .cq-svc[hidden]{ display:none !important; }
 .cq-got + .cq-svc{ margin-top:12px; }
+
+/* ═══ 2026-11-27 대표 지시 — 간단한 작성 화면 셋 (견적 신청 · 집기 내놓기 · 상품 올리기) ═══
+   ⚠️ 아이보리 바탕 · 흰 칸 · 월넛 주 단추. 선택 칸은 '추가 정보' 하나로 접습니다.
+   ⚠️ 한 화면에 주 단추 하나 — 제출 단추만 꽉 찬 색입니다. */
+.qf .qs{ margin-bottom:20px; }
+.qf .qs-h{ margin-bottom:10px; }
+.qf input:not([type=checkbox]):not([type=radio]):not([type=file]), .qf textarea, .qf .sel{ background:#fff; }
+.qf .btn-b[type=submit]{ background:var(--hm-btn); border-color:var(--hm-btn); color:#fff; }
+.qf .btn-b[type=submit]:hover{ background:var(--hm-btn-h); border-color:var(--hm-btn-h); }
+.q-more{ margin:4px 0 20px; border:1px solid var(--line); border-radius:var(--r-md, 12px); background:#fff; }
+.q-more > summary{ list-style:none; cursor:pointer; display:flex; align-items:center; gap:6px;
+  min-height:52px; padding:0 16px; font-size:var(--t-body, 16px); }
+.q-more > summary::-webkit-details-marker{ display:none; }
+.q-more > summary i{ font-style:normal; color:var(--ink2); }
+.q-more > summary svg{ margin-left:auto; transition:transform .2s; }
+.q-more[open] > summary svg{ transform:rotate(180deg); }
+.q-more-b{ padding:4px 16px 16px; border-top:1px solid var(--line); }
+.q-more-b .f-r:first-child, .q-more-b .f-2:first-child{ margin-top:12px; }
+.cq-svc .cq-k-un{ border-style:dashed; }
+.qf .phup-form{ margin:4px 0 20px; }
+#pd-fs{ border:0; padding:0; margin:0; min-width:0; }
+#pd-fs[disabled]{ opacity:.55; }
+.pd-have-l{ margin-bottom:16px; }
+.pd-mine{ margin-top:28px; }
+.pd-mine h2{ font-size:var(--t-h3, 20px); margin:0 0 10px; }
+.pd-mine ul{ list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.pd-mine a{ display:flex; flex-direction:column; gap:2px; min-height:52px; justify-content:center;
+  padding:10px 14px; border:1px solid var(--line); border-radius:12px; background:#fff; color:var(--ink); text-decoration:none; }
+.pd-mine a i{ font-style:normal; color:var(--ink2); font-size:var(--t-cap, 13px); }

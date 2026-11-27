@@ -1131,7 +1131,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    return pg.evaluate(()=>{
      const f=document.getElementById("sl-f"); if(!f) return null;
      f.querySelectorAll("input,textarea").forEach(function(i){
-       if(i.type==="checkbox"||i.type==="radio") return;
+       if(i.type==="checkbox"||i.type==="radio"||i.type==="file") return;   /* 2026-11-27 — 사진 고르개(파일 칸)는 값을 넣을 수 없습니다 */
        i.value = i.type==="number" ? "20" : "테스트";
        if(/tel/.test(i.type+i.id)) i.value="010-1234-5678"; });
      f.querySelectorAll("select").forEach(function(x){

@@ -217,6 +217,17 @@ function HomeEnter(){
 var HOME_DIRECT = ["interior", "equip", "it", "admin",
                    "staff", "marketing", "demolish", "restore"];
 
+var HOME_QUICK8 = {
+  interior:  { t:"인테리어·시공",   s:"설계 · 전기 · 배관",     ic:"roller",     tn:"terra" },
+  equip:     { t:"시설·장비",       s:"주방기기 · 냉장·냉동",   ic:"wrench",     tn:"mint" },
+  it:        { t:"POS·매장 시스템", s:"키오스크 · 인터넷",      ic:"monitor",    tn:"blue" },
+  admin:     { t:"세무·노무·행정",  s:"세무사 · 노무사",        ic:"briefcase",  tn:"lav" },
+  staff:     { t:"직원 채용",       s:"정직원 · 아르바이트",    ic:"users",      tn:"sage" },
+  marketing: { t:"홍보·디자인",     s:"로고 · 메뉴판",          ic:"megaphone",  tn:"rose" },
+  demolish:  { t:"철거",            s:"전체철거 · 부분철거",    ic:"jackhammer", tn:"amber" },
+  restore:   { t:"원상복구",        s:"바닥 · 벽 · 설비",       ic:"corner",     tn:"olive" }
+};
+
 function homeDirDesc(c){
   var it = (c.items || []);
   if(it.length) return it.slice(0, 5).map(function(x){ return x.name; })
@@ -233,8 +244,13 @@ function HomeDirect(noPick){
     var to = (typeof catTo === "function") ? catTo(c) : ("/providers/" + c.key);
     var ds = homeDirDesc(c);
 
-    if(noPick) return '<li><a class="bdq-a" href="'+esc(to)+'"><span class="bdq-i" aria-hidden="true">'+icon(c.icon || "grid", 18)+'</span>'+
-      '<span class="bdq-t"><b>'+esc(c.name)+'</b>'+(ds ? '<i>'+esc(ds)+'</i>' : '')+'</span>'+icon("chev",14)+'</a></li>';
+    if(noPick){
+      var q = HOME_QUICK8[k] || { t:c.name, s:"", ic:c.icon || "grid", tn:"terra" };
+      return '<li><a class="bsq-c" href="'+esc(to)+'">'+
+        '<span class="bsq-i bsq-'+esc(q.tn)+'" aria-hidden="true">'+icon(q.ic, 28)+'</span>'+
+        '<span class="bsq-t"><b>'+esc(q.t)+'</b>'+(q.s ? '<i>'+esc(q.s)+'</i>' : '')+'</span>'+
+        '<span class="bsq-go" aria-hidden="true">'+icon("chev",18)+'</span></a></li>';
+    }
     return '<li><a class="bdir-c'+tn(c.tone)+'" href="'+esc(to)+'">'+
       '<span class="bdir-i" aria-hidden="true">'+
         (hasIconArt(c.key) ? iconArt(c.key, 64) : icon(c.icon, 34))+'</span>'+
@@ -247,6 +263,13 @@ function HomeDirect(noPick){
   }).filter(Boolean).join("");
   if(!cards) return "";
 
+  if(noPick) return '<section class="bdir bsq"><div class="w">'+
+    '<div class="bsq-hd"><h2>서비스 바로 찾기</h2>'+
+      '<a class="bsq-all" href="/providers">전체 보기'+icon("arrow",15)+'</a></div>'+
+    '<ul class="bsq-g">'+cards+'</ul>'+
+
+    MainScopeStrip()+
+  '</div></section>';
   return '<section class="bdir"><div class="w">'+
     '<div class="sec-hd hm-hd">'+
       '<div class="hm-hd-t">'+

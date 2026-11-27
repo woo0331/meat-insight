@@ -1524,6 +1524,8 @@ const AUDIT = `(() => {
   await f("서비스마다 다르게 묻는다", "/quote?c=interior", `
     /* 지시서 6절 — 서비스 특성에 따라 질문을 다르게 표시한다.
        ⚠️ 면적 · 업종 · 지역 · 예산은 공통 칸이라 또 묻지 않습니다. */
+    /* 2026-11-27 — 서비스별 질문은 '추가 정보(선택)' 안에 접혀 있습니다. 펴고 봅니다 */
+    document.querySelectorAll("details.q-more").forEach(function(d){ d.open = true; });
     const box = document.querySelector(".rqf");
     if(!box) return "인테리어인데 서비스별 질문이 없습니다";
     const txt = box.innerText;
@@ -1951,7 +1953,8 @@ const AUDIT = `(() => {
      말과 행동이 어긋날 때만 걸립니다. */
   await f("견적: 요청을 저장한다는 말과 실제가 같다", "/quote", `
     try{ localStorage.removeItem("am.quotes.v1"); }catch(e){}
-    const noteEl = document.querySelector("#q-f .note-mid");
+    /* 2026-11-27 — 단추 아래 안내 줄을 걷었습니다. 그래서 폼 안의 안내 글(.note · .note-box) 전부를 봅니다 */
+    const noteEl = document.querySelector("#q-f");
     const note = noteEl ? (noteEl.textContent || "") : "";
     const claims = note.indexOf("보내고 나면") >= 0 || note.indexOf("요청 내용이 남") >= 0;
     const real = window.fetch;

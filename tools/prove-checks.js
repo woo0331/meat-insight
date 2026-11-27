@@ -512,8 +512,10 @@ const CASES = [
    `window.CLOSE_ASK.pop(); window.rerender(true);`],
   /* 하지 않는 저장을 한다고 적어 두면 걸려야 합니다 (절대 규칙 5). */
   ["견적: 요청을 저장한다는 말과 실제가 같다",
-   `document.querySelector("#q-f .note-mid").textContent =
-      "보내고 나면 이 브라우저에 요청 내용이 남아, 아래에서 비교하실 수 있습니다.";`],
+   `/* 2026-11-27 — 단추 아래 안내 줄을 걷어서, 거짓말 줄을 새로 끼워 넣습니다 */
+    var p = document.createElement("p"); p.className = "note note-mid";
+    p.textContent = "보내고 나면 이 브라우저에 요청 내용이 남아, 아래에서 비교하실 수 있습니다.";
+    document.querySelector("#q-f").appendChild(p);`],
   /* ⚠️ 되돌리기가 **없는 요소**를 집으면 터지고, 그러면 "검사가 안
      잡는다" 가 아니라 **되돌리기가 틀린** 것입니다 (이 저장소에서
      아홉 번째). 2026-10-09 시안으로 히어로 카드의 `.hpk-d` 가 체크

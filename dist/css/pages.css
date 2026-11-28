@@ -7662,3 +7662,4 @@ a.myq-no{ display:inline-flex; align-items:center; min-height:44px; color:inheri
 
 .up-sw{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; margin:10px 0 16px; font-size:var(--t-sm); color:var(--ink2); }
 .up-sw a{ display:inline-flex; align-items:center; gap:2px; min-height:44px; font-weight:800; color:var(--hm-pt-ink, #7A5633); }
+.r1-more{ display:flex; flex-wrap:wrap; gap:0 18px; }

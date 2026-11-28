@@ -2729,7 +2729,7 @@ function HomeR1Find(){
     '<div class="r1-pk" data-pick-row'+(n ? '' : ' hidden')+'>'+
       '<p>'+icon("check",16)+' 담은 서비스 <b data-pick-n>'+n+'</b>개 — 신청서에 그대로 들어갑니다</p>'+
       '<a class="btn btn-ac" data-pick-go="auto" href="'+esc(to)+'">담은 서비스로 견적 신청'+icon("arrow",16)+'</a></div>'+
-    '<p class="r1-more"><a href="/providers">전체 서비스 · 업체 찾기'+icon("chev",14)+'</a></p>'+
+    '<p class="r1-more"><a href="/providers">전체 서비스 · 업체 찾기'+icon("chev",14)+'</a><a href="/content">이용 가이드'+icon("chev",14)+'</a></p>'+
   '</div></section>';
 }
 window.r1Find = function(e){
@@ -2737,6 +2737,7 @@ window.r1Find = function(e){
   var el = document.getElementById("r1-q"), msg = document.getElementById("r1-msg");
   var q = el ? el.value.trim().replace(/\s+/g, " ") : "";
   if(!q){ if(el) el.focus(); if(msg) msg.textContent = "찾으실 말을 적어 주세요. 예: 철거, 인테리어, 권리금"; return false; }
+  if(!/[0-9A-Za-zㄱ-ㆎ가-힣]/.test(q)){ if(el) el.focus(); if(msg) msg.textContent = "글자나 숫자로 적어 주세요. 예: 철거, 인테리어, 권리금"; return false; }
   if(msg) msg.textContent = "";
   go("/search?q=" + encodeURIComponent(q));
   return false;

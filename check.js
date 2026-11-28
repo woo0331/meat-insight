@@ -2291,6 +2291,9 @@ const AUDIT = `(() => {
       if(e.closest(".bsq-i")) return;
       const c = rgb(getComputedStyle(e).backgroundColor); if(!c) return;
       const h = hsl(c);
+      /* 2026-11-28 대표 최종 시안 — 서비스 바로 찾기 여덟 칸만 아주 옅은 파스텔(밝기 0.88 이상) 바탕을 허용합니다.
+         진한 색으로 칠하면 그대로 잡습니다 (되돌리기가 그것을 봅니다). */
+      if(e.closest(".r1-sv") && h[2] >= 0.88) return;
       if(h[1] > 0.30 && h[2] > 0.08 && h[2] < 0.97 && (h[0] < 8 || h[0] > 50))
         bad.push((e.className || e.tagName).toString().split(" ")[0] + " " + c.join(","));
     });

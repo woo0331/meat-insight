@@ -929,24 +929,27 @@ function ctRow(r){
 }
 
 function ctTile(t){
+
+  var ph = t.ph && typeof hasPhoto === "function" && hasPhoto(t.ph);
   var art = (typeof hasIconArt === "function" && hasIconArt(t.ic)) ? iconArt(t.ic, 44) : icon(t.ic || "check", 30);
   var on = typeof amPickHas === "function" && amPickHas(t.id);
   var fid = "ctt-" + String(t.id).replace(/[^a-z0-9]/gi, "-");
-  return '<li><label class="cg-t" for="'+fid+'">'+
+  return '<li><label class="cg-t'+(ph ? ' cg-t-ph' : '')+'" for="'+fid+'">'+
     '<input type="checkbox" class="pk-ck cg-tc" id="'+fid+'" data-pick="'+esc(t.id)+'"'+(on ? ' checked' : '')+
       ' onchange="pickToggle(\''+esc(t.id)+'\', this)">'+
-    '<span class="cg-ti" aria-hidden="true">'+art+'</span><b>'+esc(t.t)+'</b>'+
-    '<i class="cg-tk"><span class="cg-tk-off">견적에 담기</span><span class="cg-tk-on">담음</span></i></label></li>';
+    (ph ? '<span class="cg-tp" aria-hidden="true">'+photoBox(t.ph, "", false, "128px")+'</span>'
+        : '<span class="cg-ti" aria-hidden="true">'+art+'</span>')+
+    '<span class="cg-tt"><b>'+esc(t.t)+'</b>'+(t.d ? '<i class="cg-td">'+esc(t.d)+'</i>' : '')+'</span>'+
+    '<i class="cg-tk"><span class="cg-tk-off">담기</span><span class="cg-tk-on">담음</span></i></label></li>';
 }
 window.CatTop = function(o){
   o = o || {};
+
   var ph = o.photo && typeof hasPhoto === "function" && hasPhoto(o.photo);
-  var big = (typeof hasIconArt === "function" && hasIconArt(o.ic)) ? iconArt(o.ic, 56) : icon(o.ic || "store", 40);
+  var hd = '<div class="ctop-hd"><div><h1>'+esc(o.h1)+'</h1><p class="ctop-s">'+esc(o.sub || "")+'</p></div></div>';
   return '<section class="ctop ctop-'+esc(o.side || "start")+'"'+(o.id ? ' id="'+esc(o.id)+'"' : '')+'><div class="ctop-g'+(ph ? ' ctop-g-ph' : '')+'">'+
-    (ph ? '<div class="ctop-ph" aria-hidden="true">'+photoBox(o.photo, "", true, "(max-width:900px) 100vw, 640px")+'</div>' : '')+
-    '<div class="w ctop-in">'+
-      '<div class="ctop-hd"><div><h1>'+esc(o.h1)+'</h1><p class="ctop-s">'+esc(o.sub || "")+'</p></div>'+
-        '<span class="ctop-ia" aria-hidden="true">'+big+'</span></div>'+
+    (ph ? '<div class="ctop-ph">'+photoBox(o.photo, "", true, "(max-width:900px) 100vw, 640px")+'<div class="w ctop-ov">'+hd+'</div></div>' : '')+
+    '<div class="w ctop-in">'+(ph ? '' : hd)+
       '<div class="ctop-go">'+ctBtn(o.a1, "cg-b cg-b1")+ctBtn(o.a2, "cg-b cg-b2")+'</div>'+
       (o.body || '')+
     '</div></div></section>';

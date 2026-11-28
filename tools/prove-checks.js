@@ -628,7 +628,7 @@ const CASES = [
   /* 2026-11-19 개편 — 폐업 카드를 낮춥니다 (grid 의 stretch 를 덮어야 합니다). */
   /* 2026-11-19 Warm Premium — 폐업·철거 카드를 낮춥니다 (grid 의 stretch 를 덮어야 합니다) */
   ["히어로의 창업 준비 · 폐업·철거 두 카드의 크기가 같다",
-   `const e = document.querySelector(".r1-bc-cl"); e.style.alignSelf = "start"; e.style.height = "200px";`],
+   `const e = document.querySelector(".r1-bc-cl"); e.style.alignSelf = "start"; e.style.minHeight = "0"; e.style.height = "200px";`],
   /* ⚠️⚠️ **아이콘 칸(.stg-i)만 집어야 합니다.** 처음에
      ".mstg-g > li > a svg" 로 적었더니 **화살표까지** 걸려서
      [아이콘0, 화살표0, 아이콘1, …] 이 되고, 0번에 화살표를 넣는 바람에

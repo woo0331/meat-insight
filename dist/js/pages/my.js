@@ -1286,7 +1286,7 @@ function PageMyProduct(){
   return PgHero({ kicker:"MY", h1raw: edit ? "상품 고치기" : "상품 올리기",
     lead:"사진과 상품명, 가격만 적어 주세요. 운영자가 확인한 뒤 공개합니다.", tight:true })+
   '<section class="sec sec-white"><div class="w form-wrap qf">'+
-    '<p class="up-sw">'+icon("store",16)+' 매장이나 쓰던 집기를 넘기시나요? <a href="/sell">매장 내놓기'+icon("chev",14)+'</a> <a href="/sell?t=asset">집기 내놓기'+icon("chev",14)+'</a></p>'+
+    (typeof upTabs === "function" ? upTabs("product") : '')+
     '<div id="pd-gate" role="status"></div>'+
     '<form id="pd-f" onsubmit="return pdSend(event)">'+
       '<fieldset id="pd-fs" disabled>'+

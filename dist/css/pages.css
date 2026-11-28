@@ -7783,3 +7783,6 @@ html.ivh #view .r1-btx h2 a, .r1-btx h2 a{ color:#fff; min-height:40px; font-siz
   color:var(--hm-ink, #2C211C); text-decoration:none; }
 .up-tc:hover{ background:rgba(255,255,255,.6); }
 .up-tc.on{ background:var(--hm-btn, #4A3025); color:#fff; box-shadow:0 2px 8px rgba(44,33,28,.18); }
+
+.r1-btx{ pointer-events:none; }
+.r1-btx a{ pointer-events:auto; }

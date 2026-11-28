@@ -33,7 +33,7 @@
    ════════════════════════════════════════════════════════════════════ */
 
 const { authReady, bearer, session } = require("./_auth.js");
-const { dbReady, dbCallService, dbSelectAs, dbWhy, DB_TIMEOUT } = require("./_db.js");
+const { dbReady, dbCallService, dbSelect, dbSelectAs, dbRpc, dbWhy, DB_TIMEOUT } = require("./_db.js");
 
 /* ⚠️ DB 의 `photo_mime_ok` 와 **같은 목록**이어야 합니다. 한쪽만
    고치면 화면이 받아 놓고 DB 가 거절합니다 (빌드가 맞춰 봅니다). */
@@ -85,6 +85,76 @@ async function signed(kind, p){
   }finally{ clearTimeout(timer); }
 }
 
+/* 저장소가 "그런 파일 없음" 으로 답했는가 (Supabase 는 400 + not_found 로 돌려줍니다) */
+function isMissing(sg){
+  return !sg.ok && !sg.timeout && (sg.status === 404 || sg.status === 400) &&
+         /not_found|not found/i.test(String(sg.why || ""));
+}
+
+/* ── 내 기록에서 사진 다시 첨부 (로그인한 주인만) ─────────────────────
+   ⚠️⚠️ 주인인지는 **그 사람의 토큰으로** 신청을 읽어서 정합니다(RLS) — 거기에 user_id 가
+   토큰의 계정과 같아야 합니다. 요청이 보낸 번호 · 계정을 믿지 않습니다.
+   ⚠️⚠️ 연락처는 **화면으로 내려가지 않습니다** — 서버가 service key 로 읽어 claim_photo_slot 에
+   넘기고 끝납니다 (비로그인 길과 같은 문 · 같은 상한 다섯 장).
+     photo 를 주면 — 파일이 없는 그 자리를 **다시 씁니다** (같은 경로 · 기록이 늘지 않음).
+       형식이 다르면(예: 원래 JPG · 이번 PNG) 그 빈 자리를 빼고 새 자리를 받습니다.
+     photo 가 없으면 — 새 자리 하나 */
+async function mine(req, res, b){
+  if(!authReady() || !bearer(req)) return res.status(401).json({ error:"로그인이 필요합니다", relogin:true });
+  const s = await session(req);
+  if(!s.ok){
+    if(s.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+    return res.status(401).json({ error:"로그인이 풀렸습니다. 다시 로그인해 주세요", relogin:true });
+  }
+  const no = String(b.no || "").trim().toUpperCase();
+  const mime = String(b.mime || "").trim().toLowerCase();
+  const bytes = Number(b.bytes);
+  if(!/^SW-[0-9A-Z]{4}-[0-9A-Z]{4}$/.test(no)) return res.status(400).json({ error:"신청번호를 확인해 주세요" });
+  if(OK_MIME.indexOf(mime) < 0)
+    return res.status(400).json({ error:"사진은 JPG · PNG · WEBP, 서류는 PDF 만 올리실 수 있습니다" });
+  if(!(bytes > 0) || bytes > MAX_BYTES) return res.status(400).json({ error:"한 장에 8MB 까지 올리실 수 있습니다" });
+
+  const rq = await dbSelectAs(s.token, "request", "?select=id,no,user_id&no=eq." + encodeURIComponent(no) + "&limit=1");
+  if(!rq.ok){ console.warn("[upload] mine — " + dbWhy(rq.why)); return res.status(502).json({ error:"지금 올리지 못했습니다" }); }
+  const r0 = rq.rows[0];
+  /* ⚠️ 없는 것과 남의 것을 갈라 말하지 않습니다 */
+  if(!r0 || r0.user_id !== s.sub) return res.status(404).json({ error:"내 기록에서 이 신청을 찾지 못했습니다" });
+
+  if(b.photo){
+    if(!/^[0-9a-fA-F-]{36}$/.test(String(b.photo))) return res.status(400).json({ error:"사진을 찾을 수 없습니다" });
+    const ph = await dbSelectAs(s.token, "request_photo",
+      "?select=id,path,mime,request_id&id=eq." + encodeURIComponent(b.photo) + "&limit=1");
+    const row = ph.ok && ph.rows[0];
+    if(!row || row.request_id !== r0.id) return res.status(404).json({ error:"사진을 찾을 수 없습니다" });
+    const chk = await signed("sign", row.path);
+    if(chk.ok) return res.status(409).json({ error:"이 사진은 이미 저장되어 있습니다", saved:true });
+    if(!isMissing(chk)){ console.warn("[upload] mine — " + chk.why); return res.status(502).json({ error:"지금 올리지 못했습니다. 잠시 뒤 다시 눌러 주세요" }); }
+    if(row.mime === mime){
+      const sg = await signed("upload", row.path);
+      if(!sg.ok){ console.warn("[upload] mine — " + sg.why); return res.status(502).json({ error:"지금 올리지 못했습니다. 잠시 뒤 다시 눌러 주세요" }); }
+      return res.status(200).json({ ok:true, url:sg.url, reuse:true });
+    }
+    /* 형식이 다르면 빈 자리를 빼고(주인 권한 · 감사 기록이 남습니다) 새 자리로 */
+    const dr = await dbRpc(s.token, "drop_photo", { p_photo: row.id });
+    if(!dr.ok){ console.warn("[upload] mine drop — " + dbWhy(dr.why)); return res.status(502).json({ error:"지금 올리지 못했습니다" }); }
+  }
+  /* 새 자리 — 연락처는 서버 안에서만 (service key) */
+  const t = await dbSelect("request", "?select=tel&id=eq." + encodeURIComponent(r0.id) + "&limit=1");
+  const tel = t.ok && t.rows[0] && t.rows[0].tel;
+  if(!tel){ console.warn("[upload] mine — 연락처를 못 읽었습니다"); return res.status(502).json({ error:"지금 올리지 못했습니다" }); }
+  const c = await dbCallService("claim_photo_slot", { p_no:no, p_tel:tel, p_mime:mime, p_bytes:bytes });
+  if(!c.ok){
+    if(c.timeout) return res.status(504).json({ error:"시간이 초과되었습니다. 다시 눌러 주세요" });
+    const m = String(c.why || "").match(/"message"\s*:\s*"([^"]{1,200})"/);
+    return res.status(400).json({ error: m ? m[1] : "지금 올리지 못했습니다" });
+  }
+  const got = c.data && (Array.isArray(c.data) ? c.data[0] : c.data);
+  if(!got || !got.path) return res.status(502).json({ error:"지금 올리지 못했습니다" });
+  const sg = await signed("upload", got.path);
+  if(!sg.ok){ console.warn("[upload] mine — " + sg.why); return res.status(502).json({ error:"지금 올리지 못했습니다. 잠시 뒤 다시 눌러 주세요" }); }
+  return res.status(200).json({ ok:true, url:sg.url });
+}
+
 const realHandler = async function handler(req, res){
   res.setHeader("cache-control", "no-store");
 
@@ -126,6 +196,10 @@ const realHandler = async function handler(req, res){
 
     const sg = await signed("sign", row.path);
     if(!sg.ok){
+      /* 2026-11-28 (SW-ZNF3-7W8E) — 자리는 받았는데 파일이 안 올라간 사진입니다.
+         ⚠️ 볼 수 있는 사람에게만 여기까지 옵니다(위 RLS). "파일 없음" 을 갈라 말해야 내 기록이
+         '다시 첨부' 를 낼 수 있습니다 — 고장(502)과 섞으면 손님은 기다리기만 합니다. */
+      if(isMissing(sg)) return res.status(200).json({ ok:false, missing:true, mime:row.mime, bytes:row.bytes });
       console.warn("[upload] " + sg.why);
       return res.status(502).json({ error:"지금 불러오지 못했습니다" });
     }
@@ -148,6 +222,10 @@ const realHandler = async function handler(req, res){
   if(typeof b === "string"){ try{ b = JSON.parse(b); }catch(e){ b = null; } }
   if(!b || typeof b !== "object")
     return res.status(400).json({ error:"내용을 읽을 수 없습니다" });
+
+  /* 2026-11-28 — 로그인해서 내 기록으로 가져온 신청에 사진을 다시 첨부합니다 (op:"mine").
+     완료 화면을 닫으면 비로그인 손님은 다시 올릴 길이 없었습니다. */
+  if(b.op === "mine") return mine(req, res, b);
 
   const no   = String(b.no   || "").trim();
   const tel  = String(b.tel  || "").trim();

@@ -312,10 +312,24 @@ window.amPhotoGo = function(w){
           it.slotUrl = x.j.url;
           /* ⚠️⚠️ **여기서 "저장됨" 이라고 하지 않습니다** — 자리를
              받은 것이고 파일은 아직 안 갔습니다 (절대 규칙 5). */
-          return fetch(x.j.url, { method:"PUT", headers:{ "content-type":it.mime }, body:it.f });
+          /* ⚠️⚠️ 2026-11-28 (SW-ZNF3-7W8E · 아이폰) — 확인 요청(OPTIONS)만 가고 파일 전송이
+             끝내 안 와서 화면이 '올리는 중' 에 머물렀습니다. 시간을 재서 끊고 '저장 실패' 와
+             '다시 올리기' 를 냅니다 — 다시 올리면 **이 자리(같은 주소)** 를 씁니다(위).
+             기다리는 시간은 크기에 따라 45초 ~ 4분 (느린 망에서 멀쩡한 전송을 끊지 않게). */
+          var ms = window.AM_PH_PUT_MS || Math.min(240000, Math.max(45000, 45000 + Math.round((it.size || 0) / 40)));
+          var ctl = (typeof AbortController === "function") ? new AbortController() : null;
+          var tm = ctl ? setTimeout(function(){ ctl.abort(); }, ms) : null;
+          return fetch(x.j.url, { method:"PUT", headers:{ "content-type":it.mime }, body:it.f, signal: ctl ? ctl.signal : undefined })
+            .then(function(r){ if(tm) clearTimeout(tm); return r; },
+                  function(e){ if(tm) clearTimeout(tm);
+                    if(e && e.name === "AbortError") throw new Error("시간이 오래 걸려 멈췄습니다. 다시 올려 주세요");
+                    throw new Error("연결이 끊겼습니다. 다시 올려 주세요"); });
         })
         .then(function(r){
-          if(!r || !r.ok){ if(reuse) it.slotUrl = ""; throw new Error("올리지 못했습니다"); }
+          if(!r || !r.ok){
+            /* 같은 주소로 또 실패했으면(만료 · 거절) 다음에는 새 자리를 받습니다.
+               ⚠️ 끊긴 것(위 throw)은 여기 안 옵니다 — 그때는 주소가 살아 있어 그대로 씁니다. */
+            if(reuse) it.slotUrl = ""; throw new Error("올리지 못했습니다"); }
           it.ok = true; it.slotUrl = "";
         })
         .catch(function(e){

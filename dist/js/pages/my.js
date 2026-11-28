@@ -57,6 +57,7 @@ function myDbPaint(d){
       '<button class="btn btn-o" type="button" onclick="mySignOut()">나가기</button>' +
     '</p></div>';
   box.hidden = false;
+  if(typeof window.myPhInit === "function") window.myPhInit();
 
   var rd = document.getElementById("myrd") || document.getElementById("my-nohit") || (nowQS("claim") && document.getElementById("my-claim"));
   if(rd && (nowQS("no") || nowQS("claim"))){
@@ -679,8 +680,103 @@ function MyReqDetail(r, d){
     (L.length ? '<p class="myrd-go"><a class="btn btn-b btn-full" href="#myqt-'+esc(r.id)+'" onclick="return hhJump(\'myqt-'+esc(r.id)+'\')">'+
        (L.length > 1 ? '견적 비교 '+L.length+'건' : '견적 보기')+icon("arrow",17)+'</a></p>' : '')+
     MyQuoteCompare(d, r)+
+    MyReqPhotos(r)+
   '</section>';
 }
+
+function MyReqPhotos(r){
+  var ph = r.request_photo || [];
+  return '<div class="myph" id="myph" data-no="'+esc(r.no || "")+'" hidden>'+
+    '<p class="myqt-h">'+icon("camera",15)+'사진 <span data-myph-n>'+ph.length+'/'+(window.AM_PH_N || 5)+'장</span></p>'+
+    (ph.length ? '<ul class="phup-l myph-l">'+ph.map(function(p, i){
+      return '<li data-myph="'+esc(p.id)+'" data-mime="'+esc(p.mime || "")+'">'+
+        '<span class="phup-th">'+icon(p.mime === "application/pdf" ? "doc" : "camera", 22)+'</span>'+
+        '<span class="phup-tx"><span class="phup-n">사진 '+(i + 1)+'</span>'+
+          '<i class="phup-s">'+esc(p.bytes ? (Math.round(p.bytes / 104857.6) / 10) + "MB" : "")+'</i>'+
+          '<b class="phup-st" data-myph-st>확인 중…</b></span>'+
+      '</li>'; }).join("")+'</ul>' : '')+
+    '<div class="myph-add">'+(typeof PhotoPick === "function" ? PhotoPick("myph", { say:"사진을 더 붙이시거나, 저장되지 않은 사진을 다시 골라 주세요." }) : "")+
+      '<p class="row-cta"><button type="button" class="btn btn-b" data-myph-save hidden>'+icon("save",16)+' 고른 사진 저장</button></p></div>'+
+  '</div>';
+}
+function myPhH(){ var h = { "content-type":"application/json" };
+  try{ if(typeof amAuthHeaders === "function") Object.assign(h, amAuthHeaders()); }catch(e){} return h; }
+function myPhSlot(no, photo){
+  return function(it){
+    return fetch("/api/upload", { method:"POST", headers:myPhH(),
+      body:JSON.stringify({ op:"mine", no:no, photo:photo || undefined, mime:it.mime, bytes:it.size }) });
+  };
+}
+window.myPhInit = function(){
+  var box = document.getElementById("myph"); if(!box || typeof amPhotoReady !== "function") return;
+  amPhotoReady().then(function(up){
+    if(!up) return;
+    box.hidden = false;
+    if(typeof amPhotoWire === "function") amPhotoWire(box);
+    var no = box.getAttribute("data-no");
+    [].forEach.call(box.querySelectorAll("li[data-myph]"), function(li){
+      var id = li.getAttribute("data-myph"), st = li.querySelector("[data-myph-st]");
+      fetch("/api/upload?p=" + encodeURIComponent(id), { headers:myPhH() })
+        .then(function(r){ return r.json().catch(function(){ return {}; }); })
+        .then(function(j){
+          if(j && j.ok){ st.textContent = "저장됨"; li.className = "is-ok";
+            if(j.url && li.getAttribute("data-mime") !== "application/pdf")
+              li.querySelector(".phup-th").innerHTML = '<img src="'+esc(j.url)+'" alt="">'; return; }
+          if(j && j.missing){ myPhMissing(li, no, id); return; }
+          st.textContent = "지금 확인하지 못했습니다";
+        }).catch(function(){ st.textContent = "지금 확인하지 못했습니다"; });
+    });
+  });
+};
+
+function myPhMissing(li, no, id){
+  li.className = "is-fail";
+  var st = li.querySelector("[data-myph-st]");
+  st.textContent = "파일이 저장되지 않았어요";
+  var f = "myph-re-" + id;
+  var lab = document.createElement("span");
+  lab.className = "myph-re";
+  lab.innerHTML = '<label class="btn btn-o" for="'+f+'">'+icon("refresh",15)+' 이 사진 다시 첨부</label>'+
+    '<input type="file" id="'+f+'" class="phup-i" accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif,.pdf">';
+  li.querySelector(".phup-tx").appendChild(lab);
+  lab.querySelector("input").addEventListener("change", function(){
+    var file = this.files && this.files[0]; this.value = ""; if(!file) return;
+    var mime = (typeof amPhKind === "function") ? amPhKind(file) : file.type;
+    var conv = (mime === "image/heic" || mime === "image/heif") && typeof amPhToJpg === "function"
+      ? amPhToJpg(file).then(function(j){ file = j; mime = "image/jpeg"; }) : Promise.resolve();
+    st.textContent = "올리는 중…"; li.className = "";
+    conv.then(function(){
+      var it = { mime:mime, size:file.size, f:file };
+      return myPhSlot(no, id)(it).then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+        .then(function(x){
+          if(x.j && x.j.saved){ return "saved"; }
+          if(!x.ok || !x.j || !x.j.url) throw new Error((x.j && x.j.error) || "지금 올리지 못했습니다");
+          var ctl = new AbortController(), ms = window.AM_PH_PUT_MS || Math.min(240000, 45000 + Math.round(file.size / 40));
+          var tm = setTimeout(function(){ ctl.abort(); }, ms);
+          return fetch(x.j.url, { method:"PUT", headers:{ "content-type":mime }, body:file, signal:ctl.signal })
+            .then(function(r){ clearTimeout(tm); if(!r.ok) throw new Error("올리지 못했습니다"); return "ok"; },
+                  function(e){ clearTimeout(tm); throw new Error(e && e.name === "AbortError" ? "시간이 오래 걸려 멈췄습니다. 다시 올려 주세요" : "연결이 끊겼습니다. 다시 올려 주세요"); });
+        });
+    }).then(function(){
+      st.textContent = "저장됨"; li.className = "is-ok"; lab.remove(); toast("사진을 저장했습니다");
+    }, function(e){
+      st.textContent = "저장 실패 — " + ((e && e.message) || "다시 올려 주세요"); li.className = "is-fail";
+    });
+  });
+}
+
+document.addEventListener("click", function(e){
+  var b = e.target && e.target.closest && e.target.closest("[data-myph-save]"); if(!b) return;
+  var box = document.getElementById("myph"); if(!box || typeof amPhotoSubmitWith !== "function") return;
+  var no = box.getAttribute("data-no");
+  b.disabled = true;
+  amPhotoSubmitWith(box.querySelector(".myph-add"), no, myPhSlot(no, "")).then(function(){ b.disabled = false; b.hidden = true; });
+});
+document.addEventListener("change", function(e){
+  if(e.target && e.target.closest && e.target.closest("#myph .myph-add input[data-ph-in]")){
+    var s2 = document.querySelector("#myph [data-myph-save]"); if(s2) setTimeout(function(){ s2.hidden = false; }, 0);
+  }
+});
 
 function MyQuoteCompare(d, r){
   var L = myqOf(d, r.id);

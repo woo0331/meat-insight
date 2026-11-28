@@ -23,10 +23,10 @@ async function ctxOf(b, W, tok, o){
   const ctx = await b.newContext({ viewport:{ width:W, height:800 } });
   await ctx.addInitScript((t) => { let w; Object.defineProperty(window, "WOW_BIZ", { configurable:true, get(){ return w; }, set(v){ v.sosReady = true; w = v; } });
     if (t !== "none" && !sessionStorage.getItem("seeded")) { sessionStorage.setItem("seeded","1");
-      localStorage.setItem("am.auth.v1", JSON.stringify({ access_token:"TOK", refresh_token:"R", at: t === "expired" ? Date.now() - 1000 : Date.now() + 3e6 })); } }, tok);
+      localStorage.setItem("am.auth.v1", JSON.stringify({ access_token: t === "revoked" ? "TOKX" : "TOK", refresh_token:"R", at: t === "expired" ? Date.now() - 1000 : Date.now() + 3e6 })); } }, tok);
   o.posts = []; o.refresh = 0;
   await ctx.route("**/api/session**", r => { const a = r.request().headers()["authorization"] || "";
-    r.fulfill({ contentType:"application/json", body: JSON.stringify({ auth:true, kakao:true, signedIn: /^Bearer TOK2?$/.test(a), role:"customer",
+    r.fulfill({ contentType:"application/json", body: JSON.stringify({ auth:true, kakao:true, signedIn: /^Bearer TOK(2|X)?$/.test(a), role:"customer",
       intake:{ quote:true, close:true, sell:true, join:true }, conf:{ url:"x", anon:"y" } }) }); });
   await ctx.route("**/api/auth**", r => { let b2 = {}; try{ b2 = JSON.parse(r.request().postData() || "{}"); }catch(e){}
     if (b2.op === "oauth") return r.fulfill({ contentType:"application/json", body: JSON.stringify({ url: R + "/fake-kakao?to=" + encodeURIComponent(b2.path) }) });
@@ -34,9 +34,11 @@ async function ctxOf(b, W, tok, o){
   /* 카카오에 다녀온 척 — 새 토큰을 남기고 돌아갈 자리로 */
   await ctx.route("**/fake-kakao**", r => { const to = new URL(r.request().url()).searchParams.get("to");
     r.fulfill({ contentType:"text/html", body:'<script>localStorage.setItem("am.auth.v1",JSON.stringify({access_token:"TOK2",refresh_token:"R2",at:Date.now()+3e6}));location.replace(' + JSON.stringify(to) + ')</script>' }); });
-  await ctx.route("**/api/upload**", r => r.fulfill({ contentType:"application/json", body:'{"up":false}' }));
+  await ctx.route("**/api/upload**", r => r.fulfill({ contentType:"application/json", body: o.up ? '{"up":true}' : '{"up":false}' }));
   await ctx.route("**/api/me**", r => r.fulfill({ contentType:"application/json", body:'{"auth":true,"signedIn":false}' }));
   await ctx.route("**/api/quote**", r => { o.posts.push(r.request().headers()["authorization"] || "");
+    if ((r.request().headers()["authorization"] || "") === "Bearer TOKX")
+      return r.fulfill({ status:401, contentType:"application/json", body: JSON.stringify({ error:"로그인이 풀려 아직 보내지 않았습니다. 다시 로그인하고 계속해 주세요.", relogin:true }) });
     r.fulfill({ contentType:"application/json", body: JSON.stringify({ ok:true, no:"SW-TEST-0001", state:"new", linked: !!r.request().headers()["authorization"] }) }); });
   return ctx;
 }
@@ -71,7 +73,7 @@ const look = pg => pg.evaluate(() => ({
       ok(v.ask && !v.done && o.posts.length === 0, W + " " + when + " 로그인이 풀렸으면 보내지 않고 묻는다", { v, posts:o.posts });
       ok(v.name === "검수" && v.tel === "010-0000-1128" && v.q === "메모 보존 확인" && v.ag, W + " " + when + " 적은 내용이 그대로 남는다", v);
       ok(v.hd !== "in", W + " " + when + " 헤더가 '내 계정' 으로 남지 않는다", v.hd);
-      ok(/내 기록에 자동으로 연결되지 않습니다/.test(v.errTxt) && /사진은 다시 골라/.test(v.errTxt), W + " " + when + " 까닭과 사진 안내를 그 자리에서 말한다");
+      ok(/내 기록에 자동으로 연결되지 않습니다/.test(v.errTxt) && /다시 골라 주셔야/.test(v.errTxt), W + " " + when + " 까닭과 사진 안내를 그 자리에서 말한다");
       const btnOk = await pg.evaluate(() => { const b2 = document.getElementById("cq-go"); return b2 && !b2.disabled; });
       ok(btnOk, W + " " + when + " 보내기 단추가 '보내는 중' 으로 묶이지 않는다");
       if (!v.ask) { ok(false, W + " " + when + " 묻는 상자가 없어 뒤 검사를 건너뜁니다"); await ctx.close(); continue; }
@@ -95,6 +97,34 @@ const look = pg => pg.evaluate(() => ({
       ok(errs.length === 0, W + " " + when + " 화면 오류 없음", errs);
       await ctx.close();
     }
+    /* ⑥ 화면에서는 토큰이 살아 있는데 서버(Supabase)가 거절 — 서버가 실제 인증으로 판정합니다 */
+    { const o = { up:true }; const ctx = await ctxOf(b, W, "revoked", o); const pg = await ctx.newPage();
+      await pg.goto(R + CLOSE); await pg.waitForTimeout(800); await fillClose(pg);
+      const img = path.join(ROOTDIR, "img", fs.readdirSync(path.join(ROOTDIR, "img")).filter(x => /\.jpg$/.test(x))[0]);
+      const hasPick = await pg.$("#pp-cq-a");
+      if (hasPick) await pg.setInputFiles("#pp-cq-a", [img]);
+      await pg.click("#cq-go"); await pg.waitForTimeout(800);
+      let v = await look(pg);
+      ok(o.posts.length === 1 && o.posts[0] === "Bearer TOKX" && v.ask && !v.done, W + " 서버가 토큰을 거절하면(401) 저장 없이 재로그인을 묻는다", { posts:o.posts, ask:v.ask });
+      ok(v.hd !== "in" && v.name === "검수" && v.q === "메모 보존 확인", W + " 거절 뒤 헤더가 로그인으로 안 남고 적은 것이 그대로", v);
+      await pg.click("[data-rl-anon]"); await pg.waitForTimeout(800);
+      v = await look(pg);
+      ok(o.posts.length === 2 && o.posts[1] === "" && v.done, W + " 거절 뒤 '로그인 없이 보내기' 는 죽은 토큰을 다시 안 단다", o.posts);
+      await ctx.close(); }
+    /* ⑦ 사진을 고른 채 다시 로그인 — 돌아오면 사진은 다시 고르라고 그 자리에 남긴다 · 작성하던 자리로 */
+    { const o = { up:true }; const ctx = await ctxOf(b, W, "expired", o); const pg = await ctx.newPage();
+      await pg.goto(R + CLOSE); await pg.waitForTimeout(800); await fillClose(pg);
+      const img = path.join(ROOTDIR, "img", fs.readdirSync(path.join(ROOTDIR, "img")).filter(x => /\.jpg$/.test(x))[0]);
+      const hasPick = await pg.$("#pp-cq-a");
+      ok(!!hasPick, W + " 사진 고르기 칸이 있다 (시험 준비)");
+      if (hasPick) { await pg.setInputFiles("#pp-cq-a", [img, img]); await pg.waitForTimeout(300); }
+      await pg.click("#cq-go"); await pg.waitForTimeout(700);
+      await pg.click("[data-rl-in]"); await pg.waitForURL(u => /\/quote\?mode=close/.test(String(u)) && !/fake-kakao/.test(String(u))); await pg.waitForTimeout(1000);
+      const p = await pg.evaluate(() => { const n = document.querySelector(".q-rl-ph"); const g = document.getElementById("cq-go"); const r = g && g.getBoundingClientRect();
+        return { note: n ? n.innerText : "", inView: !!r && r.top >= 0 && r.bottom <= innerHeight }; });
+      ok(/사진 2장/.test(p.note) && /다시 골라/.test(p.note), W + " 돌아오면 '사진 2장은 다시 골라 주세요' 가 그 자리에 남는다", p.note);
+      ok(p.inView, W + " 돌아오면 작성하던 자리(보내기 단추)로", p);
+      await ctx.close(); }
     /* ⑤ 예전과 같은 둘 */
     for (const tok of ["none", "valid"]) {
       const o = {}; const ctx = await ctxOf(b, W, tok, o); const pg = await ctx.newPage();

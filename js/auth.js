@@ -319,6 +319,12 @@ window.amAuthNow = function(){ return AM_AUTH; };
    ⚠️⚠️ 서버를 믿게 하는 값이 아닙니다 — 누구인지는 언제나 서버가 토큰으로 정합니다.
    여기는 **조용히 비회원 접수가 되는 것**을 손님에게 먼저 알리려는 것까지입니다.
    ⚠️ 로그인이 꺼져 있으면(AM_AUTH.on=false) 아무것도 묻지 않고 "anon" 입니다. */
+/* 서버가 토큰을 거절했을 때 (api/quote.js 의 401 relogin) — 지우고 '풀림' 으로 둡니다.
+   ⚠️ 지우지 않으면 '로그인 없이 보내기' 가 같은 죽은 토큰을 또 달고 가서 401 이 되풀이됩니다. */
+window.amAuthDrop = function(){
+  amAuthClear(); amAuthLostMark();
+  if(typeof window.amEntryPaint === "function") try{ window.amEntryPaint(AM_AUTH); }catch(e){}
+};
 window.amAuthEnsure = function(){
   if(!AM_AUTH.on) return Promise.resolve("anon");
   if(amAuthToken()) return Promise.resolve("ok");

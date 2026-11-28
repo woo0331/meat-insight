@@ -588,10 +588,11 @@ function amReloginAsk(failId, body, again, done, btn){
   box.innerHTML = '<div class="notice-bad q-relogin" role="alert"><b>로그인이 풀려 아직 보내지 않았습니다.</b>'+
     '<p>이대로 보내면 <b>내 기록에 자동으로 연결되지 않습니다.</b> 적어 주신 내용은 그대로 남아 있습니다.</p>'+
     '<div class="row-cta">'+
-      '<button type="button" class="btn btn-b" data-rl-in>'+icon("user",16)+' 다시 로그인하고 보내기</button>'+
+      '<button type="button" class="btn btn-b" data-rl-in>'+icon("user",16)+' 다시 로그인하고 계속하기</button>'+
       '<button type="button" class="btn btn-o" data-rl-anon>로그인 없이 보내기</button>'+
     '</div>'+
-    '<p class="note">다시 로그인하면 이 화면으로 돌아와 적어 두신 내용을 되살립니다. 사진은 다시 골라 주세요. '+
+    '<p class="note">다시 로그인하면 이 화면 이 자리로 돌아와 고르신 서비스 · 지역 · 적어 두신 내용을 되살립니다. '+
+      '사진은 브라우저가 들고 갈 수 없어 <b>다시 골라 주셔야 합니다.</b> '+
       '로그인 없이 보내셔도 나중에 접수번호와 휴대폰 번호로 내 기록에 가져오실 수 있습니다.</p></div>';
   try{ box.scrollIntoView({ block:"center" }); }catch(e){}
   var bi = box.querySelector("[data-rl-in]"), ba = box.querySelector("[data-rl-anon]");
@@ -621,7 +622,11 @@ function amReloginKeep(f){
     if(!k) return;
     keep.push([k, (e.type === "checkbox" || e.type === "radio") ? (e.checked ? 1 : 0) : String(e.value)]);
   });
-  try{ sessionStorage.setItem(AM_RL_KEY, JSON.stringify({ p: location.pathname + location.search, at: Date.now(), k: keep })); }catch(e){}
+  var ph = 0;
+  [].slice.call(f.querySelectorAll('input[type=file]')).forEach(function(e){ ph += (e.files && e.files.length) || 0; });
+  try{ if(f.__ph && f.__ph.items) ph = Math.max(ph, f.__ph.items.length); }catch(e){}
+  [].slice.call(f.querySelectorAll("[data-ph]")).forEach(function(w){ try{ if(w.__ph && w.__ph.items) ph = Math.max(ph, w.__ph.items.length); }catch(e){} });
+  try{ sessionStorage.setItem(AM_RL_KEY, JSON.stringify({ p: location.pathname + location.search, at: Date.now(), k: keep, ph: ph, f: f.id || "" })); }catch(e){}
 }
 function amReloginDrop(){ try{ sessionStorage.removeItem(AM_RL_KEY); }catch(e){} }
 window.amReloginRestore = function(){
@@ -642,7 +647,19 @@ window.amReloginRestore = function(){
     if(n){ var dt = e.closest && e.closest("details"); if(dt && v) dt.open = true; }
     try{ e.dispatchEvent(new Event("change", { bubbles:true })); }catch(_){}
   });
-  if(n) toast("적어 두신 내용을 되살렸습니다 — 사진은 다시 골라 주세요");
+  var f = d.f ? document.getElementById(d.f) : null;
+
+  if(f && d.ph){
+    var pp = f.querySelector(".phup, [data-ph]") ;
+    var nt = document.createElement("p");
+    nt.className = "note-box q-rl-ph"; nt.setAttribute("role", "status");
+    nt.innerHTML = "다시 로그인하기 전에 고르셨던 <b>사진 " + d.ph + "장</b>은 브라우저가 들고 올 수 없어 비어 있습니다. 아래에서 다시 골라 주세요.";
+    if(pp && pp.parentNode) pp.parentNode.insertBefore(nt, pp); else f.insertBefore(nt, f.firstChild);
+  }
+
+  if(f){ var go = f.querySelector("button[type=submit]") || f;
+    setTimeout(function(){ try{ go.scrollIntoView({ block:"center" }); }catch(e){} }, 60); }
+  if(n) toast("다시 로그인하셨습니다 — 적어 두신 내용을 되살렸습니다" + (d.ph ? " · 사진은 다시 골라 주세요" : ""));
   return n > 0;
 };
 window.amSendNow = amSendNow;
@@ -667,6 +684,8 @@ function amSendNow(failId, body, again, done){
 
         const err = new Error((x.j && x.j.error) || "보내지 못했습니다");
         err.fromServer = true;
+
+        if(x.j && x.j.relogin === true) err.relogin = true;
         throw err;
       }
       var box = $(failId);
@@ -724,6 +743,11 @@ function amSendNow(failId, body, again, done){
     .catch(function(e){
       clearTimeout(late);
 
+      if(e && e.relogin){
+        if(typeof window.amAuthDrop === "function") window.amAuthDrop();
+        amReloginAsk(failId, body, again, done, btn);
+        return;
+      }
       var why;
       if(e && (e.name === "AbortError" || /aborted/i.test(e.message || "")))
         why = "연결이 오래 걸려 끊었습니다. 신호가 잡히는 곳에서 다시 눌러 주세요.";

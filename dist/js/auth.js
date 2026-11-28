@@ -222,6 +222,10 @@ window.amAuthAsk = function(force){
 
 window.amAuthNow = function(){ return AM_AUTH; };
 
+window.amAuthDrop = function(){
+  amAuthClear(); amAuthLostMark();
+  if(typeof window.amEntryPaint === "function") try{ window.amEntryPaint(AM_AUTH); }catch(e){}
+};
 window.amAuthEnsure = function(){
   if(!AM_AUTH.on) return Promise.resolve("anon");
   if(amAuthToken()) return Promise.resolve("ok");

@@ -147,7 +147,14 @@ function pickPad(){
   document.documentElement.style.setProperty("--pk-bar-h", Math.round(h) + "px");
 }
 
+function amPickAutoSide(side){
+  if(side !== "auto") return side;
+  var cats = (window.AM_CLOSE_SCOPE && AM_CLOSE_SCOPE.cats) || [], ids = amPickGet();
+  return (ids.length && cats.length && ids.every(function(id){ return cats.indexOf(String(id).split("/")[0]) >= 0; }))
+    ? "close" : "start";
+}
 window.amPickGoForm = function(side){
+  side = amPickAutoSide(side);
   if(side !== "close") return "quote";
   var cats = (window.AM_CLOSE_SCOPE && AM_CLOSE_SCOPE.cats) || [];
   if(!cats.length) return "quote";
@@ -156,6 +163,7 @@ window.amPickGoForm = function(side){
     ? "close" : "quote";
 };
 window.amPickQuoteTo = function(side){
+  side = amPickAutoSide(side);
   var ids = amPickGet();
   if(window.amPickGoForm(side) === "close")
     return "/quote?mode=close&from=closure-pick" +

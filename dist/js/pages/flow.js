@@ -8,7 +8,7 @@ function PageStartup(){
   var top = amPickTop("startup", ind), rest = amPickRest("startup", ind);
 
   var stPicked = ["new","take"].indexOf(nowQS("how")) >= 0;
-  return StartIntro(ind) + StartSit(ind) + StartKpSvc(ind) + StartKpRoad(ind) + (stPicked ? "" : StartKpCalc(ind)) + StartKpInd() +
+  return StartTop(ind) + StartSit(ind) + StartKpSvc(ind) + StartKpRoad(ind) + (stPicked ? "" : StartKpCalc(ind)) + StartKpInd() +
 
     HallPickFold({ side:"start", path:(nowQS("p") === "pick" ? "pick" : ""),
       body:StartPickBody(top, rest, ind), packKeys:["open", "build"] }) +
@@ -659,7 +659,7 @@ function PageClosure(){
   var sel   = ClosurePickFold(path);
 
   var clPicked = ["pass","money","fast","lost"].indexOf(nowQS("w")) >= 0;
-  return ClosureIntro(path) + CloseSit() + CloseKpSvc() + CloseKpRoad() + (clPicked ? "" : CloseKpCalc()) +
+  return CloseTop() + CloseSit() + CloseKpSvc() + CloseKpRoad() + (clPicked ? "" : CloseKpCalc()) +
     ClosureFlow(path, true) + ClosureDemoBand() +
     sel+
     ClosureMoreBand()+

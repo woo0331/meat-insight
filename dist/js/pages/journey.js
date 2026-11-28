@@ -582,7 +582,7 @@ function PageOperation(){
   var ind = (typeof amIndustry === "function") ? amIndustry(nowQS("i")) : null;
 
   var opPicked = ["cost","mkt","fix","hr"].indexOf(nowQS("need")) >= 0;
-  return OpsIntro(ind) + OpsSit(ind) + OpsKpSvc(ind) + OpsKpRoad() + (opPicked ? "" : OpsKpDiag()) +
+  return OpsTop(ind) + OpsSit(ind) + OpsKpSvc(ind) + OpsKpRoad() + (opPicked ? "" : OpsKpDiag()) +
 
     HallPickFold({ side:"ops", path:(nowQS("p") === "pick" ? "pick" : ""),
       body:PickGroupBody("operation", "ops", { noAside:true }), packKeys:["run"] }) +
@@ -903,7 +903,7 @@ function PageAcquisition(){
   var mkt = AcqMarket(t, ind, iq);
 
   var aqPicked = ["in","out"].indexOf(nowQS("t")) >= 0;
-  return AcqIntro(ind, iq, nowQS("t")) + AcqSit(ind) + AcqKpSvc(ind, iq) + AcqKpRoad(t) + (aqPicked ? "" : AcqKpCalc(t)) +
+  return AcqTop(ind) + AcqSit(ind) + AcqKpSvc(ind, iq) + AcqKpRoad(t) + (aqPicked ? "" : AcqKpCalc(t)) +
     (aqPicked ? "" : AcqWhich(t, ind, iq, true)) +
     (t === "in" ? (aqPicked ? "" : AcqSearch(ind) + mkt) + sel : AcqPrep(ind) + sel + (aqPicked ? "" : mkt)) +
     AcqProcess(t, ind) + AcqKpPros(ind) +

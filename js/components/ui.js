@@ -1267,3 +1267,57 @@ window.ListState = function(o){
     '<p><b>고르신 조건에 맞는 '+esc(o.what || "결과")+'가 없습니다.</b> 전체에는 '+o.total+'건이 있습니다. 조건을 바꾸거나 초기화해 보세요.</p>'+
     '<a class="btn btn-b" href="'+esc(o.reset)+'" data-keep>조건 초기화</a></div>';
 };
+
+/* ══ 2026-11-28 카테고리 네 화면의 머리 (대표 시안 02_카테고리) ══════════════
+   차례 — 사진 띠 → 제목 + 큰 아이콘 → 한 줄 → **주요 행동 둘** → 개별 서비스 · 도구 줄.
+   그 아래 원래 있던 안내(절차 · 체크리스트 · 가이드 · 고르기)는 **그대로** 이어집니다.
+   ⚠️⚠️ 버튼은 전부 실제 화면입니다 — 없는 기능을 가리키지 마세요.
+   ⚠️ 접수 양식으로 가는 버튼은 form 을 주면 열림/닫힘 짝(data-cta)으로 냅니다 —
+      닫혀 있으면 같은 자리에 '접수 안내' 가 섭니다 (2026-11-18 양식마다 따로).
+   ⚠️ h1 은 화면마다 하나 — 이 머리가 그 h1 입니다 (원래 머리는 이 화면들에서 안 부릅니다). */
+function ctBtn(b, cls){
+  if(!b) return "";
+  var inner = '<span class="cg-bi" aria-hidden="true">'+icon(b.ic || "arrow", 20)+'</span><span class="cg-bt">'+esc(b.t)+'</span>'+icon("chev", 16);
+  if(b.form){
+    return '<a class="'+cls+'" data-cta="on" data-cta-form="'+esc(b.form)+'" href="'+esc(b.href)+'" hidden>'+inner+'</a>'+
+      '<a class="'+cls+'" data-cta="off" data-cta-form="'+esc(b.form)+'" href="/intake">'+
+        '<span class="cg-bi" aria-hidden="true">'+icon("info", 20)+'</span><span class="cg-bt">'+esc(b.off || "접수 안내 보기")+'</span>'+icon("chev", 16)+'</a>';
+  }
+  return '<a class="'+cls+'" href="'+esc(b.href)+'"'+(b.id ? ' id="'+esc(b.id)+'"' : '')+'>'+inner+'</a>';
+}
+/* 줄 하나 — 사진(있으면) 또는 아이콘 + 이름 + 화살표. 카드 전체가 링크 하나 */
+function ctRow(r){
+  var ph = r.ph && typeof hasPhoto === "function" && hasPhoto(r.ph);
+  var art = (typeof hasIconArt === "function" && hasIconArt(r.ic)) ? iconArt(r.ic, 34) : icon(r.ic || "store", 26);
+  return '<li><a class="cg-r'+(ph ? ' cg-r-ph' : '')+'" href="'+esc(r.href)+'">'+
+    (ph ? '<span class="cg-rp" aria-hidden="true">'+photoBox(r.ph, "", false, "128px")+'</span>'
+        : '<span class="cg-ri" aria-hidden="true">'+art+'</span>')+
+    '<span class="cg-rt"><b>'+esc(r.t)+'</b>'+(r.d ? '<i>'+esc(r.d)+'</i>' : '')+'</span>'+
+    icon("chev", 18)+'</a></li>';
+}
+/* 고르는 칸 — 서비스 고르기 바구니(am.pick.v1)에 그대로 담깁니다 (같은 id 의 칸은 화면 어디서든 같이 켜집니다) */
+function ctTile(t){
+  var art = (typeof hasIconArt === "function" && hasIconArt(t.ic)) ? iconArt(t.ic, 44) : icon(t.ic || "check", 30);
+  var on = typeof amPickHas === "function" && amPickHas(t.id);
+  var fid = "ctt-" + String(t.id).replace(/[^a-z0-9]/gi, "-");
+  return '<li><label class="cg-t" for="'+fid+'">'+
+    '<input type="checkbox" class="pk-ck cg-tc" id="'+fid+'" data-pick="'+esc(t.id)+'"'+(on ? ' checked' : '')+
+      ' onchange="pickToggle(\''+esc(t.id)+'\', this)">'+
+    '<span class="cg-ti" aria-hidden="true">'+art+'</span><b>'+esc(t.t)+'</b>'+
+    '<i class="cg-tk"><span class="cg-tk-off">견적에 담기</span><span class="cg-tk-on">담음</span></i></label></li>';
+}
+window.CatTop = function(o){
+  o = o || {};
+  var ph = o.photo && typeof hasPhoto === "function" && hasPhoto(o.photo);
+  var big = (typeof hasIconArt === "function" && hasIconArt(o.ic)) ? iconArt(o.ic, 56) : icon(o.ic || "store", 40);
+  return '<section class="ctop ctop-'+esc(o.side || "start")+'"'+(o.id ? ' id="'+esc(o.id)+'"' : '')+'><div class="ctop-g'+(ph ? ' ctop-g-ph' : '')+'">'+
+    (ph ? '<div class="ctop-ph" aria-hidden="true">'+photoBox(o.photo, "", true, "(max-width:900px) 100vw, 640px")+'</div>' : '')+
+    '<div class="w ctop-in">'+
+      '<div class="ctop-hd"><div><h1>'+esc(o.h1)+'</h1><p class="ctop-s">'+esc(o.sub || "")+'</p></div>'+
+        '<span class="ctop-ia" aria-hidden="true">'+big+'</span></div>'+
+      '<div class="ctop-go">'+ctBtn(o.a1, "cg-b cg-b1")+ctBtn(o.a2, "cg-b cg-b2")+'</div>'+
+      (o.body || '')+
+    '</div></div></section>';
+};
+window.ctRows = function(L){ return '<ul class="cg-l">'+L.map(ctRow).join("")+'</ul>'; };
+window.ctTiles = function(L){ return '<ul class="cg-tg">'+L.map(ctTile).join("")+'</ul>'; };

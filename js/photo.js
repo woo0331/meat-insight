@@ -294,22 +294,29 @@ window.amPhotoGo = function(w){
   todo.forEach(function(it){
     chain = chain.then(function(){
       it.busy = true; it.fail = ""; it.bad = ""; amPhPaint(w);
-      /* 2026-11-27 — 상품 사진은 자리를 다른 문(/api/product · 로그인 주인)에서 받습니다 (st.slot) */
-      return (st.slot ? st.slot(it) : fetch("/api/upload", {
+      /* 2026-11-27 — 상품 사진은 자리를 다른 문(/api/product · 로그인 주인)에서 받습니다 (st.slot)
+         ⚠️⚠️ 2026-11-28 — **자리를 받았는데 파일만 실패했으면, 다시 올릴 때 그 자리를 다시 씁니다.**
+         새 자리를 또 받으면 파일 없는 사진 기록이 남고(직원 화면에 깨진 사진) 다섯 장 상한도
+         그만큼 먹습니다. 받은 주소로 한 번 더 실패하면(만료 등) 그때 새 자리를 받습니다. */
+      var reuse = !!it.slotUrl;
+      var slotP = reuse ? Promise.resolve({ ok:true, j:{ url:it.slotUrl } }) :
+        (st.slot ? st.slot(it) : fetch("/api/upload", {
         method:"POST",
         headers:{ "content-type":"application/json" },
         body: JSON.stringify({ no:st.no, tel:st.tel, mime:it.mime, bytes:it.size })
-      })).then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+      })).then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); });
+      return slotP
         .then(function(x){
           if(!x.ok || !x.j || !x.j.url)
             throw new Error((x.j && x.j.error) || "지금 올리지 못했습니다");
+          it.slotUrl = x.j.url;
           /* ⚠️⚠️ **여기서 "저장됨" 이라고 하지 않습니다** — 자리를
              받은 것이고 파일은 아직 안 갔습니다 (절대 규칙 5). */
           return fetch(x.j.url, { method:"PUT", headers:{ "content-type":it.mime }, body:it.f });
         })
         .then(function(r){
-          if(!r || !r.ok) throw new Error("올리지 못했습니다");
-          it.ok = true;
+          if(!r || !r.ok){ if(reuse) it.slotUrl = ""; throw new Error("올리지 못했습니다"); }
+          it.ok = true; it.slotUrl = "";
         })
         .catch(function(e){
           amPhLog(e);

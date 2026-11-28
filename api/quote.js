@@ -44,7 +44,7 @@ const { reqNo, telKey, intakeDup } = require("./_intake.js");
 /* ⚠️ 로그인은 **거들기만** 합니다. 접수는 로그인 없이 들어오는 것이
    맞습니다 — 견적 하나 받으려고 가입하게 만들면 거기서 닫힙니다.
    토큰이 같이 왔을 때만 신청을 그 계정에 이어 둡니다 (§10). */
-const { authReady, bearer, session } = require("./_auth.js");
+const { authReady, bearer, whoami } = require("./_auth.js");
 const { gate, formOf, CLOSED_SAY } = require("./_gate.js");
 const { consentFor } = require("./_consent.js");
 const { runJob } = require("./_notify.js");
@@ -301,6 +301,27 @@ module.exports = async function handler(req, res){
      ⚠️ 1시간에 5건을 넘는 것만 막습니다 (공유 IP 가 아니라 연락처 기준 —
      같은 사무실에서 여러 분이 보내셔도 막지 않습니다). 조회가 실패해도
      접수는 막지 않습니다. */
+  /* 로그인하고 넣으셨으면 그 계정에 잇습니다 — 토큰을 Supabase 에 물어 나온
+     값만 씁니다 (요청이 보낸 아이디를 믿지 않습니다).
+     ⚠️⚠️ 2026-11-28 (SW-F65J-ZKVY) — 토큰을 **보냈는데** 확인이 안 되면 **저장하지 않습니다.**
+     전에는 계정 없이 그대로 저장해서, 로그인한 줄 아는 손님의 신청이 모르는 사이
+     비회원 접수가 되었습니다. 토큰을 안 보낸 손님(처음부터 비로그인)은 예전과 같습니다.
+       거절(401 · 403)      → 401 + relogin:true — 화면이 '다시 로그인하고 계속하기' 를 냅니다
+       확인이 늦거나 고장  → 503 — 아직 안 보냈으니 다시 누르시면 됩니다 (자동 비회원 전환 없음)
+     ⚠️ 중복 검사보다 **앞**입니다 — 확인 안 된 요청에 먼저 받은 접수번호를 내주지 않습니다. */
+  let uid = null;
+  if(kind !== "partner" && authReady() && bearer(req)){
+    const who = await whoami(bearer(req));
+    if(who.ok) uid = who.sub;
+    else if(!who.timeout && (who.status === 401 || who.status === 403)){
+      console.warn("[site] 로그인이 풀린 채 보냈습니다 — 저장하지 않고 재로그인을 안내합니다");
+      return res.status(401).json({ error:"로그인이 풀려 아직 보내지 않았습니다. 다시 로그인하고 계속해 주세요.", relogin:true });
+    }else{
+      console.warn("[site] 로그인을 확인하지 못해 아직 저장하지 않았습니다 — " + who.why);
+      return res.status(503).json({ error:"로그인 확인이 늦어 아직 보내지 않았습니다. 잠시 뒤 다시 눌러 주세요." });
+    }
+  }
+
   let near = false;
   if(kind !== "partner"){
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
@@ -323,15 +344,6 @@ module.exports = async function handler(req, res){
         return res.status(429).json({ error:dup.say });
       }
     }
-  }
-
-  /* 로그인하고 넣으셨으면 그 계정에 잇습니다 — 토큰을 Supabase 에 물어 나온
-     값만 씁니다 (요청이 보낸 아이디를 믿지 않습니다). */
-  let uid = null;
-  if(kind !== "partner" && authReady() && bearer(req)){
-    const who = await session(req);
-    if(who.ok) uid = who.sub;
-    else console.warn("[site] 로그인을 확인하지 못해 신청을 계정에 잇지 않았습니다 — " + who.why);
   }
 
   const cand = reqNo();

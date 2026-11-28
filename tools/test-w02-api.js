@@ -37,6 +37,12 @@ function world(o){
       if(fn === "due_notify") return resp(200, o.due || []);
       return resp(404, { message: "no fn" });
     }
+    if(u.indexOf("https://db.invalid/auth/v1/user") === 0){
+      w.who = (w.who || 0) + 1;
+      if(o.auth === "bad") return resp(401, { msg: "invalid JWT" });
+      if(o.auth === "down") return resp(502, {});
+      return resp(200, { id: "11111111-2222-3333-4444-555555555555" });
+    }
     if(u.indexOf("https://db.invalid/rest/v1/") === 0){ w.gets.push(u); return resp(200, o.rows || []); }
     if(u.indexOf("https://hook.invalid/") === 0){ w.hooks.push(body); return o.hookDown ? resp(500, {}) : resp(200, {}); }
     if(/api\.resend\.com/.test(u)){ w.hooks.push({ mail: body }); return resp(200, {}); }
@@ -139,6 +145,28 @@ const Q = { kind: "quote", name: "합성고객김", tel: "010-9999-1111", email:
     ok(r.code === 200 && r.body.picked === 1 && r.body.sent === 1, "밀린 알림을 꺼내 다시 보냄", r.body);
     ok(JSON.stringify(r.body).indexOf("SW-R9") < 0, "응답에 접수 내용을 싣지 않음 (셈만)");
     ok(w.gets.every(u => !/select=[^&]*(name|tel)/.test(u)), "재시도는 성함 · 연락처를 읽지 않음", w.gets); }
+
+  /* 2026-11-28 (SW-F65J-ZKVY) — 토큰을 보냈는데 확인이 안 되면 **저장하지 않습니다.**
+     전에는 계정 없이 그대로 저장해서 로그인한 줄 아는 손님의 신청이 모르는 사이 비회원 접수가 됐습니다. */
+  console.log("▶ 로그인한 채 보내기 — 계정 연결 · 풀린 토큰은 저장하지 않음");
+  { const h = load("quote.js", { SUPABASE_ANON_KEY: "anon-x" }); const w = world(); const r = res(); await h(req(Q), r);
+    const si = w.rpc.filter(x => x.fn === "submit_intake")[0];
+    ok(r.code === 200 && si && si.body.p.user_id === null && !w.who, "토큰을 안 보내면 묻지도 않고 비회원 접수 (예전과 같음)", { code: r.code, who: w.who }); }
+  { const h = load("quote.js", { SUPABASE_ANON_KEY: "anon-x" }); const w = world({ auth: "ok" }); const r = res();
+    await h(req(Q, { authorization: "Bearer good.jwt.sig" }), r);
+    const si = w.rpc.filter(x => x.fn === "submit_intake")[0];
+    ok(r.code === 200 && r.body.linked === true && si && si.body.p.user_id === "11111111-2222-3333-4444-555555555555", "살아 있는 토큰이면 그 계정에 이어 저장 · linked:true", r.body); }
+  { const h = load("quote.js", { SUPABASE_ANON_KEY: "anon-x" }); const w = world({ auth: "bad" }); const r = res();
+    await h(req(Q, { authorization: "Bearer dead.jwt.sig" }), r);
+    ok(r.code === 401 && r.body.relogin === true && !r.body.no, "풀린 토큰이면 401 + relogin · 접수번호 없음", r.body);
+    ok(!w.rpc.some(x => x.fn === "submit_intake") && w.hooks.length === 0, "⚠️⚠️ 풀린 토큰이면 저장도 알림도 안 함 (몰래 비회원 접수 없음)", w.rpc.map(x => x.fn));
+    ok(JSON.stringify(r.body).indexOf("dead.jwt") < 0, "응답에 토큰을 싣지 않음"); }
+  { const h = load("quote.js", { SUPABASE_ANON_KEY: "anon-x" }); const w = world({ auth: "down" }); const r = res();
+    await h(req(Q, { authorization: "Bearer any.jwt.sig" }), r);
+    ok(r.code === 503 && !r.body.relogin && !w.rpc.some(x => x.fn === "submit_intake"), "로그인 확인이 고장나면 503 · 비회원으로 바꿔 저장하지 않음", { code: r.code, b: r.body }); }
+  { const h = load("quote.js", { SUPABASE_ANON_KEY: "anon-x" }); const w = world({ auth: "bad", dup: true }); const r = res();
+    await h(req(Q, { authorization: "Bearer dead.jwt.sig" }), r);
+    ok(r.code === 401 && !r.body.no, "풀린 토큰이면 중복 검사보다 먼저 막아 먼저 받은 번호도 안 내줌", r.body); }
 
   console.log("\n" + (pass + bad) + "건 중 " + pass + "건 통과 · " + bad + "건 실패");
   process.exit(bad ? 1 : 0);

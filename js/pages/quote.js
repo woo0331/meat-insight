@@ -780,7 +780,108 @@ window.joinSend = function(ev){
    들고 막다른 길에 서게 하지 않습니다. 적으신 것을 화면에 그대로 두고,
    복사해 두실 수 있게 하고, 다시 시도를 줍니다.
    ⚠️ **화면을 다시 그리지 마세요** — 다시 그리면 적으신 글이 날아갑니다. */
-window.amSend = function(failId, body, again, done){
+/* ── 보내기 전에 로그인부터 (2026-11-28 · SW-F65J-ZKVY 에서 찾은 자리) ──────────
+   ⚠️⚠️ 로그인했었는데 토큰이 풀린 채로 보내면 **조용히 비회원 접수**가 되어 내 기록에
+   안 보였습니다. 이제 보내기 전에 한 번 보고, 풀렸으면 **보내지 않고** 고르시게 합니다 —
+   다시 로그인하고 보내기(적은 것은 이 탭에 잠시 맡겨 두었다가 돌아오면 되살립니다)
+   · 로그인 없이 그대로 보내기(나중에 접수번호 + 휴대폰으로 가져올 수 있습니다).
+   ⚠️ 처음부터 로그인 안 하신 분께는 아무것도 묻지 않습니다 (예전과 같습니다). */
+window.amSend = function(failId, body, again, done, anonOk){
+  var btn = document.querySelector("#"+failId+" ~ button") ||
+            document.querySelector("form button[type=submit]");
+  if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
+  if(anonOk || typeof window.amAuthEnsure !== "function" || !body || body.kind !== "quote")
+    return amSendNow(failId, body, again, done);
+  window.amAuthEnsure().then(function(st){
+    if(st !== "lost") return amSendNow(failId, body, again, done);
+    amReloginAsk(failId, body, again, done, btn);
+  }, function(){ amSendNow(failId, body, again, done); });
+  return false;
+};
+function amReloginAsk(failId, body, again, done, btn){
+  var box = $(failId); if(!box){ amSendNow(failId, body, again, done); return; }
+  if(btn){ btn.disabled = false; btn.textContent = "보내기"; }
+  box.innerHTML = '<div class="notice-bad q-relogin" role="alert"><b>로그인이 풀려 아직 보내지 않았습니다.</b>'+
+    '<p>이대로 보내면 <b>내 기록에 자동으로 연결되지 않습니다.</b> 적어 주신 내용은 그대로 남아 있습니다.</p>'+
+    '<div class="row-cta">'+
+      '<button type="button" class="btn btn-b" data-rl-in>'+icon("user",16)+' 다시 로그인하고 계속하기</button>'+
+      '<button type="button" class="btn btn-o" data-rl-anon>로그인 없이 보내기</button>'+
+    '</div>'+
+    '<p class="note">다시 로그인하면 이 화면 이 자리로 돌아와 고르신 서비스 · 지역 · 적어 두신 내용을 되살립니다. '+
+      '사진은 브라우저가 들고 갈 수 없어 <b>다시 골라 주셔야 합니다.</b> '+
+      '로그인 없이 보내셔도 나중에 접수번호와 휴대폰 번호로 내 기록에 가져오실 수 있습니다.</p></div>';
+  try{ box.scrollIntoView({ block:"center" }); }catch(e){}
+  var bi = box.querySelector("[data-rl-in]"), ba = box.querySelector("[data-rl-anon]");
+  try{ bi.focus({ preventScroll:true }); }catch(e){}
+  bi.onclick = function(){
+    amReloginKeep(box.closest("form"));
+    bi.disabled = true;
+    (window.amAuthKakao ? window.amAuthKakao() : Promise.resolve({ ok:false })).then(function(x){
+      if(!x || !x.ok){ bi.disabled = false; amReloginDrop(); toast((x && x.say) || "지금은 로그인할 수 없습니다"); }
+    });
+  };
+  ba.onclick = function(){
+    box.innerHTML = "";
+    if(window.amAuthNow) window.amAuthNow().lost = false;
+    try{ sessionStorage.removeItem("am.auth.lost"); }catch(e){}
+    window.amSend(failId, body, again, done, true);
+  };
+}
+/* 다시 로그인하는 동안 **이 탭에만** 맡겨 둡니다 (sessionStorage · 15분 · 되살리면 바로 지웁니다).
+   ⚠️ localStorage 에 두지 않습니다 — 가게 컴퓨터는 여러 사람이 씁니다.
+   ⚠️ 파일은 맡길 수 없습니다 (브라우저가 막습니다) — 사진은 다시 고르시라고 안내합니다. */
+var AM_RL_KEY = "am.relogin.v1";
+function amReloginKeep(f){
+  if(!f) return;
+  var keep = [];
+  [].slice.call(f.querySelectorAll("input, select, textarea")).forEach(function(e){
+    if(e.type === "file" || e.type === "password" || e.type === "submit" || e.type === "button") return;
+    var k = e.id ? "#" + e.id : (e.name ? "@" + e.name + "=" + e.value : "");
+    if(!k) return;
+    keep.push([k, (e.type === "checkbox" || e.type === "radio") ? (e.checked ? 1 : 0) : String(e.value)]);
+  });
+  var ph = 0;
+  [].slice.call(f.querySelectorAll('input[type=file]')).forEach(function(e){ ph += (e.files && e.files.length) || 0; });
+  try{ if(f.__ph && f.__ph.items) ph = Math.max(ph, f.__ph.items.length); }catch(e){}
+  [].slice.call(f.querySelectorAll("[data-ph]")).forEach(function(w){ try{ if(w.__ph && w.__ph.items) ph = Math.max(ph, w.__ph.items.length); }catch(e){} });
+  try{ sessionStorage.setItem(AM_RL_KEY, JSON.stringify({ p: location.pathname + location.search, at: Date.now(), k: keep, ph: ph, f: f.id || "" })); }catch(e){}
+}
+function amReloginDrop(){ try{ sessionStorage.removeItem(AM_RL_KEY); }catch(e){} }
+window.amReloginRestore = function(){
+  var d = null;
+  try{ d = JSON.parse(sessionStorage.getItem(AM_RL_KEY) || "null"); }catch(e){}
+  if(!d) return false;
+  amReloginDrop();
+  if(d.p !== location.pathname + location.search || !(Date.now() - d.at < 15 * 60e3)) return false;
+  var n = 0;
+  (d.k || []).forEach(function(kv){
+    var k = kv[0], v = kv[1], e = null;
+    if(k.charAt(0) === "#") e = document.getElementById(k.slice(1));
+    else { var i = k.indexOf("="), nm = k.slice(1, i), val = k.slice(i + 1);
+      e = [].slice.call(document.getElementsByName(nm)).filter(function(x){ return x.value === val; })[0] || null; }
+    if(!e) return;
+    if(e.type === "checkbox" || e.type === "radio"){ if(e.checked !== !!v){ e.checked = !!v; n++; } }
+    else if(e.value !== v){ e.value = v; n++; }
+    if(n){ var dt = e.closest && e.closest("details"); if(dt && v) dt.open = true; }
+    try{ e.dispatchEvent(new Event("change", { bubbles:true })); }catch(_){}
+  });
+  var f = d.f ? document.getElementById(d.f) : null;
+  /* 사진은 되살릴 수 없습니다 — 고르셨던 수만큼 그 자리에서 다시 고르시라고 남깁니다 (토스트만으로는 놓칩니다) */
+  if(f && d.ph){
+    var pp = f.querySelector(".phup, [data-ph]") ;
+    var nt = document.createElement("p");
+    nt.className = "note-box q-rl-ph"; nt.setAttribute("role", "status");
+    nt.innerHTML = "다시 로그인하기 전에 고르셨던 <b>사진 " + d.ph + "장</b>은 브라우저가 들고 올 수 없어 비어 있습니다. 아래에서 다시 골라 주세요.";
+    if(pp && pp.parentNode) pp.parentNode.insertBefore(nt, pp); else f.insertBefore(nt, f.firstChild);
+  }
+  /* 작성하던 자리로 — 보내기 단추 근처 */
+  if(f){ var go = f.querySelector("button[type=submit]") || f;
+    setTimeout(function(){ try{ go.scrollIntoView({ block:"center" }); }catch(e){} }, 60); }
+  if(n) toast("다시 로그인하셨습니다 — 적어 두신 내용을 되살렸습니다" + (d.ph ? " · 사진은 다시 골라 주세요" : ""));
+  return n > 0;
+};
+window.amSendNow = amSendNow;
+function amSendNow(failId, body, again, done){
   var btn = document.querySelector("#"+failId+" ~ button") ||
             document.querySelector("form button[type=submit]");
   if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
@@ -818,6 +919,8 @@ window.amSend = function(failId, body, again, done){
            가르려고 표시를 답니다 (2026-10-25 §4). */
         const err = new Error((x.j && x.j.error) || "보내지 못했습니다");
         err.fromServer = true;
+        /* 2026-11-28 — 서버가 토큰을 거절했으면(저장 안 함) 재로그인을 묻습니다 */
+        if(x.j && x.j.relogin === true) err.relogin = true;
         throw err;
       }
       var box = $(failId);
@@ -891,6 +994,11 @@ window.amSend = function(failId, body, again, done){
          failed" 처럼 영어이고, 그걸 그대로 내면 사장님은 무엇을 하셔야
          하는지 알 수 없습니다 — 서버가 **사람 말로** 적어 준 것만
          그대로 내고, 나머지는 쉬운 한 줄로 바꿉니다. */
+      if(e && e.relogin){
+        if(typeof window.amAuthDrop === "function") window.amAuthDrop();
+        amReloginAsk(failId, body, again, done, btn);
+        return;
+      }
       var why;
       if(e && (e.name === "AbortError" || /aborted/i.test(e.message || "")))
         why = "연결이 오래 걸려 끊었습니다. 신호가 잡히는 곳에서 다시 눌러 주세요.";

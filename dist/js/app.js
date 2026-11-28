@@ -493,6 +493,9 @@ function render(){
     window.quoteDraftPaint();
   if(nowPath() === "/quote" && typeof window.quoteSumPaint === "function")
     window.quoteSumPaint();
+
+  if(typeof window.amReloginRestore === "function" && window.amReloginRestore() &&
+     nowPath() === "/quote" && typeof window.quoteSumPaint === "function") window.quoteSumPaint();
   if(!RT.keepScroll) window.scrollTo(0,0);
   RT.keepScroll = false;
   if(RT.focus){

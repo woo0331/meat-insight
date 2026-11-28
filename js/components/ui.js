@@ -1297,24 +1297,29 @@ function ctRow(r){
 }
 /* 고르는 칸 — 서비스 고르기 바구니(am.pick.v1)에 그대로 담깁니다 (같은 id 의 칸은 화면 어디서든 같이 켜집니다) */
 function ctTile(t){
+  /* 2026-11-28 사진형 시안 — 왼쪽 작은 사진 · 이름 · 한 줄 · 오른쪽 체크 동그라미. 누르면 담기고 다시 누르면 빠집니다.
+     ⚠️ 이동 링크(ctRow · 화살표)와 생김새를 갈랐습니다 — 이건 체크 동그라미, 저건 꺾쇠입니다. */
+  var ph = t.ph && typeof hasPhoto === "function" && hasPhoto(t.ph);
   var art = (typeof hasIconArt === "function" && hasIconArt(t.ic)) ? iconArt(t.ic, 44) : icon(t.ic || "check", 30);
   var on = typeof amPickHas === "function" && amPickHas(t.id);
   var fid = "ctt-" + String(t.id).replace(/[^a-z0-9]/gi, "-");
-  return '<li><label class="cg-t" for="'+fid+'">'+
+  return '<li><label class="cg-t'+(ph ? ' cg-t-ph' : '')+'" for="'+fid+'">'+
     '<input type="checkbox" class="pk-ck cg-tc" id="'+fid+'" data-pick="'+esc(t.id)+'"'+(on ? ' checked' : '')+
       ' onchange="pickToggle(\''+esc(t.id)+'\', this)">'+
-    '<span class="cg-ti" aria-hidden="true">'+art+'</span><b>'+esc(t.t)+'</b>'+
-    '<i class="cg-tk"><span class="cg-tk-off">견적에 담기</span><span class="cg-tk-on">담음</span></i></label></li>';
+    (ph ? '<span class="cg-tp" aria-hidden="true">'+photoBox(t.ph, "", false, "128px")+'</span>'
+        : '<span class="cg-ti" aria-hidden="true">'+art+'</span>')+
+    '<span class="cg-tt"><b>'+esc(t.t)+'</b>'+(t.d ? '<i class="cg-td">'+esc(t.d)+'</i>' : '')+'</span>'+
+    '<i class="cg-tk"><span class="cg-tk-off">담기</span><span class="cg-tk-on">담음</span></i></label></li>';
 }
 window.CatTop = function(o){
   o = o || {};
+  /* 2026-11-28 사진형 최종 시안 — 사진 위에 제목 · 한 줄(짙은 막 위), 그 아래 주요 행동 둘(월넛 · 테두리), 그 아래 서비스 카드.
+     ⚠️ 사진 위 글자는 검사가 못 잽니다 — 막을 옅게 하지 마세요. 사진이 없으면 제목이 밝은 바탕 위로 내려옵니다. */
   var ph = o.photo && typeof hasPhoto === "function" && hasPhoto(o.photo);
-  var big = (typeof hasIconArt === "function" && hasIconArt(o.ic)) ? iconArt(o.ic, 56) : icon(o.ic || "store", 40);
+  var hd = '<div class="ctop-hd"><div><h1>'+esc(o.h1)+'</h1><p class="ctop-s">'+esc(o.sub || "")+'</p></div></div>';
   return '<section class="ctop ctop-'+esc(o.side || "start")+'"'+(o.id ? ' id="'+esc(o.id)+'"' : '')+'><div class="ctop-g'+(ph ? ' ctop-g-ph' : '')+'">'+
-    (ph ? '<div class="ctop-ph" aria-hidden="true">'+photoBox(o.photo, "", true, "(max-width:900px) 100vw, 640px")+'</div>' : '')+
-    '<div class="w ctop-in">'+
-      '<div class="ctop-hd"><div><h1>'+esc(o.h1)+'</h1><p class="ctop-s">'+esc(o.sub || "")+'</p></div>'+
-        '<span class="ctop-ia" aria-hidden="true">'+big+'</span></div>'+
+    (ph ? '<div class="ctop-ph">'+photoBox(o.photo, "", true, "(max-width:900px) 100vw, 640px")+'<div class="w ctop-ov">'+hd+'</div></div>' : '')+
+    '<div class="w ctop-in">'+(ph ? '' : hd)+
       '<div class="ctop-go">'+ctBtn(o.a1, "cg-b cg-b1")+ctBtn(o.a2, "cg-b cg-b2")+'</div>'+
       (o.body || '')+
     '</div></div></section>';

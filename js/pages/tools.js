@@ -644,13 +644,13 @@ function PageToolMargin(){ return tlPage({
 
 function PageToolCloseCost(){
   var v = tlGet("closecost");
-  return PgHero({
-    crumb: Crumb([["사장님 도구","/tools"],["폐업 예상비용"]]),
-    kicker:"사장님 도구", h1:"폐업 예상비용",
-    lead:"나가는 돈만 세면 반쪽입니다. 보증금과 시설 매각은 돌아오는 쪽이라, "+
-         "둘을 같이 놓아야 실제로 얼마가 드는지가 나옵니다.",
-    tight:true
-  })+
+  /* 2026-11-28 사진형 시안 — 큰 머리 대신 제목 옆 작은 사진. 입력칸과 결과가 먼저 눈에 들어오게 */
+  var ph = typeof hasPhoto === "function" && hasPhoto("kp-cl-ban-cost");
+  return '<section class="tlh"><div class="w w-narrow">'+Crumb([["사장님 도구","/tools"],["폐업 예상비용"]])+
+    '<div class="tlh-g"><div class="tlh-t"><h1>'+icon("calc",26)+'<span>폐업 예상비용</span></h1>'+
+      '<p>나가는 돈(철거 · 원상복구 등)과 돌아오는 돈(보증금 · 집기 매각)을 나눠 적으면 실제로 드는 돈이 나옵니다.</p></div>'+
+      (ph ? '<span class="tlh-ph" aria-hidden="true">'+photoBox("kp-cl-ban-cost", "", true, "140px")+'</span>' : '')+'</div>'+
+  '</div></section>'+
   '<section class="sec sec-white"><div class="w w-narrow">'+
     '<h2 class="tl-h">나가는 돈 <span>받으신 견적을 그대로</span></h2>'+
     '<ul class="tl-l">'+(window.AM_CLOSE_OUT||[]).map(function(r){

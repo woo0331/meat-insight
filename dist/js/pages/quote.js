@@ -920,6 +920,7 @@ function cqHint(pre, opts){
     (subs.length ? '<b>'+esc(subs.join(" · "))+'</b> 가운데 ' : '')+'필요한 것을 골라 주세요.</span></p>';
 }
 
+var CQ_PH = { "demolish/full":"hero-close", "demolish/partial":"insu-closure", "restore/shop-restore":"kind-take", "asset":"as-fridge", "asset/furniture":"as-fridge" };
 function PageQuoteClose(){
   var SC = window.AM_CLOSE_SCOPE || { gu:[], cats:[] };
   var pre = {};
@@ -954,8 +955,12 @@ function PageQuoteClose(){
         '<div class="cq-svc" id="cq-svc" role="group" aria-label="필요한 서비스"'+(got.length ? ' hidden' : '')+'>'+
           opts.map(function(sv){
             var id = "cq-s-" + sv.id.replace(/[^a-z0-9]/gi, "-");
-            return '<label class="cq-k" for="'+id+'"><input type="checkbox" id="'+id+'" name="cq-s" value="'+esc(sv.id)+'"'+
-              (pre[sv.id] ? " checked" : "")+'><span>'+esc(amPickLabel(sv))+'</span></label>';
+
+            var pk = CQ_PH[sv.id] || CQ_PH[sv.id.split("/")[0]] || "";
+            var th = pk && typeof hasPhoto === "function" && hasPhoto(pk);
+            return '<label class="cq-k'+(th ? ' cq-k-ph' : '')+'" for="'+id+'"><input type="checkbox" id="'+id+'" name="cq-s" value="'+esc(sv.id)+'"'+
+              (pre[sv.id] ? " checked" : "")+'>'+(th ? '<span class="cq-kp" aria-hidden="true">'+photoBox(pk, "", false, "96px")+'</span>' : '')+
+              '<span>'+esc(amPickLabel(sv))+'</span></label>';
           }).join("")+
           '<label class="cq-k cq-k-un" for="cq-s-un"><input type="checkbox" id="cq-s-un" name="cq-s" value="unsure"><span>잘 모르겠어요</span></label>'+
         '</div></div>'+

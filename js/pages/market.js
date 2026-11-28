@@ -691,10 +691,13 @@ function sellTabs(t){
 /* 2026-11-28 대표 최종 시안 — 올리기 셋(매장 · 집기 · 상품)을 한 줄 탭으로 오갑니다.
    ⚠️ 상품은 로그인 계정에 저장되는 다른 양식(/my?v=product)이라 주소가 다릅니다 — 탭은 링크입니다. */
 window.upTabs = function(k){
-  var T = [["store","매장","/sell"],["asset","집기","/sell?t=asset"],["product","상품","/my?v=product"]];
+  /* 사진형 시안 — 매장 · 집기 · 상품을 사진으로 가릅니다. 고른 칸에 체크 동그라미 · 링크라 누르면 그 등록 화면으로 */
+  var T = [["store","매장","/sell","insu-transfer"],["asset","집기","/sell?t=asset","as-espresso"],["product","상품","/my?v=product","service-inventory"]];
   return '<nav class="up-tab" aria-label="무엇을 올리시나요">'+T.map(function(x){
-    var on = x[0] === k;
-    return '<a class="up-tc'+(on ? " on" : "")+'" href="'+x[2]+'"'+(on ? ' aria-current="page"' : '')+'>'+x[1]+'</a>'; }).join("")+'</nav>';
+    var on = x[0] === k, ph = typeof hasPhoto === "function" && hasPhoto(x[3]);
+    return '<a class="up-tc'+(on ? " on" : "")+'" href="'+x[2]+'"'+(on ? ' aria-current="page"' : '')+'>'+
+      (ph ? '<span class="up-tp" aria-hidden="true">'+photoBox(x[3], "", true, "120px")+'</span>' : '')+
+      '<b>'+x[1]+'</b>'+(on ? '<em class="up-on" aria-hidden="true">'+icon("check",14)+'</em>' : '')+'</a>'; }).join("")+'</nav>';
 };
 
 /* 필수 칸 진행 — 적으실 때마다 "필수 n / m" 이 바뀝니다 (색만이 아니라 글로) */

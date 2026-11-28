@@ -550,10 +550,13 @@ function sellTabs(t){
 }
 
 window.upTabs = function(k){
-  var T = [["store","매장","/sell"],["asset","집기","/sell?t=asset"],["product","상품","/my?v=product"]];
+
+  var T = [["store","매장","/sell","insu-transfer"],["asset","집기","/sell?t=asset","as-espresso"],["product","상품","/my?v=product","service-inventory"]];
   return '<nav class="up-tab" aria-label="무엇을 올리시나요">'+T.map(function(x){
-    var on = x[0] === k;
-    return '<a class="up-tc'+(on ? " on" : "")+'" href="'+x[2]+'"'+(on ? ' aria-current="page"' : '')+'>'+x[1]+'</a>'; }).join("")+'</nav>';
+    var on = x[0] === k, ph = typeof hasPhoto === "function" && hasPhoto(x[3]);
+    return '<a class="up-tc'+(on ? " on" : "")+'" href="'+x[2]+'"'+(on ? ' aria-current="page"' : '')+'>'+
+      (ph ? '<span class="up-tp" aria-hidden="true">'+photoBox(x[3], "", true, "120px")+'</span>' : '')+
+      '<b>'+x[1]+'</b>'+(on ? '<em class="up-on" aria-hidden="true">'+icon("check",14)+'</em>' : '')+'</a>'; }).join("")+'</nav>';
 };
 
 window.sellProg = function(){

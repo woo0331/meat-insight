@@ -646,7 +646,7 @@ function PageToolCloseCost(){
   var v = tlGet("closecost");
   /* 2026-11-28 사진형 시안 — 큰 머리 대신 제목 옆 작은 사진. 입력칸과 결과가 먼저 눈에 들어오게 */
   var ph = typeof hasPhoto === "function" && hasPhoto("kp-cl-ban-cost");
-  return '<section class="tlh"><div class="w w-narrow">'+Crumb([["사장님 도구","/tools"],["폐업 예상비용"]])+
+  return '<section class="tlh"><div class="w w-narrow"><nav class="crumb" aria-label="현재 위치">'+Crumb([["사장님 도구","/tools"],["폐업 예상비용"]])+'</nav>'+
     '<div class="tlh-g"><div class="tlh-t"><h1>'+icon("calc",26)+'<span>폐업 예상비용</span></h1>'+
       '<p>나가는 돈(철거 · 원상복구 등)과 돌아오는 돈(보증금 · 집기 매각)을 나눠 적으면 실제로 드는 돈이 나옵니다.</p></div>'+
       (ph ? '<span class="tlh-ph" aria-hidden="true">'+photoBox("kp-cl-ban-cost", "", true, "140px")+'</span>' : '')+'</div>'+

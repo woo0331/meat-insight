@@ -82,6 +82,20 @@ module.exports = async function handler(req, res){
     /* ⚠️⚠️ Supabase 의 authorize 를 안 씁니다 — 그쪽은 account_email 을 고정으로 넣습니다.
        카카오 인가 주소를 직접 만들고(scope 에 이메일 없음), state · nonce 는 잠근 쿠키에 둡니다.
        돌아올 자리는 들어온 출처 + 경로만 (바깥 주소로 못 보냅니다). */
+    /* 2026-11-28 — 시험(Preview)에서는 **브랜치 주소에서만** 카카오로 보냅니다.
+       Vercel 의 "Visit" 는 배포마다 다른 주소(storeway-<해시>-…)를 엽니다. 그 주소는
+       카카오 앱의 Redirect URI 에 등록돼 있지 않아 카카오가 자기 화면에서 멈추고
+       (KOE006) 콜백 · Supabase 까지 아무것도 오지 않습니다. 그때는 브랜치 주소
+       (VERCEL_BRANCH_URL · Vercel 이 넣는 값)로 옮겨 그 자리에서 다시 시작합니다.
+       ⚠️ 운영(VERCEL_ENV=production)과 값이 없을 때는 오늘과 같습니다. */
+    const br = K.env("VERCEL_BRANCH_URL").toLowerCase();
+    if(K.env("VERCEL_ENV") === "preview" && /^[a-z0-9.-]+$/.test(br)){
+      let h = ""; try{ h = new URL(req.headers.origin || "").host.toLowerCase(); }catch(e){}
+      if(h && h !== br){
+        const p = K.safePath(b.path);
+        return res.status(200).json({ move:true, url:"https://" + br + p + (p.indexOf("?") >= 0 ? "&" : "?") + "kk=1" });
+      }
+    }
     const st = K.startAuth(req.headers.origin || "", b.path);
     res.setHeader("Set-Cookie", st.cookie);
     return res.status(200).json({ url: st.url });

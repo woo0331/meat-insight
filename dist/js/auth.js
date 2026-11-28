@@ -37,6 +37,15 @@ function amAuthClear(){
 }
 
 var AM_AUTH_ERR = "";
+var AM_AUTH_WHY = "";
+function amAuthKkResume(){
+  var sp; try{ sp = new URLSearchParams(window.location.search); }catch(e){ return; }
+  if(sp.get("kk") !== "1") return;
+  sp.delete("kk");
+  var p = window.location.pathname + (sp.toString() ? "?" + sp.toString() : "");
+  try{ window.history.replaceState({}, "", p); }catch(e){}
+  if(AM_AUTH.kakao && !AM_AUTH.signedIn) window.amAuthKakao(p);
+}
 function amAuthTakeError(){
   var src = "";
   try{ src = String(window.location.hash || "").replace(/^#/, "") + "&" +
@@ -49,16 +58,21 @@ function amAuthTakeError(){
   });
   if(!q.error && !q.error_description) return;
   AM_AUTH_ERR = (q.error === "access_denied") ? "cancel" : "fail";
+
+  AM_AUTH_WHY = /^[a-z0-9]{2,16}$/.test(q.kk_why || "") ? q.kk_why : "";
   try{
     var keep = String(window.location.search || "").replace(/^\?/, "").split("&").filter(function(kv){
-      return kv && !/^(error|error_code|error_description)=/.test(kv); }).join("&");
+      return kv && !/^(error|error_code|error_description|kk_why)=/.test(kv); }).join("&");
     window.history.replaceState({}, "", window.location.pathname + (keep ? "?" + keep : ""));
   }catch(e){}
 }
+window.amAuthErrClear = function(){ AM_AUTH_ERR = ""; AM_AUTH_WHY = ""; };
 window.amAuthErrSay = function(){
-  var e = AM_AUTH_ERR; AM_AUTH_ERR = "";
+  amAuthTakeError();
+
+  var e = AM_AUTH_ERR, w = AM_AUTH_WHY;
   return e === "cancel" ? "카카오 로그인을 취소하셨습니다."
-       : e === "fail"   ? "로그인하지 못했습니다. 잠시 뒤 다시 시도해 주세요." : "";
+       : e === "fail"   ? "로그인하지 못했습니다. 잠시 뒤 다시 시도해 주세요." + (w ? " (확인 코드: " + w + ")" : "") : "";
 };
 
 window.amAuthNext = function(){
@@ -75,7 +89,8 @@ window.amAuthKakao = function(path){
     body: JSON.stringify({ op:"oauth", provider:"kakao", path:p }) })
     .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ return { ok:r.ok, d:d }; }); })
     .then(function(x){
-      if(x.ok && x.d && x.d.url){ window.location.assign(x.d.url); return { ok:true, say:"카카오로 이동합니다…" }; }
+      if(x.ok && x.d && x.d.url){ window.location.assign(x.d.url);
+        return { ok:true, say: x.d.move ? "로그인할 수 있는 주소로 옮겨 갑니다…" : "카카오로 이동합니다…" }; }
       return { ok:false, say:(x.d && x.d.error) || "지금은 카카오로 로그인할 수 없습니다." };
     })
     .catch(function(){ return { ok:false, say:"연결이 끊겼습니다. 잠시 뒤 다시 눌러 주세요." }; });
@@ -208,6 +223,8 @@ window.amAuthAsk = function(force){
     AM_AUTH.name     = d.name || "";
     AM_AUTH.provider = d.provider || null;
     AM_AUTH.conf     = d.conf || AM_AUTH.conf;
+
+    amAuthKkResume();
     return AM_AUTH;
   }).catch(function(e){
 

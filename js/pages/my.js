@@ -87,6 +87,9 @@ window.myLoadDb = function(){
         if(!(window.amAuthNow && amAuthNow().kakao)){ box.innerHTML = ""; box.hidden = true; return; }
         box.innerHTML = '<div class="w">' + MySignInBand() + '</div>';
         box.hidden = false;
+        /* 2026-11-28 — 카카오에서 실패하고 돌아왔으면 그 자리에서 말합니다 (전에는 아무도 안 불러서 조용했습니다) */
+        var es = window.amAuthErrSay ? amAuthErrSay() : "", en = document.getElementById("my-kk-n");
+        if(es && en){ en.textContent = es; en.className = "my-in-n bad"; }
         /* 2026-11-26 — 상단 사람 아이콘 · 메뉴 · 하단 '내 기록' 으로 오셨으면(?next=) 로그인 칸으로 바로 내려갑니다 */
         if(typeof nowQS === "function" && nowQS("next") && !(window.amIsReloadView && window.amIsReloadView())){
           var hd = document.querySelector(".hd");
@@ -1562,6 +1565,7 @@ window.myLkInit = function(){
 window.myKakao = function(){
   var n = document.getElementById("my-kk-n");
   if(typeof amAuthKakao !== "function") return;
+  if(window.amAuthErrClear) amAuthErrClear();
   if(n){ n.textContent = "카카오로 이동합니다…"; n.className = "my-in-n"; }
   amAuthKakao().then(function(r){
     if(!r.ok && n){ n.textContent = r.say; n.className = "my-in-n bad"; }

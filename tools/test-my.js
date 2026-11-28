@@ -1404,6 +1404,25 @@ const ADM_DEAL = [
     await cx.close();
   }
 
+  /* ══ 2026-11-28 시험 카카오 로그인 — 옮겨 온 길(?kk=1) · 실패 꼬리표 ══ */
+  console.log("\n⑭ 카카오 로그인 — 브랜치 주소로 옮겨 온 뒤 바로 이어 감 · 실패 확인 코드");
+  for (const sc of ["kk", "why"]) {
+    const ctx = await br.newContext({ viewport:{ width:390, height:844 } }); const pg = await ctx.newPage(); const posts = [];
+    await pg.route("**/api/session**", r => r.fulfill({ contentType:"application/json", body: JSON.stringify({ auth:true, signedIn:false, kakao:true, conf:{ url:"https://x.supabase.co", anon:"a" } }) }));
+    await pg.route("**/api/me**", r => r.fulfill({ contentType:"application/json", body: JSON.stringify({ auth:true, signedIn:false }) }));
+    await pg.route("**/api/auth", r => { const b = r.request().postDataJSON(); posts.push(b); r.fulfill({ contentType:"application/json", body: JSON.stringify(b.op === "oauth" ? { url: base + "/__kakao" } : { error:"x" }) }); });
+    await pg.goto(base + (sc === "kk" ? "/my?no=SW-AB12-CD34&kk=1" : "/my?error=server_error&kk_why=tokenkoe006"), { waitUntil:"networkidle" }); await pg.waitForTimeout(500);
+    if (sc === "kk") {
+      const o = posts.find(b => b.op === "oauth");
+      ok("?kk=1 로 오면 누르지 않아도 카카오로 이어 간다 · 돌아갈 자리에서 kk 를 뺀다", !!o && o.path === "/my?no=SW-AB12-CD34" && /\/__kakao$/.test(pg.url()), [o, pg.url()]);
+    } else {
+      const v = await pg.evaluate(() => ({ t: document.getElementById("view").innerText, u: location.search }));
+      ok("실패 꼬리표가 확인 코드로 보이고 주소에서 치운다 · 저절로 카카오로 가지 않는다",
+         /로그인하지 못했습니다[^\n]*확인 코드: tokenkoe006/.test(v.t) && v.u === "" && !posts.some(b => b.op === "oauth"), v);
+    }
+    await ctx.close();
+  }
+
   /* ══ 2026-11-28 고객 '내 계정' 간소화 ════════════════════════════ */
   console.log("\n⑬ 내 계정 간소화 — 0건 · 오류 · 기본 화면에서 뺀 것");
   for (const W of [390, 1440]) {

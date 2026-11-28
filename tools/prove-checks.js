@@ -536,7 +536,7 @@ const CASES = [
       칸이 없어졌습니다. 지어낸 수를 박는 자리를 카드의 한 줄로
       옮깁니다 — 없는 요소를 집으면 되돌리기가 터져 "검사가 안
       잡는다" 로 보입니다 (이 저장소에서 열두 번 겪은 자리). */
-   `document.querySelector(".r1-bc p").textContent = "입점 업체 1,200곳";`],
+   `document.querySelector(".ihc-p").textContent = "입점 업체 1,200곳";`],
   /* ⚠️ 2026-11-18 메인 개편 — 카드 한 줄이 .sw-qt em 으로 옮겨갔습니다. */
   /* ⚠️⚠️ **2026-10-13 §5 — 히어로에는 h1 이 없습니다.** 전에는 h1
      글자를 바꿔 되돌렸는데, 지금 검사가 보는 것은 **두 판의 크기 ·
@@ -559,7 +559,7 @@ const CASES = [
   /* 2026-11-19 개편 — 4대 진입 카드의 마지막(폐업)을 지워 차례를 끊습니다. */
   /* 2026-11-19 Warm Premium — 서비스 여섯 중 폐업·철거 카드를 지워 차례를 끊습니다 */
   ["메인은 히어로 다음이 양도양수 배너이고 서비스가 창업 → 운영 → 양도양수 → 폐업 차례다",
-   `document.querySelector(".r1-bc img").setAttribute("src", "/img/hero-start.jpg");` /* 2026-11-21 — 히어로 사진을 ZIP 밖 사진으로 바꿔 끼웁니다 */],
+   `document.querySelector(".wp-hc img").setAttribute("src", "/img/hero-start.jpg");` /* 2026-11-21 — 히어로 사진을 ZIP 밖 사진으로 바꿔 끼웁니다 */],
   /* ⚠️⚠️ 되돌리기는 **검사가 실제로 보는 것**을 망가뜨려야 합니다.
      검색 가는 길을 지울 때 입력칸만 지우고 돋보기를 남겼다가 "검사가
      안 잡는다" 로 보였던 적이 있습니다 — 검사가 아니라 되돌리기가
@@ -593,7 +593,7 @@ const CASES = [
   /* 2026-11-19 개편 — 재는 자리가 4대 진입 카드입니다. 폐업 카드를 빨강으로 칠합니다. */
   /* 2026-11-19 Warm Premium — 서비스 카드 하나를 옛 블루로 칠합니다 */
   ["메인은 브라운 · 아이보리이고 블루 · 그린 · 퍼플 · 오렌지 면이 없다",
-   `document.querySelector(".r1-sv").style.backgroundColor = "rgb(29, 78, 216)";`],
+   `document.querySelector(".iind-c").style.backgroundColor = "rgb(29, 78, 216)";`],
   /* ⚠️ 2026-10-11 간소화 §2 — 연결 구간이 메인에서 내려와 되돌릴
      요소가 없습니다. **없는 요소를 집으면 되돌리기가 터지고**, 그러면
      "검사가 안 잡는다" 로 보입니다 (이 저장소에서 아홉 번 겪은 자리).
@@ -628,7 +628,7 @@ const CASES = [
   /* 2026-11-19 개편 — 폐업 카드를 낮춥니다 (grid 의 stretch 를 덮어야 합니다). */
   /* 2026-11-19 Warm Premium — 폐업·철거 카드를 낮춥니다 (grid 의 stretch 를 덮어야 합니다) */
   ["히어로의 창업 준비 · 폐업·철거 두 카드의 크기가 같다",
-   `const e = document.querySelector(".r1-bc-cl"); e.style.alignSelf = "start"; e.style.minHeight = "0"; e.style.height = "200px";`],
+   `const e = document.querySelector(".wp-hc-cl"); e.style.alignSelf = "start"; e.style.height = "200px";`],
   /* ⚠️⚠️ **아이콘 칸(.stg-i)만 집어야 합니다.** 처음에
      ".mstg-g > li > a svg" 로 적었더니 **화살표까지** 걸려서
      [아이콘0, 화살표0, 아이콘1, …] 이 되고, 0번에 화살표를 넣는 바람에
@@ -703,7 +703,7 @@ const CASES = [
       자리를 **히어로**가 받습니다 (§1-01 "BRIGHT PREMIUM 유지").
       없는 요소를 집으면 되돌리기가 터집니다 (열세 번째). */
    /* 2026-11-19 — 히어로는 승인된 짙은 사진 히어로라, 반드시 밝아야 하는 진입 카드 구간을 어둡게 합니다 */
-   `document.querySelector(".r1find").style.backgroundColor = "#2E2219";`],
+   `document.querySelector(".iind").style.backgroundColor = "#2E2219";`],
   /* 짝 검사 — 속화면에 메인 표시가 새면 걸려야 합니다 */
   ["속화면은 그대로 밝고 메인 표시가 안 묻었다",
    `document.documentElement.classList.add("ivh");`],
@@ -788,7 +788,7 @@ const CASES = [
    /* ⚠️ 2026-10-16 §3 — 지금 메인에 있는 카드는 진입(.bent-c > a) ·
       까닭(.bwhy-c) · 절차(.bstep-c) · 배너(.bban-c > a) 입니다.
       **없는 요소를 집으면 되돌리기가 터집니다** (열한 번째). */
-   `const a = document.querySelector(".r1-sv") || document.querySelector(".wp-hc") || document.querySelector(".bstep-c") ||
+   `const a = document.querySelector(".wp-hc") || document.querySelector(".bstep-c") ||
              document.querySelector(".bcal-g > li > a") ||
              document.querySelector(".bent-c > a");
     const back = (function(el){
@@ -883,7 +883,7 @@ const CASES = [
       지금 메인에서 한 묶음 안에 아이콘이 여럿인 곳은 진입 카드 넷과
       직접 찾기 여덟입니다. */
    /* 2026-11-25 — 업종 카드가 사진이 되어 아이콘이 없습니다. 네 기둥(.ipil-i)으로 옮겼습니다. */
-   `const t = [].slice.call(document.querySelectorAll("#view .r1-svi svg"));
+   `const t = [].slice.call(document.querySelectorAll("#view .ipil-i svg"));
     t[1].innerHTML = t[0].innerHTML;`],
   /* 고른 전문관이 표시되지 않으면 걸려야 합니다 — 거르개는 무엇이
      켜졌는지 보이지 않으면 거르개가 아닙니다 */
@@ -1092,7 +1092,7 @@ async function proveAudit(pg){
       /* 2026-11-19 개편 — 히어로 머리말 알약(.sw2-k · inline-flex)에 맨글 + <b> + 맨글 을 넣습니다
          (감싸개 없이 섞으면 flex 가 셋을 칸으로 가르는 그 꼴). */
       /* 2026-11-19 대표 확정 시안 — 머리말 알약이 내려가서 2분할 판의 딱지(.sw3-tag · inline-flex)에 넣습니다 */
-      const p = document.querySelector(".r1-tr li:nth-child(2) .r1-tc");
+      const p = document.querySelector(".ih-go");
       if(!p) return false;
       p.innerHTML = "창업 · <b>운영</b> · 준비";
       return true;
@@ -1361,7 +1361,7 @@ async function proveAudit(pg){
         " #view .ia-t svg, #view .mhall-i svg, #view .mstp-i svg," +
         " #view .bent-i svg, #view .bwhy-i svg, #view .bban-i svg," +
         " #view .bstep-i svg, #view .bcal-i svg, #view .wp-ci svg, #view .iind-i svg, #view .ipil-i svg," +
-        " #view .r1-svi svg, #view .r1-si svg, #view .cg-ri svg");
+        " #view .cg-ri svg");
       if(e) e.remove();
     });
     await pg.waitForTimeout(60);

@@ -69,7 +69,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     카드 셋의 첫 장이 됐습니다** (전문관 넷 + 전체보기는 내려왔습니다).
     카드 전체가 하나의 링크라 카드를 그대로 누릅니다. */
  /* 2026-11-18 메인 개편 — 창업은 히어로 왼쪽 판의 단추입니다 */
- await click('.r1-bc-st h2 a');
+ await click('.wp-hc-st');
  say((await url())==="/startup","메인 히어로 창업 준비 → /startup",await url());
  /* ⚠️⚠️ **2026-10-17 창업 준비 §2 로 업종 고르개가 접혔습니다.**
     주인공이 **서비스 고르기**(§2-B)이고, 고르는 격자 둘이 나란히 있으면
@@ -154,34 +154,34 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
     내려왔습니다.** 진입 카드 셋이 전문관 세 화면으로 **바로** 보내고,
     매장 양도양수는 ④ 가로형 배너가 받습니다. 끝이 막힌 길이 생기지
     않았는지 넷 다 눌러 봅니다. */
- await click('.r1-bc-cl h2 a');
+ await click('.wp-hc-cl');
  say((await url())==="/closure","메인 히어로 폐업·철거 → /closure",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  /* 2026-11-22 — 히어로 소개 문구 아래 창업 · 폐업 두 단추 (첫 화면에서 바로 두 전문관으로) */
- await click('.r1-bc-st .r1-bph');
+ await click('.wp-hc-st .wp-go');
  say((await url())==="/startup","메인 히어로 창업 카드 안 바로가기 → /startup",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.r1-bc-cl .r1-bph');
+ await click('.wp-hc-cl .wp-go');
  say((await url())==="/closure","메인 히어로 폐업 카드 안 바로가기 → /closure",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.r1-sc-op .r1-shd');
+ await click('.iops-tx a[href="/operation"]');
  say((await url())==="/operation","메인 진입 카드 매장 운영 → /operation",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.r1-sc-tr .r1-shd');  /* 2026-11-25 — 사진 카드 둘 아래 보조 줄 */
+ await click('.itr-sub a[href="/transfer"]');  /* 2026-11-25 — 사진 카드 둘 아래 보조 줄 */
  say((await url())==="/transfer","메인 진입 카드 양도양수 → 전문관",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  /* ⚠️⚠️ **2026-10-22 — 서비스 배너 둘이 메인에서 내려왔습니다**
     (사장님 시안). 그 길은 ③ 직접 서비스 찾기 여덟이 그대로 받습니다 —
     함수는 안 지웠으니 되살리시면 여기에 .bban-c 를 다시 넣으세요. */
- await click('.r1-more a[href="/providers"]');
+ await click('.ih-go a[href="/providers"]');
  say((await url()).startsWith("/providers"),"서비스 카드 전문가 상담 → 업체찾기",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  /* 2026-11-22 — '매물 바로보기' 링크가 빠지고 검색 단추 '매물 찾기' 가 실제 검색(/stores)으로 보냅니다 */
- await click('.r1-sc-tr a[href="/stores"]');
+ await click('.itr-f button[type="submit"]');
  say((await url()).startsWith("/stores"),"양도양수 매물 찾기(검색) → /stores",await url());
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.r1-sc-tr a[data-cta-form="sell"]:not([hidden])');
- say(/^\/(sell|transfer|intake)/.test(await url()),"양도양수 내 매장 넘기기 → /sell (접수가 닫혀 있으면 /intake 접수 안내)",await url());
+ await click('.itr-two a[data-cta-form="sell"]:not([hidden])');
+ say(/^\/(sell|transfer)/.test(await url()),"양도양수 내 매장 넘기기 → /sell 또는 넘기는 순서",await url());
  /* ⚠️⚠️ **2026-10-25 §1-01 — 히어로가 01 구간으로 돌아왔습니다.**
     첫 화면에서 바로 신청으로 가는 길이 다시 생겼습니다 — 그쪽을 먼저
     눌러 봅니다. ⚠️ 히어로를 다시 빼실 때는 여기도 같이 고치세요
@@ -190,7 +190,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  /* 2026-11-18 메인 개편 — 히어로에 신청 단추가 없습니다 (접수 중단 중에는 신청처럼 보이면 안 됩니다).
     대신 히어로 검색이 실제로 /search 로 가는지 봅니다. */
- await pg.fill('#r1-q','인테리어'); await click('.r1-sgo');
+ await pg.fill('#sw-q','인테리어'); await click('.sw-find-b');
  say((await url()).startsWith("/search"),"히어로 검색 → 통합검색",await url());
  /* ⚠️ 헤더 CTA 는 **160개 화면 전부**에 있는 늘 보이는 길입니다 */
  /* 2026-11-18 — 이 검사 서버에는 /api/session 이 없어 견적 접수가 **닫힘**으로 읽힙니다
@@ -260,17 +260,20 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
      "중간 대형 견적 신청 섹션이 없다 (§1-07)", "bqc 개수");
  /* 2026-11-19 Warm Premium — 계산도구 · 가이드 구간은 메인에서 내려왔습니다 (서비스 카드 정보·가이드가 받습니다) */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.r1-more a[href="/content"]');
+ await click('.ih-go a[href="/content"]');
  say((await url())==="/content","서비스 카드 정보·가이드 → 이용 가이드",await url());
  /* 통합 검색 — 빈 칸 · 기호 · 분야만 */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
- await click('.r1-sgo');
- say(/적어 주세요/.test(await pg.textContent('#r1-msg')),"빈 검색 — 그 자리에서 안내한다");
- await pg.fill('#r1-q','@@@'); await click('.r1-sgo');
- say(/글자나 숫자/.test(await pg.textContent('#r1-msg')),"기호만 — 그 자리에서 안내한다");
- /* 2026-11-28 — 분야 고르개가 빠졌습니다 (서비스 바로 찾기 여덟이 그 일을 합니다). 분야 칸은 업체 목록으로 바로 갑니다 */
- await pg.fill('#r1-q',''); await click('.r1-sv-p >> text=인테리어');
- say((await url())==="/providers/interior","서비스 바로 찾기 · 업체 보기 → 그 분야 업체",await url());
+ await click('.wp-find-b');
+ say(/적어 주세요/.test(await pg.textContent('#wp-msg')),"빈 검색 — 그 자리에서 안내한다");
+ await pg.fill('#sw-q','@@@'); await click('.wp-find-b');
+ say(/글자나 숫자/.test(await pg.textContent('#wp-msg')),"기호만 — 그 자리에서 안내한다");
+ /* 2026-11-28 — 분야 선택칸이 빠지고 검색창 한 줄 · Enter 로도 갑니다 · 결과에서 분야를 고릅니다 */
+ say(await pg.evaluate(()=>!document.querySelector('#view #wp-t, #view .wp-jump, #view .wp-sug, #view .bdir-pk')),
+     "메인 검색 — 분야 선택칸 · 보조 카드 · 예시 칩 · 고른 서비스 박스가 없다");
+ await pg.fill('#sw-q','철거'); await pg.press('#sw-q','Enter'); await pg.waitForTimeout(500);
+ say(/^\/search\?q=/.test(await url()),"Enter → 전체 검색 결과",await url());
+ say(await pg.evaluate(()=>document.querySelectorAll('#view a.chip[href^="#sr-"]').length>0),"검색 결과에서 분야를 고를 수 있다");
 
 
  /* ══════════════════════════════════════════════════════════════
@@ -1101,7 +1104,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  await pg.evaluate(()=>{ try{ localStorage.clear(); }catch(e){} });
  await pg.goto(B+"/",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
  const pk0 = await pg.evaluate(()=>{
-   const r = document.querySelector("#view .r1-pk");
+   const r = document.querySelector("#view .bdir-pk");
    return !r || r.hidden || !r.getClientRects().length; });
  say(pk0, "메인 — 아무것도 안 고르면 그 줄이 없다");
  await pg.goto(B+"/startup",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
@@ -1110,13 +1113,15 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
                     await sx[1].click(); await pg.waitForTimeout(300); }
  await pg.goto(B+"/",{waitUntil:"networkidle"}); await pg.waitForTimeout(400);
  const pk2 = await pg.evaluate(()=>{
-   const r = document.querySelector("#view .r1-pk");
+   const r = document.querySelector("#view .bdir-pk");
    if(!r || r.hidden) return null;
    const a = r.querySelector("[data-pick-go]");
    return { n:(r.querySelector("[data-pick-n]")||{}).textContent||"",
             go:a?a.getAttribute("href"):"" }; });
- say(pk2 && pk2.n === "2" && /sv=/.test(pk2.go||""),
-     "메인 — 고른 것을 그 자리에서 내고 신청까지 들고 간다", JSON.stringify(pk2));
+ /* 2026-11-28 대표 지시 — 메인에서는 요약 박스를 안 냅니다. 담은 것은 남아 신청 화면이 받습니다 */
+ say(pk2 === null, "메인 — 고른 것이 있어도 요약 박스를 안 낸다", JSON.stringify(pk2));
+ const kept = await pg.evaluate(()=> typeof amPickCount === "function" ? amPickCount() : -1);
+ say(kept === 2, "메인을 거쳐도 담은 서비스 둘이 그대로 남는다", kept);
 
  /* ══ 【13】 2026-10-26 — `/sell` 이 중복 방지를 들고 가는가 ══
     ⚠️⚠️ **보고서 §2-A 가 찾은 자리입니다.** `/sell` 두 탭이 `idem` 도
@@ -1270,7 +1275,7 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    }
    sellOpen = true;
    await p3.goto(B + "/", { waitUntil:"networkidle" }); await p3.waitForTimeout(300);
-   say(await p3.isVisible('.r1-sc-tr a[href="/sell"]'), "매물 등록이 열리면 메인의 '내 매장 등록하기' 가 다시 보인다 (반대쪽)");
+   say(await p3.isVisible('.itr-two a[href="/sell"]'), "매물 등록이 열리면 메인의 '내 매장 등록하기' 가 다시 보인다 (반대쪽)");
    await cx.close();
  }
 

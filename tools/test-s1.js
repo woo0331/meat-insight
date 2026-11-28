@@ -218,8 +218,17 @@ async function apiPart(){
   /* 2026-11-27 대표 지시 — 업종 · 정리 희망일은 '추가 정보(선택)' 로 내려갔습니다 (화면 · 서버 같은 규칙) */
   r = res(); w.rpc = []; await h(req(Object.assign({}, B, { wantAt:"", industry:"", idem:"api-nowant" })), r);
   ok(r.code === 200 && r.body.no, "업종 · 정리 희망일이 없어도 받음 (선택)", r.body);
-  r = res(); w.rpc = []; await h(req(Object.assign({}, B, { items:[], unsure:true, idem:"api-unsure" })), r);
+  r = res(); w.rpc = []; await h(req(Object.assign({}, B, { items:[], unsure:true, cat:"", idem:"api-unsure" })), r);
   ok(r.code === 200 && r.body.no, "'잘 모르겠어요' 만 골라도 받음", r.body);
+  { const s0 = w.rpc.find(x => x.fn === "submit_intake");
+    ok(s0 && !s0.body.p.cat, "'잘 모르겠어요' 만이면 대표 분류를 지어내지 않음 (비움)", s0 && s0.body.p.cat); }
+  /* 2026-11-28 — 대표 분류는 첫 번째 서비스의 분류 (전에는 서버가 버려서 늘 비었습니다) */
+  r = res(); w.rpc = []; await h(req(Object.assign({}, B, { items:[{ id:"demolish/full" }], cat:"demolish/full", idem:"api-one" })), r);
+  { const s1 = w.rpc.find(x => x.fn === "submit_intake");
+    ok(s1 && s1.body.p.cat === "demolish", "서비스 하나 → 대표 분류 = 그 분류 (demolish/full → demolish)", s1 && s1.body.p.cat); }
+  r = res(); w.rpc = []; await h(req(Object.assign({}, B, { items:[{ id:"restore/shop-restore" }, { id:"asset" }], cat:"zzz", idem:"api-two" })), r);
+  { const s2 = w.rpc.find(x => x.fn === "submit_intake");
+    ok(s2 && s2.body.p.cat === "restore", "여러 개 → 첫 번째 서비스의 분류 · 화면이 보낸 이상한 cat 은 버림", s2 && s2.body.p.cat); }
   r = res(); w.rpc = []; await h(req(Object.assign({}, B, { items:[], idem:"api-none" })), r);
   ok(r.code === 400 && w.rpc.length === 0, "서비스도 '잘 모르겠어요' 도 없으면 안 받음", r.body);
   r = res(); w.rpc = []; await h(req(Object.assign({}, B, { agree:false })), r);

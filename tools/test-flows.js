@@ -265,11 +265,15 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
  /* 통합 검색 — 빈 칸 · 기호 · 분야만 */
  await pg.goto(B+"/",{waitUntil:"networkidle"});
  await click('.wp-find-b');
- say(/적어 주시거나/.test(await pg.textContent('#wp-msg')),"빈 검색 — 그 자리에서 안내한다");
+ say(/적어 주세요/.test(await pg.textContent('#wp-msg')),"빈 검색 — 그 자리에서 안내한다");
  await pg.fill('#sw-q','@@@'); await click('.wp-find-b');
  say(/글자나 숫자/.test(await pg.textContent('#wp-msg')),"기호만 — 그 자리에서 안내한다");
- await pg.fill('#sw-q',''); await pg.selectOption('#wp-t','transfer'); await click('.wp-find-b');
- say((await url())==="/transfer","빈 검색 + 분야 → 그 전문관",await url());
+ /* 2026-11-28 — 분야 선택칸이 빠지고 검색창 한 줄 · Enter 로도 갑니다 · 결과에서 분야를 고릅니다 */
+ say(await pg.evaluate(()=>!document.querySelector('#view #wp-t, #view .wp-jump, #view .wp-sug, #view .bdir-pk')),
+     "메인 검색 — 분야 선택칸 · 보조 카드 · 예시 칩 · 고른 서비스 박스가 없다");
+ await pg.fill('#sw-q','철거'); await pg.press('#sw-q','Enter'); await pg.waitForTimeout(500);
+ say(/^\/search\?q=/.test(await url()),"Enter → 전체 검색 결과",await url());
+ say(await pg.evaluate(()=>document.querySelectorAll('#view a.chip[href^="#sr-"]').length>0),"검색 결과에서 분야를 고를 수 있다");
 
 
  /* ══════════════════════════════════════════════════════════════
@@ -1114,8 +1118,10 @@ const say=(ok,n,x)=>{ console.log((ok?"  ✅ ":"  ❌ ")+n+(x?"  — "+x:"")); i
    const a = r.querySelector("[data-pick-go]");
    return { n:(r.querySelector("[data-pick-n]")||{}).textContent||"",
             go:a?a.getAttribute("href"):"" }; });
- say(pk2 && pk2.n === "2" && /sv=/.test(pk2.go||""),
-     "메인 — 고른 것을 그 자리에서 내고 신청까지 들고 간다", JSON.stringify(pk2));
+ /* 2026-11-28 대표 지시 — 메인에서는 요약 박스를 안 냅니다. 담은 것은 남아 신청 화면이 받습니다 */
+ say(pk2 === null, "메인 — 고른 것이 있어도 요약 박스를 안 낸다", JSON.stringify(pk2));
+ const kept = await pg.evaluate(()=> typeof amPickCount === "function" ? amPickCount() : -1);
+ say(kept === 2, "메인을 거쳐도 담은 서비스 둘이 그대로 남는다", kept);
 
  /* ══ 【13】 2026-10-26 — `/sell` 이 중복 방지를 들고 가는가 ══
     ⚠️⚠️ **보고서 §2-A 가 찾은 자리입니다.** `/sell` 두 탭이 `idem` 도

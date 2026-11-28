@@ -7864,3 +7864,33 @@ html.ivh #view .r1-btx h2 a, .r1-btx h2 a{ color:#fff; min-height:40px; font-siz
 .cq-svc .cq-k-ph input{ order:3; }
 
 .tlh .crumb a{ display:inline-flex; align-items:center; min-height:44px; }
+
+.bsq3{ display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important; grid-auto-rows:auto !important; gap:18px !important; align-items:start; }
+.bsq3 .bsq-gc{ min-width:0; background:#FFFDF9; border:1px solid var(--hm-line, #E7DDD0); border-radius:18px; overflow:hidden; box-shadow:0 4px 14px rgba(44,33,28,.05); }
+.bsq3 .bsq-gh{ margin:0; padding:16px 20px; background:#F1E9DE; font-size:clamp(17px,1.5vw,20px); font-weight:800; color:var(--hm-ink, #2C211C); }
+.bsq3 .bsq-l{ list-style:none; margin:0; padding:6px 14px; }
+.bsq3 .bsq-l > li + li{ border-top:1px solid #EFE6DA; }
+.bsq3 .bsq-r{ position:relative; display:flex; align-items:center; gap:14px; min-height:96px; padding:10px 30px 10px 0; color:var(--hm-ink, #2C211C); text-decoration:none; }
+.bsq3 .bsq-p{ flex:none; width:118px; aspect-ratio:4 / 3; border-radius:10px; overflow:hidden; background:#EFE6DA; display:grid; place-items:center; color:#7A5633; }
+.bsq3 .bsq-p .ph{ width:100%; height:100%; object-fit:cover; display:block; }
+.bsq3 .bsq-p .ph-p{ display:contents; }
+.bsq3 .bsq-r:hover .bsq-t b{ text-decoration:underline; }
+.bsq3 .bsq-r:focus-visible{ outline:3px solid var(--hm-btn, #4A3025); outline-offset:2px; border-radius:12px; }
+.bsq3 .bsq-go{ right:0; }
+@media (max-width:1180px) and (min-width:901px){ .bsq3 .bsq-p{ width:92px; } .bsq3 .bsq-t b{ font-size:16px; } }
+@media (max-width:900px){
+  .bsq3{ grid-template-columns:1fr !important; gap:14px !important; }
+  .bsq3 .bsq-r{ min-height:84px; }
+  .bsq3 .bsq-p{ width:104px; }
+}
+@media (max-width:380px){ .bsq3 .bsq-p{ width:88px; } .bsq3 .bsq-l{ padding:4px 12px; } }
+
+.bsq3 .bsq-p{ position:relative; }
+.bsq3 .bsq-p .ph{ position:absolute; inset:0; width:100% !important; height:100% !important; }
+
+html.ivh #view .wp-find.wp-find-1{ grid-template-columns:minmax(0,1fr) !important; }
+
+html.ivh #view .bhero + .bdir{ padding-top:32px; }
+@media (min-width:901px){ html.ivh #view .bhero + .bdir{ padding-top:56px; } }
+
+html.ivh #view > section.iops + section.bstep{ background:#EDE4D6; }

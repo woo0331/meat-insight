@@ -57,7 +57,7 @@ var MAIN_CALC = ["cost", "bep", "premium", "closecost"];
 
 function PageMain(){
 
-  return HomeIHero()+ HomePillars()+ HomeIInd()+ HomeITransfer()+ HomeIOps()+ HomeDirect(true)+ HomeWPSteps();
+  return HomeIHero()+ HomeDirect(true)+ HomePillars()+ HomeIInd()+ HomeITransfer()+ HomeIOps()+ HomeWPSteps();
 }
 
 var HOME_ENTER = [
@@ -217,6 +217,13 @@ function HomeEnter(){
 var HOME_DIRECT = ["interior", "equip", "it", "admin",
                    "staff", "marketing", "demolish", "restore"];
 
+var HOME_SQ_GROUPS = [
+  { h:"매장을 준비해요",          k:["interior","equip","marketing"] },
+  { h:"운영에 필요한 걸 찾아요",  k:["it","admin","staff"] },
+  { h:"매장을 정리해요",          k:["demolish","restore"] }
+];
+var HOME_SQ_PH = { interior:"svc-interior", equip:"svc-equip", marketing:"service-menu-shoot",
+  it:"kp-op-svc-pos", admin:"kp-cl-svc-tax", staff:"kp-op-svc-staff", demolish:"hero-close", restore:"insu-closure-in" };
 var HOME_QUICK8 = {
   interior:  { t:"인테리어·시공",   s:"설계 · 전기 · 배관",     ic:"roller",     tn:"terra" },
   equip:     { t:"시설·장비",       s:"업종별 장비 · 매장 설비",   ic:"wrench",     tn:"mint" },
@@ -224,7 +231,7 @@ var HOME_QUICK8 = {
   admin:     { t:"세무·노무·행정",  s:"세무사 · 노무사",        ic:"briefcase",  tn:"lav" },
   staff:     { t:"직원 채용",       s:"정직원 · 아르바이트",    ic:"users",      tn:"sage" },
   marketing: { t:"홍보·디자인",     s:"로고 · 메뉴판",          ic:"megaphone",  tn:"rose" },
-  demolish:  { t:"철거",            s:"전체철거 · 부분철거",    ic:"jackhammer", tn:"amber" },
+  demolish:  { t:"철거",            s:"전체 철거 · 부분 철거",    ic:"jackhammer", tn:"amber" },
   restore:   { t:"원상복구",        s:"바닥 · 벽 · 설비",       ic:"corner",     tn:"olive" }
 };
 
@@ -263,13 +270,30 @@ function HomeDirect(noPick){
   }).filter(Boolean).join("");
   if(!cards) return "";
 
-  if(noPick) return '<section class="bdir bsq"><div class="w">'+
-    '<div class="bsq-hd"><h2>서비스 바로 찾기</h2>'+
-      '<a class="bsq-all" href="/providers">전체 보기'+icon("arrow",15)+'</a></div>'+
-    '<ul class="bsq-g">'+cards+'</ul>'+
-
-    MainScopeStrip()+
-  '</div></section>';
+  if(noPick){
+    var by = {}; HOME_DIRECT.forEach(function(k){
+      for(var j = 0; j < C.length; j++) if(C[j].key === k) by[k] = C[j]; });
+    var row = function(k){
+      var c = by[k]; if(!c) return "";
+      var q = HOME_QUICK8[k] || { t:c.name, s:"" };
+      var to = (typeof catTo === "function") ? catTo(c) : ("/providers/" + c.key);
+      var pk = HOME_SQ_PH[k] || (window.AM_PIC_CAT || {})[k] || "";
+      var ph = pk && typeof hasPhoto === "function" && hasPhoto(pk);
+      return '<li><a class="bsq-r" href="'+esc(to)+'">'+
+        '<span class="bsq-p" aria-hidden="true">'+(ph ? photoBox(pk, "", false, "(max-width:600px) 30vw, 130px") : icon(c.icon || "grid", 28))+'</span>'+
+        '<span class="bsq-t"><b>'+esc(q.t)+'</b>'+(q.s ? '<i>'+esc(q.s)+'</i>' : '')+'</span>'+
+        '<span class="bsq-go" aria-hidden="true">'+icon("chev",18)+'</span></a></li>';
+    };
+    var groups = HOME_SQ_GROUPS.map(function(g){
+      var li = g.k.map(row).join(""); if(!li) return "";
+      return '<div class="bsq-gc"><h3 class="bsq-gh">'+esc(g.h)+'</h3><ul class="bsq-l">'+li+'</ul></div>';
+    }).join("");
+    return '<section class="bdir bsq"><div class="w">'+
+      '<div class="bsq-hd"><h2>서비스 바로 찾기</h2>'+
+        '<a class="bsq-all" href="/providers">전체 보기'+icon("arrow",15)+'</a></div>'+
+      '<div class="bsq-g bsq3">'+groups+'</div>'+
+    '</div></section>';
+  }
   return '<section class="bdir"><div class="w">'+
     '<div class="sec-hd hm-hd">'+
       '<div class="hm-hd-t">'+
@@ -1233,27 +1257,17 @@ function HomeWPHero(){
 }
 
 function HomeWPFind(){
+
   return '<div class="wp-find-s">'+
-    '<form class="sw-find wp-find" role="search" action="/search" onsubmit="return wpFind(event)" novalidate>'+
-      '<label class="sr-only" for="wp-t">찾을 분야</label>'+
-      '<select id="wp-t" class="sel wp-t">'+WP_TYPES.map(function(t){
-        return '<option value="'+esc(t.k)+'">'+esc(t.name)+'</option>'; }).join("")+'</select>'+
-      '<label class="sr-only" for="sw-q">서비스 · 매장 · 가이드 검색</label>'+
+    '<form class="sw-find wp-find wp-find-1" role="search" action="/search" onsubmit="return wpFind(event)" novalidate>'+
+      '<label class="sr-only" for="sw-q">서비스 · 매장 · 정보 검색</label>'+
       '<span class="wp-fbox">'+icon("search",20)+
-      '<input id="sw-q" name="q" type="search" autocomplete="off" maxlength="60" '+
-        'placeholder="필요한 서비스, 매장, 정보를 검색해 보세요." aria-describedby="wp-msg">'+
+
+      '<input id="sw-q" name="q" type="search" autocomplete="off" maxlength="60" enterkeyhint="search" '+
+        'placeholder="서비스 · 매장 · 정보 검색" aria-describedby="wp-msg">'+
       '<button class="sw-find-b wp-find-b" type="submit"><span>검색</span></button></span>'+
     '</form>'+
     '<p id="wp-msg" class="wp-fmsg" role="status" aria-live="polite"></p>'+
-
-    '<nav class="wp-jump" aria-label="운영 · 양도양수 바로가기">'+
-      '<a href="/operation">'+icon("chart",18)+'<b>매장 운영</b><i>비용 · 홍보 · 시설 · 인력</i>'+icon("arrow",14)+'</a>'+
-      '<a href="/transfer">'+icon("handover",18)+'<b>매장 양도양수</b><i>매장 찾기 · 내 매장 넘기기</i>'+icon("arrow",14)+'</a>'+
-    '</nav>'+
-    '<nav class="wp-sug" aria-label="검색 예시"><span class="wp-sug-k">이렇게 찾아보세요</span>'+
-      WP_SUGGEST.map(function(t){
-        return '<a href="/search?q='+encodeURIComponent(t)+'">'+esc(t)+'</a>'; }).join("")+
-    '</nav>'+
   '</div>';
 }
 window.wpFind = function(e){
@@ -1267,7 +1281,7 @@ window.wpFind = function(e){
   if(!q){
     if(t && t.to){ say(""); go(t.to); return false; }
     if(el) el.focus();
-    return say("찾으실 말을 적어 주시거나, 분야를 골라 주세요.");
+    return say("찾으실 말을 적어 주세요. 예: 인테리어, 철거, 권리금");
   }
   if(!/[0-9A-Za-zㄱ-ㆎ가-힣]/.test(q)){
     if(el) el.focus();
@@ -1396,7 +1410,6 @@ function HomeIHero(){
     '</div>'+
     HomeWPFind()+
 
-    HomePicked()+
   '</div></section>';
 }
 

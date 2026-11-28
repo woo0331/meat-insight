@@ -10122,3 +10122,40 @@ html.ivh #view .r1-btx h2 a, .r1-btx h2 a{ color:#fff; min-height:40px; font-siz
 .cq-svc .cq-k-ph input{ order:3; }
 /* 폐업비 계산 머리의 빵부스러기 — 누름 44px (PgHero 밖이라 따로) */
 .tlh .crumb a{ display:inline-flex; align-items:center; min-height:44px; }
+
+/* ══ 2026-11-28 홈 '서비스 바로 찾기' 사진형 (대표 지시) ══════════════
+   세 묶음(준비 · 운영 · 정리) 나란히 → 폰은 세로. 줄 = 왼쪽 작은 사진 · 이름 · 설명 · 꺾쇠, 줄 전체가 링크.
+   ⚠️ 이 구역 안(.bsq3)만 고칩니다 — 홈의 다른 구간 · 다른 화면과 함께 쓰는 규칙은 건드리지 않습니다.
+   ⚠️ 사진 크기 · 줄 높이를 세 묶음에서 같게 — 정리 묶음은 두 줄 높이 그대로 (빈 칸을 채우지 않습니다). */
+.bsq3{ display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important; grid-auto-rows:auto !important; gap:18px !important; align-items:start; }
+.bsq3 .bsq-gc{ min-width:0; background:#FFFDF9; border:1px solid var(--hm-line, #E7DDD0); border-radius:18px; overflow:hidden; box-shadow:0 4px 14px rgba(44,33,28,.05); }
+.bsq3 .bsq-gh{ margin:0; padding:16px 20px; background:#F1E9DE; font-size:clamp(17px,1.5vw,20px); font-weight:800; color:var(--hm-ink, #2C211C); }
+.bsq3 .bsq-l{ list-style:none; margin:0; padding:6px 14px; }
+.bsq3 .bsq-l > li + li{ border-top:1px solid #EFE6DA; }
+.bsq3 .bsq-r{ position:relative; display:flex; align-items:center; gap:14px; min-height:96px; padding:10px 30px 10px 0; color:var(--hm-ink, #2C211C); text-decoration:none; }
+.bsq3 .bsq-p{ flex:none; width:118px; aspect-ratio:4 / 3; border-radius:10px; overflow:hidden; background:#EFE6DA; display:grid; place-items:center; color:#7A5633; }
+.bsq3 .bsq-p .ph{ width:100%; height:100%; object-fit:cover; display:block; }
+.bsq3 .bsq-p .ph-p{ display:contents; }
+.bsq3 .bsq-r:hover .bsq-t b{ text-decoration:underline; }
+.bsq3 .bsq-r:focus-visible{ outline:3px solid var(--hm-btn, #4A3025); outline-offset:2px; border-radius:12px; }
+.bsq3 .bsq-go{ right:0; }
+@media (max-width:1180px) and (min-width:901px){ .bsq3 .bsq-p{ width:92px; } .bsq3 .bsq-t b{ font-size:16px; } }
+@media (max-width:900px){
+  .bsq3{ grid-template-columns:1fr !important; gap:14px !important; }
+  .bsq3 .bsq-r{ min-height:84px; }
+  .bsq3 .bsq-p{ width:104px; }
+}
+@media (max-width:380px){ .bsq3 .bsq-p{ width:88px; } .bsq3 .bsq-l{ padding:4px 12px; } }
+/* 사진 칸을 사진 비율과 상관없이 꽉 채웁니다 (가로로 긴 사진이 위아래에 빈 띠를 남겼습니다 — 찍어 보고 알았습니다) */
+.bsq3 .bsq-p{ position:relative; }
+.bsq3 .bsq-p .ph{ position:absolute; inset:0; width:100% !important; height:100% !important; }
+
+/* 2026-11-28 대표 지시 — 메인 검색은 검색창 + 단추 한 줄 (분야 선택칸을 뺐습니다).
+   ⚠️ 위쪽 여러 블록이 .wp-find 를 "선택칸 + 입력" 두 칸 격자로 잡고 있어 한 칸으로 다시 눌러 둡니다. */
+html.ivh #view .wp-find.wp-find-1{ grid-template-columns:minmax(0,1fr) !important; }
+/* 2026-11-28 — 서비스 바로 찾기가 검색창 바로 아래로 올라와서, 그 사이 여백을 줄입니다 (폰 64→32 · PC 96→56) */
+html.ivh #view .bhero + .bdir{ padding-top:32px; }
+@media (min-width:901px){ html.ivh #view .bhero + .bdir{ padding-top:56px; } }
+/* 2026-11-28 — 서비스 바로 찾기가 위로 올라가면서 매장 운영(iops) 과 이용 방법(bstep) 이 같은 바탕으로 붙었습니다 (ΔE 0).
+   번갈아 칠하도록 이용 방법만 짙은 베이지로 (메인에서는 paintTones 가 안 돕니다 — 손으로 번갈아 칠합니다) */
+html.ivh #view > section.iops + section.bstep{ background:#EDE4D6; }

@@ -2177,8 +2177,9 @@ const AUDIT = `(() => {
     /* 2026-11-21 Warm Premium 사진 중심 리디자인 — 히어로 다음이 '지금 어떤 도움'(ihelp · 창업 준비 / 폐업·철거 두 사진 카드) */
     /* 2026-11-22 대표 확정 시안 — 창업 · 폐업 두 사진 카드가 히어로 안(한 줄 세 칸)으로 올라와서 다음은 업종별 탐색입니다 */
     /* 2026-11-22 대표 지시서(메인 사진 넷) — 히어로 다음은 네 기둥(ipil) 탐색 */
-    if(!(secs[1] && secs[1].classList.contains("ipil")))
-      return "히어로 다음이 네 기둥 서비스 탐색이 아닙니다 — " + ((secs[1] || {}).className || "").split(" ")[0];
+    /* 2026-11-28 대표 지시 — 히어로(카드 + 검색창 한 줄) 다음이 사진형 서비스 바로 찾기(bdir) */
+    if(!(secs[1] && secs[1].classList.contains("bdir")))
+      return "히어로 다음이 서비스 바로 찾기가 아닙니다 — " + ((secs[1] || {}).className || "").split(" ")[0];
     if(!(H0ok())) return "창업 · 폐업 사진 카드가 히어로 안에 없습니다";
     function H0ok(){ return document.querySelectorAll(".bhero .wp-hc").length === 2; }
     const h1s = document.querySelectorAll("#view h1");
@@ -3873,7 +3874,7 @@ const AUDIT = `(() => {
     /* 2026-11-19 Warm Premium 대표 확정 시안 */
     /* 2026-11-21 Warm Premium 사진 중심 리디자인 */
     const need = [[".ih-in .wp-find", "히어로 통합 검색"],
-                  [".wp-sug",  "검색 예시"],
+                  /* 2026-11-28 — 검색 예시 칩(.wp-sug)은 대표 지시로 메인에서 내려갔습니다 (검색창 한 줄) */
                   [".ih3-g", "히어로 세 칸 (문구 · 창업 · 폐업)"],
                   [".ipil-g",  "네 기둥 서비스 탐색"],
                   [".iind-g",  "업종별 서비스 탐색"],
@@ -4464,7 +4465,8 @@ const AUDIT = `(() => {
     /* 2026-11-21 Warm Premium 사진 중심 리디자인 — 히어로 · 도움 · 업종 · 운영 · 양도양수 · 폐업 · 이용 방법 */
     /* 2026-11-22 대표 확정 시안 — 창업 · 폐업 카드가 히어로 안으로 올라와 '지금 어떤 도움' 구간이 내려왔습니다 */
     /* 2026-11-22 대표 지시서(메인 사진 넷) — 히어로 · 네 기둥 · 업종 · 양도양수 · 매장 운영 · 세부 서비스 · 이용 방법 */
-    const want = ["bhero","ipil","iind","bpass","iops","bdir","bstep"];
+    /* 2026-11-28 대표 지시 — 서비스 바로 찾기가 검색창 바로 아래로 */
+    const want = ["bhero","bdir","ipil","iind","bpass","iops","bstep"];
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";

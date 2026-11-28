@@ -587,7 +587,8 @@ function PageMain(){
   /* ⚠️⚠️ 2026-11-28 대표 확정 — 메인은 **지금 운영 디자인**(아래 한 줄)으로 갑니다. 시험 브랜치에서 만든 새 메인
      (HomeR1Top · HomeR1Find · HomeR1Trade)은 운영 반영 범위에서 뺐습니다 — 함수는 지우지 않았습니다.
      ⚠️ 이 줄을 바꾸면 운영 반영 때 메인 디자인이 같이 바뀝니다. 바꾸지 마세요 (대표 지시). */
-  return HomeIHero()+ HomePillars()+ HomeIInd()+ HomeITransfer()+ HomeIOps()+ HomeDirect(true)+ HomeWPSteps();
+  /* 2026-11-28 대표 지시 — 창업 · 폐업 카드 → 검색창 한 줄 → 사진형 서비스 바로 찾기 차례. 나머지 구간은 그 아래 그대로 */
+  return HomeIHero()+ HomeDirect(true)+ HomePillars()+ HomeIInd()+ HomeITransfer()+ HomeIOps()+ HomeWPSteps();
 }
 
 
@@ -936,6 +937,14 @@ var HOME_DIRECT = ["interior", "equip", "it", "admin",
 /* 2026-11-27 대표 최종 시안 '서비스 바로 찾기' — 카드 여덟의 표시 문구 · 아이콘 · 아이콘 영역 색.
    ⚠️ 차례와 분류 key 는 HOME_DIRECT 그대로입니다 (주소는 catTo 가 정합니다).
    ⚠️ 색은 **아이콘과 그 뒤 파스텔 칸에만** 씁니다 — 카드는 흰색으로 통일 (css/pages.css .bsq-*). */
+/* 2026-11-28 '서비스 바로 찾기' 사진형 — 세 묶음과 줄마다 사진 (기존 자산 재사용 · 연출 사진) */
+var HOME_SQ_GROUPS = [
+  { h:"매장을 준비해요",          k:["interior","equip","marketing"] },
+  { h:"운영에 필요한 걸 찾아요",  k:["it","admin","staff"] },
+  { h:"매장을 정리해요",          k:["demolish","restore"] }
+];
+var HOME_SQ_PH = { interior:"svc-interior", equip:"svc-equip", marketing:"service-menu-shoot",
+  it:"kp-op-svc-pos", admin:"kp-cl-svc-tax", staff:"kp-op-svc-staff", demolish:"hero-close", restore:"insu-closure-in" };  /* ⚠️ kind-take · kind-pass · hero-startup 은 출처 기록이 없어 메인에 못 씁니다 (check.js) */
 var HOME_QUICK8 = {
   interior:  { t:"인테리어·시공",   s:"설계 · 전기 · 배관",     ic:"roller",     tn:"terra" },
   equip:     { t:"시설·장비",       s:"업종별 장비 · 매장 설비",   ic:"wrench",     tn:"mint" },
@@ -943,7 +952,7 @@ var HOME_QUICK8 = {
   admin:     { t:"세무·노무·행정",  s:"세무사 · 노무사",        ic:"briefcase",  tn:"lav" },
   staff:     { t:"직원 채용",       s:"정직원 · 아르바이트",    ic:"users",      tn:"sage" },
   marketing: { t:"홍보·디자인",     s:"로고 · 메뉴판",          ic:"megaphone",  tn:"rose" },
-  demolish:  { t:"철거",            s:"전체철거 · 부분철거",    ic:"jackhammer", tn:"amber" },
+  demolish:  { t:"철거",            s:"전체 철거 · 부분 철거",    ic:"jackhammer", tn:"amber" },
   restore:   { t:"원상복구",        s:"바닥 · 벽 · 설비",       ic:"corner",     tn:"olive" }
 };
 
@@ -1010,13 +1019,33 @@ function HomeDirect(noPick){
      옮긴 것이지 지운 것이 아닙니다. */
   /* 2026-11-27 대표 최종 시안 — 메인은 제목 '서비스 바로 찾기' + 오른쪽 작은 '전체 보기 →'.
      긴 설명과 가로 전체 진한 단추를 뺐습니다 (길은 그대로 /providers 하나). */
-  if(noPick) return '<section class="bdir bsq"><div class="w">'+
-    '<div class="bsq-hd"><h2>서비스 바로 찾기</h2>'+
-      '<a class="bsq-all" href="/providers">전체 보기'+icon("arrow",15)+'</a></div>'+
-    '<ul class="bsq-g">'+cards+'</ul>'+
-    /* ⚠️ 숫자는 손으로 적지 않습니다 — 그 자리에서 셉니다 (ⓘ "등록된 업체 수가 아닙니다" 줄을 지우지 마세요) */
-    MainScopeStrip()+
-  '</div></section>';
+  /* 2026-11-28 대표 지시 '서비스 바로 찾기만 사진형으로' — 세 묶음(준비 · 운영 · 정리) · 줄마다 왼쪽 작은 현장 사진 ·
+     이름 · 설명 · 꺾쇠. 줄 전체가 그 분류의 진짜 화면(catTo)으로 가는 **단순 링크**입니다 (견적 담기 칸이 아닙니다).
+     ⚠️ 숫자 띠(MainScopeStrip)는 대표 지시로 홈에서 뺐습니다 — 함수는 다른 화면이 그대로 씁니다. */
+  if(noPick){
+    var by = {}; HOME_DIRECT.forEach(function(k){
+      for(var j = 0; j < C.length; j++) if(C[j].key === k) by[k] = C[j]; });
+    var row = function(k){
+      var c = by[k]; if(!c) return "";
+      var q = HOME_QUICK8[k] || { t:c.name, s:"" };
+      var to = (typeof catTo === "function") ? catTo(c) : ("/providers/" + c.key);
+      var pk = HOME_SQ_PH[k] || (window.AM_PIC_CAT || {})[k] || "";
+      var ph = pk && typeof hasPhoto === "function" && hasPhoto(pk);
+      return '<li><a class="bsq-r" href="'+esc(to)+'">'+
+        '<span class="bsq-p" aria-hidden="true">'+(ph ? photoBox(pk, "", false, "(max-width:600px) 30vw, 130px") : icon(c.icon || "grid", 28))+'</span>'+
+        '<span class="bsq-t"><b>'+esc(q.t)+'</b>'+(q.s ? '<i>'+esc(q.s)+'</i>' : '')+'</span>'+
+        '<span class="bsq-go" aria-hidden="true">'+icon("chev",18)+'</span></a></li>';
+    };
+    var groups = HOME_SQ_GROUPS.map(function(g){
+      var li = g.k.map(row).join(""); if(!li) return "";
+      return '<div class="bsq-gc"><h3 class="bsq-gh">'+esc(g.h)+'</h3><ul class="bsq-l">'+li+'</ul></div>';
+    }).join("");
+    return '<section class="bdir bsq"><div class="w">'+
+      '<div class="bsq-hd"><h2>서비스 바로 찾기</h2>'+
+        '<a class="bsq-all" href="/providers">전체 보기'+icon("arrow",15)+'</a></div>'+
+      '<div class="bsq-g bsq3">'+groups+'</div>'+
+    '</div></section>';
+  }
   return '<section class="bdir"><div class="w">'+
     '<div class="sec-hd hm-hd">'+
       '<div class="hm-hd-t">'+
@@ -2259,27 +2288,21 @@ function HomeWPHero(){
    ⚠️ 빈 칸 · 기호만 · 너무 긴 말은 **그 자리에서** 알려 드리고 보내지 않습니다.
    ⚠️ 결과가 0건이면 /search 화면이 0건이라고 말하고 다른 길을 냅니다 (지어내지 않습니다). */
 function HomeWPFind(){
+  /* 2026-11-28 대표 지시 — 메인 검색은 **검색창 + 검색 단추 한 줄**입니다.
+     분야 선택칸 · 운영/양도양수 보조 카드 · 예시 칩을 뺐습니다 (전부 다른 자리가 받습니다 —
+     운영 · 양도양수는 상단 메뉴, 분야는 검색 결과의 분야 칩 #sr-n).
+     ⚠️ 기본값이 전체 검색입니다 — /search 가 서비스 · 매장 · 정보를 다 훑습니다.
+     옛 짜임새(선택칸 · wp-jump · wp-sug)는 WP_TYPES · WP_SUGGEST 와 함께 되살릴 수 있게 남겨 둡니다. */
   return '<div class="wp-find-s">'+
-    '<form class="sw-find wp-find" role="search" action="/search" onsubmit="return wpFind(event)" novalidate>'+
-      '<label class="sr-only" for="wp-t">찾을 분야</label>'+
-      '<select id="wp-t" class="sel wp-t">'+WP_TYPES.map(function(t){
-        return '<option value="'+esc(t.k)+'">'+esc(t.name)+'</option>'; }).join("")+'</select>'+
-      '<label class="sr-only" for="sw-q">서비스 · 매장 · 가이드 검색</label>'+
+    '<form class="sw-find wp-find wp-find-1" role="search" action="/search" onsubmit="return wpFind(event)" novalidate>'+
+      '<label class="sr-only" for="sw-q">서비스 · 매장 · 정보 검색</label>'+
       '<span class="wp-fbox">'+icon("search",20)+
-      '<input id="sw-q" name="q" type="search" autocomplete="off" maxlength="60" '+
-        'placeholder="필요한 서비스, 매장, 정보를 검색해 보세요." aria-describedby="wp-msg">'+
+      /* ⚠️ 안내 글은 짧게 — 360px 에서 글이 들어갈 폭이 182px 입니다 (긴 글 279px 은 "정보를 검" 에서 잘렸습니다) */
+      '<input id="sw-q" name="q" type="search" autocomplete="off" maxlength="60" enterkeyhint="search" '+
+        'placeholder="서비스 · 매장 · 정보 검색" aria-describedby="wp-msg">'+
       '<button class="sw-find-b wp-find-b" type="submit"><span>검색</span></button></span>'+
     '</form>'+
     '<p id="wp-msg" class="wp-fmsg" role="status" aria-live="polite"></p>'+
-    /* 2026-11-26 모바일 시안 §1 — 검색 바로 옆에 운영 · 양도양수 바로가기 (사진 카드는 창업 · 폐업 둘) */
-    '<nav class="wp-jump" aria-label="운영 · 양도양수 바로가기">'+
-      '<a href="/operation">'+icon("chart",18)+'<b>매장 운영</b><i>비용 · 홍보 · 시설 · 인력</i>'+icon("arrow",14)+'</a>'+
-      '<a href="/transfer">'+icon("handover",18)+'<b>매장 양도양수</b><i>매장 찾기 · 내 매장 넘기기</i>'+icon("arrow",14)+'</a>'+
-    '</nav>'+
-    '<nav class="wp-sug" aria-label="검색 예시"><span class="wp-sug-k">이렇게 찾아보세요</span>'+
-      WP_SUGGEST.map(function(t){
-        return '<a href="/search?q='+encodeURIComponent(t)+'">'+esc(t)+'</a>'; }).join("")+
-    '</nav>'+
   '</div>';
 }
 window.wpFind = function(e){
@@ -2293,7 +2316,7 @@ window.wpFind = function(e){
   if(!q){
     if(t && t.to){ say(""); go(t.to); return false; }
     if(el) el.focus();
-    return say("찾으실 말을 적어 주시거나, 분야를 골라 주세요.");
+    return say("찾으실 말을 적어 주세요. 예: 인테리어, 철거, 권리금");
   }
   if(!/[0-9A-Za-zㄱ-ㆎ가-힣]/.test(q)){
     if(el) el.focus();
@@ -2445,8 +2468,8 @@ function HomeIHero(){
       }).join("")+
     '</div>'+
     HomeWPFind()+
-    /* 고르신 서비스가 있으면 그 자리에서 신청까지 (0개면 줄째 없음) */
-    HomePicked()+
+    /* 2026-11-28 대표 지시 — 고르신 서비스 요약 박스(HomePicked)를 메인에서 뺐습니다.
+       담은 것은 그대로 남고(am.pick.v1) 견적 신청 화면 · 각 전문관 바구니에서 확인 · 수정합니다. */
   '</div></section>';
 }
 

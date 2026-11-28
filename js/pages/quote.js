@@ -828,6 +828,18 @@ window.amSend = function(failId, body, again, done){
          ⚠️ `esc()` 를 거칩니다 (절대 규칙 4). */
       var no = (x.j && x.j.no) ? String(x.j.no) : "";
       var dup = !!(x.j && x.j.dup);
+      var frm = box && box.closest("form");
+      /* 2026-11-28 대표 지시 — 견적 · 폐업 견적은 **완료 화면**을 따로 그립니다
+         (제목 → 접수번호 · 복사 → 현재 상태 → 사진 결과 → 다음 단계 → 주요 단추).
+         ⚠️ 매물 내놓기 · 입점은 예전 안내 그대로입니다 (견적 상태 · 문구를 섞지 않습니다). */
+      var isQuote = !!(body && body.kind === "quote" && body.form !== "sell");
+      if(isQuote && box){
+        box.innerHTML = QuoteDone({ no:no, dup:dup, state:(x.j && x.j.state) || "", linked:!!(x.j && x.j.linked) });
+        var phBox = box.querySelector("[data-qd-ph]");
+        var phOn = (typeof amPhotoSubmit === "function") ? amPhotoSubmit(frm, phBox, no, (body && body.tel) || "") : false;
+        /* 사진 없이 내셨으면 사진 자리째 뺍니다 (빈 칸 · 오류를 안 띄웁니다) */
+        if(!phOn && phBox) phBox.remove();
+      }else{
       if(box) box.innerHTML = '<div class="notice-ok"><b>' +
         (dup ? "이미 접수되었습니다." : "접수되었습니다.") + '</b>' +
         (no ? '<p>접수번호 <b>' + esc(no) + '</b> — 문의하실 때 알려 주세요.</p>' : '') +
@@ -837,24 +849,12 @@ window.amSend = function(failId, body, again, done){
           ? '<p>입점 심사를 거칩니다 — 심사 전에는 업체 목록에 나가지 않습니다.</p>'
           : '<p>현재 상태는 <b>접수됨</b>입니다. 운영자가 확인합니다.</p>') +
         '<p>회신 시점과 업체 연결을 약속드리지는 않습니다.</p></div>';
-      /* §7-3 — ⚠️⚠️ **접수한 뒤에** 사진 칸이 붙습니다. 번호가
-         없으면(저장 안 된 접수) · 버킷이 설정되기 전이면 **아예 안
-         그려집니다** (js/photo.js 머리말). ⚠️ 연락처는 **보내신 몸통
-         에서** 가져옵니다 — 폼은 바로 아래에서 비워집니다. */
-      /* ⚠️⚠️ **업체 입점(partner)에는 안 붙입니다.** 사진 자리를 주는
-         문은 `claim_photo_slot()` 이고 그것은 **신청(`request`)** 의
-         번호와 연락처만 봅니다 — 입점 신청은 다른 표(`provider_apply` ·
-         0016)라 **올릴 때마다 거절당합니다.** 2026-10-25 에 입점 신청도
-         접수번호를 받게 되면서 이 줄이 그대로 켜질 자리였습니다
-         (올리는 척하는 칸은 §30-7 이고 절대 규칙 5 입니다). */
-      /* 2026-11-27 — 작성 중에 고르신 사진이 있으면 그 번호로 바로 올립니다 (일부 실패하면 실패한 것만 다시).
-         고르신 것이 없으면 예전처럼 완료 안내 안에 '사진 추가' 를 붙입니다. */
-      var frm = box && box.closest("form");
       var phDone = (box && (!body || body.kind !== "partner") && typeof amPhotoSubmit === "function")
         ? amPhotoSubmit(frm, box, no, (body && body.tel) || "") : false;
       if(!phDone && no && box && (!body || body.kind !== "partner") &&
          typeof amPhotoAfter === "function")
         amPhotoAfter(box, no, (body && body.tel) || "");
+      }
       toast(dup ? "이미 접수되었습니다" : "접수되었습니다");
       var f = box && box.closest("form"); if(f) f.reset();
       /* 2026-11-27 대표 지시 — 접수가 끝나면 **작성 폼과 동의 칸을 접고** 접수번호 · 사진 저장 결과를
@@ -864,12 +864,17 @@ window.amSend = function(failId, body, again, done){
         box.classList.add("q-done");
         f.parentNode.insertBefore(box, f);
         f.hidden = true;
-        var again2 = document.createElement("p");
-        again2.className = "q-done-again";
-        again2.innerHTML = '<button type="button" class="btn btn-o">새로 작성하기</button>';
-        again2.firstChild.onclick = function(){ f.hidden = false; again2.remove(); f.scrollIntoView({ block:"start" }); };
-        box.appendChild(again2);
+        /* 견적 완료 화면은 제 단추('새로 작성하기')를 들고 있습니다 — 매물 쪽만 여기서 붙입니다 */
+        if(!isQuote){
+          var again2 = document.createElement("p");
+          again2.className = "q-done-again";
+          again2.innerHTML = '<button type="button" class="btn btn-o">새로 작성하기</button>';
+          again2.firstChild.onclick = function(){ f.hidden = false; again2.remove(); f.scrollIntoView({ block:"start" }); };
+          box.appendChild(again2);
+        }
+        /* 위의 안내 · 머리말을 지나 완료 영역이 바로 보이게 — 그리고 제목에 초점 (화면 읽기 · 키보드) */
         try{ box.scrollIntoView({ block:"start" }); }catch(e){}
+        var hh = box.querySelector("[data-qd-h]"); if(hh){ try{ hh.focus({ preventScroll:true }); }catch(e){ hh.focus(); } }
       }
       /* §4-3 "최종 제출 후 중복 임시 신청 정리" — 보낸 뒤에 치웁니다.
          ⚠️ **보내기 전에 치우면 안 됩니다** — 실패했을 때 적으신 것과
@@ -947,6 +952,44 @@ function sendFail(failId, again, body, msg){
 
 /* ⚠️ `navigator.clipboard` 는 https 가 아니거나 오래된 브라우저에
    없습니다. 옛 방법으로 떨어지게 해 둡니다. */
+/* ── 견적 완료 화면 (2026-11-28) ──────────────────────────────────
+   ⚠️⚠️ 상태는 **서버가 돌려준 실제 값**만 씁니다 (amCustView · deal.js). 못 읽었으면 그 줄째 뺍니다.
+   ⚠️⚠️ '업체가 확인 중' · 회신 시간 · 업체 수를 말하지 않습니다 (아직 배정 전입니다).
+   ⚠️ 주요 단추는 하나 — 로그인해서 계정에 이어진 접수면 '내 신청 보기', 아니면 '접수번호 복사'.
+   작동하지 않는 조회 단추는 내지 않습니다. */
+function QuoteDone(o){
+  var cv = (o.state && typeof amCustView === "function") ? amCustView(o.state, 0) : null;
+  var a = (typeof amAuthNow === "function") ? amAuthNow() : {};
+  var mine = !!(o.linked && a && a.signedIn);
+  var copyBtn = function(cls){ return '<button type="button" class="btn '+cls+'" data-copy="'+esc(o.no)+'" onclick="amCopy(this)">'+icon("files",16)+' 접수번호 복사</button>'; };
+  return '<section class="qd" aria-labelledby="qd-h">'+
+    '<h2 class="qd-h" id="qd-h" tabindex="-1" data-qd-h>'+icon("check",22)+
+      (o.dup ? '이미 접수된 신청입니다' : '견적 신청이 접수됐습니다')+'</h2>'+
+    (o.no ? '<div class="qd-no"><span>접수번호</span><b>'+esc(o.no)+'</b>'+(mine ? copyBtn("btn-o btn-sm") : '')+'</div>' : '')+
+    (cv ? '<div class="qd-st"><span>현재 상태</span><em class="myq-st myq-'+esc(cv.tone)+'">'+esc(cv.name)+'</em></div>' : '')+
+    '<div class="qd-ph" data-qd-ph></div>'+
+    '<p class="qd-next">'+esc(cv ? cv.next : "운영자가 내용을 확인한 뒤 연락드립니다.")+
+      ' 업체가 정해지면 어느 업체인지 알려 드리고, 그때 연락처 전달 동의를 다시 받습니다.</p>'+
+    '<div class="qd-go">'+
+      (mine
+        ? '<a class="btn btn-b btn-lg btn-full" href="/my?no='+encodeURIComponent(o.no)+'">내 신청 보기'+icon("arrow",18)+'</a>'
+        : (o.no ? copyBtn("btn-b btn-lg btn-full") : '')+
+          '<p class="qd-how">'+(a && a.on
+            ? '로그인하신 뒤 <b>내 기록</b>에서 접수번호와 휴대폰 번호로 이 신청을 가져오면 진행 상황과 견적을 보실 수 있습니다.'
+            : '문의하실 때 접수번호를 알려 주세요.')+'</p>'+
+          (a && a.on ? '<a class="btn btn-o btn-full" href="/my?claim='+encodeURIComponent(o.no)+'">로그인하고 이 신청 가져오기</a>' : ''))+
+      '<button type="button" class="btn btn-o btn-full qd-new" onclick="quoteNew()">새로 작성하기</button>'+
+    '</div>'+
+  '</section>';
+}
+/* 새로 작성하기 — ⚠️ 이전 접수번호 · 사진 결과를 새 신청에 쓰지 않게 **화면을 새로 그립니다**
+   (폼을 다시 펴면 옮겨 간 사진 칸 · 결과가 남습니다). 고르신 서비스 바구니는 접수 때 이미 비웠습니다. */
+window.quoteNew = function(){
+  var u = location.pathname + (nowQS("mode") === "close" ? "?mode=close" : "");
+  if(typeof go === "function") go(u); else location.href = u;
+  try{ window.scrollTo(0, 0); }catch(e){}
+};
+
 window.amCopy = function(btn){
   var t = btn.getAttribute("data-copy") || "";
   function done(){ toast("복사했습니다"); }

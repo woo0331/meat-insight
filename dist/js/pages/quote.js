@@ -597,6 +597,16 @@ window.amSend = function(failId, body, again, done){
 
       var no = (x.j && x.j.no) ? String(x.j.no) : "";
       var dup = !!(x.j && x.j.dup);
+      var frm = box && box.closest("form");
+
+      var isQuote = !!(body && body.kind === "quote" && body.form !== "sell");
+      if(isQuote && box){
+        box.innerHTML = QuoteDone({ no:no, dup:dup, state:(x.j && x.j.state) || "", linked:!!(x.j && x.j.linked) });
+        var phBox = box.querySelector("[data-qd-ph]");
+        var phOn = (typeof amPhotoSubmit === "function") ? amPhotoSubmit(frm, phBox, no, (body && body.tel) || "") : false;
+
+        if(!phOn && phBox) phBox.remove();
+      }else{
       if(box) box.innerHTML = '<div class="notice-ok"><b>' +
         (dup ? "이미 접수되었습니다." : "접수되었습니다.") + '</b>' +
         (no ? '<p>접수번호 <b>' + esc(no) + '</b> — 문의하실 때 알려 주세요.</p>' : '') +
@@ -606,13 +616,12 @@ window.amSend = function(failId, body, again, done){
           ? '<p>입점 심사를 거칩니다 — 심사 전에는 업체 목록에 나가지 않습니다.</p>'
           : '<p>현재 상태는 <b>접수됨</b>입니다. 운영자가 확인합니다.</p>') +
         '<p>회신 시점과 업체 연결을 약속드리지는 않습니다.</p></div>';
-
-      var frm = box && box.closest("form");
       var phDone = (box && (!body || body.kind !== "partner") && typeof amPhotoSubmit === "function")
         ? amPhotoSubmit(frm, box, no, (body && body.tel) || "") : false;
       if(!phDone && no && box && (!body || body.kind !== "partner") &&
          typeof amPhotoAfter === "function")
         amPhotoAfter(box, no, (body && body.tel) || "");
+      }
       toast(dup ? "이미 접수되었습니다" : "접수되었습니다");
       var f = box && box.closest("form"); if(f) f.reset();
 
@@ -620,12 +629,17 @@ window.amSend = function(failId, body, again, done){
         box.classList.add("q-done");
         f.parentNode.insertBefore(box, f);
         f.hidden = true;
-        var again2 = document.createElement("p");
-        again2.className = "q-done-again";
-        again2.innerHTML = '<button type="button" class="btn btn-o">새로 작성하기</button>';
-        again2.firstChild.onclick = function(){ f.hidden = false; again2.remove(); f.scrollIntoView({ block:"start" }); };
-        box.appendChild(again2);
+
+        if(!isQuote){
+          var again2 = document.createElement("p");
+          again2.className = "q-done-again";
+          again2.innerHTML = '<button type="button" class="btn btn-o">새로 작성하기</button>';
+          again2.firstChild.onclick = function(){ f.hidden = false; again2.remove(); f.scrollIntoView({ block:"start" }); };
+          box.appendChild(again2);
+        }
+
         try{ box.scrollIntoView({ block:"start" }); }catch(e){}
+        var hh = box.querySelector("[data-qd-h]"); if(hh){ try{ hh.focus({ preventScroll:true }); }catch(e){ hh.focus(); } }
       }
 
       if(typeof done === "function"){ try{ done(); }catch(e){} }
@@ -682,6 +696,38 @@ function sendFail(failId, again, body, msg){
   var btn = document.querySelector("form button[type=submit]");
   if(btn){ btn.disabled = false; btn.textContent = "다시 시도"; }
 }
+
+function QuoteDone(o){
+  var cv = (o.state && typeof amCustView === "function") ? amCustView(o.state, 0) : null;
+  var a = (typeof amAuthNow === "function") ? amAuthNow() : {};
+  var mine = !!(o.linked && a && a.signedIn);
+  var copyBtn = function(cls){ return '<button type="button" class="btn '+cls+'" data-copy="'+esc(o.no)+'" onclick="amCopy(this)">'+icon("files",16)+' 접수번호 복사</button>'; };
+  return '<section class="qd" aria-labelledby="qd-h">'+
+    '<h2 class="qd-h" id="qd-h" tabindex="-1" data-qd-h>'+icon("check",22)+
+      (o.dup ? '이미 접수된 신청입니다' : '견적 신청이 접수됐습니다')+'</h2>'+
+    (o.no ? '<div class="qd-no"><span>접수번호</span><b>'+esc(o.no)+'</b>'+(mine ? copyBtn("btn-o btn-sm") : '')+'</div>' : '')+
+    (cv ? '<div class="qd-st"><span>현재 상태</span><em class="myq-st myq-'+esc(cv.tone)+'">'+esc(cv.name)+'</em></div>' : '')+
+    '<div class="qd-ph" data-qd-ph></div>'+
+    '<p class="qd-next">'+esc(cv ? cv.next : "운영자가 내용을 확인한 뒤 연락드립니다.")+
+      ' 업체가 정해지면 어느 업체인지 알려 드리고, 그때 연락처 전달 동의를 다시 받습니다.</p>'+
+    '<div class="qd-go">'+
+      (mine
+        ? '<a class="btn btn-b btn-lg btn-full" href="/my?no='+encodeURIComponent(o.no)+'">내 신청 보기'+icon("arrow",18)+'</a>'
+        : (o.no ? copyBtn("btn-b btn-lg btn-full") : '')+
+          '<p class="qd-how">'+(a && a.on
+            ? '로그인하신 뒤 <b>내 기록</b>에서 접수번호와 휴대폰 번호로 이 신청을 가져오면 진행 상황과 견적을 보실 수 있습니다.'
+            : '문의하실 때 접수번호를 알려 주세요.')+'</p>'+
+          (a && a.on ? '<a class="btn btn-o btn-full" href="/my?claim='+encodeURIComponent(o.no)+'">로그인하고 이 신청 가져오기</a>' : ''))+
+      '<button type="button" class="btn btn-o btn-full qd-new" onclick="quoteNew()">새로 작성하기</button>'+
+    '</div>'+
+  '</section>';
+}
+
+window.quoteNew = function(){
+  var u = location.pathname + (nowQS("mode") === "close" ? "?mode=close" : "");
+  if(typeof go === "function") go(u); else location.href = u;
+  try{ window.scrollTo(0, 0); }catch(e){}
+};
 
 window.amCopy = function(btn){
   var t = btn.getAttribute("data-copy") || "";

@@ -9652,3 +9652,50 @@ html.ivh #view > section.bsq{ background:#FDFBF6; }   /* 이웃(#F5F1E9)과 ΔE 
 .q-done .phup-form{ margin-top:14px; }
 .q-done-again{ margin:16px 0 0; }
 #q-f[hidden], #cq-f[hidden], #sl-f[hidden]{ display:none !important; }
+/* 2026-11-28 — 견적 완료 화면 (제목 → 번호 · 복사 → 상태 → 사진 → 다음 단계 → 단추) */
+.qd{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:20px 18px; }
+.qd-h{ display:flex; align-items:center; gap:8px; margin:0 0 14px; font-size:var(--t-h3, 21px); color:var(--ink); outline:none; }
+.qd-h svg{ color:var(--start-deep, #2e5a3a); flex:none; }
+.qd-h:focus-visible{ outline:2px solid var(--hm-btn); outline-offset:4px; border-radius:6px; }
+.qd-no, .qd-st{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; padding:10px 0; border-top:1px solid var(--line); }
+.qd-no > span, .qd-st > span{ color:var(--ink2); font-size:var(--t-cap, 13px); min-width:58px; }
+.qd-no b{ font-size:20px; letter-spacing:.02em; word-break:break-all; }
+.qd-st em{ font-style:normal; padding:4px 10px; border-radius:999px; font-weight:700; font-size:14px; }
+.qd-ph{ border-top:1px solid var(--line); padding-top:10px; }
+.qd-ph .phup-form{ margin:0; padding:0; border:0; background:none; }
+.phup-sum{ margin:4px 0 8px; font-weight:700; color:var(--ink); }
+.phup-sum.is-fail{ color:var(--warn-dark); }
+.qd-next{ border-top:1px solid var(--line); padding-top:12px; margin:0 0 14px; color:var(--ink2); }
+.qd-go{ display:grid; gap:10px; }
+.qd-how{ margin:0; font-size:var(--t-cap, 13px); color:var(--ink2); }
+.qd .btn-b{ background:var(--hm-btn); border-color:var(--hm-btn); color:#fff; }
+/* 2026-11-28 — 내 신청 상세 · 견적 카드 */
+.myrd{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; margin:0 0 24px; scroll-margin-top:90px; }
+.myrd-k{ margin:0; font-size:var(--t-cap,13px); color:var(--ink2); font-weight:700; }
+.myrd h2{ margin:2px 0 10px; font-size:22px; word-break:break-all; outline:none; }
+.myrd-l > div, .myqc > div{ display:grid; grid-template-columns:96px minmax(0,1fr); gap:10px; padding:10px 0; border-top:1px solid var(--line); }
+.myrd-l dt, .myqc dt{ color:var(--ink2); font-size:14px; }
+.myrd-l dd, .myqc dd{ margin:0; min-width:0; overflow-wrap:anywhere; }
+.myrd-next{ margin:6px 0 14px; color:var(--ink2); }
+.myrd-go{ margin:0 0 14px; }
+.myrd-go .btn-b{ background:var(--hm-btn); border-color:var(--hm-btn); color:#fff; }
+.myrd-per{ list-style:none; margin:6px 0 0; padding:0; display:grid; gap:6px; }
+.myrd-per li{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; justify-content:space-between; }
+.myq-st{ white-space:nowrap; }
+.myqc-amt{ font-size:20px; }
+.myqc-sub{ display:block; color:var(--ink2); font-size:13px; margin-top:2px; }
+.myqc-ask{ font-style:normal; color:var(--warn-dark); font-weight:700; }
+.myqc-cov{ margin:6px 0 0; font-size:14px; }
+.myqc-cov-x{ color:var(--warn-dark); }
+.myqc-rev{ margin:8px 0 0; padding:10px 12px; background:var(--warn-bg); border-radius:10px; font-size:14px; }
+.myqc-rev ul{ margin:4px 0 0; padding-left:18px; }
+.myqc-etc{ font-size:14px; }
+@media (min-width:901px){
+  .myqt-l{ display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px; }
+}
+/* ⚠️ .myd-l 의 기본은 두 칸 격자입니다 — 상세 · 견적 카드는 한 칸(줄마다 딱지 · 값)으로 */
+.myd-l.myrd-l, .myd-l.myqc{ grid-template-columns:minmax(0,1fr); gap:0; }
+.myrd-l dd, .myqc dd{ font-weight:600; color:var(--ink); }
+.myrd-per li{ justify-content:flex-start; }
+.phup-go[hidden]{ display:none !important; }
+a.myq-no{ display:inline-flex; align-items:center; min-height:44px; color:inherit; text-decoration:underline; text-underline-offset:3px; }

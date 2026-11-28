@@ -268,7 +268,8 @@ const ADM_DEAL = [
     ok("신청 두 줄이 그려진다", (await n(pg, ".myq-l > .myq")) === 2);
     ok("접수번호가 보인다", !!t && t.includes("SW-AB12-CD34"));
     ok("상태 딱지가 이름으로 나온다 (영어가 아님)",
-        !!t && t.includes("견적 전달") && !t.includes("quoted"));
+        /* 2026-11-28 — 고객 말 여섯 갈래 (amCustView): quoted 는 볼 수 있는 견적이 있으면 '견적 도착' */
+        !!t && (t.includes("견적 도착") || t.includes("업체 답변 대기")) && !t.includes("quoted"));
     /* ⚠️⚠️ 배정된 줄에만 업체 상호 — 정해지기 전에 적으면 정해지지도
        않은 곳을 알려 주는 것입니다 (제17조 제2항) */
     ok("배정된 줄에 업체 상호가 보인다", (await n(pg, ".myq-pv")) === 1,

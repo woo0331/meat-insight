@@ -3352,8 +3352,17 @@ function checkRpcArgs(){
   /* SQL 쪽 — 마이그레이션 전부에서 함수 정의를 모읍니다 */
   const dir = path.join(ROOT, "db", "migrations");
   if(!fs.existsSync(dir)) return;
-  const sql = fs.readdirSync(dir).filter(f => /\.sql$/.test(f) && !/_down\./.test(f))
+  let sql = fs.readdirSync(dir).filter(f => /\.sql$/.test(f) && !/_down\./.test(f))
     .sort().map(f => fs.readFileSync(path.join(dir, f), "utf8")).join("\n");
+  /* 2026-11-28 — **시험 DB 에만 적용한 초안**(docs/DRAFT-*.sql)의 함수도 셉니다.
+     ⚠️ 운영에 올리기 전에 그 초안을 db/migrations 로 옮겨야 합니다 — 안 옮기면 운영에서 그 문이 없다고
+     거절당합니다 (화면은 '처리하지 못했습니다'). 그래서 여기서 이름을 적어 알립니다. */
+  const dd = path.join(ROOT, "docs");
+  const drafts = fs.existsSync(dd) ? fs.readdirSync(dd).filter(f => /^DRAFT-.*\.sql$/.test(f)).sort() : [];
+  if(drafts.length){
+    sql += "\n" + drafts.map(f => fs.readFileSync(path.join(dd, f), "utf8")).join("\n");
+    console.log("   ⚠️ 초안 SQL 도 함께 봅니다 (운영 전 db/migrations 로 옮길 것) — " + drafts.join(" · "));
+  }
 
   const want = {};
   fns.forEach(function(f){

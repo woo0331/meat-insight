@@ -57,6 +57,12 @@ function myDbPaint(d){
       '<button class="btn btn-o" type="button" onclick="mySignOut()">나가기</button>' +
     '</p></div>';
   box.hidden = false;
+
+  var rd = document.getElementById("myrd") || document.getElementById("my-nohit") || (nowQS("claim") && document.getElementById("my-claim"));
+  if(rd && (nowQS("no") || nowQS("claim"))){
+    try{ rd.scrollIntoView({ block:"start" }); }catch(e){}
+    var h2 = document.getElementById("myrd-h"); if(h2){ try{ h2.focus({ preventScroll:true }); }catch(e){} }
+  }
 }
 
 function MySignInBand(){
@@ -84,9 +90,17 @@ function myHd(k, h, p){
 
 function MyCustBand(d){
   var L = d.requests || [];
-  return myHd("MY REQUEST", "내가 넣은 신청",
+
+  var nk = function(x){ return String(x || "").toUpperCase().replace(/[^A-Z0-9]/g, ""); };
+  var want = nk(nowQS("no"));
+  var hit = want ? L.filter(function(r){ return nk(r.no) === want; })[0] : null;
+  var rest = hit ? L.filter(function(r){ return r !== hit; }) : L;
+  return (hit ? MyReqDetail(hit, d)
+             : want ? '<div class="notice-bad" id="my-nohit"><b>이 계정에서 그 접수번호를 찾지 못했어요.</b>'+
+                 '<p>로그인하기 전에 넣으신 신청이면 아래 \'로그인 전에 넣은 신청\' 에서 접수번호와 휴대폰 번호로 가져오실 수 있습니다.</p></div>' : '')+
+    myHd("MY REQUEST", hit ? "다른 신청" : "내가 넣은 신청",
     "접수번호로 물어보실 수 있습니다. 진행 상태가 바뀌면 여기에 그대로 보입니다.")+
-    (L.length ? MyReqList(L, d) : Empty({
+    (rest.length ? MyReqList(rest, d) : hit ? '' : Empty({
       icon:"doc", title:"아직 넣으신 신청이 없습니다",
       text:"필요한 일을 적어 보내시면 조건에 맞는 업체를 찾아 드립니다.",
       cta:'<a class="btn btn-b" href="'+esc(quoteTo({}))+'">'+
@@ -96,7 +110,9 @@ function MyCustBand(d){
 }
 
 function MyClaimBand(){
-  return '<details class="my-claim">'+
+
+  var cno = String(nowQS("claim") || "").replace(/[^A-Za-z0-9-]/g, "").slice(0, 20);
+  return '<details class="my-claim"'+(cno ? ' open id="my-claim"' : '')+'>'+
     '<summary><b>로그인 전에 넣은 신청이 있으세요?</b></summary>'+
     '<p class="my-claim-p">접수하실 때 받으신 <b>신청번호</b>와 그때 적어 '+
       '주신 <b>연락처</b>를 적으시면 이 계정으로 가져옵니다. '+
@@ -106,7 +122,7 @@ function MyClaimBand(){
         '<label for="my-cno">신청번호</label>'+
         '<input id="my-cno" type="text" name="no" required '+
           'autocomplete="off" inputmode="text" spellcheck="false" '+
-          'placeholder="SW-AB12-CD34">'+
+          'placeholder="SW-AB12-CD34"'+(cno ? ' value="'+esc(cno)+'"' : '')+'>'+
         '<span class="f-h">줄표와 띄어쓰기는 있어도 없어도 됩니다.</span>'+
       '</div>'+
       '<div class="f-r">'+
@@ -157,7 +173,10 @@ window.myClaim = function(ev){
     }
     if(note){ note.textContent = "가져왔습니다. 아래 목록에 들어왔습니다.";
               note.className = "my-in-n ok"; }
+
+    var got = String(no.value).trim().toUpperCase().replace(/\s/g, "");
     no.value = ""; tel.value = "";
+    try{ history.replaceState(history.state, "", "/my?no=" + encodeURIComponent(got)); }catch(e){}
 
     window.myLoadDb();
   }).catch(function(e){
@@ -543,9 +562,11 @@ function MyReqList(L, d){
     var cat = r.cat && typeof amCat === "function" ? amCat(r.cat) : null;
 
     var nq = d ? myqOf(d, r.id).length : 0;
+
+    var cv = amCustView(r.state, nq);
     return '<li class="myq"><div class="myq-h">'+
-        '<b class="myq-no">'+esc(r.no || "")+'</b>'+
-        '<span class="myq-st myq-'+esc(myStTone(cs))+'">'+esc(st)+'</span>'+
+        '<a class="myq-no" href="/my?no='+encodeURIComponent(r.no || "")+'">'+esc(r.no || "")+'</a>'+
+        '<span class="myq-st myq-'+esc(cv.tone)+'">'+esc(cv.name)+'</span>'+
       '</div>'+
       '<p class="myq-m">'+myCond(r, cat)+'</p>'+
 
@@ -588,12 +609,85 @@ function myqText(q){
     ? '<p class="myq-b"><b>적은 사람</b> 운영자가 업체에게 받아 적은 견적입니다 (업체가 직접 낸 것이 아닙니다)</p>' : '');
 }
 
+var MYQ_ASK = '<i class="myqc-ask">업체 확인 필요</i>';
+function myqSvcName(id){ var sv = (typeof amPickOne === "function") ? amPickOne(id) : null;
+  return sv ? amPickLabel(sv) : String(id || ""); }
+function myqCard(q, r, d){
+  var vatN = { add:"부가세 별도", incl:"부가세 포함", free:"면세" }[q.vat] || "";
+  var kindN = { est:"가견적", final:"확정 견적" }[q.kind] || "";
+  var siteN = { need:"실측 후 확정", done:"실측함", none:"실측 없이 산정" }[q.site] || "";
+  var its = (r && r.request_item) || [];
+  var row = function(k, v){ return '<div><dt>'+esc(k)+'</dt><dd>'+v+'</dd></div>'; };
+  var tx = function(v){ return v ? esc(String(v)) : ""; };
+
+  var amt = (q.amount != null) ? '<b class="myqc-amt">'+esc(won(q.amount))+'원</b>' : MYQ_ASK;
+  var amtSub = [vatN || "부가세 업체 확인 필요", kindN || "가견적 · 확정 업체 확인 필요"].map(esc).join(" · ");
+
+  var inc = [tx(q.scope), q.waste ? "폐기물 — "+tx(q.waste) : "", q.restore ? "원상복구 — "+tx(q.restore) : ""].filter(Boolean).join("<br>") || MYQ_ASK;
+  var cover = "";
+  if(its.length > 1){
+    if(q.items && q.items.length){
+      var outS = its.map(function(i){ return i.service_id; }).filter(function(x){ return q.items.indexOf(x) < 0; });
+      cover = '<p class="myqc-cov">적용 범위 '+esc(q.items.map(myqSvcName).join(" · "))+
+        (outS.length ? ' <span class="myqc-cov-x">— 이 견적에 없음: '+esc(outS.map(myqSvcName).join(" · "))+'</span>' : '')+'</p>';
+    }else cover = '<p class="myqc-cov">적용 범위 '+MYQ_ASK+'</p>';
+  }
+  var exc = [tx(q.excludes), q.extra ? "추가 비용 — "+tx(q.extra) : ""].filter(Boolean).join("<br>") || MYQ_ASK;
+  var when = [q.start_on ? esc(amDate(q.start_on))+" 시작 가능" : "", q.days ? esc(q.days)+"일 소요" : ""].filter(Boolean).join(" · ") || MYQ_ASK;
+  var revs = ((d && d.quoteRevs) || []).filter(function(v){ return v.quote_id === q.id && v.old_amount != null && v.old_amount !== v.new_amount; });
+  return '<dl class="myd-l myqc">'+
+      row("총액", amt+'<small class="myqc-sub">'+amtSub+'</small>')+
+      (q.buy_amount != null ? row("집기 매입", '<b>'+esc(won(q.buy_amount))+'원</b><small class="myqc-sub">공사비와 따로 — 업체가 사 가는 금액</small>') : "")+
+      row("포함 작업", inc+cover)+
+      row("제외 · 추가 비용", exc)+
+      row("가능 일정", when)+
+      row("실측", siteN ? esc(siteN) : MYQ_ASK)+
+    '</dl>'+
+    (revs.length ? '<div class="myqc-rev"><b>금액이 바뀌었습니다</b><ul>'+revs.map(function(v){
+      return '<li>'+esc(amDate(String(v.at).slice(0,10)))+' · '+esc(won(v.old_amount))+'원 → '+esc(won(v.new_amount))+'원'+
+        (v.why ? ' · '+esc(v.why) : ' · 사유 업체 확인 필요')+'</li>'; }).join("")+'</ul></div>' : "")+
+    ((q.warranty || q.note) ? '<p class="myq-b myqc-etc">'+(q.warranty ? '<b>A/S</b> '+tx(q.warranty)+' ' : '')+(q.note ? '<b>메모</b> '+tx(q.note) : '')+'</p>' : '')+
+    (q.src === "staff" ? '<p class="myq-b myqc-etc">운영자가 업체에게 받아 적은 견적입니다.</p>' : '');
+}
+
+function MyReqDetail(r, d){
+  var L = myqOf(d, r.id);
+  var cv = amCustView(r.state, L.length);
+  var its = r.request_item || [];
+  var svc = its.length ? its.map(function(i){ return myqSvcName(i.service_id); }).join(" · ")
+          : (r.cat && typeof amCat === "function" && amCat(r.cat) ? amCat(r.cat).name : "잘 모르겠어요 — 상담 후 정하기");
+
+  var reg = [((r.region && typeof amRegionName === "function") ? amRegionName(r.region) : "") || r.region || "", r.gu || ""].filter(Boolean).join(" ");
+  var per = "";
+  if(its.length > 1 && typeof amReqItemsView === "function"){
+    var v = amReqItemsView(r.state, its);
+    if(v.some(function(x){ return x.rec; }))
+      per = '<ul class="myrd-per">'+v.map(function(x){
+        var c2 = amCustView(x.state, L.length);
+        return '<li><span>'+esc(myqSvcName(x.service_id))+'</span><em class="myq-st myq-'+esc(c2.tone)+'">'+esc(c2.name)+'</em></li>'; }).join("")+'</ul>';
+  }
+  return '<section class="myrd" id="myrd" aria-labelledby="myrd-h">'+
+    '<p class="myrd-k">내 신청</p>'+
+    '<h2 id="myrd-h" tabindex="-1">'+esc(r.no || "")+'</h2>'+
+    '<dl class="myd-l myrd-l">'+
+      '<div><dt>현재 상태</dt><dd><em class="myq-st myq-'+esc(cv.tone)+'">'+esc(cv.name)+'</em></dd></div>'+
+      '<div><dt>신청한 서비스</dt><dd>'+esc(svc)+per+'</dd></div>'+
+      (reg ? '<div><dt>지역</dt><dd>'+esc(reg)+'</dd></div>' : '')+
+      '<div><dt>접수일</dt><dd>'+esc(amDate(String(r.created_at || "").slice(0, 10)))+'</dd></div>'+
+    '</dl>'+
+    (cv.next ? '<p class="myrd-next">'+esc(cv.next)+'</p>' : '')+
+    (L.length ? '<p class="myrd-go"><a class="btn btn-b btn-full" href="#myqt-'+esc(r.id)+'" onclick="return hhJump(\'myqt-'+esc(r.id)+'\')">'+
+       (L.length > 1 ? '견적 비교 '+L.length+'건' : '견적 보기')+icon("arrow",17)+'</a></p>' : '')+
+    MyQuoteCompare(d, r)+
+  '</section>';
+}
+
 function MyQuoteCompare(d, r){
   var L = myqOf(d, r.id);
   if(!L.length) return "";
   var got = L.filter(function(q){ return q.state === "chosen"; })[0];
   return '<div class="myqt" id="myqt-'+esc(r.id)+'">'+
-    '<p class="myqt-h">'+icon("doc",15)+'받은 견적 '+L.length+'건'+
+    '<p class="myqt-h">'+icon("doc",15)+(L.length > 1 ? '견적 비교 '+L.length+'건' : '견적 보기')+
       (got ? '' : ' <i>— 하나를 고르시면 업체에 전달됩니다</i>')+'</p>'+
     '<ul class="myqt-l">'+L.map(function(q){
       var pv = (q.provider && q.provider.name) || q.provider_id;
@@ -605,7 +699,7 @@ function MyQuoteCompare(d, r){
             esc((typeof amQuoteName === "function") ? amQuoteName(q.state) : q.state)+
           '</span>'+
         '</div>'+
-        myqSpecs(q)+myqText(q)+
+        myqCard(q, r, d)+
 
         (!got
           ? '<div class="row-cta"><button class="btn btn-b" type="button"'+

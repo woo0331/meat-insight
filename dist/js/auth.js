@@ -53,7 +53,8 @@ window.amAuthNext = function(){
 };
 
 window.amAuthKakao = function(path){
-  var p = path || window.amAuthNext() || window.location.pathname;
+
+  var p = path || window.amAuthNext() || (window.location.pathname + window.location.search);
   return fetch("/api/auth", { method:"POST", headers:{ "content-type":"application/json" },
     body: JSON.stringify({ op:"oauth", provider:"kakao", path:p }) })
     .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ return { ok:r.ok, d:d }; }); })

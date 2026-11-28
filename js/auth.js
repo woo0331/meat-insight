@@ -102,7 +102,8 @@ window.amAuthNext = function(){
    ⚠️ 처음이면 그 자리에서 가입되고, 같은 카카오 계정이면 같은 회원으로 돌아옵니다
    (Supabase 가 카카오 계정 id 로 묶습니다 — 저희가 따로 잇지 않습니다). */
 window.amAuthKakao = function(path){
-  var p = path || window.amAuthNext() || window.location.pathname;
+  /* 2026-11-28 — 질의문자까지 들고 돌아옵니다 (/my?claim=SW-… · /my?no=SW-… 가 로그인 뒤에도 그 자리) */
+  var p = path || window.amAuthNext() || (window.location.pathname + window.location.search);
   return fetch("/api/auth", { method:"POST", headers:{ "content-type":"application/json" },
     body: JSON.stringify({ op:"oauth", provider:"kakao", path:p }) })
     .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ return { ok:r.ok, d:d }; }); })

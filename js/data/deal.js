@@ -493,3 +493,40 @@ window.amReqTally = function(reqState, items){
   t.phase = t.total === 0 ? "none" : t.open > 0 ? "open" : t.hold > 0 ? "hold" : t.done > 0 ? "done" : "lost";
   return t;
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   고객에게 보이는 상태 — 2026-11-28 대표 지시 (견적 신청 완료 → 내 기록 → 견적 확인)
+
+   서버 상태(AM_DEAL_ST 열셋)를 고객 말 여섯 갈래로 묶습니다. **새 상태가 아닙니다.**
+
+     new                         → 접수됨
+     check                       → 내용 확인 중
+     assigned · accepted · consult → 업체 답변 대기
+     quoted · nego               → 견적 도착   ⚠️ **볼 수 있는 견적이 있을 때만** — 없으면 '업체 답변 대기'
+     signed · done · fee_*       → 계약 완료   (done 은 '작업 완료')
+     hold                        → 잠시 멈춤
+     lost                        → 종료
+
+   ⚠️⚠️ 관리자 상태값만 'quoted' 로 바뀌고 고객에게 공개된 견적이 없으면 '견적 도착' 이라 하지 않습니다.
+   ⚠️ 수수료 · 정산(fee_*)은 고객에게 안 보입니다 — 계약 완료로 접습니다.
+   ⚠️ 모르는 값(옛 상태 · 이력 일부 없음)은 '접수됨' 으로 두지 않고 그 이름을 그대로 냅니다. */
+window.AM_CUST_VIEW = {
+  new:      { name:"접수됨",         tone:"on",   next:"운영자가 신청 내용을 확인하고 있습니다." },
+  check:    { name:"내용 확인 중",   tone:"on",   next:"적어 주신 내용을 확인한 뒤 조건에 맞는 업체를 찾습니다." },
+  wait:     { name:"업체 답변 대기", tone:"on",   next:"업체가 내용을 보고 견적을 준비하면 여기에 나옵니다." },
+  quote:    { name:"견적 도착",     tone:"warn", next:"받은 견적을 확인하고 고르실 수 있습니다." },
+  signed:   { name:"계약 완료",     tone:"ok",   next:"계약이 체결되었습니다. 일정은 업체와 직접 맞추십니다." },
+  done:     { name:"작업 완료",     tone:"ok",   next:"작업이 끝났습니다." },
+  hold:     { name:"잠시 멈춤",     tone:"warn", next:"진행을 잠시 멈췄습니다. 다시 시작하시려면 문의해 주세요." },
+  lost:     { name:"종료",          tone:"gray", next:"이 신청은 종료되었습니다." }
+};
+window.amCustView = function(state, visibleQuotes){
+  var k = String(state || "");
+  var g = { new:"new", check:"check", assigned:"wait", accepted:"wait", consult:"wait",
+            quoted:"quote", nego:"quote", signed:"signed", done:"done", fee_wait:"done", fee_done:"done",
+            hold:"hold", lost:"lost" }[k];
+  if(g === "quote" && !(visibleQuotes > 0)) g = "wait";
+  if(!g){ return { key:k, name:(typeof amDealStName === "function" ? amDealStName(k) : k) || "확인 중", tone:"gray", next:"" }; }
+  var v = window.AM_CUST_VIEW[g];
+  return { key:g, name:v.name, tone:v.tone, next:v.next };
+};

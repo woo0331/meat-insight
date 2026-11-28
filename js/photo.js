@@ -200,6 +200,17 @@ function amPhPaint(w){
     go.hidden = !n || st.busy;
     go.lastChild.textContent = failN ? " 실패한 사진 " + n + "장 다시 올리기" : " 남은 사진 " + n + "장 올리기";
   }
+  /* 2026-11-28 — 제출 뒤 한 줄 요약 (서버 · 저장소가 받아 준 것만 '저장됐어요'). 접수 성공과 따로 말합니다. */
+  var sum = w.querySelector("[data-ph-sum]");
+  if(sum && st.no){
+    var okN = st.items.filter(function(o){ return o.ok; }).length, pend = failN + waitN;
+    sum.textContent = st.busy ? "사진을 올리고 있어요…"
+      : (okN && !pend) ? "사진 " + okN + "장이 저장됐어요."
+      : (okN && pend) ? "사진 " + okN + "장이 저장됐어요. " + pend + "장은 다시 올릴 수 있어요."
+      : pend ? "사진을 저장하지 못했어요. " + pend + "장을 다시 올릴 수 있어요. 신청은 접수됐습니다."
+      : "";
+    sum.className = "phup-sum" + ((!st.busy && pend) ? " is-fail" : "");
+  }
 }
 
 /* ── 제출이 성공한 뒤 — 고르신 사진을 그 접수번호로 올립니다 ───────────
@@ -214,6 +225,10 @@ window.amPhotoSubmit = function(form, box, no, tel){
   w.classList.add("phup-done");
   var h = w.querySelector(".phup-h");
   if(h) h.innerHTML = '<b>사진</b> <span class="phup-cnt" data-ph-cnt></span>';
+  if(!w.querySelector("[data-ph-sum]") && h){
+    var sm = document.createElement("p"); sm.setAttribute("data-ph-sum", ""); sm.setAttribute("role", "status");
+    h.parentNode.insertBefore(sm, h.nextSibling);
+  }
   [].forEach.call(w.querySelectorAll(".phup-bs, .phup-sub, .phup-note, input[data-ph-in]"), function(e){ e.remove(); });
   if(!no){
     st.items.forEach(function(o){ if(!o.bad) o.bad = "접수번호가 없어 저장하지 못했습니다"; });

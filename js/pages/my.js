@@ -63,12 +63,21 @@ window.myLoadDb = function(){
   /* 먼저 로그인 상태를 확인합니다 — 매직링크로 돌아온 해시를 받아
      치우는 일도 거기서 합니다 (`amAuthAsk`). */
   var pre = (typeof amAuthAsk === "function") ? amAuthAsk() : Promise.resolve(null);
+  /* 2026-11-28 — 조회 중과 오류를 '신청 0건' 으로 읽지 않습니다. 로그인이 켜진 경우에만 짧게 말합니다. */
+  var on = function(){ return !!(window.amAuthNow && amAuthNow().on); };
+  var fail = function(){
+    if(!on()) return;
+    box.innerHTML = '<div class="w"><div class="my-err" role="alert"><p>내 신청을 불러오지 못했습니다.</p>'+
+      '<button class="btn btn-o" type="button" onclick="myLoadDb()">다시 시도</button></div></div>';
+    box.hidden = false;
+  };
   pre.then(function(){
     hd = (typeof amAuthHeaders === "function") ? amAuthHeaders() : {};
+    if(on() && box.hidden){ box.innerHTML = '<div class="w"><p class="my-wait" role="status">불러오는 중…</p></div>'; box.hidden = false; }
     return fetch("/api/me", { headers: Object.assign(
       { "accept":"application/json" }, hd) });
   })
-    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(r){ if(!r.ok){ fail(); return null; } return r.json(); })
     .then(function(d){
       /* ⚠️ 설정은 됐는데 아직 로그인 안 하셨으면 **로그인 칸**을 냅니다.
          설정 자체가 꺼져 있으면(`auth:false`) 구간째 없습니다 —
@@ -86,14 +95,15 @@ window.myLoadDb = function(){
         }
         return;
       }
-      if(!d || !d.auth || !d.signedIn) return;
+      if(d === null) return;   /* 오류 — fail() 이 그린 '다시 시도' 를 지우지 않습니다 */
+      if(!d.auth || !d.signedIn){ box.innerHTML = ""; box.hidden = true; return; }
       /* ⚠️⚠️ **역할은 서버가 토큰으로 읽어 온 값**입니다 (`api/_auth.js`).
          화면이 고르는 것이 아니고, 여기서 고른다고 보이는 줄이 늘지도
          않습니다 — 무엇이 오는지는 RLS 와 `api/me.js` 의 칸 목록이
          정합니다. 여기서 하는 일은 **온 것을 어떻게 보여 줄지**까지입니다. */
       myDbPaint(d);
     })
-    .catch(function(e){ console.warn("[my] 신청 내역을 못 불러왔습니다 — " + e); });
+    .catch(function(e){ console.warn("[my] 신청 내역을 못 불러왔습니다 — " + e); fail(); });
 };
 
 /* ⚠️⚠️ **그린 것을 다시 그릴 수 있어야 합니다.** 견적을 내고 · 거두고 ·
@@ -119,10 +129,11 @@ function myDbPaint(d){
   /* ⚠️ 나가는 길을 반드시 같이 냅니다 — 가게 컴퓨터는 여러 사람이
      씁니다. 들어올 길만 만들면 앞사람 계정이 그대로 남습니다. */
   box.innerHTML = '<div class="w">' + inner +
+    (role === "customer" ? '' :
     '<p class="my-out">' + esc(d.name || "") +
       (d.name ? " · " : "") +
-      '<button class="btn btn-o" type="button" onclick="mySignOut()">나가기</button>' +
-    '</p></div>';
+      '<button class="btn btn-o" type="button" onclick="mySignOut()">로그아웃</button>' +
+    '</p>') + '</div>';
   box.hidden = false;
   if(typeof window.myPhInit === "function") window.myPhInit();
   /* 2026-11-28 — '내 신청 보기'(?no=) 로 오셨으면 그 신청 상세로 데려가고 제목에 초점 */
@@ -142,14 +153,10 @@ function myDbPaint(d){
    **그대로**입니다 — 지우면 관리자가 못 들어옵니다. 견적 알림 메일과
    신청서의 이메일 칸도 그대로입니다. */
 function MySignInBand(){
-  return myHd("MY", "로그인하고 신청 내역 보기",
-    "카카오 계정 하나로 시작합니다. 비밀번호는 없습니다.")+
-    '<div class="my-kk">'+
+  /* 2026-11-28 — 카카오로 시작하기 + 한 줄. 로그인 뒤에는 지금 주소(?no= · ?claim= 포함)로 돌아옵니다 (amAuthKakao). */
+  return '<div class="my-kk">'+
       '<button class="btn btn-lg my-kakao" type="button" onclick="myKakao()">'+icon("chat",18)+' 카카오로 시작하기</button>'+
-      /* 2026-11-26 — 처음이면 가입, 회원이면 로그인 (짧게) */
-      '<ul class="my-kk-l"><li><b>처음이세요?</b> 누르면 바로 가입됩니다.</li>'+
-        '<li><b>이미 회원이세요?</b> 같은 카카오 계정으로 로그인됩니다.</li></ul>'+
-      '<p class="f-h">서비스 찾기 · 가이드 · 견적 신청은 로그인 없이도 쓰실 수 있습니다.</p>'+
+      '<p class="f-h">견적 신청은 로그인 없이도 됩니다. 로그인하면 내 신청과 받은 견적을 볼 수 있습니다.</p>'+
       '<p class="my-in-n" id="my-kk-n" role="status"></p>'+
     '</div>';
 }
@@ -167,25 +174,49 @@ function myHd(k, h, p){
 
 /* ── 고객 (§11-1) ───────────────────────────────────────────────── */
 function MyCustBand(d){
-  var L = d.requests || [];
-  /* 2026-11-28 — 완료 화면의 '내 신청 보기'(?no=) 로 오셨으면 **그 신청을 맨 위에** 엽니다.
+  /* 최신순 (서버 차례를 믿지 않고 접수일로 한 번 더) */
+  var L = (d.requests || []).slice().sort(function(a, b){ return String(b.created_at || "").localeCompare(String(a.created_at || "")); });
+  /* 완료 화면의 '내 신청 보기'(?no=) 로 오셨으면 **그 신청을 맨 위에** 엽니다.
      ⚠️ 이 계정의 신청 목록(서버 · RLS 가 정한 것) 안에서만 찾습니다 — 번호만으로 남의 신청을 열지 않습니다. */
   var nk = function(x){ return String(x || "").toUpperCase().replace(/[^A-Z0-9]/g, ""); };
   var want = nk(nowQS("no"));
   var hit = want ? L.filter(function(r){ return nk(r.no) === want; })[0] : null;
-  var rest = hit ? L.filter(function(r){ return r !== hit; }) : L;
-  return (hit ? MyReqDetail(hit, d)
-             : want ? '<div class="notice-bad" id="my-nohit"><b>이 계정에서 그 접수번호를 찾지 못했어요.</b>'+
-                 '<p>로그인하기 전에 넣으신 신청이면 아래 \'로그인 전에 넣은 신청\' 에서 접수번호와 휴대폰 번호로 가져오실 수 있습니다.</p></div>' : '')+
-    myHd("MY REQUEST", hit ? "다른 신청" : "내가 넣은 신청",
-    "접수번호로 물어보실 수 있습니다. 진행 상태가 바뀌면 여기에 그대로 보입니다.")+
-    (rest.length ? MyReqList(rest, d) : hit ? '' : Empty({
-      icon:"doc", title:"아직 넣으신 신청이 없습니다",
-      text:"필요한 일을 적어 보내시면 조건에 맞는 업체를 찾아 드립니다.",
-      cta:'<a class="btn btn-b" href="'+esc(quoteTo({}))+'">'+
-          '서비스 신청하기'+icon("arrow",17)+'</a>'
-    }))+
+  return MyMeCard(d)+
+    (hit ? MyReqDetail(hit, d)
+         : want ? '<div class="notice-bad" id="my-nohit"><b>이 계정에서 그 접수번호를 찾지 못했어요.</b>'+
+             '<p>로그인하기 전에 넣으신 신청이면 아래 \'이전 신청 가져오기\' 로 가져오실 수 있습니다.</p></div>' : '')+
+    /* ⚠️⚠️ 신청이 0건이면 '내 신청' 구역째 없습니다 — 빈 카드 · 신청 권유를 깔지 않습니다 */
+    (L.length ? '<div class="my-reqs"><h2 class="my-sh">내 신청</h2>'+MyReqRows(L, d, hit)+'</div>' : '')+
     MyClaimBand();
+}
+/* 내 정보 — 계정에 저장된 표시 이름(카카오 닉네임)만. 없는 칸을 빈칸으로 만들지 않습니다.
+   ⚠️ 연락처는 계정 정보로 오지 않아 내지 않습니다(신청서의 번호를 계정 연락처처럼 쓰지 않습니다). */
+function MyMeCard(d){
+  var nm = String(d.name || "").trim();
+  return '<div class="my-me"><h2 class="my-sh">내 정보</h2>'+
+    '<div class="my-me-r">'+icon("user",18)+
+      '<span class="my-me-n">'+(nm ? esc(nm) : '카카오 계정으로 로그인됨')+'</span>'+
+      '<button class="my-out-b" type="button" onclick="mySignOut()">로그아웃</button>'+
+    '</div></div>';
+}
+/* 내 신청 목록 — 서비스명 · 신청일 · 진행 상태. 접수번호 · 사진 · 견적은 상세에서.
+   ⚠️ '견적 보기' 는 이 고객이 볼 수 있는 견적이 실제로 있을 때만 */
+function MyReqRows(L, d, hit){
+  return '<ul class="my-rows">'+L.map(function(r){
+    var nq = myqOf(d, r.id).length;
+    var cv = amCustView(r.state, nq);
+    var its = r.request_item || [];
+    var svc = its.length ? its.map(function(i){ return myqSvcName(i.service_id); }).join(" · ")
+            : (r.cat && typeof amCat === "function" && amCat(r.cat) ? amCat(r.cat).name : "상담 후 정하기");
+    var href = "/my?no=" + encodeURIComponent(r.no || "");
+    return '<li class="my-row'+(r === hit ? " is-on" : "")+'">'+
+      '<a class="my-row-a" href="'+esc(href)+'">'+
+        '<span class="my-row-s">'+esc(svc)+'</span>'+
+        '<span class="my-row-d">'+esc(amDate(String(r.created_at || "").slice(0, 10)))+'</span>'+
+        '<em class="myq-st myq-'+esc(cv.tone)+'">'+esc(cv.name)+'</em>'+
+      '</a>'+
+      (nq ? '<a class="my-row-q" href="'+esc(href)+'">'+icon("doc",14)+' 견적 보기</a>' : '')+
+    '</li>'; }).join("")+'</ul>';
 }
 
 /* ── 로그인 전에 넣은 신청을 내 것으로 (2026-10-22 P1 ⑩ · §10) ──
@@ -212,10 +243,8 @@ function MyClaimBand(){
      ⚠️ 휴대폰 번호는 채우지 않습니다 — 둘 다 맞아야 열리는 것이 본인 확인입니다. */
   var cno = String(nowQS("claim") || "").replace(/[^A-Za-z0-9-]/g, "").slice(0, 20);
   return '<details class="my-claim"'+(cno ? ' open id="my-claim"' : '')+'>'+
-    '<summary><b>로그인 전에 넣은 신청이 있으세요?</b></summary>'+
-    '<p class="my-claim-p">접수하실 때 받으신 <b>신청번호</b>와 그때 적어 '+
-      '주신 <b>연락처</b>를 적으시면 이 계정으로 가져옵니다. '+
-      '⚠️ 둘이 다 맞아야 합니다 — 번호만으로는 남의 신청이 열리면 안 되니까요.</p>'+
+    '<summary>이전 신청 가져오기</summary>'+
+    '<p class="my-claim-p">로그인 없이 넣으신 신청의 <b>접수번호</b>와 그때 적은 <b>휴대폰 번호</b>가 둘이 다 맞아야 이 계정으로 가져옵니다.</p>'+
     '<form class="my-in" onsubmit="return myClaim(event)">'+
       '<div class="f-r">'+
         '<label for="my-cno">신청번호</label>'+
@@ -888,6 +917,9 @@ function MyReqDetail(r, d){
       '<div><dt>현재 상태</dt><dd><em class="myq-st myq-'+esc(cv.tone)+'">'+esc(cv.name)+'</em></dd></div>'+
       '<div><dt>신청한 서비스</dt><dd>'+esc(svc)+per+'</dd></div>'+
       (reg ? '<div><dt>지역</dt><dd>'+esc(reg)+'</dd></div>' : '')+
+      /* ⚠️⚠️ 업체 상호는 **배정된 뒤에만** (제17조 제2항) — 서버가 배정된 줄만 줍니다 */
+      (function(){ var pv = (r.assignment || []).map(function(a){ return a && a.provider && a.provider.name; }).filter(Boolean);
+        return pv.length ? '<div><dt>배정된 업체</dt><dd class="myq-pv">'+esc(pv.join(" · "))+'</dd></div>' : ''; })()+
       '<div><dt>접수일</dt><dd>'+esc(amDate(String(r.created_at || "").slice(0, 10)))+'</dd></div>'+
     '</dl>'+
     (cv.next ? '<p class="myrd-next">'+esc(cv.next)+'</p>' : '')+
@@ -1226,34 +1258,32 @@ function myqCall(fn, args, say){
   });
 }
 
+/* ════════════════════════════════════════════════════════════════════
+   2026-11-28 대표 지시 — 고객 '내 계정' 화면 간소화
+   기본 화면에 두는 것: 내 정보(계정의 표시 이름) · 로그아웃 · 내 신청(있을 때만).
+   ⚠️⚠️ 빼기만 했습니다 — 브라우저 준비 기록(am.profile.v1) · 받은 제안(am.quotes.v1) ·
+   저장한 업체(am.saved.v1) · 도구 숫자는 **지우지 않았고**, 그 함수도 그대로입니다
+   (MyBrowserRecords · MySaved · MyTools · myClear). 다른 화면(업체 저장 단추 · /quote 비교 ·
+   /tools)은 지금처럼 씁니다. 되살리려면 PageMy 끝에 MyBrowserRecords() 한 줄입니다.
+   ⚠️ 업체 · 직원 · 관리자는 같은 주소에서 역할별 구간이 그대로 섭니다(myDbPaint).
+   ⚠️ 상품 올리기(판매자 직접 진입)는 /my?v=product 그대로입니다 — 기본 화면에 단추만 뺐습니다.
+   ════════════════════════════════════════════════════════════════════ */
 function PageMy(){
   if(nowQS("v") === "product") return PageMyProduct();
+  /* 예전 준비 기록 · 저장한 업체 · 도구 · 받은 제안 · 지우기 — 기본 화면에서 뺐고, 직접 주소로만 엽니다(링크 없음) */
+  if(nowQS("v") === "records") return PgHero({ kicker:"MY", h1raw:"이 브라우저의 기록", tight:true })+MyBrowserRecords();
+  return PgHero({ kicker:"MY", h1raw:"내 계정", tight:true })+
+    MyDbBand()+
+    /* 비회원 본인 확인 조회 — **열려 있을 때만** 섭니다 (닫힘 안내를 기본 화면에 깔지 않습니다) */
+    MyLookupBand();
+}
+/* 예전 기본 화면의 '이 브라우저에 저장한 준비 기록' — 지금은 부르지 않습니다(위). 데이터는 그대로 남습니다. */
+function MyBrowserRecords(){
   var p = amGet(MKEY, { side:"", industry:"", region:"", gu:"", pyeong:"", dday:"" });
   var qs = amGet("am.quotes.v1", []);
   var ind = p.industry ? amIndustry(p.industry) : null;
-
-  return PgHero({
-    kicker:"MY",
-    h1raw: p.side === "close" ? "내 폐업" : (p.side === "start" ? "내 창업" : "지금 어느 쪽이세요?"),
-    lead:"신청 내역(본인 확인 후 조회)과 이 브라우저에만 저장한 준비 기록을 나눠서 보여 드립니다.",
-    tight:true
-  })+
-  /* W03 — 두 영역을 **갈라서** 냅니다. 위: 서버에 저장된 내 신청 (본인 확인 후) ·
-     아래: 이 브라우저에만 남는 준비 기록 (서버로 안 보냄). */
-  MyLookupBand()+
-  /* ⚠️⚠️ §11-1 — 로그인이 설정되면 **여기에 신청 내역이
-     섭니다.** 지금은 `/api/session` 이 `auth:false` 라 구간이 빈 채로
-     숨어 있고 화면에는 아무것도 안 보입니다 — "로그인" 단추도
-     "준비 중" 자리표시도 만들지 않습니다 (§30-7 · 절대 규칙 2 · 5).
-     ⚠️ 위의 상황 · 업종 칸은 **이 브라우저 안**에만 남는 것이고,
-     이 구간은 **서버에 저장된 신청**입니다 — 둘은 다릅니다. */
-  MyDbBand()+
-  /* 2026-11-27 — 상품 올리기로 가는 길 (로그인한 회원 · 운영자 확인 뒤 공개) */
-  '<section class="sec sec-white my-pd-go"><div class="w"><p><a class="btn btn-o" href="/my?v=product">'+icon("box",17)+' 상품 올리기 · 내 상품 보기</a></p></div></section>'+
-  '<section class="sec sec-white"><div class="w">'+
-    '<div class="my-area-hd"><h2>이 브라우저에 저장한 준비 기록</h2>'+
-      '<p>아래 기록은 <b>이 브라우저에만</b> 남고 서버로 보내지 않습니다. 신청서에 저절로 붙지도 않습니다. '+
-      '다른 기기에서는 보이지 않습니다.</p></div>'+
+  return '<section class="sec sec-white"><div class="w">'+
+    '<div class="my-area-hd"><h2>이 브라우저에 저장한 준비 기록</h2></div>'+
     '<div class="my-set">'+
       '<div class="f-r"><label for="my-side">상황</label>'+
         '<select class="sel" id="my-side" onchange="myPut()">'+
@@ -1261,55 +1291,15 @@ function PageMy(){
           '<option value="start"'+(p.side==="start"?" selected":"")+'>창업 준비중</option>'+
           '<option value="close"'+(p.side==="close"?" selected":"")+'>폐업 준비중</option>'+
         '</select></div>'+
-      '<div class="f-r"><label for="my-ind">업종</label>'+
-        IndustrySelect("my-ind", p.industry, "myPut()")+'</div>'+
-      '<div class="f-r"><label for="my-reg">지역</label>'+
-        RegionSelect("my-reg", p.region, "myPut()")+'</div>'+
+      '<div class="f-r"><label for="my-ind">업종</label>'+IndustrySelect("my-ind", p.industry, "myPut()")+'</div>'+
+      '<div class="f-r"><label for="my-reg">지역</label>'+RegionSelect("my-reg", p.region, "myPut()")+'</div>'+
       '<div class="f-r"><label for="my-py">평수</label>'+
-        '<input id="my-py" inputmode="numeric" value="'+esc(p.pyeong||"")+'" '+
-        'onchange="myPut()" placeholder="예: 30"></div>'+
+        '<input id="my-py" inputmode="numeric" value="'+esc(p.pyeong||"")+'" onchange="myPut()" placeholder="예: 30"></div>'+
     '</div>'+
-
-    (p.side && ind
-      ? '<div class="my-next"><h2>'+esc(ind.name)+' '+
-          (p.side==="close"?"정리":"창업")+'에 필요한 것</h2>'+
-          '<div class="cat-g cat-g4">'+
-            amCatsFor(p.industry, p.side==="close"?"close":"start").slice(0,8)
-              .map(function(c){ return CatCard(c, p.industry); }).join("")+
-          '</div>'+
-          '<div class="row-cta">'+
-            '<a class="btn btn-b" href="'+esc(p.side==="close"?("/closure/"+p.industry):("/startup/"+p.industry))+'">'+
-              '전부 보기'+icon("arrow",16)+'</a>'+
-            '<a class="btn btn-o" href="'+esc(quoteTo({industry:p.industry,region:p.region,side:p.side}))+'">'+
-              '견적 요청</a>'+
-          '</div></div>'
-      : Empty({
-          icon:"user",
-          title:"상황과 업종을 고르시면",
-          text:"그 업종에 실제로 필요한 것만 여기 모아 드립니다.",
-          cta:'<a class="btn btn-b" href="/startup">창업 시작하기'+icon("arrow",16)+'</a>'+
-              '<a class="btn btn-o" href="/closure">폐업 시작하기</a>'
-        }))+
-
-    MySaved()+
-
-    MyTools()+
-
-    '<div class="my-next"><h2>받은 제안</h2>'+
-      (qs.length
-        ? '<p class="lead">'+qs.length+'건을 적어 두셨습니다.</p>'+
-          '<div class="row-cta"><a class="btn btn-o" href="/quote">비교 화면으로</a></div>'
-        /* ⚠️ 문장 한가운데 링크를 박지 않습니다 — 높이가 16px 이라
-           누르기 어렵습니다. 문단 끝에 버튼으로 냅니다 (바로 위
-           칸과 같은 꼴입니다). */
-        : '<p class="lead">아직 적어 두신 제안이 없습니다. 견적을 받으시면 '+
-          '나란히 놓고 보실 수 있습니다.</p>'+
-          '<div class="row-cta"><a class="btn btn-o" href="/quote">'+
-            '제안 비교 화면 열기</a></div>')+
-    '</div>'+
-
-    '<div class="row-cta"><button class="btn btn-o" type="button" onclick="myClear()">'+
-      '내 기록 전부 지우기</button></div>'+
+    (p.side && ind ? '<p class="lead">'+esc(ind.name)+'</p>' : '')+
+    MySaved()+MyTools()+
+    (qs.length ? '<p class="lead">받은 제안 '+qs.length+'건</p>' : '')+
+    '<div class="row-cta"><button class="btn btn-o" type="button" onclick="myClear()">내 기록 전부 지우기</button></div>'+
   '</div></section>';
 }
 
@@ -1423,7 +1413,7 @@ var LK_TOK = "am.lookup.v1";
 var LK_PHASE = { open:"진행 중", hold:"보류", done:"완료", lost:"종료", none:"확인 중" };
 
 function MyLookupBand(){
-  return '<section class="sec sec-white my-lk" aria-labelledby="my-lk-h"><div class="w">'+
+  return '<section class="sec sec-white my-lk" id="my-lk-sec" aria-labelledby="my-lk-h" hidden><div class="w">'+
     '<div class="my-area-hd"><h2 id="my-lk-h">본인 확인 후 조회하는 신청 내역</h2>'+
       '<p>접수번호와 전화번호를 적으시면 그 번호로 인증번호를 보내 드리고, 인증번호까지 맞으면 '+
       '진행 상태를 보여 드립니다. 접수번호와 전화번호만으로는 열리지 않습니다.</p></div>'+
@@ -1557,7 +1547,10 @@ window.myLkReset = function(end){
 window.myLkInit = function(){
   if(typeof window.amAuthAsk !== "function") return;
   window.amAuthAsk().then(function(a){
-    if(!a || !a.lookup){ myLkDraw(); return; }
+    /* 2026-11-28 — 열리지 않았거나 로그인한 고객이면 구역째 숨깁니다 (닫힘 안내를 기본 화면에 깔지 않습니다) */
+    var sec = document.getElementById("my-lk-sec");
+    if(!a || !a.lookup || a.signedIn){ if(sec) sec.hidden = true; myLkDraw(); return; }
+    if(sec) sec.hidden = false;
     var saved = null;
     try{ saved = JSON.parse(sessionStorage.getItem(LK_TOK) || "null"); }catch(_){}
     if(saved && saved.t && saved.until > Date.now()){ myLkDraw(); myLkRead(saved.t); }

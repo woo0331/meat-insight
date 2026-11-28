@@ -12,12 +12,21 @@ window.myLoadDb = function(){
   var hd = (typeof amAuthHeaders === "function") ? amAuthHeaders() : {};
 
   var pre = (typeof amAuthAsk === "function") ? amAuthAsk() : Promise.resolve(null);
+
+  var on = function(){ return !!(window.amAuthNow && amAuthNow().on); };
+  var fail = function(){
+    if(!on()) return;
+    box.innerHTML = '<div class="w"><div class="my-err" role="alert"><p>내 신청을 불러오지 못했습니다.</p>'+
+      '<button class="btn btn-o" type="button" onclick="myLoadDb()">다시 시도</button></div></div>';
+    box.hidden = false;
+  };
   pre.then(function(){
     hd = (typeof amAuthHeaders === "function") ? amAuthHeaders() : {};
+    if(on() && box.hidden){ box.innerHTML = '<div class="w"><p class="my-wait" role="status">불러오는 중…</p></div>'; box.hidden = false; }
     return fetch("/api/me", { headers: Object.assign(
       { "accept":"application/json" }, hd) });
   })
-    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(r){ if(!r.ok){ fail(); return null; } return r.json(); })
     .then(function(d){
 
       if(d && d.auth && !d.signedIn){
@@ -32,11 +41,12 @@ window.myLoadDb = function(){
         }
         return;
       }
-      if(!d || !d.auth || !d.signedIn) return;
+      if(d === null) return;
+      if(!d.auth || !d.signedIn){ box.innerHTML = ""; box.hidden = true; return; }
 
       myDbPaint(d);
     })
-    .catch(function(e){ console.warn("[my] 신청 내역을 못 불러왔습니다 — " + e); });
+    .catch(function(e){ console.warn("[my] 신청 내역을 못 불러왔습니다 — " + e); fail(); });
 };
 
 var MYQ = { d:null, open:"", draft:{}, busy:false };
@@ -52,10 +62,11 @@ function myDbPaint(d){
             : MyCustBand(d);
 
   box.innerHTML = '<div class="w">' + inner +
+    (role === "customer" ? '' :
     '<p class="my-out">' + esc(d.name || "") +
       (d.name ? " · " : "") +
-      '<button class="btn btn-o" type="button" onclick="mySignOut()">나가기</button>' +
-    '</p></div>';
+      '<button class="btn btn-o" type="button" onclick="mySignOut()">로그아웃</button>' +
+    '</p>') + '</div>';
   box.hidden = false;
   if(typeof window.myPhInit === "function") window.myPhInit();
 
@@ -67,14 +78,10 @@ function myDbPaint(d){
 }
 
 function MySignInBand(){
-  return myHd("MY", "로그인하고 신청 내역 보기",
-    "카카오 계정 하나로 시작합니다. 비밀번호는 없습니다.")+
-    '<div class="my-kk">'+
-      '<button class="btn btn-lg my-kakao" type="button" onclick="myKakao()">'+icon("chat",18)+' 카카오로 시작하기</button>'+
 
-      '<ul class="my-kk-l"><li><b>처음이세요?</b> 누르면 바로 가입됩니다.</li>'+
-        '<li><b>이미 회원이세요?</b> 같은 카카오 계정으로 로그인됩니다.</li></ul>'+
-      '<p class="f-h">서비스 찾기 · 가이드 · 견적 신청은 로그인 없이도 쓰실 수 있습니다.</p>'+
+  return '<div class="my-kk">'+
+      '<button class="btn btn-lg my-kakao" type="button" onclick="myKakao()">'+icon("chat",18)+' 카카오로 시작하기</button>'+
+      '<p class="f-h">견적 신청은 로그인 없이도 됩니다. 로그인하면 내 신청과 받은 견적을 볼 수 있습니다.</p>'+
       '<p class="my-in-n" id="my-kk-n" role="status"></p>'+
     '</div>';
 }
@@ -90,34 +97,54 @@ function myHd(k, h, p){
 }
 
 function MyCustBand(d){
-  var L = d.requests || [];
+
+  var L = (d.requests || []).slice().sort(function(a, b){ return String(b.created_at || "").localeCompare(String(a.created_at || "")); });
 
   var nk = function(x){ return String(x || "").toUpperCase().replace(/[^A-Z0-9]/g, ""); };
   var want = nk(nowQS("no"));
   var hit = want ? L.filter(function(r){ return nk(r.no) === want; })[0] : null;
-  var rest = hit ? L.filter(function(r){ return r !== hit; }) : L;
-  return (hit ? MyReqDetail(hit, d)
-             : want ? '<div class="notice-bad" id="my-nohit"><b>이 계정에서 그 접수번호를 찾지 못했어요.</b>'+
-                 '<p>로그인하기 전에 넣으신 신청이면 아래 \'로그인 전에 넣은 신청\' 에서 접수번호와 휴대폰 번호로 가져오실 수 있습니다.</p></div>' : '')+
-    myHd("MY REQUEST", hit ? "다른 신청" : "내가 넣은 신청",
-    "접수번호로 물어보실 수 있습니다. 진행 상태가 바뀌면 여기에 그대로 보입니다.")+
-    (rest.length ? MyReqList(rest, d) : hit ? '' : Empty({
-      icon:"doc", title:"아직 넣으신 신청이 없습니다",
-      text:"필요한 일을 적어 보내시면 조건에 맞는 업체를 찾아 드립니다.",
-      cta:'<a class="btn btn-b" href="'+esc(quoteTo({}))+'">'+
-          '서비스 신청하기'+icon("arrow",17)+'</a>'
-    }))+
+  return MyMeCard(d)+
+    (hit ? MyReqDetail(hit, d)
+         : want ? '<div class="notice-bad" id="my-nohit"><b>이 계정에서 그 접수번호를 찾지 못했어요.</b>'+
+             '<p>로그인하기 전에 넣으신 신청이면 아래 \'이전 신청 가져오기\' 로 가져오실 수 있습니다.</p></div>' : '')+
+
+    (L.length ? '<div class="my-reqs"><h2 class="my-sh">내 신청</h2>'+MyReqRows(L, d, hit)+'</div>' : '')+
     MyClaimBand();
+}
+
+function MyMeCard(d){
+  var nm = String(d.name || "").trim();
+  return '<div class="my-me"><h2 class="my-sh">내 정보</h2>'+
+    '<div class="my-me-r">'+icon("user",18)+
+      '<span class="my-me-n">'+(nm ? esc(nm) : '카카오 계정으로 로그인됨')+'</span>'+
+      '<button class="my-out-b" type="button" onclick="mySignOut()">로그아웃</button>'+
+    '</div></div>';
+}
+
+function MyReqRows(L, d, hit){
+  return '<ul class="my-rows">'+L.map(function(r){
+    var nq = myqOf(d, r.id).length;
+    var cv = amCustView(r.state, nq);
+    var its = r.request_item || [];
+    var svc = its.length ? its.map(function(i){ return myqSvcName(i.service_id); }).join(" · ")
+            : (r.cat && typeof amCat === "function" && amCat(r.cat) ? amCat(r.cat).name : "상담 후 정하기");
+    var href = "/my?no=" + encodeURIComponent(r.no || "");
+    return '<li class="my-row'+(r === hit ? " is-on" : "")+'">'+
+      '<a class="my-row-a" href="'+esc(href)+'">'+
+        '<span class="my-row-s">'+esc(svc)+'</span>'+
+        '<span class="my-row-d">'+esc(amDate(String(r.created_at || "").slice(0, 10)))+'</span>'+
+        '<em class="myq-st myq-'+esc(cv.tone)+'">'+esc(cv.name)+'</em>'+
+      '</a>'+
+      (nq ? '<a class="my-row-q" href="'+esc(href)+'">'+icon("doc",14)+' 견적 보기</a>' : '')+
+    '</li>'; }).join("")+'</ul>';
 }
 
 function MyClaimBand(){
 
   var cno = String(nowQS("claim") || "").replace(/[^A-Za-z0-9-]/g, "").slice(0, 20);
   return '<details class="my-claim"'+(cno ? ' open id="my-claim"' : '')+'>'+
-    '<summary><b>로그인 전에 넣은 신청이 있으세요?</b></summary>'+
-    '<p class="my-claim-p">접수하실 때 받으신 <b>신청번호</b>와 그때 적어 '+
-      '주신 <b>연락처</b>를 적으시면 이 계정으로 가져옵니다. '+
-      '⚠️ 둘이 다 맞아야 합니다 — 번호만으로는 남의 신청이 열리면 안 되니까요.</p>'+
+    '<summary>이전 신청 가져오기</summary>'+
+    '<p class="my-claim-p">로그인 없이 넣으신 신청의 <b>접수번호</b>와 그때 적은 <b>휴대폰 번호</b>가 둘이 다 맞아야 이 계정으로 가져옵니다.</p>'+
     '<form class="my-in" onsubmit="return myClaim(event)">'+
       '<div class="f-r">'+
         '<label for="my-cno">신청번호</label>'+
@@ -674,6 +701,9 @@ function MyReqDetail(r, d){
       '<div><dt>현재 상태</dt><dd><em class="myq-st myq-'+esc(cv.tone)+'">'+esc(cv.name)+'</em></dd></div>'+
       '<div><dt>신청한 서비스</dt><dd>'+esc(svc)+per+'</dd></div>'+
       (reg ? '<div><dt>지역</dt><dd>'+esc(reg)+'</dd></div>' : '')+
+
+      (function(){ var pv = (r.assignment || []).map(function(a){ return a && a.provider && a.provider.name; }).filter(Boolean);
+        return pv.length ? '<div><dt>배정된 업체</dt><dd class="myq-pv">'+esc(pv.join(" · "))+'</dd></div>' : ''; })()+
       '<div><dt>접수일</dt><dd>'+esc(amDate(String(r.created_at || "").slice(0, 10)))+'</dd></div>'+
     '</dl>'+
     (cv.next ? '<p class="myrd-next">'+esc(cv.next)+'</p>' : '')+
@@ -984,26 +1014,20 @@ function myqCall(fn, args, say){
 
 function PageMy(){
   if(nowQS("v") === "product") return PageMyProduct();
+
+  if(nowQS("v") === "records") return PgHero({ kicker:"MY", h1raw:"이 브라우저의 기록", tight:true })+MyBrowserRecords();
+  return PgHero({ kicker:"MY", h1raw:"내 계정", tight:true })+
+    MyDbBand()+
+
+    MyLookupBand();
+}
+
+function MyBrowserRecords(){
   var p = amGet(MKEY, { side:"", industry:"", region:"", gu:"", pyeong:"", dday:"" });
   var qs = amGet("am.quotes.v1", []);
   var ind = p.industry ? amIndustry(p.industry) : null;
-
-  return PgHero({
-    kicker:"MY",
-    h1raw: p.side === "close" ? "내 폐업" : (p.side === "start" ? "내 창업" : "지금 어느 쪽이세요?"),
-    lead:"신청 내역(본인 확인 후 조회)과 이 브라우저에만 저장한 준비 기록을 나눠서 보여 드립니다.",
-    tight:true
-  })+
-
-  MyLookupBand()+
-
-  MyDbBand()+
-
-  '<section class="sec sec-white my-pd-go"><div class="w"><p><a class="btn btn-o" href="/my?v=product">'+icon("box",17)+' 상품 올리기 · 내 상품 보기</a></p></div></section>'+
-  '<section class="sec sec-white"><div class="w">'+
-    '<div class="my-area-hd"><h2>이 브라우저에 저장한 준비 기록</h2>'+
-      '<p>아래 기록은 <b>이 브라우저에만</b> 남고 서버로 보내지 않습니다. 신청서에 저절로 붙지도 않습니다. '+
-      '다른 기기에서는 보이지 않습니다.</p></div>'+
+  return '<section class="sec sec-white"><div class="w">'+
+    '<div class="my-area-hd"><h2>이 브라우저에 저장한 준비 기록</h2></div>'+
     '<div class="my-set">'+
       '<div class="f-r"><label for="my-side">상황</label>'+
         '<select class="sel" id="my-side" onchange="myPut()">'+
@@ -1011,53 +1035,15 @@ function PageMy(){
           '<option value="start"'+(p.side==="start"?" selected":"")+'>창업 준비중</option>'+
           '<option value="close"'+(p.side==="close"?" selected":"")+'>폐업 준비중</option>'+
         '</select></div>'+
-      '<div class="f-r"><label for="my-ind">업종</label>'+
-        IndustrySelect("my-ind", p.industry, "myPut()")+'</div>'+
-      '<div class="f-r"><label for="my-reg">지역</label>'+
-        RegionSelect("my-reg", p.region, "myPut()")+'</div>'+
+      '<div class="f-r"><label for="my-ind">업종</label>'+IndustrySelect("my-ind", p.industry, "myPut()")+'</div>'+
+      '<div class="f-r"><label for="my-reg">지역</label>'+RegionSelect("my-reg", p.region, "myPut()")+'</div>'+
       '<div class="f-r"><label for="my-py">평수</label>'+
-        '<input id="my-py" inputmode="numeric" value="'+esc(p.pyeong||"")+'" '+
-        'onchange="myPut()" placeholder="예: 30"></div>'+
+        '<input id="my-py" inputmode="numeric" value="'+esc(p.pyeong||"")+'" onchange="myPut()" placeholder="예: 30"></div>'+
     '</div>'+
-
-    (p.side && ind
-      ? '<div class="my-next"><h2>'+esc(ind.name)+' '+
-          (p.side==="close"?"정리":"창업")+'에 필요한 것</h2>'+
-          '<div class="cat-g cat-g4">'+
-            amCatsFor(p.industry, p.side==="close"?"close":"start").slice(0,8)
-              .map(function(c){ return CatCard(c, p.industry); }).join("")+
-          '</div>'+
-          '<div class="row-cta">'+
-            '<a class="btn btn-b" href="'+esc(p.side==="close"?("/closure/"+p.industry):("/startup/"+p.industry))+'">'+
-              '전부 보기'+icon("arrow",16)+'</a>'+
-            '<a class="btn btn-o" href="'+esc(quoteTo({industry:p.industry,region:p.region,side:p.side}))+'">'+
-              '견적 요청</a>'+
-          '</div></div>'
-      : Empty({
-          icon:"user",
-          title:"상황과 업종을 고르시면",
-          text:"그 업종에 실제로 필요한 것만 여기 모아 드립니다.",
-          cta:'<a class="btn btn-b" href="/startup">창업 시작하기'+icon("arrow",16)+'</a>'+
-              '<a class="btn btn-o" href="/closure">폐업 시작하기</a>'
-        }))+
-
-    MySaved()+
-
-    MyTools()+
-
-    '<div class="my-next"><h2>받은 제안</h2>'+
-      (qs.length
-        ? '<p class="lead">'+qs.length+'건을 적어 두셨습니다.</p>'+
-          '<div class="row-cta"><a class="btn btn-o" href="/quote">비교 화면으로</a></div>'
-
-        : '<p class="lead">아직 적어 두신 제안이 없습니다. 견적을 받으시면 '+
-          '나란히 놓고 보실 수 있습니다.</p>'+
-          '<div class="row-cta"><a class="btn btn-o" href="/quote">'+
-            '제안 비교 화면 열기</a></div>')+
-    '</div>'+
-
-    '<div class="row-cta"><button class="btn btn-o" type="button" onclick="myClear()">'+
-      '내 기록 전부 지우기</button></div>'+
+    (p.side && ind ? '<p class="lead">'+esc(ind.name)+'</p>' : '')+
+    MySaved()+MyTools()+
+    (qs.length ? '<p class="lead">받은 제안 '+qs.length+'건</p>' : '')+
+    '<div class="row-cta"><button class="btn btn-o" type="button" onclick="myClear()">내 기록 전부 지우기</button></div>'+
   '</div></section>';
 }
 
@@ -1143,7 +1129,7 @@ var LK_TOK = "am.lookup.v1";
 var LK_PHASE = { open:"진행 중", hold:"보류", done:"완료", lost:"종료", none:"확인 중" };
 
 function MyLookupBand(){
-  return '<section class="sec sec-white my-lk" aria-labelledby="my-lk-h"><div class="w">'+
+  return '<section class="sec sec-white my-lk" id="my-lk-sec" aria-labelledby="my-lk-h" hidden><div class="w">'+
     '<div class="my-area-hd"><h2 id="my-lk-h">본인 확인 후 조회하는 신청 내역</h2>'+
       '<p>접수번호와 전화번호를 적으시면 그 번호로 인증번호를 보내 드리고, 인증번호까지 맞으면 '+
       '진행 상태를 보여 드립니다. 접수번호와 전화번호만으로는 열리지 않습니다.</p></div>'+
@@ -1268,7 +1254,10 @@ window.myLkReset = function(end){
 window.myLkInit = function(){
   if(typeof window.amAuthAsk !== "function") return;
   window.amAuthAsk().then(function(a){
-    if(!a || !a.lookup){ myLkDraw(); return; }
+
+    var sec = document.getElementById("my-lk-sec");
+    if(!a || !a.lookup || a.signedIn){ if(sec) sec.hidden = true; myLkDraw(); return; }
+    if(sec) sec.hidden = false;
     var saved = null;
     try{ saved = JSON.parse(sessionStorage.getItem(LK_TOK) || "null"); }catch(_){}
     if(saved && saved.t && saved.until > Date.now()){ myLkDraw(); myLkRead(saved.t); }

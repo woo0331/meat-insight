@@ -7457,3 +7457,27 @@ html.ivh #view > section.bsq{ background:#FDFBF6; }
 .myrd-per li{ justify-content:flex-start; }
 .phup-go[hidden]{ display:none !important; }
 a.myq-no{ display:inline-flex; align-items:center; min-height:44px; color:inherit; text-decoration:underline; text-underline-offset:3px; }
+
+.my-sh{ font-size:var(--t-lg, 20px); font-weight:800; margin:0 0 12px; }
+.my-me{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px 18px; margin:0 0 20px; }
+.my-me-r{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.my-me-n{ font-weight:700; flex:1 1 auto; min-width:0; }
+.my-out-b{ background:none; border:0; padding:0 4px; min-height:44px; font:inherit; font-size:var(--t-cap); color:var(--ink2);
+  text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+.my-reqs{ margin:0 0 20px; }
+.my-rows{ list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+.my-row{ background:var(--surface); border:1px solid var(--line); border-radius:14px; display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; padding:4px 14px; }
+.my-row.is-on{ border-color:var(--blue-600, #3a5572); }
+.my-row-a{ display:flex; flex:1 1 260px; flex-wrap:wrap; align-items:center; gap:4px 12px; min-height:52px; color:inherit; text-decoration:none; min-width:0; }
+.my-row-s{ font-weight:700; flex:1 1 auto; min-width:0; }
+.my-row-d{ color:var(--ink2); font-size:var(--t-cap); }
+.my-row-q{ display:inline-flex; align-items:center; gap:4px; min-height:44px; font-size:var(--t-cap); font-weight:700; color:var(--blue-600, #3a5572); }
+.my-claim > summary{ list-style:none; display:inline-flex; align-items:center; min-height:48px; cursor:pointer;
+  font-size:var(--t-cap); color:var(--ink2); text-decoration:underline; text-underline-offset:3px; }
+.my-claim > summary::-webkit-details-marker{ display:none; }
+.my-err{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; }
+.my-err p{ margin:0; }
+.my-wait{ color:var(--ink2); margin:0; }
+
+.my-claim:not([open]){ background:none; border:0; padding:0; box-shadow:none; }
+.my-claim > summary::after{ content:none; }

@@ -264,24 +264,29 @@ const ADM_DEAL = [
       { auth:true, signedIn:true, role:"customer" },
       { auth:true, signedIn:true, role:"customer",
         requests:CUST_RQ, quotes:CUST_Q, state:null });
-    const t = await dbTxt(pg);
-    ok("신청 두 줄이 그려진다", (await n(pg, ".myq-l > .myq")) === 2);
-    ok("접수번호가 보인다", !!t && t.includes("SW-AB12-CD34"));
+    let t = await dbTxt(pg);
+    /* 2026-11-28 간소화 — 목록은 서비스명 · 신청일 · 진행 상태만. 접수번호 · 업체 · 견적은 상세에서 */
+    ok("내 정보 — 계정의 표시 이름 + 작은 로그아웃", !!t && t.includes("내 정보") &&
+        (await n(pg, ".my-me .my-out-b[onclick='mySignOut()']")) === 1 && (await n(pg, ".my-out")) === 0);
+    ok("신청 두 줄이 최신순으로 그려진다", (await n(pg, ".my-rows > .my-row")) === 2 &&
+        (await pg.evaluate(() => document.querySelector(".my-rows > .my-row .my-row-s").textContent)).length > 0 &&
+        (await pg.evaluate(() => document.querySelector(".my-rows > .my-row a").getAttribute("href"))) === "/my?no=SW-EF56-GH78");
+    ok("목록에는 접수번호 · 업체 상호 · 견적 카드가 없다", !!t && !t.includes("SW-AB12-CD34") &&
+        (await n(pg, ".myq-pv")) === 0 && (await n(pg, ".myqt-c")) === 0, String(t).slice(0, 200));
+    ok("'견적 보기' 는 볼 수 있는 견적이 있는 줄에만", (await n(pg, ".my-row-q")) === 1);
     ok("상태 딱지가 이름으로 나온다 (영어가 아님)",
-        /* 2026-11-28 — 고객 말 여섯 갈래 (amCustView): quoted 는 볼 수 있는 견적이 있으면 '견적 도착' */
         !!t && (t.includes("견적 도착") || t.includes("업체 답변 대기")) && !t.includes("quoted"));
-    /* ⚠️⚠️ 배정된 줄에만 업체 상호 — 정해지기 전에 적으면 정해지지도
-       않은 곳을 알려 주는 것입니다 (제17조 제2항) */
-    ok("배정된 줄에 업체 상호가 보인다", (await n(pg, ".myq-pv")) === 1,
-        "줄 둘 중 하나여야 합니다");
-    ok("배정 전인 줄에는 상호가 없다", (await pg.evaluate(() =>
-        document.querySelectorAll(".myq-l > .myq")[1].querySelectorAll(".myq-pv").length)) === 0);
-    /* 견적 비교 */
-    ok("받은 견적 둘이 나란히 놓인다", (await n(pg, ".myqt-c")) === 2);
-    ok("업체 상호 · 금액 · 범위가 보인다",
+    ok("목록에 수수료 · 정산 · 계약이 없다", !!t && !t.includes("수수료") && !t.includes("정산") && !t.includes("내 계약"));
+    /* 상세 — 접수번호 · 배정된 업체 · 견적 */
+    await pg.goto(base + "/my?no=SW-AB12-CD34", { waitUntil:"networkidle" }); await pg.waitForTimeout(420);
+    t = await dbTxt(pg);
+    ok("상세: 접수번호가 보인다", !!t && t.includes("SW-AB12-CD34"));
+    ok("상세: 배정된 줄에 업체 상호", (await n(pg, "#myrd .myq-pv")) === 1 && t.includes("가나다 인테리어"));
+    ok("상세: 받은 견적 둘이 나란히 놓인다", (await n(pg, ".myqt-c")) === 2);
+    ok("상세: 업체 상호 · 금액 · 범위가 보인다",
         !!t && t.includes("가나다 인테리어") && t.includes("4,200,000") &&
         t.includes("철거 · 바닥 · 전기 · 도장"));
-    ok("고르는 단추가 견적마다 있다",
+    ok("상세: 고르는 단추가 견적마다 있다",
         (await n(pg, ".myqt-c button[onclick^='myqPick']")) === 2);
     /* ⚠️⚠️ 금액순으로 줄 세우지 않습니다 — 줄을 세우면 그 순서가 곧
        추천이 됩니다 (약관 제6조 제4항 · "최저가" 는 금지 문구) */
@@ -293,14 +298,11 @@ const ADM_DEAL = [
         !!t && t.includes("금액순으로 줄 세우지 않습니다"));
     ok("'가장 저렴한' · '최저가' 딱지가 없다",
         !!t && !t.includes("가장 저렴") && !t.includes("최저가"));
-    /* ⚠️⚠️ **핵심** — 우리와 업체 사이의 돈이 고객 화면에 보이면
-       자기가 내는 돈으로 읽힙니다. api/me.js 가 묻지도 않습니다. */
     ok("수수료 · 정산 · 계약 구간이 아예 없다",
-        !!t && !t.includes("수수료") && !t.includes("정산") &&
-        !t.includes("내 계약"),
-        (t || "").slice(0, 0) + "보이면 안 되는 말이 있습니다");
-    ok("나가는 길(나가기)이 같이 있다",
-        (await n(pg, ".my-out button[onclick='mySignOut()']")) === 1);
+        !!t && !t.includes("수수료") && !t.includes("정산") && !t.includes("내 계약"));
+    /* 배정 전 신청의 상세에는 상호가 없다 */
+    await pg.goto(base + "/my?no=SW-EF56-GH78", { waitUntil:"networkidle" }); await pg.waitForTimeout(420);
+    ok("배정 전인 신청 상세에는 상호가 없다", (await n(pg, "#myrd .myq-pv")) === 0);
     ok("JS 에러 0", errs.length === 0, errs.join(" | "));
     await ctx.close();
   }
@@ -418,7 +420,7 @@ const ADM_DEAL = [
     const { ctx, pg, errs } = await openMy(
       { auth:true, signedIn:true, role:"customer" },
       { auth:true, signedIn:true, role:"customer",
-        requests:CUST_RQ, quotes:q, state:null });
+        requests:CUST_RQ, quotes:q, state:null }, { path:"/my?no=SW-AB12-CD34" });
     const t = await dbTxt(pg);
     ok("고르는 단추가 하나도 없다",
         (await n(pg, "button[onclick^='myqPick']")) === 0);
@@ -1040,7 +1042,7 @@ const ADM_DEAL = [
       { auth:true, signedIn:true, role:"customer" },
       { auth:true, signedIn:true, role:"customer",
         requests:CUST_RQ, quotes:CUST_Q, state:null },
-      { viewport:{ width:390, height:844 } });
+      { viewport:{ width:390, height:844 }, path:"/my?no=SW-AB12-CD34" });
     const w = await pg.evaluate(() => ({
       doc:document.documentElement.scrollWidth, win:window.innerWidth }));
     ok("가로 스크롤이 없다", w.doc <= w.win + 1, JSON.stringify(w));
@@ -1218,12 +1220,12 @@ const ADM_DEAL = [
       await pg.route("**/api/session", r => r.fulfill({ status:200, contentType:"application/json",
         body: JSON.stringify({ auth:false, signedIn:false, lookup:false, intake:{ quote:false } }) }));
       await pg.goto(base + "/my", { waitUntil:"networkidle" }); await pg.waitForTimeout(400);
-      const st = await pg.evaluate(() => ({
-        hs: [].slice.call(document.querySelectorAll("#view .my-area-hd h2")).map(h => h.textContent.trim()),
-        off: !!document.querySelector('#my-lk [data-lk="off"]'), form: !!document.querySelector("#my-lk form") }));
-      ok(W + "px 닫힘 — 두 영역 제목이 갈려 있다",
-         st.hs.indexOf("본인 확인 후 조회하는 신청 내역") >= 0 && st.hs.indexOf("이 브라우저에 저장한 준비 기록") >= 0, JSON.stringify(st.hs));
-      ok(W + "px 닫힘 — 열리지 않았다는 사실만 · 폼 없음", st.off && !st.form, JSON.stringify(st));
+      const st = await pg.evaluate(() => { const sec = document.getElementById("my-lk-sec");
+        return { hid: !sec || sec.hidden, h: sec ? sec.getBoundingClientRect().height : 0,
+          txt: document.getElementById("view").innerText, form: !!document.querySelector("#my-lk form") }; });
+      /* 2026-11-28 간소화 — 열리지 않은 조회 안내 · 브라우저 준비 기록을 기본 화면에 깔지 않습니다 */
+      ok(W + "px 닫힘 — 조회 구역째 안 보임 (닫힘 안내도 없음)", st.hid && st.h === 0 && !/아직 열리지 않았습니다/.test(st.txt) && !st.form, JSON.stringify(st).slice(0, 200));
+      ok(W + "px 닫힘 — 기본 화면에 준비 기록 · 상황 칸 · 지우기 없음", !/이 브라우저에 저장한 준비 기록|지금 어느 쪽이세요|내 기록 전부 지우기/.test(st.txt), JSON.stringify(st.txt).slice(0, 200));
       ok(W + "px 닫힘 — JS 에러 0", errs.length === 0, errs.join(" | "));
       await ctx.close();
     }
@@ -1400,6 +1402,40 @@ const ADM_DEAL = [
     ok(tok ? "로그인 — /api/quote 에 Authorization: Bearer 가 실린다" : "비로그인 — Authorization 을 안 보낸다",
        hdr !== null && (tok ? a === "Bearer " + tok : a === ""), JSON.stringify(a));
     await cx.close();
+  }
+
+  /* ══ 2026-11-28 고객 '내 계정' 간소화 ════════════════════════════ */
+  console.log("\n⑬ 내 계정 간소화 — 0건 · 오류 · 기본 화면에서 뺀 것");
+  for (const W of [390, 1440]) {
+    { /* 신청 0건 — '내 신청' 구역째 없음 · 신청 권유 · 빈 카드 없음 */
+      const { ctx, pg, errs } = await openMy({ auth:true, signedIn:true, role:"customer", name:"김검수" },
+        { auth:true, signedIn:true, role:"customer", name:"김검수", requests:[], quotes:[] }, { viewport:{ width:W, height:844 } });
+      const v = await pg.evaluate(() => ({ t: document.getElementById("view").innerText,
+        h1: (document.querySelector("#view h1") || {}).textContent || "", reqs: document.querySelectorAll(".my-reqs, .my-row, .empty").length,
+        cta: document.querySelectorAll('#my-db a[href^="/quote"]').length, me: !!document.querySelector(".my-me") }));
+      ok(W + "px 0건 — 제목 '내 계정' · 내 정보(이름) · 로그아웃", v.h1.trim() === "내 계정" && v.me && v.t.includes("김검수") && v.t.includes("로그아웃"), v.t.slice(0, 120));
+      ok(W + "px 0건 — '내 신청' 구역 · 빈 카드 · 신청 권유가 없다", v.reqs === 0 && v.cta === 0 && !v.t.includes("내 신청") && !v.t.includes("아직 넣으신"), v.t.slice(0, 160));
+      ok(W + "px 0건 — 기본 화면에서 뺀 것이 안 보인다", !/지금 어느 쪽이세요|이 브라우저에 저장한 준비 기록|저장한 업체|사장님 도구|받은 제안|내 기록 전부 지우기|본인 확인 조회는 아직|상품 올리기/.test(v.t), v.t.slice(0, 200));
+      ok(W + "px 0건 — '이전 신청 가져오기' 는 작은 텍스트 링크(접힘)", (await pg.evaluate(() => { const d = document.querySelector(".my-claim"); return !!d && !d.open && getComputedStyle(d).backgroundColor === "rgba(0, 0, 0, 0)"; })));
+      ok(W + "px 0건 — 가로 넘침 없음 · JS 에러 0", (await pg.evaluate(() => document.documentElement.scrollWidth - innerWidth)) <= 0 && errs.length === 0, errs.join(" | "));
+      await ctx.close(); }
+    { /* 오류 — 0건으로 읽지 않고 짧은 안내 + 다시 시도 */
+      const ctx = await br.newContext({ viewport:{ width:W, height:844 } }); const pg = await ctx.newPage(); let calls = 0;
+      await pg.addInitScript(() => localStorage.setItem("am.auth.v1", JSON.stringify({ access_token:"TOK", refresh_token:"R", at: Date.now() + 3e6 })));
+      await pg.route("**/api/session", r => r.fulfill({ status:200, contentType:"application/json", body: JSON.stringify({ auth:true, signedIn:true, kakao:true, role:"customer" }) }));
+      await pg.route("**/api/me**", r => { calls++; r.fulfill({ status:502, contentType:"application/json", body:"{}" }); });
+      await pg.goto(base + "/my", { waitUntil:"networkidle" }); await pg.waitForTimeout(400);
+      const v = await pg.evaluate(() => ({ t:(document.getElementById("my-db") || {}).innerText || "", btn: !!document.querySelector(".my-err button") }));
+      ok(W + "px 오류 — '불러오지 못했습니다' + 다시 시도 (0건 처리 아님)", /불러오지 못했습니다/.test(v.t) && v.btn && !/내 정보|아직/.test(v.t), v.t);
+      await pg.click(".my-err button"); await pg.waitForTimeout(400);
+      ok(W + "px 오류 — 다시 시도가 실제로 다시 묻는다", calls >= 2, calls);
+      await ctx.close(); }
+    { /* 예전 기록은 지우지 않았다 — 직접 주소(/my?v=records)로만 */
+      const { ctx, pg } = await openMy({ auth:false, signedIn:false }, { auth:false, signedIn:false },
+        { viewport:{ width:W, height:844 }, path:"/my?v=records", before:() => localStorage.setItem("am.profile.v1", JSON.stringify({ side:"close", industry:"cafe" })) });
+      const v = await pg.evaluate(() => ({ side:(document.getElementById("my-side") || {}).value, keep: localStorage.getItem("am.profile.v1") }));
+      ok(W + "px 예전 준비 기록은 지우지 않고 /my?v=records 에 그대로", v.side === "close" && /cafe/.test(v.keep || ""), v);
+      await ctx.close(); }
   }
 
   await br.close(); srv.close();

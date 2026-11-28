@@ -933,6 +933,11 @@ html:not(.iq-sell)  [data-go-form="sell"]:not(.pk-closed),
 html:not(.iq-join)  [data-go-form="join"]:not(.pk-closed){ display:none !important; }
 html.iq-quote .pk-closed[data-go-form="quote"],
 html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
+/* 열린 양식에는 '접수 중단 · 안내 보기'(hdCtaPaint 가 단추 옆에 붙이는 것)를 가립니다.
+   ⚠️ 2026-11-28 검수 — 이 두 줄이 e6a28bc 합치기에서 빠져, 접수가 열려 있어도
+   매물 상세 등에서 '이 매장 문의하기' 옆에 '견적 접수 중단' 이 같이 보였습니다. 지우지 마세요. */
+html.iq-quote [data-go-off="quote"], html.iq-close [data-go-off="close"],
+html.iq-sell  [data-go-off="sell"],  html.iq-join  [data-go-off="join"]{ display:none !important; }
 .pk-closed-n{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:10px 0 0;
   font-size:var(--t-cap); color:var(--ink2); }
 .pk-closed-n a{ min-height:40px; display:inline-flex; align-items:center; font-weight:700; }

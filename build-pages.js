@@ -1587,6 +1587,14 @@ function checkColorScheme(html, where){
     throw new Error(where + ' 에 color-scheme 메타가 없습니다 — 안드로이드 '
       + '브라우저가 바탕을 검정으로, 폐업 주황을 빨강으로 뒤집습니다');
 }
+/* 2026-11-28 검수 — 열린 양식의 '접수 중단 · 안내 보기' 를 가리는 줄이 합치기에서 한 번 빠졌습니다
+   (e6a28bc). 화면 검사는 접수를 닫힌 채로 돌아서 못 잡습니다 — 여기서 글자로 봅니다. */
+function checkGoOffCss(){
+  const css = fs.readFileSync(path.join(ROOT, "css/app.css"), "utf8").replace(/\s+/g, " ");
+  const bad = ["quote","close","sell","join"].filter(f => css.indexOf('html.iq-' + f + ' [data-go-off="' + f + '"]') < 0);
+  if(bad.length) throw new Error("css/app.css 에 열린 양식의 닫힘 안내를 가리는 줄이 없습니다 — " + bad.join(", ") +
+    " (접수가 열려 있어도 '접수 중단 · 안내 보기' 가 같이 보입니다)");
+}
 function checkColorSchemeCss(){
   const css = fs.readFileSync(path.join(ROOT, "css/tokens.css"), "utf8");
   if(!/color-scheme:\s*only light/.test(css))
@@ -3725,6 +3733,7 @@ function checkIndGroups(W){
 /* ── 실행 ─────────────────────────────────────────────────────── */
 checkCssVars();
 checkColorSchemeCss();
+checkGoOffCss();
 checkVercel();
 const W = loadApp();
 checkIndGroups(W);

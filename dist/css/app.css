@@ -529,6 +529,9 @@ html:not(.iq-sell)  [data-go-form="sell"]:not(.pk-closed),
 html:not(.iq-join)  [data-go-form="join"]:not(.pk-closed){ display:none !important; }
 html.iq-quote .pk-closed[data-go-form="quote"],
 html.iq-close .pk-closed[data-go-form="close"]{ display:none !important; }
+
+html.iq-quote [data-go-off="quote"], html.iq-close [data-go-off="close"],
+html.iq-sell  [data-go-off="sell"],  html.iq-join  [data-go-off="join"]{ display:none !important; }
 .pk-closed-n{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:10px 0 0;
   font-size:var(--t-cap); color:var(--ink2); }
 .pk-closed-n a{ min-height:40px; display:inline-flex; align-items:center; font-weight:700; }

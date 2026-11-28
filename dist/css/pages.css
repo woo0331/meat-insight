@@ -7862,3 +7862,5 @@ html.ivh #view .r1-btx h2 a, .r1-btx h2 a{ color:#fff; min-height:40px; font-siz
 .cq-svc .cq-k-ph{ min-height:64px; padding:8px 14px 8px 8px; }
 .cq-svc .cq-k-ph > span:last-child{ flex:1; min-width:0; font-weight:800; }
 .cq-svc .cq-k-ph input{ order:3; }
+
+.tlh .crumb a{ display:inline-flex; align-items:center; min-height:44px; }

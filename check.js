@@ -1430,7 +1430,7 @@ const AUDIT = `(() => {
       return "도구가 '도구' 묶음이 아니라 다른 묶음에 들어갑니다";
     return true;`);
 
-  await f("저장한 업체가 MY 로 이어진다", "/my", `
+  await f("저장한 업체가 MY 로 이어진다", "/my?v=records", `
     /* 지시서 §13 — CTA 넷 가운데 "관심 업체 저장".
        ⚠️⚠️ 이 화면의 **설명이 이미 "저장한 업체" 를 약속**하고 있었는데
        기능이 없었습니다 (절대 규칙 5).
@@ -1871,7 +1871,7 @@ const AUDIT = `(() => {
     return true;`);
 
   /* ⑤ MY — ⚠️ 성함 · 연락처를 이 브라우저에 담지 않습니다 */
-  await f("MY: 고른 것이 남는다", "/my", `
+  await f("MY: 고른 것이 남는다", "/my?v=records", `
     try{ localStorage.clear(); }catch(e){}
     document.getElementById("my-side").value = "start";
     document.getElementById("my-ind").value = "cafe";
@@ -3806,7 +3806,7 @@ const AUDIT = `(() => {
        go() 로 넘기면 같은 문맥에서 이어집니다.
        주의: 이 글은 백틱 문자열 안이라 주석에 백틱을 쓰면 문자열이
        거기서 끝나고 SyntaxError 가 납니다. */
-    window.go("/my");
+    window.go("/my?v=records");
     await new Promise(r => setTimeout(r, 500));
     const t = document.getElementById("view").textContent;
     if(t.indexOf("인건비율") < 0) return "MY 에 안 보입니다";

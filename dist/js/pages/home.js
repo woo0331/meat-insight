@@ -57,7 +57,7 @@ var MAIN_CALC = ["cost", "bep", "premium", "closecost"];
 
 function PageMain(){
 
-  return HomeR1Top()+ HomeR1Find()+ HomeR1Trade()+ HomeWPSteps();
+  return HomeIHero()+ HomePillars()+ HomeIInd()+ HomeITransfer()+ HomeIOps()+ HomeDirect(true)+ HomeWPSteps();
 }
 
 var HOME_ENTER = [

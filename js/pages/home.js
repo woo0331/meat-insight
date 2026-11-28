@@ -584,7 +584,10 @@ function PageMain(){
      → 무엇을 찾으세요(검색 · 서비스 바로 찾기 여덟) → 사고팔기(집기 · 상품 · 실제 매물) → 이용 방법.
      ⚠️ 옛 구간(HomeIHero · HomePillars · HomeIInd · HomeITransfer · HomeIOps · HomeDirect)은 지우지 않았습니다 —
         되살리기는 이 return 한 줄입니다 (옛 줄: HomeIHero()+ HomePillars()+ HomeIInd()+ HomeITransfer()+ HomeIOps()+ HomeDirect(true)+ HomeWPSteps()). */
-  return HomeR1Top()+ HomeR1Find()+ HomeR1Trade()+ HomeWPSteps();
+  /* ⚠️⚠️ 2026-11-28 대표 확정 — 메인은 **지금 운영 디자인**(아래 한 줄)으로 갑니다. 시험 브랜치에서 만든 새 메인
+     (HomeR1Top · HomeR1Find · HomeR1Trade)은 운영 반영 범위에서 뺐습니다 — 함수는 지우지 않았습니다.
+     ⚠️ 이 줄을 바꾸면 운영 반영 때 메인 디자인이 같이 바뀝니다. 바꾸지 마세요 (대표 지시). */
+  return HomeIHero()+ HomePillars()+ HomeIInd()+ HomeITransfer()+ HomeIOps()+ HomeDirect(true)+ HomeWPSteps();
 }
 
 

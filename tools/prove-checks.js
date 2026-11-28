@@ -419,7 +419,8 @@ const CASES = [
    `document.querySelectorAll(".emg-n").forEach(function(e){ e.textContent = ""; });`],
   /* 시간 제한을 걷어내면 걸려야 합니다 — 멈추면 영원히 "보내는 중…". */
   ["접수가 멈추면 끊고 적은 글을 돌려준다",
-   `window.amSend = function(failId, body){
+   `window.amSendNow = null;
+    window.amSend = function(failId, body){
       const btn = document.querySelector("form button[type=submit]");
       if(btn){ btn.disabled = true; btn.textContent = "보내는 중…"; }
       fetch("/api/quote", { method:"POST",

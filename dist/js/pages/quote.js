@@ -645,6 +645,7 @@ window.amReloginRestore = function(){
   if(n) toast("적어 두신 내용을 되살렸습니다 — 사진은 다시 골라 주세요");
   return n > 0;
 };
+window.amSendNow = amSendNow;
 function amSendNow(failId, body, again, done){
   var btn = document.querySelector("#"+failId+" ~ button") ||
             document.querySelector("form button[type=submit]");

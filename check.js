@@ -1561,7 +1561,8 @@ const AUDIT = `(() => {
   `);
 
   await f("접수가 멈추면 끊고 적은 글을 돌려준다", "/quote", `
-    const src = String(window.amSend);
+    /* 2026-11-28 — 보내기 앞에 로그인 확인이 붙어서 실제로 보내는 몸통은 amSendNow 입니다 (둘 다 봅니다) */
+    const src = String(window.amSend) + String(window.amSendNow || "");
     if(src.indexOf("AbortController") < 0)
       return "보내기에 시간 제한이 없습니다 — 멈추면 영원히 '보내는 중…' 입니다";
     if(src.indexOf("setTimeout") < 0) return "끊을 시계가 없습니다";

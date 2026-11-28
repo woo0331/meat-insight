@@ -101,6 +101,7 @@ const OK_FN = {
      운영자가 스스로 누르는 일이고, 상태가 바뀌는 자리는 그 안의
      move_state() 가 감사 기록에 남깁니다. ⚠️ 결제 · 청구는 하지 않습니다. */
   staff_record_quote:1, set_outcome:1,
+  set_quote_terms:1,   /* 2026-11-28 초안 0088 — 가견적/확정 · 실측 · 적용 범위 · 집기 매입 · 변경 사유 (시험 DB 만) */
   /* 2026-10-25 P1-7 (0016) — `/join` 입점 신청의 상태.
      ⚠️⚠️ **`FN_SAY` 에 넣지 마세요.** 이 문을 누르는 사람이 곧 직원
      입니다 — 자기가 방금 누른 것을 운영자 채널로 되받으면 정작 돈 쪽
@@ -141,6 +142,7 @@ const OK_ARG = {
   p_item:1, p_agree3rd:1,                              /* assign_item · move_item_state */
   p_due:1, p_kind:1, p_body:1, p_result:1,             /* W03 set_next_due · add_request_note */
   p_on:1, p_settle:1,                                  /* 0084 set_outcome (staff_record_quote 는 위 칸들) */
+  p_quote:1, p_terms:1,                                    /* 초안 0088 set_quote_terms */
   /* 0012 — ⚠️ p_owner 는 **직원 · 관리자 계정**이라야 합니다 (DB 가 봅니다).
      p_assignable 은 listed 와 다른 플래그입니다 — "배정해도 되는가" 입니다. */
   p_owner:1, p_assignable:1,                           /* set_owner · approve_provider */

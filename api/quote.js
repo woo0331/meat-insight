@@ -369,9 +369,18 @@ module.exports = async function handler(req, res){
     res.setHeader("Cache-Control", "no-store");
     return res.status(503).json({ error: "지금 접수하지 못했습니다. 적어 주신 내용은 그대로 두었으니 잠시 뒤 다시 보내 주세요." });
   }
+  /* 2026-11-28 — 완료 화면이 **저장된 실제 상태**를 내도록 그 줄의 상태를 읽어 돌려줍니다.
+     ⚠️ 못 읽으면 상태를 지어내지 않고 비웁니다 (화면은 '접수됨' 줄을 안 그립니다).
+     linked — 로그인한 채로 보내 계정에 이어졌는가 (화면이 '내 신청 보기' 를 낼지 가릅니다). */
+  let stNow = "";
+  if(kind !== "partner"){
+    const rs = await dbSelect("request", "?select=state&no=eq." + encodeURIComponent(got.no) + "&limit=1");
+    if(rs.ok && rs.rows[0]) stNow = String(rs.rows[0].state || "");
+  }
+  const linked = !!uid;
   if(got.dup){
     console.warn("[site] 같은 신청서를 다시 보내셨습니다 — " + got.no);
-    return res.status(200).json({ ok:true, no:got.no, dup:true, say:"이미 접수되었습니다." });
+    return res.status(200).json({ ok:true, no:got.no, dup:true, state:stNow, linked:linked, say:"이미 접수되었습니다." });
   }
 
   /* ②-1 접수 길 · 유입 경로 (0084) — ⚠️ 연락처 · 원문 없이. 실패해도
@@ -394,6 +403,6 @@ module.exports = async function handler(req, res){
     catch(e){ console.error("[site] 알림 작업이 터졌습니다 — " + (e && e.message)); }
   }
 
-  res.status(200).json({ ok:true, no:got.no });
+  res.status(200).json({ ok:true, no:got.no, state:stNow, linked:linked });
 };
 

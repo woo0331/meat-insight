@@ -63,8 +63,8 @@ const res = []; const ok = (c, m, x) => { res.push((c ? "✅ " : "❌ ") + m + (
       return f.hidden && !document.getElementById("q-ag").offsetParent && b.nextElementSibling === f && b.offsetParent &&
         b.textContent.indexOf("SW-TEST-0001") < b.textContent.indexOf("저장됨"); }),
       W + " quote 접수 뒤 폼 · 동의 칸은 접히고 접수번호 → 사진 결과가 먼저");
-    await pg.click(".q-done-again button");
-    ok(await pg.evaluate(() => !document.getElementById("q-f").hidden), W + " quote '새로 작성하기' 로 폼이 다시 열림");
+    await pg.click(".qd-new"); await pg.waitForTimeout(500);
+    ok(await pg.evaluate(() => !document.getElementById("q-f").hidden && !document.querySelector(".qd")), W + " quote '새로 작성하기' 로 새 폼 (이전 접수 결과 없음)");
     // 2 폐업
     await check("/quote?mode=close", "close");
     await pg.check("#cq-s-demolish-full"); await pg.check("#cq-s-asset");

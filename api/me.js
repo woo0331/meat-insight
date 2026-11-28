@@ -79,6 +79,8 @@ const STATE_PICK = "pick,draft,checks,updated_at";
 /* 0084 칸 — 돌리기 전에 배포돼도 안 깨지게 따로 둡니다 (아래 다시 묻기) */
 const S84 = "channel,src,want_at,outcome_why,outcome_on,settle,";
 const Q84 = "waste,restore,extra,src,";
+/* 2026-11-28 초안 0088 — 가견적/확정 · 실측 · 적용 범위 · 집기 매입 (없는 DB 에서는 400 → 빼고 다시 묻습니다) */
+const Q88 = "kind,site,items,buy_amount,";
 
 const PICK = {
   customer:
@@ -429,12 +431,22 @@ const realHandler = async function handler(req, res){
     const qsel = function(p){ return "?select=" + encodeURIComponent(
         s.role === "customer" ? p + ",provider(id,name)" : p) +
       "&order=created_at.desc&limit=" + QUOTE_LIMIT; };
-    let qq = await dbSelectAs(s.token, "quote", qsel(qp));
+    let qq = await dbSelectAs(s.token, "quote", qsel(Q88 + qp));
+    if(!qq.ok && /\b400\b/.test(qq.why || ""))
+      qq = await dbSelectAs(s.token, "quote", qsel(qp));
     /* ⚠️ 0084 전이면 새 견적 칸 없이 다시 묻습니다 (위 접수함과 같은 까닭) */
     if(!qq.ok && /\b400\b/.test(qq.why || ""))
       qq = await dbSelectAs(s.token, "quote", qsel(qp.replace(Q84, "")));
     if(qq.ok) out.quotes = qq.rows;
     else console.warn("[me] quote — " + qq.why);
+    /* 금액 변경 이력 (초안 0088 quote_rev) — 이전 금액을 조용히 덮어쓰지 않습니다. 없는 DB 면 조용히 뺍니다.
+       ⚠️ 누가 고쳤는지 · 내부 메모는 안 가져옵니다 (금액 · 부가세 · 범위 바뀜 · 사유 · 날짜) */
+    if(qq.ok && qq.rows.length){
+      const qr = await dbSelectAs(s.token, "quote_rev",
+        "?select=" + encodeURIComponent("quote_id,old_amount,new_amount,old_vat,new_vat,scope_changed,why,at") +
+        "&order=at.asc&limit=200");
+      if(qr.ok) out.quoteRevs = qr.rows;
+    }
   }
 
   /* ── 신청 한 건의 이력 (§6 "신청 및 변경 이력" · §8) ──────────────

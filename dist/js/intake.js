@@ -1863,6 +1863,22 @@ function rqStaffQuote(r){
           'value="'+esc(v)+'" oninput="rqQctx(\''+f[0]+'\', this.value)"></label>';
       }).join("")+
     '</div>'+
+
+    '<div class="rq-sq-g">'+
+      '<label class="rq-f"><span>견적 종류</span><select class="sel" onchange="rqQctx(\'kind\', this.value)">'+
+        [["","모름 (업체 확인 필요)"],["est","가견적"],["final","확정 견적"]].map(function(v){
+          return '<option value="'+v[0]+'"'+((c.kind || "") === v[0] ? " selected" : "")+'>'+v[1]+'</option>'; }).join("")+'</select></label>'+
+      '<label class="rq-f"><span>실측</span><select class="sel" onchange="rqQctx(\'site\', this.value)">'+
+        [["","모름 (업체 확인 필요)"],["need","실측 후 확정"],["done","실측함"],["none","실측 없이 산정"]].map(function(v){
+          return '<option value="'+v[0]+'"'+((c.site || "") === v[0] ? " selected" : "")+'>'+v[1]+'</option>'; }).join("")+'</select></label>'+
+      '<label class="rq-f"><span>집기 매입 금액 (원)</span><input inputmode="numeric" value="'+esc(c.buy || "")+'" oninput="rqQctx(\'buy\', this.value)" placeholder="업체가 사 가는 금액 · 없으면 비움"></label>'+
+      '<label class="rq-f"><span>금액을 고친 사유</span><input value="'+esc(c.why || "")+'" oninput="rqQctx(\'why\', this.value)" placeholder="고칠 때만 · 고객에게 보입니다"></label>'+
+      ((r.request_item || []).length > 1
+        ? '<fieldset class="rq-f rq-f-w"><legend>이 견적이 덮는 서비스 (적용 범위)</legend>'+(r.request_item || []).map(function(i){
+            var on = (c.items || []).indexOf(i.service_id) >= 0;
+            return '<label class="rq-k"><input type="checkbox"'+(on ? " checked" : "")+' onchange="rqQitem(\''+esc(i.service_id)+'\', this.checked)"> '+esc(rqSvcName(i.service_id))+'</label>'; }).join("")+'</fieldset>'
+        : '')+
+    '</div>'+
     '<button class="btn btn-b" type="button" id="rq-sq-go"'+(RQ.busy ? " disabled" : "")+
       ' onclick="rqQuoteGo(\''+esc(r.id)+'\')">견적 기록하기</button>'+
   '</div>';
@@ -1878,9 +1894,39 @@ window.rqQuoteGo = function(id){
     if(String(c[k] || "").trim()) data[k] = String(c[k]).trim(); });
   var d = String(c.days || "").replace(/[^0-9]/g, "");
   if(d) data.days = Number(d);
-  rqCall("staff_record_quote", { p_request:id, p_provider:c.provider, p_data:data },
-         "견적을 기록했습니다", true);
+
+  var terms = { kind:c.kind || "", site:c.site || "", buy:String(c.buy || "").replace(/[^0-9]/g, ""),
+                why:String(c.why || "").trim() };
+  if(c.items && c.items.length) terms.items = c.items;
+  var hasTerms = terms.kind || terms.site || terms.buy || terms.why || terms.items;
+  if(!hasTerms){
+    rqCall("staff_record_quote", { p_request:id, p_provider:c.provider, p_data:data }, "견적을 기록했습니다", true);
+    return;
+  }
+  var H = Object.assign({ "content-type":"application/json", accept:"application/json" }, window.amAuthHeaders());
+  RQ.busy = true; rqDraw();
+  fetch("/api/deal", { method:"POST", headers:H,
+    body:JSON.stringify({ fn:"staff_record_quote", args:{ p_request:id, p_provider:c.provider, p_data:data } }) })
+    .then(function(r){ return r.json().then(function(d){ return { ok:r.ok, d:d }; }); })
+    .then(function(x){
+      if(!x.ok) throw new Error((x.d && x.d.error) || "처리하지 못했습니다");
+      var qid = x.d && x.d.data;
+      return fetch("/api/deal", { method:"POST", headers:H,
+        body:JSON.stringify({ fn:"set_quote_terms", args:{ p_quote:qid, p_terms:terms } }) })
+        .then(function(r){ return r.json().then(function(d){ return { ok:r.ok, d:d }; }); })
+        .then(function(y){ if(!y.ok) throw new Error("견적은 저장했지만 조건 칸을 저장하지 못했습니다 — " + ((y.d && y.d.error) || "다시 적어 주세요")); });
+    })
+    .then(function(){ RQ.busy = false; rqCall2Done("견적과 조건을 기록했습니다"); })
+    .catch(function(e){ RQ.busy = false; toast((e && e.message) || "처리하지 못했습니다"); rqLoad(); });
 };
+window.rqQitem = function(sid, on){
+  var c = RQ.qctx || (RQ.qctx = {}); var L = c.items || (c.items = []);
+  var i = L.indexOf(sid); if(on && i < 0) L.push(sid); if(!on && i >= 0) L.splice(i, 1);
+};
+function rqCall2Done(say){
+  toast(say);
+  var reopen = RQ.open; RQ.qctx = {}; rqLoad(); RQ.open = reopen;
+}
 
 var RQ_SETTLE = [["pending","정산 확인 전"],["done","정산 확인함"],["none","정산 없음 (취소 · 무상)"]];
 function rqOutcome(r){

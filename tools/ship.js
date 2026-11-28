@@ -243,6 +243,7 @@ const STEPS = [
      보이는가)와 회원 계정 저장의 합치기 규칙은 여기서 봅니다. */
   { n: "/my · 회원 계정 저장",  c: ["node", ["tools/test-my.js"]] },
   { n: "작성 화면 셋 (견적 · 집기 · 상품)",  c: ["node", ["tools/test-forms3.js"]] },
+  { n: "견적 완료 → 내 신청 → 견적 비교",  c: ["node", ["tools/test-cq.js"]] },
   { n: "표본 밖 화면",         c: ["node", ["tools/sweep-rest.js"]] },
   { n: "/admin 전수 점검",     c: ["node", ["tools/audit-admin.js"]] },
   { n: "검사가 실제로 잡는가", c: ["node", ["tools/prove-checks.js"]] },

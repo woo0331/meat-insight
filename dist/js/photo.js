@@ -263,10 +263,19 @@ window.amPhotoGo = function(w){
             throw new Error((x.j && x.j.error) || "지금 올리지 못했습니다");
           it.slotUrl = x.j.url;
 
-          return fetch(x.j.url, { method:"PUT", headers:{ "content-type":it.mime }, body:it.f });
+          var ms = window.AM_PH_PUT_MS || Math.min(240000, Math.max(45000, 45000 + Math.round((it.size || 0) / 40)));
+          var ctl = (typeof AbortController === "function") ? new AbortController() : null;
+          var tm = ctl ? setTimeout(function(){ ctl.abort(); }, ms) : null;
+          return fetch(x.j.url, { method:"PUT", headers:{ "content-type":it.mime }, body:it.f, signal: ctl ? ctl.signal : undefined })
+            .then(function(r){ if(tm) clearTimeout(tm); return r; },
+                  function(e){ if(tm) clearTimeout(tm);
+                    if(e && e.name === "AbortError") throw new Error("시간이 오래 걸려 멈췄습니다. 다시 올려 주세요");
+                    throw new Error("연결이 끊겼습니다. 다시 올려 주세요"); });
         })
         .then(function(r){
-          if(!r || !r.ok){ if(reuse) it.slotUrl = ""; throw new Error("올리지 못했습니다"); }
+          if(!r || !r.ok){
+
+            if(reuse) it.slotUrl = ""; throw new Error("올리지 못했습니다"); }
           it.ok = true; it.slotUrl = "";
         })
         .catch(function(e){

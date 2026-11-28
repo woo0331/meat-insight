@@ -245,6 +245,8 @@ const STEPS = [
   { n: "작성 화면 셋 (견적 · 집기 · 상품)",  c: ["node", ["tools/test-forms3.js"]] },
   { n: "견적 완료 → 내 신청 → 견적 비교",  c: ["node", ["tools/test-cq.js"]] },
   { n: "로그인이 풀린 채 보내기 → 재로그인 · 작성 보존",  c: ["node", ["tools/test-relogin.js"]] },
+  { n: "사진 멈춤 → 실패 · 같은 자리로 다시 · 내 기록에서 다시 첨부",  c: ["node", ["tools/test-myph.js"]] },
+  { n: "내 기록 사진 다시 첨부 서버 (주인 확인 · 자리 재사용)",  c: ["node", ["tools/test-upload-mine.js"]] },
   { n: "표본 밖 화면",         c: ["node", ["tools/sweep-rest.js"]] },
   { n: "/admin 전수 점검",     c: ["node", ["tools/audit-admin.js"]] },
   { n: "검사가 실제로 잡는가", c: ["node", ["tools/prove-checks.js"]] },

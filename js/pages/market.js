@@ -686,19 +686,16 @@ var SELL_TABS = [
    ⚠️ 사진은 **연출 사진**입니다 (실제 매물이 아닙니다) — 카드 안에 그렇게 적습니다. */
 var SELL_PH = { store:"kp-tr-svc-sell", asset:"as-fridge" };
 function sellTabs(t){
-  return '<nav class="sl-tab" aria-label="무엇을 내놓으시나요">'+
-    SELL_TABS.map(function(x){
-      var on = x.k === t;
-      return '<a class="sl-tc'+(on ? " on" : "")+'" href="/sell?t='+x.k+'"'+(on ? ' aria-current="page"' : "")+'>'+
-        '<span class="sl-tph" aria-hidden="true">'+picBox(SELL_PH[x.k], x.k === "store" ? "store" : "equip", "(max-width:600px) 44vw, 320px")+'</span>'+
-        '<span class="sl-ttx"><b>'+esc(x.name)+'</b><i>'+esc(x.lead)+'</i></span>'+
-        (on ? '<em class="swt-on">'+icon("check",14)+'선택됨</em>' : '')+
-      '</a>'; }).join("")+
-  '</nav>'+
-  '<p class="sl-tnote">사진은 이해를 돕는 연출 사진이며 실제 매물이 아닙니다.</p>'+
-  /* 2026-11-28 — 세 가지 올리기(매장 · 집기 · 상품)를 오가는 길. 상품은 로그인 계정에 저장되는 다른 양식입니다 */
-  '<p class="up-sw">'+icon("box",16)+' 새 상품을 파시나요? <a href="/my?v=product">상품 올리기'+icon("chev",14)+'</a></p>';
+  return upTabs(t === "store" ? "store" : "asset");
 }
+/* 2026-11-28 대표 최종 시안 — 올리기 셋(매장 · 집기 · 상품)을 한 줄 탭으로 오갑니다.
+   ⚠️ 상품은 로그인 계정에 저장되는 다른 양식(/my?v=product)이라 주소가 다릅니다 — 탭은 링크입니다. */
+window.upTabs = function(k){
+  var T = [["store","매장","/sell"],["asset","집기","/sell?t=asset"],["product","상품","/my?v=product"]];
+  return '<nav class="up-tab" aria-label="무엇을 올리시나요">'+T.map(function(x){
+    var on = x[0] === k;
+    return '<a class="up-tc'+(on ? " on" : "")+'" href="'+x[2]+'"'+(on ? ' aria-current="page"' : '')+'>'+x[1]+'</a>'; }).join("")+'</nav>';
+};
 
 /* 필수 칸 진행 — 적으실 때마다 "필수 n / m" 이 바뀝니다 (색만이 아니라 글로) */
 window.sellProg = function(){

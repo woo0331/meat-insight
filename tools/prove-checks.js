@@ -1120,7 +1120,8 @@ async function proveAudit(pg){
     const before = (await pg.evaluate(AUDIT)).dark;
     await pg.evaluate(() => {
       /* ⚠️ 구간이 없는 화면도 있어서 #view 자신을 받침으로 둡니다 */
-      const s = [...document.querySelectorAll("#view > section")];
+      /* 2026-11-28 — 간소화한 /my 는 보이는 구간이 제목 띠 하나뿐이라 구간 하나로는 15% 를 못 넘습니다. 본문(#view) 전체를 칠합니다 */
+      const s = [];
       const t = s.length ? s[s.length-1] : document.getElementById("view");
       if(t) t.style.background = "#241B15";
     });

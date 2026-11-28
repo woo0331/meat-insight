@@ -555,7 +555,9 @@ function sellTabs(t){
         (on ? '<em class="swt-on">'+icon("check",14)+'선택됨</em>' : '')+
       '</a>'; }).join("")+
   '</nav>'+
-  '<p class="sl-tnote">사진은 이해를 돕는 연출 사진이며 실제 매물이 아닙니다.</p>';
+  '<p class="sl-tnote">사진은 이해를 돕는 연출 사진이며 실제 매물이 아닙니다.</p>'+
+
+  '<p class="up-sw">'+icon("box",16)+' 새 상품을 파시나요? <a href="/my?v=product">상품 올리기'+icon("chev",14)+'</a></p>';
 }
 
 window.sellProg = function(){

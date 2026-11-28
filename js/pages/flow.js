@@ -69,7 +69,7 @@ function PageStartup(){
   /* 2026-11-26 모바일 시안 §2 — 신규/인수를 고르면 결과에 이미 창업비(또는 신규 vs 인수) 계산이 첫 행동으로 나옵니다.
      바로 아래 계산 띠가 같은 말을 되풀이하지 않게, 고른 뒤에는 띠를 뺍니다 (안 고르면 그대로). */
   var stPicked = ["new","take"].indexOf(nowQS("how")) >= 0;
-  return StartIntro(ind) + StartSit(ind) + StartKpSvc(ind) + StartKpRoad(ind) + (stPicked ? "" : StartKpCalc(ind)) + StartKpInd() +
+  return StartTop(ind) + StartSit(ind) + StartKpSvc(ind) + StartKpRoad(ind) + (stPicked ? "" : StartKpCalc(ind)) + StartKpInd() +
     /* 2026-11-24 하단 간소화 — 고르개 · 바구니 · 묶음을 '여러 서비스 함께 고르기' 한 구역(기본 접힘)으로.
        옛 StartPickBand · PickBasket · PackPickBand · StartApplyBand 는 지우지 않았습니다 (되살리기는 이 줄).
        STEP 02(StartApplyBand)의 신청 · 접수 안내는 이 구역의 요약(고른 것이 있을 때)과 아래 KpCta 가 받습니다. */
@@ -962,7 +962,7 @@ function PageClosure(){
   /* 2026-11-26 모바일 사용성 개편 — 머리 바로 아래가 상황 넷(CloseSit)입니다. 사진 서비스 · 절차 · 계산은 그 아래. */
   /* 2026-11-26 모바일 시안 §5 — 상황을 고르면 결과에 비용 계산 · 체크리스트가 이미 있어서 아래 계산 띠는 뺍니다 */
   var clPicked = ["pass","money","fast","lost"].indexOf(nowQS("w")) >= 0;
-  return ClosureIntro(path) + CloseSit() + CloseKpSvc() + CloseKpRoad() + (clPicked ? "" : CloseKpCalc()) +
+  return CloseTop() + CloseSit() + CloseKpSvc() + CloseKpRoad() + (clPicked ? "" : CloseKpCalc()) +
     ClosureFlow(path, true) + ClosureDemoBand() +
     sel+
     ClosureMoreBand()+

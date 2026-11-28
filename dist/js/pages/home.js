@@ -57,7 +57,7 @@ var MAIN_CALC = ["cost", "bep", "premium", "closecost"];
 
 function PageMain(){
 
-  return HomeIHero()+ HomePillars()+ HomeIInd()+ HomeITransfer()+ HomeIOps()+ HomeDirect(true)+ HomeWPSteps();
+  return HomeR1Top()+ HomeR1Find()+ HomeR1Trade()+ HomeWPSteps();
 }
 
 var HOME_ENTER = [
@@ -1580,5 +1580,111 @@ function HomeIClose(){
       '</div>'+
     '</div>'+
     '<div class="iclose-ph" aria-hidden="true">'+ihPhoto("insu-closure-in", "", false, "(max-width:900px) 92vw, 50vw")+'</div>'+
+  '</div></section>';
+}
+
+function r1Btn(b, cls){
+  var inner = icon(b.ic || "arrow", 18)+'<span>'+esc(b.t)+'</span>';
+  if(b.form) return '<a class="'+cls+'" data-cta="on" data-cta-form="'+esc(b.form)+'" href="'+esc(b.href)+'" hidden>'+inner+'</a>'+
+    '<a class="'+cls+'" data-cta="off" data-cta-form="'+esc(b.form)+'" href="/intake">'+icon("info",18)+'<span>'+esc(b.off || "접수 안내 보기")+'</span></a>';
+  return '<a class="'+cls+'" href="'+esc(b.href)+'">'+inner+'</a>';
+}
+var R1_BIG = [
+  { k:"st", ph:"home-startup", h:"창업 준비", p:"업종 선택부터 비용 · 인테리어 · 인허가까지", to:"/startup",
+    b:[{ href:"/tools/cost", t:"창업비 계산", ic:"calc" }, { href:"/startup#st-ig", t:"업종별 준비", ic:"check" }] },
+  { k:"cl", ph:"home-closure", h:"폐업 · 철거", p:"철거 · 원상복구 · 집기 처분 · 신고까지", to:"/closure",
+    b:[{ href:"/quote?mode=close", t:"폐업 견적", ic:"doc", form:"close", off:"폐업 견적 접수 안내" }, { href:"/tools/closecost", t:"폐업비 계산", ic:"calc" }] }
+];
+var R1_SMALL = [
+  { k:"op", ic:"chart", h:"매장 운영", p:"POS · 세무 노무 · 시설 유지보수", to:"/operation",
+    b:[{ href:"/providers?j=operation", t:"업체 찾기", ic:"store" }, { href:"/operation#ops-check", t:"운영 점검", ic:"check" }] },
+  { k:"tr", ic:"handover", h:"매장 양도양수", p:"매장 인수 · 내 매장 넘기기 · 권리금", to:"/transfer",
+    b:[{ href:"/stores", t:"매장 찾기", ic:"search" }, { href:"/sell", t:"내 매장 내놓기", ic:"store", form:"sell", off:"매장 내놓기 접수 안내" }] }
+];
+function HomeR1Top(){
+  var art = function(n){ return (typeof hasIconArt === "function" && hasIconArt(n)) ? iconArt(n, 40) : icon(n, 26); };
+  return '<section class="bhero r1top"><div class="w">'+
+    '<div class="r1-hd"><p class="r1-k">창업 · 운영 · 양도양수 · 폐업까지</p>'+
+      '<h1>자영업의 모든 순간을<br class="br-m"> 연결합니다.</h1></div>'+
+    '<ul class="r1-big">'+R1_BIG.map(function(c){
+      return '<li class="r1-bc r1-bc-'+c.k+'">'+
+        '<a class="r1-bph" href="'+c.to+'" aria-hidden="true" tabindex="-1">'+ihPhoto(c.ph, "", true, "(max-width:900px) 92vw, 620px")+'</a>'+
+        '<div class="r1-btx"><h2><a href="'+c.to+'">'+esc(c.h)+icon("chev",18)+'</a></h2><p>'+esc(c.p)+'</p>'+
+          '<div class="r1-go">'+r1Btn(c.b[0], "r1-b r1-b1")+r1Btn(c.b[1], "r1-b r1-b2")+'</div></div></li>';
+    }).join("")+'</ul>'+
+    '<ul class="r1-sm">'+R1_SMALL.map(function(c){
+      return '<li class="r1-sc r1-sc-'+c.k+'"><a class="r1-shd" href="'+c.to+'"><span class="r1-si" aria-hidden="true">'+art(c.ic)+'</span>'+
+          '<span class="r1-st"><b>'+esc(c.h)+'</b><i>'+esc(c.p)+'</i></span>'+icon("chev",16)+'</a>'+
+        '<div class="r1-go r1-go-s">'+r1Btn(c.b[0], "r1-b r1-b2")+r1Btn(c.b[1], "r1-b r1-b2")+'</div></li>';
+    }).join("")+'</ul>'+
+  '</div></section>';
+}
+
+var R1_SVC = [
+  { t:"철거",       ic:"demolish", pick:"demolish/full" },
+  { t:"원상복구",   ic:"restore",  pick:"restore/shop-restore" },
+  { t:"집기 처분",  ic:"sofa",     pick:"asset/furniture" },
+  { t:"인테리어",   ic:"interior", to:"/providers/interior" },
+  { t:"시설 · 장비", ic:"equip",    to:"/providers/equip" },
+  { t:"POS",        ic:"pos",      to:"/providers/it" },
+  { t:"세무 · 노무", ic:"tax",      to:"/providers/admin" },
+  { t:"직원 채용",  ic:"staff",    to:"/providers/staff" }
+];
+function HomeR1Find(){
+  var art = function(n){ return (typeof hasIconArt === "function" && hasIconArt(n)) ? iconArt(n, 44) : icon(n, 28); };
+  var L = R1_SVC.filter(function(x){ return !x.pick || typeof amPickOne !== "function" || amPickOne(x.pick); });
+  var n = (typeof amPickCount === "function") ? amPickCount() : 0;
+  var to = (typeof amPickQuoteTo === "function") ? amPickQuoteTo("auto") : "/quote";
+  return '<section class="r1find"><div class="w">'+
+    '<h2 class="r1-h2">무엇을 찾으세요?</h2>'+
+    '<form class="r1-sf" role="search" action="/search" onsubmit="return r1Find(event)" novalidate>'+
+      '<label class="sr-only" for="r1-q">서비스 · 매장 · 정보 검색</label>'+
+      '<span class="r1-sbox">'+icon("search",20)+'<input id="r1-q" name="q" type="search" autocomplete="off" maxlength="40" '+
+        'placeholder="예: 철거, 인테리어, 권리금" aria-describedby="r1-msg"></span>'+
+      '<button class="r1-sgo" type="submit">검색</button></form>'+
+    '<p id="r1-msg" class="r1-msg" role="status" aria-live="polite"></p>'+
+    '<div class="r1-sh"><h3>서비스 바로 찾기</h3><p><span class="r1-tg r1-tg-q">견적에 담기</span> 고르면 신청서에 그대로 · <span class="r1-tg r1-tg-p">업체 보기</span> 분야 업체 목록</p></div>'+
+    '<ul class="r1-sg">'+L.map(function(x){
+      if(x.pick){
+        var on = typeof amPickHas === "function" && amPickHas(x.pick);
+        var fid = "r1p-" + x.pick.replace(/[^a-z0-9]/gi, "-");
+        return '<li><label class="r1-sv r1-sv-q" for="'+fid+'">'+
+          '<input type="checkbox" class="pk-ck r1-sc-ck" id="'+fid+'" data-pick="'+esc(x.pick)+'"'+(on ? ' checked' : '')+' onchange="pickToggle(\''+esc(x.pick)+'\', this)">'+
+          '<span class="r1-svi" aria-hidden="true">'+art(x.ic)+'</span><b>'+esc(x.t)+'</b>'+
+          '<i class="r1-tg r1-tg-q"><span class="r1-q-off">견적에 담기</span><span class="r1-q-on">담음</span></i></label></li>';
+      }
+      return '<li><a class="r1-sv r1-sv-p" href="'+esc(x.to)+'"><span class="r1-svi" aria-hidden="true">'+art(x.ic)+'</span><b>'+esc(x.t)+'</b>'+
+        '<i class="r1-tg r1-tg-p">업체 보기</i></a></li>';
+    }).join("")+'</ul>'+
+    '<div class="r1-pk" data-pick-row'+(n ? '' : ' hidden')+'>'+
+      '<p>'+icon("check",16)+' 담은 서비스 <b data-pick-n>'+n+'</b>개 — 신청서에 그대로 들어갑니다</p>'+
+      '<a class="btn btn-ac" data-pick-go="auto" href="'+esc(to)+'">담은 서비스로 견적 신청'+icon("arrow",16)+'</a></div>'+
+    '<p class="r1-more"><a href="/providers">전체 서비스 · 업체 찾기'+icon("chev",14)+'</a></p>'+
+  '</div></section>';
+}
+window.r1Find = function(e){
+  if(e && e.preventDefault) e.preventDefault();
+  var el = document.getElementById("r1-q"), msg = document.getElementById("r1-msg");
+  var q = el ? el.value.trim().replace(/\s+/g, " ") : "";
+  if(!q){ if(el) el.focus(); if(msg) msg.textContent = "찾으실 말을 적어 주세요. 예: 철거, 인테리어, 권리금"; return false; }
+  if(msg) msg.textContent = "";
+  go("/search?q=" + encodeURIComponent(q));
+  return false;
+};
+
+function HomeR1Trade(){
+  var S = (window.AM_STORES || []).slice(0, 2), A = (window.AM_ASSETS || []).slice(0, 2);
+  var cards = S.map(function(s){ return { t:s.title || "매장", d:[amRegionName(s.region), s.gu].filter(Boolean).join(" "), to:"/s/" + encodeURIComponent(s.id) }; })
+    .concat(A.map(function(a){ return { t:a.title || "시설 · 집기", d:[amRegionName(a.region), a.gu].filter(Boolean).join(" "), to:"/a/" + encodeURIComponent(a.id) }; }));
+  return '<section class="r1trade"><div class="w">'+
+    '<h2 class="r1-h2">집기 · 상품 사고팔기</h2>'+
+    '<ul class="r1-tr">'+
+      '<li>'+r1Btn({ href:"/sell?t=asset", t:"집기 내놓기", ic:"sofa", form:"sell", off:"집기 내놓기 접수 안내" }, "r1-tc")+'</li>'+
+      '<li><a class="r1-tc" href="/my?v=product">'+icon("box",18)+'<span>상품 올리기</span></a></li>'+
+      '<li><a class="r1-tc" href="/assets">'+icon("search",18)+'<span>시설 · 집기 둘러보기</span></a></li>'+
+    '</ul>'+
+    (cards.length ? '<ul class="r1-tl">'+cards.map(function(c){
+      return '<li><a href="'+esc(c.to)+'"><b>'+esc(c.t)+'</b>'+(c.d ? '<i>'+esc(c.d)+'</i>' : '')+icon("chev",16)+'</a></li>'; }).join("")+'</ul>' : '')+
+    '<p class="r1-tn">올리신 내용은 운영자가 확인한 뒤 공개합니다. 연락처 · 상호 · 번지 주소는 공개하지 않습니다.</p>'+
   '</div></section>';
 }

@@ -906,3 +906,50 @@ window.ListState = function(o){
     '<p><b>고르신 조건에 맞는 '+esc(o.what || "결과")+'가 없습니다.</b> 전체에는 '+o.total+'건이 있습니다. 조건을 바꾸거나 초기화해 보세요.</p>'+
     '<a class="btn btn-b" href="'+esc(o.reset)+'" data-keep>조건 초기화</a></div>';
 };
+
+function ctBtn(b, cls){
+  if(!b) return "";
+  var inner = '<span class="cg-bi" aria-hidden="true">'+icon(b.ic || "arrow", 20)+'</span><span class="cg-bt">'+esc(b.t)+'</span>'+icon("chev", 16);
+  if(b.form){
+    return '<a class="'+cls+'" data-cta="on" data-cta-form="'+esc(b.form)+'" href="'+esc(b.href)+'" hidden>'+inner+'</a>'+
+      '<a class="'+cls+'" data-cta="off" data-cta-form="'+esc(b.form)+'" href="/intake">'+
+        '<span class="cg-bi" aria-hidden="true">'+icon("info", 20)+'</span><span class="cg-bt">'+esc(b.off || "접수 안내 보기")+'</span>'+icon("chev", 16)+'</a>';
+  }
+  return '<a class="'+cls+'" href="'+esc(b.href)+'"'+(b.id ? ' id="'+esc(b.id)+'"' : '')+'>'+inner+'</a>';
+}
+
+function ctRow(r){
+  var ph = r.ph && typeof hasPhoto === "function" && hasPhoto(r.ph);
+  var art = (typeof hasIconArt === "function" && hasIconArt(r.ic)) ? iconArt(r.ic, 34) : icon(r.ic || "store", 26);
+  return '<li><a class="cg-r'+(ph ? ' cg-r-ph' : '')+'" href="'+esc(r.href)+'">'+
+    (ph ? '<span class="cg-rp" aria-hidden="true">'+photoBox(r.ph, "", false, "128px")+'</span>'
+        : '<span class="cg-ri" aria-hidden="true">'+art+'</span>')+
+    '<span class="cg-rt"><b>'+esc(r.t)+'</b>'+(r.d ? '<i>'+esc(r.d)+'</i>' : '')+'</span>'+
+    icon("chev", 18)+'</a></li>';
+}
+
+function ctTile(t){
+  var art = (typeof hasIconArt === "function" && hasIconArt(t.ic)) ? iconArt(t.ic, 44) : icon(t.ic || "check", 30);
+  var on = typeof amPickHas === "function" && amPickHas(t.id);
+  var fid = "ctt-" + String(t.id).replace(/[^a-z0-9]/gi, "-");
+  return '<li><label class="cg-t" for="'+fid+'">'+
+    '<input type="checkbox" class="pk-ck cg-tc" id="'+fid+'" data-pick="'+esc(t.id)+'"'+(on ? ' checked' : '')+
+      ' onchange="pickToggle(\''+esc(t.id)+'\', this)">'+
+    '<span class="cg-ti" aria-hidden="true">'+art+'</span><b>'+esc(t.t)+'</b>'+
+    '<i class="cg-tk"><span class="cg-tk-off">견적에 담기</span><span class="cg-tk-on">담음</span></i></label></li>';
+}
+window.CatTop = function(o){
+  o = o || {};
+  var ph = o.photo && typeof hasPhoto === "function" && hasPhoto(o.photo);
+  var big = (typeof hasIconArt === "function" && hasIconArt(o.ic)) ? iconArt(o.ic, 56) : icon(o.ic || "store", 40);
+  return '<section class="ctop ctop-'+esc(o.side || "start")+'"'+(o.id ? ' id="'+esc(o.id)+'"' : '')+'><div class="ctop-g'+(ph ? ' ctop-g-ph' : '')+'">'+
+    (ph ? '<div class="ctop-ph" aria-hidden="true">'+photoBox(o.photo, "", true, "(max-width:900px) 100vw, 640px")+'</div>' : '')+
+    '<div class="w ctop-in">'+
+      '<div class="ctop-hd"><div><h1>'+esc(o.h1)+'</h1><p class="ctop-s">'+esc(o.sub || "")+'</p></div>'+
+        '<span class="ctop-ia" aria-hidden="true">'+big+'</span></div>'+
+      '<div class="ctop-go">'+ctBtn(o.a1, "cg-b cg-b1")+ctBtn(o.a2, "cg-b cg-b2")+'</div>'+
+      (o.body || '')+
+    '</div></div></section>';
+};
+window.ctRows = function(L){ return '<ul class="cg-l">'+L.map(ctRow).join("")+'</ul>'; };
+window.ctTiles = function(L){ return '<ul class="cg-tg">'+L.map(ctTile).join("")+'</ul>'; };

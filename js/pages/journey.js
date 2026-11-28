@@ -813,7 +813,7 @@ function PageOperation(){
   /* 2026-11-26 모바일 사용성 개편 — 머리 바로 아래가 고민 넷(OpsSit). 옛 고민 카드(OpsWorry)는 같은 선택이라 내렸습니다(함수는 그대로). */
   /* 2026-11-26 모바일 시안 §3 — 고민을 고르면 결과에 그 계산이 첫 행동으로 나옵니다 · 아래 진단 띠(월 고정비)는 고른 뒤 뺍니다 */
   var opPicked = ["cost","mkt","fix","hr"].indexOf(nowQS("need")) >= 0;
-  return OpsIntro(ind) + OpsSit(ind) + OpsKpSvc(ind) + OpsKpRoad() + (opPicked ? "" : OpsKpDiag()) +
+  return OpsTop(ind) + OpsSit(ind) + OpsKpSvc(ind) + OpsKpRoad() + (opPicked ? "" : OpsKpDiag()) +
     /* 2026-11-24 하단 간소화 — '여러 서비스 함께 고르기' 한 구역 · 기본 접힘 (옛 PickGroupBand + PickBasket) */
     HallPickFold({ side:"ops", path:(nowQS("p") === "pick" ? "pick" : ""),
       body:PickGroupBody("operation", "ops", { noAside:true }), packKeys:["run"] }) +
@@ -1229,7 +1229,7 @@ function PageAcquisition(){
      결과에 이미 있는 권리금 계산 띠 · 경로 메뉴(aq-path) · (넘기기면) 매물 건수 띠는 고른 뒤 뺍니다 — 같은 링크가 여섯 번 나왔습니다.
      안 고르면 그대로입니다. */
   var aqPicked = ["in","out"].indexOf(nowQS("t")) >= 0;
-  return AcqIntro(ind, iq, nowQS("t")) + AcqSit(ind) + AcqKpSvc(ind, iq) + AcqKpRoad(t) + (aqPicked ? "" : AcqKpCalc(t)) +
+  return AcqTop(ind) + AcqSit(ind) + AcqKpSvc(ind, iq) + AcqKpRoad(t) + (aqPicked ? "" : AcqKpCalc(t)) +
     (aqPicked ? "" : AcqWhich(t, ind, iq, true)) +
     (t === "in" ? (aqPicked ? "" : AcqSearch(ind) + mkt) + sel : AcqPrep(ind) + sel + (aqPicked ? "" : mkt)) +
     AcqProcess(t, ind) + AcqKpPros(ind) +

@@ -2957,7 +2957,8 @@ const AUDIT = `(() => {
     const secs = {};
     [].slice.call(cks).forEach(function(c){
       const s = c.closest("section");
-      if(s) secs[s.className] = 1;
+      /* 2026-11-28 — 머리(CatTop)의 '견적에 담기' 칸은 같은 바구니의 빠른 선택이라 따로 세지 않습니다 */
+      if(s && !s.classList.contains("ctop")) secs[s.className] = 1;
     });
     if(Object.keys(secs).length > 1)
       return "고르는 자리가 " + Object.keys(secs).length + "곳입니다 — " + Object.keys(secs).join(" / ");
@@ -2999,7 +3000,8 @@ const AUDIT = `(() => {
     const secs = {};
     [].slice.call(cks).forEach(function(c){
       const s = c.closest("section");
-      if(s) secs[s.className] = 1;
+      /* 2026-11-28 — 머리(CatTop)의 '견적에 담기' 칸은 같은 바구니의 빠른 선택이라 따로 세지 않습니다 */
+      if(s && !s.classList.contains("ctop")) secs[s.className] = 1;
     });
     if(Object.keys(secs).length > 1)
       return "고르는 자리가 " + Object.keys(secs).length + "곳입니다 — " + Object.keys(secs).join(" / ");
@@ -3041,7 +3043,8 @@ const AUDIT = `(() => {
     const secs = {};
     [].slice.call(cks).forEach(function(c){
       const s = c.closest("section");
-      if(s) secs[s.className] = 1;
+      /* 2026-11-28 — 머리(CatTop)의 '견적에 담기' 칸은 같은 바구니의 빠른 선택이라 따로 세지 않습니다 */
+      if(s && !s.classList.contains("ctop")) secs[s.className] = 1;
     });
     if(Object.keys(secs).length > 1)
       return "고르는 자리가 " + Object.keys(secs).length + "곳입니다 — " + Object.keys(secs).join(" / ");
@@ -3083,7 +3086,8 @@ const AUDIT = `(() => {
     const secs = {};
     [].slice.call(cks).forEach(function(c){
       const s = c.closest("section");
-      if(s) secs[s.className] = 1;
+      /* 2026-11-28 — 머리(CatTop)의 '견적에 담기' 칸은 같은 바구니의 빠른 선택이라 따로 세지 않습니다 */
+      if(s && !s.classList.contains("ctop")) secs[s.className] = 1;
     });
     if(Object.keys(secs).length > 1)
       return "고르는 자리가 " + Object.keys(secs).length + "곳입니다 — " + Object.keys(secs).join(" / ");

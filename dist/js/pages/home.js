@@ -1657,8 +1657,8 @@ function HomeR1Find(){
         '<i class="r1-tg r1-tg-p">업체 보기</i></a></li>';
     }).join("")+'</ul>'+
     '<div class="r1-pk" data-pick-row'+(n ? '' : ' hidden')+'>'+
-      '<p>'+icon("check",16)+' 담은 서비스 <b data-pick-n>'+n+'</b>개 — 신청서에 그대로 들어갑니다</p>'+
-      '<a class="btn btn-ac" data-pick-go="auto" href="'+esc(to)+'">담은 서비스로 견적 신청'+icon("arrow",16)+'</a></div>'+
+      '<p>'+icon("check",16)+'<span>담은 서비스 <b data-pick-n>'+n+'</b>개 — 신청서에 그대로 들어갑니다</span></p>'+
+      '<a class="btn btn-ac" data-pick-go="auto" href="'+esc(to)+'"><span>담은 서비스로 견적 신청</span>'+icon("arrow",16)+'</a></div>'+
     '<p class="r1-more"><a href="/providers">전체 서비스 · 업체 찾기'+icon("chev",14)+'</a><a href="/content">이용 가이드'+icon("chev",14)+'</a></p>'+
   '</div></section>';
 }

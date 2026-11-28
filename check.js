@@ -985,7 +985,8 @@ const AUDIT = `(() => {
   document.querySelectorAll("#view .ic-t, #view .stg-i, #view .ia-t," +
                             " #view .mhall-i, #view .mstp-i," +
                             " #view .bent-i, #view .bwhy-i, #view .bban-i," +
-                            " #view .bstep-i, #view .bcal-i, #view .wp-ci, #view .wp-sn, #view .iind-i, #view .ipil-i").forEach(e => {
+                            " #view .bstep-i, #view .bcal-i, #view .wp-ci, #view .wp-sn, #view .iind-i, #view .ipil-i," +
+                            " #view .r1-si, #view .r1-svi, #view .cg-ri, #view .cg-ti, #view .ctop-ia").forEach(e => {
     if(e.querySelector("svg")) return;
     const own = (e.parentElement || e);
     out.ico.push((own.textContent || "").trim().slice(0, 14) || "(이름 없음)");
@@ -2165,56 +2166,34 @@ const AUDIT = `(() => {
      큰 배너 · 설명 · 검색창을 하나씩 더하다 보면 카드가 첫 화면
      아래로 밀려나는데, 그걸 막는 것이 목적입니다. */
   await f("메인은 히어로 다음이 양도양수 배너이고 서비스가 창업 → 운영 → 양도양수 → 폐업 차례다", "/", `
-    /* 2026-11-19 홈페이지 전체 디자인 개편 — 01 히어로 · 02 4대 진입 카드 (시안 STOREWAY_01).
-       뜻은 그대로 — 첫 구간이 히어로이고 h1 이 거기 하나 · 다음이 네 기둥 · 차례가 사업의 흐름.
-       옛 판(보조 진입 넷 · 네 걸음 · 두 판)은 git show e1f99c3:check.js 에 있습니다. 이 주석에 백틱 금지. */
+    /* 2026-11-28 대표 지시 '메인·카테고리·기능 최종 개편' 1 — 첫 구간(r1top)에 h1 하나 · 큰 카드 둘(창업 → 폐업) ·
+       작은 카드 둘(운영 → 양도양수). 네 기둥으로 가는 길과 사진 자리를 봅니다. 옛 판은 git show d5d83042f^:check.js. 이 주석에 백틱 금지. */
     const secs = [].slice.call(document.querySelectorAll("#view > section"));
     if(!secs.length) return "메인에 구간이 없습니다";
-    if(!secs[0].classList.contains("bhero"))
-      return "첫 구간이 히어로가 아닙니다 — " + (secs[0].className || "").split(" ")[0];
-    /* 2026-11-19 Warm Premium — 히어로 다음이 양도양수 배너(bpass)이고 서비스 여섯(bent)이 그 뒤입니다 */
-    /* 2026-11-21 Warm Premium 사진 중심 리디자인 — 히어로 다음이 '지금 어떤 도움'(ihelp · 창업 준비 / 폐업·철거 두 사진 카드) */
-    /* 2026-11-22 대표 확정 시안 — 창업 · 폐업 두 사진 카드가 히어로 안(한 줄 세 칸)으로 올라와서 다음은 업종별 탐색입니다 */
-    /* 2026-11-22 대표 지시서(메인 사진 넷) — 히어로 다음은 네 기둥(ipil) 탐색 */
-    if(!(secs[1] && secs[1].classList.contains("ipil")))
-      return "히어로 다음이 네 기둥 서비스 탐색이 아닙니다 — " + ((secs[1] || {}).className || "").split(" ")[0];
-    if(!(H0ok())) return "창업 · 폐업 사진 카드가 히어로 안에 없습니다";
-    function H0ok(){ return document.querySelectorAll(".bhero .wp-hc").length === 2; }
+    if(!secs[0].classList.contains("r1top")) return "첫 구간이 큰 카드 구간이 아닙니다 — " + (secs[0].className || "").split(" ")[0];
     const h1s = document.querySelectorAll("#view h1");
     if(h1s.length !== 1) return "화면의 h1 이 " + h1s.length + "개입니다";
-    if(!h1s[0].closest(".bhero")) return "h1 이 히어로 구간에 없습니다";
-    /* 2026-11-19 Warm Premium — 히어로의 두 카드(창업 준비 · 폐업·철거) + 서비스 여섯 */
-    const H = [].slice.call(document.querySelectorAll(".wp-hc"));
-    if(H.map(function(a){ return a.getAttribute("href"); }).join() !== "/startup,/closure")
-      return "히어로 카드가 창업 준비 · 폐업·철거 둘이 아닙니다";
-    /* 2026-11-21 — 서비스 여섯 카드가 내려가고 네 기둥이 저마다 구간을 가집니다. 그 넷으로 가는 길이 메인 본문에 있어야 합니다 */
-    const L = [];
-    const lost4 = ["/startup","/operation","/transfer","/closure","/providers","/content"].filter(function(u){
-      return !document.querySelector('a[href="' + u + '"]'); });
-    if(lost4.length) return "메인에서 갈 길이 없는 기둥: " + lost4.join(" · ");
-    for(const a of H) if(a.querySelector("a")) return "카드 안에 링크가 또 있습니다";
-    /* 2026-11-20 배포 후보 — 출처가 기록에 없는 사진 셋은 메인에서 안 불려야 하고, 세 자리는 자체 일러스트(또는 권리 확인된 main-* 사진)로 섭니다 */
+    if(!h1s[0].closest(".r1top")) return "h1 이 첫 구간에 없습니다";
+    const big = [].slice.call(document.querySelectorAll(".r1-bc")).map(function(e){ return (e.querySelector("h2 a") || {}).getAttribute ? e.querySelector("h2 a").getAttribute("href") : ""; });
+    if(big.join() !== "/startup,/closure") return "큰 카드가 창업 → 폐업 둘이 아닙니다 — " + big.join();
+    const sm = [].slice.call(document.querySelectorAll(".r1-sc .r1-shd")).map(function(a){ return a.getAttribute("href"); });
+    if(sm.join() !== "/operation,/transfer") return "작은 카드가 운영 → 양도양수 둘이 아닙니다 — " + sm.join();
+    for(const c of document.querySelectorAll(".r1-bc, .r1-sc")){
+      for(const b of c.querySelectorAll(".r1-go a")){ if(b.closest("[hidden]") || b.hidden) continue;
+        if(b.querySelector("a")) return "단추 안에 링크가 또 있습니다"; }
+      if(c.querySelectorAll(".r1-go a:not([hidden])").length !== 2) return "카드마다 보이는 단추가 둘이 아닙니다"; }
+    const lost = ["/startup","/operation","/transfer","/closure","/providers","/content"].filter(function(u){
+      return !document.querySelector('#view a[href="' + u + '"]'); });
+    if(lost.length) return "메인 본문에서 갈 길이 없는 곳: " + lost.join(" · ");
     const used = [].slice.call(document.querySelectorAll("#view img, #view source")).map(function(e){ return (e.getAttribute("src") || "") + " " + (e.getAttribute("srcset") || ""); }).join(" ");
     const leak = ["hero-startup","kind-take","kind-pass"].filter(function(k){ return used.indexOf("/img/" + k) >= 0; });
     if(leak.length) return "출처 미확인 사진이 메인에 불립니다 — " + leak.join(" · ");
-    /* 2026-11-21 — 지시서가 정한 자리에 ZIP 사진 다섯 장이 정확히 앉았는가 (다른 사진으로 바꿔 끼우면 잡습니다) */
-    /* 2026-11-22 — 히어로가 밝은 세 칸이 되면서 00_hero_brand 는 메인에 안 나옵니다 (파일과 자리는 그대로) */
-    /* 2026-11-22 대표 지시서 — 사진 넷이 img/home/ 의 대표 지정 파일이어야 합니다 (폐업 구간은 히어로 카드와 겹쳐 내려왔습니다) */
-    const spot = [[H[0], "home/01_hero_startup", "창업 카드"],
-                  [H[1], "home/02_hero_closure", "폐업 카드"], [document.querySelector(".iops-ph"), "home/03_section_operations", "매장 운영"],
-                  [document.querySelector(".itr-ph"), "home/04_section_transfer", "양도양수"]];
+    const spot = [[".r1-bc-st", "home/01_hero_startup", "창업 카드"], [".r1-bc-cl", "home/02_hero_closure", "폐업 카드"]];
     for(const x of spot){
-      if(!x[0]) return x[2] + " 가 없습니다";
-      const im = x[0].querySelector("img");
+      const im = document.querySelector(x[0] + " img");
       if(!im) return x[2] + " 에 사진이 없습니다";
       if((im.getAttribute("src") || "").indexOf("/img/" + x[1]) < 0) return x[2] + " 사진이 " + x[1] + " 가 아닙니다";
     }
-    /* 03_transfer 는 매물 썸네일이 아닙니다 */
-    if([].slice.call(document.querySelectorAll(".itr-g img")).some(function(i){ var u = i.getAttribute("src") || ""; return u.indexOf("/img/insu/") >= 0 || u.indexOf("/img/home/") >= 0; }))
-      return "ZIP 연출 사진이 매물 목록에 쓰였습니다";
-    /* 옛 보조 진입이 들고 있던 둘이 길을 잃지 않았는가 (헤더 펼침 · 푸터) */
-    const miss = ["/providers","/about"].filter(function(u){ return !document.querySelector('a[href="' + u + '"]'); });
-    if(miss.length) return "메인에서 갈 수 없게 된 곳: " + miss.join(" · ");
     return true;`);
   await f("어느 화면에서나 검색으로 가는 길이 있고 메인이 두 갈래로 갈린다", "/", `
     /* ⚠️⚠️ **2026-10-08 — 떠 있는 검색 패널이 메인에서 내려왔습니다**
@@ -2248,7 +2227,7 @@ const AUDIT = `(() => {
     const bodyQ = document.querySelectorAll("#view input[type=search]");
     if(bodyQ.length > 1) return "메인 본문에 검색창이 " + bodyQ.length + "개입니다 (중복)";
     if(bodyQ.length === 1){
-      const fm = bodyQ[0].closest("form.sw-find");
+      const fm = bodyQ[0].closest("form.sw-find, form.r1-sf");
       if(!fm || fm.getAttribute("action") !== "/search") return "메인 검색창이 /search 로 가지 않습니다";
     }
     /* ⚠️ 패널 탭이 가리키던 다섯 곳이 길을 잃지 않았는지 — 메인이나
@@ -2316,9 +2295,11 @@ const AUDIT = `(() => {
         bad.push((e.className || e.tagName).toString().split(" ")[0] + " " + c.join(","));
     });
     if(bad.length) return "브라운 · 아이보리 밖의 면: " + bad.slice(0, 3).join(" | ");
-    const go = rgb(getComputedStyle(document.querySelector(".wp-hc .wp-go") || document.body).backgroundColor);
-    if(!go || !(go[0] >= go[1] && go[1] >= go[2])) return "히어로 단추가 브라운이 아닙니다 — " + go;
-    const g2 = [].slice.call(document.querySelectorAll(".wp-hc .wp-go")).map(function(e){ return getComputedStyle(e).backgroundColor; });
+    /* 2026-11-28 — 재는 자리가 큰 카드 둘의 주 단추(창업비 계산 · 폐업 견적)입니다 (보이는 것만) */
+    const g1 = [].slice.call(document.querySelectorAll(".r1-bc .r1-b1")).filter(function(e){ return e.getClientRects().length; });
+    const go = rgb(getComputedStyle(g1[0] || document.body).backgroundColor);
+    if(!go || !(go[0] >= go[1] && go[1] >= go[2])) return "큰 카드 단추가 브라운이 아닙니다 — " + go;
+    const g2 = g1.map(function(e){ return getComputedStyle(e).backgroundColor; });
     if(g2.length !== 2 || g2[0] !== g2[1]) return "창업 · 폐업 단추의 색이 다릅니다 (같은 무게라야 합니다) — " + g2.join(" | ");
     return true;`);
 
@@ -2858,17 +2839,16 @@ const AUDIT = `(() => {
      손님은 같은 것을 두 번 적고 거기서 닫습니다.
      ⚠️ 주석에 백틱을 쓰지 마세요. */
   await f("창업 머리에서 업종 고르기로 가는 길이 폰에도 있다", "/startup", `
-    /* 2026-11-24 — 폰은 바로 가기 카드를 접어 두어서, 단추 줄 안의 '내 업종 준비 보기'(.hh-mo)가 그 길입니다.
-       그 링크가 있고 · 가는 곳(업종 고르기 구간)이 있고 · 폰 폭 규칙에서만 보이는지 봅니다. 이 주석에 백틱 금지. */
-    const a = document.querySelector(".hh-cta a.hh-mo");
-    if(!a) return "단추 줄에 '내 업종 준비 보기' 가 없습니다";
+    /* 2026-11-28 대표 시안 02 — 머리(CatTop)의 둘째 행동 '업종별 준비' 가 업종 고르기 구간(#st-ig)으로 갑니다.
+       폰에서도 숨지 않아야 합니다 (보이는가 · 가는 곳이 있는가). 이 주석에 백틱 금지. */
+    const a = document.querySelector(".ctop .cg-b2");
+    if(!a) return "머리에 '업종별 준비' 가 없습니다";
     if(a.getAttribute("href") !== "#st-ig") return "가는 곳이 업종 고르기 구간이 아닙니다 — " + a.getAttribute("href");
     if(!document.getElementById("st-ig")) return "업종 고르기 구간이 없습니다";
-    let mob = false;
+    if(!a.getClientRects().length || getComputedStyle(a).display === "none") return "'업종별 준비' 가 안 보입니다";
     for (const sh of document.styleSheets){ let rs; try{ rs = sh.cssRules; }catch(e){ continue; }
-      for (const r of rs){ if(r.media && r.media.mediaText.indexOf("max-width: 900px") >= 0)
-        for (const x of r.cssRules) if(x.selectorText && x.selectorText.indexOf(".hh-mo") >= 0 && x.style.display && x.style.display !== "none") mob = true; } }
-    if(!mob) return "폰 폭에서 보이게 하는 규칙이 없습니다";
+      for (const r of rs){ if(r.media && r.media.mediaText.indexOf("max-width") >= 0)
+        for (const x of r.cssRules) if(x.selectorText && /\.cg-b2|\.ctop-go/.test(x.selectorText) && x.style.display === "none") return "폰 폭에서 숨기는 규칙이 있습니다"; } }
     return true;`);
   await f("운영 고민 카드마다 계산 · 점검 단추가 실제 목적지로 간다", "/operation", `
     /* 2026-11-26 모바일 사용성 개편 — 고민 넷이 맨 위 첫 구간(#sit)으로 올라왔습니다. 고민마다 계산 · 점검 · 업체 중
@@ -2934,7 +2914,7 @@ const AUDIT = `(() => {
        한 구역(clpf)으로 합쳐졌습니다. 그 구역이 하나 있고 · 절차(stD)가 있고 · 고르는 칸 · 개수 · 신청 길이
        그 안에 있는지 봅니다. */
     const got = [].slice.call(document.querySelectorAll("#view > section")).map(function(s){
-      return s.classList.contains("clpf") ? "clpf" : (s.classList.contains("stD") ? "stD" : (s.className.indexOf("pgh") >= 0 ? "pgh" : "?")); });
+      return s.classList.contains("clpf") ? "clpf" : (s.classList.contains("stD") ? "stD" : ((s.className.indexOf("pgh") >= 0 || s.classList.contains("ctop")) ? "pgh" : "?")); });
     for(const w of ["pgh", "clpf", "stD"])
       if(got.indexOf(w) < 0) return "구간이 빠졌습니다 — " + w + " · 지금 " + got.join(" ");
     if(got.filter(function(x){ return x === "clpf"; }).length !== 1) return "고르는 구역이 하나가 아닙니다";
@@ -2968,7 +2948,7 @@ const AUDIT = `(() => {
   await f("전문관 공통 여덟 — /startup", "/startup", `
     const WANT_SIDE = "start";
     /* ① 소개 */
-    if(!document.querySelector(".pgh")) return "소개(머리)가 없습니다";
+    if(!document.querySelector(".pgh, .ctop")) return "소개(머리)가 없습니다";
     /* ② 서비스 선택 — 고를 수 있는 칸이 실제로 있어야 합니다 */
     const cks = document.querySelectorAll("#view [data-pick]");
     if(!cks.length) return "고르는 체크칸이 0개입니다";
@@ -3010,7 +2990,7 @@ const AUDIT = `(() => {
   await f("전문관 공통 여덟 — /operation", "/operation", `
     const WANT_SIDE = "ops";
     /* ① 소개 */
-    if(!document.querySelector(".pgh")) return "소개(머리)가 없습니다";
+    if(!document.querySelector(".pgh, .ctop")) return "소개(머리)가 없습니다";
     /* ② 서비스 선택 — 고를 수 있는 칸이 실제로 있어야 합니다 */
     const cks = document.querySelectorAll("#view [data-pick]");
     if(!cks.length) return "고르는 체크칸이 0개입니다";
@@ -3052,7 +3032,7 @@ const AUDIT = `(() => {
   await f("전문관 공통 여덟 — /transfer", "/transfer", `
     const WANT_SIDE = "transfer";
     /* ① 소개 */
-    if(!document.querySelector(".pgh")) return "소개(머리)가 없습니다";
+    if(!document.querySelector(".pgh, .ctop")) return "소개(머리)가 없습니다";
     /* ② 서비스 선택 — 고를 수 있는 칸이 실제로 있어야 합니다 */
     const cks = document.querySelectorAll("#view [data-pick]");
     if(!cks.length) return "고르는 체크칸이 0개입니다";
@@ -3094,7 +3074,7 @@ const AUDIT = `(() => {
   await f("전문관 공통 여덟 — /closure", "/closure", `
     const WANT_SIDE = "close";
     /* ① 소개 */
-    if(!document.querySelector(".pgh")) return "소개(머리)가 없습니다";
+    if(!document.querySelector(".pgh, .ctop")) return "소개(머리)가 없습니다";
     /* ② 서비스 선택 — 고를 수 있는 칸이 실제로 있어야 합니다 */
     const cks = document.querySelectorAll("#view [data-pick]");
     if(!cks.length) return "고르는 체크칸이 0개입니다";
@@ -3868,15 +3848,13 @@ const AUDIT = `(() => {
     /* 2026-11-19 대표 확정 시안 — 2분할(.sw3-g) 이 첫 구간 · 바로가기 칩과 "왜 일까요" 띠는 내려왔습니다. */
     /* 2026-11-19 Warm Premium 대표 확정 시안 */
     /* 2026-11-21 Warm Premium 사진 중심 리디자인 */
-    const need = [[".ih-in .wp-find", "히어로 통합 검색"],
-                  [".wp-sug",  "검색 예시"],
-                  [".ih3-g", "히어로 세 칸 (문구 · 창업 · 폐업)"],
-                  [".ipil-g",  "네 기둥 서비스 탐색"],
-                  [".iind-g",  "업종별 서비스 탐색"],
-                  [".iops-l",  "매장 운영 목록"],
-                  [".itr-f",   "매물 찾기 (지역 · 업종 · 예산)"],
-                  [".bdir-g, .bdq-g, .bsq-g",  "세부 서비스"],
-                  [".wp-sg",   "이용 방법 넷"]];
+    /* 2026-11-28 대표 지시 1 */
+    const need = [[".r1-big", "큰 카드 둘 (창업 · 폐업)"],
+                  [".r1-sm",  "작은 카드 둘 (운영 · 양도양수)"],
+                  [".r1-sf",  "무엇을 찾으세요 검색"],
+                  [".r1-sg",  "서비스 바로 찾기"],
+                  [".r1-tr",  "집기 · 상품 사고팔기"],
+                  [".wp-sg",  "이용 방법 넷"]];
     /* 숨겨 둔 짝(data-cta=on · hidden)은 닫혀 있을 때 안 보이는 것이 맞습니다 — 보이는 것만 셉니다 */
     if(!(window.WOW_BIZ && WOW_BIZ.sosReady) && [].slice.call(v.querySelectorAll('a[href="/quote"]')).some(function(a){ return !a.closest("[hidden]") && a.getClientRects().length; }))
       return "접수가 닫혀 있는데 메인 본문에 견적 신청 단추가 있습니다 (W01)";
@@ -3946,8 +3924,8 @@ const AUDIT = `(() => {
        (아래 · 밝은 면 60% 이상)는 그대로라 "전부 다크로" 는 여전히 잡힙니다. */
     /* 2026-11-21 — 히어로는 대형 사진(어두운 막)이라 빼고, 나머지 여섯 구간은 반드시 밝아야 합니다 */
     /* 2026-11-22 — 히어로가 밝은 아이보리 세 칸이 되어 이제 히어로도 밝아야 합니다 */
-    for(const q of [[".ih3","히어로"], [".ipil","네 기둥"], [".iind","업종별"], [".iops","매장 운영"],
-                    [".itr","매장 양도양수"], [".bdir","세부 서비스"], [".wp-steps","이용 방법"]]){
+    /* 2026-11-28 대표 지시 1 — 메인 네 구간이 전부 밝아야 합니다 */
+    for(const q of [[".r1top","큰 · 작은 카드"], [".r1find","무엇을 찾으세요"], [".r1trade","사고팔기"], [".wp-steps","이용 방법"]]){
       const e = document.querySelector(q[0]);
       if(!e) return q[1] + " 구간이 없습니다";
       const L = bgL(e);
@@ -4083,19 +4061,17 @@ const AUDIT = `(() => {
     if(lost.length) return "사이트 안에서 갈 길이 없는 단계 — " + lost.join(" · ");
     return true;`);
   await f("히어로의 창업 준비 · 폐업·철거 두 카드의 크기가 같다", "/", `
-    /* 2026-11-19 Warm Premium — 재는 자리가 히어로의 두 카드입니다. 한 줄에 서면 폭 · 높이가
-       1px 단위로 같아야 합니다 (어느 쪽이 덜 중요한 것으로 읽히면 안 됩니다). 이 주석에 백틱 금지. */
-    const L = [].slice.call(document.querySelectorAll(".wp-hc"));
-    if(L.length !== 2) return "히어로 카드가 " + L.length + "장입니다";
-    const R = L.map(function(e){ return e.getBoundingClientRect(); });
-    if(Math.abs(R[1].top - R[0].top) <= 2 &&
-       (Math.abs(R[1].width - R[0].width) > 2 || Math.abs(R[1].height - R[0].height) > 2))
-      return "히어로 카드 " + Math.round(R[0].width) + "×" + Math.round(R[0].height) + " · " +
-             Math.round(R[1].width) + "×" + Math.round(R[1].height) + " — 크기와 무게가 같아야 합니다";
-    const C = [].slice.call(document.querySelectorAll(".wp-cc")).map(function(e){ return e.getBoundingClientRect(); });
-    for(let i = 1; i < C.length; i++)
-      if(Math.abs(C[i].top - C[i-1].top) <= 2 && Math.abs(C[i].height - C[i-1].height) > 2)
-        return "서비스 카드 높이가 한 줄 안에서 다릅니다";
+    /* 2026-11-28 — 재는 자리가 메인 큰 카드 둘(창업 · 폐업)과 작은 카드 둘(운영 · 양도양수)입니다.
+       한 줄에 서면 폭 · 높이가 같아야 합니다 (어느 쪽이 덜 중요한 것으로 읽히면 안 됩니다). 이 주석에 백틱 금지. */
+    for(const q of [[".r1-bc", "큰 카드"], [".r1-sc", "작은 카드"]]){
+      const L = [].slice.call(document.querySelectorAll(q[0]));
+      if(L.length !== 2) return q[1] + "가 " + L.length + "장입니다";
+      const R = L.map(function(e){ return e.getBoundingClientRect(); });
+      if(Math.abs(R[1].top - R[0].top) <= 2 &&
+         (Math.abs(R[1].width - R[0].width) > 2 || Math.abs(R[1].height - R[0].height) > 2))
+        return q[1] + " " + Math.round(R[0].width) + "×" + Math.round(R[0].height) + " · " +
+               Math.round(R[1].width) + "×" + Math.round(R[1].height) + " — 크기와 무게가 같아야 합니다";
+    }
     return true;`);
   /* ══ 여정 넷 (2026-10-05 V2 지시서 §1 · §2 · §4 · §6 · §7 · §31) ══ */
 
@@ -4299,7 +4275,7 @@ const AUDIT = `(() => {
     /* 2026-11-18 메인 디자인 개편(대표 확정 시안) — 재는 자리만 새 화면으로.
        옛 판은 git show 2aa1d8d:check.js 에 있습니다. 이 주석에 백틱 금지. */
 
-    const groups = [[".ipil-i", "네 기둥"], [".wp-sn", "이용 방법"]];
+    const groups = [[".r1-si", "작은 카드"], [".r1-svi", "서비스 바로 찾기"], [".wp-sn", "이용 방법"]];
     for(const g of groups){
       const L = [].slice.call(document.querySelectorAll("#view " + g[0]));
       if(!L.length) return g[1] + " 아이콘이 하나도 없습니다";
@@ -4460,7 +4436,7 @@ const AUDIT = `(() => {
     /* 2026-11-21 Warm Premium 사진 중심 리디자인 — 히어로 · 도움 · 업종 · 운영 · 양도양수 · 폐업 · 이용 방법 */
     /* 2026-11-22 대표 확정 시안 — 창업 · 폐업 카드가 히어로 안으로 올라와 '지금 어떤 도움' 구간이 내려왔습니다 */
     /* 2026-11-22 대표 지시서(메인 사진 넷) — 히어로 · 네 기둥 · 업종 · 양도양수 · 매장 운영 · 세부 서비스 · 이용 방법 */
-    const want = ["bhero","ipil","iind","bpass","iops","bdir","bstep"];
+    const want = ["r1top","r1find","r1trade","bstep"];  /* 2026-11-28 대표 지시 1 — 큰 · 작은 카드 → 무엇을 찾으세요 → 사고팔기 → 이용 방법 */
     const S = [].slice.call(document.querySelectorAll("#view > section"));
     if(S.length !== want.length)
       return "구간이 " + S.length + "개입니다 (" + want.length + "이어야 합니다)";
@@ -4470,7 +4446,7 @@ const AUDIT = `(() => {
          합니다 ("?3" 이 아니라). */
       /* ⚠️ 앞 지시서의 이름들을 **빼지 않습니다** — 되살아나면
          "차례가 … 입니다" 로 이름을 내야 합니다 ("?3" 이 아니라). */
-      for(const m of ["ipil","ihelp","iind","iops","iclose","bent","bdir","bpass","bwhy","bstep","bban","bcal","bgd","bcta",
+      for(const m of ["r1top","r1find","r1trade","ipil","ihelp","iind","iops","iclose","bent","bdir","bpass","bwhy","bstep","bban","bcal","bgd","bcta",
                       "bhero","mh","mbr","mhall","msvc","mexp","pkg","mind",
                       "mti","mstp","mopsv","mjn","mlast"])
         if(e.classList.contains(m)) return m;
@@ -5262,6 +5238,7 @@ const AUDIT = `(() => {
     const sel = ".cat,.ind,.pv,.fr,.fc,.mk,.help,.sp,.empty," +
                 ".bent-c > a,.bwhy-c,.bstep-c,.bban-c > a,.sw2-ec > a,.wp-hc,.wp-cc,.wp-sg > li,.wp-pb," +
                 ".bcal-c > a,.bgd-c > a,.bqc," +
+                ".r1-bc,.r1-sc,.r1-sv,.r1-tc,.cg-r,.cg-t,.cg-ff," +
                 ".mhall-c,.mcal-g > li,.mstp-g > li," +
                 ".mti-c,.hsv-box,.mlast-h > li > a,.swt-c," +
                 ".ms-g a,.mv-g a,.mh-fc > li,.hb-g a,.hb-b";

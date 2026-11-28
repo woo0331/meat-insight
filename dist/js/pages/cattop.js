@@ -74,7 +74,7 @@ function CloseTop(){
     body:'<div class="cg-pk" id="cg-close-pick">'+
       '<p class="cg-pk-h">필요한 작업을 고르면 견적 신청서에 그대로 담깁니다</p>'+ctTiles(L)+
       '<div class="cg-pk-go" data-pick-row hidden>'+
-        '<a class="btn btn-ac" data-pick-go="close" href="/quote?mode=close">'+icon("doc",16)+' 고른 작업으로 견적 신청 <b data-pick-n>0</b>개</a>'+
+        '<a class="btn btn-ac" data-pick-go="close" href="/quote?mode=close">'+icon("doc",16)+'<span>고른 작업으로 견적 신청 <b data-pick-n>0</b>개</span></a>'+
         '<a class="cg-pk-more" href="/closure?p=pick#pick">다른 작업도 고르기</a></div>'+
       '<p class="cg-pk-more-l"><a href="/closure?p=pick#pick">신고 · 폐기물 · 세무까지 더 고르기'+icon("chev",14)+'</a></p>'+
     '</div>'+

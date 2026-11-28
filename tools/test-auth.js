@@ -1598,6 +1598,20 @@ console.log("\n── W03 /api/auth — 브라우저 대신 Supabase 로 전함 
   ok("카카오 — 목록 밖 공급자는 거절", r.code === 400, r);
   r = res(); await Hauth(req({ method:"POST", headers:{ origin:"https://evil.example", host:"storeway.co.kr" }, body:{ op:"oauth", provider:"kakao" } }), r);
   ok("카카오 — 다른 출처 403", r.code === 403, r);
+  /* 2026-11-28 — 시험(Preview) 배포별 주소에서는 카카오로 안 보내고 브랜치 주소로 옮긴다 */
+  process.env.VERCEL_ENV = "preview"; process.env.VERCEL_BRANCH_URL = "storeway-git-claude-preview-intake-test-team.vercel.app";
+  const OD = { origin:"https://storeway-abc123-team.vercel.app", host:"storeway-abc123-team.vercel.app" };
+  calls = []; r = res(); await Hauth(req({ method:"POST", headers:OD, body:{ op:"oauth", provider:"kakao", path:"/my?no=SW-AB12-CD34" } }), r);
+  ok("시험 — 배포별 주소면 브랜치 주소로 옮긴다 (카카오 안 감 · 쿠키 없음)", r.code === 200 && r.body.move === true &&
+     r.body.url === "https://storeway-git-claude-preview-intake-test-team.vercel.app/my?no=SW-AB12-CD34&kk=1" && !ckOf(r, "sw_kk") && calls.length === 0, r.body);
+  const OB = { origin:"https://storeway-git-claude-preview-intake-test-team.vercel.app", host:"storeway-git-claude-preview-intake-test-team.vercel.app" };
+  r = res(); await Hauth(req({ method:"POST", headers:OB, body:{ op:"oauth", provider:"kakao", path:"/my" } }), r);
+  ok("시험 — 브랜치 주소면 그대로 카카오 (콜백도 브랜치 주소)", r.code === 200 && !r.body.move &&
+     new URL(r.body.url).searchParams.get("redirect_uri") === "https://storeway-git-claude-preview-intake-test-team.vercel.app/api/auth-kakao", r.body);
+  process.env.VERCEL_ENV = "production";
+  r = res(); await Hauth(req({ method:"POST", headers:O, body:{ op:"oauth", provider:"kakao", path:"/my" } }), r);
+  ok("운영 — 옮기지 않는다 (오늘과 같음)", r.code === 200 && !r.body.move && /kauth\.kakao\.com/.test(r.body.url), r.body);
+  delete process.env.VERCEL_ENV; delete process.env.VERCEL_BRANCH_URL;
 
   /* 콜백 — 정상 */
   const CB = function(q, cookie){ return req({ method:"GET", query:q, headers:{ host:"storeway.co.kr", cookie: cookie || "" } }); };
@@ -1632,9 +1646,12 @@ console.log("\n── W03 /api/auth — 브라우저 대신 Supabase 로 전함 
   /* 가짜 토큰 — Supabase 가 거절하면 로그인 안 됨 */
   kmock({ sbfail:true }); r = res(); await Hcb(CB({ code:"CODE-abcdefgh", state:st1 }, "sw_kk=" + ck1), r);
   ok("콜백 — Supabase 가 토큰을 거절하면 세션 쿠키를 안 만든다", /error=server_error/.test(r.headers.location) && !ckOf(r, "sw_ks"), r.headers);
+  ok("콜백 — 끊긴 자리를 꼬리표로 (supabase · 토큰 · 값 없음)", /&kk_why=supabase$/.test(r.headers.location), r.headers.location);
+  kmock({ kfail:true }); r = res(); await Hcb(CB({ code:"CODE-abcdefgh", state:st1 }, "sw_kk=" + ck1), r);
+  ok("콜백 — 카카오 토큰 교환 실패는 kk_why=token", /&kk_why=token$/.test(r.headers.location) && !ckOf(r, "sw_ks"), r.headers.location);
   /* 사용자가 동의 화면에서 취소 */
   kmock(); r = res(); await Hcb(CB({ error:"access_denied", state:st1 }, "sw_kk=" + ck1), r);
-  ok("콜백 — 취소하면 원래 화면에 ?error=access_denied · 바깥 요청 0", r.headers.location === "https://storeway.co.kr/startup?i=cafe&error=access_denied" && calls.length === 0, r.headers.location);
+  ok("콜백 — 취소하면 원래 화면에 ?error=access_denied · 바깥 요청 0", r.headers.location === "https://storeway.co.kr/startup?i=cafe&error=access_denied&kk_why=kakao" && calls.length === 0, r.headers.location);
   /* 로그에 토큰이 안 남는다 */
   const logs = []; const cw = console.warn, cl = console.log, ce = console.error;
   console.warn = function(){ logs.push([].join.call(arguments, " ")); }; console.error = console.warn;

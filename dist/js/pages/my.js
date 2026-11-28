@@ -34,6 +34,9 @@ window.myLoadDb = function(){
         box.innerHTML = '<div class="w">' + MySignInBand() + '</div>';
         box.hidden = false;
 
+        var es = window.amAuthErrSay ? amAuthErrSay() : "", en = document.getElementById("my-kk-n");
+        if(es && en){ en.textContent = es; en.className = "my-in-n bad"; }
+
         if(typeof nowQS === "function" && nowQS("next") && !(window.amIsReloadView && window.amIsReloadView())){
           var hd = document.querySelector(".hd");
           window.scrollTo(0, Math.max(0, box.getBoundingClientRect().top + (window.scrollY || 0) - ((hd && hd.offsetHeight) || 64) - 8));
@@ -1268,6 +1271,7 @@ window.myLkInit = function(){
 window.myKakao = function(){
   var n = document.getElementById("my-kk-n");
   if(typeof amAuthKakao !== "function") return;
+  if(window.amAuthErrClear) amAuthErrClear();
   if(n){ n.textContent = "카카오로 이동합니다…"; n.className = "my-in-n"; }
   amAuthKakao().then(function(r){
     if(!r.ok && n){ n.textContent = r.say; n.className = "my-in-n bad"; }

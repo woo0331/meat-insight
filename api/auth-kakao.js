@@ -46,8 +46,13 @@ module.exports = async function handler(req, res){
   const back = (box && box.o ? box.o : "") + (box && box.p ? box.p : "/my");
   function fail(code, why){
     console.warn("[auth-kakao] 로그인 실패 — " + why);         /* ⚠️ 종류만 · 값은 안 찍음 */
+    /* 2026-11-28 — 어디서 끊겼는지를 **꼬리표 하나**로 화면에 (토큰 · 코드 · 키 없음).
+       화면이 "(확인 코드: …)" 로 보여 주고 주소에서 치웁니다. */
+    const tag = /설정/.test(why) ? "off" : /state/.test(why) ? "state" : /취소|거절/.test(why) ? "kakao"
+      : /코드 꼴/.test(why) ? "code" : /토큰 교환/.test(why) ? ("token" + ((why.match(/KOE[0-9]{3}/) || [""])[0].toLowerCase()))
+      : /nonce/.test(why) ? "nonce" : /Supabase/.test(why) ? "supabase" : "etc";
     const sep = back.indexOf("?") >= 0 ? "&" : "?";
-    return go(res, back + sep + "error=" + encodeURIComponent(code), [drop]);
+    return go(res, back + sep + "error=" + encodeURIComponent(code) + "&kk_why=" + tag, [drop]);
   }
   if(!K.oidcReady() || !authReady()) return fail("server_error", "설정이 꺼져 있음");
   if(!box) return fail("server_error", "state 쿠키 없음 · 위조 · 재사용");

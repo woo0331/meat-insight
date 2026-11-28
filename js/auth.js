@@ -88,6 +88,15 @@ function amAuthClear(){
    ?error=access_denied … 또는 #error=… 로 돌려보냅니다. 받아서 사람 말로 알리고
    주소창을 치웁니다 (오류 글이 주소에 남아 공유되지 않게). */
 var AM_AUTH_ERR = "";
+var AM_AUTH_WHY = "";
+function amAuthKkResume(){
+  var sp; try{ sp = new URLSearchParams(window.location.search); }catch(e){ return; }
+  if(sp.get("kk") !== "1") return;
+  sp.delete("kk");
+  var p = window.location.pathname + (sp.toString() ? "?" + sp.toString() : "");
+  try{ window.history.replaceState({}, "", p); }catch(e){}
+  if(AM_AUTH.kakao && !AM_AUTH.signedIn) window.amAuthKakao(p);
+}
 function amAuthTakeError(){
   var src = "";
   try{ src = String(window.location.hash || "").replace(/^#/, "") + "&" +
@@ -100,16 +109,21 @@ function amAuthTakeError(){
   });
   if(!q.error && !q.error_description) return;
   AM_AUTH_ERR = (q.error === "access_denied") ? "cancel" : "fail";
+  /* 어디서 끊겼는지 — 서버가 붙인 꼬리표(영문 · 숫자만)를 그대로 보여 드립니다 */
+  AM_AUTH_WHY = /^[a-z0-9]{2,16}$/.test(q.kk_why || "") ? q.kk_why : "";
   try{
     var keep = String(window.location.search || "").replace(/^\?/, "").split("&").filter(function(kv){
-      return kv && !/^(error|error_code|error_description)=/.test(kv); }).join("&");
+      return kv && !/^(error|error_code|error_description|kk_why)=/.test(kv); }).join("&");
     window.history.replaceState({}, "", window.location.pathname + (keep ? "?" + keep : ""));
   }catch(e){}
 }
+window.amAuthErrClear = function(){ AM_AUTH_ERR = ""; AM_AUTH_WHY = ""; };
 window.amAuthErrSay = function(){
-  var e = AM_AUTH_ERR; AM_AUTH_ERR = "";
+  amAuthTakeError();   /* 화면이 먼저 물을 수 있어 여기서도 주소를 읽습니다 (읽은 뒤에는 주소가 비어 아무 일 안 함) */
+  /* ⚠️ 읽어도 안 비웁니다 — 헤더(알림)와 /my(로그인 칸 아래)가 둘 다 말해야 합니다. 다시 누를 때 amAuthErrClear */
+  var e = AM_AUTH_ERR, w = AM_AUTH_WHY;
   return e === "cancel" ? "카카오 로그인을 취소하셨습니다."
-       : e === "fail"   ? "로그인하지 못했습니다. 잠시 뒤 다시 시도해 주세요." : "";
+       : e === "fail"   ? "로그인하지 못했습니다. 잠시 뒤 다시 시도해 주세요." + (w ? " (확인 코드: " + w + ")" : "") : "";
 };
 /* 로그인 뒤 돌아갈 자리 — ?next= 가 **우리 사이트 안 경로**일 때만 씁니다 */
 window.amAuthNext = function(){
@@ -128,7 +142,8 @@ window.amAuthKakao = function(path){
     body: JSON.stringify({ op:"oauth", provider:"kakao", path:p }) })
     .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ return { ok:r.ok, d:d }; }); })
     .then(function(x){
-      if(x.ok && x.d && x.d.url){ window.location.assign(x.d.url); return { ok:true, say:"카카오로 이동합니다…" }; }
+      if(x.ok && x.d && x.d.url){ window.location.assign(x.d.url);
+        return { ok:true, say: x.d.move ? "로그인할 수 있는 주소로 옮겨 갑니다…" : "카카오로 이동합니다…" }; }
       return { ok:false, say:(x.d && x.d.error) || "지금은 카카오로 로그인할 수 없습니다." };
     })
     .catch(function(){ return { ok:false, say:"연결이 끊겼습니다. 잠시 뒤 다시 눌러 주세요." }; });
@@ -297,6 +312,8 @@ window.amAuthAsk = function(force){
     AM_AUTH.name     = d.name || "";
     AM_AUTH.provider = d.provider || null;
     AM_AUTH.conf     = d.conf || AM_AUTH.conf;
+    /* 2026-11-28 — 시험 배포별 주소에서 옮겨 온 길(?kk=1): 그 자리에서 카카오로 바로 이어 갑니다 */
+    amAuthKkResume();
     return AM_AUTH;
   }).catch(function(e){
     /* ⚠️ 운영자에게만 남깁니다 — 손님은 아무 잘못도 안 했습니다

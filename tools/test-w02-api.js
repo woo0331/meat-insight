@@ -97,7 +97,9 @@ const Q = { kind: "quote", name: "합성고객김", tel: "010-9999-1111", email:
   console.log("\n▶ T10 매물 · 입점");
   { const h = load("quote.js"); const w = world(); const r = res();
     await h(req(Object.assign({}, Q, { form: "sell", cat: "transfer", items: undefined, idem: "s1" })), r);
-    ok(w.rpc[0] && w.rpc[0].body.p.form === "sell", "매물은 form=sell 로 저장 (DB 가 review 로 둠)", w.rpc[0] && w.rpc[0].body.p.form); }
+    ok(w.rpc[0] && w.rpc[0].body.p.form === "sell", "매물은 form=sell 로 저장 (DB 가 review 로 둠)", w.rpc[0] && w.rpc[0].body.p.form);
+    /* 2026-11-28 — 대표 분류가 버려지던 자리 (매물은 화면이 보낸 transfer · asset) */
+    ok(w.rpc[0] && w.rpc[0].body.p.cat === "transfer", "매물의 대표 분류가 저장됨 (transfer)", w.rpc[0] && w.rpc[0].body.p.cat); }
   { const h = load("quote.js"); const w = world(); const r = res();
     await h(req({ kind: "partner", company: "합성업체", name: "담당", tel: "010-1", services: ["인테리어"], agree: true, state: "approved" }), r);
     ok(w.rpc[0] && w.rpc[0].fn === "submit_apply" && w.rpc[0].body.p.state === undefined, "입점은 submit_apply · 화면이 보낸 state 를 넘기지 않음", w.rpc[0]); }

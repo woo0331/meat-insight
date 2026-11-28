@@ -198,6 +198,16 @@ module.exports = async function handler(req, res){
       console.warn("[site] 없는 서비스 id 로 왔습니다 — " + got.bad.join(", "));
       return res.status(400).json({ error: "고르신 서비스를 다시 확인해 주세요" });
     }
+    /* ⚠️⚠️ 2026-11-28 — **대표 분류(cat)** 를 여기서 정합니다. 전에는 q.cat 을 sos 에서만 채워서
+       견적 · 매장 정리 상담 · 매물 접수가 **전부 cat 이 빈 채로** 저장됐습니다 (화면은 cat 을 보내는데
+       서버가 버렸습니다). 그 바람에 관리자 목록에 분야 이름이 안 나오고, 신청 전체로 배정할 때
+       '하는 일' 로 업체를 못 추렸고, 같은 분야 재접수 표시(near)도 안 걸렸습니다.
+       기준 — ① 고르신 서비스가 있으면 **첫 번째 서비스의 분류** (demolish/full → demolish)
+              ② 없으면 화면이 보낸 cat 의 분류 (매물: transfer · asset / 분야에서 들어온 견적: ?c=)
+              ③ 둘 다 없으면('잘 모르겠어요' 만) 비워 둡니다 — 지어내지 않습니다.
+       ⚠️ 분류 목록(_services.js)에 없는 값은 버립니다. 하위까지 적지 않습니다 — 하위는 항목(request_item)에 있습니다. */
+    const catOf = function(id){ const k = String(id || "").split("/")[0]; return SERVICES.indexOf(k) >= 0 ? k : ""; };
+    q.cat = (q.items.length ? catOf(q.items[0].id) : "") || catOf(clean(b.cat, 60));
     /* 해결 가이드에서 고르신 "업체에 물어볼 것".
        ⚠️ 이건 사장님이 업체에게 **대신 물어봐 달라고 맡기신 것**입니다.
        빠뜨리면 요청은 성공하는데 정작 물어볼 것이 사라집니다. */

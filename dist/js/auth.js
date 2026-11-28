@@ -8,6 +8,22 @@ var AM_AUTH_FLY = null;
 
 function amAuthSave(t){
   try{ localStorage.setItem(AM_AUTH_KEY, JSON.stringify(t)); }catch(e){}
+
+  amAuthLostClear();
+}
+
+var AM_AUTH_LOST_KEY = "am.auth.lost";
+function amAuthLostMark(){
+  AM_AUTH.lost = true; AM_AUTH.signedIn = false;
+  try{ sessionStorage.setItem(AM_AUTH_LOST_KEY, "1"); }catch(e){}
+}
+function amAuthLostClear(){
+  if(typeof AM_AUTH === "object") AM_AUTH.lost = false;
+  try{ sessionStorage.removeItem(AM_AUTH_LOST_KEY); }catch(e){}
+}
+function amAuthLostNow(){
+  if(AM_AUTH.lost) return true;
+  try{ return sessionStorage.getItem(AM_AUTH_LOST_KEY) === "1"; }catch(e){ return false; }
 }
 function amAuthLoad(){
   var t = null;
@@ -131,7 +147,7 @@ function amAuthRefresh(){
     body: JSON.stringify({ op:"refresh", refresh_token: t.refresh_token })
   }).then(function(r){ return r.ok ? r.json() : null; })
     .then(function(d){
-      if(!d || !d.access_token){ amAuthClear(); return false; }
+      if(!d || !d.access_token){ amAuthClear(); amAuthLostMark(); return false; }
       amAuthSave({ access_token:d.access_token,
                    refresh_token:d.refresh_token || t.refresh_token,
                    at: Date.now() + (d.expires_in || 3600) * 1000 });
@@ -205,6 +221,26 @@ window.amAuthAsk = function(force){
 };
 
 window.amAuthNow = function(){ return AM_AUTH; };
+
+window.amAuthEnsure = function(){
+  if(!AM_AUTH.on) return Promise.resolve("anon");
+  if(amAuthToken()) return Promise.resolve("ok");
+  var had = AM_AUTH.signedIn || amAuthLostNow();
+  if(amAuthLoad()){
+    return amAuthRefresh().then(function(ok){
+      if(ok){ AM_AUTH.signedIn = true; return "ok"; }
+      amAuthLostMark();
+      if(typeof window.amEntryPaint === "function") try{ window.amEntryPaint(AM_AUTH); }catch(e){}
+      return "lost";
+    });
+  }
+  if(had){
+    amAuthLostMark();
+    if(typeof window.amEntryPaint === "function") try{ window.amEntryPaint(AM_AUTH); }catch(e){}
+    return Promise.resolve("lost");
+  }
+  return Promise.resolve("anon");
+};
 
 window.amAuthSend = function(email){
   var c = AM_AUTH.conf;

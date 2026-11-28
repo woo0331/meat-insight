@@ -49,6 +49,26 @@ var AM_AUTH_FLY = null;
    의존을 끊습니다. */
 function amAuthSave(t){
   try{ localStorage.setItem(AM_AUTH_KEY, JSON.stringify(t)); }catch(e){}
+  /* 새 토큰을 받았으면 '로그인이 풀렸다' 표시를 걷습니다 */
+  amAuthLostClear();
+}
+/* ── 로그인이 풀렸다 (2026-11-28 · SW-F65J-ZKVY 에서 찾은 자리) ─────────
+   ⚠️⚠️ 토큰 갱신이 실패하면 저장된 토큰을 지우는데, **화면은 그 사실을 모른 채**
+   '내 계정' 을 그대로 보여 주고 신청은 **계정 없이** 들어갔습니다.
+   갱신 실패만 표시합니다 — 스스로 나가기(amAuthOut)는 표시하지 않습니다.
+   ⚠️ 이 탭 안에만 둡니다(sessionStorage) — 다음 방문까지 끌고 가지 않습니다. */
+var AM_AUTH_LOST_KEY = "am.auth.lost";
+function amAuthLostMark(){
+  AM_AUTH.lost = true; AM_AUTH.signedIn = false;
+  try{ sessionStorage.setItem(AM_AUTH_LOST_KEY, "1"); }catch(e){}
+}
+function amAuthLostClear(){
+  if(typeof AM_AUTH === "object") AM_AUTH.lost = false;
+  try{ sessionStorage.removeItem(AM_AUTH_LOST_KEY); }catch(e){}
+}
+function amAuthLostNow(){
+  if(AM_AUTH.lost) return true;
+  try{ return sessionStorage.getItem(AM_AUTH_LOST_KEY) === "1"; }catch(e){ return false; }
 }
 function amAuthLoad(){
   var t = null;
@@ -209,7 +229,7 @@ function amAuthRefresh(){
     body: JSON.stringify({ op:"refresh", refresh_token: t.refresh_token })
   }).then(function(r){ return r.ok ? r.json() : null; })
     .then(function(d){
-      if(!d || !d.access_token){ amAuthClear(); return false; }
+      if(!d || !d.access_token){ amAuthClear(); amAuthLostMark(); return false; }
       amAuthSave({ access_token:d.access_token,
                    refresh_token:d.refresh_token || t.refresh_token,
                    at: Date.now() + (d.expires_in || 3600) * 1000 });
@@ -292,6 +312,32 @@ window.amAuthAsk = function(force){
 };
 
 window.amAuthNow = function(){ return AM_AUTH; };
+
+/* ── 보내기 직전에 로그인이 살아 있는가 (2026-11-28) ──────────────────
+   돌려주는 것 — "ok"(토큰이 살아 있거나 새로 받음) · "anon"(처음부터 로그인 안 함)
+                · "lost"(이 탭에서 로그인했었는데 지금은 풀림).
+   ⚠️⚠️ 서버를 믿게 하는 값이 아닙니다 — 누구인지는 언제나 서버가 토큰으로 정합니다.
+   여기는 **조용히 비회원 접수가 되는 것**을 손님에게 먼저 알리려는 것까지입니다.
+   ⚠️ 로그인이 꺼져 있으면(AM_AUTH.on=false) 아무것도 묻지 않고 "anon" 입니다. */
+window.amAuthEnsure = function(){
+  if(!AM_AUTH.on) return Promise.resolve("anon");
+  if(amAuthToken()) return Promise.resolve("ok");
+  var had = AM_AUTH.signedIn || amAuthLostNow();
+  if(amAuthLoad()){
+    return amAuthRefresh().then(function(ok){
+      if(ok){ AM_AUTH.signedIn = true; return "ok"; }
+      amAuthLostMark();
+      if(typeof window.amEntryPaint === "function") try{ window.amEntryPaint(AM_AUTH); }catch(e){}
+      return "lost";
+    });
+  }
+  if(had){
+    amAuthLostMark();
+    if(typeof window.amEntryPaint === "function") try{ window.amEntryPaint(AM_AUTH); }catch(e){}
+    return Promise.resolve("lost");
+  }
+  return Promise.resolve("anon");
+};
 
 /* ── 매직링크 보내기 ─────────────────────────────────────────────
    ⚠️⚠️ **"보냈습니다" 는 실제로 보낸 뒤에만** 말합니다 (절대 규칙 5).

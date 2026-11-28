@@ -665,6 +665,9 @@ function render(){
     window.quoteDraftPaint();
   if(nowPath() === "/quote" && typeof window.quoteSumPaint === "function")
     window.quoteSumPaint();
+  /* 2026-11-28 — 로그인이 풀려 다시 로그인하고 돌아왔으면, 맡겨 둔 작성 내용을 되살립니다 (js/pages/quote.js) */
+  if(typeof window.amReloginRestore === "function" && window.amReloginRestore() &&
+     nowPath() === "/quote" && typeof window.quoteSumPaint === "function") window.quoteSumPaint();
   if(!RT.keepScroll) window.scrollTo(0,0);
   RT.keepScroll = false;
   if(RT.focus){

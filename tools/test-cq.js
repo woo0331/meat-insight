@@ -25,7 +25,8 @@ async function ctxOf(b, W, o){
     r.fulfill({ contentType:"application/json", body: JSON.stringify({ ok:true, url: R + "/fake-put/" + o.slots }) }); });
   o.puts = 0;
   await ctx.route("**/fake-put/**", r => { o.puts++; const n = +r.request().url().split("/").pop();
-    if (o.failSlot && n === o.failSlot) return r.fulfill({ status:500, body:"" }); r.fulfill({ status:200, body:"" }); });
+    o.putN = (o.putN || {}); o.putN[n] = (o.putN[n] || 0) + 1;
+    if (o.failSlot && n === o.failSlot && o.putN[n] === 1) return r.fulfill({ status:500, body:"" }); r.fulfill({ status:200, body:"" }); });
   o.posts = 0;
   await ctx.route("**/api/quote**", r => { o.posts++; setTimeout(() => r.fulfill({ contentType:"application/json",
     body: JSON.stringify({ ok:true, no:"SW-QA28-0002", state:"new", linked:!!o.signed }) }), o.slow || 0); });
@@ -84,6 +85,8 @@ async function navCovers(pg, sel){
       o.failSlot = 0; const before = o.puts;
       await pg.click(".qd [data-ph-retry]"); await pg.waitForTimeout(800);
       ok(o.puts - before === 1, W + " " + kind + " 다시 올리기는 실패한 1장만", o.puts - before);
+      /* 2026-11-28 — 파일만 실패했으면 받은 자리를 다시 씁니다 (새 자리 = 파일 없는 기록 + 상한 소모) */
+      ok(o.slots === 3, W + " " + kind + " 다시 올릴 때 새 자리를 또 받지 않는다 (기록 중복 없음)", o.slots);
       ok(/사진 3장이 저장됐어요/.test(await pg.textContent(".qd")), W + " " + kind + " 다시 올린 뒤 '사진 3장이 저장됐어요'");
       ok(await pg.evaluate(() => { const b = document.querySelector(".qd [data-ph-retry]"); return !b || b.offsetParent === null; }), W + " " + kind + " 다 저장되면 '다시 올리기' 가 사라짐");
       // 새로 작성하기 — 이전 번호 · 사진이 안 남음
@@ -98,6 +101,14 @@ async function navCovers(pg, sel){
         return { top:s.getBoundingClientRect().top, st:(s.querySelector(".myrd-l em")||{}).textContent, t, cards, rows,
           go:(s.querySelector(".myrd-go a")||{}).textContent, contact:/010-0000-1128|검수 시험/.test(document.body.innerText) }; });
       ok(d && d.st === "견적 도착", W + " " + kind + " 상세: 견적 2건 → 견적 도착", d && d.st);
+      /* 2026-11-28 — 서버 상태가 quoted 여도 **볼 수 있는 견적이 0건**이면 '견적 도착' 을 내지 않습니다
+         (시험 DB 의 SW-QA28-0003 · DB 가 아직 견적 없이 quoted 를 허용합니다 — DRAFT-0085 적용 전) */
+      if (W === 390 && kind === "quote") {
+        await pg.goto(R + "/my?no=SW-QA28-0003"); await pg.waitForTimeout(800);
+        const z = await pg.evaluate(() => { const s = document.getElementById("myrd"); return s ? { st:(s.querySelector(".myrd-l em")||{}).textContent, t:s.innerText } : null; });
+        ok(z && z.st !== "견적 도착" && !/견적 비교|견적 보기/.test(z.t), W + " 견적 0건이면 상태가 quoted 여도 '견적 도착' · 견적 보기를 안 낸다", z && z.st);
+        await pg.goto(R + "/my?no=SW-QA28-0002"); await pg.waitForTimeout(800);
+      }
       ok(d && /군포시/.test(d.t) && /전체 철거/.test(d.t) && /2026\.\s?11\.\s?28/.test(d.t), W + " " + kind + " 상세: 서비스 · 지역 · 접수일", d && d.t.slice(0, 200));
       ok(d && /견적 비교 2건/.test(d.go || ""), W + " " + kind + " 주요 단추: 견적 비교 2건", d && d.go);
       ok(d && d.rows.join(",") === "총액,포함 작업,제외 · 추가 비용,가능 일정,실측", W + " " + kind + " 카드 순서 (업체명 → 총액 → 포함 → 제외 → 일정 → 실측)", d && d.rows);

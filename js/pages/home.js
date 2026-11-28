@@ -2660,13 +2660,13 @@ var R1_BIG = [
   { k:"st", ph:"home-startup", h:"창업 준비", p:"업종 선택부터 비용 · 인테리어 · 인허가까지", to:"/startup",
     b:[{ href:"/tools/cost", t:"창업비 계산", ic:"calc" }, { href:"/startup#st-ig", t:"업종별 준비", ic:"check" }] },
   { k:"cl", ph:"home-closure", h:"폐업 · 철거", p:"철거 · 원상복구 · 집기 처분 · 신고까지", to:"/closure",
-    b:[{ href:"/quote?mode=close", t:"폐업 견적", ic:"doc", form:"close", off:"폐업 견적 접수 안내" }, { href:"/tools/closecost", t:"폐업비 계산", ic:"calc" }] }
+    b:[{ href:"/quote?mode=close", t:"폐업 견적", ic:"doc", form:"close", off:"접수 안내" }, { href:"/tools/closecost", t:"폐업비 계산", ic:"calc" }] }
 ];
 var R1_SMALL = [
   { k:"op", ic:"chart", h:"매장 운영", p:"POS · 세무 노무 · 시설 유지보수", to:"/operation",
     b:[{ href:"/providers?j=operation", t:"업체 찾기", ic:"store" }, { href:"/operation#ops-check", t:"운영 점검", ic:"check" }] },
   { k:"tr", ic:"handover", h:"매장 양도양수", p:"매장 인수 · 내 매장 넘기기 · 권리금", to:"/transfer",
-    b:[{ href:"/stores", t:"매장 찾기", ic:"search" }, { href:"/sell", t:"내 매장 내놓기", ic:"store", form:"sell", off:"매장 내놓기 접수 안내" }] }
+    b:[{ href:"/stores", t:"매장 찾기", ic:"search" }, { href:"/sell", t:"내 매장 내놓기", ic:"store", form:"sell", off:"접수 안내" }] }
 ];
 function HomeR1Top(){
   var art = function(n){ return (typeof hasIconArt === "function" && hasIconArt(n)) ? iconArt(n, 40) : icon(n, 26); };

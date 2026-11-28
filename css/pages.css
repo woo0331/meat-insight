@@ -9892,6 +9892,9 @@ a.myq-no{ display:inline-flex; align-items:center; min-height:44px; color:inheri
 @media (max-width:400px){
   .r1-sm{ grid-template-columns:1fr; }
   .r1-sg{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+}
+/* ⚠️ 341~400px 만 가로 줄 — 320px 은 칸이 좁아 이름이 낱말 가운데서 잘립니다 (전수 점검이 잡았습니다) */
+@media (min-width:341px) and (max-width:400px){
   .r1-sv{ flex-direction:row; justify-content:flex-start; text-align:left; min-height:64px; padding:10px 10px 10px 32px; gap:8px; flex-wrap:wrap; }
   .r1-sv b{ flex:1; min-width:0; font-size:15px; }
   .r1-sv .r1-tg{ width:100%; margin-left:48px; margin-top:-6px; }
@@ -9902,6 +9905,9 @@ a.myq-no{ display:inline-flex; align-items:center; min-height:44px; color:inheri
   .r1-btx{ padding:22px 24px 24px; }
   .r1-bph{ aspect-ratio:16 / 8; }
   .r1-sm{ gap:22px; margin-top:22px; }
+}
+/* ⚠️ 작은 카드를 한 줄(제목 왼쪽 · 단추 오른쪽)로 눕히는 것은 1180px 부터 — 1024px 에서는 제목 칸이 좁아 낱말이 잘립니다 */
+@media (min-width:1180px){
   .r1-sc{ display:flex; align-items:center; gap:16px; padding:14px 16px; }
   .r1-shd{ flex:1; margin:0; }
   .r1-go-s{ flex:none; width:300px; }

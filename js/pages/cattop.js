@@ -7,7 +7,7 @@
 function StartTop(ind){
   var ok = !!(ind && typeof amIndustry === "function" && amIndustry(ind));
   var iq = ok ? "?i=" + encodeURIComponent(ind) : "";
-  var rows = ["restaurant", "cafe", "beauty"].map(function(k){
+  var rows = ["restaurant", "cafe", "hair"].map(function(k){
     var x = typeof amIndustry === "function" ? amIndustry(k) : null; if(!x) return null;
     return { t:x.name, ic:x.icon || "store", ph:(typeof picKey === "function" ? picKey("ind", k) : ""), href:"/startup/" + encodeURIComponent(k) };
   }).filter(Boolean);
